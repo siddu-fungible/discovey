@@ -123,6 +123,7 @@ class NetperfManager:
         parallel = arg_dicts[0].get('parallel', 1)
         for arg_dict in arg_dicts:
             linux_obj = arg_dict.get('linux_obj')
+            perf_suffix = arg_dict.get('perf_suffix')
             dip = arg_dict.get('dip')
             protocol = arg_dict.get('protocol', 'tcp')
             duration = arg_dict.get('duration', 30)
@@ -143,32 +144,32 @@ class NetperfManager:
                     func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns,
                                local_send_buffer_size),
                     task_key=i)
-            # One task to measure latency
-            measure_latency = True
-            mp_task_obj.add_task(
-                func=do_test,
-                func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, measure_latency, sip, ns),
-                task_key=parallel-1)  # TODO: change 'parallel-1' to 'parallel' when COMe is not used
+            ## One task to measure latency
+            #measure_latency = True
+            #mp_task_obj.add_task(
+            #    func=do_test,
+            #    func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, measure_latency, sip, ns),
+            #    task_key=parallel-1)  # TODO: change 'parallel-1' to 'parallel' when COMe is not used
             mp_task_obj.run(max_parallel_processes=parallel)
             for i in range(0, parallel):
                 rlist.append(mp_task_obj.get_result(i))
 
             throughput = sum(r.get('throughput') for r in rlist)
-            latency_min = rlist[parallel-1].get('latency_min')
-            latency_avg = rlist[parallel-1].get('latency_avg')
-            latency_max = rlist[parallel-1].get('latency_max')
-            latency_P50 = rlist[parallel-1].get('latency_P50')
-            latency_P90 = rlist[parallel-1].get('latency_P90')
-            latency_P99 = rlist[parallel-1].get('latency_P99')
+            #latency_min = rlist[parallel-1].get('latency_min')
+            #latency_avg = rlist[parallel-1].get('latency_avg')
+            #latency_max = rlist[parallel-1].get('latency_max')
+            #latency_P50 = rlist[parallel-1].get('latency_P50')
+            #latency_P90 = rlist[parallel-1].get('latency_P90')
+            #latency_P99 = rlist[parallel-1].get('latency_P99')
 
             result = {
                 'throughput': round(throughput, 3),
-                'latency_min': round(latency_min, 1),
-                'latency_avg': round(latency_avg, 1),
-                'latency_max': round(latency_max, 1),
-                'latency_P50': round(latency_P50, 1),
-                'latency_P90': round(latency_P90, 1),
-                'latency_P99': round(latency_P99, 1),
+                #'latency_min': round(latency_min, 1),
+                #'latency_avg': round(latency_avg, 1),
+                #'latency_max': round(latency_max, 1),
+                #'latency_P50': round(latency_P50, 1),
+                #'latency_P90': round(latency_P90, 1),
+                #'latency_P99': round(latency_P99, 1),
             }
 
         else:
@@ -183,7 +184,12 @@ class NetperfManager:
              }
         )
 
-        return result
+        result_cooked = {}
+        for k, v in result.items():
+            result_cooked.update(
+                {'{}_{}'.format(k, perf_suffix): v}
+            )
+        return result_cooked
 
 
 def get_send_size(protocol, frame_size):

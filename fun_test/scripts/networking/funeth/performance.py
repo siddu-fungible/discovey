@@ -46,18 +46,18 @@ class FunethPerformance(sanity.FunethSanity):
 
         network_controller_obj = NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                    dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True)
-        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(sf_thr=4000,
-                                                                            sf_xoff_thr=3500,
-                                                                            sx_thr=4000,
-                                                                            dx_thr=4000,
-                                                                            df_thr=4000,
-                                                                            fcp_thr=8000,
-                                                                            fcp_xoff_thr=7000,
-                                                                            nonfcp_thr=8000,
-                                                                            nonfcp_xoff_thr=7000,
-                                                                            sample_copy_thr=255,
-                                                                            mode='nu')
-        fun_test.test_assert(buffer_pool_set, 'Configure QoS egress buffer pool')
+        #buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(sf_thr=4000,
+        #                                                                    sf_xoff_thr=3500,
+        #                                                                    sx_thr=4000,
+        #                                                                    dx_thr=4000,
+        #                                                                    df_thr=4000,
+        #                                                                    fcp_thr=8000,
+        #                                                                    fcp_xoff_thr=7000,
+        #                                                                    nonfcp_thr=8000,
+        #                                                                    nonfcp_xoff_thr=7000,
+        #                                                                    sample_copy_thr=255,
+        #                                                                    mode='nu')
+        #fun_test.test_assert(buffer_pool_set, 'Configure QoS egress buffer pool')
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
@@ -120,6 +120,7 @@ class FunethPerformanceBase(FunTestCase):
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
                 sip = None
             local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE
+            perf_suffix = 'n2h'
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             linux_obj_dst = funeth_obj.linux_obj_dict['nu']
@@ -128,6 +129,7 @@ class FunethPerformanceBase(FunTestCase):
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
             sip = None
             local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE / 2
+            perf_suffix = 'h2n'
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             linux_obj_dst = funeth_obj.linux_obj_dict['hu']
@@ -147,17 +149,17 @@ class FunethPerformanceBase(FunTestCase):
         linux_objs_dst.append(linux_obj_dst)
         ns_dst_list.append(ns_dst)
 
-        # configure MSS by add iptable rule
-        for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
-            cmds = (
-                'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-                    frame_size-18-20-20),
-                'iptables -t mangle -L',
-            )
-            for cmd in cmds:
-                if ns_dst:
-                    cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-                linux_obj_dst.sudo_command(cmd)
+        ## configure MSS by add iptable rule
+        #for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+        #    cmds = (
+        #        'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+        #            frame_size-18-20-20),
+        #        'iptables -t mangle -L',
+        #    )
+        #    for cmd in cmds:
+        #        if ns_dst:
+        #            cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+        #        linux_obj_dst.sudo_command(cmd)
 
         if tool == 'netperf':
             perf_manager_obj = NetperfManager(linux_objs)
@@ -165,6 +167,7 @@ class FunethPerformanceBase(FunTestCase):
             perf_manager_obj = IPerfManager(linux_objs)
         arg_dicts = [
             {'linux_obj': linux_obj,
+             'perf_suffix': perf_suffix,
              'dip': dip,
              'sip': sip,
              'tool': tool,
@@ -188,17 +191,17 @@ class FunethPerformanceBase(FunTestCase):
         fun_test.log('Collect stats after test')
         #collect_stats()
 
-        # Delete iptable rule
-        for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
-            cmds = (
-                'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-                    frame_size-18-20-20),
-                'iptables -t mangle -L',
-            )
-            for cmd in cmds:
-                if ns_dst:
-                    cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-                linux_obj_dst.sudo_command(cmd)
+        ## Delete iptable rule
+        #for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+        #    cmds = (
+        #        'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+        #            frame_size-18-20-20),
+        #        'iptables -t mangle -L',
+        #    )
+        #    for cmd in cmds:
+        #        if ns_dst:
+        #            cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+        #        linux_obj_dst.sudo_command(cmd)
 
         # check for 'nan'
         passed = True
@@ -1177,22 +1180,22 @@ if __name__ == "__main__":
             #FunethPerformance_HU_NU_800B_UDP_NETPERF,
             #FunethPerformance_HU_NU_64B_UDP_NETPERF,
             #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
-            FunethPerformance_HU_NU_800B_TCP_NETPERF,
-            FunethPerformance_HU_NU_128B_TCP_NETPERF,
+            #FunethPerformance_HU_NU_800B_TCP_NETPERF,
+            #FunethPerformance_HU_NU_128B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
-            FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
-            FunethPerformance_HU_NU_128B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_NU_128B_TCP_NETPERF_MultipleFlows,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF_MultipleFlows,
 
             # NU -> HU Non-FCP
             ## FunethPerformance_NU_HU_800B_UDP_NETPERF,
             ## FunethPerformance_NU_HU_64B_UDP_NETPERF,
             ## FunethPerformance_NU_HU_1500B_UDP_NETPERF,
-            FunethPerformance_NU_HU_800B_TCP_NETPERF,
-            FunethPerformance_NU_HU_128B_TCP_NETPERF,
+            #FunethPerformance_NU_HU_800B_TCP_NETPERF,
+            #FunethPerformance_NU_HU_128B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
-            FunethPerformance_NU_HU_800B_TCP_NETPERF_MultipleFlows,
-            FunethPerformance_NU_HU_128B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_NU_HU_800B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_NU_HU_128B_TCP_NETPERF_MultipleFlows,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF_MultipleFlows,
 
             # HU -> HU Non-FCP
