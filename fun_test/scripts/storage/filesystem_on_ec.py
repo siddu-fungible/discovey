@@ -175,7 +175,7 @@ class FSOnECTestcase(FunTestCase):
                 block_size=ec_info["volume_block"]["lsv"], name="lsv_"+this_uuid[-4:], uuid=this_uuid,
                 command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.simple_assert(command_result["status"], "Deleting {} bytes LS volume on DUT instance".
+            fun_test.test_assert(command_result["status"], "Deleting {} bytes LS volume on DUT instance".
                                    format(ec_info["volume_capacity"]["lsv"]))
 
             this_uuid = ec_info["uuids"]["jvol"]
@@ -335,7 +335,13 @@ class FSOnECTestcase(FunTestCase):
                 # Check whether the current capacity is sufficient enough to create the ndata:nparity EC volume
                 # The minimum size of the each individual plex participating in making m:n EC volume is 128 blocks
                 min_ec_plex_size = self.min_ec_plex_blocks * self.ec_info["volume_block"]["ec"]
+                min_blt_plex_size = self.min_blt_plex_blocks * self.ec_info["volume_block"]["ndata"]
                 if int(round(float(size) / ndata)) < min_ec_plex_size:
+                    fun_test.critical("Skipping the current capacity {}, because its not sufficient enough to create "
+                                      "{}:{} EC volume".format(size, ndata, nparity))
+                    continue
+
+                if int(round(float(size) / ndata)) < min_blt_plex_size:
                     fun_test.critical("Skipping the current capacity {}, because its not sufficient enough to create "
                                       "{}:{} EC volume".format(size, ndata, nparity))
                     continue
