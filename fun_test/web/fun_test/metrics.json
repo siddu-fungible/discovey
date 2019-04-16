@@ -11,7 +11,7 @@
         "metric_model_name": "MetricContainer",
         "leaf": false,
         "name": "Networking",
-        "label": "Networking - (work in progress)",
+        "label": "Networking",
         "children": [
           {
             "info": "Lookup-engine",
@@ -401,6 +401,159 @@
             "label": "Flowtest on F1",
             "children": [],
             "weight": 1
+          },
+          {
+            "info": "rcnvme",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "rcnvme",
+            "label": "RCNVME",
+            "children": [
+              {
+                "info": "rcnvme_sequential_read",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "rcnvme_sequential_read",
+                "label": "Sequential Read",
+                "children": [
+                  {
+                    "info": "rcnvme_sequential_read_output_bandwidth",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_sequential_read_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_sequential_read_output_iops",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_sequential_read_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_sequential_read_output_latency_avg",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_sequential_read_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "rcnvme_random_read",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "rcnvme_random_read",
+                "label": "Random Read",
+                "children": [
+                  {
+                    "info": "rcnvme_random_read_output_bandwidth",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_random_read_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_random_read_output_iops",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_random_read_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_random_read_output_latency_avg",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_random_read_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "rcnvme_sequential_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "rcnvme_sequential_write",
+                "label": "Sequential Write",
+                "children": [
+                  {
+                    "info": "rcnvme_sequential_write_output_bandwidth",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_sequential_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_sequential_write_output_iops",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_sequential_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_sequential_write_output_latency_avg",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_sequential_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "rcnvme_random_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "rcnvme_random_write",
+                "label": "Random Write",
+                "children": [
+                  {
+                    "info": "rcnvme_random_write_output_bandwidth",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_random_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_random_write_output_iops",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_random_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "rcnvme_random_write_output_latency_avg",
+                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "leaf": true,
+                    "name": "rcnvme_random_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
           },
           {
             "info": "Volume Type",
@@ -1789,7 +1942,7 @@
             "leaf": false,
             "name": "Regex",
             "weight": 1,
-            "label": "Regex - (work in progress)",
+            "label": "Regex",
             "children": [
               {
                 "info": "dfa_teramark_output_bandwidth",
@@ -2009,7 +2162,7 @@
                 "leaf": false,
                 "name": "teramarks_customer_juniper",
                 "weight": 1,
-                "label": "Juniper - (work in progress)",
+                "label": "Juniper",
                 "children": [
                   {
                     "info": "juniper_NU_VP_NU_FWD_NFCP",
@@ -2076,6 +2229,50 @@
                         "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
                         "weight": 1,
                         "label": "Latency"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "Apple",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "teramarks_customer_apple",
+                "weight": 1,
+                "label": "Apple",
+                "children": [
+                  {
+                    "info": "Random Read",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "apple_rand_read_4kb_6vol_6ssd_stripe_volume",
+                    "weight": 1,
+                    "label": "Random Read",
+                    "children": [
+                      {
+                        "info": "apple_rand_read_4kb6vol6ssd_output_bandwidth",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "apple_rand_read_4kb6vol6ssd_output_bandwidth",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "apple_rand_read_4kb6vol6ssd_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "apple_rand_read_4kb6vol6ssd_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      },
+                      {
+                        "info": "apple_rand_read_4kb6vol6ssd_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "apple_rand_read_4kb6vol6ssd_output_iops",
+                        "weight": 1,
+                        "label": "IOPS"
                       }
                     ]
                   }
