@@ -3,12 +3,13 @@ from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed
 from django.db.models import Q
-from web.fun_test.models import SuiteExecution
+from web.fun_test.models import SuiteExecution, TestCaseExecution
 from fun_settings import TEAM_REGRESSION_EMAIL
 import json
 from lib.utilities.send_mail import send_mail
 from datetime import datetime, timedelta
 from scheduler.scheduler_global import JobStatusType
+from scheduler.scheduler_helper import kill_job
 
 @csrf_exempt
 @api_safe_json_response
@@ -60,8 +61,17 @@ def test_beds(request, id):
 @api_safe_json_response
 def suite_executions(request, id):
     result = None
-    q = Q()
+    if request.method == "DELETE":
+        suite_execution = SuiteExecution.objects.get(execution_id=int(id))
+        kill_job(job_id=int(id))
+        #suite_execution.delete()
+        #test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=int(id))
+        #test_case_executions.delete()
+
+        result = True
+
     if request.method == "GET":
+        q = Q()
         test_bed_type = request.GET.get('test_bed_type', None)
         if test_bed_type:
             q = q & Q(test_bed_type=test_bed_type)

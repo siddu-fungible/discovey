@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -18,6 +18,7 @@ enum EditMode {
   styleUrls: ['./test-bed.component.css']
 })
 export class TestBedComponent implements OnInit {
+  @Input() embed: boolean = false;
   schedulingTime = {hour: 1, minute: 1};
   testBeds: any [] = null;
   automationStatus = {};
