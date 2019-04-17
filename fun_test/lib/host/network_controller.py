@@ -1637,3 +1637,12 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def execute_app(self, name):
+        result = None
+        try:
+            cmd = ['%s' % name]
+            result = self.json_execute(verb='execute', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
