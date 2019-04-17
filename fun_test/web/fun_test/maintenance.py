@@ -505,7 +505,8 @@ if __name__ == "__main_apple_rr_latency__":
     print "created latency charts for random read stripe volume"
 
 if __name__ == "__main__":
-    old_internal_names = ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps"]
+    old_internal_names = ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "NU_HU_NFCP_output_throughput",
+                          "NU_HU_NFCP_output_pps"]
     for old_name in old_internal_names:
         entry = MetricChart.objects.get(internal_chart_name=old_name)
         if "HU_NU" in old_name:
