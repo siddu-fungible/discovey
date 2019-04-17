@@ -99,6 +99,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   successAuthor: string = null;
   commits: any = null;
   message: any = null;
+  readonly DECIMAL_PRECISION: number = 5;
 
   public formatter: Function;
   public tooltip: Function;
@@ -1084,8 +1085,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         output = output / Math.pow(10, 6);
       }
     }
-
-    return parseFloat(output.toFixed(5));
+    return parseFloat(output.toFixed(this.DECIMAL_PRECISION));
   }
 
   onUnitChange(newUnit) {
