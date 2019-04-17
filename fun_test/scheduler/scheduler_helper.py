@@ -589,6 +589,16 @@ def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(test_bed_name=test_bed_name)
 
 
+def send_error_mail(message, submitter_email=None, job_id=None):
+    to_addresses = [TEAM_REGRESSION_EMAIL]
+    if submitter_email:
+        to_addresses.append(submitter_email)
+    content = message
+    subject = "Regression: Suite execution error. Job-Id: {}".format(job_id)
+    send_mail(to_addresses=to_addresses, content=content, subject=subject)
+    pass
+
+
 def send_test_bed_remove_lock(test_bed, warning=False):
 
     submitter_email = test_bed.manual_lock_submitter
@@ -724,7 +734,7 @@ def send_summary_mail(job_id, extra_message=""):
 
         # print html
         attributes_dict = {x["name"]: x["value"] for x in suite_execution_attributes}
-        subject = "Automation: {}: {} P:{} F:{}".format(attributes_dict["Result"],
+        subject = "Regression: {}: {} P:{} F:{}".format(attributes_dict["Result"],
                                                         suite_execution.suite_path,
                                                         attributes_dict["Passed"],
                                                         attributes_dict["Failed"])
