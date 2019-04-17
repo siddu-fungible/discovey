@@ -980,7 +980,6 @@ if __name__ == "__main__":
     initialize()
     scheduler_logger.info("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
-    # queue_worker.start()
     test_bed_monitor.start()
     clear_out_queue()
     clear_out_old_jobs()

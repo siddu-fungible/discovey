@@ -153,15 +153,14 @@ export class ReRunService {
         let reRunInfo = response.data;
         for (let index = 0; index < reRunInfo.length; index++) {
           result["numTotal"] += 1;
-          let reRunResult = reRunInfo[index].re_run.attributes.result;
-          let activeStates = ["QUEUED", "SCHEDULED", "IN_PROGRESS", "NOT_RUN"];
-          let completedStates = ["KILLED", "ABORTED", "PASSED", "FAILED"];
-          if (activeStates.indexOf(reRunResult) > -1) {
+          let reRunState = reRunInfo[index].re_run.attributes.result;
+
+          if (reRunState >= 30) {
             result["numActive"] += 1;
-          }
-          if (completedStates.indexOf(reRunResult) > -1) {
+          } else {
             result["numCompleted"] += 1;
-          }
+          }// JobStatusType.SUBMITTED // TODO
+
         }
         result["reRunInfo"] = reRunInfo;
       }
