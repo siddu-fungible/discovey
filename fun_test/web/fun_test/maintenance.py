@@ -504,7 +504,7 @@ if __name__ == "__main_apple_rr_latency__":
         mmt.save()
     print "created latency charts for random read stripe volume"
 
-if __name__ == "__main__":
+if __name__ == "__main__network_revamped__":
     old_internal_names = ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "NU_HU_NFCP_output_throughput",
                           "NU_HU_NFCP_output_pps"]
     for old_name in old_internal_names:
@@ -602,3 +602,18 @@ if __name__ == "__main__":
                     base_line_date=base_line_date,
                     work_in_progress=False).save()
     print "created charts for the new networking teramarks"
+
+if __name__ == "__main__":
+    internal_chart_names = ["HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                            "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
+                            "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                            "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_pps"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        entry = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        ml.remove_attribute_from_data_sets(chart=entry, key="input_offloads")
+    print "removed the input offloads from datasets"

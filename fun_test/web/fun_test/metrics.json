@@ -242,19 +242,77 @@
             "info": "HU_NU_NFCP",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "HU_NU_NFCP",
+            "name": "HU_NU_NFCP_non_teramark",
             "weight": 1,
             "label": "Host->Network",
-            "reference": true
+            "extensible_references": [
+              "HU_NU_NFCP"
+            ],
+            "children": [
+              {
+                "info": "HU_NU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_NU_NFCP_1TCP_offloads_disabled",
+                "weight": 1,
+                "label": "1 TCP Flow(s)",
+                "children": [
+                  {
+                    "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "metric_model_name": "HuThroughputPerformance",
+                    "leaf": true,
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "metric_model_name": "HuThroughputPerformance",
+                    "leaf": true,
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  }
+                ]
+              }
+            ]
           },
           {
             "info": "NU_HU_NFCP",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "NU_HU_NFCP",
+            "name": "NU_HU_NFCP_non_teramark",
             "weight": 1,
             "label": "Network->Host",
-            "reference": true
+            "extensible_references": ["NU_HU_NFCP"],
+            "children": [
+              {
+                "info": "NU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_HU_NFCP_1TCP_offloads_disabled",
+                "weight": 1,
+                "label": "1 TCP Flow(s)",
+                "children": [
+                  {
+                    "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "metric_model_name": "HuThroughputPerformance",
+                    "leaf": true,
+                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "metric_model_name": "HuThroughputPerformance",
+                    "leaf": true,
+                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  }
+                ]
+              }
+            ]
           }
         ],
         "weight": 1
@@ -1729,35 +1787,9 @@
                     "info": "HU_NU_NFCP",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "HU_NU_NFCP_1TCP_offloads_disabled",
-                    "weight": 1,
-                    "label": "1 TCP Flow(s), Offloads: Disabled ",
-                    "children": [
-                      {
-                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
-                        "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
-                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
-                        "weight": 1,
-                        "label": "Throughput"
-                      },
-                      {
-                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
-                        "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
-                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
-                        "weight": 1,
-                        "label": "Packets per sec"
-                      }
-                    ]
-                  },
-                  {
-                    "info": "HU_NU_NFCP",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_NU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "8 TCP Flow(s), Offloads: Disabled ",
+                    "label": "8 TCP Flow(s)",
                     "children": [
                       {
                         "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
@@ -1791,35 +1823,9 @@
                     "info": "NU_HU_NFCP",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "NU_HU_NFCP_1TCP_offloads_disabled",
-                    "weight": 1,
-                    "label": "1 TCP Flow(s), Offloads: Disabled ",
-                    "children": [
-                      {
-                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
-                        "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
-                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
-                        "weight": 1,
-                        "label": "Throughput"
-                      },
-                      {
-                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
-                        "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
-                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
-                        "weight": 1,
-                        "label": "Packets per sec"
-                      }
-                    ]
-                  },
-                  {
-                    "info": "NU_HU_NFCP",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "NU_HU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "8 TCP Flow(s), Offloads: Disabled ",
+                    "label": "8 TCP Flow(s)",
                     "children": [
                       {
                         "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
