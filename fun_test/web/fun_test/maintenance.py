@@ -505,18 +505,28 @@ if __name__ == "__main_apple_rr_latency__":
     print "created latency charts for random read stripe volume"
 
 if __name__ == "__main__":
+    old_internal_names = ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps"]
+    for old_name in old_internal_names:
+        entry = MetricChart.objects.get(internal_chart_name=old_name)
+        if "HU_NU" in old_name:
+            if "throughput" in old_name:
+                HU_NU_throughput_description = entry.description
+            else:
+                HU_NU_pps_description = entry.description
+        else:
+            if "throughput" in old_name:
+                NU_HU_throughput_description = entry.description
+            else:
+                NU_HU_pps_description = entry.description
+
     internal_chart_names = ["HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
                             "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
-                            "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_avg",
                             "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
                             "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
-                            "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_avg",
                             "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
                             "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
-                            "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_avg",
                             "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
-                            "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
-                            "NU_HU_NFCP_8TCP_offloads_disabled_output_latency_avg"]
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_pps"]
     frame_sizes = [800, 1500]
     flow_types = ["HU_NU_NFCP", "NU_HU_NFCP"]
     for internal_chart_name in internal_chart_names:
@@ -527,16 +537,16 @@ if __name__ == "__main__":
             chart_name = "Throughput"
             y1_axis_title = "Gbps"
             output_name = "output_throughput"
-        elif "pps" in internal_chart_name:
+        else:
             chart_name = "Packets per sec"
             y1_axis_title = "Mpps"
             output_name = "output_pps"
-        else:
-            chart_name = "Latency"
-            positive = False
-            y1_axis_title = "usecs"
-            output_name = "output_latency_avg"
-            model_name = "HuLatencyPerformance"
+        # else:
+        #     chart_name = "Latency"
+        #     positive = False
+        #     y1_axis_title = "usecs"
+        #     output_name = "output_latency_avg"
+        #     model_name = "HuLatencyPerformance"
 
         if "1TCP" in internal_chart_name:
             num_flows = 1
@@ -550,11 +560,20 @@ if __name__ == "__main__":
             flow_type = "NU_HU_NFCP"
             output_name = output_name + "_n2h"
 
+        description = "TBD"
+        if internal_chart_name == "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput":
+            description = HU_NU_throughput_description
+        elif internal_chart_name == "HU_NU_NFCP_1TCP_offloads_disabled_output_pps":
+            description = HU_NU_pps_description
+        elif internal_chart_name == "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput":
+            description = NU_HU_throughput_description
+        elif internal_chart_name == "NU_HU_NFCP_1TCP_offloads_disabled_output_pps":
+            description = NU_HU_pps_description
         data_sets = []
         for frame_size in frame_sizes:
             name = str(frame_size) + "B"
-            if chart_name == "Latency":
-                name = name + "-avg"
+            # if chart_name == "Latency":
+            #     name = name + "-avg"
             one_data_set = {}
             one_data_set["name"] = name
             one_data_set["inputs"] = {}
@@ -572,7 +591,7 @@ if __name__ == "__main__":
                     internal_chart_name=internal_chart_name,
                     data_sets=json.dumps(data_sets),
                     leaf=True,
-                    description="TBD",
+                    description=description,
                     owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
                     source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/funeth/performance.py",
                     positive=positive,

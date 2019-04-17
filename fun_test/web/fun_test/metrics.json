@@ -1748,14 +1748,6 @@
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
-                      },
-                      {
-                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_avg",
-                        "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
-                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_avg",
-                        "weight": 1,
-                        "label": "Latency"
                       }
                     ]
                   },
@@ -1782,14 +1774,6 @@
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
-                      },
-                      {
-                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_avg",
-                        "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
-                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_avg",
-                        "weight": 1,
-                        "label": "Latency"
                       }
                     ]
                   }
@@ -1826,14 +1810,6 @@
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
-                      },
-                      {
-                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_avg",
-                        "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
-                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_avg",
-                        "weight": 1,
-                        "label": "Latency"
                       }
                     ]
                   },
@@ -1860,14 +1836,6 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
-                      },
-                      {
-                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency_avg",
-                        "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
-                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency_avg",
-                        "weight": 1,
-                        "label": "Latency"
                       }
                     ]
                   }

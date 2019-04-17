@@ -1022,7 +1022,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   convertToVisualizationUnit(outputUnit, output): any {
     if (this.latency_category.includes(outputUnit)) {
       if (outputUnit === "usecs") {
-        output = output * Math.pow(10, 6);
+        output = output * (Math.pow(10, 6));
       } else if (outputUnit === "msecs") {
         output = output * Math.pow(10, 3);
       } else if (outputUnit === "nsecs") {
@@ -1085,7 +1085,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
     }
 
-    return output;
+    return parseFloat(output.toFixed(5));
   }
 
   onUnitChange(newUnit) {

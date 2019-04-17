@@ -2076,42 +2076,44 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
     def add_entries_into_dual_table(self, default_metrics, line, date_time):
-        metrics = dict(default_metrics)
-        self.model = "HuThroughputPerformance"
-        if metrics["input_flow_type"] == "HU_NU_NFCP":
-            metrics["output_throughput_h2n"] = (float(
-                line["throughput"]) / 1000) if line["throughput"] != -1 else -1
-            metrics["output_pps_h2n"] = (float(
-                line["pps"]) / 1000000) if line["pps"] != -1 else -1
-        else:
-            metrics["output_throughput_n2h"] = (float(
-                line["throughput"]) / 1000) if line["throughput"] != -1 else -1
-            metrics["output_pps_n2h"] = (float(
-                line["pps"]) / 1000000) if line["pps"] != -1 else -1
-        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-        d["input_date_time"] = date_time
-        metric_model = app_config.get_metric_models()[self.model]
-        MetricHelper(model=metric_model).add_entry(**d)
-        metrics = dict(default_metrics)
-        self.model = "HuLatencyPerformance"
-        if metrics["input_flow_type"] == "HU_NU_NFCP":
-            metrics["output_latency_max_h2n"] = line.get("latency_max", -1)
-            metrics["output_latency_min_h2n"] = line.get("latency_min", -1)
-            metrics["output_latency_avg_h2n"] = line.get("latency_avg", -1)
-            metrics["output_latency_P99_h2n"] = line.get("latency_P99", -1)
-            metrics["output_latency_P90_h2n"] = line.get("latency_P90", -1)
-            metrics["output_latency_P50_h2n"] = line.get("latency_P50", -1)
-        else:
-            metrics["output_latency_max_n2h"] = line.get("latency_max", -1)
-            metrics["output_latency_min_n2h"] = line.get("latency_min", -1)
-            metrics["output_latency_avg_n2h"] = line.get("latency_avg", -1)
-            metrics["output_latency_P99_n2h"] = line.get("latency_P99", -1)
-            metrics["output_latency_P90_n2h"] = line.get("latency_P90", -1)
-            metrics["output_latency_P50_n2h"] = line.get("latency_P50", -1)
-        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-        d["input_date_time"] = date_time
-        metric_model = app_config.get_metric_models()[self.model]
-        MetricHelper(model=metric_model).add_entry(**d)
+        if "throughput" in line and "pps" in line:
+            metrics = dict(default_metrics)
+            self.model = "HuThroughputPerformance"
+            if metrics["input_flow_type"] == "HU_NU_NFCP":
+                metrics["output_throughput_h2n"] = (float(
+                    line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
+                metrics["output_pps_h2n"] = (float(
+                    line["pps"]) / 1000000) if "pps" in line and  line["pps"] != -1 else -1
+            else:
+                metrics["output_throughput_n2h"] = (float(
+                    line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
+                metrics["output_pps_n2h"] = (float(
+                    line["pps"]) / 1000000) if "pps" in line and line["pps"] != -1 else -1
+            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+            d["input_date_time"] = date_time
+            metric_model = app_config.get_metric_models()[self.model]
+            MetricHelper(model=metric_model).add_entry(**d)
+        if "latency_avg" in line:
+            metrics = dict(default_metrics)
+            self.model = "HuLatencyPerformance"
+            if metrics["input_flow_type"] == "HU_NU_NFCP":
+                metrics["output_latency_max_h2n"] = line.get("latency_max", -1)
+                metrics["output_latency_min_h2n"] = line.get("latency_min", -1)
+                metrics["output_latency_avg_h2n"] = line.get("latency_avg", -1)
+                metrics["output_latency_P99_h2n"] = line.get("latency_P99", -1)
+                metrics["output_latency_P90_h2n"] = line.get("latency_P90", -1)
+                metrics["output_latency_P50_h2n"] = line.get("latency_P50", -1)
+            else:
+                metrics["output_latency_max_n2h"] = line.get("latency_max", -1)
+                metrics["output_latency_min_n2h"] = line.get("latency_min", -1)
+                metrics["output_latency_avg_n2h"] = line.get("latency_avg", -1)
+                metrics["output_latency_P99_n2h"] = line.get("latency_P99", -1)
+                metrics["output_latency_P90_n2h"] = line.get("latency_P90", -1)
+                metrics["output_latency_P50_n2h"] = line.get("latency_P50", -1)
+            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+            d["input_date_time"] = date_time
+            metric_model = app_config.get_metric_models()[self.model]
+            MetricHelper(model=metric_model).add_entry(**d)
 
 
 class PrepareDbTc(FunTestCase):
@@ -2134,44 +2136,44 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    # myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    # myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    # myscript.add_test_case(F1FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkNfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
-    # myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTC())
-    # myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
-    # myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
-    # myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTC())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkZipPerformanceTC())
+    myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
+    myscript.add_test_case(F1FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkNfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTC())
     myscript.add_test_case(TeraMarkHuPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
