@@ -969,6 +969,10 @@ def join_suite_workers():
         if job_to_be_removed in job_id_threads:
             del job_id_threads[job_to_be_removed]
 
+def clear_out_old_jobs():
+    old_jobs = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.SUBMITTED)
+    old_jobs.delete()
+
 
 if __name__ == "__main__":
     queue_lock = Lock()
@@ -979,6 +983,7 @@ if __name__ == "__main__":
     # queue_worker.start()
     test_bed_monitor.start()
     clear_out_queue()
+    clear_out_old_jobs()
 
     run = True
     while run:
