@@ -5,6 +5,7 @@ import re
 import json
 import collections
 from fun_global import RESULTS
+from dateutil.parser import parse
 
 app_config = apps.get_app_config(app_label='fun_test')
 
@@ -34,6 +35,8 @@ class MetricParser():
             return self.dfa_nfa(logs=logs, date_time=date_time)
         elif "Rcnvme" in model_name:
             return self.rcnvme(logs=logs, date_time=date_time)
+        elif "HuLatency" in model_name or "HuThroughput" in model_name:
+            return self.hu_networking(logs=logs, date_time=date_time)
         else:
             return {}
 
@@ -185,6 +188,59 @@ class MetricParser():
                     self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                     result["data"].append(d)
+        result["match_found"] = match_found
+        result["status"] = self.status == RESULTS["PASSED"]
+        return result
+
+    def get_time_from_timestamp(self, timestamp):
+        time_obj = parse(timestamp)
+        return time_obj
+
+    def hu_networking(self, logs, date_time):
+        match_found = False
+        result = {}
+        result["data"] = []
+        d = {}
+        for line in logs:
+            self.status = RESULTS["FAILED"]
+            if "flow_type" in line:
+                match_found = True
+                metrics = collections.OrderedDict()
+                metrics["input_flow_type"] = line["flow_type"]
+                metrics["input_frame_size"] = line["frame_size"]
+                metrics["input_number_flows"] = line.get("num_flows", 1)
+                metrics["input_offloads"] = line.get("offloads", False)
+                metrics["input_protocol"] = line.get("protocol", "TCP")
+                metrics["input_version"] = line.get("version", "")
+                date_time = self.get_time_from_timestamp(line["timestamp"])
+                if "throughput_h2n" in line:
+                    self.model = "HuThroughputPerformance"
+                    metrics["output_throughput_h2n"] = (float(
+                        line["throughput_h2n"]) / 1000) if line["throughput_h2n"] != -1 else -1
+                    metrics["output_throughput_n2h"] = (float(
+                        line["throughput_n2h"]) / 1000) if line["throughput_n2h"] != -1 else -1
+                    metrics["output_pps_h2n"] = (float(
+                        line["pps_h2n"]) / 1000000) if line["pps_h2n"] != -1 else -1
+                    metrics["output_pps_n2h"] = (float(
+                        line["pps_n2h"]) / 1000000) if line["pps_n2h"] != -1 else -1
+                elif "latency_avg_h2n" in line:
+                    self.model = "HuLatencyPerformance"
+                    metrics["output_latency_max_h2n"] = line.get("latency_max_h2n", -1)
+                    metrics["output_latency_min_h2n"] = line.get("latency_min_h2n", -1)
+                    metrics["output_latency_avg_h2n"] = line.get("latency_avg_h2n", -1)
+                    metrics["output_latency_P99_h2n"] = line.get("latency_P99_h2n", -1)
+                    metrics["output_latency_P90_h2n"] = line.get("latency_P90_h2n", -1)
+                    metrics["output_latency_P50_h2n"] = line.get("latency_P50_h2n", -1)
+
+                    metrics["output_latency_max_n2h"] = line.get("latency_max_n2h", -1)
+                    metrics["output_latency_min_n2h"] = line.get("latency_min_n2h", -1)
+                    metrics["output_latency_avg_n2h"] = line.get("latency_avg_n2h", -1)
+                    metrics["output_latency_P99_n2h"] = line.get("latency_P99_n2h", -1)
+                    metrics["output_latency_P90_n2h"] = line.get("latency_P90_n2h", -1)
+                    metrics["output_latency_P50_n2h"] = line.get("latency_P50_n2h", -1)
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
+                result["data"].append(d)
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
         return result

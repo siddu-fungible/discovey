@@ -242,137 +242,19 @@
             "info": "HU_NU_NFCP",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "HU_NU_NFCP_non_teramark",
+            "name": "HU_NU_NFCP",
             "weight": 1,
-            "label": "Host->DPU->NU",
-            "children": [
-              {
-                "info": "HU_NU_NFCP_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_NU_NFCP_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HU_NU_NFCP_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_NU_NFCP_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HU_NU_NFCP_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_NU_NFCP_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "HU_HU_NFCP",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "HU_HU_NFCP_non_teramark",
-            "weight": 1,
-            "label": "Host<->DPU<->DPU<->Host (NFCP)",
-            "children": [
-              {
-                "info": "HU_HU_NFCP_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_HU_NFCP_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HU_HU_NFCP_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_HU_NFCP_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HU_HU_NFCP_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_HU_NFCP_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "HU_HU_FCP",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "HU_HU_FCP_non_teramark",
-            "weight": 1,
-            "label": "Host<->DPU<->DPU<->Host (FCP)",
-            "children": [
-              {
-                "info": "HU_HU_FCP_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_HU_FCP_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HU_HU_FCP_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_HU_FCP_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HU_HU_FCP_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HU_HU_FCP_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
+            "label": "Host->Network",
+            "reference": true
           },
           {
             "info": "NU_HU_NFCP",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "NU_HU_NFCP_non_teramark",
+            "name": "NU_HU_NFCP",
             "weight": 1,
-            "label": "NU->DPU->Host",
-            "children": [
-              {
-                "info": "NU_HU_NFCP_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HU_NFCP_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "NU_HU_NFCP_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HU_NFCP_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "NU_HU_NFCP_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HU_NFCP_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
+            "label": "Network->Host",
+            "reference": true
           }
         ],
         "weight": 1
@@ -408,6 +290,7 @@
             "leaf": false,
             "name": "rcnvme",
             "label": "RCNVME",
+            "weight": 1,
             "children": [
               {
                 "info": "rcnvme_sequential_read",
@@ -415,6 +298,7 @@
                 "leaf": false,
                 "name": "rcnvme_sequential_read",
                 "label": "Sequential Read",
+                "weight": 1,
                 "children": [
                   {
                     "info": "rcnvme_sequential_read_output_bandwidth",
@@ -451,6 +335,7 @@
                 "leaf": false,
                 "name": "rcnvme_random_read",
                 "label": "Random Read",
+                "weight": 1,
                 "children": [
                   {
                     "info": "rcnvme_random_read_output_bandwidth",
@@ -487,6 +372,7 @@
                 "leaf": false,
                 "name": "rcnvme_sequential_write",
                 "label": "Sequential Write",
+                "weight": 1,
                 "children": [
                   {
                     "info": "rcnvme_sequential_write_output_bandwidth",
@@ -523,6 +409,7 @@
                 "leaf": false,
                 "name": "rcnvme_random_write",
                 "label": "Random Write",
+                "weight": 1,
                 "children": [
                   {
                     "info": "rcnvme_random_write_output_bandwidth",
@@ -1836,75 +1723,59 @@
                 "leaf": false,
                 "name": "HU_NU_NFCP",
                 "weight": 1,
-                "label": "Host->DPU->NU",
+                "label": "Host->Network",
                 "children": [
                   {
-                    "info": "HU_NU_NFCP_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_NU_NFCP_output_throughput",
+                    "info": "HU_NU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Throughput"
+                    "label": "1 TCP Flow(s), Offloads: Disabled ",
+                    "children": [
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
                   },
                   {
-                    "info": "HU_NU_NFCP_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_NU_NFCP_output_pps",
+                    "info": "HU_NU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_NU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Packets per sec"
-                  }
-                ]
-              },
-              {
-                "info": "HU_HU_NFCP",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HU_HU_NFCP",
-                "weight": 1,
-                "label": "Host<->DPU<->DPU<->Host (NFCP)",
-                "children": [
-                  {
-                    "info": "HU_HU_NFCP_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_HU_NFCP_output_throughput",
-                    "weight": 1,
-                    "label": "Throughput"
-                  },
-                  {
-                    "info": "HU_HU_NFCP_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_HU_NFCP_output_pps",
-                    "weight": 1,
-                    "label": "Packets per sec"
-                  }
-                ]
-              },
-              {
-                "info": "HU_HU_FCP",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HU_HU_FCP",
-                "weight": 1,
-                "label": "Host<->DPU<->DPU<->Host (FCP)",
-                "children": [
-                  {
-                    "info": "HU_HU_FCP_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_HU_FCP_output_throughput",
-                    "weight": 1,
-                    "label": "Throughput"
-                  },
-                  {
-                    "info": "HU_HU_FCP_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_HU_FCP_output_pps",
-                    "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "8 TCP Flow(s), Offloads: Disabled ",
+                    "children": [
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
                   }
                 ]
               },
@@ -1914,23 +1785,59 @@
                 "leaf": false,
                 "name": "NU_HU_NFCP",
                 "weight": 1,
-                "label": "NU->DPU->Host",
+                "label": "Network->Host",
                 "children": [
                   {
-                    "info": "NU_HU_NFCP_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_HU_NFCP_output_throughput",
+                    "info": "NU_HU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "NU_HU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Throughput"
+                    "label": "1 TCP Flow(s), Offloads: Disabled ",
+                    "children": [
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
                   },
                   {
-                    "info": "NU_HU_NFCP_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_HU_NFCP_output_pps",
+                    "info": "NU_HU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "NU_HU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "8 TCP Flow(s), Offloads: Disabled ",
+                    "children": [
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
                   }
                 ]
               }
