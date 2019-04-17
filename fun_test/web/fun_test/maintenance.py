@@ -165,7 +165,6 @@ if __name__ == "__main_memset_datasets__":
                 if data_set["name"] == "2048KB" or data_set["name"] == "4096KB":
                     ml.delete_data_set(metric_id=entry.metric_id, data_set=data_set)
 
-
 if __name__ == "__main_juniper_networking__":
     flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
@@ -289,8 +288,9 @@ if __name__ == "__main_memset_BM__":
 
     internal_chart_names = {"memset_buffer_memory_output_bandwidth_below_4k": "DMA soak memset BM (Below 4K)",
                             "memset_buffer_memory_output_bandwidth_4k_1mb": "DMA soak memset BM (4K-1MB)"}
-    internal_frame_sizes = {"memset_buffer_memory_output_bandwidth_below_4k": ["64B", "128B", "256B", "512B", "1024B", "2048B"],
-                            "memset_buffer_memory_output_bandwidth_4k_1mb": ["4096B", "8192B", "16KB"]}
+    internal_frame_sizes = {
+        "memset_buffer_memory_output_bandwidth_below_4k": ["64B", "128B", "256B", "512B", "1024B", "2048B"],
+        "memset_buffer_memory_output_bandwidth_4k_1mb": ["4096B", "8192B", "16KB"]}
     for internal_chart_name in internal_chart_names:
         chart_name = internal_chart_names[internal_chart_name]
         model_name = "SoakDmaMemsetPerformance"
@@ -398,7 +398,7 @@ if __name__ == "__main_RCNVME__":
             mmt.save()
     print "chart creation for RCNVME is done"
 
-if __name__ == "__main__":
+if __name__ == "__main_apple_rr_throughput__":
     internal_chart_names = ["apple_rand_read_4kb6vol6ssd_output_bandwidth",
                             "apple_rand_read_4kb6vol6ssd_output_iops"]
     model_name = "BltVolumePerformance"
@@ -452,7 +452,7 @@ if __name__ == "__main__":
         mmt.save()
     print "created throughput charts for random read stripe volume"
 
-if __name__ == "__main__":
+if __name__ == "__main_apple_rr_latency__":
     internal_chart_names_dict = {"apple_rand_read_4kb6vol6ssd_output_latency": "Latency"}
     model_name = "BltVolumePerformance"
     fio_read_job_names = ["fio_randread_stripe12"]
@@ -503,3 +503,80 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "created latency charts for random read stripe volume"
+
+if __name__ == "__main__":
+    internal_chart_names = ["HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                            "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                            "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_avg",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_avg",
+                            "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                            "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                            "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_avg",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_latency_avg"]
+    frame_sizes = [800, 1500]
+    flow_types = ["HU_NU_NFCP", "NU_HU_NFCP"]
+    for internal_chart_name in internal_chart_names:
+        positive = True
+        base_line_date = datetime(year=2019, month=1, day=26, minute=0, hour=0, second=0)
+        model_name = "HuThroughputPerformance"
+        if "throughput" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "Gbps"
+            output_name = "output_throughput"
+        elif "pps" in internal_chart_name:
+            chart_name = "Packets per sec"
+            y1_axis_title = "Mpps"
+            output_name = "output_pps"
+        else:
+            chart_name = "Latency"
+            positive = False
+            y1_axis_title = "usecs"
+            output_name = "output_latency_avg"
+            model_name = "HuLatencyPerformance"
+
+        if "1TCP" in internal_chart_name:
+            num_flows = 1
+        else:
+            num_flows = 8
+
+        if "HU_NU_NFCP" in internal_chart_name:
+            flow_type = "HU_NU_NFCP"
+            output_name = output_name + "_h2n"
+        else:
+            flow_type = "NU_HU_NFCP"
+            output_name = output_name + "_n2h"
+
+        data_sets = []
+        for frame_size in frame_sizes:
+            name = str(frame_size) + "B"
+            if chart_name == "Latency":
+                name = name + "-avg"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"]["input_flow_type"] = flow_type
+            one_data_set["inputs"]["input_number_flows"] = num_flows
+            one_data_set["inputs"]["input_protocol"] = "TCP"
+            one_data_set["inputs"]["input_offloads"] = False
+            one_data_set["inputs"]["input_frame_size"] = frame_size
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/funeth/performance.py",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
