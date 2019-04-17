@@ -119,7 +119,7 @@
               <td class="no-wrap">
                 <label>Select a tag: </label>
               </td>
-              <td>
+              <td >
                 <div class="field-width">
                   <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
                                            [settings]="dropdownSettings">
@@ -200,8 +200,8 @@
                       <td class="no-wrap">
                         <label>Select day(s): </label>
                       </td>
-                      <td>
-                        <div class="field-width">
+                      <td class="no-wrap" style="width: 400px">
+                        <div>
                           <ng-multiselect-dropdown [placeholder]="'Select'" [data]="daysOptions"
                                                    [(ngModel)]="selectedDays"
                                                    [settings]="dropdownSettings">

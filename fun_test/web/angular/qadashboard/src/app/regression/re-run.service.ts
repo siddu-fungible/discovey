@@ -116,7 +116,7 @@ export class ReRunService {
 
       let suiteIndices = Object.keys(this.info);
       suiteIndices.forEach(suiteIndex => {
-        let thisSuiteIndex = parseInt(suiteIndex) - 1; // log_prefix/suite index is 1 based
+        let thisSuiteIndex = parseInt(suiteIndex); // log_prefix/suite index is 1 based
         let scriptItem = this.suiteContents[thisSuiteIndex];
         scriptItem["re_run_info"] = this.info[suiteIndex].re_run_info;
         console.log(scriptItem);
