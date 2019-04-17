@@ -17,7 +17,7 @@ from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
-from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution
+from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
 from web.fun_test.models import TestBed, User
 from django.db import transaction
 from pytz import timezone
@@ -593,7 +593,10 @@ def send_test_bed_remove_lock(test_bed, warning=False):
 
     submitter_email = test_bed.manual_lock_submitter
     expiry_time = test_bed.manual_lock_expiry_time
-    to_addresses = [TEAM_REGRESSION_EMAIL, submitter_email]
+
+    default_email_list = [x.email for x in TestbedNotificationEmails.objects.all()]
+    to_addresses = [submitter_email]
+    to_addresses.extend(default_email_list)
 
     user = User.objects.get(email=submitter_email)
     content = "Hi {},".format(user.first_name) + "<br>"

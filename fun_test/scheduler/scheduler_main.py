@@ -103,6 +103,7 @@ class QueueWorker(Thread):
             if version:
                 container_suite_execution.version = version
                 container_suite_execution.save()
+                container_suite_execution.save()
             for item in container_spec:
                 item_suite = parse_suite(suite_name=item)
                 item_suite_level_tags = get_suite_level_tags(suite_spec=item_suite)

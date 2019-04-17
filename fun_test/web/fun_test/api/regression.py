@@ -3,7 +3,7 @@ from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed
 from django.db.models import Q
-from web.fun_test.models import SuiteExecution, TestCaseExecution
+from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
 from fun_settings import TEAM_REGRESSION_EMAIL
 import json
 from lib.utilities.send_mail import send_mail
@@ -49,7 +49,10 @@ def test_beds(request, id):
         test_bed.save()
 
         if test_bed.manual_lock_submitter:
-            to_addresses = [test_bed.manual_lock_submitter, TEAM_REGRESSION_EMAIL]
+            default_email_list = [x.email for x in TestbedNotificationEmails.objects.all()]
+            to_addresses = [test_bed.manual_lock_submitter]
+            to_addresses.extend(default_email_list)
+
             lock_or_unlock = "lock" if test_bed.manual_lock else "un-lock"
             subject = "Manual {} for Test-bed: {} User: {} ".format(lock_or_unlock, test_bed.name, test_bed.manual_lock_submitter)
             content = subject
