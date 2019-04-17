@@ -5,6 +5,7 @@ from lib.host.network_controller import *
 from scripts.networking.helper import *
 from lib.host.linux import *
 from lib.fun.fs import *
+import copy
 
 
 network_controller_obj = None
@@ -27,7 +28,7 @@ class TcpPerformance(FunTestScript):
         3. Execute tcp_server in dpcsh""")
 
     def setup(self):
-        global nu_lab_obj, network_controller_obj, nu_lab_ip, nu_lab_username, nu_lab_password
+        global nu_lab_obj, network_controller_obj, nu_lab_ip, nu_lab_username, nu_lab_password, nu_lab_obj2
 
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fs = Fs.get()
@@ -54,18 +55,27 @@ class TcpPerformance(FunTestScript):
         nu_lab_obj = Linux(host_ip=nu_lab_ip, ssh_username=nu_lab_username,
                            ssh_password=nu_lab_password)
 
+        nu_lab_obj2 = copy.deepcopy(nu_lab_obj)
+
     def cleanup(self):
         pass
 
 
-class TcpPerformance_1500(FunTestCase):
+class TcpPerformance_1_Conn(FunTestCase):
     default_frame_size = 1500
+    perf_filename = "perf_1_tcp_connection.sh"
+    perf_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + perf_filename
+    test_run_time = 30
+    num_flows = 1
+    output_file = None
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test Tcp performance for 1500B stream",
+                              summary="Test Tcp performance for 1 connection for 1500B stream",
                               steps="""
                               1. Setup fpg1 on nu-lab-04
+                              2. Run netperf file with 1 connection
+                              3. Update tcp_performance.json file with throughput and pps
                               """)
 
     def setup(self):
@@ -75,55 +85,73 @@ class TcpPerformance_1500(FunTestCase):
                                      target_password=nu_lab_password)
         fun_test.simple_assert(file_transfer, "Ensure %s is scp to %s" % (setup_fpg1_file, nu_lab_ip))
 
-        # Apply routes
-        cmd = "sh %s" % target_file_path
-        nu_lab_obj.command(command=cmd)
+        # Execute sh file
+        fun_test.log("Creating interface and applying routes")
+        output = execute_shell_file(linux_obj=nu_lab_obj, target_file=target_file_path)
+        fun_test.simple_assert(output['output'], "Ensure file %s is executed" % target_file_path)
+
+        fun_test.log("Display applied routes")
         nu_lab_obj.get_ip_route()
 
     def run(self):
 
         TIMESTAMP = get_current_time()
+
+        fun_test.log("SCP file %s to %s" % (self.perf_filename, nu_lab_obj.host_ip))
+
+        target_file_path = "/tmp/" + self.perf_filename
+        file_transfer = fun_test.scp(source_file_path=self.perf_filepath, target_file_path=target_file_path,
+                                     target_ip=nu_lab_ip, target_username=nu_lab_username,
+                                     target_password=nu_lab_password)
+        fun_test.simple_assert(file_transfer, "Ensure %s is scp to %s" % (setup_fpg1_file, nu_lab_ip))
+        
+        # Execute sh file
+        temp_filename = fun_test.get_temp_file_name() + '.txt'
+        output_file = fun_test.get_temp_file_path(file_name=temp_filename)
+        
         fun_test.log("Starting netperf test")
-        cmd = "taskset -c 2 netperf -t TCP_STREAM -H 10.1.40.26 -l 30 -f m -j -N -P 0 -- -k \"THROUGHPUT\" -s 128K -P 3000,4555"
-        #fun_test.log(cmd)
-        import copy
+        output = execute_shell_file(linux_obj=nu_lab_obj2, target_file=target_file_path, output_file=output_file)
+        fun_test.simple_assert(output['output'], "Ensure file %s is executed" % target_file_path)
 
-        nu_lab2 = copy.deepcopy(nu_lab_obj)
-        cmd_2 = "sh /local/localadmin/onkar_perf.sh > out1984.txt"
-        output_1 = nu_lab2.command(command=cmd_2, timeout=40)
-        fun_test.sleep("file update", seconds=40)
-        output = nu_lab_obj.command("cat /local/localadmin/out1984.txt")
-        fun_test.log(output)
+        fun_test.sleep("Letting traffic be run", seconds=self.test_run_time + 10)
 
-        #output = nu_lab_obj.command(command=cmd)
-        #output = """THROUGHPUT=935.87
-        #THROUGHPUT=935.87
-        #THROUGHPUT=935.87
-        #THROUGHPUT=935.87"""
-        #fun_test.log(output)
+        netperf_output = nu_lab_obj.command("cat %s" % output_file)
 
-        throughput_out_lines = output.split("\n")
-        total_throughput = 0.0
-        for line in throughput_out_lines:
-            throughput = float(line.split("=")[1])
-            total_throughput += throughput
+        total_throughput = get_total_throughput(output=netperf_output)
+        fun_test.log("Total throughput seen is %s" % total_throughput)
 
-        fun_test.log("Throughput seen is %s" % total_throughput)
-        pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=default_frame_size)
+        pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
         fun_test.log("PPS value is %s" % pps)
 
         # Parse output to get json
-        output = populate_performance_json_file(flow_type="TCP_Server", frame_size=default_frame_size, num_flows=1,
+        output = populate_performance_json_file(flow_type="TCP_Server", frame_size=self.default_frame_size,
+                                                num_flows=self.num_flows,
                                                 throughput_n2t=total_throughput, pps_n2t=pps, timestamp=TIMESTAMP,
                                                 filename=filename)
         fun_test.test_assert(output, "JSON file populated")
 
     def cleanup(self):
-        pass
+        if self.output_file:
+            nu_lab_obj.remove_file(self.output_file)
+
+
+class TcpPerformance_4_Conn(TcpPerformance_1_Conn):
+    num_flows = 4
+    perf_filename = "perf_4_tcp_connection.sh"
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Test Tcp performance for 4 connections 1500B stream",
+                              steps="""
+                              1. Setup fpg1 on nu-lab-04
+                              2. Run netperf file with 4 connection
+                              3. Update tcp_performance.json file with throughput and pps
+                              """)
+
 
 if __name__ == '__main__':
     ts = TcpPerformance()
 
-    # Multi flows
-    ts.add_test_case(TcpPerformance_1500())
+    ts.add_test_case(TcpPerformance_1_Conn())
+    ts.add_test_case(TcpPerformance_4_Conn())
     ts.run()

@@ -1,6 +1,6 @@
-sudo ip addr add 20.1.1.1/24 dev fpg1
-sudo ip link set fpg1 address fe:dc:ba:44:55:77
-sudo ip link set fpg1 up
-sudo ifconfig fpg1 up
-sudo route add -net 29.1.1.0/24 gw 20.1.1.2
-sudo arp -s 20.1.1.2 00:de:ad:be:ef:00
+sudo ip addr add 21.1.1.1/24 dev enp216s0
+sudo ip link set enp216s0 address fe:dc:ba:44:66:31 
+sudo ip link set enp216s0 up
+sudo ifconfig enp216s0 up
+sudo route add -net 29.1.1.0/24 gw 21.1.1.2
+sudo arp -s 21.1.1.2 00:de:ad:be:ef:00

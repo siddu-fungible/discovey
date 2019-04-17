@@ -56,3 +56,30 @@ def populate_performance_json_file(flow_type, frame_size, num_flows, throughput_
 
 def get_pps_from_mbps(mbps, byte_frame_size):
     return (float(mbps) * 1000000) / (byte_frame_size * 8)
+
+def execute_shell_file(linux_obj, target_file, output_file=None):
+    output = {}
+    output['result'] = False
+    try:
+        check = linux_obj.check_file_directory_exists(target_file)
+        fun_test.simple_assert(check, "Check file %s exists in %s" % (target_file, linux_obj.host_ip))
+        cmd = "sh %s" % target_file
+        if output_file:
+            cmd = "sh %s > %s" % (target_file, output_file)
+        out = linux_obj.command(command=cmd)
+        output['output'] = out
+        output['result'] = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+def get_total_throughput(output):
+    result = 0.0
+    try:
+        throughput_out_lines = output.split("\n")
+        for line in throughput_out_lines:
+            throughput = float(line.split("=")[1])
+            result += throughput
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
