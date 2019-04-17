@@ -64,9 +64,9 @@ def suite_executions(request, id):
     if request.method == "DELETE":
         suite_execution = SuiteExecution.objects.get(execution_id=int(id))
         kill_job(job_id=int(id))
-        #suite_execution.delete()
-        #test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=int(id))
-        #test_case_executions.delete()
+        suite_execution.delete()
+        test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=int(id))
+        test_case_executions.delete()
 
         result = True
 

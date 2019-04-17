@@ -388,7 +388,7 @@ class SuiteWorker(Thread):
         if self.current_script_process:
             for i in range(2):
                 try:
-                    while psutil.pid_exists(self.current_script_process.pid):
+                    while self.current_script_process.poll() is None:
                         # os.kill(self.current_script_process.pid, signal.SIGINT)
                         time.sleep(5)
                         self.current_script_process.kill()
@@ -626,7 +626,7 @@ class SuiteWorker(Thread):
                           "--" + "suite_execution_id={}".format(self.job_id),
                           "--" + "relative_path={}".format(relative_path),
                           "--" + "build_url={}".format(self.job_build_url),
-                          "--" + "log_prefix={}".format(script_item_index + 1)]
+                          "--" + "log_prefix={}".format(script_item_index)]
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
