@@ -311,10 +311,10 @@ def queue_job3(suite_path=None,
                                                         completed_time=get_current_time(),
                                                         suite_path=final_suite_path,
                                                         tags=tags,
-                                                        state=JobStatusType.UNKNOWN,
                                                         suite_container_execution_id=suite_container_execution_id,
                                                         test_bed_type=test_bed_type,
-                                                        submitter_email=submitter_email)
+                                                        submitter_email=submitter_email,
+                                                        state=job_state)
     if suite_type == SuiteType.DYNAMIC:
         if original_suite_execution_id:  # Must be a re-run
             models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
@@ -349,7 +349,6 @@ def queue_job3(suite_path=None,
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
         suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
-        suite_execution.state = JobStatusType.SUBMITTED
         # print ("queue_job_3: {}".format(suite_execution.execution_id))
         suite_execution.save()
 

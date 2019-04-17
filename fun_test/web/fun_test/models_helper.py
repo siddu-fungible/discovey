@@ -509,6 +509,7 @@ def _get_suite_executions(execution_id=None,
         if save_suite_info:
             for se in ses:
                 se.save()
+                se.save()
     return all_objects_dict
 
 def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties):

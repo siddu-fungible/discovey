@@ -129,6 +129,18 @@ export class RegressionComponent implements OnInit {
     return match;
   }
 
+  onDeleteSuiteExecution(suiteExecution) {
+    let executionId = suiteExecution.fields.execution_id;
+    if (confirm(`Are you sure you want to delete ${executionId}`)) {
+      let url = "/api/v1/regression/suite_executions/" + executionId;
+        this.apiService.delete(url).subscribe(response => {
+        this.logger.success(`Suite: ${executionId} deletion request submitted`);
+        window.location.reload();
+      }, error => {
+        this.logger.error("Deletion failed");
+      })
+    }
+  }
 
   onStateFilterClick(state) {
     this.stateFilterString = state;
