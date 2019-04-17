@@ -557,6 +557,7 @@ if __name__ == "__main__":
                 name = name + "-avg"
             one_data_set = {}
             one_data_set["name"] = name
+            one_data_set["inputs"] = {}
             one_data_set["inputs"]["input_flow_type"] = flow_type
             one_data_set["inputs"]["input_number_flows"] = num_flows
             one_data_set["inputs"]["input_protocol"] = "TCP"
@@ -580,3 +581,4 @@ if __name__ == "__main__":
                     metric_model_name=model_name,
                     base_line_date=base_line_date,
                     work_in_progress=False).save()
+    print "created charts for the new networking teramarks"
