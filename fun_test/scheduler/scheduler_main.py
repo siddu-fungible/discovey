@@ -146,7 +146,7 @@ class QueueWorker(Thread):
         if True:
 
             queue_lock.acquire()
-            scheduler_logger.info("Lock-acquire: QueueWorker")
+            # scheduler_logger.info("Lock-acquire: QueueWorker")
 
             try:
                 de_queued_jobs = []
@@ -189,7 +189,7 @@ class QueueWorker(Thread):
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
             # scheduler_logger.info("QueueWorker: Before lock release")
-            scheduler_logger.info("Lock-release: QueueWorker")
+            # scheduler_logger.info("Lock-release: QueueWorker")
             queue_lock.release()
             time.sleep(5)
 
