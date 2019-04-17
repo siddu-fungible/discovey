@@ -11,6 +11,7 @@
     "warm_up_fio_cmd_args": {"bs": "1g", "iodepth": 1, "fill_device": "1", "rw": "write", "direct": 1, "prio": 0,"timeout": 800},
     "fio_cmd_args": {"ioengine": "mmap", "thread": 1, "numjobs": 12, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254, "runtime": 300, "group_reporting": 1, "timeout": 400},
     "fio_modes": ["randread"],
+    "iostat_details": { "interval": 2, "iterations": 70},
     "fio_bs_iodepth": ["(4, 1)"],
     "fio_pass_threshold": 0.05,
     "fio_job_name": {"read": "stripe12", "randread": "stripe12"},
@@ -32,7 +33,7 @@
       }
     }
   },
-  "BLTFioRandRead16": {
+  "BLTFioRandRead12XFS": {
     "num_ssd": 6,
     "blt_count": 6,
     "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 35791396864, "block_size": 4096},
@@ -42,13 +43,15 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "1g", "iodepth": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0,"timeout": 800},
-    "fio_cmd_args": {"ioengine": "mmap", "thread": 1, "numjobs": 16, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254, "runtime": 300, "group_reporting": 1, "timeout": 400},
+    "fio_cmd_args": {"ioengine": "mmap", "thread": 1, "numjobs": 12, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254, "runtime": 300, "group_reporting": 1, "timeout": 400},
     "fio_modes": ["randread"],
+    "iostat_details": { "interval": 2, "iterations": 70},
     "fio_bs_iodepth": ["(4, 1)"],
     "fio_pass_threshold": 0.05,
-    "fio_job_name": {"read": "stripe16", "randread": "stripe16"},
+    "fio_job_name": {"read": "stripe12", "randread": "stripe12"},
     "volume_pass_threshold": 0,
     "nvme_device": "/dev/nvme0",
+    "create_file_system": true,
     "expected_fio_result": {
       "(4, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
     },
