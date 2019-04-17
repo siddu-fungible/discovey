@@ -784,9 +784,15 @@ class ECVolumeCreateDeleteInBatch(FSOnECTestcase):
                     # Check whether the current capacity is sufficient enough to create the ndata:nparity EC volume
                     # The minimum size of the each individual plex participating in making m:n EC volume is 128 blocks
                     min_ec_plex_size = self.min_ec_plex_blocks * self.ec_info["volume_block"]["ec"]
+                    min_blt_plex_size = self.min_blt_plex_blocks * self.ec_info["volume_block"]["ndata"]
                     if int(round(float(size) / ndata)) < min_ec_plex_size:
                         fun_test.critical("Skipping the current capacity {}, because its not sufficient enough to "
                                           "create {}:{} EC volume".format(size, ndata, nparity))
+                        continue
+                    if int(round(float(size) / ndata)) < min_blt_plex_size:
+                        fun_test.critical(
+                            "Skipping the current capacity {}, because its not sufficient enough to create "
+                            "{}:{} EC volume".format(size, ndata, nparity))
                         continue
                     # Creating ndata:npartiy EC volume
                     self.unconfigure_ec_volume(self.cur_ec_info[index])
