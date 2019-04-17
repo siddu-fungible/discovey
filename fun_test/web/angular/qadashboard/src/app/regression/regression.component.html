@@ -61,10 +61,9 @@
         </div>
       </div>
       <fun-spinner [status]="status"></fun-spinner>
-      <table class="table table-hover table-responsive table-bordered">
+      <table class="table table-hover table-responsive table-bordered" *ngIf="stateFilterString !== filter.AUTO_SCHEDULED">
         <tr style="text-align: center">
           <th></th>
-          <th *ngIf="stateFilterString === filter.AUTO_SCHEDULED">Enabled</th>
           <th>Id</th>
           <th>Result</th>
           <th>State</th>
@@ -101,6 +100,7 @@
                 <i (click)="onDeleteSuiteExecution(suiteExecution)" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
               </ng-container>
             </td>
+
             <td>{{ suiteExecution.fields.execution_id }}</td>
             <td>
               <a [routerLink]="'/regression/suite_detail/' + suiteExecution.fields.execution_id" target="_blank">
@@ -173,6 +173,28 @@
               <app-re-run-panel *ngIf="suiteExecution.reRunInfo"
                                 [reRunInfo]="suiteExecution.reRunInfo"></app-re-run-panel>
             </td>
+          </tr>
+        </ng-container>
+      </table>
+      <table class="table" *ngIf="stateFilterString === filter.AUTO_SCHEDULED">
+        <tr>
+          <th class="text-center">Action</th>
+          <th class="text-center">Id</th>
+          <th class="text-center">State</th>
+          <th class="text-center">Next schedule</th>
+        </tr>
+        <ng-container *ngFor="let suiteExecution of items">
+          <tr style="text-align: center">
+            <td style="text-align: center">
+              <ng-container>
+                <i (click)="onDeleteSuiteExecution(suiteExecution)" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
+              </ng-container>
+            </td>
+
+            <td style="text-align: center">{{ suiteExecution.fields.execution_id }}</td>
+            <td style="text-align: center">{{ stateStringMap[suiteExecution.fields.state] }}</td>
+            <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
+
           </tr>
         </ng-container>
       </table>
