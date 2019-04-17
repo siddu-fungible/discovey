@@ -21,7 +21,6 @@ RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 TIMESTAMP = get_current_time()
 PARALLEL = 8  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
-LOCAL_SEND_BUFFER_SIZE = 256  # in kB
 
 
 class FunethPerformance(sanity.FunethSanity):
@@ -46,18 +45,19 @@ class FunethPerformance(sanity.FunethSanity):
 
         network_controller_obj = NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                    dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True)
-        #buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(sf_thr=4000,
-        #                                                                    sf_xoff_thr=3500,
-        #                                                                    sx_thr=4000,
-        #                                                                    dx_thr=4000,
-        #                                                                    df_thr=4000,
-        #                                                                    fcp_thr=8000,
-        #                                                                    fcp_xoff_thr=7000,
-        #                                                                    nonfcp_thr=8000,
-        #                                                                    nonfcp_xoff_thr=7000,
-        #                                                                    sample_copy_thr=255,
-        #                                                                    mode='nu')
-        #fun_test.test_assert(buffer_pool_set, 'Configure QoS egress buffer pool')
+        # Configure small SF/Non-FCP thr to workaround SWOS-4771
+        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(sf_thr=256,
+                                                                            sf_xoff_thr=128,
+                                                                            #sx_thr=4000,
+                                                                            #dx_thr=4000,
+                                                                            #df_thr=4000,
+                                                                            #fcp_thr=8000,
+                                                                            #fcp_xoff_thr=7000,
+                                                                            nonfcp_thr=256,
+                                                                            nonfcp_xoff_thr=128,
+                                                                            #sample_copy_thr=255,
+                                                                            mode='nu')
+        fun_test.test_assert(buffer_pool_set, 'Configure QoS egress buffer pool')
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
@@ -86,6 +86,10 @@ def collect_stats():
         pass
 
 
+def get_fpg_packet_stats():
+    pass
+
+
 class FunethPerformanceBase(FunTestCase):
     def describe(self):
         pass
@@ -107,7 +111,6 @@ class FunethPerformanceBase(FunTestCase):
         linux_objs = []
         linux_objs_dst = []
         ns_dst_list = []
-        local_send_buffer_size = None
         if flow_type.startswith('NU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['nu']
             linux_obj_dst = funeth_obj.linux_obj_dict['hu']
@@ -119,7 +122,6 @@ class FunethPerformanceBase(FunTestCase):
             else:  # Default use PF interface
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
                 sip = None
-            local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE
             perf_suffix = 'n2h'
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
@@ -128,7 +130,6 @@ class FunethPerformanceBase(FunTestCase):
             ns_dst = None
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
             sip = None
-            local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE / 2
             perf_suffix = 'h2n'
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
@@ -143,23 +144,23 @@ class FunethPerformanceBase(FunTestCase):
                                                                     funeth_obj.tb_config_obj.get_hu_vf_interface_fcp())
                 sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
                                                                     funeth_obj.tb_config_obj.get_hu_pf_interface_fcp())
-            local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE / 2
 
         linux_objs.append(linux_obj)
         linux_objs_dst.append(linux_obj_dst)
         ns_dst_list.append(ns_dst)
 
-        ## configure MSS by add iptable rule
-        #for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
-        #    cmds = (
-        #        'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-        #            frame_size-18-20-20),
-        #        'iptables -t mangle -L',
-        #    )
-        #    for cmd in cmds:
-        #        if ns_dst:
-        #            cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-        #        linux_obj_dst.sudo_command(cmd)
+        # configure MSS by add iptable rule
+        if frame_size < 1500:
+            for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+                cmds = (
+                    'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                        frame_size-18-20-20),
+                    'iptables -t mangle -L',
+                )
+                for cmd in cmds:
+                    if ns_dst:
+                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                    linux_obj_dst.sudo_command(cmd)
 
         if tool == 'netperf':
             perf_manager_obj = NetperfManager(linux_objs)
@@ -177,7 +178,6 @@ class FunethPerformanceBase(FunTestCase):
              'frame_size': frame_size,
              'bw': bw,
              'ns': ns,
-             'local_send_buffer_size': local_send_buffer_size,
              }
         ]
         if tool == 'netperf':
@@ -191,17 +191,18 @@ class FunethPerformanceBase(FunTestCase):
         fun_test.log('Collect stats after test')
         #collect_stats()
 
-        ## Delete iptable rule
-        #for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
-        #    cmds = (
-        #        'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-        #            frame_size-18-20-20),
-        #        'iptables -t mangle -L',
-        #    )
-        #    for cmd in cmds:
-        #        if ns_dst:
-        #            cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-        #        linux_obj_dst.sudo_command(cmd)
+        # Delete iptable rule
+        if frame_size < 1500:
+            for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+                cmds = (
+                    'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                        frame_size-18-20-20),
+                    'iptables -t mangle -L',
+                )
+                for cmd in cmds:
+                    if ns_dst:
+                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                    linux_obj_dst.sudo_command(cmd)
 
         # check for 'nan'
         passed = True
@@ -1180,10 +1181,10 @@ if __name__ == "__main__":
             #FunethPerformance_HU_NU_800B_UDP_NETPERF,
             #FunethPerformance_HU_NU_64B_UDP_NETPERF,
             #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
-            #FunethPerformance_HU_NU_800B_TCP_NETPERF,
+            FunethPerformance_HU_NU_800B_TCP_NETPERF,
             #FunethPerformance_HU_NU_128B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
-            #FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
+            FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
             #FunethPerformance_HU_NU_128B_TCP_NETPERF_MultipleFlows,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF_MultipleFlows,
 
@@ -1191,10 +1192,10 @@ if __name__ == "__main__":
             ## FunethPerformance_NU_HU_800B_UDP_NETPERF,
             ## FunethPerformance_NU_HU_64B_UDP_NETPERF,
             ## FunethPerformance_NU_HU_1500B_UDP_NETPERF,
-            #FunethPerformance_NU_HU_800B_TCP_NETPERF,
+            FunethPerformance_NU_HU_800B_TCP_NETPERF,
             #FunethPerformance_NU_HU_128B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
-            #FunethPerformance_NU_HU_800B_TCP_NETPERF_MultipleFlows,
+            FunethPerformance_NU_HU_800B_TCP_NETPERF_MultipleFlows,
             #FunethPerformance_NU_HU_128B_TCP_NETPERF_MultipleFlows,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF_MultipleFlows,
 
