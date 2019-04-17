@@ -378,7 +378,10 @@ class SuiteWorker(Thread):
 
         self.job_version = version
         self.abort_on_failure_requested = False
-        self.prepare_script_items()
+        try:
+            self.prepare_script_items()
+        except Exception as ex:
+            self.shutdown_suite(reason=ShutdownReason.ABORTED)
         self.initialized = True
 
     def shutdown_suite(self, reason=ShutdownReason.KILLED):
