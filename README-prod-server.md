@@ -61,7 +61,7 @@ export PRODUCTION_MODE=1
 python web/manage.py migrate --database=default
 cd web/angular/qadashboard/
 ng build --prod  --output-hashing none
-python web/start_production_server.py &> server.out  &
+nohup python web/start_production_server.py &> server.out  &
 ~~~~
 
 ## Starting/Re-starting the scheduler
