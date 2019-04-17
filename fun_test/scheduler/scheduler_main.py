@@ -884,7 +884,9 @@ def join_suite_workers():
             del job_id_threads[job_to_be_removed]
 
 def clear_out_old_jobs():
-    old_jobs = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.SUBMITTED)
+    today = get_current_time()
+    past = today - timedelta(days=2)
+    old_jobs = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.SUBMITTED, scheduled_time__gt=past)
     old_jobs.delete()
 
 
