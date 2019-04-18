@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
-from fun_global import is_production_mode, is_triaging_mode
+from fun_global import is_production_mode, is_triaging_mode, get_current_time
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
 from scheduler.scheduler_helper import queue_dynamic_suite, queue_job3, LOG_DIR_PREFIX
 from scheduler.scheduler_helper import move_to_higher_queue, move_to_queue_head, increase_decrease_priority, delete_queued_job
@@ -626,10 +626,11 @@ def get_suite_executions_by_time(request):
 @api_safe_json_response
 def get_test_case_executions_by_time(request):
     request_json = json.loads(request.body)
-    from_time = 1546581539 * 1000
+    started_time = get_current_time() - timedelta(days=10)
+    # from_time = 1546581539 * 1000
     # from_time = int(request_json["from_time"])
     # to_time = request_json["to_time"]
-    from_time = get_datetime_from_epoch_time(from_time)
+    # from_time = get_datetime_from_epoch_time(from_time)
     # to_time = get_datetime_from_epoch_time(to_time)
     test_case_execution_tags = None
     if "test_case_execution_tags" in request_json:
@@ -645,7 +646,7 @@ def get_test_case_executions_by_time(request):
         scripts_for_module = [x.script_path for x in scripts_for_module]
 
     tes = []
-    q = Q(started_time__gte=from_time)
+    q = Q(started_time__gte=started_time)
 
     if test_case_execution_tags:
         for tag in test_case_execution_tags:
