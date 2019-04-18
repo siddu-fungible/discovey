@@ -93,6 +93,8 @@ class FunTest:
     MODE_SIMULATION = 2
     MODE_EMULATION = 3
 
+    BOOT_ARGS_REPLACEMENT_STRING = "rpl_:"
+
     LOG_COLORS = {
         LOG_LEVEL_DEBUG: '\033[94m',
         LOG_LEVEL_CRITICAL: '\033[91m',
@@ -405,9 +407,10 @@ class FunTest:
         boot_args = ""
         if "BOOTARGS" in build_parameters:
 
-            build_parameters["BOOTARGS"] = build_parameters["BOOTARGS"].replace(":", " ")
+            build_parameters["BOOTARGS"] = build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
+
             boot_args = build_parameters["BOOTARGS"]
-        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args.replace(":", " ")))
+        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
