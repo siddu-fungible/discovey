@@ -49,8 +49,12 @@ import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.compo
 import { ToasterModule, ToasterService } from "angular2-toaster";
 import { LogViewerComponent } from './log-viewer/log-viewer.component';
 import { SmartLabelComponent } from './smart-label/smart-label.component';
+import {QueueViewerComponent} from "./regression/queue-viewer/queue-viewer.component";
 import { TriageComponent } from './triage/triage.component';
 import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-line/section-horizontal-line.component";
+import { ReactiveFormsModule } from '@angular/forms';
+import { UserComponent } from './user/user.component';
+import { TestBedComponent } from './regression/test-bed/test-bed.component';
 
 @NgModule({
   declarations: [
@@ -87,7 +91,10 @@ import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-
     SchedulerAdminComponent,
     LogViewerComponent,
     SmartLabelComponent,
-    SectionHorizontalLineComponent
+    QueueViewerComponent,
+    SectionHorizontalLineComponent,
+    UserComponent,
+    TestBedComponent
   ],
   imports: [
     BsDropdownModule,
@@ -102,6 +109,7 @@ import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-
     Angular2FontawesomeModule,
     AngularCollapseModule,
     NgMultiSelectDropDownModule,
+    ReactiveFormsModule,
     NgbModule,
     NgbTooltipModule,
     ToasterModule.forRoot()

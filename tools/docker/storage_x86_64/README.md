@@ -35,3 +35,6 @@ docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" storag
 where sdk-url=http://dochub.fungible.local/doc/jenkins/funos/latest/Linux
 ```
 
+Changelog:
+storage_x86_64:v04_16: Support for downloading regex artifacts
+

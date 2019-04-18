@@ -35,7 +35,7 @@ export class CommonService {
     })
   }
 
-  convertToLocalTimezone(t) {
+  convertToLocalTimezone(t): Date {
     let d = new Date(t.replace(/\s+/g, 'T'));
     let epochValue = d.getTime();
     return new Date(epochValue);

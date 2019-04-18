@@ -112,8 +112,8 @@ class ScriptSetup(FunTestScript):
                                                                             mode="hnu")
         fun_test.test_assert(buffer_pool_set, checkpoint)
 
-        nu_port_list = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-        hnu_port_list = [0, 1, 2, 3]
+        nu_port_list = [8,12]
+        hnu_port_list = [0, 4]
         shape = 0
         for port in nu_port_list:
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
@@ -312,14 +312,14 @@ class TestTransitPerformance(FunTestCase):
 class TestNuHnuPerformance(TestTransitPerformance):
     tc_id = 2
     flow_direction = FLOW_TYPE_NU_HNU_NFCP
-    tcc_file_name = "nu_hnu_fs1600_2ports.tcc"  # 2 Ports with Spray Enable
+    tcc_file_name = "nu_hnu_fs1600_2ports_100g.tcc"  # 2 Ports with Spray Enable
     spray = True
 
 
 class TestHnuNuPerformance(TestTransitPerformance):
     tc_id = 3
     flow_direction = FLOW_TYPE_HNU_NU_NFCP
-    tcc_file_name = "hnu_nu_fs1600_2ports.tcc"  # 2 Ports with Spray Enable
+    tcc_file_name = "hnu_nu_fs1600_2ports_100g.tcc"  # 2 Ports with Spray Enable
     spray = True
 
 
@@ -369,15 +369,15 @@ if __name__ == '__main__':
     ts = ScriptSetup()
 
     # Multi flows
-    ts.add_test_case(TestTransitPerformance())
+    #ts.add_test_case(TestTransitPerformance())
     ts.add_test_case(TestNuHnuPerformance())
     ts.add_test_case(TestHnuNuPerformance())
-    ts.add_test_case(TestHnuHnuNonFcpPerformance())
+    #ts.add_test_case(TestHnuHnuNonFcpPerformance())
 
     # Single flow
-    ts.add_test_case(TestNuHnuPerformanceSingleFlow())
-    ts.add_test_case(TestHnuNuPerformanceSingleFlow())
-    ts.add_test_case(TestHnuHnuNonFcpPerformanceSingleFlow())
+    #ts.add_test_case(TestNuHnuPerformanceSingleFlow())
+    #ts.add_test_case(TestHnuNuPerformanceSingleFlow())
+    #ts.add_test_case(TestHnuHnuNonFcpPerformanceSingleFlow())
 
     # FCP cases
     # ts.add_test_case(TestHnuHnuFcpPerformance())

@@ -11,7 +11,7 @@ import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-from scheduler.scheduler_global import SuiteType
+from scheduler.scheduler_global import SuiteType, JobStatusType
 from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
@@ -29,12 +29,16 @@ from web.fun_test.models import (
     TestCaseExecution,
     JenkinsJobIdMap,
     SuiteContainerExecution,
-    SuiteReRunInfo
+    SuiteReRunInfo,
+    TestBed
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
                            "COMPLETED": "COMPLETED",
-                           "ALL": "ALL"}
+                           "ALL": "ALL",
+                           "SCHEDULED": "SCHEDULED",
+                           "SUBMITTED": "SUBMITTED",
+                           "QUEUED": "QUEUED"}
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
@@ -149,7 +153,15 @@ def update_suite_container_execution(suite_container_execution_id, version=None)
             s.version = version
     s.save()
 
-def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None):
+def update_suite_execution(suite_execution_id,
+                           result=None,
+                           scheduled_time=None,
+                           version=None,
+                           build_url=None,
+                           tags=None,
+                           state=None,
+                           suite_path=None,
+                           completed_time=None):
     # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
@@ -158,14 +170,26 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.scheduled_time = scheduled_time
     if version:
         te.version = version
+    if build_url:
+        te.build_url = build_url
     if tags:
         te.tags = json.dumps(tags)
-    with transaction.atomic():
-        te.save()
+    if suite_path:
+        te.suite_path = suite_path
+    if state is not None:
+        te.state = state
+    if completed_time:
+        te.completed_time = completed_time
+    te.save()
+    te.save()
+    transaction.commit()
     # print te.version
+    # print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, result, version, te.state)
+
     return te
 
 def finalize_suite_execution(suite_execution_id):
+
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
 
 def get_new_suite_execution_id():
@@ -177,24 +201,20 @@ def get_new_suite_execution_id():
         last_suite_execution_id = LastSuiteExecution.objects.last()
         last_suite_execution_id.last_suite_execution_id += 1
         last_suite_execution_id.save()
+        last_suite_execution_id.save()
     return last_suite_execution_id
-
-def add_suite_container_execution(suite_path, tags):
-    last_suite_execution_id = get_new_suite_execution_id()
-    s = SuiteContainerExecution(suite_path=suite_path, execution_id=last_suite_execution_id.last_suite_execution_id, tags=json.dumps(tags))
-    s.save()
-    return s
 
 
 def add_suite_execution(submitted_time,
                         scheduled_time,
                         completed_time,
                         suite_path="unknown",
+                        state=JobStatusType.SCHEDULED,
                         tags=None,
-                        catalog_reference="",
                         suite_container_execution_id=-1,
                         test_bed_type=None,
-                        suite_type=SuiteType.STATIC):
+                        suite_type=SuiteType.STATIC,
+                        submitter_email=None):
 
     if tags:
         tags = json.dumps(tags)
@@ -206,16 +226,18 @@ def add_suite_execution(submitted_time,
     for i in xrange(4):
         try:
             last_suite_execution_id = get_new_suite_execution_id()
+            # print ("New suite: {}, submitter: {}".format(last_suite_execution_id.last_suite_execution_id, submitter_email))
             s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
                                submitted_time=submitted_time,
                                scheduled_time=scheduled_time,
                                completed_time=completed_time,
-                               result="QUEUED",
                                tags=tags,
-                               catalog_reference=catalog_reference,
                                suite_container_execution_id=suite_container_execution_id,
                                test_bed_type=test_bed_type,
-                               suite_type=suite_type)
+                               state=state,
+                               suite_type=suite_type,
+                               submitter_email=submitter_email)
+            s.save()
             s.save()
 
             break
@@ -250,6 +272,7 @@ def get_next_test_case_execution_id():
         last_test_case_execution_id = LastTestCaseExecution.objects.last()
         last_test_case_execution_id.last_test_case_execution_id += 1
         last_test_case_execution_id.save()
+        last_test_case_execution_id.save()
     return last_test_case_execution_id.last_test_case_execution_id
 
 def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
@@ -261,7 +284,7 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
             current_list.append(test_case_execution_id)
             s.test_case_execution_ids = json.dumps(current_list)
             s.save()
-
+            s.save()
             result = True
         else:
             raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
@@ -289,6 +312,7 @@ def add_test_case_execution(test_case_id,
                                    tags=json.dumps(tags),
                                    inputs=json.dumps(inputs))
             te.save()
+            te.save()
             add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                        test_case_execution_id=te.execution_id)
             break
@@ -304,14 +328,11 @@ def update_test_case_execution(test_case_execution_id, suite_execution_id, resul
                                        suite_execution_id=suite_execution_id)
     te.result = result
     te.save()
+    te.save()
     return te
 
-def report_test_case_execution_result(execution_id, result, re_run_info=None):
+def report_re_run_result(execution_id, re_run_info=None):
     test_execution = get_test_case_execution(execution_id=execution_id)
-    # fun_test.simple_assert(test_execution, "Test-execution") # TODO
-    test_execution.result = result
-    test_execution.end_time = get_current_time()#timezone.now()
-    test_execution.save()
     if re_run_info:
         if str(test_execution.test_case_id) in re_run_info.keys():
             info = re_run_info[str(test_execution.test_case_id)]
@@ -330,10 +351,14 @@ def report_test_case_execution_result(execution_id, result, re_run_info=None):
             original_test_case_execution.add_re_run_entry(re_run_entry)
             original_test_case_execution.re_run_state = TestCaseReRunState.RE_RUN_COMPLETE
             original_test_case_execution.save()
+            original_test_case_execution.save()
             original_suite_execution = get_suite_execution(suite_execution_id=original_test_case_execution.suite_execution_id)
             original_suite_execution.finalized = False
             original_suite_execution.save()
+            original_suite_execution.save()
+
             finalize_suite_execution(suite_execution_id=original_suite_execution.execution_id)
+
 
 
 def get_test_case_executions_by_suite_execution(suite_execution_id):
@@ -349,21 +374,33 @@ def _get_suite_executions(execution_id=None,
                           records_per_page=10,
                           save_test_case_info=False,
                           save_suite_info=True,
-                          filter_string="ALL",
+                          state_filter_string="ALL",
                           get_count=False,
                           tags=None,
                           finalize=None):
-    all_objects = None
-    q = Q(result=RESULTS["UNKNOWN"])
 
-    if filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
-        q = Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"]) | Q(result=RESULTS["QUEUED"]) | Q(result=RESULTS["SCHEDULED"])
-    elif filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
-        q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"]) | Q(result=RESULTS["ABORTED"])
+    all_objects = None
+    q = Q()
+
+    if state_filter_string == "ALL":
+        q = Q()
+    elif int(state_filter_string) == JobStatusType.IN_PROGRESS:
+        q = Q(state=JobStatusType.IN_PROGRESS)
+    elif int(state_filter_string) == JobStatusType.QUEUED:
+        q = Q(state=JobStatusType.QUEUED)
+    elif int(state_filter_string) == JobStatusType.COMPLETED:
+        q = Q(state=JobStatusType.COMPLETED) | Q(state=JobStatusType.KILLED) | Q(state=JobStatusType.ABORTED)
+    elif int(state_filter_string) == JobStatusType.SUBMITTED:
+        q = Q(state=JobStatusType.SUBMITTED)
+    elif int(state_filter_string) == JobStatusType.SCHEDULED:
+        q = Q(state=JobStatusType.SCHEDULED)
+    elif int(state_filter_string) == JobStatusType.AUTO_SCHEDULED:
+        q = Q(state=JobStatusType.AUTO_SCHEDULED)
+
     if execution_id:
         q = Q(execution_id=execution_id) & q
 
-    if filter_string == "ALL":
+    if state_filter_string == "ALL":
         if execution_id:
             q = Q(execution_id=execution_id)
         else:
@@ -382,7 +419,6 @@ def _get_suite_executions(execution_id=None,
             q = q & tag_q
 
     all_objects = SuiteExecution.objects.filter(q).order_by('-id')
-
 
     if get_count:
         return all_objects.count()
@@ -473,7 +509,6 @@ def _get_suite_executions(execution_id=None,
         if save_suite_info:
             for se in ses:
                 se.save()
-
     return all_objects_dict
 
 def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties):
@@ -489,6 +524,7 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 hardware_version=hardware_version,
                                 build_properties=build_properties)
         entry.save()
+        entry.save()
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
@@ -502,9 +538,25 @@ def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes.append({"name": "Not Run", "value": suite_execution["num_not_run"]})
     suite_execution_attributes.append({"name": "In Progress", "value": suite_execution["num_in_progress"]})
     suite_execution_attributes.append({"name": "Skipped", "value": suite_execution["num_skipped"]})
+    suite_execution_attributes.append({"name": "Test-bed type", "value": suite_execution["fields"]["test_bed_type"]})
+    suite_execution_attributes.append({"name": "Submitter", "value": suite_execution["fields"]["submitter_email"]})
     return suite_execution_attributes
 
 
 def set_suite_re_run_info(original_suite_execution_id, re_run_suite_execution_id):
     re_run = SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id, re_run_suite_execution_id=re_run_suite_execution_id)
     re_run.save()
+    re_run.save()
+
+def get_suite_executions_by_filter(**kwargs):
+    suite_executions = SuiteExecution.objects.filter(**kwargs)
+    return suite_executions
+
+def is_test_bed_with_manual_lock(test_bed_name):
+    result = None
+    try:
+        t = TestBed.objects.get(name=test_bed_name, manual_lock=True)
+        result = {"manual_lock_submitter": t.manual_lock_submitter}
+    except ObjectDoesNotExist:
+        pass
+    return result

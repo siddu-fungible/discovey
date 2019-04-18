@@ -93,6 +93,8 @@ class FunTest:
     MODE_SIMULATION = 2
     MODE_EMULATION = 3
 
+    BOOT_ARGS_REPLACEMENT_STRING = "rpl_:"
+
     LOG_COLORS = {
         LOG_LEVEL_DEBUG: '\033[94m',
         LOG_LEVEL_CRITICAL: '\033[91m',
@@ -405,9 +407,10 @@ class FunTest:
         boot_args = ""
         if "BOOTARGS" in build_parameters:
 
-            build_parameters["BOOTARGS"] = build_parameters["BOOTARGS"].replace(":", " ")
+            build_parameters["BOOTARGS"] = build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
+
             boot_args = build_parameters["BOOTARGS"]
-        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args.replace(":", " ")))
+        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
@@ -1172,30 +1175,22 @@ class FunTestScript(object):
                 else:
                     fun_test.log("Skipping Jenkins build as it is not the first script")
             self.setup()
-            if setup_te:
-                models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                         suite_execution_id=fun_test.suite_execution_id,
-                                                         result=fun_test.PASSED)
             script_result = FunTest.PASSED
         except (TestException) as ex:
             self.at_least_one_failed = True
-            if setup_te:
-                models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                         suite_execution_id=fun_test.suite_execution_id,
-                                                         result=fun_test.FAILED)
+            script_result = FunTest.FAILED
         except (Exception) as ex:
             self.at_least_one_failed = True
+            script_result = FunTest.FAILED
             fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
-            if setup_te:
-                models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
-                                                         suite_execution_id=fun_test.suite_execution_id,
-                                                         result=fun_test.FAILED)
             fun_test.critical(str(ex))
+        if setup_te:
+            models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
+                                                     suite_execution_id=fun_test.suite_execution_id,
+                                                     result=script_result)
+            models_helper.report_re_run_result(execution_id=setup_te.execution_id, re_run_info=fun_test.get_re_run_info())
         fun_test._end_test(result=script_result)
-        if fun_test.suite_execution_id:
-            models_helper.report_test_case_execution_result(execution_id=setup_te.execution_id,
-                                                            result=script_result,
-                                                            re_run_info=fun_test.get_re_run_info())
+
 
         return script_result == FunTest.PASSED
 
@@ -1277,9 +1272,11 @@ class FunTestScript(object):
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
                     fun_test._end_test(result=test_result)
                     if fun_test.suite_execution_id:
-                        models_helper.report_test_case_execution_result(execution_id=test_case.execution_id,
-                                                                        result=test_result,
-                                                                        re_run_info=fun_test.get_re_run_info())
+                        models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
+                                                                 suite_execution_id=fun_test.suite_execution_id,
+                                                                 result=test_result)
+                        models_helper.report_re_run_result(execution_id=test_case.execution_id,
+                                                           re_run_info=fun_test.get_re_run_info())
 
                     if test_result == FunTest.FAILED:
                         self.at_least_one_failed = True

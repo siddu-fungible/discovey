@@ -33,3 +33,4 @@ where sdk-url=http://dochub.fungible.local/doc/jenkins/funos/latest/Linux
 Changelog:
 
 f1_qemu_colocated:v04_01 ubuntu kernel 5.x
+f1_qemu_colocated:v04_16 support for downloading regex

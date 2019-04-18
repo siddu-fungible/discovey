@@ -48,8 +48,12 @@ export class SubmitJobComponent implements OnInit {
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
+  privateFunosTgzUrl: string = null;
 
   suiteSelectionMode: string = "BY_SUITE";
+  selectedUser: any = null;
+  users: any = null;
+  BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title) {
@@ -90,6 +94,7 @@ export class SubmitJobComponent implements OnInit {
     });
     this.selectedTags = [];
     this.tags = [];
+    this.fetchUsers();
     this.fetchTags();
     this.fetchTestBeds();
     this.emailOnFailOnly = false;
@@ -101,6 +106,15 @@ export class SubmitJobComponent implements OnInit {
   onSelectAll (items: any): void {
     console.log(items);
   }
+
+  fetchUsers(): void {
+    this.apiService.get("/api/v1/users").subscribe(response => {
+      this.users = response.data;
+    }, error => {
+      this.logger.error("Unable to fetch users");
+    })
+  }
+
 
   fetchTestBeds(): void {
     this.apiService.get('/regression/testbeds').subscribe(response => {
@@ -198,10 +212,14 @@ export class SubmitJobComponent implements OnInit {
       payload["script_pk"] = this.selectedScriptPk;
     }
 
+    if (!this.selectedUser) {
+      return this.logger.error("Please select a user");
+    }
     payload["build_url"] = this.buildUrl;
     payload["tags"] = this._getSelectedtags();
     payload["email_on_fail_only"] = this.emailOnFailOnly;
     payload["test_bed_type"] = this.selectedTestBedType;
+    payload["submitter_email"] = this.selectedUser.email;
     if (this.emails) {
       this.emails = this.emails.split(",");
       payload["email_list"] = this.emails
@@ -221,23 +239,27 @@ export class SubmitJobComponent implements OnInit {
     }
 
 
-    if (!this.withJenkinsBuild) {
-      if (this.tftpImagePath && this.tftpImagePath !== "") {
-        payload["environment"]["tftp_image_path"] = this.tftpImagePath;
-      }
-    } else {
+    if (this.isTestBedFs()) {
+      if (!this.withJenkinsBuild) {
+        if (this.tftpImagePath && this.tftpImagePath !== "") {
+          payload["environment"]["tftp_image_path"] = this.tftpImagePath;
+        }
+      } else {
       payload["environment"]["with_jenkins_build"] = true;
+      }
+
+      if (payload["environment"]["with_jenkins_build"]) {
+        payload["environment"]["build_parameters"] = {};
+        if (this.bootArgs && this.bootArgs !== "" && this.selectedTestBedType.indexOf('fs') > -1) {
+          payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
+        }
+        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
+        payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
+      }
     }
 
-    if (payload["environment"]["with_jenkins_build"])
-    {
-      payload["environment"]["build_parameters"] = {};
-      if (this.bootArgs && this.bootArgs !== "" && this.selectedTestBedType.indexOf('fs') > -1) {
-        payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, ':');
-
-      }
-      payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
-      payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
+    if (this.privateFunosTgzUrl && this.privateFunosTgzUrl !== "") {
+      payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
     }
 
     this.submitting = "Submitting job";
@@ -265,15 +287,15 @@ export class SubmitJobComponent implements OnInit {
     this.withJenkinsBuild = !this.withJenkinsBuild;
   }
 
-  /*
+
 
   isTestBedFs(): boolean {
     let result = null;
     if (this.selectedTestBedType) {
-      result = this.selectedTestBedType.indexOf('fs') > 0;
+      result = this.selectedTestBedType.indexOf('fs') > -1;
     }
     return result;
-  }*/
+  }
 
 
 

@@ -1,0 +1,48 @@
+<div class="component">
+  <div class="card">
+    <div class="card-header">
+      Add a user
+    </div>
+    <div class="card-body">
+      <form [formGroup]="profileForm" (submit)="onSubmit()">
+        <label for="firstName">First name</label>
+        <input style="width: 300px" class="form-control" formControlName="firstName" id="firstName"/>
+        <div [hidden]="firstName.valid">Required</div>
+
+        <label for="lastName">Last name</label>
+        <input style="width: 300px" class="form-control" formControlName="lastName" id="lastName"/>
+        <div [hidden]="lastName.valid">Required</div>
+
+        <label for="email">E-mail</label>
+        <input style="width: 300px" class="form-control" formControlName="email" id="email" type="email"/>
+        <div [hidden]="email.valid">Required</div>
+
+        <button type="submit" [disabled]="!profileForm.valid">Submit</button>
+      </form>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+    <div class="card-header">Current users</div>
+    <div class="card-body">
+      <table class="table table-nonfluid">
+        <tr>
+          <th>
+          </th>
+          <th>First name</th>
+          <th>Last name</th>
+          <th>E-mail</th>
+        </tr>
+        <tr *ngFor="let user of users">
+          <td><span (click)="onDelete(user)" class="pseudo-anchor">Delete</span></td>
+          <td>{{ user.first_name }}</td>
+          <td>{{ user.last_name }}</td>
+          <td>{{ user.email }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+

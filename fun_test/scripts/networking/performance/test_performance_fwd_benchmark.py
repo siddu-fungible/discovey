@@ -34,7 +34,7 @@ class ScriptSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
-
+        '''
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
         fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
@@ -77,11 +77,21 @@ class ScriptSetup(FunTestScript):
             shape = 1
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
+        '''
+        older_build = False
+        if not older_build:
+            fwd_benchmark_ports = [8, 12]
+            for fpg in fwd_benchmark_ports:
+                result = network_controller_obj.set_nu_benchmark_1(mode=1, fpg=fpg)
+                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
-        fwd_benchmark_ports = [8, 12]
-        for fpg in fwd_benchmark_ports:
-            result = network_controller_obj.set_nu_benchmark(main=1, erp=1, nh_id=4097, clbp_idx=20, fpg=fpg)
-            fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
+            result = network_controller_obj.set_etp(pkt_adj_size=8)
+            fun_test.simple_assert(result['status'], "Set pkt_adj_size")
+        else:
+            fwd_benchmark_ports = [8, 12]
+            for fpg in fwd_benchmark_ports:
+                result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=1, erp=1, nh_id=4097, clbp_idx=20)
+                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
         TIMESTAMP = get_current_time()
 

@@ -18,7 +18,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -115,7 +115,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -207,7 +207,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -299,7 +299,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -391,7 +391,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -485,7 +485,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -577,7 +577,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -669,7 +669,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -761,7 +761,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -871,7 +871,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -979,7 +979,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -1252,7 +1252,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -1336,7 +1336,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
@@ -1420,7 +1420,7 @@
     "lsv_create": true,
     "lsv_head": 30,
     "lsv_details": {
-      "chunk_size": 32
+      "chunk_size": 128
     },
     "jvol_details": {
       "multiplier": 8,
