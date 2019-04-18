@@ -670,10 +670,9 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
+                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+)?(:\s+)?(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
-                    stats_found = True
                     metric_name = m.group("metric_name")
                     metric_type = m.group("metric_type")
                     value = m.group("value")
@@ -689,6 +688,10 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
                                             "VOL_TYPE_BLK_EC_read"]
                     if metric_name not in allowed_metric_names:
                         continue
+
+                    if metric_type == None:
+                        metric_type = "latency"
+                        j = j["latency"]
 
                     if "andwidth" in metric_type.lower():
                         if "avg_op_bw_mbps" in line:
