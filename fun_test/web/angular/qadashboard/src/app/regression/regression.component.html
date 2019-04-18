@@ -181,7 +181,10 @@
           <th class="text-center">Action</th>
           <th class="text-center">Id</th>
           <th class="text-center">State</th>
+          <th class="text-center">Submitter</th>
+          <th class="text-center">Suite</th>
           <th class="text-center">First schedule</th>
+
         </tr>
         <ng-container *ngFor="let suiteExecution of items">
           <tr style="text-align: center">
@@ -193,6 +196,10 @@
 
             <td style="text-align: center">{{ suiteExecution.fields.execution_id }}</td>
             <td style="text-align: center">{{ stateStringMap[suiteExecution.fields.state] }}</td>
+            <td>{{ suiteExecution.fields.submitter_email }}</td>
+            <td>
+              {{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
+            </td>
             <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
 
           </tr>
