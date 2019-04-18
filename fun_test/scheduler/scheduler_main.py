@@ -11,8 +11,8 @@ import signal
 import psutil
 import shutil
 
-job_id_threads = {}
 job_id_timers = {}
+job_id_threads = {}
 
 ONE_HOUR = 60 * 60
 
@@ -37,6 +37,7 @@ class TestBedWorker(Thread):
         super(TestBedWorker, self).__init__()
         self.shutdown_requested = False
         self.warn_list = []
+        self.test_bed_lock_timers = {}
 
     def shutdown(self):
         self.shutdown_requested = True
@@ -51,6 +52,8 @@ class TestBedWorker(Thread):
                     test_bed.save()
                     send_test_bed_remove_lock(test_bed=test_bed, warning=False)
                     self.warn_list.remove(test_bed.name)
+                    if test_bed_name in self.test_bed_lock_timers:
+                        del self.test_bed_lock_timers[test_bed_name]
 
         except Exception as ex:
             scheduler_logger.exception(str(ex))
@@ -63,7 +66,7 @@ class TestBedWorker(Thread):
                 if test_bed.name not in self.warn_list:
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
-                        t = threading.Timer(60 * 60, self.test_bed_unlock_dispatch, (self, test_bed.name,))
+                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
                         self.warn_list.append(test_bed.name)
                         send_test_bed_remove_lock(test_bed=test_bed, warning=True)
 
