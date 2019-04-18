@@ -19,8 +19,6 @@ LOGS_RELATIVE_DIR = STATIC_RELATIVE_DIR + "/logs"
 MEDIA_DIR = WEB_STATIC_DIR + "/media"
 
 WEB_SERVER_PORT = 5000
-# if "PRODUCTION_MODE" in os.environ:
-#    WEB_SERVER_PORT = 80
 
 COMMON_WEB_LOGGER_NAME = "web"
 
@@ -51,6 +49,7 @@ TIME_ZONE = "America/Los_Angeles"
 MAIL_SERVER = "localhost"
 REGRESSION_EMAIL = "regression@fungible.com"
 TEAM_REGRESSION_EMAIL = "team-regression@fungible.com"
+REGRESSION_SERVER_DOMAIN_NAME = "integration.fungible.local"
 
 SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
 

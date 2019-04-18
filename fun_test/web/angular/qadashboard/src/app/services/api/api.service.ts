@@ -129,5 +129,21 @@ export class ApiService {
       );
   }
 
+  put(url: string, payload: any): Observable<ApiResponse> {
+    return this.httpClient.put<ApiResponse>(url, payload)
+      .pipe(
+        map(response => {
+          if (!response.status) {
+            throw response;
+          } else {
+            return response;
+          }
+        }),
+        catchError((error) => {
+          return this.handleError(error, "PUT", url, payload);
+        })
+      );
+  }
+
 
 }

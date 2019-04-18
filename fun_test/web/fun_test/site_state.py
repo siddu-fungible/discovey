@@ -1,9 +1,9 @@
-from fun_settings import WEB_ROOT_DIR
+from fun_settings import WEB_ROOT_DIR, TEAM_REGRESSION_EMAIL
 # from web.fun_test.metrics_models import ModelMapping
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import Engineer
 from web.fun_test.models import Tag
-from web.fun_test.models import TestBed
+from web.fun_test.models import TestBed, TestbedNotificationEmails
 from web.fun_test.models import Module
 from web.fun_test.metrics_models import MetricsGlobalSettings
 from django.apps import apps
@@ -40,11 +40,17 @@ class SiteState():
                 e = Engineer(short_name=user["short_name"], email=user["email"])
                 e.save()
 
+    def register_test_bed_interest_emails(self):
+        try:
+            TestbedNotificationEmails.objects.get(email=TEAM_REGRESSION_EMAIL)
+        except ObjectDoesNotExist:
+            TestbedNotificationEmails(email=TEAM_REGRESSION_EMAIL).save()
+
     def register_model_mappings(self):
         for model in apps.get_models():
             self.register_model_mapping(model=model, model_name=model.__name__)
 
-    def register_testbeds(self):
+    def register_test_beds(self):
         testbeds = self.site_base_data["testbeds"]
         for testbed in testbeds:
             try:

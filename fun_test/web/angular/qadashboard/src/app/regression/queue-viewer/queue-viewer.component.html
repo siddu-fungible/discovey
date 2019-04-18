@@ -1,0 +1,47 @@
+<div class="card" *ngFor="let category of priorityCategories">
+  <div class="card-header">
+    {{ toTitleCase(category) }} priority jobs
+  </div>
+  <div class="card-body">
+    <table class="table table-nonfluid">
+      <tr>
+        <th></th>
+        <th>Job-Id</th>
+        <th>Priority</th>
+        <th>Test-bed</th>
+        <th>Suite</th>
+        <th>Email</th>
+        <th>Message</th>
+      </tr>
+      <tr *ngFor="let queueEntry of queueOccupancy[category]; let i = index">
+        <td>
+          <ng-container>
+            <i (click)="onDelete(queueEntry)" class="fa fa-trash-o" style="font-size:20px; color: red"></i> &nbsp;
+          </ng-container>
+          <ng-container *ngIf="i > 0 && queueOccupancy[category].length > 1">
+            <i class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, true)" class="fa fa-arrow-up"></i>
+            &nbsp;
+          </ng-container>
+          <ng-container *ngIf="i < ( queueOccupancy[category].length - 1 ) && queueOccupancy[category].length > 1">
+            <i class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, false)" class="fa fa-arrow-down"></i>
+            &nbsp;
+          </ng-container>
+          <ng-container  *ngIf="i > 0 && queueOccupancy[category].length > 1">
+            <span class="pseudo-anchor" (click)="moveToTop(queueEntry.job_id, false)">T</span>&nbsp;
+          </ng-container>
+          <span *ngIf="category === 'normal' || category === 'low' " class="pseudo-anchor" (click)="moveToNextQueue(queueEntry.job_id)">N</span>
+
+
+        </td>
+        <td>{{ queueEntry.job_id }}</td>
+        <td>{{ queueEntry.priority }}</td>
+        <td>{{ queueEntry.test_bed_type }}</td>
+        <td>{{ queueEntry.job_spec.suite_path }}</td>
+        <td>{{ queueEntry.job_spec.email }}</td>
+        <td>{{ queueEntry.message }}</td>
+
+      </tr>
+    </table>
+  </div>
+
+</div>

@@ -23,9 +23,13 @@ from . import tests_views
 from . import upgrade_views
 from . import demo_views
 from . import triaging
+from web.fun_test.api import users
+from web.fun_test.api import regression
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
+from django.conf import settings
+
 
 regression_urls = [
     url(r'^$', views.angular_home),
@@ -37,7 +41,6 @@ regression_urls = [
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),
     url(r'^suite_execution_attributes/(\d+)$', regression_views.suite_execution_attributes),
-    url(r'^last_jenkins_hourly_execution_status', regression_views.last_jenkins_hourly_execution_status),
     url(r'^suite_executions_count/(.*)$', regression_views.suite_executions_count),
     url(r'^test_case_execution/(\d+)/(\d+)$', regression_views.test_case_execution),
     url(r'^suite_re_run/(\d+)$', regression_views.suite_re_run),
@@ -75,6 +78,9 @@ regression_urls = [
     url(r'^script_execution/(\d+)$', regression_views.script_execution),
     url(r'^job_spec/(\d+)$', regression_views.job_spec),
     url(r'^re_run_info$', regression_views.re_run_info),
+    url(r'^scheduler/admin$', views.angular_home),
+    url(r'^scheduler/queue/?(\d+)?$', regression_views.scheduler_queue),
+    url(r'^scheduler/queue_priorities$', regression_views.scheduler_queue_priorities),
     url(r'^scheduler/.*$', views.angular_home),
     url(r'^test_case_execution_info/(\d+)$', regression_views.test_case_execution_info),
     url(r'^git$', regression_views.git),
@@ -191,6 +197,17 @@ demo_urls = [
     url(r'^get_container_logs', demo_views.get_container_logs)
 ]
 
+users_urls = [
+    url(r'^$', views.angular_home)
+]
+
+api_v1_urls = [
+    url(r'^users/?(.*)?$', users.users),
+    url(r'^regression/test_beds/?(\d+)?$', regression.test_beds),
+    url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions)
+]
+
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^performance/', views.angular_home),
@@ -208,8 +225,14 @@ urlpatterns = [
     url(r'^test/', include(test_urls)),
     url(r'^upgrade/', include(upgrade_urls)),
     url(r'^demo/', include(demo_urls)),
+    url(r'^users', include(users_urls)),
+    url(r'^api/v1/', include(api_v1_urls)),
     url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
 
 ]
 
 urlpatterns += staticfiles_urlpatterns()
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [url(r'^__debug__/', include(debug_toolbar.urls)),]

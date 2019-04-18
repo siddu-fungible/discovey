@@ -1616,3 +1616,33 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+
+    def set_nu_benchmark_1(self, fpg, mode):
+        result = None
+        try:
+            cmd_args = {"fpg": fpg, "mode": mode}
+            cmd = ['benchmark', cmd_args]
+            result = self.json_execute(verb='nu', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def set_etp(self, pkt_adj_size):
+        result = None
+        try:
+            cmd_args = {"pkt_adj_size": pkt_adj_size}
+            cmd = ['etp', cmd_args]
+            result = self.json_execute(verb='nu', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def execute_app(self, name):
+        result = None
+        try:
+            cmd = ['%s' % name]
+            result = self.json_execute(verb='execute', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result

@@ -5,10 +5,10 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
-from fun_global import is_production_mode, is_triaging_mode
+from fun_global import is_production_mode, is_triaging_mode, get_current_time
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job2, queue_suite_container
-from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
+from scheduler.scheduler_helper import queue_dynamic_suite, queue_job3, LOG_DIR_PREFIX
+from scheduler.scheduler_helper import move_to_higher_queue, move_to_queue_head, increase_decrease_priority, delete_queued_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, \
     get_test_case_details, get_all_test_cases
@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
+from web.fun_test.models import SuiteReRunInfo, JobQueue
 from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
 import logging
@@ -35,6 +36,7 @@ from django.apps import apps
 import time
 from django.db import transaction
 from django.db.models import Q
+from scheduler.scheduler_global import SchedulerJobPriority, QueueOperations
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -115,6 +117,10 @@ def submit_job(request):
         if "suite_path" in request_json:
             suite_path = request_json["suite_path"]
 
+        submitter_email = "team-regression@fungible.com"
+        if "submitter_email" in request_json:
+            submitter_email = request_json["submitter_email"]
+
         # script path used for script only submission
         script_pk = None
         if "script_pk" in request_json:
@@ -143,13 +149,13 @@ def submit_job(request):
         tags = None
         if "tags" in request_json:
             tags = request_json["tags"]
-        email_list = None
+        emails = None
         email_on_fail_only = None
         environment = None
         if "environment" in request_json:
             environment = request_json["environment"]
-        if "email_list" in request_json:
-            email_list = request_json["email_list"]
+        if "emails" in request_json:
+            emails = request_json["emails"]
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 
@@ -175,56 +181,44 @@ def submit_job(request):
             repeat_in_minutes = request_json["repeat_in_minutes"]
 
         if suite_path:
-            if suite_path.replace(".json", "").endswith("_container"):
-                job_id = queue_suite_container(suite_path=suite_path,
-                                               build_url=build_url,
-                                               tags=tags,
-                                               email_list=email_list,
-                                               email_on_fail_only=email_on_fail_only,
-                                               environment=environment,
-                                               test_bed_type=test_bed_type,
-                                               scheduling_type=scheduling_type,
-                                               tz_string=tz,
-                                               requested_hour=requested_hour,
-                                               requested_minute=requested_minute,
-                                               requested_days=requested_days,
-                                               repeat_in_minutes=repeat_in_minutes)
-            else:
-                job_id = queue_job2(suite_path=suite_path,
-                                    build_url=build_url,
-                                    tags=tags,
-                                    email_list=email_list,
-                                    test_bed_type=test_bed_type,
-                                    email_on_fail_only=email_on_fail_only,
-                                    environment=environment,
-                                    scheduling_type=scheduling_type,
-                                    tz_string=tz,
-                                    requested_hour=requested_hour,
-                                    requested_minute=requested_minute,
-                                    requested_days=requested_days,
-                                    repeat_in_minutes=repeat_in_minutes)
-        elif script_pk:
-            script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
-            job_id = queue_job2(script_path=script_path,
+            job_id = queue_job3(suite_path=suite_path,
                                 build_url=build_url,
                                 tags=tags,
-                                email_list=email_list,
+                                emails=emails,
                                 test_bed_type=test_bed_type,
                                 email_on_fail_only=email_on_fail_only,
                                 environment=environment,
                                 scheduling_type=scheduling_type,
-                                tz_string=tz,
+                                timezone_string=tz,
                                 requested_hour=requested_hour,
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
-                                repeat_in_minutes=repeat_in_minutes)
+                                repeat_in_minutes=repeat_in_minutes,
+                                submitter_email=submitter_email)
+        elif script_pk:
+            script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
+            job_id = queue_job3(script_path=script_path,
+                                build_url=build_url,
+                                tags=tags,
+                                emails=emails,
+                                test_bed_type=test_bed_type,
+                                email_on_fail_only=email_on_fail_only,
+                                environment=environment,
+                                scheduling_type=scheduling_type,
+                                timezone_string=tz,
+                                requested_hour=requested_hour,
+                                requested_minute=requested_minute,
+                                requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes,
+                                submitter_email=submitter_email)
         elif dynamic_suite_spec:
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
-                                email_list=email_list,
+                                emails=emails,
                                 environment=environment,
                                 test_bed_type=test_bed_type,
                                 original_suite_execution_id=original_suite_execution_id,
-                                build_url=build_url)
+                                build_url=build_url,
+                                submitter_email=submitter_email)
     return job_id
 
 
@@ -239,9 +233,6 @@ def static_serve_log_directory(request, suite_execution_id):
 @api_safe_json_response
 def kill_job(request, suite_execution_id):
     scheduler.scheduler_helper.kill_job(job_id=suite_execution_id)
-    suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
-    suite_execution.result = RESULTS["KILLED"]
-    suite_execution.save()
     return "OK"
 
 
@@ -304,7 +295,7 @@ def suites(request):
 
 @csrf_exempt
 @api_safe_json_response
-def suite_executions_count(request, filter_string):
+def suite_executions_count(request, state_filter_string):
     tags = None
     if request.method == 'POST':
         if request.body:
@@ -312,13 +303,13 @@ def suite_executions_count(request, filter_string):
             if "tags" in request_json:
                 tags = request_json["tags"]
                 tags = json.loads(tags)
-    count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
+    count = _get_suite_executions(get_count=True, state_filter_string=state_filter_string, tags=tags)
     return count
 
 
 @csrf_exempt
 @api_safe_json_response
-def suite_executions(request, records_per_page=10, page=None, filter_string="ALL"):
+def suite_executions(request, records_per_page=10, page=None, state_filter_string="ALL"):
     tags = None
     if request.method == 'POST':
         if request.body:
@@ -329,7 +320,7 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
     all_objects_dict = _get_suite_executions(execution_id=None,
                                              page=page,
                                              records_per_page=records_per_page,
-                                             filter_string=filter_string,
+                                             state_filter_string=state_filter_string,
                                              tags=tags)
     return all_objects_dict
     # return all_objects_dict
@@ -341,18 +332,6 @@ def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
     # return json.dumps(all_objects_dict[0]) #TODO: Validate
     return all_objects_dict[0]
-
-
-@csrf_exempt
-@api_safe_json_response
-def last_jenkins_hourly_execution_status(request):
-    result = RESULTS["UNKNOWN"]
-    suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
-                                             filter_string=SUITE_EXECUTION_FILTERS["COMPLETED"],
-                                             page=1, records_per_page=10)
-    if suite_executions:
-        result = suite_executions[0]["suite_result"]
-    return result
 
 
 def suite_detail(request, execution_id):
@@ -647,10 +626,11 @@ def get_suite_executions_by_time(request):
 @api_safe_json_response
 def get_test_case_executions_by_time(request):
     request_json = json.loads(request.body)
-    from_time = 1546581539 * 1000
+    started_time = get_current_time() - timedelta(days=10)
+    # from_time = 1546581539 * 1000
     # from_time = int(request_json["from_time"])
     # to_time = request_json["to_time"]
-    from_time = get_datetime_from_epoch_time(from_time)
+    # from_time = get_datetime_from_epoch_time(from_time)
     # to_time = get_datetime_from_epoch_time(to_time)
     test_case_execution_tags = None
     if "test_case_execution_tags" in request_json:
@@ -666,7 +646,7 @@ def get_test_case_executions_by_time(request):
         scripts_for_module = [x.script_path for x in scripts_for_module]
 
     tes = []
-    q = Q(started_time__gte=from_time)
+    q = Q(started_time__gte=started_time)
 
     if test_case_execution_tags:
         for tag in test_case_execution_tags:
@@ -944,12 +924,18 @@ def script_execution(request, pk):
 @csrf_exempt
 @api_safe_json_response
 def job_spec(request, job_id):
-    archived_job_spec = get_archived_job_spec(job_id=job_id)
-    return archived_job_spec
+    result = {}
+    suite_execution = SuiteExecution.objects.get(execution_id=job_id)
+    result["submitter_email"] = suite_execution.submitter_email
+    result["emails"] = json.loads(suite_execution.emails)
+    result["test_bed_type"] = suite_execution.test_bed_type
+    result["environment"] = json.loads(suite_execution.environment)
+    return result
 
 
 def _get_attributes(suite_execution):
     attributes = {"result": suite_execution.result,
+                  "state": suite_execution.state,
                   "scheduled_time": str(suite_execution.scheduled_time),
                   "completed_time": str(suite_execution.completed_time),
                   "suite_path": str(suite_execution.suite_path)}
@@ -1004,6 +990,64 @@ def git(request):
     return result
 
 
+def _get_job_spec(job_id):
+    result = {}
+    job_spec = SuiteExecution.objects.get(execution_id=job_id)
+    result["execution_id"] = job_spec.execution_id
+    result["suite_type"] = job_spec.suite_type
+    result["suite_path"] = job_spec.suite_path
+    result["email"] = job_spec.submitter_email
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def scheduler_queue(request, job_id):
+    result = None
+    if request.method == 'GET':
+        result = []
+        queue_elements = JobQueue.objects.all().order_by('priority')
+        for queue_element in queue_elements:
+            one_element = {"job_id": queue_element.job_id,
+                           "priority": queue_element.priority,
+                           "test_bed_type": queue_element.test_bed_type,
+                           "job_spec": _get_job_spec(job_id=queue_element.job_id),
+                           "message": queue_element.message}
+            result.append(one_element)
+    elif request.method == 'POST':
+        result = None
+        request_json = json.loads(request.body)
+        operation = request_json['operation']
+        job_id = request_json["job_id"]
+        if operation == QueueOperations.MOVE_UP:
+            increase_decrease_priority(job_id=job_id, increase=True)
+        if operation == QueueOperations.MOVE_DOWN:
+            increase_decrease_priority(job_id=job_id, increase=False)
+        if operation == QueueOperations.MOVE_TO_TOP:
+            move_to_queue_head(job_id=job_id)
+        if operation == QueueOperations.MOVE_TO_NEXT_QUEUE:
+            move_to_higher_queue(job_id=job_id)
+        if operation == QueueOperations.DELETE:
+            delete_queued_job(job_id=job_id)
+        result = True
+    elif request.method == 'DELETE':
+        try:
+            queue_entry = JobQueue.objects.get(job_id=int(job_id))
+            scheduler.scheduler_helper.kill_job(job_id=int(job_id))
+            queue_entry.delete()
+        except ObjectDoesNotExist:
+            pass
+
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def scheduler_queue_priorities(request):
+    if request.method == "GET":
+        return SchedulerJobPriority.__dict__
+    elif request.method == 'POST':
+        request_json = json.loads(request.body)
 @csrf_exempt
 @api_safe_json_response
 def testbeds(request):

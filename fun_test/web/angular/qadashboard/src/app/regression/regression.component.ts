@@ -10,9 +10,13 @@ import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 
 enum Filter {
-    All = "ALL",
-    Completed = "COMPLETED",
-    Pending = "PENDING"
+  ALL = "ALL",
+  COMPLETED = "COMPLETED",
+  IN_PROGRESS = "IN_PROGRESS",
+  QUEUED = "QUEUED",
+  SCHEDULED = "SCHEDULED",
+  SUBMITTED = "SUBMITTED",
+  AUTO_SCHEDULED = "AUTO_SCHEDULED"
 }
 
 @Component({
@@ -26,12 +30,14 @@ export class RegressionComponent implements OnInit {
   suiteExecutionsCount: number;
   recordsPerPage: number;
   @Input() tags: string;
-  @Input() filterString: string = Filter.All;
+  @Input() filterString: string = Filter.ALL;
   items: any;
   logDir: any;
   status: string = "Fetching Data";
-  stateFilter: string = Filter.All;
+  stateFilter: string = Filter.ALL;
+  stateFilterString: string = Filter.ALL;
   filter = Filter;
+  stateStringMap: any = null;
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
@@ -41,6 +47,7 @@ export class RegressionComponent implements OnInit {
               private logger: LoggerService,
               private regressionService: RegressionService,
               private router: Router) {
+    this.stateStringMap = this.regressionService.stateStringMap;
   }
 
   ngOnInit() {
@@ -83,6 +90,7 @@ export class RegressionComponent implements OnInit {
         return this.getQueryParam().pipe(switchMap((response) => {
           if (response["state_filter"]) {
             this.stateFilter = response["state_filter"];
+            this.stateFilterString = this.regressionService.stateStringMap[this.stateFilter];
           }
 
           return of(true);
@@ -110,9 +118,34 @@ export class RegressionComponent implements OnInit {
     this.status = null;
   }
 
+  stateFilterStringToNumber(s) {
+    let match = "ALL";
+    for (let key in this.stateStringMap) {
+      let value = this.stateStringMap[key];
+      if (value === s) {
+        match = key;
+        break;
+      }
+    }
+    return match;
+  }
+
+  onDeleteSuiteExecution(suiteExecution) {
+    let executionId = suiteExecution.fields.execution_id;
+    if (confirm(`Are you sure you want to delete ${executionId}`)) {
+      let url = "/api/v1/regression/suite_executions/" + executionId;
+        this.apiService.delete(url).subscribe(response => {
+        this.logger.success(`Suite: ${executionId} deletion request submitted`);
+        window.location.reload();
+      }, error => {
+        this.logger.error("Deletion failed");
+      })
+    }
+  }
+
   onStateFilterClick(state) {
-    this.stateFilter = state;
-    this.navigateByQuery(state);
+    this.stateFilterString = state;
+    this.navigateByQuery(this.stateFilterStringToNumber(state));
   }
 
   navigateByQuery(state) {
@@ -134,6 +167,7 @@ export class RegressionComponent implements OnInit {
 
   setPage(page) {
 
+    this.items = null;
     this.pager = this.pagerService.getPager(this.suiteExecutionsCount, page, this.recordsPerPage);
     if (page === 0 || (page > this.pager.endPage)) {
 

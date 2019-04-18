@@ -116,7 +116,7 @@ export class ReRunService {
 
       let suiteIndices = Object.keys(this.info);
       suiteIndices.forEach(suiteIndex => {
-        let thisSuiteIndex = parseInt(suiteIndex) - 1; // log_prefix/suite index is 1 based
+        let thisSuiteIndex = parseInt(suiteIndex); // log_prefix/suite index is 1 based
         let scriptItem = this.suiteContents[thisSuiteIndex];
         scriptItem["re_run_info"] = this.info[suiteIndex].re_run_info;
         console.log(scriptItem);
@@ -132,8 +132,9 @@ export class ReRunService {
     let payload = {dynamic_suite_spec: scriptItems,
       version: this.reRunVersion,
       original_suite_execution_id: suiteExecutionId,
-      email_list: this.archivedJobSpec["email_list"],
-    environment: this.archivedJobSpec["environment"]};
+      emails: this.archivedJobSpec["emails"],
+      submitter_email: this.archivedJobSpec["submitter_email"],
+      environment: this.archivedJobSpec["environment"]};
     if (this.archivedJobSpec.hasOwnProperty('test_bed_type')) {
       payload["test_bed_type"] = this.archivedJobSpec["test_bed_type"];
     }
@@ -152,15 +153,14 @@ export class ReRunService {
         let reRunInfo = response.data;
         for (let index = 0; index < reRunInfo.length; index++) {
           result["numTotal"] += 1;
-          let reRunResult = reRunInfo[index].re_run.attributes.result;
-          let activeStates = ["QUEUED", "SCHEDULED", "IN_PROGRESS", "NOT_RUN"];
-          let completedStates = ["KILLED", "ABORTED", "PASSED", "FAILED"];
-          if (activeStates.indexOf(reRunResult) > -1) {
+          let reRunState = reRunInfo[index].re_run.attributes.result;
+
+          if (reRunState >= 30) {
             result["numActive"] += 1;
-          }
-          if (completedStates.indexOf(reRunResult) > -1) {
+          } else {
             result["numCompleted"] += 1;
-          }
+          }// JobStatusType.SUBMITTED // TODO
+
         }
         result["reRunInfo"] = reRunInfo;
       }

@@ -129,6 +129,24 @@ class DockerHost(Linux, ToDictMixin):
             logs = container.logs()
         return logs
 
+    def _insert_username_password(self, url, username, password):
+        insertion_point = -1
+        if username not in url and password not in url:
+            if url.startswith("http"):
+                for http_type in ["http://", "https://"]:
+                    try:
+                        insertion_point = url.index(http_type)
+                        insertion_point += len(http_type)
+                        break
+                    except Exception as ex:
+                        pass
+            else:
+                insertion_point = 0
+
+        if insertion_point > -1:
+            auth_string = "{}:{}@".format(username, password)
+            url = url[0: insertion_point] + auth_string + url[insertion_point:]
+        return url
 
     def get_images(self):
         images = []
@@ -199,42 +217,6 @@ class DockerHost(Linux, ToDictMixin):
         images = [x["name"] for x in images if str(x["category"]) == category_name]
         return images[0]
 
-    '''
-    @fun_test.safe
-    def setup_storage_container(self,
-                               container_name,
-                               build_url,
-                               ssh_internal_ports,
-                               qemu_internal_ports,
-                               dpcsh_internal_ports,
-                               funos_command=None,
-                               dpc_server=False,
-                               pre_dpcsh_sleep=None,
-                               dpcsh_directory=None,
-                               mounts=None,
-                               ):
-        storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  #TODO
-        if build_url:
-            build_url += "/Linux"
-        command = build_url
-        if not build_url:
-            command = "None"
-        if funos_command:
-            command += " {}".format(funos_command)
-            if dpc_server:
-                command += " True"
-            if pre_dpcsh_sleep:
-                command += " {}".format(pre_dpcsh_sleep)
-            if dpcsh_directory:
-                command += " {}".format(dpcsh_directory)
-        return self.setup_container(image_name=storage_image_name,
-                                    container_name=container_name,
-                                    pool0_internal_ports=ssh_internal_ports,
-                                    pool1_internal_ports=qemu_internal_ports,
-                                    pool2_internal_ports=dpcsh_internal_ports,
-                                    command=command, mounts=mounts)
-        
-    '''
 
     @fun_test.safe
     def setup_storage_container(self,
@@ -259,12 +241,21 @@ class DockerHost(Linux, ToDictMixin):
         local_functrlp_tgz_url = fun_test.get_local_setting("FUNCTRLP_TGZ_URL")
         local_dochub_ip = fun_test.get_local_setting("DOCHUB_IP")
 
+        private_funos_tgz_url = fun_test.get_job_environment_variable("private_funos_tgz_url")
+        if private_funos_tgz_url:
+            from lib.utilities.jenkins_manager import JenkinsManager
+            private_funos_tgz_url = self._insert_username_password(url=private_funos_tgz_url,
+                                                                   username=JenkinsManager.SERVICE_USERNAME,
+                                                                   password=JenkinsManager.SERVICE_PASSWORD)
+
         sdk_url = sdk_url or local_sdk_url
         command = " -s {}".format(sdk_url)
         if local_dpcsh_url:
             command += " -d {}".format(local_dpcsh_url)
         if local_funos_tgz_url:
             command += " -f {}".format(local_funos_tgz_url)
+        elif private_funos_tgz_url:
+            command += " -f {}".format(private_funos_tgz_url)
         if local_qemu_tgz_url:
             command += " -q {}".format(local_qemu_tgz_url)
         if local_modules_tgz_url:
