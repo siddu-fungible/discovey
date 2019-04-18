@@ -34,7 +34,7 @@ class ScriptSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
-
+        '''
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
         fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
@@ -77,7 +77,7 @@ class ScriptSetup(FunTestScript):
             shape = 1
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
-
+        '''
         older_build = False
         if not older_build:
             fwd_benchmark_ports = [8, 12]
