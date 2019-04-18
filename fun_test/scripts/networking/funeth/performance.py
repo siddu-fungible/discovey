@@ -111,6 +111,8 @@ class FunethPerformanceBase(FunTestCase):
         linux_objs = []
         linux_objs_dst = []
         ns_dst_list = []
+        is_n2h = False
+        is_h2n = False
         if flow_type.startswith('NU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['nu']
             linux_obj_dst = funeth_obj.linux_obj_dict['hu']
@@ -123,6 +125,7 @@ class FunethPerformanceBase(FunTestCase):
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
                 sip = None
             perf_suffix = 'n2h'
+            is_n2h = True
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             linux_obj_dst = funeth_obj.linux_obj_dict['nu']
@@ -131,6 +134,7 @@ class FunethPerformanceBase(FunTestCase):
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
             sip = None
             perf_suffix = 'h2n'
+            is_h2n = True
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             linux_obj_dst = funeth_obj.linux_obj_dict['hu']
@@ -144,6 +148,7 @@ class FunethPerformanceBase(FunTestCase):
                                                                     funeth_obj.tb_config_obj.get_hu_vf_interface_fcp())
                 sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
                                                                     funeth_obj.tb_config_obj.get_hu_pf_interface_fcp())
+
 
         linux_objs.append(linux_obj)
         linux_objs_dst.append(linux_obj_dst)
@@ -169,6 +174,8 @@ class FunethPerformanceBase(FunTestCase):
         arg_dicts = [
             {'linux_obj': linux_obj,
              'perf_suffix': perf_suffix,
+             'is_n2h': is_n2h,
+             'is_h2n': is_h2n,
              'dip': dip,
              'sip': sip,
              'tool': tool,

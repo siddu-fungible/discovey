@@ -4,6 +4,76 @@ import pprint
 import re
 
 
+class PerformanceTuning:
+    def __init__(self, linux_obj):
+        self.linux_obj = linux_obj
+
+    def cpu_governor(self):
+        cmd = 'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor'
+        self.linux_obj.sudo_command(cmd)
+        for i in range(0, 32):  # TODO: Use actual CPU number
+            self.linux_obj.sudo_command(
+                'echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor'.format(i))
+        self.linux_obj.sudo_command(cmd)
+
+    def tcp(self):
+        cmds = (
+            'sysctl -w net.core.rmem_max=4194304',
+            'sysctl -w net.core.wmem_max=4194304',
+            'sysctl -w net.core.rmem_default=4194304',
+            'sysctl -w net.core.wmem_default=4194304',
+            'sysctl -w net.core.optmem_max=4194304',
+            'sysctl -w net.ipv4.tcp_rmem="4096 87380 4194304"',
+            'sysctl -w net.ipv4.tcp_wmem="4096 65536 4194304"',
+            'sysctl -w net.ipv4.tcp_timestamps=0',
+            'sysctl -w net.ipv4.tcp_sack=1',
+            'sysctl -w net.core.netdev_max_backlog=250000',
+            'sysctl -w net.ipv4.tcp_low_latency=1',
+            'sysctl -w net.ipv4.tcp_adv_win_scale=1',
+            'sysctl -w net.ipv4.route.flush=1',
+        )
+        for cmd in cmds:
+            self.linux_obj.sudo_command(cmd)
+
+    def iptables(self):
+        cmds = (
+            'sudo ufw disable',
+            'iptables -X',
+            'iptables -t nat -F',
+            'iptables -t nat -X',
+            'iptables -t mangle -F',
+            'iptables -t mangle -X',
+            'iptables -P INPUT ACCEPT',
+            'iptables -P OUTPUT ACCEPT',
+            'iptables -P FORWARD ACCEPT',
+            'iptables -F',
+            'iptables -L',
+        )
+        for cmd in cmds:
+            self.linux_obj.sudo_command(cmd)
+
+    def mlnx_tune(self, profile='HIGH_THROUGHPUT'):
+        cmds = (
+            'mlnx_tune -p {}'.format(profile),
+        )
+        for cmd in cmds:
+            self.linux_obj.sudo_command(cmd)
+
+    def interrupt_coalesce(self, interface, disable=True):
+        if disable:
+            cmds = (
+                'ethtool --coalesce {} rx-usecs 0 tx-usecs 0 rx-frames 1 tx-frames 1 adaptive-rx off'.format(
+                    interface),
+            )
+        else:
+            cmds = (
+                'ethtool --coalesce {} rx-usecs 8 tx-usecs 16 rx-frames 128 tx-frames 32 adaptive-rx on'.format(
+                    interface),
+            )
+        for cmd in cmds:
+            self.linux_obj.sudo_command(cmd)
+
+
 class NetperfManager:
     """Use netperf to measure throughput and latency between host pairs.
     """
@@ -124,6 +194,8 @@ class NetperfManager:
         for arg_dict in arg_dicts:
             linux_obj = arg_dict.get('linux_obj')
             perf_suffix = arg_dict.get('perf_suffix')
+            is_n2h = arg_dict.get('is_n2h', False)
+            is_h2n = arg_dict.get('is_h2n', False)
             dip = arg_dict.get('dip')
             protocol = arg_dict.get('protocol', 'tcp')
             duration = arg_dict.get('duration', 30)
@@ -149,6 +221,7 @@ class NetperfManager:
         for i in range(0, parallel):
             rlist.append(mp_task_obj.get_result(i))
 
+        # TODO: the assumption here is all the tasks have same traffic direction
         throughput = sum(r.get('throughput') for r in rlist)
         #latency_min = rlist[parallel-1].get('latency_min')
         #latency_avg = rlist[parallel-1].get('latency_avg')
