@@ -53,6 +53,7 @@ export class SubmitJobComponent implements OnInit {
   suiteSelectionMode: string = "BY_SUITE";
   selectedUser: any = null;
   users: any = null;
+  BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title) {
@@ -238,23 +239,23 @@ export class SubmitJobComponent implements OnInit {
     }
 
 
-    if (!this.withJenkinsBuild) {
-      if (this.tftpImagePath && this.tftpImagePath !== "") {
-        payload["environment"]["tftp_image_path"] = this.tftpImagePath;
-      }
-    } else {
+    if (this.isTestBedFs()) {
+      if (!this.withJenkinsBuild) {
+        if (this.tftpImagePath && this.tftpImagePath !== "") {
+          payload["environment"]["tftp_image_path"] = this.tftpImagePath;
+        }
+      } else {
       payload["environment"]["with_jenkins_build"] = true;
-    }
-
-    if (payload["environment"]["with_jenkins_build"])
-    {
-      payload["environment"]["build_parameters"] = {};
-      if (this.bootArgs && this.bootArgs !== "" && this.selectedTestBedType.indexOf('fs') > -1) {
-        payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, ':');
-
       }
-      payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
-      payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
+
+      if (payload["environment"]["with_jenkins_build"]) {
+        payload["environment"]["build_parameters"] = {};
+        if (this.bootArgs && this.bootArgs !== "" && this.selectedTestBedType.indexOf('fs') > -1) {
+          payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
+        }
+        payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
+        payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
+      }
     }
 
     if (this.privateFunosTgzUrl && this.privateFunosTgzUrl !== "") {
@@ -286,15 +287,15 @@ export class SubmitJobComponent implements OnInit {
     this.withJenkinsBuild = !this.withJenkinsBuild;
   }
 
-  /*
+
 
   isTestBedFs(): boolean {
     let result = null;
     if (this.selectedTestBedType) {
-      result = this.selectedTestBedType.indexOf('fs') > 0;
+      result = this.selectedTestBedType.indexOf('fs') > -1;
     }
     return result;
-  }*/
+  }
 
 
 
