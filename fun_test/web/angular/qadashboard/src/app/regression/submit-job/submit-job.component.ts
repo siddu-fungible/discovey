@@ -51,6 +51,8 @@ export class SubmitJobComponent implements OnInit {
   privateFunosTgzUrl: string = null;
 
   suiteSelectionMode: string = "BY_SUITE";
+  selectedUser: any = null;
+  users: any = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title) {
@@ -91,6 +93,7 @@ export class SubmitJobComponent implements OnInit {
     });
     this.selectedTags = [];
     this.tags = [];
+    this.fetchUsers();
     this.fetchTags();
     this.fetchTestBeds();
     this.emailOnFailOnly = false;
@@ -102,6 +105,15 @@ export class SubmitJobComponent implements OnInit {
   onSelectAll (items: any): void {
     console.log(items);
   }
+
+  fetchUsers(): void {
+    this.apiService.get("/api/v1/users").subscribe(response => {
+      this.users = response.data;
+    }, error => {
+      this.logger.error("Unable to fetch users");
+    })
+  }
+
 
   fetchTestBeds(): void {
     this.apiService.get('/regression/testbeds').subscribe(response => {
@@ -199,10 +211,14 @@ export class SubmitJobComponent implements OnInit {
       payload["script_pk"] = this.selectedScriptPk;
     }
 
+    if (!this.selectedUser) {
+      return this.logger.error("Please select a user");
+    }
     payload["build_url"] = this.buildUrl;
     payload["tags"] = this._getSelectedtags();
     payload["email_on_fail_only"] = this.emailOnFailOnly;
     payload["test_bed_type"] = this.selectedTestBedType;
+    payload["submitter_email"] = this.selectedUser.email;
     if (this.emails) {
       this.emails = this.emails.split(",");
       payload["email_list"] = this.emails

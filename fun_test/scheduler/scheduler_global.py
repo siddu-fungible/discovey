@@ -1,8 +1,12 @@
 class SchedulingType:
     ASAP = "asap"
-    PERIODIC = "periodic"
-    TODAY = "today"
-    REPEAT = "repeat"
+    PERIODIC = "periodic"  # Like Monday, Tuesdays at 1PM
+    TODAY = "today"  # Schedule sometime today
+    REPEAT = "repeat"  # Goes with the today type. Repeat the job after some minutes
+
+    @staticmethod
+    def get_deferred_types():
+        return [SchedulingType.PERIODIC, SchedulingType.REPEAT, SchedulingType.TODAY]
 
 
 class SchedulerStates:
@@ -18,3 +22,47 @@ class SchedulerStates:
 class SuiteType:
     STATIC = "regular"
     DYNAMIC = "dynamic"  # Usually for re-runs
+    CONTAINER = "container"
+
+class SchedulerJobPriority:
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    RANGES = {LOW: (2049, 3072),  NORMAL: (1025, 2048), HIGH: (1, 1024)}
+
+
+class QueueOperations:
+    MOVE_UP = "move_up"
+    MOVE_DOWN = "move_down"
+    MOVE_TO_TOP = "move_to_top"
+    MOVE_TO_NEXT_QUEUE = "move_to_next_queue"
+    DELETE = "delete"
+
+
+class JobStatusType:
+    UNKNOWN = -40
+    ERROR = -30
+    KILLED = -20
+    ABORTED = -10
+    COMPLETED = 10
+    AUTO_SCHEDULED = 20
+    SUBMITTED = 30
+    SCHEDULED = 40
+    QUEUED = 50
+    IN_PROGRESS = 60
+
+    def code_to_string(self, code):
+        result = "UNKNOWN"
+        non_callable_attributes = [f for f in dir(self) if not callable(getattr(self, f))]
+        for non_callable_attribute in non_callable_attributes:
+            if getattr(self, non_callable_attribute) == code:
+                result = non_callable_attribute
+                break
+        return result
+
+    def is_idle_state(self, state):
+        return (state == self.AUTO_SCHEDULED) or (state == self.KILLED) or (state == self.ABORTED) or (state == self.COMPLETED) or (state == self.ERROR)
+
+    @staticmethod
+    def is_completed(state):
+        return state <= JobStatusType.COMPLETED

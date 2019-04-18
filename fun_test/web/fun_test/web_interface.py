@@ -1,5 +1,5 @@
-from fun_settings import WEB_SERVER_PORT
-from fun_global import is_lite_mode
+from fun_settings import WEB_SERVER_PORT, REGRESSION_SERVER_DOMAIN_NAME
+from fun_global import is_lite_mode, is_production_mode
 import socket
 
 
@@ -11,7 +11,11 @@ def get_homepage_url():
         print (str(ex))
     if not is_lite_mode():
         hostname = socket.gethostname()
+
     s = "http://{}:{}".format(hostname, WEB_SERVER_PORT)
+    if is_production_mode():
+        s = "http://{}".format(REGRESSION_SERVER_DOMAIN_NAME)
+
     return s
 
 

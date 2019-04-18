@@ -1,0 +1,19 @@
+table > tbody > tr > th, table > tbody > tr > td {
+  /*text-align: left;*/
+  padding: 2px;
+  margin: 2px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+
+
+.ngb-tp-hour, .ngb-tp-meridian, .ngb-tp-minute, .ngb-tp-second {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -ms-flex-align: center;
+    align-items: center;
+    justify-content: space-around;
+}

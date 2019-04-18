@@ -76,7 +76,7 @@ export class LoggerService {
       type: 'success',
       title: text,
       showCloseButton: true,
-      timeout: 3
+      timeout: 3000
     };
     this.toasterService.pop(toast);
     let plainLog = new Log(null, text, LogDataType.SIMPLE, AlertLevel.SUCCESS);

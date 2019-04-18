@@ -5,7 +5,26 @@
         <div class="card-header">Submit Job</div>
         <div class="card-body">
           <table class="table table-nonfluid table-borderless">
-
+            <tr>
+              <td class="no-wrap">
+                <label for="submitter">Submitter</label>
+              </td>
+              <td>
+                <select id="submitter" [(ngModel)]="selectedUser">
+                  <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+                </select>
+                &nbsp;
+                <a href="/users" target="_blank">Can't find your name? Add user</a>
+              </td>
+            </tr>
+            <tr>
+              <td class="no-wrap">
+                <label for="build-url">Build URL</label>
+              </td>
+              <td>
+                <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
+              </td>
+            </tr>
             <tr>
               <td class="no-wrap">
                 <label for="testbed-type">Testbed type</label>
@@ -100,7 +119,7 @@
               <td class="no-wrap">
                 <label>Select a tag: </label>
               </td>
-              <td>
+              <td >
                 <div class="field-width">
                   <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
                                            [settings]="dropdownSettings">
@@ -181,8 +200,8 @@
                       <td class="no-wrap">
                         <label>Select day(s): </label>
                       </td>
-                      <td>
-                        <div class="field-width">
+                      <td class="no-wrap" style="width: 400px">
+                        <div>
                           <ng-multiselect-dropdown [placeholder]="'Select'" [data]="daysOptions"
                                                    [(ngModel)]="selectedDays"
                                                    [settings]="dropdownSettings">

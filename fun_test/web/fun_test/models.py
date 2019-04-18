@@ -11,7 +11,7 @@ from web.fun_test.jira_models import *
 from web.fun_test.demo1_models import *
 from rest_framework import serializers
 from datetime import datetime, timedelta
-from scheduler.scheduler_types import SchedulerStates, SuiteType
+from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority, JobStatusType
 import json
 from rest_framework.serializers import ModelSerializer
 
@@ -21,6 +21,14 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 
 TAG_LENGTH = 50
+
+class FunModel(models.Model):
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
 
 class TimeKeeper(models.Model):
     time = models.DateTimeField(default=datetime.now)
@@ -52,12 +60,20 @@ class CatalogTestCase(models.Model):
     def __str__(self):
         return str(self.jira_id)
 
+
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    manual_lock = models.BooleanField(default=False)
+    manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
+    manual_lock_submitter = models.EmailField(null=True, blank=True)
 
     def __str__(self):
-        return "{} {}".format(self.name, self.description)
+        return "{} {} {} {} {}".format(self.name,
+                                       self.description,
+                                       self.manual_lock,
+                                       self.manual_lock_expiry_time,
+                                       self.manual_lock_submitter)
 
 
 class CatalogSuite(models.Model):
@@ -86,31 +102,80 @@ class SuiteContainerExecution(models.Model):
 
 
 class SuiteExecution(models.Model):
-    execution_id = models.IntegerField(unique=True, db_index=True)
-    suite_path = models.CharField(max_length=100)
-    submitted_time = models.DateTimeField()
-    scheduled_time = models.DateTimeField()
-    completed_time = models.DateTimeField()
-    test_case_execution_ids = models.CharField(max_length=10000, default="[]")
-    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
-    tags = models.TextField(default="[]")
-    version = models.CharField(max_length=50, default="UNKNOWN")
-    catalog_reference = models.TextField(null=True, blank=True, default=None)
-    finalized = models.BooleanField(default=False)
-    banner = models.TextField(default="")
-    suite_container_execution_id = models.IntegerField(default=-1)
+    """
+    Suite selection
+    """
+    suite_path = models.CharField(max_length=100, null=True)
+    script_path = models.TextField(default=None, null=True)
     suite_type = models.TextField(default=SuiteType.STATIC)
+    dynamic_suite_spec = models.TextField(default="{}", null=True)
+
+    """
+    Job inputs related
+    """
     test_bed_type = models.TextField(default="")
+    environment = models.TextField(default="{}", null=True)  # extra environment dictionary (only networking uses this)
+    inputs = models.TextField(default="{}", null=True)  # inputs dictionary
+    build_url = models.TextField(default="", null=True)
+    version = models.CharField(max_length=50, null=True)
+    requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
+    tags = models.TextField(default="[]", null=True)
+
+    """
+    Scheduling
+    """
+    scheduling_type = models.TextField(default="")
+    submitted_time = models.DateTimeField(null=True)
+    scheduled_time = models.DateTimeField(null=True)
+    queued_time = models.DateTimeField(null=True)
+    completed_time = models.DateTimeField()
+    requested_days = models.TextField(default="[]")  # Days of the week as an array with Monday being 0
+    requested_hour = models.IntegerField(null=True)  # Hour of the day
+    requested_minute = models.IntegerField(null=True)  # minute in the hour
+    timezone_string = models.TextField(default="PST")  # timezone string PST or IST
+    repeat_in_minutes = models.IntegerField(null=True)  # Repeat the job in some minutes
+    submitter_email = models.EmailField(default="john.abraham@fungible.com")
+    description = models.TextField(default="", null=True)
+
+    """
+    Job result related
+    """
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
+    emails = models.TextField(default="[]", null=True)  # email addresses to send reports to
+    email_on_failure_only = models.BooleanField(default=False)
+    finalized = models.BooleanField(default=False)
+
+    """
+    Execution
+    """
+    state = models.IntegerField(default=JobStatusType.UNKNOWN)
+    suite_container_execution_id = models.IntegerField(default=-1)
+    is_auto_scheduled_job = models.BooleanField(default=False)
+    banner = models.TextField(default="")
+    execution_id = models.IntegerField(unique=True, db_index=True)
+    test_case_execution_ids = models.CharField(max_length=10000, default="[]")
     build_done = models.BooleanField(default=False)
+    auto_scheduled_execution_id = models.IntegerField(default=-1)
+    disable_schedule = models.BooleanField(default=False)
 
     def __str__(self):
-        s = "Suite: {} {}".format(self.execution_id, self.suite_path)
+        s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
         return s
 
     class Meta:
         indexes = [
             models.Index(fields=['execution_id'])
         ]
+
+    def set_state(self, state):
+        self.state = state
+        self.save()
+
+    def set_properties(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+            self.save()
+
 
 class SuiteExecutionSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=50)
@@ -287,6 +352,33 @@ class SuiteReRunInfo(models.Model):
     """
     original_suite_execution_id = models.IntegerField()
     re_run_suite_execution_id = models.IntegerField()
+
+
+class JobQueue(models.Model):
+    """
+    Scheduler's job queue
+    """
+    priority = models.IntegerField()
+    job_id = models.IntegerField(unique=True)
+    test_bed_type = models.TextField(default="", null=True)
+    message = models.TextField(default="", null=True)
+
+
+class KilledJob(models.Model):
+    job_id = models.IntegerField(unique=True)
+    killed_time = models.DateTimeField(default=datetime.now)
+
+
+class User(FunModel):
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    email = models.EmailField(max_length=30, unique=True)
+
+    def __str__(self):
+        return "{} {} {}".format(self.first_name, self.last_name, self.email)
+
+class TestbedNotificationEmails(FunModel):
+    email = models.EmailField(max_length=30, unique=True)
 
 if not is_lite_mode():
     from web.fun_test.metrics_models import *

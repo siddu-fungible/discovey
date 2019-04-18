@@ -176,3 +176,10 @@ class MetricLib():
             for key, value in kwargs.iteritems():
                 data_set["output"][key] = value
         return data_sets
+
+    def remove_attribute_from_data_sets(self, chart, key):
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"].pop(key, None)
+        self.save_data_sets(data_sets=data_sets, chart=chart)
+
