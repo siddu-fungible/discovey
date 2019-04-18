@@ -292,7 +292,7 @@ export class SubmitJobComponent implements OnInit {
   isTestBedFs(): boolean {
     let result = null;
     if (this.selectedTestBedType) {
-      result = this.selectedTestBedType.indexOf('fs') > 0;
+      result = this.selectedTestBedType.indexOf('fs') > -1;
     }
     return result;
   }
