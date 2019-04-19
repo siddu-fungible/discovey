@@ -166,7 +166,7 @@ class BLTSanityTestCase(FunTestCase):
         for fkey, fvalue in final_volume_status.items():
             # Not going to calculate the difference for the value stats which are not in the expected volume
             # dictionary and also for the fault_injection attribute
-            if fkey == "fault_injection":
+            if fkey == "fault_injection" or fkey == "drive_uuid":
                 diff_volume_stats[fkey] = fvalue
                 continue
             if fkey in initial_volume_status:
