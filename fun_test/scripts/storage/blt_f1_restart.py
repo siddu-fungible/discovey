@@ -323,7 +323,7 @@ class BLTF1RestartTestCase(FunTestCase):
                     for fkey, fvalue in final_volume_status[mode][type][index].items():
                         # Don't compute the difference of stats which is not defined in expected_volume_stats in
                         # the json config file
-                        if fkey == "fault_injection":
+                        if fkey == "fault_injection" or fkey == "drive_uuid":
                             diff_volume_stats[mode][type][index][fkey] = fvalue
                             continue
                         if fkey in initial_volume_status[mode][type][index]:
@@ -494,7 +494,7 @@ class BLTF1RestartTestCase(FunTestCase):
                         for fkey, fvalue in final_volume_status[mode][type][index].items():
                             # Don't compute the difference of stats which is not defined in expected_volume_stats in
                             # the json config file
-                            if fkey not in fkey == "fault_injection":
+                            if fkey not in fkey == "fault_injection" or fkey == "drive_uuid":
                                 diff_volume_stats[mode][type][index][fkey] = fvalue
                                 continue
                             if fkey in initial_volume_status[mode][type][index]:
