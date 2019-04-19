@@ -1296,24 +1296,10 @@ class TeraMarkFunTcpThroughputPerformance(models.Model):
     input_mode = models.CharField(verbose_name="Port modes", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=0)
-    input_offloads = models.BooleanField(default=False)
-    input_protocol = models.TextField(default="UDP")
+    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)
     output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
-    output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
-    output_latency_max = models.FloatField(verbose_name="Latency Max in us")
-    output_latency_min = models.FloatField(verbose_name="Latency Min in us")
-    output_jitter_min = models.FloatField(verbose_name="Jitter min in us")
-    output_jitter_max = models.FloatField(verbose_name="Jitter max in us")
-    output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us")
     output_pps = models.FloatField(verbose_name="Packets per sec")
     output_throughput_unit = models.TextField(default="Gbps")
-    output_latency_avg_unit = models.TextField(default="usecs")
-    output_latency_max_unit = models.TextField(default="usecs")
-    output_latency_min_unit = models.TextField(default="usecs")
-    output_jitter_min_unit = models.TextField(default="usecs")
-    output_jitter_max_unit = models.TextField(default="usecs")
-    output_jitter_avg_unit = models.TextField(default="usecs")
     output_pps_unit = models.TextField(default="Mpps")
 
 
@@ -1323,75 +1309,75 @@ class TeraMarkFunTcpThroughputPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
-class TeraMarkFunTcpConnectionsPerSecondPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
-    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_frame_size = models.FloatField(verbose_name="Frame Size")
-    output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
-    output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
-    output_latency_max = models.FloatField(verbose_name="Latency Max in us")
-    output_latency_min = models.FloatField(verbose_name="Latency Min in us")
-    output_jitter_min = models.FloatField(verbose_name="Jitter min in us")
-    output_jitter_max = models.FloatField(verbose_name="Jitter max in us")
-    output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us")
-    output_pps = models.FloatField(verbose_name="Packets per sec")
-    output_throughput_unit = models.TextField(default="Gbps")
-    output_latency_avg_unit = models.TextField(default="usecs")
-    output_latency_max_unit = models.TextField(default="usecs")
-    output_latency_min_unit = models.TextField(default="usecs")
-    output_jitter_min_unit = models.TextField(default="usecs")
-    output_jitter_max_unit = models.TextField(default="usecs")
-    output_jitter_avg_unit = models.TextField(default="usecs")
-    output_pps_unit = models.TextField(default="Mpps")
-    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
-    input_version = models.CharField(verbose_name="Version", max_length=50)
-    input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=0)
-    input_offloads = models.BooleanField(default=False)
-    input_protocol = models.TextField(default="UDP")
-
-    def __str__(self):
-        s = ""
-        for key, value in self.__dict__.iteritems():
-            s += "{}:{} ".format(key, value)
-        return s
-
-class TeraMarkFunTcpConcurrentConnectionsPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=False)
-    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
-    interpolated = models.BooleanField(default=False)
-    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_frame_size = models.FloatField(verbose_name="Frame Size")
-    output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
-    output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
-    output_latency_max = models.FloatField(verbose_name="Latency Max in us")
-    output_latency_min = models.FloatField(verbose_name="Latency Min in us")
-    output_jitter_min = models.FloatField(verbose_name="Jitter min in us")
-    output_jitter_max = models.FloatField(verbose_name="Jitter max in us")
-    output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us")
-    output_pps = models.FloatField(verbose_name="Packets per sec")
-    output_throughput_unit = models.TextField(default="Gbps")
-    output_latency_avg_unit = models.TextField(default="usecs")
-    output_latency_max_unit = models.TextField(default="usecs")
-    output_latency_min_unit = models.TextField(default="usecs")
-    output_jitter_min_unit = models.TextField(default="usecs")
-    output_jitter_max_unit = models.TextField(default="usecs")
-    output_jitter_avg_unit = models.TextField(default="usecs")
-    output_pps_unit = models.TextField(default="Mpps")
-    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
-    input_version = models.CharField(verbose_name="Version", max_length=50)
-    input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=0)
-    input_offloads = models.BooleanField(default=False)
-    input_protocol = models.TextField(default="UDP")
-
-    def __str__(self):
-        s = ""
-        for key, value in self.__dict__.iteritems():
-            s += "{}:{} ".format(key, value)
-        return s
+# class TeraMarkFunTcpConnectionsPerSecondPerformance(models.Model):
+#     interpolation_allowed = models.BooleanField(default=False)
+#     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+#     interpolated = models.BooleanField(default=False)
+#     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+#     input_frame_size = models.FloatField(verbose_name="Frame Size")
+#     output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
+#     output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
+#     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
+#     output_latency_min = models.FloatField(verbose_name="Latency Min in us")
+#     output_jitter_min = models.FloatField(verbose_name="Jitter min in us")
+#     output_jitter_max = models.FloatField(verbose_name="Jitter max in us")
+#     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us")
+#     output_pps = models.FloatField(verbose_name="Packets per sec")
+#     output_throughput_unit = models.TextField(default="Gbps")
+#     output_latency_avg_unit = models.TextField(default="usecs")
+#     output_latency_max_unit = models.TextField(default="usecs")
+#     output_latency_min_unit = models.TextField(default="usecs")
+#     output_jitter_min_unit = models.TextField(default="usecs")
+#     output_jitter_max_unit = models.TextField(default="usecs")
+#     output_jitter_avg_unit = models.TextField(default="usecs")
+#     output_pps_unit = models.TextField(default="Mpps")
+#     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
+#     input_version = models.CharField(verbose_name="Version", max_length=50)
+#     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
+#     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=0)
+#     input_offloads = models.BooleanField(default=False)
+#     input_protocol = models.TextField(default="UDP")
+#
+#     def __str__(self):
+#         s = ""
+#         for key, value in self.__dict__.iteritems():
+#             s += "{}:{} ".format(key, value)
+#         return s
+#
+# class TeraMarkFunTcpConcurrentConnectionsPerformance(models.Model):
+#     interpolation_allowed = models.BooleanField(default=False)
+#     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+#     interpolated = models.BooleanField(default=False)
+#     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+#     input_frame_size = models.FloatField(verbose_name="Frame Size")
+#     output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
+#     output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
+#     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
+#     output_latency_min = models.FloatField(verbose_name="Latency Min in us")
+#     output_jitter_min = models.FloatField(verbose_name="Jitter min in us")
+#     output_jitter_max = models.FloatField(verbose_name="Jitter max in us")
+#     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us")
+#     output_pps = models.FloatField(verbose_name="Packets per sec")
+#     output_throughput_unit = models.TextField(default="Gbps")
+#     output_latency_avg_unit = models.TextField(default="usecs")
+#     output_latency_max_unit = models.TextField(default="usecs")
+#     output_latency_min_unit = models.TextField(default="usecs")
+#     output_jitter_min_unit = models.TextField(default="usecs")
+#     output_jitter_max_unit = models.TextField(default="usecs")
+#     output_jitter_avg_unit = models.TextField(default="usecs")
+#     output_pps_unit = models.TextField(default="Mpps")
+#     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
+#     input_version = models.CharField(verbose_name="Version", max_length=50)
+#     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
+#     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=0)
+#     input_offloads = models.BooleanField(default=False)
+#     input_protocol = models.TextField(default="UDP")
+#
+#     def __str__(self):
+#         s = ""
+#         for key, value in self.__dict__.iteritems():
+#             s += "{}:{} ".format(key, value)
+#         return s
 
 class VoltestPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)

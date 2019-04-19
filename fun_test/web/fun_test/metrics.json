@@ -1848,6 +1848,46 @@
                     ]
                   }
                 ]
+              },
+              {
+                "info": "funtcp_server",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "funtcp_server",
+                "weight": 1,
+                "label": "FunTCP Server",
+                "children": [
+                  {
+                    "info": "funtcp_server_throughput",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_throughput",
+                    "weight": 1,
+                    "label": "Throughput",
+                    "children": [
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "funtcp_client",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "funtcp_client",
+                "weight": 1,
+                "label": "FunTCP Client",
+                "children": [
+                  {
+                    "info": "funtcp_client_throughput",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_client_throughput",
+                    "weight": 1,
+                    "label": "Throughput",
+                    "children": [
+                    ]
+                  }
+                ]
               }
             ]
           },
