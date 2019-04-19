@@ -49,7 +49,8 @@
             <td *ngIf="allowContext">
               <span>
                 <li *ngFor="let context of getContextArray(info['id'])">
-                  {{ context }}<br>
+                  <span [innerHTML]="context">
+                  </span>
                 </li>
               </span>
             </td>

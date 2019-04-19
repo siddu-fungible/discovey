@@ -191,6 +191,11 @@ export class PerformanceComponent implements OnInit {
         return of(null);
       }
     }))
+  }
+
+  getRoutablePathByGuid(guid) {
+    let flatNode = this.getFlatNodeByGuid(guid);
+    return this.gotoQueryBaseUrl + this.lineageToPath(flatNode.lineage[0]);
 
   }
 
@@ -323,6 +328,10 @@ export class PerformanceComponent implements OnInit {
     });
     s = s.slice(1, s.length); // Remove leading slash
     return s;
+  }
+
+  getQueuryPathByMetricId(metricId) {
+
   }
 
   expandFromLineage(parent): void {
@@ -552,7 +561,8 @@ export class PerformanceComponent implements OnInit {
         if (bugObj.context) {
           for (let el of bugObj.context) {
             for (let child of el) {
-              context += child.chartName;
+              let path = this.getRoutablePathByGuid(child.guid);
+              context += `<a href="${path}"> ${child.chartName}</a>`;
               context += "->";
             }
           }
