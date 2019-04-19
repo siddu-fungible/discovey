@@ -379,7 +379,7 @@ class TeraMarkFunTcpThroughputPerformanceHelper(MetricHelper):
             entry.save()
         except ObjectDoesNotExist:
             pass
-            one_entry = BltVolumePerformance(input_date_time=get_time_from_timestamp(timestamp),
+            one_entry = TeraMarkFunTcpThroughputPerformance(input_date_time=get_time_from_timestamp(timestamp),
                                              input_frame_size=frame_size,
                                              input_mode=mode,
                                              input_version=version,
