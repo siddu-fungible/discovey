@@ -83,6 +83,7 @@
     },
     "volume_capacity_list": [4194304, 8388608, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
+    "min_blt_plex_blocks": 256,
     // Head room needed for the LS volume in percentage
     "ns_id": 1,
     "check_lsv_stats": 0,
