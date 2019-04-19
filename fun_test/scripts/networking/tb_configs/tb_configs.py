@@ -25,6 +25,13 @@ class TBConfigs:
     def get_mgmt_interface(self, nu_or_hu):
         return self.configs[nu_or_hu]['mgmt_interface']
 
+    def get_an_interface(self, nu_or_hu, type=None):
+        for namespace in self.get_namespaces(nu_or_hu):
+            for intf_dict in self.get_interface_dicts(nu_or_hu, namespace):
+                for intf in intf_dict.keys():
+                    if intf_dict[intf].get('type', None) == type:
+                        return intf
+
     def get_a_nu_interface(self):
         namespaces = self.get_namespaces('nu')
         for ns in namespaces:
