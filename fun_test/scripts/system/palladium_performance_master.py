@@ -42,6 +42,7 @@ RCNVME_READ = "qa_rcnvme_read"
 RCNVME_RANDOM_READ = "qa_rcnvme_random_read"
 RCNVME_WRITE = "qa_rcnvme_write"
 RCNVME_RANDOM_WRITE = "qa_rcnvme_random_write"
+TERAMARK_CRYPTO_TUNNEL = "crypto_tunnel_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -152,7 +153,7 @@ class MyScript(FunTestScript):
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
-                RCNVME_RANDOM_WRITE]
+                RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_TUNNEL]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -2120,6 +2121,33 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             MetricHelper(model=metric_model).add_entry(**d)
 
 
+class JuniperCryptoTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_CRYPTO_TUNNEL
+    model = "JuniperCryptoTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=39,
+                              summary="TeraMark Crypto tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+    def run(self):
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt)
+
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=self.model)
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -2178,6 +2206,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTC())
     myscript.add_test_case(TeraMarkHuPerformanceTC())
+    myscript.add_test_case(JuniperCryptoTunnelPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

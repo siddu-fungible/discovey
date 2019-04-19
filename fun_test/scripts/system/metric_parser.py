@@ -37,6 +37,8 @@ class MetricParser():
             return self.rcnvme(logs=logs, date_time=date_time)
         elif "HuLatency" in model_name or "HuThroughput" in model_name:
             return self.hu_networking(logs=logs, date_time=date_time)
+        elif "JuniperCrypto" in model_name:
+            return self.crypto_tunnel(logs=logs, date_time=date_time)
         else:
             return {}
 
@@ -113,8 +115,8 @@ class MetricParser():
                     metrics["input_io_size"] = json_value["io_size"]
             else:
                 n = re.search(
-                r'rcnvme\s+(?P<value>{.*})',
-                line)
+                    r'rcnvme\s+(?P<value>{.*})',
+                    line)
                 if n:
                     json_value = json.loads(n.group("value"))
                     if "ctrlr_id" in json_value:
@@ -238,6 +240,56 @@ class MetricParser():
                     metrics["output_latency_P99_n2h"] = line.get("latency_P99_n2h", -1)
                     metrics["output_latency_P90_n2h"] = line.get("latency_P90_n2h", -1)
                     metrics["output_latency_P50_n2h"] = line.get("latency_P50_n2h", -1)
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
+                result["data"].append(d)
+        result["match_found"] = match_found
+        result["status"] = self.status == RESULTS["PASSED"]
+        return result
+
+    def crypto_tunnel(self, logs, date_time):
+        match_found = False
+        result = {}
+        result["data"] = []
+        self.status = RESULTS["FAILED"]
+        for line in logs:
+            m = re.search(
+                r'(?P<crypto_json>{"test".*})',
+                line)
+            if m:
+                match_found = True
+                metrics = collections.OrderedDict()
+                crypto_json = json.loads(m.group("crypto_json"))
+                input_test = crypto_json["test"]
+                input_algorithm = crypto_json["alg"]
+                input_num_tunnels = crypto_json["num_tunnels"]
+                input_key_size = crypto_json["key_size"]
+                input_operation = crypto_json["operation"]
+                input_src_memory = crypto_json["src_mem"]
+                input_dst_memory = crypto_json["dst_mem"]
+
+                pkt_size_json = crypto_json["pktsize"]
+                pps_json = crypto_json["PPS"] if "PPS" in crypto_json else None
+                bandwidth_json = crypto_json["throughput"]
+
+                input_pkt_size = float(pkt_size_json["value"])
+                output_packets_per_sec = float(pps_json["value"]) if pps_json else -1
+                output_packets_per_sec_unit = pps_json["unit"]
+                output_throughput = float(bandwidth_json["value"])
+                output_throughput_unit = bandwidth_json["unit"]
+
+                metrics["input_test"] = input_test
+                metrics["input_algorithm"] = input_algorithm
+                metrics["input_num_tunnels"] = input_num_tunnels
+                metrics["input_key_size"] = input_key_size
+                metrics["input_operation"] = input_operation
+                metrics["input_pkt_size"] = input_pkt_size
+                metrics["input_src_memory"] = input_src_memory
+                metrics["input_dst_memory"] = input_dst_memory
+                metrics["output_packets_per_sec"] = output_packets_per_sec
+                metrics["output_throughput"] = output_throughput
+                metrics["output_packets_per_sec_unit"] = output_packets_per_sec_unit
+                metrics["output_throughput_unit"] = output_throughput_unit
                 self.status = RESULTS["PASSED"]
                 d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                 result["data"].append(d)
