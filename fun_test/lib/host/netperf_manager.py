@@ -190,69 +190,81 @@ class NetperfManager:
 
     def run(self, *arg_dicts):
         result = {}
-        parallel = arg_dicts[0].get('parallel', 1)
-        for arg_dict in arg_dicts:
-            linux_obj = arg_dict.get('linux_obj')
-            perf_suffix = arg_dict.get('perf_suffix')
-            is_n2h = arg_dict.get('is_n2h', False)
-            is_h2n = arg_dict.get('is_h2n', False)
-            dip = arg_dict.get('dip')
-            protocol = arg_dict.get('protocol', 'tcp')
-            duration = arg_dict.get('duration', 30)
-            frame_size = arg_dict.get('frame_size', 800)
-            sip = arg_dict.get('sip', None)
-            ns = arg_dict.get('ns', None)
 
-        mp_task_obj = MultiProcessingTasks()
-        rlist = []
-        for i in range(0, parallel):
-            cpu = i + 8  # TODO: this is for SB-5 only
-            measure_latency = False
-            mp_task_obj.add_task(
-                func=do_test,
-                func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
-                task_key=i)
-        #measure_latency = True
-        #mp_task_obj.add_task(
-        #    func=do_test,
-        #    func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, measure_latency, sip, ns),
-        #    task_key=parallel-1)  # TODO: change 'parallel-1' to 'parallel' when COMe is not used
-        mp_task_obj.run(max_parallel_processes=parallel)
-        for i in range(0, parallel):
-            rlist.append(mp_task_obj.get_result(i))
+        # Do throughput test first, and latency test last
+        #for measure_latency in (False, True):
+        for measure_latency in (False,):
 
-        # TODO: the assumption here is all the tasks have same traffic direction
-        throughput = sum(r.get('throughput') for r in rlist)
-        #latency_min = rlist[parallel-1].get('latency_min')
-        #latency_avg = rlist[parallel-1].get('latency_avg')
-        #latency_max = rlist[parallel-1].get('latency_max')
-        #latency_P50 = rlist[parallel-1].get('latency_P50')
-        #latency_P90 = rlist[parallel-1].get('latency_P90')
-        #latency_P99 = rlist[parallel-1].get('latency_P99')
+            mp_task_obj = MultiProcessingTasks()
 
-        result = {
-            'throughput': round(throughput, 3),
-            #'latency_min': round(latency_min, 1),
-            #'latency_avg': round(latency_avg, 1),
-            #'latency_max': round(latency_max, 1),
-            #'latency_P50': round(latency_P50, 1),
-            #'latency_P90': round(latency_P90, 1),
-            #'latency_P99': round(latency_P99, 1),
-        }
+            direction_list = []
+            for arg_dict in arg_dicts:
+                parallel = arg_dict.get('parallel', 1)
+                linux_obj = arg_dict.get('linux_obj')
+                direction = arg_dict.get('suffix')
+                direction_list.append(direction)
+                dip = arg_dict.get('dip')
+                protocol = arg_dict.get('protocol', 'tcp')
+                duration = arg_dict.get('duration', 30)
+                frame_size = arg_dict.get('frame_size', 800)
+                sip = arg_dict.get('sip', None)
+                ns = arg_dict.get('ns', None)
 
-        throughput = result.get('throughput')
-        send_size = get_send_size(protocol, frame_size)
-        result.update(
-            {'throughput': round(throughput / (float(send_size) / frame_size), 3),
-             'pps': round(throughput * 1000000 / 8 / send_size, 2),
-             }
-        )
+                num_processes = 1 if measure_latency else parallel
+                for i in range(0, num_processes):
+                    cpu = i + 8  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
+                    mp_task_obj.add_task(
+                        func=do_test,
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
+                        task_key='{}_{}'.format(direction, i))
+
+            mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list))
+            rdict = {}
+            for direction in direction_list:
+                if direction not in result:
+                    result.update(
+                        {direction: {}}
+                    )
+                rdict.update(
+                    {direction: []}
+                )
+                for i in range(0, num_processes):
+                    rdict[direction].append(mp_task_obj.get_result('{}_{}'.format(direction, i)))
+
+                if measure_latency:
+                    lat_dict = rdict[direction][-1]
+                    latency_min = lat_dict.get('latency_min')
+                    latency_avg = lat_dict.get('latency_avg')
+                    latency_max = lat_dict.get('latency_max')
+                    latency_P50 = lat_dict.get('latency_P50')
+                    latency_P90 = lat_dict.get('latency_P90')
+                    latency_P99 = lat_dict.get('latency_P99')
+
+                    result[direction].update(
+                        {'latency_min': round(latency_min, 1),
+                         'latency_avg': round(latency_avg, 1),
+                         'latency_max': round(latency_max, 1),
+                         'latency_P50': round(latency_P50, 1),
+                         'latency_P90': round(latency_P90, 1),
+                         'latency_P99': round(latency_P99, 1),
+                        }
+                    )
+                else:
+                    throughput = sum(r.get('throughput', 0) for r in rdict[direction])
+
+                    result[direction].update(
+                        {'throughput': calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
+                         'pps': calculate_pps(protocol, frame_size, throughput),
+                        }
+                    )
 
         result_cooked = {}
-        for k, v in result.items():
-            result_cooked.update(
-                {'{}_{}'.format(k, perf_suffix): v}
-            )
+        for direction in result:
+            for k, v in result[direction].items():
+                result_cooked.update(
+                    {'{}_{}'.format(k, direction): v}
+                )
+
         return result_cooked
 
 
@@ -265,6 +277,16 @@ def get_send_size(protocol, frame_size):
         t = 'TCP_STREAM'
         send_size = frame_size-18-20-20
     return send_size
+
+
+def calculate_ethernet_throughput(protocol, frame_size, payload_throughput):
+    send_size = get_send_size(protocol, frame_size)
+    return round(payload_throughput / (float(send_size) / frame_size), 3)
+
+
+def calculate_pps(protocol, frame_size, throughput):
+    send_size = get_send_size(protocol, frame_size)
+    return round(throughput * 1000000 / 8 / send_size, 2)
 
 
 def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=None, measure_latency=False, sip=None,
@@ -287,17 +309,29 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     MEAN_LATENCY=78.26
     """
 
-    interface = linux_obj.get_interface_to_route(dip)
-    mtu = linux_obj.get_mtu(interface)
-    if frame_size > mtu + 18:
-        fun_test.log('Frame size {} is larger than interface {} mtu {}'.format(frame_size, interface, mtu))
-        return None
+    #interface = linux_obj.get_interface_to_route(dip)
+    #mtu = linux_obj.get_mtu(interface)
+    #if frame_size > mtu + 18:
+    #    fun_test.log('Frame size {} is larger than interface {} mtu {}'.format(frame_size, interface, mtu))
+    #    return None
 
     # Turn off offload
     #linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
 
-    result = {}
-    throughput = latency_min = latency_avg = latency_max = latency_P50 = latency_P90 = latency_P99 = float('nan')
+    if measure_latency:
+        result = {
+            'latency_min': -1,
+            'latency_avg': -1,
+            'latency_max': -1,
+            'latency_P50': -1,
+            'latency_P90': -1,
+            'latency_P99': -1,
+        }
+    else:
+        result = {
+            'throughput': -1,
+        }
+
     if protocol.lower() == 'udp':
         t = 'UDP_STREAM'
     elif protocol.lower() == 'tcp':
@@ -312,8 +346,8 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
         pat = r'THROUGHPUT=(\d+)'
     else:
         #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
-        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT"'.format(t, dip, duration)
-        pat = r'MIN_LATENCY=(\d+).*?MEAN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+).*?THROUGHPUT=(\d+)'
+        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1'.format(t, dip, duration)
+        pat = r'MIN_LATENCY=(\d+).*?MEAN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+)'
     if sip:
         cmd = '{} -L {}'.format(cmd, sip)
     if ns:
@@ -336,7 +370,6 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
             latency_P90 = float(match.group(4))
             latency_P99 = float(match.group(5))
             latency_max = float(match.group(6))
-            throughput = float(match.group(7))  # TCP/UDP throughput
 
             result.update(
                 {'latency_min': round(latency_min, 1),
@@ -345,7 +378,6 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
                  'latency_P50': round(latency_P50, 1),
                  'latency_P90': round(latency_P90, 1),
                  'latency_P99': round(latency_P99, 1),
-                 'throughput': round(throughput, 3),
                  }
             )
 

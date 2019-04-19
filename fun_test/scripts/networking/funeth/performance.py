@@ -21,6 +21,15 @@ RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 TIMESTAMP = get_current_time()
 PARALLEL = 8  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
+PERF_RESULT_KEYS = ('throughput',
+                    'pps',
+                    #'latency_min',
+                    #'latency_avg',
+                    #'latency_max',
+                    #'latency_P50',
+                    #'latency_P90',
+                    #'latency_P99',
+                    )
 
 
 class FunethPerformance(sanity.FunethSanity):
@@ -32,7 +41,7 @@ class FunethPerformance(sanity.FunethSanity):
         """)
 
     def setup(self):
-        super(FunethPerformance, self).setup()
+        #super(FunethPerformance, self).setup()
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -63,7 +72,7 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
 
     def cleanup(self):
-        super(FunethPerformance, self).cleanup()
+        #super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
 
@@ -104,7 +113,115 @@ class FunethPerformanceBase(FunTestCase):
             interval = 5
         fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
 
-    def _run(self, flow_type, tool='iperf3', protocol='udp', parallel=1, duration=30, frame_size=800, bw=BW_LIMIT):
+    def _run(self, flow_type, tool='netperf', protocol='tcp', parallel=1, duration=30, frame_size=800):
+        funeth_obj = fun_test.shared_variables['funeth_obj']
+
+        host_pairs = []
+        if flow_type.startswith('NU_HU'):
+            host_pairs = [('nu', 'hu'),]
+        elif flow_type.startswith('HU_NU'):
+            host_pairs = [('hu', 'nu'),]
+        elif flow_type.startswith('HU_HU'):
+            host_pairs = [('nu', 'hu'), ('hu', 'nu')]
+
+        suffixes = ('n2h', 'h2n')
+        arg_dicts = []
+        for shost, dhost in host_pairs:
+            linux_obj_src = funeth_obj.linux_obj_dict[shost]
+            linux_obj_dst = funeth_obj.linux_obj_dict[dhost]
+            dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr(dhost,
+                                                                   funeth_obj.tb_config_obj.get_an_interface(dhost))
+            suffix = '{}2{}'.format(shost[0], dhost[0])
+            arg_dicts.append(
+                {'linux_obj': linux_obj_src,
+                 'dip': dip,
+                 'tool': tool,
+                 'protocol': protocol,
+                 'parallel': parallel,
+                 'duration': duration,
+                 'frame_size': frame_size,
+                 'suffix': suffix,
+                 }
+            )
+
+        # configure MSS by add iptable rule
+        if frame_size < 1500:
+            for linux_obj_dst, ns_dst in zip([linux_obj_dst,], [None,]):
+                cmds = (
+                    'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                        frame_size - 18 - 20 - 20),
+                    'iptables -t mangle -L',
+                )
+                for cmd in cmds:
+                    if ns_dst:
+                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                    linux_obj_dst.sudo_command(cmd)
+
+        perf_manager_obj = NetperfManager([arg_dict.get('linux_obj') for arg_dict in arg_dicts])
+
+        # Collect stats before and after test run
+        fun_test.log('Collect stats before test')
+        #collect_stats()
+        try:
+            result = perf_manager_obj.run(*arg_dicts)
+        except:
+            result = {}
+        fun_test.log('Collect stats after test')
+        #collect_stats()
+
+        # Delete iptable rule
+        if frame_size < 1500:
+            for linux_obj_dst, ns_dst in zip([linux_obj_dst,], [None,]):
+                cmds = (
+                    'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                        frame_size - 18 - 20 - 20),
+                    'iptables -t mangle -L',
+                )
+                for cmd in cmds:
+                    if ns_dst:
+                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                    linux_obj_dst.sudo_command(cmd)
+
+        # Check test passed or failed
+        if any(v == -1 for v in result.values()):
+            passed = False
+        else:
+            passed = True
+
+        # Set -1 for untested direction
+        for suffix in suffixes:
+            for k in PERF_RESULT_KEYS:
+                k_suffix = '{}_{}'.format(k, suffix)
+                if k_suffix not in result:
+                    result.update(
+                        {k_suffix: -1}
+                    )
+
+        # Update result dict
+        result.update(
+            {'flow_type': flow_type,
+             'frame_size': frame_size,
+             'protocol': protocol.upper(),
+             'offloads': False,  # TODO: pass in parameter
+             'num_flows': parallel,
+             'timestamp': '%s' % TIMESTAMP,  # Use same timestamp for all the results of same run, per John/Ashwin
+             'version': fun_test.get_version(),
+             }
+        )
+        fun_test.log('Results:\n{}'.format(pprint.pformat(result)))
+
+        # Update file with result
+        with open(RESULT_FILE) as f:
+            r = json.load(f)
+            r.append(result)
+
+        with open(RESULT_FILE, 'w') as f:
+            json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
+
+        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
+
+
+    def _run2(self, flow_type, tool='iperf3', protocol='udp', parallel=1, duration=30, frame_size=800, bw=BW_LIMIT):
 
         funeth_obj = fun_test.shared_variables['funeth_obj']
 
