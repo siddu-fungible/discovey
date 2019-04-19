@@ -4,12 +4,14 @@ import re
 import json
 import collections
 
-base_tag = "qa_triage_ecdh_"
-iteration = 0
+base_tag = "qa_triage_ecdh_p256_"
+iteration = 5
 lsf_server = LsfStatusServer()
-num_commits = 76
+num_commits = 3
 num_sections = 4
 step = num_commits/num_sections
+if not step:
+    step = 1
 lsf_results = collections.OrderedDict()
 prefix = "{}{}".format(base_tag, iteration)
 for i in range(0, num_commits, step):
@@ -35,7 +37,7 @@ for git_commit, value in lsf_results.iteritems():
     tag = value["tag"]
     lines = output_text.split("\n")
     for line in lines:
-        m = re.search('ECDH\s+25519', line, re.MULTILINE|re.DOTALL)
+        m = re.search('ECDH\s+P256', line, re.MULTILINE|re.DOTALL)
         if m:
 
             c = GitManager().get_commit(sha=git_commit)

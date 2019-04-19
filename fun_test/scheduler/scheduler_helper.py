@@ -586,7 +586,7 @@ def get_manual_lock_test_beds():
     return TestBed.objects.filter(manual_lock=True)
 
 def get_test_bed_by_name(test_bed_name):
-    return TestBed.objects.get(test_bed_name=test_bed_name)
+    return TestBed.objects.get(name=test_bed_name)
 
 
 def send_error_mail(message, submitter_email=None, job_id=None):
