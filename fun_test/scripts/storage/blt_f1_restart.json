@@ -34,7 +34,7 @@
     "fio_params": {
       "bs": "4k",
       "iodepth": 1,
-      "size": "1m",
+      "size": "1028k",
       "io_queues": 2,
       "verify_pattern": "01234567",
       "timeout": 180
@@ -44,7 +44,7 @@
     "use_lsv": true,
     "lsv_pct": 0.32,
     "group": 1,
-    "vol_stats_threshold_pass": 128,
+    "vol_stats_threshold_pass": 2,
     "iter_interval": 2
   },
   "BLTF1FaultInjectFio": {
@@ -83,7 +83,7 @@
     "fio_params": {
       "bs": "4k",
       "iodepth": 1,
-      "size": "1m",
+      "size": "1028k",
       "io_queues": 2,
       "verify_pattern": "01234567",
       "timeout": 180
@@ -94,7 +94,7 @@
     "lsv_pct": 0.32,
     "group": 1,
     "iter_interval": 2,
-    "vol_stats_threshold_pass": 128,
+    "vol_stats_threshold_pass": 2,
     "trigger_lsv_failure": 0,
     "trigger_blt_failure": 1
   }
