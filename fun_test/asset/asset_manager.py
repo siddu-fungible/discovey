@@ -118,7 +118,7 @@ class AssetManager:
         result["test_bed"] = test_bed_type
         result["status"] = False
         result["message"] = None
-        in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state=JobStatusType.IN_PROGRESS)
+        in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state=JobStatusType.IN_PROGRESS).exclude(suite_path__endswith="_container.json")
 
         credits = 0
         if test_bed_type.lower().startswith("fs-"):
