@@ -661,8 +661,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
-                row_data_dict["readiops"] = avg_tps / 1000
-                row_data_dict["readbw"] = avg_kbs_read / 1000
+                row_data_dict["readiops"] = int(round(avg_tps))
+                row_data_dict["readbw"] = int(round(avg_kbs_read / 1000))
 
                 # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 # Comparing the internal volume stats with the expected value
