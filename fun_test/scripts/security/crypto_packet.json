@@ -5,7 +5,7 @@
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,
@@ -34,7 +34,7 @@
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,
@@ -63,7 +63,7 @@
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,
@@ -92,7 +92,7 @@
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,

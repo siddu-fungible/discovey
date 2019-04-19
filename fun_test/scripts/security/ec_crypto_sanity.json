@@ -18,7 +18,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -108,7 +108,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -194,7 +194,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -280,7 +280,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -366,7 +366,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -454,7 +454,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -540,7 +540,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -626,7 +626,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -712,7 +712,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -815,7 +815,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -916,7 +916,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -1017,7 +1017,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -1106,7 +1106,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -1195,7 +1195,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -1272,7 +1272,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
@@ -1352,7 +1352,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "ns_id": 1,
