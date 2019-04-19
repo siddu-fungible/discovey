@@ -570,15 +570,15 @@ export class PerformanceComponent implements OnInit {
         if (bugObj.jiraIds) {
           for (let id of bugObj.jiraIds) {
             if (thisFlatNode.jiraList[id]) {
-              if (!thisFlatNode.jiraList[id].includes(context)) {
-                thisFlatNode.jiraList[id].push(context);
-              }
-            } else {
-              thisFlatNode.jiraList[id] = [context];
-            }
+              thisFlatNode.jiraList[id].context += context;
 
+            } else {
+              thisFlatNode.jiraList[id] = {context: context}
+            }
           }
         }
+
+
       });
     }
   }
