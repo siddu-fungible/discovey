@@ -831,6 +831,7 @@ def process_auto_scheduled_jobs():
             # if job_id not in progress, clone and submit
             print("Cloning")
             cloned_job = clone_job(job_id=auto_schedule_job_id)
+            cloned_job.submitted_time = get_current_time()
             cloned_job.state = JobStatusType.SUBMITTED
             cloned_job.is_auto_scheduled_job = False
             cloned_job.auto_scheduled_execution_id = auto_schedule_job_id
