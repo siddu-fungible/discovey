@@ -122,8 +122,10 @@ class AssetManager:
 
         credits = 0
         if test_bed_type.lower().startswith("fs-"):
-            credits = 1
+            credits = 1  #TODO: why are these hard-coded?
         elif test_bed_type.lower().startswith("simulation"):
+            credits = 3
+        elif test_bed_type.lower().startswith("emulation"):
             credits = 3
         else:
             credits = 1
