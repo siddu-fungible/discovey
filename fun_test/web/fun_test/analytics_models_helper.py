@@ -7,12 +7,19 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
-from web.fun_test.metrics_models import VolumePerformanceEmulation, BltVolumePerformance
+from web.fun_test.metrics_models import VolumePerformanceEmulation, BltVolumePerformance, \
+    TeraMarkFunTcpThroughputPerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.db_fixup import prepare_status
+from fun_global import RESULTS
+from dateutil.parser import parse
 
+
+def get_time_from_timestamp(timestamp):
+    time_obj = parse(timestamp)
+    return time_obj
 
 def invalidate_goodness_cache():
     charts = MetricChart.objects.all()
@@ -225,9 +232,12 @@ class BltVolumePerformanceHelper(MetricHelper):
     def __init__(self):
         super(BltVolumePerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume, fio_job_name, write_iops=-1, read_iops=-1,
-                  write_throughput=-1, read_throughput=-1, write_avg_latency=-1, read_avg_latency=-1, write_90_latency=-1,
-                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1, read_99_99_latency=-1, write_99_99_latency=-1,
+    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume,
+                  fio_job_name, write_iops=-1, read_iops=-1,
+                  write_throughput=-1, read_throughput=-1, write_avg_latency=-1, read_avg_latency=-1,
+                  write_90_latency=-1,
+                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
+                  read_99_99_latency=-1, write_99_99_latency=-1,
                   write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
                   read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
                   write_90_latency_unit="usecs", write_95_latency_unit="usecs",
@@ -343,6 +353,43 @@ class AllocSpeedPerformanceHelper(MetricHelper):
                                               output_one_malloc_free_classic_min=output_one_malloc_free_classic_min,
                                               output_one_malloc_free_classic_avg=output_one_malloc_free_classic_avg,
                                               output_one_malloc_free_classic_max=output_one_malloc_free_classic_max)
+            one_entry.save()
+
+
+class TeraMarkFunTcpThroughputPerformanceHelper(MetricHelper):
+    model = TeraMarkFunTcpThroughputPerformance
+
+    def __init__(self):
+        super(TeraMarkFunTcpThroughputPerformanceHelper, self).__init__(model=self.model)
+
+    def add_entry(self, timestamp, frame_size, mode, version, flow_type, num_flows, pps, throughput,
+                  status=RESULTS["PASSED"], pps_unit="Mpps", throughput_unit="Gbps"):
+        try:
+            entry = TeraMarkFunTcpThroughputPerformance.objects.get(input_date_time=get_time_from_timestamp(timestamp),
+                                                                    input_frame_size=frame_size,
+                                                                    input_mode=mode,
+                                                                    input_version=version,
+                                                                    input_flow_type=flow_type,
+                                                                    input_number_flows=num_flows)
+            entry.output_throughput = throughput
+            entry.output_throughput_unit = throughput_unit
+            entry.output_pps = pps
+            entry.output_pps_unit = pps_unit
+            entry.status = status
+            entry.save()
+        except ObjectDoesNotExist:
+            pass
+            one_entry = BltVolumePerformance(input_date_time=get_time_from_timestamp(timestamp),
+                                             input_frame_size=frame_size,
+                                             input_mode=mode,
+                                             input_version=version,
+                                             input_flow_type=flow_type,
+                                             input_number_flows=num_flows,
+                                             output_throughput=throughput,
+                                             output_throughput_unit=throughput_unit,
+                                             output_pps=pps,
+                                             output_pps_unit=pps_unit,
+                                             status=status)
             one_entry.save()
 
 
@@ -546,4 +593,7 @@ if __name__ == "__main2__":
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
 
 if __name__ == "__main__":
-    prepare_status_db()
+    # prepare_status_db()
+    funtcp = TeraMarkFunTcpThroughputPerformanceHelper()
+    funtcp.add_entry(timestamp="2019-04-18 05:44:48.005254-08:00", mode="100G", version=6011, flow_type="FunTCP_Server_Throughput", frame_size=1500, pps=0.483, throughput=5.8, num_flows=1, status=RESULTS["PASSED"], pps_unit="Mpps", throughput_unit="Gbps")
+    print "added one entry into funtcp"
