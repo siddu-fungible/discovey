@@ -10,10 +10,8 @@ from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
-import uuid
 import re
 from datetime import datetime
-from colorama import Fore
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
 '''
