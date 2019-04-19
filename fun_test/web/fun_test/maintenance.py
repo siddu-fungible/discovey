@@ -603,7 +603,7 @@ if __name__ == "__main__network_revamped__":
                     work_in_progress=False).save()
     print "created charts for the new networking teramarks"
 
-if __name__ == "__main__":
+if __name__ == "__main_removed_offloads__":
     internal_chart_names = ["HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
                             "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
                             "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
@@ -617,3 +617,51 @@ if __name__ == "__main__":
         entry = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         ml.remove_attribute_from_data_sets(chart=entry, key="input_offloads")
     print "removed the input offloads from datasets"
+
+if __name__ == "__main__":
+    internal_chart_names = ["funtcp_server_throughput_1tcp", "funtcp_server_throughput_4tcp"]
+    frame_size = 1500
+    flow_type = "FunTCP_Server_Throughput"
+    for internal_chart_name in internal_chart_names:
+        positive = True
+        base_line_date = datetime(year=2019, month=4, day=18, minute=0, hour=0, second=0)
+        model_name = "TeraMarkFunTcpThroughputPerformance"
+        y1_axis_title = "Gbps"
+        output_name = "output_throughput"
+        if "1tcp" in internal_chart_name:
+            chart_name = "1 TCP Flow(s)"
+            num_flows = 1
+        else:
+            chart_name = "4 TCP Flow(s)"
+            num_flows = 4
+
+        description = "TBD"
+        data_sets = []
+        name = str(frame_size) + "B"
+        # if chart_name == "Latency":
+        #     name = name + "-avg"
+        one_data_set = {}
+        one_data_set["name"] = name
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_flow_type"] = flow_type
+        one_data_set["inputs"]["input_number_flows"] = num_flows
+        one_data_set["inputs"]["input_frame_size"] = frame_size
+        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info="Amit Surana (amit.surana@fungible.com)",
+                    source="",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created charts for the FunTCP networking teramarks"
