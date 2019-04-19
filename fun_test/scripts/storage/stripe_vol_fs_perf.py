@@ -65,10 +65,11 @@ tb_config = {
 }
 
 
-def get_iostat(arg1, arg2, arg3, arg4):
-    arg1.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".format(arg2, arg3, arg4),
-                      timeout=400)
-    fun_test.shared_variables["iostat_output"] = arg1.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d")
+def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
+    host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
+                             format(sleep_time, iostat_interval, iostat_iter), timeout=400)
+    fun_test.shared_variables["iostat_output"] = \
+        host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d")
 
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
@@ -347,21 +348,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                           message="{} device type check".format(self.volume_name))
 
-            if hasattr(self, "create_file_system") and self.create_file_system:
-                self.end_host.command("sudo mkfs.xfs -f /dev/nvme0n1")
-                self.end_host.command("sudo mount /dev/nvme0n1 /mnt")
-                # self.end_host.command("sudo xfs_mkfile 32g /mnt/testfile.dat")
-
             # Writing 20GB data on volume (one time task)
-            if self.warm_up_traffic:
+            if self.warm_up_traffic and not hasattr(self, "create_file_system"):
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
-                if hasattr(self, "create_file_system") and self.create_file_system:
-                    fio_output = self.end_host.pcie_fio(filename="/mnt/testfile.dat",
-                                                        **self.warm_up_fio_cmd_args)
-                    fun_test.test_assert(fio_output, "Pre-populating the testfile")
-                    self.end_host.command("sudo umount /mnt")
-                    self.end_host.command("sudo mount -o ro /dev/nvme0n1 /mnt")
-                else:
+                if not hasattr(self, "create_file_system"):
                     fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
                     fun_test.test_assert(fio_output, "Pre-populating the volume")
                 fun_test.log("FIO Command Output:\n{}".format(fio_output))
@@ -374,6 +364,17 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
+
+        if hasattr(self, "create_file_system") and self.create_file_system:
+            self.end_host.command("sudo mkfs.xfs -f /dev/nvme0n1")
+            self.end_host.command("sudo mount /dev/nvme0n1 /mnt")
+
+        if hasattr(self, "create_file_system") and self.create_file_system:
+            fio_output = self.end_host.pcie_fio(filename="/mnt/testfile.dat",
+                                                **self.warm_up_fio_cmd_args)
+            fun_test.test_assert(fio_output, "Pre-populating the testfile")
+            self.end_host.command("sudo umount /mnt")
+            self.end_host.command("sudo mount -o ro /dev/nvme0n1 /mnt")
 
         # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         # self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
@@ -487,10 +488,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 self.iostat_host_thread = self.end_host.clone()
                 iostat_thread = fun_test.execute_thread_after(time_in_seconds=1,
                                                               func=get_iostat,
-                                                              arg1=self.iostat_host_thread,
-                                                              arg2=self.fio_cmd_args["runtime"]/4,
-                                                              arg3=self.iostat_details["interval"],
-                                                              arg4=self.iostat_details["iterations"] + 1)
+                                                              host_thread=self.iostat_host_thread,
+                                                              sleep_time=self.fio_cmd_args["runtime"]/4,
+                                                              iostat_interval=self.iostat_details["interval"],
+                                                              iostat_iter=self.iostat_details["iterations"] + 1)
 
                 fun_test.log("Running FIO...")
                 fio_job_name = "fio_" + mode + "_" + self.fio_job_name[mode]
@@ -743,10 +744,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                # post_results("Stripe_Vol_FS", test_method, *row_data_list)
+                post_results("Stripe_XFS_Vol_FS", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Stripe Vol Perf Table", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="Stripe Vol XFS Perf Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -765,23 +766,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         pass
 
 
-class BLTFioRandRead12(BLTVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Random Read performance of stripe volume with 12 threads",
-                              steps='''
-        1. Create a stripe_vol with 2 BLT volume on FS attached with SSD.
-        2. Export (Attach) this stripe_vol to the Internal COMe host connected via the PCIe interface. 
-        3. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
-        COMe host and check the performance are inline with the expected threshold. 
-        ''')
-
-
 class BLTFioRandRead12XFS(BLTVolumePerformanceTestcase):
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=1,
                               summary="Random Read performance on a file in XFS partition created on stripe volume "
                                       "with 12 threads ",
                               steps='''
@@ -794,9 +782,23 @@ class BLTFioRandRead12XFS(BLTVolumePerformanceTestcase):
         ''')
 
 
+class BLTFioRandRead12(BLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Random Read performance of stripe volume with 12 threads",
+                              steps='''
+        1. Create a stripe_vol with 2 BLT volume on FS attached with SSD.
+        2. Export (Attach) this stripe_vol to the Internal COMe host connected via the PCIe interface. 
+        3. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
+        COMe host and check the performance are inline with the expected threshold. 
+        ''')
+
+
 if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
-#    bltscript.add_test_case(BLTFioRandRead12())
     bltscript.add_test_case(BLTFioRandRead12XFS())
+#    bltscript.add_test_case(BLTFioRandRead12())
+
     bltscript.run()
