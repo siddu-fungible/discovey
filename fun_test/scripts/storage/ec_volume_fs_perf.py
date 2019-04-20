@@ -24,9 +24,6 @@ tb_config = {
             "mode": Dut.MODE_EMULATION,
             "type": Dut.DUT_TYPE_FSU,
             "num_f1s": 1,
-            "f1_index": 0,
-            "serial_device_path": "/dev/ttyS0",
-            "serial_sbp_device_path": "/dev/ttyS1",
             "ip": "server26",
             "user": REGRESSION_USER,
             "passwd": REGRESSION_USER_PASSWORD,
@@ -127,12 +124,8 @@ class ECVolumeLevelScript(FunTestScript):
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], num_f1s=tb_config["dut_info"][0]["num_f1s"])
         fun_test.shared_variables["fs"] = fs
 
-        f1infs = F1InFs(index=tb_config["dut_info"][0]["f1_index"], fs=fs,
-                        serial_device_path=tb_config["dut_info"][0]["serial_device_path"],
-                        serial_sbp_device_path=tb_config["dut_info"][0]["serial_sbp_device_path"])
-
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
-        f1 = fs.get_f1(index=tb_config["dut_info"][0]["f1_index"])
+        f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
         self.db_log_time = datetime.now()
@@ -141,7 +134,7 @@ class ECVolumeLevelScript(FunTestScript):
         '''self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
                                                     target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])'''
 
-        self.storage_controller = f1infs.get_dpc_storage_controller()
+        self.storage_controller = f1.get_dpc_storage_controller()
 
         # Setting the syslog level to 2
         command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False,
