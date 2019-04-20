@@ -6,7 +6,6 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
-import uuid
 from datetime import datetime
 
 '''
