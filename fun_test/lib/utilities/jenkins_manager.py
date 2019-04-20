@@ -11,7 +11,7 @@ DEFAULT_BUILD_PARAMS = {
     "HW_VERSION": "Ignored",
     "RUN_MODE": "Build only",
     "PRIORITY": "high_priority",
-    "BOOTARGS": "app=jpeg_perf_test --disable-wu-watchdog --test-exit-fast",
+    "BOOTARGS": "app=jpeg_perf_test --test-exit-fast",
     "MAX_DURATION": 3,
     "SECURE_BOOT": "fungible",
     "NOTE": "",
@@ -101,7 +101,7 @@ class JenkinsManager():
 
 if __name__ == "__main__":
     jenkins_manager = JenkinsManager()
-    boot_args = "app=jpeg_perf_test --disable-wu-watchdog --test-exit-fast"
+    boot_args = "app=jpeg_perf_test --test-exit-fast"
     params = {"BOOTARGS": boot_args, "FUNOS_MAKEFLAGS": "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"}
 
     queue_item = jenkins_manager.build(params=params)
