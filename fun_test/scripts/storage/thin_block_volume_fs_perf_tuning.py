@@ -1155,7 +1155,7 @@ class BLTFioSeqRead(BLTVolumePerformanceTestcase):
                               steps='''
         1. Create a BLT volume on FS attached with SSD.
         2. Export (Attach) this BLT volume to the Internal COMe host connected via the PCIe interface. 
-        3. Run the FIO sequential read test(without verify) for various block size and IO depth from the 
+        3. Run FIO sequential read test(without verify) for various block size and IO depth from the 
         COMe host and check the performance are inline with the expected threshold. 
         ''')
 
@@ -1164,11 +1164,11 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Sequential Random Read performance of BLT volume",
+                              summary="Random Read performance of BLT volume",
                               steps='''
         1. Create a BLT volume on FS attached with SSD.
         2. Export (Attach) this BLT volume to the Internal COMe host connected via the PCIe interface. 
-        3. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
+        3. Run FIO random Read test(without verify) for various block size and IO depth from the 
         COMe host and check the performance are inline with the expected threshold. 
         ''')
 
