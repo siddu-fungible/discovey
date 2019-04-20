@@ -21,7 +21,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     // To enable fault_injection on BLT. Set indices to random & count for number of BLT.
@@ -118,7 +118,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -210,7 +210,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -302,7 +302,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -394,7 +394,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -488,7 +488,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -580,7 +580,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -672,7 +672,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -764,7 +764,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -874,7 +874,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -982,7 +982,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -1255,7 +1255,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -1339,7 +1339,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,
@@ -1423,7 +1423,7 @@
       "chunk_size": 128
     },
     "jvol_details": {
-      "multiplier": 8,
+      "multiplier": 4,
       "block_size": 512
     },
     "trigger_plex_failure": true,

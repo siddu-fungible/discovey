@@ -1,4 +1,6 @@
 [
   {"info": {"tags": ["tagn1"]}},
-  {"path": "examples/vanilla.py"}
+  {"path": "examples/vanilla.py"},
+  {"path": "examples/sanity.py"}
+
 ]

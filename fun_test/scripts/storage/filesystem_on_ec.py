@@ -300,7 +300,7 @@ class FSOnECTestcase(FunTestCase):
         self.funos_cmdline = fun_test.shared_variables["funos_cmdline"]
         self.qemu_cmdline = fun_test.shared_variables["qemu_cmdline"]
 
-        self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
+        self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         self.volume_attached = False
 
@@ -385,12 +385,31 @@ class FSOnECTestcase(FunTestCase):
                                               message="Ensuring error_injection got disabled")
 
                 # Resetting the nvme controller to make the newly created volume accessible to the host
-                self.reset_command = "echo 1 >/sys/class/nvme/" + self.nvme_device.split("/")[2] + "/reset_controller"
-                self.host.sudo_command(self.reset_command)
-                fun_test.sleep("Sleeping for couple of seconds to the host to identify the volume", 2)
+                for n in self.nvme_controller:
+                    try:
+                        self.reset_command = "echo 1 >/sys/class/nvme/nvme" + str(n) + "/reset_controller"
+                        self.host.sudo_command(self.reset_command)
+                    except:
+                        fun_test.log("Ignoring the above command timeout")
+                fun_test.sleep("Sleeping for couple of seconds to the host to identify the volume", 5)
 
                 # Checking that the volume is accessible to the host
                 lsblk_output = self.host.lsblk("-b")
+                fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+                volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
+                for volume_name in lsblk_output:
+                    match = re.search(volume_pattern, volume_name)
+                    if match:
+                        self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
+                        self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                        fun_test.test_assert_expected(expected=self.volume_name,
+                                                      actual=lsblk_output[volume_name]["name"],
+                                                      message="{} device available".format(self.volume_name))
+                        break
+                else:
+                    fun_test.test_assert(False,"{} device available".format(self.volume_name))
+
                 fun_test.simple_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                               message="{} volume type check".format(self.volume_name))
@@ -399,7 +418,7 @@ class FSOnECTestcase(FunTestCase):
                                               message="{} volume size check".format(self.volume_name))
 
                 # Reducing the queue length of the block device to 8
-                self.host.sudo_command("echo 8 >/sys/block/nvme0n1/queue/nr_requests")
+                self.host.sudo_command("echo 8 >/sys/block/{}/queue/nr_requests".format(self.volume_name))
 
                 # Creating self.fs_type filesystem in EC volume and mount the same
                 # Checking if the filesystem type is XFS, if so at first ensure the xfs is installed in the qemu host
@@ -750,10 +769,17 @@ class ECVolumeCreateDeleteInBatch(FSOnECTestcase):
                     # Check whether the current capacity is sufficient enough to create the ndata:nparity EC volume
                     # The minimum size of the each individual plex participating in making m:n EC volume is 128 blocks
                     min_ec_plex_size = self.min_ec_plex_blocks * self.ec_info["volume_block"]["ec"]
+                    min_blt_plex_size = self.min_blt_plex_blocks * self.ec_info["volume_block"]["ndata"]
                     if int(round(float(size) / ndata)) < min_ec_plex_size:
                         fun_test.critical("Skipping the current capacity {}, because its not sufficient enough to "
                                           "create {}:{} EC volume".format(size, ndata, nparity))
                         continue
+                    if int(round(float(size) / ndata)) < min_blt_plex_size:
+                        fun_test.critical(
+                            "Skipping the current capacity {}, because its not sufficient enough to create "
+                            "{}:{} EC volume".format(size, ndata, nparity))
+                        continue
+
                     self.cur_ec_info[index] = {}
                     self.cur_ec_info[index] = copy.deepcopy(self.ec_info)
                     self.cur_ec_info[index]["ndata"] = ndata
@@ -765,9 +791,15 @@ class ECVolumeCreateDeleteInBatch(FSOnECTestcase):
                     # Check whether the current capacity is sufficient enough to create the ndata:nparity EC volume
                     # The minimum size of the each individual plex participating in making m:n EC volume is 128 blocks
                     min_ec_plex_size = self.min_ec_plex_blocks * self.ec_info["volume_block"]["ec"]
+                    min_blt_plex_size = self.min_blt_plex_blocks * self.ec_info["volume_block"]["ndata"]
                     if int(round(float(size) / ndata)) < min_ec_plex_size:
                         fun_test.critical("Skipping the current capacity {}, because its not sufficient enough to "
                                           "create {}:{} EC volume".format(size, ndata, nparity))
+                        continue
+                    if int(round(float(size) / ndata)) < min_blt_plex_size:
+                        fun_test.critical(
+                            "Skipping the current capacity {}, because its not sufficient enough to create "
+                            "{}:{} EC volume".format(size, ndata, nparity))
                         continue
                     # Creating ndata:npartiy EC volume
                     self.unconfigure_ec_volume(self.cur_ec_info[index])

@@ -61,9 +61,13 @@ internal_chart_names_for_flows = {
     "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps", "HU_HU_NFCP_output_latency_avg"],
     "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps", "HU_HU_FCP_output_latency_avg"],
     "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"],
-    "NU_VP_NU_FWD_NFCP": ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps", "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"],
-    "NU_LE_VP_NU_FW": ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps", "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
+    "NU_VP_NU_FWD_NFCP": ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                          "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"],
+    "NU_LE_VP_NU_FW": ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
+                       "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
 }
+
+networking_models = ["HuThroughputPerformance", "HuLatencyPerformance"]
 
 
 def get_rounded_time():
@@ -111,6 +115,29 @@ def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, j
         chart.last_git_commit = git_commit
         chart.save()
 
+def set_networking_chart_status():
+    for model in networking_models:
+        metric_model = app_config.get_metric_models()[model]
+        charts = MetricChart.objects.filter(metric_model_name=model)
+        for chart in charts:
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                order_by = "input_date_time"
+                inputs = data_set["inputs"]
+                output = data_set["output"]["name"]
+                d = {}
+                for input_name, input_value in inputs.iteritems():
+                    d[input_name] = input_value
+                entries = metric_model.objects.filter(**d).order_by(order_by)
+                if len(entries):
+                    entry = entries.first()
+                    value = getattr(entry, output)
+                    if value == -1:
+                        chart.last_build_status = fun_test.FAILED
+                        chart.last_build_date = get_current_time()
+                        chart.save()
+                        break
+
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -124,7 +151,8 @@ class MyScript(FunTestScript):
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
-                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE, RCNVME_RANDOM_WRITE]
+                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
+                RCNVME_RANDOM_WRITE]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -593,10 +621,9 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'(?:\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[\S+:(?P<metric_name>\S+)\]',
+                    r'(?P<value>{.*})\s+\[\S+:(?P<metric_name>\S+)\]',
                     line)
                 if m:
-                    metric_type = m.group("metric_type")
                     value = m.group("value")
                     j = json.loads(value)
                     metric_name = m.group("metric_name").lower()
@@ -605,6 +632,8 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
                         continue
 
                     try:  # Either a raw value or json value
+                        if "latency" in j:
+                            j = j["latency"]
                         for key, value in j.iteritems():
                             if key != "unit" and key != "value":
                                 metrics["output_" + metric_name + "_" + key] = value
@@ -641,10 +670,9 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
+                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+)?(:\s+)?(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
-                    stats_found = True
                     metric_name = m.group("metric_name")
                     metric_type = m.group("metric_type")
                     value = m.group("value")
@@ -660,6 +688,10 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
                                             "VOL_TYPE_BLK_EC_read"]
                     if metric_name not in allowed_metric_names:
                         continue
+
+                    if metric_type == None:
+                        metric_type = "latency"
+                        j = j["latency"]
 
                     if "andwidth" in metric_type.lower():
                         if "avg_op_bw_mbps" in line:
@@ -1549,7 +1581,6 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-
 class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
 
@@ -1638,11 +1669,11 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
 
 class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
     model = "NuTransitPerformance"
-    file_paths = ["nu_rfc2544_performance.json", "hu_funeth_performance_data.json"]
+    file_paths = ["nu_rfc2544_performance.json"]
 
     def describe(self):
         self.set_test_details(id=24,
-                              summary="TeraMark NU Transit and HU Funeth Performance Test",
+                              summary="TeraMark HNU Transit Performance Test",
                               steps="Steps 1")
 
     def run(self):
@@ -1952,6 +1983,7 @@ class TeraMarkRcnvmeReadPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class TeraMarkRcnvmeRandomReadPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
     tag = RCNVME_RANDOM_READ
     model = "TeraMarkRcnvmeReadWritePerformance"
@@ -1980,6 +2012,112 @@ class TeraMarkRcnvmeRandomWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
         self.set_test_details(id=37,
                               summary="TeraMark rcnvme random write Performance Test on F1",
                               steps="Steps 1")
+
+
+class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
+    file_paths = ["hu_funeth_performance_data.json"]
+
+    def describe(self):
+        self.set_test_details(id=38,
+                              summary="TeraMark HU Funeth Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        try:
+            fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
+            for file in self.lines:
+                for line in file:
+                    if "flow_type" in line:
+                        metrics = collections.OrderedDict()
+                        metrics["input_flow_type"] = line["flow_type"]
+                        metrics["input_frame_size"] = line["frame_size"]
+                        metrics["input_number_flows"] = line.get("num_flows", 1)
+                        metrics["input_offloads"] = line.get("offloads", False)
+                        metrics["input_protocol"] = line.get("protocol", "TCP")
+                        metrics["input_version"] = line.get("version", "")
+                        date_time = get_time_from_timestamp(line["timestamp"])
+                        if "throughput_h2n" in line:
+                            self.model = "HuThroughputPerformance"
+                            metrics["output_throughput_h2n"] = (float(
+                                line["throughput_h2n"]) / 1000) if line["throughput_h2n"] != -1 else -1
+                            metrics["output_throughput_n2h"] = (float(
+                                line["throughput_n2h"]) / 1000) if line["throughput_n2h"] != -1 else -1
+                            metrics["output_pps_h2n"] = (float(
+                                line["pps_h2n"]) / 1000000) if line["pps_h2n"] != -1 else -1
+                            metrics["output_pps_n2h"] = (float(
+                                line["pps_n2h"]) / 1000000) if line["pps_n2h"] != -1 else -1
+                        elif "latency_avg_h2n" in line:
+                            self.model = "HuLatencyPerformance"
+                            metrics["output_latency_max_h2n"] = line.get("latency_max_h2n", -1)
+                            metrics["output_latency_min_h2n"] = line.get("latency_min_h2n", -1)
+                            metrics["output_latency_avg_h2n"] = line.get("latency_avg_h2n", -1)
+                            metrics["output_latency_P99_h2n"] = line.get("latency_P99_h2n", -1)
+                            metrics["output_latency_P90_h2n"] = line.get("latency_P90_h2n", -1)
+                            metrics["output_latency_P50_h2n"] = line.get("latency_P50_h2n", -1)
+
+                            metrics["output_latency_max_n2h"] = line.get("latency_max_n2h", -1)
+                            metrics["output_latency_min_n2h"] = line.get("latency_min_n2h", -1)
+                            metrics["output_latency_avg_n2h"] = line.get("latency_avg_n2h", -1)
+                            metrics["output_latency_P99_n2h"] = line.get("latency_P99_n2h", -1)
+                            metrics["output_latency_P90_n2h"] = line.get("latency_P90_n2h", -1)
+                            metrics["output_latency_P50_n2h"] = line.get("latency_P50_n2h", -1)
+                        else:
+                            self.add_entries_into_dual_table(default_metrics=metrics, line=line, date_time=date_time)
+                            continue
+                        fun_test.log(
+                            "flow type: {}, frame size: {}, date time: {}".format(
+                                metrics["input_flow_type"], metrics["input_frame_size"], date_time))
+                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                        d["input_date_time"] = date_time
+                        metric_model = app_config.get_metric_models()[self.model]
+                        MetricHelper(model=metric_model).add_entry(**d)
+
+            self.result = fun_test.PASSED
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_networking_chart_status()
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+    def add_entries_into_dual_table(self, default_metrics, line, date_time):
+        if "throughput" in line and "pps" in line:
+            metrics = dict(default_metrics)
+            self.model = "HuThroughputPerformance"
+            if metrics["input_flow_type"] == "HU_NU_NFCP":
+                metrics["output_throughput_h2n"] = (float(
+                    line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
+                metrics["output_pps_h2n"] = (float(
+                    line["pps"]) / 1000000) if "pps" in line and  line["pps"] != -1 else -1
+            else:
+                metrics["output_throughput_n2h"] = (float(
+                    line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
+                metrics["output_pps_n2h"] = (float(
+                    line["pps"]) / 1000000) if "pps" in line and line["pps"] != -1 else -1
+            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+            d["input_date_time"] = date_time
+            metric_model = app_config.get_metric_models()[self.model]
+            MetricHelper(model=metric_model).add_entry(**d)
+        if "latency_avg" in line:
+            metrics = dict(default_metrics)
+            self.model = "HuLatencyPerformance"
+            if metrics["input_flow_type"] == "HU_NU_NFCP":
+                metrics["output_latency_max_h2n"] = line.get("latency_max", -1)
+                metrics["output_latency_min_h2n"] = line.get("latency_min", -1)
+                metrics["output_latency_avg_h2n"] = line.get("latency_avg", -1)
+                metrics["output_latency_P99_h2n"] = line.get("latency_P99", -1)
+                metrics["output_latency_P90_h2n"] = line.get("latency_P90", -1)
+                metrics["output_latency_P50_h2n"] = line.get("latency_P50", -1)
+            else:
+                metrics["output_latency_max_n2h"] = line.get("latency_max", -1)
+                metrics["output_latency_min_n2h"] = line.get("latency_min", -1)
+                metrics["output_latency_avg_n2h"] = line.get("latency_avg", -1)
+                metrics["output_latency_P99_n2h"] = line.get("latency_P99", -1)
+                metrics["output_latency_P90_n2h"] = line.get("latency_P90", -1)
+                metrics["output_latency_P50_n2h"] = line.get("latency_P50", -1)
+            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+            d["input_date_time"] = date_time
+            metric_model = app_config.get_metric_models()[self.model]
+            MetricHelper(model=metric_model).add_entry(**d)
 
 
 class PrepareDbTc(FunTestCase):
@@ -2039,6 +2177,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTC())
+    myscript.add_test_case(TeraMarkHuPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

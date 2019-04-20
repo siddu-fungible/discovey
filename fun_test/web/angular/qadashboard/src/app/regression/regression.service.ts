@@ -8,12 +8,26 @@ import {forkJoin, observable, Observable, of} from "rxjs";
   providedIn: 'root'
 })
 export class RegressionService implements OnInit{
+  stateStringMap = { "-200": "UNKNOWN",
+                   "-100": "ERROR",
+                   "-20": "KILLED",
+                   "-10": "ABORTED",
+                   "10": "COMPLETED",
+                   "20": "AUTO_SCHEDULED",
+                   "30": "SUBMITTED",
+                   "40": "SCHEDULED",
+                   "50": "QUEUED",
+                   "60": "IN_PROGRESS"};
+
+
   logDir: string = null;
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
   ngOnInit() {
 
   }
+
+
 
   fetchLogDir() {
     if (!this.logDir) {
@@ -67,5 +81,38 @@ export class RegressionService implements OnInit{
       return of(response.data);
     }));
   }
+
+  fetchTestbeds() {
+    return this.apiService.get("/api/v1/regression/test_beds").pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
+  stateFilterStringToNumber(s) {
+    let match = "ALL";
+    for (let key in this.stateStringMap) {
+      let value = this.stateStringMap[key];
+      if (value === s) {
+        match = key;
+        break;
+      }
+    }
+    return match;
+  }
+
+
+  testBedInProgress(testBedType) {
+
+    let paramString = `?`;
+    let stateStringNumber = this.stateFilterStringToNumber("IN_PROGRESS");
+    if (testBedType) {
+      paramString += `test_bed_type=${testBedType}&state=${stateStringNumber}`;
+    }
+    return this.apiService.get("/api/v1/regression/suite_executions" + paramString).pipe(switchMap (response => {
+      return of(response.data);
+    }))
+
+  }
+
 
 }

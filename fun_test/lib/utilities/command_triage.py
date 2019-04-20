@@ -46,21 +46,22 @@ BUILD_PARAMS = {
 
 
 
-def do_score_triage(commits, bootargs):
+def do_score_triage(commits, bootargs, base_tag):
     num_commits = len(commits)
-    step = num_commits/5
+    step = num_commits/4
     if step == 0:
         step = 1
 
     for i in range(0, len(commits), step):
 
         sha = commits[i]["sha"]
-        tag = "qa_triage_bcopy_{}".format(i)
+        tag = "{}_{}".format(base_tag, i)
         jenkins_manager = JenkinsManager(job_name="emulation/fun_on_demand")
         params = BUILD_PARAMS
         params["BOOTARGS"] = bootargs
         params["BRANCH_FunOS"] = sha
-        params["DISABLE_ASSERTIONS"] = "true"
+        params["SECURE_BOOT"] = "Yes"
+        # params["DISABLE_ASSERTIONS"] = "true"
         params["TAGS"] = "{}, {}".format(tag, "qa_triage")
         queue_item = jenkins_manager.build(params=params)
 
@@ -90,11 +91,16 @@ def do_score_triage(commits, bootargs):
 
 if __name__ == "__main__":
     gm = GitManager()
-    to_sha = "17ea45595c54f72e56b27659f16663579479d7eb"
-    from_sha = "5e6850064e31f39142c20741d45d697f5e7a53ed"
+
+    from_sha = "2fed57f3fcd79c7e6a3f0dce15036e6aad1be674"
+    to_sha = "a658f7f0f6bf615fc5ee37ad7f34bfc428b9cc58"
+
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))
     for commit in commits:
         print commit["sha"], commit["commit"]["committer"]["date"]
     bootargs = "--serial app=bcopy_speed_test,bcopy_flood_speed_test"
-    do_score_triage(commits, bootargs=bootargs)
+    bootargs = "app=pke_rsa_crt_dec_no_pad_soak,pke_rsa_crt_dec_no_pad_4096_soak,pke_ecdh_soak_256,pke_ecdh_soak_25519,pke_x25519_2k_tls_soak,pke_p256_2k_tls_soak --serial"
+    iteration = 5
+    base_tag = "qa_triage_ecdh_p256_{}".format(iteration)
+    do_score_triage(commits, bootargs=bootargs, base_tag=base_tag)

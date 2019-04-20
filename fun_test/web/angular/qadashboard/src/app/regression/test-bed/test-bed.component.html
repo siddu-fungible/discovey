@@ -1,0 +1,137 @@
+<div [ngClass]="{'component': !embed}">
+  <div class="container1">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-header">
+            Testbeds
+          </div>
+          <div class="card-body">
+            <table class="table table-bordered">
+              <tr>
+                <th class="text-center" rowspan="2">Name</th>
+                <th class="text-center" rowspan="2">Description</th>
+                <th class="text-center" colspan="2">Regression lock</th>
+                <th class="text-center" colspan="3">Manual lock</th>
+              </tr>
+              <tr>
+                <th class="text-center">Status</th>
+                <th class="text-center">Locked by</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Expiration time</th>
+                <th class="text-center">Locked by</th>
+              </tr>
+
+              <tr *ngFor="let testBed of testBeds">
+                <td>{{ testBed.name }}</td>
+                <td>{{ testBed.description }}</td>
+                <td>
+                  <span class="badge badge-danger"
+                        *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
+                  <ng-template #freeAutomationStatus>
+                    <span class="badge badge-success">Free</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <a *ngIf="automationStatus[testBed.name].numExecutions > 0" target="_blank"
+                     href="/regression/suite_detail/{{ automationStatus[testBed.name].executionId }}">Suite:
+                    {{ automationStatus[testBed.name].executionId }}</a>
+                </td>
+                <td>
+                  <span class="badge badge-danger"
+                        *ngIf="manualStatus[testBed.name].manualLock; else freeManualStatus">In use</span>
+
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onUnLock(testBed)"> Un-lock</span>
+                  </ng-container>
+
+                  <ng-template #freeManualStatus>
+                    <span class="badge badge-success">Free</span>
+                    <ng-container *ngIf="!manualStatus[testBed.name].manualLock">&nbsp;
+                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
+                    &nbsp;
+                  </ng-container>
+                  </ng-template>
+                </td>
+                <td>
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+
+                    &nbsp;
+                    <span>{{ getPrettyTime(manualStatus[testBed.name].manualLockExpiryTime) }}</span>
+                    <ng-container *ngIf="isLockExpired(testBed)">
+                      &nbsp;
+                      <span class="badge badge-danger" *ngIf="manualStatus[testBed.name].manualLock"> Expired</span>
+                      &nbsp;
+                      <span class="pseudo-anchor" (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+
+                    </ng-container>
+
+                  </ng-container>
+                </td>
+                <td>
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+                  {{ manualStatus[testBed.name].manualLockSubmitter }}
+                  </ng-container>
+                </td>
+              </tr>
+
+            </table>
+
+          </div>
+        </div>
+      </div>
+      <div class="col" *ngIf="currentEditMode !== EditMode.NONE">
+        <div class="card">
+          <div class="card-header">
+            {{ lockPanelHeader }}
+            <span style="float:right;" (click)="onCloseLockPanel()" class="pseudo-anchor">Close</span>
+          </div>
+          <div class="card-body">
+
+
+
+            <table>
+
+              <tr *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL">
+                <td class="no-wrap">
+                  <label for="submitter">Submitter</label>
+                </td>
+                <td>
+                  <select id="submitter" [(ngModel)]="selectedUser">
+                    <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+                      ({{ user.email }})
+                    </option>
+                  </select>
+                  &nbsp;
+                  <a href="/users" target="_blank">Add user</a>
+                </td>
+              </tr>
+              <tr>
+
+              </tr>
+              <tr>
+                <td colspan="2">
+              <table>
+                <tr>
+                  <td>HH:MM (Duration from now)</td>
+                  <td>
+                    <ngb-timepicker style="display: inline-flex" id="scheduling-time-picker"
+                                    [(ngModel)]="schedulingTime"></ngb-timepicker>
+                  </td>
+                </tr>
+              </table>
+
+                 </td>
+              </tr>
+              <tr>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="btn btn-sm btn-outline-success" (click)="onLockSubmit()"> Submit</button>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_UPDATE_EXPIRATION " class="btn btn-sm btn-outline-success" (click)="onExtendTimeSubmit()"> Submit</button>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -92,8 +92,8 @@
     </ng-container>
     <ng-container *ngSwitchCase="'View script history'">
       <br>
-      <label for="admin-option">Choose a script:
-        <div id="admin-option" style="display:inline-flex;" ngbDropdown>
+      <label for="admin-option-script-history">Choose a script:
+        <div id="admin-option-history" style="display:inline-flex;" ngbDropdown>
           <button class="btn btn-sm" ngbDropdownToggle>{{ scriptPathSelected }}</button>
           <div ngbDropdownMenu *ngIf="scriptPathSelected">
             <ng-container *ngFor="let script of scriptPathsList">

@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 curl_fetch()
@@ -21,7 +22,6 @@ modules_tgz_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/
 functrlp_tgz_url=http://$dochub_fungible_local/doc/jenkins/funcontrolplane/latest/functrlp_posix.tgz
 sdk_url=
 kernel_url=
-host_os_tgz=host_os.tgz    
 regex_tgz_url=
 
 QEMU_TGZ_NAME=qemu.tgz
@@ -88,7 +88,7 @@ if [ ! -z "$funos_tgz_url" ]; then
     echo "Setting up funos files"
     echo "----------------------"
     curl_fetch $funos_tgz_url
-    if [[ $fun_os_tgz_url =~ tgz ]]; then
+    if [[ $funos_tgz_url =~ tgz ]]; then
         tar -xf $FUNOS_TGZ_NAME -C /tmp
         mv /tmp/bin/$FUNOS_POSIX_NAME $FUNOS_POSIX_NAME
         rm -rf /tmp/bin
@@ -119,16 +119,6 @@ if [ ! -z "$regex_tgz_url" ]; then
     cp $TMP_REGEX/bin/Linux/ffac `pwd`
     rm -rf $TMP_REGEX
     echo PATH=$PATH:`pwd` >> ~/.bashrc
-fi
-
-if [ ! -z "$host_os_tgz" ]; then
-    printf "Host OS tgz: $host_os_tgz\n"
-    echo "-------------------------"
-    echo "Setting up Host OS"
-    echo "-------------------------"
-    tar -xvzf $host_os_tgz -C $QEMU_DIRECTORY
-    rm $host_os_tgz
-    echo "Done setting up Host OS"
 fi
 
 

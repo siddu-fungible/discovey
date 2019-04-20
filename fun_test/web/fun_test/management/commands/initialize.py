@@ -8,9 +8,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         site_state.register_users()
+        site_state.register_test_bed_interest_emails()
         site_state.register_tags()
         site_state.register_modules()
-        site_state.register_testbeds()
+        site_state.register_test_beds()
         if not is_lite_mode():
             site_state.register_product_metrics()
             site_state.set_metrics_settings()

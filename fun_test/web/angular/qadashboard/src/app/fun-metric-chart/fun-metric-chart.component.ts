@@ -99,6 +99,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   successAuthor: string = null;
   commits: any = null;
   message: any = null;
+  readonly DECIMAL_PRECISION: number = 5;
 
   public formatter: Function;
   public tooltip: Function;
@@ -759,8 +760,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   addLeadingZeroesToDate(localDate): string {
     let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
     let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
-    let keySplitString = localDate.toLocaleString().split("/");
-    let keyString = localMonthString + "/" + localDateString + "/" + keySplitString[2];
+    let localYearString = String(localDate.getFullYear());
+    let keySplitString = localDate.toLocaleString().split(" ");
+    let timeString = keySplitString[1].split(":");
+    let hour = ((Number(timeString[0]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[0] + ":";
+    let minutes = ((Number(timeString[1]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[1] + ":";
+    let seconds = ((Number(timeString[2]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[2] + " ";
+    let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " +  hour + minutes + seconds + keySplitString[2];
     return keyString;
   }
 
@@ -1084,8 +1090,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         output = output / Math.pow(10, 6);
       }
     }
-
-    return output;
+    return parseFloat(output.toFixed(this.DECIMAL_PRECISION));
   }
 
   onUnitChange(newUnit) {

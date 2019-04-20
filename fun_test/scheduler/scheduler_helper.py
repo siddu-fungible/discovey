@@ -9,19 +9,21 @@ import logging.handlers
 import sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR, SUITES_DIR
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR
+from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
-from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType
-from lib.utilities.http import fetch_text_file
-# from web.fun_test.models import JobSpec
-
+from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
+from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
+from web.fun_test.models import TestBed, User
+from django.db import transaction
 from pytz import timezone
 from datetime import timedelta
 import random
+import collections
 
 
 activate(TIME_ZONE)
@@ -43,6 +45,7 @@ DYNAMIC_SUITE_QUEUED_JOB_EXTENSION = "dynamic_queued.json"
 
 scheduler_logger = logging.getLogger("main_scheduler_log")
 scheduler_logger.setLevel(logging.DEBUG)
+scheduler_logger.propagate = False
 
 TEN_MB = 1e7
 DEBUG = False
@@ -53,9 +56,6 @@ else:
     handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 scheduler_logger.addHandler(hdlr=handler)
-scheduler_logger.setLevel(logging.DEBUG)
-
-
 
 
 DAY_OF_WEEK_TO_INDEX = {
@@ -67,18 +67,6 @@ DAY_OF_WEEK_TO_INDEX = {
     "saturday": 5,
     "sunday": 6
 }
-
-
-def set_jenkins_hourly_execution_status(status):
-    source_file = MEDIA_DIR + "/regression_unknown.png"
-    if status == RESULTS["PASSED"]:
-        source_file = MEDIA_DIR + "/regression_passed.png"
-    if status == RESULTS["FAILED"]:
-        source_file = MEDIA_DIR + "/regression_failed.png"
-    if status == RESULTS["IN_PROGRESS"]:
-        source_file = MEDIA_DIR + "/regression_in_progress.png"
-    status_file = LOGS_DIR + "/jenkins_hourly_execution_status.png"
-    shutil.copy(src=source_file, dst=status_file)
 
 
 class SchedulerException(Exception):
@@ -112,9 +100,10 @@ def get_flat_html_log_file_name(path, script_index):
 
 
 def kill_job(job_id):
-    filename = "{}/{}_{}".format(KILLED_JOBS_DIR, job_id, KILLED_JOB_EXTENSION)
-    with open(filename, "w") as f:
-        f.write(str(job_id))
+    suite_execution = models_helper.get_suite_execution(suite_execution_id=int(job_id))
+    suite_execution.state = JobStatusType.KILLED
+    KilledJob(job_id=job_id).save()
+    suite_execution.save()
 
 
 def get_timezone_by_string(tz_string):
@@ -182,22 +171,22 @@ def get_todays_scheduling_time_in_seconds(requested_hour, requested_minute, tz_s
 
 def get_scheduling_time(spec):
     result = -1
-    if spec["scheduling_type"] == SchedulingType.PERIODIC:
-        result = get_periodic_scheduling_time_in_seconds(days=spec["requested_days"],
-                                                         requested_hour=spec["requested_hour"],
-                                                         requested_minute=spec["requested_minute"],
-                                                         tz_string=spec["tz"])
-    elif spec["scheduling_type"] == SchedulingType.TODAY:
-        result = get_todays_scheduling_time_in_seconds(requested_hour=spec["requested_hour"],
-                                                       requested_minute=spec["requested_minute"],
-                                                       tz_string=spec["tz"])
-    elif spec["scheduling_type"] == SchedulingType.ASAP:
+    if spec.scheduling_type == SchedulingType.PERIODIC:
+        result = get_periodic_scheduling_time_in_seconds(days=json.loads(spec.requested_days),
+                                                         requested_hour=spec.requested_hour,
+                                                         requested_minute=spec.requested_minute,
+                                                         tz_string=spec.timezone_string)
+    elif spec.scheduling_type == SchedulingType.TODAY:
+        result = get_todays_scheduling_time_in_seconds(requested_hour=spec.requested_hour,
+                                                       requested_minute=spec.requested_minute,
+                                                       tz_string=spec.timezone_string)
+    elif spec.scheduling_type == SchedulingType.ASAP:
         result = 1
 
-    elif spec["scheduling_type"] == SchedulingType.REPEAT:
+    elif spec.scheduling_type == SchedulingType.REPEAT:
         result = 60
-        if "repeat_in_minutes" in spec:
-            result = spec["repeat_in_minutes"]
+        if spec.repeat_in_minutes:
+            result = spec.repeat_in_minutes
         result = result * 60  # Minutes to seconds
     return result
 
@@ -205,29 +194,29 @@ def get_scheduling_time(spec):
 def validate_spec(spec):
     valid = False
     error_message = ""
-    if spec["scheduling_type"] in [SchedulingType.PERIODIC, SchedulingType.TODAY]:
-        if spec["requested_hour"] > 23:
+    if spec.scheduling_type in [SchedulingType.PERIODIC, SchedulingType.TODAY]:
+        if spec.requested_hour > 23:
             error_message = "requested_hour > 23"
-        if spec["requested_minute"] > 59:
+        if spec.requested_minute > 59:
             error_message = "requested_minute > 59"
         supported_timezones = ["PST", "IST"]
-        if spec["tz"] not in supported_timezones:
-            error_message = "unsupported timezone: {}".format(spec["tz"])
+        if spec.timezone_string not in supported_timezones:
+            error_message = "unsupported timezone: {}".format(spec.timezone_string)
         valid = True
-    if spec["scheduling_type"] == SchedulingType.PERIODIC and not spec["requested_days"]:
+    if spec.scheduling_type == SchedulingType.PERIODIC and not spec.requested_days:
         valid = False
         error_message = "days list is empty"
-    if spec["scheduling_type"] == SchedulingType.TODAY:
+    if spec.scheduling_type == SchedulingType.TODAY:
         if get_scheduling_time(spec=spec) < 0:
             valid = False
             error_message = "scheduling time should be in the future"
         else:
             valid = True
-    if spec["scheduling_type"] == SchedulingType.ASAP:
+    if spec.scheduling_type == SchedulingType.ASAP:
         valid = True
-    if spec["scheduling_type"] == SchedulingType.REPEAT:
+    if spec.scheduling_type == SchedulingType.REPEAT:
         valid = True
-    if not spec["scheduling_type"]:
+    if not spec.scheduling_type:
         valid = False
         error_message = "scheduling type cannot be empty"
     return valid, error_message
@@ -235,9 +224,11 @@ def validate_spec(spec):
 def parse_suite(suite_name=None, dynamic_suite_file=None):
     suite_file_name = None
     if not dynamic_suite_file:
-        suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
+        suite_file_name = SUITES_DIR + "/" + suite_name
     else:
         suite_file_name = dynamic_suite_file
+    if not suite_file_name.endswith(".json"):
+        suite_file_name += ".json"
     suite_spec = parse_file_to_json(file_name=suite_file_name)
     if not suite_spec:
         raise SchedulerException("Unable to parse suite-spec: {}".format(suite_file_name))
@@ -253,49 +244,26 @@ def get_suite_level_tags(suite_spec):
             break
     return tags
 
-def queue_suite_container(suite_path,
-                          build_url=None,
-                          tags=None, **kwargs):
-    job_id = -1
-    container_execution = models_helper.add_suite_container_execution(suite_path=suite_path, tags=tags)
-    if container_execution:
-        job_id = container_execution.execution_id
-        container_spec = parse_suite(suite_name=suite_path.replace(".json", ""))
-        container_tags = get_suite_level_tags(suite_spec=container_spec)
-        container_tags.extend(tags)
-
-        for item_suite_path in container_spec:
-            item_spec = parse_suite(suite_name=item_suite_path.replace(".json", ""))
-            suite_level_tags = get_suite_level_tags(suite_spec=item_spec)
-            suite_level_tags.extend(container_tags)
-            time.sleep(random.uniform(0.1, 0.3))
-            queue_job2(suite_path=item_suite_path, tags=suite_level_tags, build_url=build_url, suite_container_execution_id=container_execution.execution_id, **kwargs)
-    return job_id
-
-def queue_dynamic_job(suite_path, scheduling_type, build_url, tags, email_list, email_on_fail_only=None):
-    # jobs that don't have a suite file. we create a suite dynamically
-    return queue_job2(suite_path=suite_path,
-                      build_url=build_url,
-                      tags=tags,
-                      email_list=email_list,
-                      email_on_fail_only=email_on_fail_only,
-                      suite_type=SuiteType.DYNAMIC,
-                      scheduling_type=scheduling_type)
-
 
 def queue_dynamic_suite(dynamic_suite_spec,
+                        submitter_email,
                         original_suite_execution_id,
-                        email_list=None,
+                        emails=None,
                         environment=None,
                         test_bed_type=None,
                         build_url=None):
-    return queue_job2(dynamic_suite_spec=dynamic_suite_spec,
-                      suite_type=SuiteType.DYNAMIC,
+
+    return queue_job3(dynamic_suite_spec=dynamic_suite_spec,
                       original_suite_execution_id=original_suite_execution_id,
-                      email_list=email_list,
+                      suite_type=SuiteType.DYNAMIC,
+                      emails=emails,
                       test_bed_type=test_bed_type,
                       environment=environment,
-                      build_url=build_url)
+                      build_url=build_url,
+                      submitter_email=submitter_email)
+
+def is_auto_scheduled(scheduling_type, repeat_in_minutes):
+    return (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type == SchedulingType.PERIODIC)
 
 def queue_job3(suite_path=None,
                original_suite_execution_id=None,
@@ -309,134 +277,35 @@ def queue_job3(suite_path=None,
                timezone_string="PST",
                tags=None,
                emails=None,
-               email_on_fail_only=None,
+               email_on_fail_only=False,
                environment=None,
                inputs=None,
                repeat_in_minutes=None,
-               suite_container_execution_id=-1,
-               job_spec=None,
+               suite_container_execution_id=-1,  # A container of suites
                suite_type=SuiteType.STATIC,
                test_bed_type=None,
-               version=None):
+               version=None,
+               requested_priority_category=SchedulerJobPriority.NORMAL,
+               submitter_email=None):
     time.sleep(0.1)
-    job_id = -1
-    if not suite_path:
-        if job_spec:
-            suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
-            tags = job_spec["tags"]
-
+    result = -1
+    if not tags:
+        tags = []
+    if not emails:
+        emails = []
     if suite_type == SuiteType.DYNAMIC:
-        suite_path = "dynamic"
+        original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
+        suite_path = "Re({})".format(original_suite_execution.suite_path)
+
+    if suite_path and suite_path.replace(".json", "").endswith("_container"):
+        suite_type = SuiteType.CONTAINER
+
     final_suite_path = suite_path if suite_path else script_path
 
-    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                        scheduled_time=get_current_time(),
-                                                        completed_time=get_current_time(),
-                                                        suite_path=final_suite_path,
-                                                        tags=tags,
-                                                        suite_container_execution_id=suite_container_execution_id,
-                                                        test_bed_type=test_bed_type)
-    dynamic_suite_file = None
-    if suite_type == SuiteType.DYNAMIC:
-        dynamic_suite_file = prepare_dynamic_suite(spec=dynamic_suite_spec, suite_execution_id=suite_execution.execution_id)
-        if original_suite_execution_id:  # Must be a re-run
-            models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
-                                                re_run_suite_execution_id=suite_execution.execution_id)
-        else:
-            scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
-    if not job_spec:
-        job_spec = {}
-        if suite_path:
-            suite_path = suite_path.replace(JSON_EXTENSION, "")
-        job_spec["suite_name"] = suite_path  #.replace(JSON_EXTENSION, "")
-        job_spec["dynamic_suite_file"] = dynamic_suite_file
-        job_spec["script_path"] = script_path
-        job_spec["build_url"] = build_url
-        job_spec["scheduling_type"] = scheduling_type
-        job_spec["requested_days"] = requested_days
-        job_spec["requested_hour"] = requested_hour
-        job_spec["requested_minute"] = requested_minute
-        job_spec["repeat_in_minutes"] = repeat_in_minutes
-        job_spec["tags"] = tags
-        job_spec["emails"] = emails
-        job_spec["email_on_fail_only"] = email_on_fail_only
-        job_spec["environment"] = environment
-        job_spec["timezone_string"] = timezone_string
-        job_spec["suite_type"] = suite_type
-        job_spec["inputs"] = inputs
-    job_spec_valid, error_message = validate_spec(spec=job_spec)
+    is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
+    job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
 
-    if not job_spec_valid:
-        scheduler_logger.error("Invalid job spec: {}, Error message: {}".format(job_spec, error_message))
-        job_id = -1
-    else:
-        job_id = suite_execution.execution_id
-        job_spec["job_id"] = job_id
-        try:
-            job_spec_entry = JobSpec()
-            job_spec_entry.suite_name = job_spec["suite_path"]
-            job_spec_entry.dynamic_suite_file = job_spec["dynamic_suite_file"]
-            job_spec_entry.script_path = job_spec["script_path"]
-            job_spec_entry.suite_type = job_spec["suite_type"]
-            job_spec_entry.scheduling_type = job_spec["scheduling_type"]
-
-            job_spec_entry.requested_days = job_spec["requested_days"]
-            job_spec_entry.requested_hour = job_spec["requested_hour"]
-            job_spec_entry.requested_minute = job_spec["requested_minute"]
-            job_spec_entry.timezone_string = job_spec["timezone_string"]
-            job_spec_entry.repeat_in_minutes = job_spec["repeat_in_minutes"]
-
-            job_spec_entry.tags = job_spec["tags"]
-            job_spec_entry.emails = job_spec["emails"]
-            job_spec_entry.email_on_failure_only = job_spec["email_on_fail_only"]
-
-            job_spec_entry.environment = job_spec["environment"]
-            job_spec_entry.inputs = job_spec["inputs"]
-            job_spec_entry.build_url = job_spec["build_url"]
-            job_spec_entry.version = job_spec["version"]
-
-            job_spec_entry.save()
-
-            queued_file_name = "{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION)
-            with open(queued_file_name, "w+") as qf:
-                qf.write(json.dumps(job_spec))
-                qf.close()
-        except Exception as ex:
-            scheduler_logger.error("Job spec is invalid: {}".format(job_spec))
-        print("Job Id: {} suite: {} Queued. Spec: {}".format(job_id, suite_path, job_spec))
-    return job_id
-
-def queue_job2(suite_path=None,
-               original_suite_execution_id=None,
-               dynamic_suite_spec=None,
-               script_path=None,
-               build_url=None,
-               scheduling_type=SchedulingType.ASAP,
-               requested_days=None,
-               requested_hour=None,
-               requested_minute=None,
-               tz_string="PST",
-               tags=None,
-               email_list=None,
-               email_on_fail_only=None,
-               environment=None,
-               inputs=None,
-               repeat_in_minutes=None,
-               suite_container_execution_id=-1,
-               job_spec=None,
-               suite_type=SuiteType.STATIC,
-               test_bed_type=None):
-    time.sleep(0.1)
-    # print "Environment: {}".format(environment)
-    if not suite_path:
-        if job_spec:
-            suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
-            tags = job_spec["tags"]
-
-    if suite_type == SuiteType.DYNAMIC:
-        suite_path = "dynamic"
-    final_suite_path = suite_path if suite_path else script_path
-
+    # print ("Before adding suite execution: submitter {}".format(submitter_email))
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                         scheduled_time=get_current_time(),
                                                         completed_time=get_current_time(),
@@ -444,100 +313,55 @@ def queue_job2(suite_path=None,
                                                         tags=tags,
                                                         suite_container_execution_id=suite_container_execution_id,
                                                         test_bed_type=test_bed_type,
-                                                        suite_type=suite_type)
-    dynamic_suite_file = None
+                                                        submitter_email=submitter_email,
+                                                        state=job_state)
     if suite_type == SuiteType.DYNAMIC:
-        dynamic_suite_file = prepare_dynamic_suite(spec=dynamic_suite_spec, suite_execution_id=suite_execution.execution_id)
         if original_suite_execution_id:  # Must be a re-run
             models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
-                                          re_run_suite_execution_id=suite_execution.execution_id)
-    if not job_spec:
-        job_spec = {}
-        if suite_path:
-            suite_path = suite_path.replace(JSON_EXTENSION, "")
-        job_spec["suite_name"] = suite_path #.replace(JSON_EXTENSION, "")
-        job_spec["dynamic_suite_file"] = dynamic_suite_file
-        job_spec["script_path"] = script_path
-        job_spec["build_url"] = build_url
-        job_spec["scheduling_type"] = scheduling_type
-        job_spec["requested_days"] = requested_days
-        job_spec["requested_hour"] = requested_hour
-        job_spec["requested_minute"] = requested_minute
-        job_spec["repeat_in_minutes"] = repeat_in_minutes
-        job_spec["tags"] = tags
-        job_spec["email_list"] = email_list
-        job_spec["email_on_fail_only"] = email_on_fail_only
-        job_spec["environment"] = environment
-        job_spec["tz"] = tz_string
-        job_spec["suite_type"] = suite_type
-        job_spec["inputs"] = inputs
-    job_id = suite_execution.execution_id
-    job_spec["job_id"] = job_id
-    job_spec_valid, error_message = validate_spec(spec=job_spec)
-    if not job_spec_valid:
-        scheduler_logger.critical("Invalid job spec: {}, Error message: {}".format(job_spec, error_message))
-        job_id = -1
-    if job_spec_valid:
-        try:
-            queued_file_name = "{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION)
-            with open(queued_file_name, "w+") as qf:
-                qf.write(json.dumps(job_spec))
-                qf.close()
-        except Exception as ex:
-            print str(ex)
-        print("Job Id: {} suite: {} Queued. Spec: {}".format(job_id, suite_path, job_spec))
-    return job_id
+                                                re_run_suite_execution_id=suite_execution.execution_id)
+        else:
+            scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
 
-
-def queue_job(suite_path="unknown",
-              build_url=None,
-              job_spec=None,
-              schedule_at=None,
-              repeat=False,
-              schedule_in_minutes=None,
-              repeat_in_minutes=None,
-              email_list=None,
-              tags=None,
-              email_on_fail_only=None,
-              environment=None):
-    time.sleep(0.1)  # enough time to keep the creation timestamp unique
-    print "Environment: {}".format(environment)
-
-    if suite_path == "unknown":
-        if job_spec:
-            suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
-            tags = job_spec["tags"]
-    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                        scheduled_time=get_current_time(),
-                                                        completed_time=get_current_time(),
-                                                        suite_path=suite_path,
-                                                        tags=tags)
-    # if tags and "jenkins-hourly" in tags:
-    #    set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
-    if not job_spec:
-        job_spec = {}
-        suite_path = suite_path.replace(JSON_EXTENSION, "")
-        job_spec["suite_name"] = suite_path.replace(JSON_EXTENSION, "")
-        job_spec["build_url"] = build_url
-        job_spec["schedule_at"] = schedule_at
-        job_spec["repeat"] = repeat
-        job_spec["schedule_in_minutes"] = schedule_in_minutes
-        job_spec["repeat_in_minutes"] = repeat_in_minutes
-        job_spec["tags"] = tags
-        job_spec["email_list"] = email_list
-        job_spec["email_on_fail_only"] = email_on_fail_only
-        job_spec["environment"] = environment
-    job_id = suite_execution.execution_id
-    job_spec["job_id"] = job_id
     try:
-        queued_file_name = "{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION)
-        with open(queued_file_name, "w+") as qf:
-            qf.write(json.dumps(job_spec))
-            qf.close()
+        suite_execution.suite_path = suite_path
+        suite_execution.script_path = script_path
+        suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
+        suite_execution.suite_type = suite_type
+        suite_execution.scheduling_type = scheduling_type
+
+        suite_execution.requested_days = json.dumps(requested_days)
+        suite_execution.requested_hour = requested_hour
+        suite_execution.requested_minute = requested_minute
+        suite_execution.timezone_string = timezone_string
+        suite_execution.repeat_in_minutes = repeat_in_minutes
+
+        suite_execution.tags = json.dumps(tags)
+        suite_execution.emails = json.dumps(emails)
+        suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
+
+        suite_execution.environment = json.dumps(environment)
+        suite_execution.inputs = inputs
+        suite_execution.build_url = build_url
+        suite_execution.version = version
+        suite_execution.requested_priority_category = requested_priority_category
+
+        job_spec_valid, error_message = validate_spec(spec=suite_execution)
+        if not job_spec_valid:
+            raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
+        suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
+        # print ("queue_job_3: {}".format(suite_execution.execution_id))
+        suite_execution.save()
+
+        result = suite_execution.execution_id
     except Exception as ex:
-        print str(ex)
-    print("Job Id: {} suite: {} Queued. Spec: {}".format(job_id, suite_path, job_spec))
-    return job_id
+        scheduler_logger.exception(str(ex))
+        if suite_execution:
+            suite_execution.delete()
+        raise SchedulerException("Unable to schedule job due to: " + str(ex))
+        # TODO: Remove suite execution entry
+    # print("Job Id: {} suite: {} Submitted".format(suite_execution.execution_id, suite_path))
+    return result
+
 
 
 def get_archived_file_name(suite_execution_id):
@@ -546,11 +370,6 @@ def get_archived_file_name(suite_execution_id):
     files = glob.glob(glob_str)
     return files[0]
 
-
-def get_archived_job_spec(job_id):
-    archive_file_name = get_archived_file_name(suite_execution_id=job_id)
-    result = parse_file_to_json(file_name=archive_file_name)
-    return result
 
 
 def re_queue_job(suite_execution_id,
@@ -641,7 +460,8 @@ def process_dynamic_suite():
         print parse_file_to_json(job_file)
 
 
-def prepare_dynamic_suite(spec, suite_execution_id):
+def prepare_dynamic_suite(spec):
+
     queued_file_name = "{}/{}.{}".format(DYNAMIC_SUITE_JOBS_DIR, suite_execution_id, DYNAMIC_SUITE_QUEUED_JOB_EXTENSION)
     with open(queued_file_name, "w+") as qf:
         qf.write(json.dumps(spec))
@@ -649,35 +469,9 @@ def prepare_dynamic_suite(spec, suite_execution_id):
     return queued_file_name
 
 
-    '''
-        dynamic_suite_contents = {}
-    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                        scheduled_time=get_current_time(),
-                                                        completed_time=get_current_time(),
-                                                        suite_path=SuiteType.DYNAMIC)
-    dynamic_suite_contents["suite_execution_id"] = suite_execution.execution_id
-    queued_file_name = "{}/{}.{}".format(DYNAMIC_SUITE_JOBS_DIR, suite_execution.execution_id, DYNAMIC_SUITE_QUEUED_JOB_EXTENSION)
-    with open(queued_file_name, "w+") as qf:
-        qf.write(json.dumps(dynamic_suite_contents))
-        qf.close()
-
-    return suite_execution.execution_id
-    '''
 
 
 
-
-
-    '''
-    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                        scheduled_time=get_current_time(),
-                                                        completed_time=get_current_time(),
-                                                        suite_path=SuiteType.DYNAMIC)
-    queued_file_name = "{}/{}.{}".format(JOBS_DIR, suite_execution.execution_id, QUEUED_JOB_EXTENSION)
-    with open(queued_file_name, "w+") as qf:
-        qf.write(json.dumps(spec))
-        qf.close()
-    '''
 
 def set_scheduler_state(state):
     o = SchedulerInfo.objects.first()
@@ -696,26 +490,220 @@ def get_scheduler_info():
     o = SchedulerInfo.objects.first()
     return o
 
+def delete_queued_job(job_id):
+    jobs_in_queue = JobQueue.objects.all().order_by('priority')
+    job_found = False
+    with transaction.atomic():
+        for job_in_queue in jobs_in_queue:
+            if job_id == jobs_in_queue.job_id:
+                jobs_in_queue.delete()
+            if job_found:
+                job_in_queue.priority -= 1
+                job_in_queue.save()
 
-def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_only=None, extra_message=""):
-    scheduler_logger.info("Suite Execution: {}".format(str(suite_execution)))
-    if email_on_fail_only and suite_execution["suite_result"] == RESULTS["PASSED"]:
+def get_next_priority_value(category):
+    low, high = SchedulerJobPriority.RANGES[category]
+    queued_jobs = JobQueue.objects.filter(priority__gte=low, priority__lte=high).order_by('priority')
+    if queued_jobs.count():
+        next_priority_value = queued_jobs.last().priority + 1
+    else:
+        next_priority_value = low
+    if next_priority_value > high:
+        raise SchedulerException("Exceeded high range for priority category: {}, high: {}".format(category, high))
+    return next_priority_value
+
+
+def get_priority_category_by_priority(priority):
+    result = None
+    for category, priority_range in SchedulerJobPriority.RANGES.iteritems():
+        if (priority >= priority_range[0] and priority <= priority_range[1]):
+            result = category
+            break
+    return result
+
+
+def move_to_queue_head(job_id):
+    this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
+    priority_category = get_priority_category_by_priority(priority=this_job_queue_entry.priority)
+    low, high = SchedulerJobPriority.RANGES[priority_category]
+
+    with transaction.atomic():
+        queue_entries = JobQueue.objects.all().order_by('priority')
+        for queue_entry in queue_entries:
+            queue_entry.priority += 1
+            if queue_entry.priority > high:
+                raise SchedulerException("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
+            queue_entry.save()
+        this_job_queue_entry.priority = low
+        this_job_queue_entry.save()
+
+
+def move_to_higher_queue(job_id):
+    this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
+    priority_category = get_priority_category_by_priority(priority=this_job_queue_entry.priority)
+
+    next_priority_category = priority_category
+    if priority_category == SchedulerJobPriority.LOW:
+        next_priority_category = SchedulerJobPriority.NORMAL
+    if priority_category == SchedulerJobPriority.NORMAL:
+        next_priority_category = SchedulerJobPriority.HIGH
+
+    if priority_category == SchedulerJobPriority.HIGH:
+        raise SchedulerException("Job-Id: {} already in high priority category")
+
+    next_priority_value = get_next_priority_value(next_priority_category)
+    this_job_queue_entry.priority = next_priority_value
+    this_job_queue_entry.save()
+
+
+def swap_priorities(job1, job2):
+    with transaction.atomic():
+        temp = job1.priority
+        job1.priority = job2.priority
+        job2.priority = temp
+        job1.save()
+        job2.save()
+
+
+def increase_decrease_priority(job_id, increase=True):
+    this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
+    this_job_priority = this_job_queue_entry.priority
+    priority_category = get_priority_category_by_priority(this_job_priority)
+    low, high = SchedulerJobPriority.RANGES[priority_category]
+
+    if increase:
+        other_priority_jobs = JobQueue.objects.filter(priority__lt=this_job_priority, priority__gte=low).order_by('priority')
+    else:
+        other_priority_jobs = JobQueue.objects.filter(priority__gt=this_job_priority, priority__lte=high).order_by('-priority')
+
+    if other_priority_jobs.count():
+        other_priority_job = other_priority_jobs.last()
+        swap_priorities(this_job_queue_entry, other_priority_job)
+    else:
+        pass # You are already the highest
+
+def get_manual_lock_test_beds():
+    return TestBed.objects.filter(manual_lock=True)
+
+def get_test_bed_by_name(test_bed_name):
+    return TestBed.objects.get(name=test_bed_name)
+
+
+def send_error_mail(message, submitter_email=None, job_id=None):
+    to_addresses = [TEAM_REGRESSION_EMAIL]
+    if submitter_email:
+        to_addresses.append(submitter_email)
+    content = message
+    subject = "Regression: Suite execution error. Job-Id: {}".format(job_id)
+    send_mail(to_addresses=to_addresses, content=content, subject=subject)
+    pass
+
+
+def send_test_bed_remove_lock(test_bed, warning=False):
+
+    submitter_email = test_bed.manual_lock_submitter
+    expiry_time = test_bed.manual_lock_expiry_time
+
+    default_email_list = [x.email for x in TestbedNotificationEmails.objects.all()]
+    to_addresses = [submitter_email]
+    to_addresses.extend(default_email_list)
+
+    user = User.objects.get(email=submitter_email)
+    content = "Hi {},".format(user.first_name) + "<br>"
+    content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
+    if warning:
+        content += "We will unlock the test-bed in 1 hour" + "<br>"
+        subject = "Manual-testing lock duration for Test-bed {} has exceeded".format(test_bed.name)
+    else:
+        content += "Unlocking now" + "<br>"
+        subject = "Manual lock for Test-bed {} removed".format(test_bed.name)
+    content += "- Regression" + "<br>"
+
+    send_mail(to_addresses=to_addresses, content=content, subject=subject)
+
+
+
+class DatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return super(DatetimeEncoder, obj).default(obj)
+        except TypeError:
+            return str(obj)
+
+
+
+def parse_it(test_case_info, execution):
+    if execution.script_path not in test_case_info:
+        test_case_info[execution.script_path] = {"num_passed": 0, "num_failed": 0, "num_not_run": 0, "test_cases": {}}
+    entry = test_case_info[execution.script_path]
+    if execution.result == "PASSED":
+        entry["num_passed"] += 1
+    elif execution.result == "FAILED":
+        entry["num_failed"] += 1
+    else:
+        entry["num_not_run"] += 1
+    entry["test_cases"][execution.test_case_id] = execution
+
+
+def send_summary_mail(job_id, extra_message=""):
+    suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+    if suite_execution.email_on_failure_only and suite_execution.result == RESULTS["PASSED"]:
         return True
 
-    # if "jenkins-hourly" in suite_execution["fields"]["tags"]:
-    #    set_jenkins_hourly_execution_status(status=suite_execution["suite_result"])
-    suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
+    test_case_info = collections.OrderedDict()
+    test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=job_id).order_by('started_time')
+    for test_case_execution in test_case_executions:
+        parse_it(test_case_info=test_case_info, execution=test_case_execution)
+
+    scheduler_logger.info("Job {}: Suite Execution: {}".format(str(suite_execution.execution_id), suite_execution))
+
+    suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=models_helper._get_suite_executions(execution_id=suite_execution.execution_id)[0])
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
-    header_list = ["TC-ID", "Summary", "Inputs", "Path", "Result"]
-    list_of_rows = [[x["test_case_id"],
-                     models_helper.get_test_case_details(x["script_path"], x["test_case_id"])['summary'], x["inputs"], x["script_path"], x["result"]] for x in
-                    suite_execution["test_case_info"]]
-    table2 = _get_table(header_list=header_list, list_of_rows=list_of_rows)
+
+    all_tables = ""
+
+    for script_path, script_info in test_case_info.iteritems():
+        s = ""
+        s += "<table class='table table-nonfluid'>"
+        s += "<tr><td class='card-header' colspan='4'>{}</td></tr>".format(script_path)
+        s += "<tr>"
+        s += "<th>Id</th>"
+        s += "<th>Result</th>"
+        s += "<th>Summary</th>"
+        s += "<th>Inputs</th>"
+        s += "</tr>"
+        test_cases = script_info["test_cases"]
+        for test_case_id, test_case_entry in test_cases.iteritems():
+            s += "<tr>"
+
+            # Test-case Id
+            s += "<td>{}</td>".format(test_case_id)
+
+            # Results
+            result_class = "{}"
+            if test_case_entry.result == "PASSED":
+                result_class = " class='passed' "
+            elif test_case_entry.result == "FAILED":
+                result_class = " class='failed'"
+            s += "<td{}>{}</td>".format(result_class, test_case_entry.result)
+
+            # Summary
+            test_case_details = models_helper.get_test_case_details(script_path=script_path, test_case_id=test_case_id)
+            summary = test_case_details['summary']
+            s += "<td>{}</td>".format(summary)
+
+            # Inputs
+            inputs = json.loads(test_case_entry.inputs)
+            if inputs:
+                s += "<td>{}</td>".format(json.dumps(inputs))
+
+        s += "</table>"
+        all_tables += s + "<br>"
 
     banner = ""
-    if suite_execution["fields"]["banner"]:
-        banner = suite_execution["fields"]["banner"]
+    if suite_execution.banner:
+        banner = suite_execution.banner
 
     if extra_message:
         extra_message = "<p><b>{}</b></p><br>".format(extra_message)
@@ -742,16 +730,19 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
         <br>
         <br>
         %s
-        """ % (css, banner, extra_message, suite_detail_url, table1, table2)
+        """ % (css, banner, extra_message, suite_detail_url, table1, all_tables)
 
         # print html
-
-        subject = "Automation: {}: {} P:{} F:{}".format(suite_execution["suite_result"],
-                                                        suite_execution["fields"]["suite_path"],
-                                                        suite_execution["num_passed"],
-                                                        suite_execution["num_failed"])
+        attributes_dict = {x["name"]: x["value"] for x in suite_execution_attributes}
+        subject = "Regression: {}: {} P:{} F:{}".format(attributes_dict["Result"],
+                                                        suite_execution.suite_path,
+                                                        attributes_dict["Passed"],
+                                                        attributes_dict["Failed"])
 
         try:
+            to_addresses = [suite_execution.submitter_email, TEAM_REGRESSION_EMAIL]
+            to_addresses.extend(json.loads(suite_execution.emails))
+
             result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
             # print html
             scheduler_logger.info("Sent mail")
