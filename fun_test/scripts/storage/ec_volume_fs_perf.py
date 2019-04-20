@@ -1,15 +1,10 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
-from lib.host.storage_controller import StorageController
 from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
-from lib.host.linux import Linux
-from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
-import uuid
 from lib.fun.fs import Fs
 from datetime import datetime
 
@@ -131,8 +126,10 @@ class ECVolumeLevelScript(FunTestScript):
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
-                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
+        '''self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
+                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])'''
+
+        self.storage_controller = f1.get_dpc_storage_controller()
 
         # Setting the syslog level to 2
         command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False,
