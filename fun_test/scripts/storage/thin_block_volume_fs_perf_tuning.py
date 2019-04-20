@@ -1,17 +1,14 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
-from lib.host.storage_controller import StorageController
-from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper, BltVolumePerformanceHelper
-from lib.host.linux import Linux
-from lib.host.palladium import DpcshProxy
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
-import re
 from datetime import datetime
+import re
+
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
 '''
@@ -22,6 +19,7 @@ tb_config = {
         0: {
             "mode": Dut.MODE_EMULATION,
             "type": Dut.DUT_TYPE_FSU,
+            "num_f1s": 1,
             "ip": "server26",
             "user": REGRESSION_USER,
             "passwd": REGRESSION_USER_PASSWORD,
@@ -52,10 +50,10 @@ tb_config = {
     "tg_info": {
         0: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.20.154",
+            "ip": "10.1.21.213",
             "user": "fun",
             "passwd": "123",
-            "ipmi_name": "10.1.20.153",
+            "ipmi_name": "cadence-pc-5-ilo",
             "ipmi_iface": "lanplus",
             "ipmi_user": "admin",
             "ipmi_passwd": "admin",
@@ -106,65 +104,6 @@ def compare(actual, expected, threshold, operation):
         return (actual < (expected * (1 - threshold)) and ((expected - actual) > 2))
     else:
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
-
-
-class BLTVolumePerformanceScript(FunTestScript):
-    def describe(self):
-        self.set_test_details(steps="""
-        1. Deploy the topology. i.e Bring up FS
-        2. Make the Linux instance available for the testcase
-        """)
-
-    def setup(self):
-        # topology_obj_helper = TopologyHelper(spec=topology_dict)
-        # topology = topology_obj_helper.deploy()
-
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], num_f1s=1)
-        fun_test.shared_variables["fs"] = fs
-
-        fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
-        f1 = fs.get_f1(index=0)
-        fun_test.shared_variables["f1"] = f1
-
-        self.db_log_time = datetime.now()
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
-
-        self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
-                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
-
-        # Setting the syslog level to 2
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
-
-        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                      command_duration=5)
-        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
-
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
-
-    def cleanup(self):
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # Detach the volume
-        self.volume_details = fun_test.shared_variables["volume_details"]
-        command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
-                                                                    uuid=fun_test.shared_variables["thin_uuid"],
-                                                                    huid=tb_config['dut_info'][0]['huid'],
-                                                                    ctlid=tb_config['dut_info'][0]['ctlid'],
-                                                                    command_duration=30)
-        fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
-
-        # Deleting the volume
-        command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
-                                                               block_size=self.volume_details["block_size"],
-                                                               type=self.volume_details["type"],
-                                                               name=self.volume_details["name"],
-                                                               uuid=fun_test.shared_variables["thin_uuid"],
-                                                               command_duration=10)
-        fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
-
-        fun_test.log("FS cleanup")
-        fun_test.shared_variables["fs"].cleanup()
-
 
 fio_run_time = 60
 nvme_device_name = None
@@ -625,6 +564,66 @@ def function_flow(handle, num_jobs, iodepth, number_of_cores):
         return function_flow(handle, num_jobs, iodepth, number_of_cores)
 
 
+class BLTVolumePerformanceScript(FunTestScript):
+    def describe(self):
+        self.set_test_details(steps="""
+        1. Deploy the topology. i.e Bring up FS
+        2. Make the Linux instance available for the testcase
+        """)
+
+    def setup(self):
+        # topology_obj_helper = TopologyHelper(spec=topology_dict)
+        # topology = topology_obj_helper.deploy()
+
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], num_f1s=tb_config["dut_info"][0]["num_f1s"])
+        fun_test.shared_variables["fs"] = fs
+
+        fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
+        f1 = fs.get_f1(index=0)
+        fun_test.shared_variables["f1"] = f1
+
+        self.db_log_time = datetime.now()
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
+
+        '''self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
+                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])'''
+
+        self.storage_controller = f1.get_dpc_storage_controller()
+
+        # Setting the syslog level to 2
+        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False)
+        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
+
+        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                      command_duration=5)
+        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
+
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
+
+    def cleanup(self):
+        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        # Detach the volume
+        self.volume_details = fun_test.shared_variables["volume_details"]
+        command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
+                                                                    uuid=fun_test.shared_variables["thin_uuid"],
+                                                                    huid=tb_config['dut_info'][0]['huid'],
+                                                                    ctlid=tb_config['dut_info'][0]['ctlid'],
+                                                                    command_duration=30)
+        fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+
+        # Deleting the volume
+        command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
+                                                               block_size=self.volume_details["block_size"],
+                                                               type=self.volume_details["type"],
+                                                               name=self.volume_details["name"],
+                                                               uuid=fun_test.shared_variables["thin_uuid"],
+                                                               command_duration=10)
+        fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
+
+        fun_test.log("FS cleanup")
+        fun_test.shared_variables["fs"].cleanup()
+
+
 class BLTVolumePerformanceTestcase(FunTestCase):
     def describe(self):
         pass
@@ -749,6 +748,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert("Success" in attach_ns, "Namespace is attached")
             # self.end_host.exit_sudo()
             """
+            self.end_host.sudo_command("apt-get install sysstat -y")
 
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
@@ -799,12 +799,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
 
-        # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
-        # self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-        # storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes",
-        # self.volume_details["type"], self.thin_uuid,"stats")
-
-        ##################################################################
+        # Logic to find best iodepth & numjobs
         function_flow(self.end_host, 1, 17, 1)
         try:
             fun_test.log_section("Comparing all the values the final results to be used are")
@@ -813,9 +808,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         except:
             fun_test.critical("Logic not working")
 
-        # kill_process("")
-
-        ##################################################################
+        # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
+        # self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
+        # storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid,
+        #                                             "stats")
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -877,7 +873,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 row_data_dict["size"] = self.fio_cmd_args["size"]
 
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
-                             format(mode, fio_block_size, fio_iodepth))
+                             format(mode, fio_block_size, use_iodepth))
 
                 # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 ''''# Pulling the initial volume stats in dictionary format
@@ -926,6 +922,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  name=fio_job_name, **self.fio_cmd_args)
 
                 kill_process(self.end_host, "iostat")
+
                 iostat_results = parse_iostat_file(self.end_host)
                 print iostat_results
                 avg_tps = iostat_results["average_tps"]
@@ -935,7 +932,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
-
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 for op, stats in fio_output[combo][mode].items():
@@ -1168,11 +1164,11 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Random Read performance of BLT volume",
+                              summary="Sequential Random Read performance of BLT volume",
                               steps='''
         1. Create a BLT volume on FS attached with SSD.
         2. Export (Attach) this BLT volume to the Internal COMe host connected via the PCIe interface. 
-        3. Run the FIO random read test(without verify) for various block size and IO depth from the 
+        3. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
         COMe host and check the performance are inline with the expected threshold. 
         ''')
 
