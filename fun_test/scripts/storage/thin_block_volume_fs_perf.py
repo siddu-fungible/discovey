@@ -43,7 +43,7 @@ tb_config = {
         },
     },
     "dpcsh_proxy": {
-        "ip": "10.1.20.154",
+        "ip": "10.1.21.213",
         "user": "fun",
         "passwd": "123",
         "dpcsh_port": 40220,
