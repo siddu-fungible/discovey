@@ -105,7 +105,7 @@ def compare(actual, expected, threshold, operation):
     else:
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
-fio_run_time = 60
+fio_run_time = 20
 nvme_device_name = None
 max_cpu_usage = 0
 result_list = []
@@ -800,7 +800,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         test_method = testcase[3:]
 
         # Logic to find best iodepth & numjobs
-        function_flow(self.end_host, 1, 17, 1)
+        function_flow(self.end_host, 1, 1, 1)
         try:
             fun_test.log_section("Comparing all the values the final results to be used are")
             fun_test.log("The Final values are  \nJobs     : %s\nIodepth  : %s\nNumber of cores : %s" %
