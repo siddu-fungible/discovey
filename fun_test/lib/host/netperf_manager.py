@@ -4,17 +4,25 @@ import pprint
 import re
 
 
+# Server has 2 socket, each CPU has 8 cores, 2 threads, NUMA 0: 0-7,16-23, NUMA 1: 8-15,24-31
+# CPU frequency is locked at 2.1GHz
+CPU_FREQ = '2.1G'
+
+
 class PerformanceTuning:
     def __init__(self, linux_obj):
         self.linux_obj = linux_obj
 
     def cpu_governor(self):
-        cmd = 'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor'
-        self.linux_obj.sudo_command(cmd)
-        for i in range(0, 32):  # TODO: Use actual CPU number
-            self.linux_obj.sudo_command(
-                'echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor'.format(i))
-        self.linux_obj.sudo_command(cmd)
+        cmds = ('cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_driver',
+                'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',
+                'for i in {0..31}; do echo userspace > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done',
+                'cpupower frequency-set -f {}'.format(CPU_FREQ),
+                'cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq',
+                'cat /proc/cpuinfo | grep MHz',
+                'lscpu | grep "CPU MHz"',)
+        for cmd in cmds:
+            self.linux_obj.sudo_command(cmd)
 
     def tcp(self):
         cmds = (
@@ -53,6 +61,7 @@ class PerformanceTuning:
             self.linux_obj.sudo_command(cmd)
 
     def mlnx_tune(self, profile='HIGH_THROUGHPUT'):
+        """profile: HIGH_THROUGHPUT, or LOW_LATENCY_VMA"""
         cmds = (
             'mlnx_tune -p {}'.format(profile),
         )
@@ -80,59 +89,19 @@ class NetperfManager:
 
     def __init__(self, linux_objs):
         self.linux_objs = linux_objs
+        self.perf_tuning_objs = [PerformanceTuning(linux_obj) for linux_obj in linux_objs]
 
     def setup(self):
         self.cleanup()
         result = True
+
+        for perf_tuning_obj in self.perf_tuning_objs:
+            perf_tuning_obj.cpu_governor()
+            perf_tuning_obj.tcp()
+            perf_tuning_obj.iptables()
+
         for linux_obj in self.linux_objs:
 
-            # CPU governor
-            cmd = 'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor'
-            linux_obj.sudo_command(cmd)
-            for i in range(0, 32):  # TODO: Use actual CPU number
-                linux_obj.sudo_command(
-                    'echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor'.format(i))
-            linux_obj.sudo_command(cmd)
-            
-            # Tune TCP buffer
-            cmds = (
-                'sysctl -w net.core.rmem_max=2147483647',
-                'sysctl -w net.core.wmem_max=2147483647',
-                'sysctl -w net.ipv4.tcp_rmem="4096 87380 2147483647"',
-                'sysctl -w net.ipv4.tcp_wmem="4096 87380 2147483647"',
-                'sysctl -w net.ipv4.route.flush=1',
-            )
-            for cmd in cmds:
-                linux_obj.sudo_command(cmd)
-            
-            # Clean up iptables
-            cmds = (
-                'sudo ufw disable',
-                'iptables -X',
-                'iptables -t nat -F',
-                'iptables -t nat -X',
-                'iptables -t mangle -F',
-                'iptables -t mangle -X',
-                'iptables -P INPUT ACCEPT',
-                'iptables -P OUTPUT ACCEPT',
-                'iptables -P FORWARD ACCEPT',
-                'iptables -F',
-                'iptables -L',
-            )
-            try:
-                for cmd in cmds:
-                    linux_obj.sudo_command(cmd, timeout=180)
-            except Exception as ex:
-                fun_test.critical(str(ex))
-            linux_obj = linux_obj.clone()
-            try:
-                linux_obj.disconnect()
-            except Exception as ex:
-                pass
-            linux_obj._connect()
-            
-            # linux_obj.connect_retry_timeout_max = 120
-            
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
             #    result &= linux_obj.install_package(pkg)
@@ -167,7 +136,7 @@ class NetperfManager:
 
             # Start netserver
             if linux_obj.get_process_id_by_pattern('netserveer') is None:
-                cmd = '/usr/bin/netserver'
+                cmd = 'taskset -c 8-15 /usr/bin/netserver'  # NU server NIC and F1 are both in NUA 1
                 linux_obj.sudo_command(cmd)
                 for ns in linux_obj.get_namespaces():
                     linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
@@ -194,6 +163,14 @@ class NetperfManager:
         # Do throughput test first, and latency test last
         #for measure_latency in (False, True):
         for measure_latency in (False,):
+            if measure_latency:
+                for perf_tuning_obj in self.perf_tuning_objs:
+                    perf_tuning_obj.mlnx_tune(profile='LOW_LATENCY_VMA')
+                    # TODO: disable interrupt coalesce
+            else:
+                for perf_tuning_obj in self.perf_tuning_objs:
+                    perf_tuning_obj.mlnx_tune(profile='HIGH_THROUGHPUT')
+                    # TODO: enable interrupt coalesce
 
             mp_task_obj = MultiProcessingTasks()
 

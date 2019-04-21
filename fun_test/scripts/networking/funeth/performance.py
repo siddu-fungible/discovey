@@ -79,6 +79,7 @@ class FunethPerformance(sanity.FunethSanity):
 
 def collect_stats():
     try:
+        # TODO: add mpstat and netstat
         network_controller_obj = fun_test.shared_variables['network_controller_obj']
         network_controller_obj.peek_fpg_port_stats(port_num=0)
         network_controller_obj.peek_fpg_port_stats(port_num=1)
