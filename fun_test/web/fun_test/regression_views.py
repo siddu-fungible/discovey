@@ -297,16 +297,22 @@ def suites(request):
 @api_safe_json_response
 def suite_executions_count(request, state_filter_string):
     tags = None
+    count = 0
     if request.method == 'POST':
         if request.body:
             request_json = json.loads(request.body)
             if "tags" in request_json:
                 tags = request_json["tags"]
                 tags = json.loads(tags)
-            if "submitter_email" in request_json:
-                submitter_email = request_json["submitter_email"]
+            submitter_email = request_json.get('submitter_email', None)
+            test_bed_type = request_json.get('test_bed_type', None)
+            suite_path = request_json.get('suite_path', None)
 
-    count = _get_suite_executions(get_count=True, state_filter_string=state_filter_string, tags=tags)
+            count = _get_suite_executions(get_count=True,
+                                          state_filter_string=state_filter_string,
+                                          tags=tags,
+                                          submitter_email=submitter_email,
+                                          test_bed_type=test_bed_type, suite_path=suite_path)
     return count
 
 
