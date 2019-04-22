@@ -1617,6 +1617,9 @@ class Linux(object, ToDictMixin):
         if 'numjobs' not in kwargs:
             fio_command += " --numjobs=1"
 
+        if 'runtime' in kwargs:
+            fio_command += " --time_based"
+
         if 'output-format' not in kwargs:
             fio_command += " --output-format=json"
 

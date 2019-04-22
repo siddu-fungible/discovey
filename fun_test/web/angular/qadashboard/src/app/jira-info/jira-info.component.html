@@ -47,11 +47,7 @@
               {{ info["status"] }}
             </td>
             <td *ngIf="allowContext">
-              <span>
-                <li *ngFor="let context of getContextArray(info['id'])">
-                  {{ context }}<br>
-                </li>
-              </span>
+              <span [innerHTML]="data[info['id']]?.context"></span>
             </td>
           </tr>
         </table>

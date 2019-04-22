@@ -28,7 +28,7 @@ tb_config = {
             "model": "StorageNetwork2",
             "run_mode": "build_only",
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods --serial --dpc-server --dpc-uart --disable-wu-watchdog",
+            "bootarg": "app=mdt_test,load_mods --serial --dpc-server --dpc-uart",
             "huid": 3,
             "interface_info": {
                 0: {

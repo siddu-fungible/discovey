@@ -1,11 +1,11 @@
 {
   "Key256Write4k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,
@@ -30,11 +30,11 @@
   },
   "Key512Write4k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,
@@ -59,11 +59,11 @@
   },
   "Key256Write8k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,
@@ -88,11 +88,11 @@
   },
   "Key512Write8k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
-        "multiplier": 8,
+        "multiplier": 4,
         "block_size": 512
     },
     "lsv_head": 30,

@@ -4,7 +4,7 @@ dropdb fun_test
 echo "Dropped fun_test"
 createdb fun_test
 echo "Created fun_test"
-
+git checkout origin/master -- 'fun_test/migrations/*.py'
 tar -xvzf perf_db_backup.json.bkp.tgz
 python manage.py migrate --database=default
 echo "Completed migrate"

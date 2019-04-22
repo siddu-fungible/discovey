@@ -449,7 +449,7 @@ class F1InFs:
 
 class Fs(object, ToDictMixin):
     #  sku=SKU_FS1600_{}
-    DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit"
+    DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit"
     TO_DICT_VARS = ["bmc_mgmt_ip",
                     "bmc_mgmt_ssh_username",
                     "bmc_mgmt_ssh_password",

@@ -66,7 +66,9 @@ class TestBedWorker(Thread):
                 if test_bed.name not in self.warn_list:
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
-                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
+                        # self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
+                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (test_bed.name,))
+                        self.test_bed_lock_timers[test_bed.name].start()
                         self.warn_list.append(test_bed.name)
                         send_test_bed_remove_lock(test_bed=test_bed, warning=True)
 
@@ -243,7 +245,7 @@ def queue_job(job_id):
     queue_lock.acquire()
     scheduler_logger.info("Lock-acquire: queue_job")
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
-    if job_spec.state == JobStatusType.SCHEDULED:
+    if job_spec and job_spec.state == JobStatusType.SCHEDULED:
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id,
                            test_bed_type=job_spec.test_bed_type)
@@ -254,7 +256,8 @@ def queue_job(job_id):
         models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
 
     else:
-        scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
+        if job_spec:
+            scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 
     scheduler_logger.info("Lock-release: queue_job")
     queue_lock.release()
@@ -829,6 +832,7 @@ def process_auto_scheduled_jobs():
             # if job_id not in progress, clone and submit
             print("Cloning")
             cloned_job = clone_job(job_id=auto_schedule_job_id)
+            cloned_job.submitted_time = get_current_time()
             cloned_job.state = JobStatusType.SUBMITTED
             cloned_job.is_auto_scheduled_job = False
             cloned_job.auto_scheduled_execution_id = auto_schedule_job_id

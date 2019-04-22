@@ -55,7 +55,7 @@ class BuildHelper():
         return gz_filename
 
 if __name__ == "__main__":
-    boot_args = "app=jpeg_perf_test --disable-wu-watchdog --test-exit-fast"
+    boot_args = "app=jpeg_perf_test --test-exit-fast"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
 
     build_helper = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags)
