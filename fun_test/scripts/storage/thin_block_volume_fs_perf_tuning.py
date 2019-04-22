@@ -1,7 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
 from lib.topology.dut import Dut, DutInterface
-from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
