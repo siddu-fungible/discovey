@@ -245,7 +245,7 @@ def queue_job(job_id):
     queue_lock.acquire()
     scheduler_logger.info("Lock-acquire: queue_job")
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
-    if job_spec.state == JobStatusType.SCHEDULED:
+    if job_spec and job_spec.state == JobStatusType.SCHEDULED:
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id,
                            test_bed_type=job_spec.test_bed_type)
@@ -256,7 +256,8 @@ def queue_job(job_id):
         models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
 
     else:
-        scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
+        if job_spec:
+            scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 
     scheduler_logger.info("Lock-release: queue_job")
     queue_lock.release()
