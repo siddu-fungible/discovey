@@ -363,8 +363,8 @@ def prepare_status_db():
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=cache_valid)
     all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
     prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=cache_valid)
-    global_setting.cache_valid = True
-    global_setting.save()
+    # global_setting.cache_valid = True
+    # global_setting.save()
 
 
 if __name__ == "__main2__":
