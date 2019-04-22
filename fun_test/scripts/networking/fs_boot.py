@@ -35,7 +35,7 @@ class BootFS(FunTestCase):
 
     def run(self):
         fun_test.log(fun_test.get_build_parameter("boot_args"))
-        fun_test.test_assert_expected(expected=Fs.get(boot_args=fun_test.get_build_parameter("boot_args")),
+        fun_test.test_assert_expected(expected=fun_test.get_build_parameter("boot_args"),
                                       actual="app=hw_hsu_test cc_huid=3 --fec sku=SKU_FS1600_0 --dis-stats --csr-replay --dpc-server --dpc-uart --serdesinit",
                                       message="verify bootargs")
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
