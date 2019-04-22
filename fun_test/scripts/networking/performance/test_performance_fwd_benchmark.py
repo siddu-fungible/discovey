@@ -234,6 +234,9 @@ class TestFwdPerformance(FunTestCase):
             for fpg in fwd_benchmark_ports:
                 result = network_controller_obj.set_nu_benchmark_1(mode=0, fpg=fpg)
                 fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
+
+            result = network_controller_obj.set_etp(pkt_adj_size=24)
+            fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 24")
         else:
             fwd_benchmark_ports = [8, 12]
             for fpg in fwd_benchmark_ports:
