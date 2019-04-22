@@ -55,11 +55,11 @@ class FunethPerformance(sanity.FunethSanity):
         network_controller_obj = NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                    dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True)
         # Configure small SF/Non-FCP thr to workaround SWOS-4771
-        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(sf_thr=256,
-                                                                            sf_xoff_thr=128,
+        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(#sf_thr=256,
+                                                                            #sf_xoff_thr=128,
                                                                             #sx_thr=4000,
                                                                             #dx_thr=4000,
-                                                                            #df_thr=4000,
+                                                                            df_thr=256,
                                                                             #fcp_thr=8000,
                                                                             #fcp_xoff_thr=7000,
                                                                             nonfcp_thr=256,

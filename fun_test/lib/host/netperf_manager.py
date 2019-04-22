@@ -13,14 +13,22 @@ class PerformanceTuning:
     def __init__(self, linux_obj):
         self.linux_obj = linux_obj
 
-    def cpu_governor(self):
-        cmds = ('cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_driver',
-                'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',
+    def cpu_governor(self, lock_freq=False):
+        cmds = ['cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_driver',
+                'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',]
+        if lock_freq:
+            cmds.extend([
                 'for i in {0..31}; do echo userspace > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done',
-                'cpupower frequency-set -f {}'.format(CPU_FREQ),
-                'cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq',
-                'cat /proc/cpuinfo | grep MHz',
-                'lscpu | grep "CPU MHz"',)
+                'cpupower frequency-set -f {}'.format(CPU_FREQ)
+            ])
+        else:
+            cmds.append(
+                'for i in {0..31}; do echo performance > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done')
+        cmds.extend([
+            'cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq',
+            'cat /proc/cpuinfo | grep MHz',
+            'lscpu | grep "CPU MHz"',
+        ])
         for cmd in cmds:
             self.linux_obj.sudo_command(cmd)
 
@@ -189,7 +197,7 @@ class NetperfManager:
 
                 num_processes = 1 if measure_latency else parallel
                 for i in range(0, num_processes):
-                    cpu = i + 8  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
+                    cpu = 15 -i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
                     mp_task_obj.add_task(
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
