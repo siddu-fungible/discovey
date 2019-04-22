@@ -1296,7 +1296,7 @@ class TeraMarkFunTcpThroughputPerformance(models.Model):
     input_mode = models.CharField(verbose_name="Port modes", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)
+    input_num_flows = models.IntegerField(verbose_name="Number of flows", default=1)
     output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
     output_pps = models.FloatField(verbose_name="Packets per sec")
     output_throughput_unit = models.TextField(default="Gbps")

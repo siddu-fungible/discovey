@@ -644,7 +644,7 @@ if __name__ == "__main__":
         one_data_set["name"] = name
         one_data_set["inputs"] = {}
         one_data_set["inputs"]["input_flow_type"] = flow_type
-        one_data_set["inputs"]["input_number_flows"] = num_flows
+        one_data_set["inputs"]["input_num_flows"] = num_flows
         one_data_set["inputs"]["input_frame_size"] = frame_size
         one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
         data_sets.append(one_data_set)

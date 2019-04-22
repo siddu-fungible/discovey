@@ -15,6 +15,9 @@ from web.fun_test.metrics_models import MetricChart
 from web.fun_test.db_fixup import prepare_status
 from fun_global import RESULTS
 from dateutil.parser import parse
+from fun_settings import MAIN_WEB_APP
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+from lib.system.fun_test import *
 
 
 def get_time_from_timestamp(timestamp):
@@ -393,6 +396,49 @@ class TeraMarkFunTcpThroughputPerformanceHelper(MetricHelper):
             one_entry.save()
 
 
+class ModelHelper(MetricHelper):
+    model = ""
+
+    def __init__(self):
+        super(ModelHelper, self).__init__(model=self.model)
+
+    def add_entry(self, **kwargs):
+        try:
+            m_obj = self.model_obj
+            for key, value in kwargs.iteritems():
+                if key == "timestamp":
+                    key = "date_time"
+                    value = get_time_from_timestamp(value)
+                if hasattr(m_obj, "input_" + key):
+                    setattr(m_obj, "input_" + key, value)
+                elif hasattr(m_obj, "output_" + key):
+                    setattr(m_obj, "output_" + key, value)
+                elif hasattr(m_obj, key):
+                    setattr(m_obj, key, value)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+    def set_units(self, model_name, **kwargs):
+        try:
+            metric_model = app_config.get_metric_models()[model_name]
+            m_obj = metric_model()
+            for key, value in kwargs.iteritems():
+                if hasattr(m_obj, "output_" + key):
+                    setattr(m_obj, "output_" + key, value)
+            self.model_obj = m_obj
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+    def set_status(self, status):
+        try:
+            m_obj = self.model_obj
+            if hasattr(m_obj, "status"):
+                setattr(m_obj, "status", status)
+            m_obj.save()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+
 class WuLatencyAllocStackHelper(MetricHelper):
     model = WuLatencyAllocStack
 
@@ -594,6 +640,26 @@ if __name__ == "__main2__":
 
 if __name__ == "__main__":
     # prepare_status_db()
-    funtcp = TeraMarkFunTcpThroughputPerformanceHelper()
-    funtcp.add_entry(timestamp="2019-04-18 05:44:48.005254-08:00", mode="100G", version=6011, flow_type="FunTCP_Server_Throughput", frame_size=1500, pps=0.483, throughput=5.8, num_flows=1, status=RESULTS["PASSED"], pps_unit="Mpps", throughput_unit="Gbps")
-    print "added one entry into funtcp"
+    # funtcp = TeraMarkFunTcpThroughputPerformanceHelper()
+    # funtcp.add_entry(timestamp="2019-04-18 05:44:48.005254-08:00", mode="100G", version=6011, flow_type="FunTCP_Server_Throughput", frame_size=1500, pps=0.483, throughput=5.8, num_flows=1, status=RESULTS["PASSED"], pps_unit="Mpps", throughput_unit="Gbps")
+    # print "added one entry into funtcp"
+    generic_helper = ModelHelper()
+    d = {}
+    d["timestamp"] = "2019-04-19 05:44:48.005254-08:00"
+    d["mode"] = "100G"
+    d["version"] = 6011
+    d["flow_type"] = "FunTCP_Server_Throughput"
+    d["frame_size"] = 1500
+    d["pps"] = 0.483
+    d["throughput"] = 5.8
+    d["num_flows"] = 1
+
+    unit = {}
+    unit["pps_unit"] = "Mpps"
+    unit["throughput_unit"] = "Gbps"
+
+    status = RESULTS["PASSED"]
+    generic_helper.set_units(model_name="TeraMarkFunTcpThroughputPerformance", **unit)
+    generic_helper.add_entry(**d)
+    generic_helper.set_status(status)
+    print "used generic helper to add an entry"
