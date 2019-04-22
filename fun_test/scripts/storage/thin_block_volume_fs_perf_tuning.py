@@ -39,25 +39,6 @@ tb_config = {
             "start_mode": F1.START_MODE_DPCSH_ONLY,
             "perf_multiplier": 1
         },
-    },
-    "dpcsh_proxy": {
-        "ip": "10.1.21.213",
-        "user": "fun",
-        "passwd": "123",
-        "dpcsh_port": 40220,
-        "dpcsh_tty": "/dev/ttyUSB8"
-    },
-    "tg_info": {
-        0: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.21.213",
-            "user": "fun",
-            "passwd": "123",
-            "ipmi_name": "cadence-pc-5-ilo",
-            "ipmi_iface": "lanplus",
-            "ipmi_user": "admin",
-            "ipmi_passwd": "admin",
-        }
     }
 }
 
