@@ -211,7 +211,7 @@ export class RegressionComponent implements OnInit {
       return;
     }
     let payload = {};
-    
+
     if (this.tags) {
       payload["tags"] = this.tags;
     }
