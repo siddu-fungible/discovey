@@ -29,6 +29,7 @@ class FunTestCase1(FunTestCase):
     def setup(self):
         fun_test.log("Testcase setup")
         fun_test.sleep("demo", seconds=1)
+        fun_test.log("Version is: {}".format(fun_test.get_version()))
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
@@ -51,7 +52,7 @@ class FunTestCase2(FunTestCase):
 
     def setup(self):
         fun_test.log("Testcase setup")
-        fun_test.sleep("demo", seconds=1)
+        fun_test.sleep("demo", seconds=10)
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
