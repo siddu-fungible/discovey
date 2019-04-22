@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
+from web.fun_test.models import ScriptInfo
 from fun_settings import TEAM_REGRESSION_EMAIL
 import json
 from lib.utilities.send_mail import send_mail
@@ -111,3 +112,17 @@ def suite_executions(request, id):
 
     return result
 
+
+@csrf_exempt
+@api_safe_json_response
+def script_infos(request, id):
+    result = None
+    if request.method == 'GET':
+        q = Q()
+        if id:
+            q = q & Q(script_id=id)
+        script_infos = ScriptInfo.objects.filter(q)
+        result = []
+        for script_info in script_infos:
+            result.append({"script_id": script_info.script_id, "bug": script_info.bug})
+    return result
