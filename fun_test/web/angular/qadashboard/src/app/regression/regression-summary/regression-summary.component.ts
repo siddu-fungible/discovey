@@ -70,7 +70,14 @@ export class RegressionSummaryComponent implements OnInit {
     this.fetchAllVersions();
     this.pointClickCallback = this.pointDetail.bind(this);
     this.setFilterData();
+    this.getAllRegressionJiras();
 
+  }
+
+  getAllRegressionJiras() {
+    this.regressionService.getScriptInfo(null).subscribe(response => {
+      let i = 0;
+    })
   }
 
   clickHistory(scriptPath) {

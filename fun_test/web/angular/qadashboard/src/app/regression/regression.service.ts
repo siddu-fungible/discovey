@@ -100,7 +100,6 @@ export class RegressionService implements OnInit{
     return match;
   }
 
-
   testBedInProgress(testBedType) {
 
     let paramString = `?`;
@@ -111,8 +110,12 @@ export class RegressionService implements OnInit{
     return this.apiService.get("/api/v1/regression/suite_executions" + paramString).pipe(switchMap (response => {
       return of(response.data);
     }))
-
   }
 
+  getScriptInfo(scriptPk) {
+    return this.apiService.get("/api/v1/regression/script_infos").pipe(switchMap (response => {
+      return of(response.data);
+    }))
+  }
 
 }

@@ -375,6 +375,9 @@ def _get_suite_executions(execution_id=None,
                           save_test_case_info=False,
                           save_suite_info=True,
                           state_filter_string="ALL",
+                          submitter_email=None,
+                          test_bed_type=None,
+                          suite_path=None,
                           get_count=False,
                           tags=None,
                           finalize=None):
@@ -417,6 +420,12 @@ def _get_suite_executions(execution_id=None,
             # print("Found tags:" + str(tags))
         if tags:
             q = q & tag_q
+    if submitter_email:
+        q = q & Q(submitter_email=submitter_email)
+    if test_bed_type:
+        q = q & Q(test_bed_type=test_bed_type)
+    if suite_path:
+        q = q & Q(suite_path=suite_path)
 
     all_objects = SuiteExecution.objects.filter(q).order_by('-id')
 
