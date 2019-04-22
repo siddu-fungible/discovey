@@ -20,6 +20,7 @@ from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, A
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 from web.fun_test.metrics_models import MetricsGlobalSettings
+from django.utils import timezone
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -255,6 +256,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                     valid_dates.append(entry.date_time)
                     scores[entry.date_time] = entry.score
                 current_date = last_date + timedelta(days=1)
+                current_date = timezone.localtime(current_date)
                 current_date = set_local_timezone(current_date)
         data_set_mofified = False
         data_sets = json.loads(chart.data_sets)
@@ -545,8 +547,8 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="juniper_NU_VP_NU_FWD_NFCP")
-    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="apple_rand_read_4kb_6vol_6ssd_stripe_volume")
+    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=True)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
