@@ -181,7 +181,7 @@ def set_from_to_dates(chart):
     # calculate the from date and to date for fetching the data
     today = datetime.datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
-    from_date = set_local_timezone(from_date)
+    from_date = adjust_timezone_for_day_light_savings(from_date)
     from_date = get_rounded_time(from_date)
     yesterday = today  # - timedelta(days=0) # Just use today
     yesterday = get_rounded_time(yesterday)
@@ -218,7 +218,7 @@ def set_chart_status_details(chart, result):
     chart.save()
 
 
-def set_local_timezone(current_date):
+def adjust_timezone_for_day_light_savings(current_date):
     date_time_obj = datetime.datetime(year=current_date.year, month=current_date.month, day=current_date.day,
                                       hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
@@ -257,7 +257,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                     scores[entry.date_time] = entry.score
                 current_date = last_date + timedelta(days=1)
                 current_date = timezone.localtime(current_date)
-                current_date = set_local_timezone(current_date)
+                current_date = adjust_timezone_for_day_light_savings(current_date)
         data_set_mofified = False
         data_sets = json.loads(chart.data_sets)
         num_data_sets_with_expected = 0
@@ -382,7 +382,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
             if is_leaf_degrade or not current_score:
                 result["num_degrades"] = 1
             current_date = current_date + timedelta(days=1)
-            current_date = set_local_timezone(current_date)
+            current_date = adjust_timezone_for_day_light_savings(current_date)
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
         result["valid_dates"] = valid_dates
