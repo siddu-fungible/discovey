@@ -143,18 +143,18 @@
                         (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
                         class="anchor-button pseudo-anchor">
                 / Re-run failed</span> &nbsp;
-                  <!--span style="display: inline-flex"
+                  <span style="display: inline-flex"
                         [hidden]="suiteExecution.fields.state < 30"
                         data-placement="top" data-toggle="tooltip" title="Stop/Kill"
-                        (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor">&nbsp;Kill</span-->
+                        (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor">&nbsp;Kill</span>
               </ng-container>
 
-              <!--ng-container *ngIf="suiteExecution.fields.suite_type ==='dynamic'">
+              <ng-container *ngIf="suiteExecution.fields.suite_type ==='dynamic'">
                 <span style="display: inline-flex"
                       [hidden]="suiteExecution.fields.state < 30"
                       data-placement="top" data-toggle="tooltip" title="Stop/Kill"
                       (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor">&nbsp;Kill</span>
-              </ng-container-->
+              </ng-container>
 
 
             </td>
