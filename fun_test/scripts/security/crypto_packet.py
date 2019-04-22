@@ -484,8 +484,8 @@ class Key512Write8k(CryptoCore):
 if __name__ == "__main__":
     crypto_script = CryptoCoreTest()
     crypto_script.add_test_case(Key256Write4k())
-    crypto_script.add_test_case(Key512Write4k())
-    crypto_script.add_test_case(Key256Write8k())
-    crypto_script.add_test_case(Key512Write8k())
+#    crypto_script.add_test_case(Key512Write4k())
+#    crypto_script.add_test_case(Key256Write8k())
+#    crypto_script.add_test_case(Key512Write8k())
 
     crypto_script.run()

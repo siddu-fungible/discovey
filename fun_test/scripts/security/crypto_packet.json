@@ -1,7 +1,7 @@
 {
   "Key256Write4k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
@@ -30,7 +30,7 @@
   },
   "Key512Write4k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
@@ -59,7 +59,7 @@
   },
   "Key256Write8k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
@@ -88,7 +88,7 @@
   },
   "Key512Write8k": {
     "blt_details": {
-      "capacity": 1048576,
+      "capacity": 2097152,
       "block_size": 4096
     },
     "jvol_details": {
