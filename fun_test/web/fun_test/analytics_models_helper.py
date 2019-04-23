@@ -359,38 +359,57 @@ class AllocSpeedPerformanceHelper(MetricHelper):
             one_entry.save()
 
 
-class ModelHelper(MetricHelper):
+class ModelHelper(object):
     model = None
     units = None
+    id = None
 
     def __init__(self, model_name):
-        metric_model = app_config.get_metric_models()[model_name]
-        m_obj = metric_model()
-        super(ModelHelper, self).__init__(model=m_obj)
+        self.metric_model = app_config.get_metric_models()[model_name]
+        m_obj = self.metric_model()
+        self.model = m_obj
 
     def add_entry(self, **kwargs):
         try:
-            units = {}
+            self.id = None
             m_obj = self.model
+            units = {}
             for key, value in kwargs.iteritems():
-                if "unit" in key:
+                if key.endswith("_unit"):
                     units[key] = value
             if units != {}:
                 self.units = units
+            if not self.units:
+                raise Exception('No units provided: {}. Please provide the required units'.format(self.units))
+
+            inputs = {}
+            outputs = {}
+
             for key, value in kwargs.iteritems():
-                if key == "timestamp":
+                if key in ["timestamp", "date_time"]:
                     key = "date_time"
                     value = get_time_from_timestamp(value)
                 if hasattr(m_obj, "input_" + key):
+                    inputs["input_" + key] = value
                     setattr(m_obj, "input_" + key, value)
                 elif hasattr(m_obj, "output_" + key):
+                    outputs["output_" + key] = value
                     setattr(m_obj, "output_" + key, value)
+                    if not key.endswith("_unit"):
+                        key_unit = key + "_unit"
+                        if not key_unit in self.units:
+                            raise Exception('No matching units for the output {} found'.format(key))
                 elif hasattr(m_obj, key):
                     setattr(m_obj, key, value)
-            if self.units:
+            try:
+                o = self.metric_model.objects.get(**inputs)
+                for k, v in outputs.iteritems():
+                    if hasattr(o, k):
+                        setattr(o, k, v)
+                o.save()
+            except ObjectDoesNotExist:
                 m_obj.save()
-            else:
-                raise Exception('No units provided: {}. Please provide the required units'.format(self.units))
+                self.id = m_obj.id
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -400,6 +419,8 @@ class ModelHelper(MetricHelper):
             for key, value in kwargs.iteritems():
                 if hasattr(m_obj, "output_" + key):
                     setattr(m_obj, "output_" + key, value)
+                else:
+                    raise Exception("Provided units do not match any output - {}".format(key))
             self.units = kwargs
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -409,10 +430,11 @@ class ModelHelper(MetricHelper):
             m_obj = self.model
             if hasattr(m_obj, "status"):
                 setattr(m_obj, "status", status)
-            if self.units:
-                m_obj.save()
-            else:
+            if not self.units:
                 raise Exception('No units provided: {}. Please provide the required units'.format(self.units))
+            if self.id:
+                m_obj.save()
+
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -620,14 +642,16 @@ if __name__ == "__main__":
     # prepare_status_db()
     generic_helper = ModelHelper(model_name="TeraMarkFunTcpThroughputPerformance")
     d = {}
-    d["timestamp"] = "2019-04-23 09:44:02.007497-07:00"
+    d["timestamp"] = "2019-04-18 09:44:02.007497-07:00"
     d["mode"] = "100G"
     d["version"] = 6087
     d["flow_type"] = "FunTCP_Server_Throughput"
     d["frame_size"] = 1500
     d["pps"] = 799339.1666666666
-    d["throughput"] = 9592.07
+    d["throughput"] = 95
     d["num_flows"] = 4
+    d["pps_unit"] = "pps"
+    d["throughput_unit"] = "Mbps"
 
     unit = {}
     unit["pps_unit"] = "pps"
