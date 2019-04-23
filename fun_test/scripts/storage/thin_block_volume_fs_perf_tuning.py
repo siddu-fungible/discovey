@@ -572,7 +572,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables["sysstat_install"] = False
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
@@ -722,11 +721,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert("Success" in attach_ns, "Namespace is attached")
             # self.end_host.exit_sudo()
             """
-            if not fun_test.shared_variables["sysstat_install"]:
-                install_sysstat = self.end_host.install_package("sysstat")
-                fun_test.test_assert(install_sysstat, "Sysstat installation")
-                fun_test.shared_variables["sysstat_install"] = True
-                
+            self.end_host.sudo_command("apt-get install sysstat -y")
+
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_thin_block_volume(
@@ -776,12 +772,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
 
-        # Logic to find best iodepth & numjobs
-        function_flow(self.end_host, 1, 1, 1)
+
         try:
+
+            # Logic to find best iodepth & numjobs
+            function_flow(self.end_host, 1, 1, 1)
+
             fun_test.log_section("Comparing all the values the final results to be used are")
             fun_test.log("The Final values are  \nJobs     : %s\nIodepth  : %s\nNumber of cores : %s" %
                          (use_num_jobs, use_iodepth, use_number_of_cores))
+
         except:
             fun_test.critical("Logic not working")
 
