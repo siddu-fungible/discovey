@@ -1857,23 +1857,33 @@
             "leaf": false,
             "name": "Regex",
             "weight": 1,
-            "label": "Regex",
+            "label": "RegEx",
             "children": [
               {
-                "info": "dfa_teramark_output_bandwidth",
-                "metric_model_name": "TeraMarkDfaPerformance",
-                "leaf": true,
-                "name": "dfa_teramark_output_bandwidth",
+                "info": "regex_100_cache_hit",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "regex_100_cache_hit",
                 "weight": 1,
-                "label": "DFA Throughput"
-              },
-              {
-                "info": "nfa_teramark_output_bandwidth",
-                "metric_model_name": "TeraMarkNfaPerformance",
-                "leaf": true,
-                "name": "nfa_teramark_output_bandwidth",
-                "weight": 1,
-                "label": "NFA Throughput"
+                "label": "100 Percent Cache Hit",
+                "children": [
+                  {
+                    "info": "dfa_teramark_output_bandwidth",
+                    "metric_model_name": "TeraMarkDfaPerformance",
+                    "leaf": true,
+                    "name": "dfa_teramark_output_bandwidth",
+                    "weight": 1,
+                    "label": "DFA Throughput"
+                  },
+                  {
+                    "info": "nfa_teramark_output_bandwidth",
+                    "metric_model_name": "TeraMarkNfaPerformance",
+                    "leaf": true,
+                    "name": "nfa_teramark_output_bandwidth",
+                    "weight": 1,
+                    "label": "NFA Throughput"
+                  }
+                ]
               }
             ]
           },
@@ -2144,6 +2154,68 @@
                         "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
                         "weight": 1,
                         "label": "Latency"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "juniper_ipsec",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_ipsec",
+                    "weight": 1,
+                    "label": "IPSEC",
+                    "children": [
+                      {
+                        "info": "juniper_ipsec_crypto_single_tunnel",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "juniper_ipsec_crypto_single_tunnel",
+                        "weight": 1,
+                        "label": "Single Tunnel",
+                        "children": [
+                          {
+                            "info": "juniper_crypto_single_tunnel_output_throughput",
+                            "metric_model_name": "JuniperCryptoTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_crypto_single_tunnel_output_throughput",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "juniper_crypto_single_tunnel_output_pps",
+                            "metric_model_name": "JuniperCryptoTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_crypto_single_tunnel_output_pps",
+                            "weight": 1,
+                            "label": "Packets per sec"
+                          }
+                        ]
+                      },
+                      {
+                        "info": "juniper_ipsec_crypto_multi_tunnel",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "juniper_ipsec_crypto_multi_tunnel",
+                        "weight": 1,
+                        "label": "Multi Tunnel",
+                        "children": [
+                          {
+                            "info": "juniper_crypto_multi_tunnel_output_throughput",
+                            "metric_model_name": "JuniperCryptoTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_crypto_multi_tunnel_output_throughput",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "juniper_crypto_multi_tunnel_output_pps",
+                            "metric_model_name": "JuniperCryptoTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_crypto_multi_tunnel_output_pps",
+                            "weight": 1,
+                            "label": "Packets per sec"
+                          }
+                        ]
                       }
                     ]
                   }
