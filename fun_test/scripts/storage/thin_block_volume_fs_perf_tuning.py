@@ -726,7 +726,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 install_sysstat = self.end_host.install_package("sysstat")
                 fun_test.test_assert(install_sysstat, "Sysstat installation")
                 fun_test.shared_variables["sysstat_install"] = True
-                
+
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_thin_block_volume(
