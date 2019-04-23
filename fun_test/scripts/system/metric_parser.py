@@ -58,7 +58,7 @@ class MetricParser():
         match = None
         self.status = RESULTS["FAILED"]
         for line in logs:
-            if "PASS libfunq testflow_test" in line:
+            if "PASS testflow_test" in line:
                 flow_test_passed = True
             m = re.search(
                 r'Testflow:\s+(?P<iterations>\d+)\s+iterations\s+took\s+(?P<seconds>\d+)\s+seconds',
