@@ -1617,6 +1617,9 @@ class Linux(object, ToDictMixin):
         if 'numjobs' not in kwargs:
             fio_command += " --numjobs=1"
 
+        if 'runtime' in kwargs:
+            fio_command += " --time_based"
+
         if 'output-format' not in kwargs:
             fio_command += " --output-format=json"
 
@@ -1651,8 +1654,10 @@ class Linux(object, ToDictMixin):
         # Populating the resultant fio_dict dictionary
         for operation in ["write", "read"]:
             fio_dict[operation] = {}
-            for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99", "latency9999"]:
-                if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9999"):
+            for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99",
+                         "latency9950", "latency9999"]:
+                if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
+                                "latency9999"):
                     fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                 elif stat in ("latency", "clatency"):
                     for key in fio_result_dict["jobs"][0][operation].keys():
@@ -1686,7 +1691,7 @@ class Linux(object, ToDictMixin):
                                 value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                 value *= 1000
                                 fio_dict[operation][stat] = value
-                elif stat in ("latency90", "latency95", "latency99", "latency9999"):
+                elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
                     for key in fio_result_dict["jobs"][0][operation].keys():
                         if key == "clat_ns":
                             for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
@@ -1706,6 +1711,12 @@ class Linux(object, ToDictMixin):
                                     stat = "latency99"
                                     value = int(round(
                                         fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
+                                    value /= 1000
+                                    fio_dict[operation][stat] = value
+                                if key.startswith("99.50"):
+                                    stat = "latency9950"
+                                    value = int(round(
+                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
                                     value /= 1000
                                     fio_dict[operation][stat] = value
                                 if key.startswith("99.99"):

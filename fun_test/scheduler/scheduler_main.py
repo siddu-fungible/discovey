@@ -51,10 +51,10 @@ class TestBedWorker(Thread):
                     test_bed.manual_lock = False
                     test_bed.save()
                     send_test_bed_remove_lock(test_bed=test_bed, warning=False)
-                    self.warn_list.remove(test_bed.name)
+
                     if test_bed_name in self.test_bed_lock_timers:
                         del self.test_bed_lock_timers[test_bed_name]
-
+            self.warn_list.remove(test_bed_name)
         except Exception as ex:
             scheduler_logger.exception(str(ex))
 
@@ -67,7 +67,7 @@ class TestBedWorker(Thread):
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
                         # self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
-                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(120, self.test_bed_unlock_dispatch, (test_bed.name,))
+                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name].start()
                         self.warn_list.append(test_bed.name)
                         send_test_bed_remove_lock(test_bed=test_bed, warning=True)
@@ -245,7 +245,7 @@ def queue_job(job_id):
     queue_lock.acquire()
     scheduler_logger.info("Lock-acquire: queue_job")
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
-    if job_spec.state == JobStatusType.SCHEDULED:
+    if job_spec and job_spec.state == JobStatusType.SCHEDULED:
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id,
                            test_bed_type=job_spec.test_bed_type)
@@ -256,7 +256,8 @@ def queue_job(job_id):
         models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
 
     else:
-        scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
+        if job_spec:
+            scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 
     scheduler_logger.info("Lock-release: queue_job")
     queue_lock.release()

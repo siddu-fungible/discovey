@@ -38,6 +38,7 @@ export class RegressionComponent implements OnInit {
   stateFilterString: string = Filter.ALL;
   filter = Filter;
   stateStringMap: any = null;
+  queryParameters: any = null;
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
@@ -55,22 +56,7 @@ export class RegressionComponent implements OnInit {
     if (this.route.snapshot.data["tags"]) {
       this.tags = this.route.snapshot.data["tags"];
     }
-    /*
-    this.route.params.subscribe(params => {
-      if (params['filterString']) {
-        let urlString = params['filterString'];
-        if (urlString === "completed_jobs") {
-          this.filterString = Filter.Completed;
-        } else if (urlString === "pending_jobs") {
-          this.filterString = Filter.Pending;
-        } else {
-          this.filterString = Filter.All;
-        }
-      }
-      if (params['tags']) {
-        this.tags = '["' + params["tags"] + '"]';
-      }
-    });*/
+
     this.recordsPerPage = 50;
     this.logDir = null;
     this.suiteExecutionsCount = 0;
@@ -92,16 +78,27 @@ export class RegressionComponent implements OnInit {
             this.stateFilter = response["state_filter"];
             this.stateFilterString = this.regressionService.stateStringMap[this.stateFilter];
           }
-
-          return of(true);
+          this.queryParameters = response;
+          return of(response);
         }))
       }),switchMap((response) => {
-      return this.apiService.post("/regression/suite_executions_count/" + this.stateFilter, payload).pipe(switchMap((result) => {
-        this.suiteExecutionsCount = (parseInt(result.data));
-        this.setPage(1);
-        return of(true);
-      }))
-    })
+        if (response.hasOwnProperty('submitter_email')) {
+          payload["submitter_email"] = response.submitter_email;
+        }
+        if (response.hasOwnProperty('test_bed_type')) {
+          payload["test_bed_type"] = response.test_bed_type;
+        }
+
+        if (response.hasOwnProperty('suite_path')) {
+          payload["suite_path"] = response.suite_path;
+        }
+
+        return this.apiService.post("/regression/suite_executions_count/" + this.stateFilter, payload).pipe(switchMap((result) => {
+          this.suiteExecutionsCount = (parseInt(result.data));
+          this.setPage(1);
+          return of(true);
+        }))
+      })
     ).subscribe(() => {
 
     }, error => {
@@ -116,6 +113,42 @@ export class RegressionComponent implements OnInit {
       });
     }
     this.status = null;
+  }
+
+  prepareBaseQueryParams(userSuppliedParams) {
+    let queryParams = {};
+    if (this.queryParameters) {
+      /*
+      s += "?";
+      if (this.queryParameters.hasOwnProperty('submitter_email')) {
+        s += `submitter_email=${this.queryParameters.submitter_email}&`;
+      }
+      s += `state_filter=${this.stateFilter}&`;
+      if (s.endsWith('&')) {
+        s = s.slice(0, s.length - 1);
+      }*/
+
+      if (this.queryParameters.hasOwnProperty('submitter_email')) {
+        queryParams["submitter_email"] = this.queryParameters['submitter_email'];
+      }
+
+      if (this.queryParameters.hasOwnProperty('test_bed_type')) {
+        queryParams["test_bed_type"] = this.queryParameters["test_bed_type"];
+      }
+
+      if (this.queryParameters.hasOwnProperty('suite_path')) {
+        queryParams["suite_path"] = this.queryParameters["suite_path"]
+      }
+
+      queryParams["state_filter"] = this.stateFilter;
+    }
+    if (userSuppliedParams) {
+      for (let key in userSuppliedParams) {
+        queryParams[key] = userSuppliedParams[key];
+      }
+    }
+
+    return queryParams;
   }
 
   stateFilterStringToNumber(s) {
@@ -145,12 +178,15 @@ export class RegressionComponent implements OnInit {
 
   onStateFilterClick(state) {
     this.stateFilterString = state;
-    this.navigateByQuery(this.stateFilterStringToNumber(state));
+    this.stateFilter = this.stateFilterStringToNumber(state);
+    this.navigateByQuery(this.stateFilter);
   }
 
   navigateByQuery(state) {
     let queryPath = "/regression?state_filter=" + state;
-    this.router.navigateByUrl(queryPath);
+    //this.router.navigateByUrl(queryPath);
+    //this.router.navi
+    this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(null)});
   }
 
   getQueryParam() {
@@ -161,6 +197,7 @@ export class RegressionComponent implements OnInit {
       if (params.hasOwnProperty('tag')) {
         this.tags = '["' + params["tag"] + '"]';
       }
+
       return of(params);
     }))
   }
@@ -174,9 +211,17 @@ export class RegressionComponent implements OnInit {
       return;
     }
     let payload = {};
+
     if (this.tags) {
       payload["tags"] = this.tags;
     }
+
+    if (this.queryParameters) {
+      for (let key in this.queryParameters) {
+        payload[key] = this.queryParameters[key];
+      }
+    }
+
     this.status = "Fetching Data";
     this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.stateFilter, payload).subscribe(result => {
       this.items = result.data;

@@ -324,7 +324,16 @@ class FunTest:
         self.version = version
 
     def get_version(self):
-        return self.version
+        version = None
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            if not suite_execution:
+                self.log("Suite execution: {} could not be retrieved from the DB".format(self.suite_execution_id))
+            else:
+                version = suite_execution.version
+        else:
+            version = self.version
+        return version
 
     def _get_next_thread_id(self):
         self.fun_test_thread_id += 1

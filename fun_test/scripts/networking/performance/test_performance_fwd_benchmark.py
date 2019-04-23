@@ -10,6 +10,7 @@ network_controller_obj = None
 spirent_config = None
 TIMESTAMP = None
 OUTPUT_JSON_FILE_NAME = "nu_rfc2544_fwd_performance.json"
+older_build = False
 
 
 class ScriptSetup(FunTestScript):
@@ -78,7 +79,7 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
         '''
-        older_build = False
+
         if not older_build:
             fwd_benchmark_ports = [8, 12]
             for fpg in fwd_benchmark_ports:
@@ -228,6 +229,19 @@ class TestFwdPerformance(FunTestCase):
     def cleanup(self):
         self.template_obj.cleanup()
 
+        if not older_build:
+            fwd_benchmark_ports = [8, 12]
+            for fpg in fwd_benchmark_ports:
+                result = network_controller_obj.set_nu_benchmark_1(mode=0, fpg=fpg)
+                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
+
+            result = network_controller_obj.set_etp(pkt_adj_size=24)
+            fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 24")
+        else:
+            fwd_benchmark_ports = [8, 12]
+            for fpg in fwd_benchmark_ports:
+                result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=0, erp=1, nh_id=4097, clbp_idx=20)
+                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
 if __name__ == '__main__':
     ts = ScriptSetup()
