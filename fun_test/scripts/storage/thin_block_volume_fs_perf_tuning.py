@@ -572,6 +572,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["sysstat_install"] = False
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
@@ -721,8 +722,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert("Success" in attach_ns, "Namespace is attached")
             # self.end_host.exit_sudo()
             """
-            self.end_host.sudo_command("apt-get install sysstat -y")
-
+            if not fun_test.shared_variables["sysstat_install"]:
+                install_sysstat = self.end_host.install_package("sysstat")
+                fun_test.test_assert(install_sysstat, "Sysstat installation")
+                fun_test.shared_variables["sysstat_install"] = True
+                
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_thin_block_volume(
