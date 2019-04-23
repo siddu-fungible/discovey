@@ -39,25 +39,6 @@ tb_config = {
             "start_mode": F1.START_MODE_DPCSH_ONLY,
             "perf_multiplier": 1
         },
-    },
-    "dpcsh_proxy": {
-        "ip": "10.1.20.154",
-        "user": "fun",
-        "passwd": "123",
-        "dpcsh_port": 40220,
-        "dpcsh_tty": "/dev/ttyUSB8"
-    },
-    "tg_info": {
-        0: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.20.154",
-            "user": "fun",
-            "passwd": "123",
-            "ipmi_name": "10.1.20.153",
-            "ipmi_iface": "lanplus",
-            "ipmi_user": "admin",
-            "ipmi_passwd": "admin",
-        }
     }
 }
 
@@ -533,8 +514,6 @@ def function_flow(handle, num_jobs, iodepth, number_of_cores):
     use_number_of_cores = present_result_obtained["number_of_cores"]
 
     return
-
-
 
 
 class BLTVolumePerformanceScript(FunTestScript):
@@ -1021,6 +1000,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
+                row_data_dict["readiops"] = int(round(avg_tps))
+                row_data_dict["readbw"] = int(round(avg_bw / 1000))
 
                 # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 # Comparing the internal volume stats with the expected value
