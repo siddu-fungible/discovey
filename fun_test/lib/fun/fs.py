@@ -120,15 +120,14 @@ class Bmc(Linux):
         for i in range(self.num_f1s):
             self.uart_log_threads[i].close()
 
-
-    def come_reset(self, come, max_wait_time=180):
+    def come_reset(self, come, max_wait_time=180, power_cycle=True):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
         fun_test.test_assert(self.ping(come.host_ip), "ComE reachable before reset")
         # self.command("./come-power.sh")
         # fun_test.sleep("ComE powering down", seconds=15)
         # fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
         # Temporary woraround for COMe
-        fun_test.log(("Rebooting COMe"))
+        fun_test.log(("Rebooting ComE"))
         come.reboot(retries=15)
 
         # Ensure come restarted
@@ -139,7 +138,15 @@ class Bmc(Linux):
             if ping_result:
                 break
             fun_test.sleep("ComE power up")
-        fun_test.test_assert(not come_restart_timer.is_expired() and ping_result, "ComE reachable")
+
+        if come_restart_timer.is_expired():
+            fun_test.critical("ComE did not power up. Trying to power-cycle")
+            if power_cycle:
+                fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")
+                fun_test.sleep("Power-cyling ComE", seconds=10)
+                fun_test.test_assert(self.is_host_pingable(host_ip=come.host_ip, max_time=max_wait_time),
+                                     "ComE reachable after power-cycle")
+
         return True
 
     def set_boot_phase(self, index, phase):
@@ -544,15 +551,10 @@ class Fs(object, ToDictMixin):
                   boot_args=boot_args,
                   num_f1s=num_f1s)
 
-    def bootup(self, reboot_bmc=False, power_cyle_come=None):
+    def bootup(self, reboot_bmc=False, power_cycle_come=True):
         if reboot_bmc:
             fun_test.test_assert(self.reboot_bmc(), "Reboot BMC")
         fun_test.test_assert(self.bmc_initialize(), "BMC initialize")
-
-        if self.power_cycle_come or power_cyle_come:
-            fun_test.test_assert(self.bmc.host_power_cycle(), "Power-cycle comE using ipmitool")
-            fun_test.sleep("Power cyling comE", seconds=10)
-            fun_test.test_assert(self.bmc.is_host_pingable(host_ip=self.get_come().host_ip, max_time=180), "comE reachable after power-cycle")
 
         fun_test.test_assert(self.set_f1s(), "Set F1s")
         fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
@@ -561,7 +563,7 @@ class Fs(object, ToDictMixin):
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
-        fun_test.test_assert(self.come_reset(), "ComE rebooted successfully")
+        fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come), "ComE rebooted successfully")
         fun_test.test_assert(self.come_initialize(), "ComE initialized")
         fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
         fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
@@ -572,8 +574,8 @@ class Fs(object, ToDictMixin):
 
         return True
 
-    def come_reset(self):
-        return self.bmc.come_reset(self.get_come())
+    def come_reset(self, power_cycle=None):
+        return self.bmc.come_reset(come=self.get_come(), power_cycle=power_cycle)
 
 
     def re_initialize(self):

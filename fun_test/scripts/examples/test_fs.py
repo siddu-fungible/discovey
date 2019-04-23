@@ -36,9 +36,9 @@ class FunTestCase1(FunTestCase):
         fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
-        fs = Fs.get()
+        fs = Fs.get(num_f1s=1)
         fun_test.shared_variables["fs"] = fs
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cyle_come=True), "FS bootup")
+        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
         f1 = fs.get_f1(index=0)
         f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
 
