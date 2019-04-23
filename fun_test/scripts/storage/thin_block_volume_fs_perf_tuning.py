@@ -776,16 +776,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
 
-
         try:
-
             # Logic to find best iodepth & numjobs
             function_flow(self.end_host, 1, 1, 1)
 
             fun_test.log_section("Comparing all the values the final results to be used are")
             fun_test.log("The Final values are  \nJobs     : %s\nIodepth  : %s\nNumber of cores : %s" %
                          (use_num_jobs, use_iodepth, use_number_of_cores))
-
         except:
             fun_test.critical("Logic not working")
 
