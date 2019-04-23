@@ -24,7 +24,7 @@ class UartLogger(Thread):
         nc = Netcat(ip=self.ip, port=self.port)
 
         while not self.stopped and not fun_test.closed:
-            self.buf += nc.read_until(data="PUlsAr", timeout=0.001)
+            self.buf += nc.read_until(data="PUlsAr", timeout=0.00001)
 
     def get_log(self):
         return self.buf
