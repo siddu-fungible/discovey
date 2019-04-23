@@ -1606,6 +1606,10 @@ class Linux(object, ToDictMixin):
         fun_test.debug(kwargs)
 
         # Building the fio command
+
+        # Add group reporting option (in case numjobs > 1)
+        fio_command += " --group_reporting"
+
         if 'name' not in kwargs:
             fio_command += " --name=nvme_pcie"
 
