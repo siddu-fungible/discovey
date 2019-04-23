@@ -592,5 +592,41 @@
         "num_flows": 128000000, 
         "offloads": false, 
         "protocol": "UDP"
+    },
+    {
+        "mode": "100G",
+        "version": 6065,
+        "timestamp": "2019-04-21 22:55:24.815259-07:00",
+        "flow_type": "NU_VP_NU_FWD_NFCP",
+        "frame_size": 1500.0,
+        "pps": 16430764.94,
+        "throughput": 198220.75,
+        "latency_min": 1.71,
+        "latency_max": 3.48,
+        "latency_avg": 2.19,
+        "jitter_min": 0.0,
+        "jitter_max": 0.41,
+        "jitter_avg": 0.0,
+        "num_flows": 128000000,
+        "offloads": false,
+        "protocol": "UDP"
+    },
+    {
+        "mode": "100G",
+        "version": 6065,
+        "timestamp": "2019-04-21 22:55:24.815259-07:00",
+        "flow_type": "NU_VP_NU_FWD_NFCP",
+        "frame_size": 362.94,
+        "pps": 65218692.96,
+        "throughput": 193537.78,
+        "latency_min": 1.65,
+        "latency_max": 18.67,
+        "latency_avg": 3.07,
+        "jitter_min": 0.0,
+        "jitter_max": 0.43,
+        "jitter_avg": 0.03,
+        "num_flows": 128000000,
+        "offloads": false,
+        "protocol": "UDP"
     }
 ]
