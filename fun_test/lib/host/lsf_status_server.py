@@ -159,6 +159,7 @@ class LsfStatusServer:
         result = {}
         if "completion_date" in job_info:
             completion_date = "20" + job_info["completion_date"]
+            lsf_id = job_info["job_id"]
             jenkins_url = job_info["jenkins_url"]
             build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
             build_properties = self._get(url=build_properties_url)
@@ -170,7 +171,7 @@ class LsfStatusServer:
                                                  software_date=job_info["software_date"],
                                                  hardware_version=job_info["hardware_version"],
                                                  completion_date=completion_date,
-                                                 build_properties=build_properties)
+                                                 build_properties=build_properties, lsf_job_id=lsf_id)
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])

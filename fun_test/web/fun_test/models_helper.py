@@ -520,7 +520,7 @@ def _get_suite_executions(execution_id=None,
                 se.save()
     return all_objects_dict
 
-def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties):
+def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties, lsf_job_id):
     print"Hardware_version: {}".format(hardware_version)
     try:
         entry = JenkinsJobIdMap.objects.get(completion_date=completion_date)
@@ -531,8 +531,8 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 git_commit=git_commit,
                                 software_date=software_date,
                                 hardware_version=hardware_version,
-                                build_properties=build_properties)
-        entry.save()
+                                build_properties=build_properties,
+                                lsf_job_id=lsf_job_id)
         entry.save()
 
 def _get_suite_execution_attributes(suite_execution):

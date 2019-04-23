@@ -284,7 +284,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       hardwareVersion = this.buildInfo[key]["hardware_version"];
       sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
       let buildProperties = this.buildInfo[key]["build_properties"];
+      let lsfJobId = this.buildInfo[key]["lsf_job_id"];
       s["SDK branch"] = sdkBranch;
+      s["Lsf job link"] = lsfJobId;
       s["Software date"] = softwareDate;
       s["Hardware version"] = hardwareVersion;
       s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
