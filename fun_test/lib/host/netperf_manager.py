@@ -5,7 +5,8 @@ import re
 
 
 # Server has 2 socket, each CPU has 8 cores, 2 threads, NUMA 0: 0-7,16-23, NUMA 1: 8-15,24-31
-# CPU frequency is locked at 2.1GHz
+# scaling_governor is set to performance mode.
+# If locked, CPU frequency is 2.4GHz; if turbo boost, it can go up to 3.0GHz.
 CPU_FREQ = '2.1G'
 
 
@@ -15,19 +16,24 @@ class PerformanceTuning:
 
     def cpu_governor(self, lock_freq=False):
         cmds = ['cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_driver',
-                'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',]
+                'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',
+                'for i in {0..31}; do echo performance > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done',]
         if lock_freq:
             cmds.extend([
-                'for i in {0..31}; do echo userspace > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done',
-                'cpupower frequency-set -f {}'.format(CPU_FREQ)
+                #'cpupower frequency-set -f {}'.format(CPU_FREQ),
+                'cpupower idle-set -e 0',
+                'cpupower idle-set -d 1',
+                'cpupower idle-set -d 2',
+                'cpupower idle-set -d 3',
+                'cpupower idle-set -d 4',
             ])
         else:
-            cmds.append(
-                'for i in {0..31}; do echo performance > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done')
+            cmds.extend([
+                'cpupower idle-set -E',
+            ])
         cmds.extend([
-            'cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq',
+            'cpupower monitor',
             'cat /proc/cpuinfo | grep MHz',
-            'lscpu | grep "CPU MHz"',
         ])
         for cmd in cmds:
             self.linux_obj.sudo_command(cmd)
@@ -173,10 +179,12 @@ class NetperfManager:
         for measure_latency in (False,):
             if measure_latency:
                 for perf_tuning_obj in self.perf_tuning_objs:
+                    perf_tuning_obj.cpu_governor(lock_freq=True)
                     perf_tuning_obj.mlnx_tune(profile='LOW_LATENCY_VMA')
                     # TODO: disable interrupt coalesce
             else:
                 for perf_tuning_obj in self.perf_tuning_objs:
+                    perf_tuning_obj.cpu_governor(lock_freq=False)
                     perf_tuning_obj.mlnx_tune(profile='HIGH_THROUGHPUT')
                     # TODO: enable interrupt coalesce
 
