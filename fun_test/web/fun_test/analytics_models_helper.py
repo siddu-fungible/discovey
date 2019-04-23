@@ -397,14 +397,23 @@ class TeraMarkFunTcpThroughputPerformanceHelper(MetricHelper):
 
 
 class ModelHelper(MetricHelper):
-    model = ""
+    model = None
+    units = None
 
-    def __init__(self):
-        super(ModelHelper, self).__init__(model=self.model)
+    def __init__(self, model_name):
+        metric_model = app_config.get_metric_models()[model_name]
+        m_obj = metric_model()
+        super(ModelHelper, self).__init__(model=m_obj)
 
     def add_entry(self, **kwargs):
         try:
-            m_obj = self.model_obj
+            units = {}
+            m_obj = self.model
+            for key, value in kwargs.iteritems():
+                if "unit" in key:
+                    units[key] = value
+            if units != {}:
+                self.units = units
             for key, value in kwargs.iteritems():
                 if key == "timestamp":
                     key = "date_time"
@@ -415,26 +424,32 @@ class ModelHelper(MetricHelper):
                     setattr(m_obj, "output_" + key, value)
                 elif hasattr(m_obj, key):
                     setattr(m_obj, key, value)
+            if self.units:
+                m_obj.save()
+            else:
+                raise Exception('No units provided: {}. Please provide the required units'.format(self.units))
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def set_units(self, model_name, **kwargs):
+    def set_units(self, **kwargs):
         try:
-            metric_model = app_config.get_metric_models()[model_name]
-            m_obj = metric_model()
+            m_obj = self.model
             for key, value in kwargs.iteritems():
                 if hasattr(m_obj, "output_" + key):
                     setattr(m_obj, "output_" + key, value)
-            self.model_obj = m_obj
+            self.units = kwargs
         except Exception as ex:
             fun_test.critical(str(ex))
 
     def set_status(self, status):
         try:
-            m_obj = self.model_obj
+            m_obj = self.model
             if hasattr(m_obj, "status"):
                 setattr(m_obj, "status", status)
-            m_obj.save()
+            if self.units:
+                m_obj.save()
+            else:
+                raise Exception('No units provided: {}. Please provide the required units'.format(self.units))
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -643,9 +658,9 @@ if __name__ == "__main__":
     # funtcp = TeraMarkFunTcpThroughputPerformanceHelper()
     # funtcp.add_entry(timestamp="2019-04-18 05:44:48.005254-08:00", mode="100G", version=6011, flow_type="FunTCP_Server_Throughput", frame_size=1500, pps=0.483, throughput=5.8, num_flows=1, status=RESULTS["PASSED"], pps_unit="Mpps", throughput_unit="Gbps")
     # print "added one entry into funtcp"
-    generic_helper = ModelHelper()
+    generic_helper = ModelHelper(model_name="TeraMarkFunTcpThroughputPerformance")
     d = {}
-    d["timestamp"] = "2019-04-19 05:44:48.005254-08:00"
+    d["timestamp"] = "2019-04-21 05:44:48.005254-08:00"
     d["mode"] = "100G"
     d["version"] = 6011
     d["flow_type"] = "FunTCP_Server_Throughput"
@@ -659,7 +674,7 @@ if __name__ == "__main__":
     unit["throughput_unit"] = "Gbps"
 
     status = RESULTS["PASSED"]
-    generic_helper.set_units(model_name="TeraMarkFunTcpThroughputPerformance", **unit)
+    generic_helper.set_units(**unit)
     generic_helper.add_entry(**d)
     generic_helper.set_status(status)
     print "used generic helper to add an entry"
