@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from lib.system import utils
 from lib.topology.dut import Dut, DutInterface
+from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
@@ -38,6 +39,25 @@ tb_config = {
             "start_mode": F1.START_MODE_DPCSH_ONLY,
             "perf_multiplier": 1
         },
+    },
+    "dpcsh_proxy": {
+        "ip": "10.1.20.154",
+        "user": "fun",
+        "passwd": "123",
+        "dpcsh_port": 40220,
+        "dpcsh_tty": "/dev/ttyUSB8"
+    },
+    "tg_info": {
+        0: {
+            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
+            "ip": "10.1.20.154",
+            "user": "fun",
+            "passwd": "123",
+            "ipmi_name": "10.1.20.153",
+            "ipmi_iface": "lanplus",
+            "ipmi_user": "admin",
+            "ipmi_passwd": "admin",
+        }
     }
 }
 
@@ -45,7 +65,6 @@ tb_config = {
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
-
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -85,6 +104,7 @@ def compare(actual, expected, threshold, operation):
     else:
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
+
 fio_run_time = 20
 nvme_device_name = None
 max_cpu_usage = 0
@@ -93,13 +113,14 @@ prev_result = None
 fail_happened = False
 first = 0
 last = 0
-max_cpu_core = 8
+number_of_cores_present = 8
 use_num_jobs = 0
 use_iodepth = 0
 use_number_of_cores = 0
 present_result_obtained = {}
 previous_result_obtained = {}
 fio_rwmode = None
+fio_testfile_size = None
 
 
 def kill_process(arg1, name):
@@ -128,7 +149,7 @@ def convert_to_comma_format(number):
     if number == 0:
         return str(1)
     for i in range(number):
-        str_data = str_data + str(i+1) + ','
+        str_data = str_data + str(i + 1) + ','
     cpu_cores = str_data[:-1]
     return cpu_cores
 
@@ -140,7 +161,7 @@ def run_fio_command(arg1, num_jobs, iodepth, number_of_cores):
     fun_test.log_section("\n\n\nStarting traffic")
     fun_test.log("\nStarting Fio with \nNumber of jobs  : %s \nIodepth         : %s "
                  "\nNumber of cores : %s\nFio mode        : %s" %
-                 (num_jobs, iodepth, number_of_cores,fio_rwmode))
+                 (num_jobs, iodepth, number_of_cores, fio_rwmode))
 
     arg1.pcie_fio(filename=nvme_device_name,
                   size=fio_testfile_size,
@@ -156,7 +177,7 @@ def run_fio_command(arg1, num_jobs, iodepth, number_of_cores):
                   runtime=fio_run_time,
                   time_based=1,
                   cpus_allowed=cores_str_format,
-                  timeout=fio_run_time*2
+                  timeout=fio_run_time * 2
                   )
 
 
@@ -164,7 +185,7 @@ def start_iostat_in_background(arg1):
     fun_test.debug("Starting the iostat in background")
     iostat_device = nvme_device_name[5:]
     cmd = "iostat -d %s 1" % (iostat_device)
-    arg1.start_bg_process(cmd, output_file="iostat.txt", timeout=fio_run_time+50)
+    arg1.start_bg_process(cmd, output_file="iostat.txt", timeout=fio_run_time + 50)
     return
 
 
@@ -172,7 +193,7 @@ def start_mpstat_in_background(arg1, number_of_cores):
     fun_test.debug("Starting the mpstat in background")
     cores_str_format = convert_to_comma_format(number_of_cores)
     cmd = "mpstat -P %s 1" % (cores_str_format)
-    arg1.start_bg_process(cmd, output_file="mpstat.txt", timeout=fio_run_time+50)
+    arg1.start_bg_process(cmd, output_file="mpstat.txt", timeout=fio_run_time + 50)
     return
 
 
@@ -183,7 +204,7 @@ def parse_iostat_file(arg1):
     fun_test.debug("IOstat has finished\nIOSTAT output")
     iostat_device = nvme_device_name[5:]
     lines = output.split('\n')
-    lines = lines[12:(len(lines))-6]
+    lines = lines[12:(len(lines)) - 6]
     tps_list = []
     kb_read_list = []
     ignore_first = True
@@ -274,7 +295,8 @@ def parse_mpstat_file(arg1, number_of_cores):
             fun_test.critical("Unable to parse the mpstat.txt file")
 
 
-def save_the_results(num_jobs, iodepth, number_of_cores, result_iostat, iowait_flag, cpu_flag, eqm_flag, difference_eqm, final_working):
+def save_the_results(num_jobs, iodepth, number_of_cores, result_iostat, iowait_flag, cpu_flag, eqm_flag, difference_eqm,
+                     final_working):
     fun_test.debug("Saving results")
     global max_cpu_usage
     dictionary = {}
@@ -303,7 +325,7 @@ def save_the_results(num_jobs, iodepth, number_of_cores, result_iostat, iowait_f
     a_bw = result_iostat['average_kbr']
 
     fun_test.log_section("\n\nFio result")
-    fun_test.log("Nuber of jobs     : %s" % num_jobs)
+    fun_test.log("Number of jobs     : %s" % num_jobs)
     fun_test.log("Iodepth           : %s" % iodepth)
     fun_test.log("Number of cores   : %s" % number_of_cores)
     fun_test.log("Max IOPS          : %s" % iops)
@@ -319,7 +341,7 @@ def save_the_results(num_jobs, iodepth, number_of_cores, result_iostat, iowait_f
     max_cpu_usage = 0
 
 
-def find(key1, value1,key2,value2):
+def find(key1, value1, key2, value2):
     for i, dic in enumerate(result_list):
         if dic[key1] == value1 and dic[key2] == value2:
             return i
@@ -329,7 +351,7 @@ def find(key1, value1,key2,value2):
 def print_final_result(result_iostat):
     fun_test.log_section("\n\nOverall summary")
     for index, i in enumerate(result_list):
-        fun_test.log("\nResult %s" % (index+1))
+        fun_test.log("\nResult %s" % (index + 1))
         iops = i['max_tps']
         bw = i['max_kbr']
         a_iops = i["average_tps"]
@@ -344,7 +366,7 @@ def print_final_result(result_iostat):
         result = i["Result"]
         max_cpu_usage = i["max_cpu_usage"]
 
-        fun_test.log("Nuber of jobs     : %s" % num_jobs)
+        fun_test.log("Number of jobs     : %s" % num_jobs)
         fun_test.log("Iodepth           : %s" % iodepth)
         fun_test.log("Number of cores   : %s" % number_of_cores)
         fun_test.log("Max IOPS          : %s" % iops)
@@ -363,7 +385,7 @@ def print_final_result(result_iostat):
 
         fun_test.log_section("\n\nThe final results for this loop are")
 
-        index_of_the_result = find(key1='iodepth',value1=iodepth,key2='num_jobs',value2=num_jobs)
+        index_of_the_result = find(key1='iodepth', value1=iodepth, key2='num_jobs', value2=num_jobs)
         i = result_list[index_of_the_result]
         iops = i['max_tps']
         bw = i['max_kbr']
@@ -379,7 +401,7 @@ def print_final_result(result_iostat):
         result = i["Result"]
         max_cpu_usage = i["max_cpu_usage"]
 
-        fun_test.log("Nuber of jobs     : %s" % num_jobs)
+        fun_test.log("Number of jobs     : %s" % num_jobs)
         fun_test.log("Iodepth           : %s" % iodepth)
         fun_test.log("Number of cores   : %s" % number_of_cores)
         fun_test.log("Max IOPS          : %s" % iops)
@@ -448,11 +470,11 @@ def logic_design(working, num_jobs, iodepth, number_of_cores, result_iostat):
 
 
 def function_flow(handle, num_jobs, iodepth, number_of_cores):
-    global use_iodepth, use_num_jobs, use_number_of_cores, first, last, fail_happened, prev_result, result_list,\
+    global use_iodepth, use_num_jobs, use_number_of_cores, first, last, fail_happened, prev_result, result_list, \
         previous_result_obtained, present_result_obtained
     fun_test.log("\n\n\n\n\nStarting the process with \nNumber of jobs   : %s"
                  "\nIodepth          : %s\nNumber of cores : %s\n"
-                 % (num_jobs,iodepth,number_of_cores))
+                 % (num_jobs, iodepth, number_of_cores))
     kill_process(handle, "iostat")
     kill_process(handle, "mpstat")
     start_iostat_in_background(handle)
@@ -479,7 +501,11 @@ def function_flow(handle, num_jobs, iodepth, number_of_cores):
         fun_test.critical("Error in feching eqm stats")
         eqm_flag = True
 
-    if iowait_flag and cpu_flag and eqm_flag:
+    special_condition = False
+    if cpu_flag and not (iowait_flag or eqm_flag):
+        special_condition = True
+
+    elif iowait_flag and cpu_flag and eqm_flag:
         final_working = True
     else:
         final_working = False
@@ -487,61 +513,28 @@ def function_flow(handle, num_jobs, iodepth, number_of_cores):
     save_the_results(num_jobs, iodepth, number_of_cores, result_iostat, iowait_flag, cpu_flag, eqm_flag,
                      difference_eqm, final_working)
 
-    num_jobs, iodepth, number_of_cores, run_again = logic_design(working=final_working,
-                                                                 num_jobs=num_jobs,
-                                                                 iodepth=iodepth,
-                                                                 number_of_cores=number_of_cores,
-                                                                 result_iostat=result_iostat)
+    if special_condition:
+        run_again = True
+        num_jobs = 2 * num_jobs
+        number_of_cores = 2 * number_of_cores
+    else:
+        num_jobs, iodepth, number_of_cores, run_again = logic_design(working=final_working,
+                                                                     num_jobs=num_jobs,
+                                                                     iodepth=iodepth,
+                                                                     number_of_cores=number_of_cores,
+                                                                     result_iostat=result_iostat)
+
     if run_again:
         fun_test.debug("Running the logic again")
         return function_flow(handle, num_jobs, iodepth, number_of_cores)
 
-    fun_test.debug("Starting the loop again")
-    fun_test.debug("Previous result : %s \nPresent result : %s" % (previous_result_obtained, present_result_obtained))
-    fail_happened = False
-    first = 0
-    last = 0
-    if previous_result_obtained:
-        max_tps_prev = previous_result_obtained['max_tps']
-        max_kbr_prev = previous_result_obtained['max_kbr']
-        max_tps_present = present_result_obtained['max_tps']
-        max_kbr_present = present_result_obtained['max_kbr']
-        if (max_tps_prev > max_tps_present) and (max_kbr_prev > max_kbr_present):
-            use_num_jobs = previous_result_obtained["num_jobs"]
-            use_iodepth = previous_result_obtained["iodepth"]
-            use_number_of_cores = previous_result_obtained["number_of_cores"]
-            fun_test.debug("use_num_jobs : %s " % use_num_jobs)
-            fun_test.debug("use_iodepth : %s " % use_iodepth)
-            fun_test.debug("use cores : %s" % use_number_of_cores)
-            kill_process(handle, "iostat")
-            kill_process(handle, "mpstat")
-            present_result_obtained = {}
-            previous_result_obtained = {}
-            prev_result = {}
-            result_list = []
-            time.sleep(2)
-            return
-        else:
-            previous_result_obtained = present_result_obtained.copy()
-            num_jobs = num_jobs + 1
-            iodepth = int(iodepth/2)
-            number_of_cores = number_of_cores + 1
-            if number_of_cores >= max_cpu_core:
-                use_num_jobs = previous_result_obtained["num_jobs"]
-                use_iodepth = previous_result_obtained["iodepth"]
-                use_number_of_cores = previous_result_obtained["number_of_cores"]
-                return
+    use_iodepth = present_result_obtained["iodepth"]
+    use_num_jobs = present_result_obtained["num_jobs"]
+    use_number_of_cores = present_result_obtained["number_of_cores"]
 
-            return function_flow(handle, num_jobs, iodepth, number_of_cores)
+    return
 
-    else:
-        previous_result_obtained = present_result_obtained.copy()
-        num_jobs = num_jobs + 1
-        iodepth = int(iodepth/2)
-        number_of_cores = number_of_cores + 1
-        present_result_obtained = {}
-        prev_result = {}
-        return function_flow(handle, num_jobs, iodepth, number_of_cores)
+
 
 
 class BLTVolumePerformanceScript(FunTestScript):
@@ -902,9 +895,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  name=fio_job_name, **self.fio_cmd_args)
 
                 kill_process(self.end_host, "iostat")
-
                 iostat_results = parse_iostat_file(self.end_host)
-                print iostat_results
+                print (iostat_results)
                 avg_tps = iostat_results["average_tps"]
                 avg_bw = iostat_results["average_kbr"]
                 print "The Avg TPS is " + str(avg_tps)
@@ -1154,7 +1146,6 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
 
 if __name__ == "__main__":
-
     bltscript = BLTVolumePerformanceScript()
     bltscript.add_test_case(BLTFioSeqRead())
     bltscript.add_test_case(BLTFioRandRead())
