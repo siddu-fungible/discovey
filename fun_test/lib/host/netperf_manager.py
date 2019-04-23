@@ -82,19 +82,20 @@ class PerformanceTuning:
         for cmd in cmds:
             self.linux_obj.sudo_command(cmd)
 
-    def interrupt_coalesce(self, interface, disable=True):
-        if disable:
-            cmds = (
-                'ethtool --coalesce {} rx-usecs 0 tx-usecs 0 rx-frames 1 tx-frames 1 adaptive-rx off'.format(
-                    interface),
-            )
-        else:
-            cmds = (
-                'ethtool --coalesce {} rx-usecs 8 tx-usecs 16 rx-frames 128 tx-frames 32 adaptive-rx on'.format(
-                    interface),
-            )
-        for cmd in cmds:
-            self.linux_obj.sudo_command(cmd)
+    def interrupt_coalesce(self, interfaces, disable=True):
+        for interface in interfaces:
+            if disable:
+                cmds = (
+                    'ethtool --coalesce {} rx-usecs 0 tx-usecs 0 rx-frames 1 tx-frames 1 adaptive-rx off'.format(
+                        interface),
+                )
+            else:
+                cmds = (
+                    'ethtool --coalesce {} rx-usecs 8 tx-usecs 16 rx-frames 128 tx-frames 32 adaptive-rx on'.format(
+                        interface),
+                )
+            for cmd in cmds:
+                self.linux_obj.sudo_command(cmd)
 
 
 class NetperfManager:
@@ -110,7 +111,7 @@ class NetperfManager:
         result = True
 
         for perf_tuning_obj in self.perf_tuning_objs:
-            perf_tuning_obj.cpu_governor()
+            perf_tuning_obj.cpu_governor(lock_freq=False)
             perf_tuning_obj.tcp()
             perf_tuning_obj.iptables()
 
@@ -135,7 +136,7 @@ class NetperfManager:
             #        linux_obj.get_process_id_by_pattern('phc2sys') is not None)
             #    if not result:
             #        break
-            
+
             # Install Netperf
             for pkg in ('netperf',):
                 if not linux_obj.check_package(pkg):
@@ -175,18 +176,17 @@ class NetperfManager:
         result = {}
 
         # Do throughput test first, and latency test last
-        #for measure_latency in (False, True):
-        for measure_latency in (False,):
+        for measure_latency in (False, True):
             if measure_latency:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=True)
                     perf_tuning_obj.mlnx_tune(profile='LOW_LATENCY_VMA')
-                    # TODO: disable interrupt coalesce
+                    perf_tuning_obj.interrupt_coalesce('fpg0', disable=True)  # TODO: pass interface in a nice way
             else:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=False)
                     perf_tuning_obj.mlnx_tune(profile='HIGH_THROUGHPUT')
-                    # TODO: enable interrupt coalesce
+                    perf_tuning_obj.interrupt_coalesce('fpg0', disable=False)
 
             mp_task_obj = MultiProcessingTasks()
 

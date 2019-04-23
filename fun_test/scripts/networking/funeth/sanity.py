@@ -22,12 +22,12 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.21.120'
     #DPC_PROXY_PORT = 40221
     #TB = 'SN2'
-    DPC_PROXY_IP = '10.1.40.24'
-    DPC_PROXY_PORT = 40221
-    TB = 'SB5'
-    #DPC_PROXY_IP = '10.1.23.5'
-    #DPC_PROXY_PORT = 40220
-    #TB = 'FS11'
+    #DPC_PROXY_IP = '10.1.40.24'
+    #DPC_PROXY_PORT = 40221
+    #TB = 'SB5'
+    DPC_PROXY_IP = '10.1.23.5'
+    DPC_PROXY_PORT = 40220
+    TB = 'FS11'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
@@ -60,8 +60,8 @@ def setup_hu_host(funeth_obj, update_driver=True):
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     fun_test.test_assert(funeth_obj.configure_interfaces('hu'), 'Configure funeth interfaces.')
     fun_test.test_assert(funeth_obj.configure_ipv4_routes('hu'), 'Configure HU host IPv4 routes.')
-    #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
-    #                    'HU PF and VF interface loopback ping test via NU')
+    fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
+                        'HU PF and VF interface loopback ping test via NU')
 
 
 class FunethSanity(FunTestScript):

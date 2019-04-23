@@ -23,12 +23,12 @@ PARALLEL = 8  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = ('throughput',
                     'pps',
-                    #'latency_min',
-                    #'latency_avg',
-                    #'latency_max',
-                    #'latency_P50',
-                    #'latency_P90',
-                    #'latency_P99',
+                    'latency_min',
+                    'latency_avg',
+                    'latency_max',
+                    'latency_P50',
+                    'latency_P90',
+                    'latency_P99',
                     )
 
 
@@ -41,7 +41,7 @@ class FunethPerformance(sanity.FunethSanity):
         """)
 
     def setup(self):
-        #super(FunethPerformance, self).setup()
+        super(FunethPerformance, self).setup()
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -54,7 +54,7 @@ class FunethPerformance(sanity.FunethSanity):
 
         network_controller_obj = NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                    dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True)
-        # Configure small SF/Non-FCP thr to workaround SWOS-4771
+        # Configure small DF/Non-FCP thr to workaround SWOS-4771
         buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(#sf_thr=256,
                                                                             #sf_xoff_thr=128,
                                                                             #sx_thr=4000,
@@ -72,7 +72,7 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
 
     def cleanup(self):
-        #super(FunethPerformance, self).cleanup()
+        super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
 
@@ -145,43 +145,17 @@ class FunethPerformanceBase(FunTestCase):
                  }
             )
 
-        # configure MSS by add iptable rule
-        if frame_size < 1500:
-            for linux_obj_dst, ns_dst in zip([linux_obj_dst,], [None,]):
-                cmds = (
-                    'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-                        frame_size - 18 - 20 - 20),
-                    'iptables -t mangle -L',
-                )
-                for cmd in cmds:
-                    if ns_dst:
-                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-                    linux_obj_dst.sudo_command(cmd)
-
         perf_manager_obj = NetperfManager([arg_dict.get('linux_obj') for arg_dict in arg_dicts])
 
         # Collect stats before and after test run
         fun_test.log('Collect stats before test')
-        #collect_stats()
+        collect_stats()
         try:
             result = perf_manager_obj.run(*arg_dicts)
         except:
             result = {}
         fun_test.log('Collect stats after test')
-        #collect_stats()
-
-        # Delete iptable rule
-        if frame_size < 1500:
-            for linux_obj_dst, ns_dst in zip([linux_obj_dst,], [None,]):
-                cmds = (
-                    'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-                        frame_size - 18 - 20 - 20),
-                    'iptables -t mangle -L',
-                )
-                for cmd in cmds:
-                    if ns_dst:
-                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-                    linux_obj_dst.sudo_command(cmd)
+        collect_stats()
 
         # Check test passed or failed
         if any(v == -1 for v in result.values()):
@@ -1306,10 +1280,10 @@ if __name__ == "__main__":
             #FunethPerformance_HU_NU_800B_UDP_NETPERF,
             #FunethPerformance_HU_NU_64B_UDP_NETPERF,
             #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
-            FunethPerformance_HU_NU_800B_TCP_NETPERF,
+            #FunethPerformance_HU_NU_800B_TCP_NETPERF,
             #FunethPerformance_HU_NU_128B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
-            FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
             #FunethPerformance_HU_NU_128B_TCP_NETPERF_MultipleFlows,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF_MultipleFlows,
 
@@ -1317,10 +1291,10 @@ if __name__ == "__main__":
             ## FunethPerformance_NU_HU_800B_UDP_NETPERF,
             ## FunethPerformance_NU_HU_64B_UDP_NETPERF,
             ## FunethPerformance_NU_HU_1500B_UDP_NETPERF,
-            FunethPerformance_NU_HU_800B_TCP_NETPERF,
+            #FunethPerformance_NU_HU_800B_TCP_NETPERF,
             #FunethPerformance_NU_HU_128B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
-            FunethPerformance_NU_HU_800B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_NU_HU_800B_TCP_NETPERF_MultipleFlows,
             #FunethPerformance_NU_HU_128B_TCP_NETPERF_MultipleFlows,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF_MultipleFlows,
 
