@@ -359,43 +359,6 @@ class AllocSpeedPerformanceHelper(MetricHelper):
             one_entry.save()
 
 
-class TeraMarkFunTcpThroughputPerformanceHelper(MetricHelper):
-    model = TeraMarkFunTcpThroughputPerformance
-
-    def __init__(self):
-        super(TeraMarkFunTcpThroughputPerformanceHelper, self).__init__(model=self.model)
-
-    def add_entry(self, timestamp, frame_size, mode, version, flow_type, num_flows, pps, throughput,
-                  status=RESULTS["PASSED"], pps_unit="Mpps", throughput_unit="Gbps"):
-        try:
-            entry = TeraMarkFunTcpThroughputPerformance.objects.get(input_date_time=get_time_from_timestamp(timestamp),
-                                                                    input_frame_size=frame_size,
-                                                                    input_mode=mode,
-                                                                    input_version=version,
-                                                                    input_flow_type=flow_type,
-                                                                    input_number_flows=num_flows)
-            entry.output_throughput = throughput
-            entry.output_throughput_unit = throughput_unit
-            entry.output_pps = pps
-            entry.output_pps_unit = pps_unit
-            entry.status = status
-            entry.save()
-        except ObjectDoesNotExist:
-            pass
-            one_entry = TeraMarkFunTcpThroughputPerformance(input_date_time=get_time_from_timestamp(timestamp),
-                                             input_frame_size=frame_size,
-                                             input_mode=mode,
-                                             input_version=version,
-                                             input_flow_type=flow_type,
-                                             input_number_flows=num_flows,
-                                             output_throughput=throughput,
-                                             output_throughput_unit=throughput_unit,
-                                             output_pps=pps,
-                                             output_pps_unit=pps_unit,
-                                             status=status)
-            one_entry.save()
-
-
 class ModelHelper(MetricHelper):
     model = None
     units = None
@@ -655,26 +618,26 @@ if __name__ == "__main2__":
 
 if __name__ == "__main__":
     # prepare_status_db()
-    # funtcp = TeraMarkFunTcpThroughputPerformanceHelper()
-    # funtcp.add_entry(timestamp="2019-04-18 05:44:48.005254-08:00", mode="100G", version=6011, flow_type="FunTCP_Server_Throughput", frame_size=1500, pps=0.483, throughput=5.8, num_flows=1, status=RESULTS["PASSED"], pps_unit="Mpps", throughput_unit="Gbps")
-    # print "added one entry into funtcp"
     generic_helper = ModelHelper(model_name="TeraMarkFunTcpThroughputPerformance")
     d = {}
-    d["timestamp"] = "2019-04-21 05:44:48.005254-08:00"
+    d["timestamp"] = "2019-04-23 09:44:02.007497-07:00"
     d["mode"] = "100G"
-    d["version"] = 6011
+    d["version"] = 6087
     d["flow_type"] = "FunTCP_Server_Throughput"
     d["frame_size"] = 1500
-    d["pps"] = 0.483
-    d["throughput"] = 5.8
-    d["num_flows"] = 1
+    d["pps"] = 799339.1666666666
+    d["throughput"] = 9592.07
+    d["num_flows"] = 4
 
     unit = {}
-    unit["pps_unit"] = "Mpps"
-    unit["throughput_unit"] = "Gbps"
+    unit["pps_unit"] = "pps"
+    unit["throughput_unit"] = "Mbps"
 
     status = RESULTS["PASSED"]
-    generic_helper.set_units(**unit)
-    generic_helper.add_entry(**d)
-    generic_helper.set_status(status)
+    try:
+        generic_helper.set_units(**unit)
+        generic_helper.add_entry(**d)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
     print "used generic helper to add an entry"

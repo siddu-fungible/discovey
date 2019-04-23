@@ -657,7 +657,7 @@ if __name__ == "__main__":
                     leaf=True,
                     description=description,
                     owner_info="Amit Surana (amit.surana@fungible.com)",
-                    source="",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/tcp/performance.py",
                     positive=positive,
                     y1_axis_title=y1_axis_title,
                     visualization_unit=y1_axis_title,
