@@ -54,7 +54,7 @@ class TestBedWorker(Thread):
 
                     if test_bed_name in self.test_bed_lock_timers:
                         del self.test_bed_lock_timers[test_bed_name]
-            self.warn_list.remove(test_bed.name)
+            self.warn_list.remove(test_bed_name)
         except Exception as ex:
             scheduler_logger.exception(str(ex))
 
