@@ -51,10 +51,10 @@ class TestBedWorker(Thread):
                     test_bed.manual_lock = False
                     test_bed.save()
                     send_test_bed_remove_lock(test_bed=test_bed, warning=False)
-                    self.warn_list.remove(test_bed.name)
+
                     if test_bed_name in self.test_bed_lock_timers:
                         del self.test_bed_lock_timers[test_bed_name]
-
+            self.warn_list.remove(test_bed.name)
         except Exception as ex:
             scheduler_logger.exception(str(ex))
 
