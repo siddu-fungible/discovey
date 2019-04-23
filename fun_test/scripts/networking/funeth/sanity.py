@@ -461,14 +461,14 @@ if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
             FunethTestNUPingHU,
-            #FunethTestPacketSweep,
-            #FunethTestScpNU2HUPF,
-            #FunethTestScpNU2HUVF,
-            #FunethTestScpHU2NU,
-            #FunethTestInterfaceFlapPF,
-            #FunethTestInterfaceFlapVF,
-            ##FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
-            #FunethTestReboot,
+            FunethTestPacketSweep,
+            FunethTestScpNU2HUPF,
+            FunethTestScpNU2HUVF,
+            FunethTestScpHU2NU,
+            FunethTestInterfaceFlapPF,
+            FunethTestInterfaceFlapVF,
+            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestReboot,
     ):
         ts.add_test_case(tc())
     ts.run()
