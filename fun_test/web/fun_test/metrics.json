@@ -2148,18 +2148,18 @@
                     ]
                   },
                   {
-                    "info": "juniper_crypto_tunnel",
+                    "info": "juniper_ipsec",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "juniper_crypto_tunnel",
+                    "name": "juniper_ipsec",
                     "weight": 1,
-                    "label": "Crypto Tunnel",
+                    "label": "IPSEC",
                     "children": [
                       {
-                        "info": "juniper_crypto_tunnel_single",
+                        "info": "juniper_ipsec_crypto_single_tunnel",
                         "metric_model_name": "MetricContainer",
                         "leaf": false,
-                        "name": "juniper_crypto_tunnel_single",
+                        "name": "juniper_ipsec_crypto_single_tunnel",
                         "weight": 1,
                         "label": "Single Tunnel",
                         "children": [
@@ -2182,10 +2182,10 @@
                         ]
                       },
                       {
-                        "info": "juniper_crypto_tunnel_multi",
+                        "info": "juniper_ipsec_crypto_multi_tunnel",
                         "metric_model_name": "MetricContainer",
                         "leaf": false,
-                        "name": "juniper_crypto_tunnel_multi",
+                        "name": "juniper_ipsec_crypto_multi_tunnel",
                         "weight": 1,
                         "label": "Multi Tunnel",
                         "children": [
