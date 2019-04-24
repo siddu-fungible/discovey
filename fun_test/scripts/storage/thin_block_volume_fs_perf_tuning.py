@@ -513,6 +513,14 @@ def function_flow(handle, num_jobs, iodepth, number_of_cores):
     use_num_jobs = present_result_obtained["num_jobs"]
     use_number_of_cores = present_result_obtained["number_of_cores"]
 
+    prev_result = None
+    present_result_obtained = None
+    fail_happened = False
+    first = 0
+    last = 0
+    result_list = []
+    previous_result_obtained = None
+
     return
 
 
@@ -878,14 +886,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
                 kill_process(self.end_host, "iostat")
                 iostat_results = parse_iostat_file(self.end_host)
-                print (iostat_results)
-                avg_tps = iostat_results["average_tps"]
-                avg_bw = iostat_results["average_kbr"]
-                print "The Avg TPS is " + str(avg_tps)
-                print "The Avg BW is " + str(avg_bw)
+                fun_test.debug(iostat_results)
+                fun_test.log_section("Iostat results")
+                fun_test.log("Average IOPS  : {}".format(iostat_results["average_tps"]))
+                fun_test.log("Average BW    : {} Kb/s".format(iostat_results["average_kbr"]))
+                fun_test.log("Maximum IOPS  : {} ".format(iostat_results["max_tps"]))
+                fun_test.log("Maximum BW    : {} Kb/s".format(iostat_results["max_kbr"]))
 
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
+
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 for op, stats in fio_output[combo][mode].items():
@@ -998,8 +1008,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
-                row_data_dict["readiops"] = int(round(avg_tps))
-                row_data_dict["readbw"] = int(round(avg_bw / 1000))
+                row_data_dict["readiops"] = int(round(iostat_results["average_tps"]))
+                row_data_dict["readbw"] = int(round(iostat_results["average_kbr"] / 1000))
 
                 # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 # Comparing the internal volume stats with the expected value
