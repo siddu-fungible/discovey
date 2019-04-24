@@ -115,14 +115,14 @@ def suite_executions(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def script_infos(request, id):
+def script_infos(request, pk):
     result = None
     if request.method == 'GET':
         q = Q()
-        if id:
-            q = q & Q(script_id=id)
+        if pk:
+            q = q & Q(script_id=int(pk))
         script_infos = ScriptInfo.objects.filter(q)
         result = []
         for script_info in script_infos:
-            result.append({"script_id": script_info.script_id, "bug": script_info.bug})
+            result.append({"id": script_info.script_id, "bug": script_info.bug, "pk": script_info.pk})
     return result

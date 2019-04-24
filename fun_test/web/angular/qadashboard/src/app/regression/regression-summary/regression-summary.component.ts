@@ -6,6 +6,7 @@ import {forkJoin, from, Observable, of} from 'rxjs';
 import {ReRunService} from "../re-run.service";
 import {concatMap, mergeMap, switchMap} from "rxjs/operators";
 import {RegressionService} from "../regression.service";
+import {ActivatedRoute} from "@angular/router";
 
 
 @Component({
@@ -22,7 +23,8 @@ export class RegressionSummaryComponent implements OnInit {
               private loggerService: LoggerService,
               private commonService: CommonService,
               private reRunService: ReRunService,
-              private regressionService: RegressionService) {
+              private regressionService: RegressionService,
+              private route: ActivatedRoute) {
   }
 
   xValues: any [] = [];
@@ -32,12 +34,16 @@ export class RegressionSummaryComponent implements OnInit {
   public pointClickCallback: Function;
   availableModules = [];
   testCaseExecutions: any = null;
-  scriptInfoMap = {};
+  scriptInfoMap = {}; // Maps script_path to entry
+  scriptPkToEntry = {};  // Maps script pk to entry
   numBugs = 0;
   numBugsActive = 0;
   numBugsResolved = 0;
   showGlobalBugPanel = false;
   scriptSuiteBaselineMap = {};
+  globalJiraMap: any = null;
+  queryParameters: any = null;
+
 
   /*initialFilterData = [{info: "Networking overall", payload: {module: "networking"}},
     {info: "Networking sanity", payload: {module: "networking", test_case_execution_tags: ["networking-sanity"]}}
@@ -67,26 +73,87 @@ export class RegressionSummaryComponent implements OnInit {
 
   }
   ngOnInit() {
-    this.fetchAllVersions();
     this.pointClickCallback = this.pointDetail.bind(this);
-    this.setFilterData();
-    this.getAllRegressionJiras();
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {}
+    }).pipe(switchMap(response => {
+        return this.route.queryParams.pipe(switchMap(params => {
+          this.queryParameters = params;
+          return of(true);
+        }))
+      }),
+      switchMap(response => {
+      return this.fetchScripts();
+      }),
+      switchMap(response => {
+        return this.fetchAllVersions();
+      }),
+      switchMap(response => {
+        this.setFilterData();
+        return this.fetchModules();
+      }),
+      switchMap(response => {
+        return this.getAllRegressionJiras();
+      }),
+      switchMap(response => {
+        return of(true);
+      })).subscribe(response => {}, error => {
+        console.trace();
+        this.loggerService.error("Unable to initialize regression summary");
+    });
 
   }
 
   getAllRegressionJiras() {
-    this.regressionService.getScriptInfo(null).subscribe(response => {
-      let i = 0;
-    })
+    let scriptPk = null;
+    if (this.queryParameters && this.queryParameters.hasOwnProperty("script_pk")) {
+      scriptPk = this.queryParameters["script_pk"];
+    }
+
+    return this.regressionService.getScriptInfo(scriptPk).pipe(switchMap(response => {
+      this.globalJiraMap = {};
+      response.map(item => {
+        if (!this.globalJiraMap.hasOwnProperty(item.bug)) {
+          this.globalJiraMap[item.bug] = {scriptPks: []};
+        }
+        this.globalJiraMap[item.bug].scriptPks.push(item.id);
+      });
+
+      for (let key in this.globalJiraMap) {
+        this.setContext(this.globalJiraMap[key]);
+      }
+      return of(true);
+    }));
+  }
+
+  setContext(item) {
+    let s = "";
+
+    item.scriptPks.map(pk => {
+      s += `<a target="_blank" href='/regression/summary?script_pk=${pk}'>` + this.scriptPkToEntry[pk].entry.script_path + "</a>"
+      s += "<br>";
+    });
+    item["context"] = s;
+
   }
 
   clickHistory(scriptPath) {
-    let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].entry.pk;
+    // let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].entry.pk;
+    let url = `/regression/summary?script_pk=${this.scriptInfoMap[scriptPath].entry.pk}`;
     window.open(url, '_blank');
   }
 
   setFilterData() {
     let filterData = this.initialFilterData;
+    if (this.queryParameters.hasOwnProperty('script_pk')) {
+      let pk = this.queryParameters["script_pk"];
+      let entry = this.scriptPkToEntry[pk].entry;
+      this.filterData = [{info: entry.script_path, payload: {script_path: entry.script_path}}]
+    }
+
+
     if (this.filterData) {
       filterData = this.filterData;
     }
@@ -131,42 +198,32 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchAllVersions() {
-    this.apiService.get("/regression/get_all_versions").subscribe((response) => {
+    return this.apiService.get("/regression/get_all_versions").pipe(switchMap((response) => {
       let entries = response.data;
       entries.forEach((entry) => {
-        let version = parseInt(entry.version);
-        //this.versionSet.add(version);
-        this.suiteExectionVersionMap[entry.execution_id] = version;
-
+        this.suiteExectionVersionMap[entry.execution_id] = parseInt(entry.version);
       });
-      this.fetchScripts();
-
-    }, error => {
-      this.loggerService.error("/regression/get_all_versions");
-    });
+      return of(true);
+    }));
   }
+
 
   fetchScripts() {
     //this.numBugs = 0;
-    this.apiService.get("/regression/scripts").subscribe(response => {
+    return this.apiService.get("/regression/scripts").pipe(switchMap(response => {
       response.data.forEach(entry => {
         this.scriptInfoMap[entry.script_path] = {entry: entry};
+        this.scriptPkToEntry[entry.pk] = {entry: entry};
         if (entry.baseline_suite_execution_id > 0) {
           let payload = {suite_execution_id: entry.baseline_suite_execution_id};
-          this.apiService.post('/regression/script_execution/' + entry.pk, payload ).subscribe(response => {
+          return this.apiService.post('/regression/script_execution/' + entry.pk, payload ).subscribe(response => {
             this.scriptInfoMap[entry.script_path]["baselineResults"] = response.data;
-          }, error => {
-
+            //return of(true);
           });
         }
-        /*if (entry.bugs.length) {
-          this.numBugs += entry.bugs.length;
-        }*/
       });
-      this.fetchModules();
-    }, error => {
-      this.loggerService.error("/regression/scripts");
-    })
+      return of(true);
+    }));
   }
 
   getBaselineResult(scriptPath, testCaseId) {
@@ -338,40 +395,17 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchModules() {
-    this.apiService.get("/regression/modules").subscribe((response) => {
+    return this.apiService.get("/regression/modules").pipe(switchMap(response => {
       //console.log(response);
       this.availableModules = response.data;
       this.availableModules.forEach((module) => {
-
       });
 
-      /*
-      for (let index = 0; index < this.filters.length; index++) {
-        this.fetchScriptInfo2(index).subscribe();
-      }*/
-
-      /*forkJoin(Array.from(Array(this.filters.length).keys()).map(filterIndex => {
-        return this.fetchScriptInfo2(filterIndex);
-      })).subscribe(() => {
-
-      });*/
       let numbers = [];
       this.filters.map(filter => {numbers.push(numbers.length)});
-        return from(numbers).pipe(
-     mergeMap(filterIndex => this.fetchScriptInfo2(filterIndex))).subscribe(response => {
-
-        }, error => {
-        this.loggerService.error("Unable to fetch script info");
-        });
-
-
-
-
-
-
-    }, error => {
-      this.loggerService.error("Error fetching modules");
-    })
+      return from(numbers).pipe(
+          mergeMap(filterIndex => this.fetchScriptInfo2(filterIndex)));
+    }));
   }
 
 
@@ -567,7 +601,11 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchScriptInfo2(index) {
-    return this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).pipe(switchMap((response) => {
+    let url = "/regression/get_test_case_executions_by_time";
+    if (this.queryParameters.hasOwnProperty("days_in_past")) {
+      url += "?days_in_past=" + this.queryParameters["days_in_past"];
+    }
+    return this.apiService.post(url, this.filters[index].payload).pipe(switchMap((response) => {
       this.filters[index].testCaseExecutions = response.data;
       this.filters[index].testCaseExecutions.forEach((historyElement) => {
         if (historyElement.script_path === "/networking/qos/test_cir_1.py") {

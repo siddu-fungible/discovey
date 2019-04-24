@@ -78,7 +78,7 @@ class FunethSanity(FunTestScript):
 
         # Boot up FS1600
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get(num_f1s=1)
+            fs = Fs.get(disable_f1_index=1)
             fun_test.shared_variables["fs"] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
             # TODO: get dpc proxy ip/port

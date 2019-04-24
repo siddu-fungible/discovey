@@ -113,7 +113,11 @@ export class RegressionService implements OnInit{
   }
 
   getScriptInfo(scriptPk) {
-    return this.apiService.get("/api/v1/regression/script_infos").pipe(switchMap (response => {
+    let url = "/api/v1/regression/script_infos";
+    if (scriptPk) {
+      url += "/" + scriptPk;
+    }
+    return this.apiService.get(url).pipe(switchMap (response => {
       return of(response.data);
     }))
   }

@@ -191,7 +191,7 @@
     <!-- right side of the perf page dispalying the charts -->
     <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col">
       <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
-        <summary-jira-info [summaryInfo]="'/common/bug_info'" [data]="jiraList"
+        <summary-jira-info [bugInfoUrl]="'/common/bug_info'" [data]="jiraList"
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
                            (close)="closeSummaryPanel($event)"></summary-jira-info>
       </div>

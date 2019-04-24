@@ -98,24 +98,12 @@ class _XmlHead(Element):
         self.add_script(src="{}/jsoneditor.js".format(JS_DIR_DEFAULT))
         self.add_script(src="http://code.highcharts.com/highcharts.js")
         self.add_script(src="http://code.highcharts.com/modules/exporting.js")
-        # self.add_script(src="https://cdn.plot.ly/plotly-latest.min.js")
-        '''
-        self.add_script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js")
-        self.add_script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js")
-        self.add_script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js")
-        self.add_script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js")
-        self.add_script(src="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js")
-        '''
-        # self.add_script(src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.4.1/js/mdb.js")
+
         self.add_script(src="{}/script_result.js".format(JS_DIR_DEFAULT))
 
         # Add Links
-        #self.add_link(href="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css",
-        #              rel="stylesheet")
-        # self.add_link(href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.3.2/css/mdb.min.css", rel="stylesheet")
         self.add_link(href="{}/bootstrap.min.css".format(CSS_DIR_DEFAULT), rel="stylesheet")
         self.add_link(href="{}/jsoneditor.css".format(CSS_DIR_DEFAULT), rel="stylesheet")
-        # self.add_link(href="https://fonts.googleapis.com/icon?family=Material+Icons", rel="stylesheet")
         self.add_link(href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css", rel="stylesheet")
         self.add_link(href="{}/script_result.css".format(CSS_DIR_DEFAULT), rel="stylesheet")
         self.add_link(href="https://cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css", rel="stylesheet")
@@ -214,14 +202,14 @@ class DocumentationContent:
         table.set_attribute(attribute="width", attribute_value="7%")
         table.set_attribute(attribute="class", attribute_value="table table-nonfluid table-bordered")
 
-        publish_button = GenericElement("button", id="test-case-publish-button", class_name="btn btn-labeled btn-success")
-        span = GenericElement("span", class_name="btn-label")
-        i = GenericElement("i", class_name="glyphicon glyphicon-upload")
-        i.text = " "
-        span.append(i)
-        publish_button.append(i)
-        publish_button.text = "Publish"
-        fluid_div.append(publish_button)
+        # publish_button = GenericElement("button", id="test-case-publish-button", class_name="btn btn-labeled btn-success")
+        # span = GenericElement("span", class_name="btn-label")
+        # i = GenericElement("i", class_name="glyphicon glyphicon-upload")
+        # i.text = " "
+        # span.append(i)
+        # publish_button.append(i)
+        # publish_button.text = "Publish"
+        # fluid_div.append(publish_button)
 
         fluid_div.append(table)
 
@@ -315,7 +303,7 @@ class PageContent:
         self.side_wrapper.append(side_wrapper_table)
 
         one_row = GenericElement("tr")
-        column_names = ['Id', 'Result', 'Testcase', 'Bugs', 'Re-run']
+        column_names = ['Id', 'Result', 'Testcase']
         if self.variants:
             column_names.extend(self.variants)
 
@@ -363,7 +351,7 @@ class PageContent:
         one_table_data.append(result_anchor)
         # .append(one_table_data)
 
-        if self.enable_bugs:
+        if self.enable_bugs and False:
             one_table_data = GenericElement("td")
             if bugs:
                 for i in bugs:
@@ -377,13 +365,6 @@ class PageContent:
                     one_table_data.append(bug_anchor)
             else:
                 one_table_data.append(GenericElement("div"))
-            one_row.append(one_table_data)
-        if result.lower() == "failed":
-            rerun_anchor = GenericElement("a")
-            rerun_anchor.set("href", "#1")
-            rerun_anchor.text = "Re-run"
-            one_table_data = GenericElement("td")
-            one_table_data.append(rerun_anchor)
             one_row.append(one_table_data)
 
         self.side_wrapper_table.append(one_row)
@@ -621,7 +602,7 @@ class TestSection(GenericElement):
         header_row = GenericElement("tr")
         for header in headers:
             th = GenericElement("th")
-            th.text  = header
+            th.text = header
             header_row.append(th)
         table.append(header_row)
         for row in rows_list:
@@ -658,7 +639,7 @@ class TestSection(GenericElement):
         show_long_summary_button = GenericElement("a",
                                                       class_name="long_summary_button",
                                                       id=self.get_href_id() + "long_summary_button")
-        show_long_summary_button.text = "Steps"
+        show_long_summary_button.text = "&nbsp;Steps"
         return show_long_summary_button
 
     def get_long_summary(self, long_summary=""):
