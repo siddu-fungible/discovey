@@ -216,10 +216,10 @@ export class RegressionSummaryComponent implements OnInit {
         this.scriptPkToEntry[entry.pk] = {entry: entry};
         if (entry.baseline_suite_execution_id > 0) {
           let payload = {suite_execution_id: entry.baseline_suite_execution_id};
-          return this.apiService.post('/regression/script_execution/' + entry.pk, payload ).pipe(switchMap(response => {
+          return this.apiService.post('/regression/script_execution/' + entry.pk, payload ).subscribe(response => {
             this.scriptInfoMap[entry.script_path]["baselineResults"] = response.data;
-            return of(true);
-          }));
+            //return of(true);
+          });
         }
       });
       return of(true);
