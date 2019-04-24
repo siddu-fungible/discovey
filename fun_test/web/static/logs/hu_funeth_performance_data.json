@@ -2287,6 +2287,57 @@
         "throughput_n2h": 11853.329,
         "timestamp": "2019-04-22 16:30:18.413010-07:00",
         "version": 6076
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 1,
+        "offloads": false,
+        "pps_h2n": 959691.4,
+        "pps_n2h": -1,
+        "protocol": "TCP",
+        "throughput_h2n": 11516.297,
+        "throughput_n2h": -1,
+        "timestamp": "2019-04-23 19:46:55.185102-07:00",
+        "version": 6106
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 8,
+        "offloads": false,
+        "pps_h2n": 726334.95,
+        "pps_n2h": -1,
+        "protocol": "TCP",
+        "throughput_h2n": 8716.019,
+        "throughput_n2h": -1,
+        "timestamp": "2019-04-23 19:46:55.185102-07:00",
+        "version": 6106
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 1,
+        "offloads": false,
+        "pps_h2n": -1,
+        "pps_n2h": 2049930.65,
+        "protocol": "TCP",
+        "throughput_h2n": -1,
+        "throughput_n2h": 24599.168,
+        "timestamp": "2019-04-23 19:46:55.185102-07:00",
+        "version": 6106
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 8,
+        "offloads": false,
+        "pps_h2n": -1,
+        "pps_n2h": 1004074.2,
+        "protocol": "TCP",
+        "throughput_h2n": -1,
+        "throughput_n2h": 12048.89,
+        "timestamp": "2019-04-23 19:46:55.185102-07:00",
+        "version": 6106
     }
-
 ]
