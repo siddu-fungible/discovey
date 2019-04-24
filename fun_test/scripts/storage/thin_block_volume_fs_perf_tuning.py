@@ -537,9 +537,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        '''self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
-                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])'''
-
         self.storage_controller = f1.get_dpc_storage_controller()
 
         # Setting the syslog level to 2
@@ -551,6 +548,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["sysstat_install"] = False
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
