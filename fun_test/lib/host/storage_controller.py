@@ -37,11 +37,14 @@ class StorageController(DpcshClient):
         delete_dict["params"]["name"] = name
         return self.json_execute(verb=self.mode, data=delete_dict, command_duration=command_duration)
 
-    def volume_attach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT):
+    def volume_attach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT, **kwargs):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
                                   "remote_ip": remote_ip}}
+        if kwargs:
+            for key in kwargs:
+                attach_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
 
     def volume_detach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT):
