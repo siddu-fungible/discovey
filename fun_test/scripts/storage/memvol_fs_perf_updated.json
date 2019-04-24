@@ -1,0 +1,146 @@
+{
+  "MemVolFioSeqRead": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 67108864, "block_size": 4096,
+                       "name": "mem-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0,"runtime": 60, "timeout": 120, "numjobs": 4},
+    "fio_modes": ["read"],
+    "fio_bs_iodepth": ["(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "memvol_seq_read"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 16)": {"read": {"read": {"bw": 0, "iops": 0, "clatency": 0, "latency90": 0, "latency95": 0, "latency99": 0, "latency9999": 0}}}
+    },
+    "expected_volume_stats": {
+      "read": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}
+    }
+  },
+  "MemVolFioRandRead": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 67108864, "block_size": 4096,
+                       "name": "mem-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0,"runtime": 60, "timeout": 120, "numjobs": 4},
+    "fio_modes": ["randread"],
+    "fio_bs_iodepth": ["(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"randread": "memvol_rand_read"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 16)": {"read": {"read": {"bw": 0, "iops": 0, "clatency": 0, "latency90": 0, "latency95": 0, "latency99": 0, "latency9999": 0}}}
+    },
+    "expected_volume_stats": {
+      "read": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}
+    }
+  },
+  "MemVolFioSeqWrite": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 67108864, "block_size": 4096,
+                       "name": "mem-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0,"runtime": 60, "timeout": 120, "numjobs": 4},
+    "fio_modes": ["write"],
+    "fio_bs_iodepth": ["(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"write": "memvol_seq_write"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 16)": {"read": {"read": {"bw": 0, "iops": 0, "clatency": 0, "latency90": 0, "latency95": 0, "latency99": 0, "latency9999": 0}}}
+    },
+    "expected_volume_stats": {
+      "read": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}
+    }
+  },
+  "MemVolFioRandWrite": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 67108864, "block_size": 4096,
+                       "name": "mem-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0,"runtime": 60, "timeout": 120, "numjobs": 4},
+    "fio_modes": ["randwrite"],
+    "fio_bs_iodepth": ["(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"randwrite": "memvol_rand_write"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 16)": {"read": {"read": {"bw": 0, "iops": 0, "clatency": 0, "latency90": 0, "latency95": 0, "latency99": 0, "latency9999": 0}}}
+    },
+    "expected_volume_stats": {
+      "read": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}
+    }
+  },
+  "MemVolFioSeqReadWriteMix": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 67108864, "block_size": 4096,
+                       "name": "mem-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0,"runtime": 60, "timeout": 120, "numjobs": 4},
+    "fio_modes": ["readwrite"],
+    "fio_bs_iodepth": ["(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"readwrite": "memvol_seq_read_write"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 16)": {"read": {"read": {"bw": 0, "iops": 0, "clatency": 0, "latency90": 0, "latency95": 0, "latency99": 0, "latency9999": 0}}}
+    },
+    "expected_volume_stats": {
+      "read": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}
+    }
+  },
+  "MemVolFioRandReadWriteMix": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 67108864, "block_size": 4096,
+                       "name": "mem-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "100%", "direct": 1, "prio":  0,"runtime": 60, "timeout": 120, "numjobs": 4},
+    "fio_modes": ["randrw"],
+    "fio_bs_iodepth": ["(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"randrw": "memvol_rand_read_write"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 16)": {"read": {"read": {"bw": 0, "iops": 0, "clatency": 0, "latency90": 0, "latency95": 0, "latency99": 0, "latency9999": 0}}}
+    },
+    "expected_volume_stats": {
+      "read": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}
+    }
+  }
+}
