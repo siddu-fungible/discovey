@@ -284,7 +284,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       hardwareVersion = this.buildInfo[key]["hardware_version"];
       sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
       let buildProperties = this.buildInfo[key]["build_properties"];
+      let lsfJobId = this.buildInfo[key]["lsf_job_id"];
       s["SDK branch"] = sdkBranch;
+      s["Lsf job id"] = lsfJobId;
       s["Software date"] = softwareDate;
       s["Hardware version"] = hardwareVersion;
       s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
@@ -548,6 +550,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   openSource(url): void {
     window.open(url, '_blank');
+  }
+
+  openLsfUrl(lsfId): void {
+    let url = "http://palladium-jobs.fungible.local:8080/job/";
+    window.open(url + lsfId, '_blank');
   }
 
   getAppName(source): string {
