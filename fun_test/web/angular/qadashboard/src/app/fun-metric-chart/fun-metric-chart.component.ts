@@ -553,7 +553,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   openLsfUrl(lsfId): void {
-    window.open("http://palladium-jobs.fungible.local:8080/job/" + lsfId, '_blank');
+    let url = "http://palladium-jobs.fungible.local:8080/job/";
+    window.open(url + lsfId, '_blank');
   }
 
   getAppName(source): string {
