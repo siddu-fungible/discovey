@@ -566,6 +566,9 @@ export class PerformanceComponent implements OnInit {
               context += "->";
             }
           }
+
+          context = context.replace(/->$/, "<br>");
+
         }
         if (bugObj.jiraIds) {
           for (let id of bugObj.jiraIds) {

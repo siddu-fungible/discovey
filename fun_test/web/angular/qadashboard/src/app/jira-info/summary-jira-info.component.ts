@@ -7,16 +7,16 @@ import {JiraInfoComponent} from "./jira-info.component";
   styleUrls: ['./jira-info.component.css']
 })
 export class SummaryJiraInfoComponent extends JiraInfoComponent {
-  @Input() summaryInfo: any = null;
+  @Input() bugInfoUrl: any = null;
   @Input() data: any = new Set();
 
   fetchJiraIds(): void {
     this.jiraInfo = [];
-    if (this.summaryInfo) {
+    if (this.bugInfoUrl) {
       this.status = "Fetching";
       let payload = {};
       payload["bug_ids"] = Object.keys(this.data);
-      this.apiService.post(this.summaryInfo, payload).subscribe((response) => {
+      this.apiService.post(this.bugInfoUrl, payload).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
         this.setActiveResolvedBugs();
         this.status = null;
