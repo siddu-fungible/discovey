@@ -416,6 +416,7 @@ class MemVolPerformanceTestcase(FunTestCase):
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
+
                         if field == "iops":
                             fio_output[combo][mode][op][field] = int(round(value * multiplier))
                         if field == "bw":
@@ -423,6 +424,9 @@ class MemVolPerformanceTestcase(FunTestCase):
                             fio_output[combo][mode][op][field] = int(round(value * multiplier / 1000))
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value / multiplier))
+                        actual = fio_output[combo][mode][op][field]
+                        row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
+                                                     int((value * (1 + self.fio_pass_threshold))))
                 fun_test.log("FIO Command Output after multiplication:")
                 fun_test.log(fio_output[combo][mode])
 
@@ -431,7 +435,6 @@ class MemVolPerformanceTestcase(FunTestCase):
 
                 row_data_dict["fio_job_name"] = fio_job_name
 
-                """
                 # Building the table row for this variation for both the script table and performance dashboard
                 row_data_list = []
                 for i in table_data_cols:
@@ -442,7 +445,7 @@ class MemVolPerformanceTestcase(FunTestCase):
 
                 table_data_rows.append(row_data_list)
                 post_results("MEMVOL_FS", test_method, *row_data_list)
-                """
+
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Memvol Performance Table", table_name=self.summary, table_data=table_data)
