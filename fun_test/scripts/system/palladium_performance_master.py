@@ -69,7 +69,7 @@ internal_chart_names_for_flows = {
                        "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
 }
 
-networking_models = ["HuThroughputPerformance", "HuLatencyPerformance"]
+networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance"]
 
 
 def get_rounded_time():

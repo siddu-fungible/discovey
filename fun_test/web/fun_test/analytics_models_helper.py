@@ -7,12 +7,22 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
-from web.fun_test.metrics_models import VolumePerformanceEmulation, BltVolumePerformance
+from web.fun_test.metrics_models import VolumePerformanceEmulation, BltVolumePerformance, \
+    TeraMarkFunTcpThroughputPerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.db_fixup import prepare_status
+from fun_global import RESULTS
+from dateutil.parser import parse
+from fun_settings import MAIN_WEB_APP
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+from lib.system.fun_test import *
 
+
+def get_time_from_timestamp(timestamp):
+    time_obj = parse(timestamp)
+    return time_obj
 
 def invalidate_goodness_cache():
     charts = MetricChart.objects.all()
@@ -225,9 +235,12 @@ class BltVolumePerformanceHelper(MetricHelper):
     def __init__(self):
         super(BltVolumePerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume, fio_job_name, write_iops=-1, read_iops=-1,
-                  write_throughput=-1, read_throughput=-1, write_avg_latency=-1, read_avg_latency=-1, write_90_latency=-1,
-                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1, read_99_99_latency=-1, write_99_99_latency=-1,
+    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume,
+                  fio_job_name, write_iops=-1, read_iops=-1,
+                  write_throughput=-1, read_throughput=-1, write_avg_latency=-1, read_avg_latency=-1,
+                  write_90_latency=-1,
+                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
+                  read_99_99_latency=-1, write_99_99_latency=-1,
                   write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
                   read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
                   write_90_latency_unit="usecs", write_95_latency_unit="usecs",
@@ -344,6 +357,101 @@ class AllocSpeedPerformanceHelper(MetricHelper):
                                               output_one_malloc_free_classic_avg=output_one_malloc_free_classic_avg,
                                               output_one_malloc_free_classic_max=output_one_malloc_free_classic_max)
             one_entry.save()
+
+
+class ModelHelper(object):
+    model = None
+    units = None
+    id = None
+
+    def __init__(self, model_name):
+        self.metric_model = app_config.get_metric_models()[model_name]
+        m_obj = self.metric_model()
+        self.model = m_obj
+
+    def add_entry(self, **kwargs):
+        result = None
+        try:
+            self.id = None
+            m_obj = self.model
+            units = {}
+            for key, value in kwargs.iteritems():
+                if key.endswith("_unit"):
+                    units[key] = value
+            if units != {}:
+                self.units = units
+            if not self.units:
+                raise Exception('No units provided. Please provide the required units')
+
+            inputs = {}
+            outputs = {}
+
+            for key, value in kwargs.iteritems():
+                if key in ["timestamp", "date_time"]:
+                    key = "date_time"
+                    value = get_time_from_timestamp(value)
+                if hasattr(m_obj, "input_" + key):
+                    inputs["input_" + key] = value
+                    setattr(m_obj, "input_" + key, value)
+                elif hasattr(m_obj, "output_" + key):
+                    outputs["output_" + key] = value
+                    setattr(m_obj, "output_" + key, value)
+                    if not key.endswith("_unit"):
+                        key_unit = key + "_unit"
+                        if not key_unit in self.units:
+                            raise Exception('No matching units for the output {} found'.format(key))
+                elif hasattr(m_obj, key):
+                    setattr(m_obj, key, value)
+            try:
+                o = self.metric_model.objects.get(**inputs)
+                for k, v in outputs.iteritems():
+                    if hasattr(o, k):
+                        setattr(o, k, v)
+                o.save()
+                result = True
+            except ObjectDoesNotExist:
+                m_obj.save()
+                self.id = m_obj.id
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            raise ex
+        return result
+
+    def set_units(self, **kwargs):
+        result = None
+        try:
+            m_obj = self.model
+            for key, value in kwargs.iteritems():
+                if hasattr(m_obj, "output_" + key):
+                    setattr(m_obj, "output_" + key, value)
+                else:
+                    raise Exception("Provided units do not match any output - {}".format(key))
+            self.units = kwargs
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            raise ex
+        return result
+
+    def set_status(self, status):
+        result = None
+        try:
+            m_obj = self.model
+            if hasattr(m_obj, "status"):
+                setattr(m_obj, "status", status)
+            if not self.units:
+                raise Exception('No units provided. Please provide the required units')
+            if self.id:
+                m_obj.save()
+                result = True
+            else:
+                raise Exception("Set status failed")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            raise ex
+        return result
+
 
 
 class WuLatencyAllocStackHelper(MetricHelper):
@@ -546,4 +654,29 @@ if __name__ == "__main2__":
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
 
 if __name__ == "__main__":
-    prepare_status_db()
+    # prepare_status_db()
+    generic_helper = ModelHelper(model_name="TeraMarkFunTcpThroughputPerformance")
+    d = {}
+    d["timestamp"] = "2019-04-18 09:44:02.007497-07:00"
+    d["mode"] = "100G"
+    d["version"] = 6087
+    d["flow_type"] = "FunTCP_Server_Throughput"
+    d["frame_size"] = 1500
+    d["pps"] = 799339.1666666666
+    d["throughput"] = 95
+    d["num_flows"] = 4
+    d["pps_unit"] = "pps"
+    d["throughput_unit"] = "Mbps"
+
+    unit = {}
+    unit["pps_unit"] = "pps"
+    unit["throughput_unit"] = "Mbps"
+
+    status = fun_test.PASSED
+    try:
+        generic_helper.set_units(**unit)
+        generic_helper.add_entry(**d)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"

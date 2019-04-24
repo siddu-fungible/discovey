@@ -45,8 +45,11 @@
             <td class="no-wrap">
               <b>{{ point.name }}:</b>
             </td>
-            <td class="word-break">
+            <td *ngIf="point.name!=='Lsf job id'" class="word-break">
               {{ point.value }}
+            </td>
+            <td *ngIf="point.name==='Lsf job id'" class="word-break">
+              <a [routerLink]="" (click)="openLsfUrl(point.value)">{{ point.value }}</a>
             </td>
           </tr>
         </table>

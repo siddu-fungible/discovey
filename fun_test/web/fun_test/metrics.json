@@ -1848,6 +1848,42 @@
                     ]
                   }
                 ]
+              },
+              {
+                "info": "funtcp_server",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "funtcp_server",
+                "weight": 1,
+                "label": "FunTCP Server",
+                "children": [
+                  {
+                    "info": "funtcp_server_throughput",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_throughput",
+                    "weight": 1,
+                    "label": "Throughput",
+                    "children": [
+                      {
+                        "info": "funtcp_server_throughput_1tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_1tcp",
+                        "weight": 1,
+                        "label": "1 TCP Flow(s)"
+                      },
+                      {
+                        "info": "funtcp_server_throughput_4tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_4tcp",
+                        "weight": 1,
+                        "label": "4 TCP Flow(s)"
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
