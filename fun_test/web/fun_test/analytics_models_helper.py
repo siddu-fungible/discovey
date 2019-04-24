@@ -370,6 +370,7 @@ class ModelHelper(object):
         self.model = m_obj
 
     def add_entry(self, **kwargs):
+        result = None
         try:
             self.id = None
             m_obj = self.model
@@ -407,14 +408,18 @@ class ModelHelper(object):
                     if hasattr(o, k):
                         setattr(o, k, v)
                 o.save()
+                result = True
             except ObjectDoesNotExist:
                 m_obj.save()
                 self.id = m_obj.id
+                result = True
         except Exception as ex:
             fun_test.critical(str(ex))
-            raise Exception
+            raise ex
+        return result
 
     def set_units(self, **kwargs):
+        result = None
         try:
             m_obj = self.model
             for key, value in kwargs.iteritems():
@@ -423,11 +428,14 @@ class ModelHelper(object):
                 else:
                     raise Exception("Provided units do not match any output - {}".format(key))
             self.units = kwargs
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
-            raise Exception
+            raise ex
+        return result
 
     def set_status(self, status):
+        result = None
         try:
             m_obj = self.model
             if hasattr(m_obj, "status"):
@@ -436,10 +444,14 @@ class ModelHelper(object):
                 raise Exception('No units provided. Please provide the required units')
             if self.id:
                 m_obj.save()
-
+                result = True
+            else:
+                raise Exception("Set status failed")
         except Exception as ex:
             fun_test.critical(str(ex))
-            raise Exception
+            raise ex
+        return result
+
 
 
 class WuLatencyAllocStackHelper(MetricHelper):
@@ -660,7 +672,7 @@ if __name__ == "__main__":
     unit["pps_unit"] = "pps"
     unit["throughput_unit"] = "Mbps"
 
-    status = RESULTS["PASSED"]
+    status = fun_test.PASSED
     try:
         generic_helper.set_units(**unit)
         generic_helper.add_entry(**d)
