@@ -108,7 +108,7 @@ class Funeth:
         if sriov > 0:
             _modparams.append('sriov_test=yes')
 
-        self.linux_obj_dict['hu'].command('cd {0}; sudo insmod funeth.ko {1}'.format(drvdir, " ".join(_modparams)),
+        self.linux_obj_dict['hu'].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
                                           timeout=300)
 
         fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)

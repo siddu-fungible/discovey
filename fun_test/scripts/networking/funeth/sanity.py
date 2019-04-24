@@ -25,9 +25,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.129'
+    DPC_PROXY_IP = '10.1.23.5'
     DPC_PROXY_PORT = 40220
-    TB = 'FS7'
+    TB = 'FS11'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
@@ -94,7 +94,7 @@ class FunethSanity(FunTestScript):
         setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj)
+        setup_hu_host(funeth_obj, update_driver=True)
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
