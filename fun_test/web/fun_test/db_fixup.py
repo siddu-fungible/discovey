@@ -547,7 +547,7 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="apple_rand_read_4kb_6vol_6ssd_stripe_volume")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="HU_NU_NFCP")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=True)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
