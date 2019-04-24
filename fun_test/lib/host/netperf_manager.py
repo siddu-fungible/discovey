@@ -181,12 +181,12 @@ class NetperfManager:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=True)
                     perf_tuning_obj.mlnx_tune(profile='LOW_LATENCY_VMA')
-                    perf_tuning_obj.interrupt_coalesce('fpg0', disable=True)  # TODO: pass interface in a nice way
+                    perf_tuning_obj.interrupt_coalesce(['fpg0',], disable=True)  # TODO: pass interface in a nice way
             else:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=False)
                     perf_tuning_obj.mlnx_tune(profile='HIGH_THROUGHPUT')
-                    perf_tuning_obj.interrupt_coalesce('fpg0', disable=False)
+                    perf_tuning_obj.interrupt_coalesce(['fpg0',], disable=False)
 
             mp_task_obj = MultiProcessingTasks()
 

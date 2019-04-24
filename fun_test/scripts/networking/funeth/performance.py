@@ -135,6 +135,7 @@ class FunethPerformanceBase(FunTestCase):
             suffix = '{}2{}'.format(shost[0], dhost[0])
             arg_dicts.append(
                 {'linux_obj': linux_obj_src,
+                 'linux_obj_dst': linux_obj_dst,
                  'dip': dip,
                  'tool': tool,
                  'protocol': protocol,
@@ -145,7 +146,8 @@ class FunethPerformanceBase(FunTestCase):
                  }
             )
 
-        perf_manager_obj = NetperfManager([arg_dict.get('linux_obj') for arg_dict in arg_dicts])
+        linux_objs = [arg_dict.get('linux_obj') for arg_dict in arg_dicts] + [arg_dict.get('linux_obj_dst') for arg_dict in arg_dicts]
+        perf_manager_obj = NetperfManager(linux_objs)
 
         # Collect stats before and after test run
         fun_test.log('Collect stats before test')
