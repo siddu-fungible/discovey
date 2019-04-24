@@ -78,14 +78,19 @@
                   <span style="color: green">Resolved </span> - {{ numBugsResolved }}</span>
                   &nbsp;
                   <u (click)="showGlobalBugPanel = !showGlobalBugPanel" class="anchor-button pseudo-anchor">details</u>
-                  <jira-info [ngClass]='{hidden: !showGlobalBugPanel}'
+                  <!--jira-info [ngClass]='{hidden: !showGlobalBugPanel}'
                              [apiUrl]="'/regression/all_jiras'"
                              [allowDelete]="false"
                              [allowAdd]="false"
                              (numBugs)="updateNumBugs($event, null)"
                              (numActive)="updateNumBugsActive($event, null)"
                              (numResolved)="updateNumBugsResolved($event, null)">
-                  </jira-info>
+                  </jira-info-->
+                  <summary-jira-info [ngClass]='{hidden: !showGlobalBugPanel}' *ngIf="globalJiraMap" [bugInfoUrl]="'/common/bug_info'" [data]="globalJiraMap" [allowDelete]="false" [allowContext]="true" [allowAdd]="false" (numBugs)="updateNumBugs($event, null)"
+                             (numActive)="updateNumBugsActive($event, null)"
+                             (numResolved)="updateNumBugsResolved($event, null)"></summary-jira-info>
+
+
                 </div>
               </div>
             </div>
