@@ -601,7 +601,11 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchScriptInfo2(index) {
-    return this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).pipe(switchMap((response) => {
+    let url = "/regression/get_test_case_executions_by_time";
+    if (this.queryParameters.hasOwnProperty("days_in_past")) {
+      url += "?days_in_past=" + this.queryParameters["days_in_past"];
+    }
+    return this.apiService.post(url, this.filters[index].payload).pipe(switchMap((response) => {
       this.filters[index].testCaseExecutions = response.data;
       this.filters[index].testCaseExecutions.forEach((historyElement) => {
         if (historyElement.script_path === "/networking/qos/test_cir_1.py") {
