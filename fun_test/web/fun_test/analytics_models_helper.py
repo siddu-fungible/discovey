@@ -380,7 +380,7 @@ class ModelHelper(object):
             if units != {}:
                 self.units = units
             if not self.units:
-                raise Exception('No units provided: {}. Please provide the required units'.format(self.units))
+                raise Exception('No units provided. Please provide the required units')
 
             inputs = {}
             outputs = {}
@@ -412,6 +412,7 @@ class ModelHelper(object):
                 self.id = m_obj.id
         except Exception as ex:
             fun_test.critical(str(ex))
+            raise Exception
 
     def set_units(self, **kwargs):
         try:
@@ -424,6 +425,7 @@ class ModelHelper(object):
             self.units = kwargs
         except Exception as ex:
             fun_test.critical(str(ex))
+            raise Exception
 
     def set_status(self, status):
         try:
@@ -431,12 +433,13 @@ class ModelHelper(object):
             if hasattr(m_obj, "status"):
                 setattr(m_obj, "status", status)
             if not self.units:
-                raise Exception('No units provided: {}. Please provide the required units'.format(self.units))
+                raise Exception('No units provided. Please provide the required units')
             if self.id:
                 m_obj.save()
 
         except Exception as ex:
             fun_test.critical(str(ex))
+            raise Exception
 
 
 class WuLatencyAllocStackHelper(MetricHelper):
