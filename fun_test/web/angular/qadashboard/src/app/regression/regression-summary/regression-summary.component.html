@@ -78,14 +78,19 @@
                   <span style="color: green">Resolved </span> - {{ numBugsResolved }}</span>
                   &nbsp;
                   <u (click)="showGlobalBugPanel = !showGlobalBugPanel" class="anchor-button pseudo-anchor">details</u>
-                  <jira-info [ngClass]='{hidden: !showGlobalBugPanel}'
+                  <!--jira-info [ngClass]='{hidden: !showGlobalBugPanel}'
                              [apiUrl]="'/regression/all_jiras'"
                              [allowDelete]="false"
                              [allowAdd]="false"
                              (numBugs)="updateNumBugs($event, null)"
                              (numActive)="updateNumBugsActive($event, null)"
                              (numResolved)="updateNumBugsResolved($event, null)">
-                  </jira-info>
+                  </jira-info-->
+                  <summary-jira-info [ngClass]='{hidden: !showGlobalBugPanel}' *ngIf="globalJiraMap" [bugInfoUrl]="'/common/bug_info'" [data]="globalJiraMap" [allowDelete]="false" [allowContext]="true" [allowAdd]="false" (numBugs)="updateNumBugs($event, null)"
+                             (numActive)="updateNumBugsActive($event, null)"
+                             (numResolved)="updateNumBugsResolved($event, null)"></summary-jira-info>
+
+
                 </div>
               </div>
             </div>
@@ -196,7 +201,7 @@
                 <td colspan="4">
                   <table class="pseudo-table">
                     <tr style="display: inline-block">
-                      <td>Suite-execution ID: {{ suiteExecutionId }}</td>
+                      <td>Suite-execution ID: <a href="/regression/suite_detail/{{ suiteExecutionId }}" target="_blank">{{ suiteExecutionId }}</a></td>
                       <td>
                         <label>Set as baseline</label>
                       </td>
@@ -211,30 +216,27 @@
                   </table>
                   <table class="table">
                     <tr>
+                      <th>TC-ID</th>
                       <th>Result</th>
                       <th *ngIf="getBaselineSuiteExecutionId(scriptInfo.key)">Baseline</th>
-                      <th>Suite execution ID</th>
-                      <th>TC-ID</th>
                       <th>Summary</th>
                     </tr>
                     <tr *ngFor="let executionEntry of scriptInfo.value.bySuiteExecution[suiteExecutionId].history | keyvalue">
+                      <td>{{ executionEntry.value.test_case_id }}</td>
+
                       <td>
-                        <span [ngClass]="{'failed': executionEntry.value.result === 'FAILED', 'passed': executionEntry.value.result === 'PASSED'}">{{ executionEntry.value.result }}</span>
+                        <a [ngClass]="{'failed': executionEntry.value.result === 'FAILED', 'passed': executionEntry.value.result === 'PASSED'}" href="/regression/suite_detail/{{ suiteExecutionId }}" target="_blank">{{ executionEntry.value.result }}</a>
                       </td>
-                      <ng-container *ngIf="getBaselineSuiteExecutionId(scriptInfo.key)">
+
+                      <ng-container *ngIf="getBaselineSuiteExecutionId(scriptInfo.key); let baselineSuiteExecutionId">
                         <ng-container *ngIf="getBaselineResult(scriptInfo.key, executionEntry.value.test_case_id); let baselineResult">
                           <td>
-                            <span [ngClass]="{'failed': baselineResult === 'FAILED', 'passed': baselineResult === 'PASSED'}">{{ baselineResult }}</span>
+                            <a target="_blank" href="/regression/suite_detail/{{ baselineSuiteExecutionId }}" [ngClass]="{'failed': baselineResult === 'FAILED', 'passed': baselineResult === 'PASSED'}">{{ baselineResult }}</a>
                           </td>
                         </ng-container>
                       </ng-container>
-
-
-                      <td><a target="_blank"
-                             href="/regression/suite_detail/{{ executionEntry.value.suite_execution_id }}">{{ executionEntry.value.suite_execution_id }}</a>
-                      </td>
-                      <td>{{ executionEntry.value.test_case_id }}</td>
                       <td>{{ getTestCaseSummary(scriptInfo.key, executionEntry.value.test_case_id) }}</td>
+
                     </tr>
                   </table>
                 </td>

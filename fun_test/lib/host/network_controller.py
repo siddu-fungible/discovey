@@ -1646,3 +1646,12 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def get_flow_list(self):
+        result = None
+        try:
+            cmd = ['list']
+            result = self.json_execute(verb='flow', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
