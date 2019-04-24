@@ -213,6 +213,9 @@ class TcpPerformance_1_Conn(FunTestCase):
         populate = populate_netstat_json_file(old_stats=netstat_1, new_stats=netstat_2, filename=netstat_temp_filename)
         fun_test.test_assert(populate, "Populate netstat into json file")
 
+        output = network_controller_obj.get_flow_list()
+        fun_test.log("Log flow list")
+
     def cleanup(self):
         if self.output_file:
             nu_lab_obj.remove_file(self.output_file)
