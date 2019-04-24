@@ -644,7 +644,8 @@ def get_suite_executions_by_time(request):
 @api_safe_json_response
 def get_test_case_executions_by_time(request):
     request_json = json.loads(request.body)
-    started_time = get_current_time() - timedelta(days=10)
+    days_in_past = int(request.GET.get("days_in_past", 10))
+    started_time = get_current_time() - timedelta(days=days_in_past)
     # from_time = 1546581539 * 1000
     # from_time = int(request_json["from_time"])
     # to_time = request_json["to_time"]
