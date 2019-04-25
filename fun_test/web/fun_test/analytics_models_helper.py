@@ -61,9 +61,11 @@ class MetricHelper(object):
                 if hasattr(o, k):
                     setattr(o, k, v)
             o.save()
+            return None
         except ObjectDoesNotExist:
             o = self.model(**kwargs)
             o.save()
+            return o.id
 
     def get_entry(self, **kwargs):
         result = None
@@ -403,7 +405,7 @@ class ModelHelper(MetricHelper):
                 elif hasattr(m_obj, key):
                     new_kwargs[key] = value
             try:
-                super(ModelHelper, self).add_entry(**new_kwargs)
+                self.id = super(ModelHelper, self).add_entry(**new_kwargs)
                 if "input_version" in new_kwargs and "input_date_time" in new_kwargs:
                     date_time = timezone.localtime(new_kwargs["input_date_time"])
                     date_time = str(date_time).split(":")
@@ -420,8 +422,6 @@ class ModelHelper(MetricHelper):
                 result = True
             except Exception as ex:
                 fun_test.critical(str(ex))
-                # m_obj.save()
-                # self.id = m_obj.id
         except Exception as ex:
             fun_test.critical(str(ex))
             raise ex
@@ -444,12 +444,12 @@ class ModelHelper(MetricHelper):
     def set_status(self, status):
         result = None
         try:
-            m_obj = self.metric_model
-            if hasattr(m_obj, "status"):
-                setattr(m_obj, "status", status)
-            if not self.units:
-                raise Exception('No units provided. Please provide the required units')
             if self.id:
+                m_obj = self.model.objects.get(id=self.id)
+                if hasattr(m_obj, "status"):
+                    setattr(m_obj, "status", status)
+                if not self.units:
+                    raise Exception('No units provided. Please provide the required units')
                 m_obj.save()
                 result = True
             else:
@@ -664,7 +664,7 @@ if __name__ == "__main__":
     # prepare_status_db()
     generic_helper = ModelHelper(model_name="TeraMarkFunTcpThroughputPerformance")
     d = {}
-    d["timestamp"] = "2019-04-18 09:44:02.007497-07:00"
+    d["timestamp"] = "2019-04-25 09:44:02.007497-07:00"
     d["mode"] = "100G"
     d["version"] = 6087
     d["flow_type"] = "FunTCP_Server_Throughput"
