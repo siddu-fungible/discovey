@@ -2174,6 +2174,7 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
