@@ -18,7 +18,7 @@ tb_config = {
         0: {
             "mode": Dut.MODE_EMULATION,
             "type": Dut.DUT_TYPE_FSU,
-            "disable_f1_index": 1,
+            "disable_f1_index": 0,
             "ip": "server26",
             "user": REGRESSION_USER,
             "passwd": REGRESSION_USER_PASSWORD,
@@ -27,7 +27,7 @@ tb_config = {
             "run_mode": "build_only",
             "pci_mode": "all",
             "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
-            "huid": 3,
+            "huid": 2,
             "ctlid": 2,
             "interface_info": {
                 0: {
@@ -120,14 +120,11 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = fs
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
-        f1 = fs.get_f1(index=0)
+        f1 = fs.get_f1(index=1)
         fun_test.shared_variables["f1"] = f1
 
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
-
-        '''self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
-                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])'''
 
         self.storage_controller = f1.get_dpc_storage_controller()
 
