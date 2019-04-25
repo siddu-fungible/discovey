@@ -6,10 +6,12 @@ from lib.fun.f1 import F1
 from lib.host.storage_controller import StorageController
 from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import VolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from lib.host.linux import Linux
 from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
-import uuid
+from lib.fun.fs import Fs
+from datetime import datetime
 
 '''
 Script to track the performance of various read write combination of Erasure Coded volume using FIO
@@ -21,23 +23,12 @@ tb_config = {
         0: {
             "mode": Dut.MODE_EMULATION,
             "type": Dut.DUT_TYPE_FSU,
-            "ip": "server26",
-            "user": REGRESSION_USER,
-            "passwd": REGRESSION_USER_PASSWORD,
-            "emu_target": "palladium",
-            "model": "StorageNetwork2",
-            "run_mode": "build_only",
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods timerfactor=2000 --serial --dpc-server --dpc-uart",
-            "huid": 3,
-            "interface_info": {
-                0: {
-                    "vms": 0,
-                    "type": DutInterface.INTERFACE_TYPE_PCIE
-                }
-            },
-            "start_mode": F1.START_MODE_DPCSH_ONLY,
-            "perf_multiplier": 5000
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test sku=SKU_FS1600_0 --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+            "disable_f1_index": 0,
+            "f1_in_use": 1,
+            "huid": 2,
+            "ctlid": 2,
         },
     },
     "dpcsh_proxy": {
@@ -95,6 +86,147 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
+def configure_ec_volume(storage_controller, ec_info, command_timeout):
+
+    result = True
+    if "ndata" not in ec_info or "nparity" not in ec_info or "capacity" not in ec_info:
+        result = False
+        fun_test.critical("Mandatory attributes needed for the EC volume creation is missing in ec_info dictionary")
+        return (result, ec_info)
+
+    ec_info["uuids"] = {}
+    ec_info["uuids"]["blt"] = []
+    ec_info["uuids"]["ec"] = []
+    ec_info["uuids"]["jvol"] = []
+    ec_info["uuids"]["lsv"] = []
+
+    # Calculating the sizes of all the volumes together creates the EC or LSV on top EC volume
+    ec_info["volume_capacity"] = {}
+    ec_info["volume_capacity"]["lsv"] = ec_info["capacity"]
+    ec_info["volume_capacity"]["ndata"] = int(round(float(ec_info["capacity"]) / ec_info["ndata"]))
+    ec_info["volume_capacity"]["nparity"] = ec_info["volume_capacity"]["ndata"]
+    # ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
+
+    if "use_lsv" in ec_info and ec_info["use_lsv"]:
+        fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
+                     "rounding that to the nearest 8KB value")
+        ec_info["volume_capacity"]["jvol"] = ec_info["lsv_chunk_size"] * ec_info["volume_block"]["lsv"] * \
+                                             ec_info["jvol_size_multiplier"]
+
+        for vtype in ["ndata", "nparity"]:
+            tmp = int(round(ec_info["volume_capacity"][vtype] * (1 + ec_info["lsv_pct"])))
+            # Aligning the capacity the nearest nKB(volume block size) boundary
+            ec_info["volume_capacity"][vtype] = ((tmp + (ec_info["volume_block"][vtype] - 1)) /
+                                                 ec_info["volume_block"][vtype]) * \
+                                                ec_info["volume_block"][vtype]
+
+    # Setting the EC volume capacity to ndata times of ndata volume capacity
+    ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
+
+    # Adding one more block to the plex volume size to add room for super block
+    for vtype in ["ndata", "nparity"]:
+        ec_info["volume_capacity"][vtype] = ec_info["volume_capacity"][vtype] + ec_info["volume_block"][vtype]
+
+    # Configuring ndata and nparity number of BLT volumes
+    for vtype in ["ndata", "nparity"]:
+        ec_info["uuids"][vtype] = []
+        for i in range(ec_info[vtype]):
+            this_uuid = utils.generate_uuid()
+            ec_info["uuids"][vtype].append(this_uuid)
+            ec_info["uuids"]["blt"].append(this_uuid)
+            command_result = storage_controller.create_volume(
+                type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][vtype],
+                block_size=ec_info["volume_block"][vtype], name=vtype+"_"+this_uuid[-4:], uuid=this_uuid,
+                command_duration=command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Creating {} {} {} {} bytes volume on DUT instance".
+                                 format(i, vtype, ec_info["volume_types"][vtype], ec_info["volume_capacity"][vtype]))
+
+    # Configuring EC volume on top of BLT volumes
+    this_uuid = utils.generate_uuid()
+    ec_info["uuids"]["ec"].append(this_uuid)
+    command_result = storage_controller.create_volume(
+        type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"]["ec"],
+        block_size=ec_info["volume_block"]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
+        ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=ec_info["uuids"]["blt"],
+        command_duration=command_timeout)
+    fun_test.test_assert(command_result["status"], "Creating {}:{} {} bytes EC volume on DUT instance".
+                         format(ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"]["ec"]))
+    ec_info["attach_uuid"] = this_uuid
+    ec_info["attach_size"] = ec_info["volume_capacity"]["ec"]
+
+    # Configuring LS volume and its associated journal volume based on the script config setting
+    if "use_lsv" in ec_info and ec_info["use_lsv"]:
+        ec_info["uuids"]["jvol"] = utils.generate_uuid()
+        command_result = storage_controller.create_volume(
+            type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"]["jvol"],
+            block_size=ec_info["volume_block"]["jvol"], name="jvol_"+this_uuid[-4:], uuid=ec_info["uuids"]["jvol"],
+            command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Creating {} bytes Journal volume on DUT instance".
+                             format(ec_info["volume_capacity"]["jvol"]))
+
+        this_uuid = utils.generate_uuid()
+        ec_info["uuids"]["lsv"].append(this_uuid)
+        command_result = storage_controller.create_volume(
+            type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"]["lsv"],
+            block_size=ec_info["volume_block"]["lsv"], name="lsv_"+this_uuid[-4:], uuid=this_uuid,
+            group=ec_info["ndata"], jvol_uuid=ec_info["uuids"]["jvol"], pvol_id=ec_info["uuids"]["ec"],
+            command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Creating {} bytes LS volume on DUT instance".
+                             format(ec_info["volume_capacity"]["lsv"]))
+        ec_info["attach_uuid"] = this_uuid
+        ec_info["attach_size"] = ec_info["volume_capacity"]["lsv"]
+
+    return (result, ec_info)
+
+
+def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
+
+    # Unconfiguring LS volume based on the script config settting
+    if "use_lsv" in ec_info and ec_info["use_lsv"]:
+        this_uuid = ec_info["uuids"]["lsv"][0]
+        command_result = storage_controller.delete_volume(
+            type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"]["lsv"],
+            block_size=ec_info["volume_block"]["lsv"], name="lsv_"+this_uuid[-4:], uuid=this_uuid,
+            command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Deleting {} bytes LS volume on DUT instance".
+                               format(ec_info["volume_capacity"]["lsv"]))
+
+        this_uuid = ec_info["uuids"]["jvol"]
+        command_result = storage_controller.delete_volume(
+            type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"]["jvol"],
+            block_size=ec_info["volume_block"]["jvol"], name="jvol_"+this_uuid[-4:], uuid=this_uuid,
+            command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Deleting {} bytes Journal volume on DUT instance".
+                             format(ec_info["volume_capacity"]["jvol"]))
+
+    # Unconfiguring EC volume configured on top of BLT volumes
+    this_uuid = ec_info["uuids"]["ec"][0]
+    command_result = storage_controller.delete_volume(
+        type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"]["ec"],
+        block_size=ec_info["volume_block"]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
+        command_duration=command_timeout)
+    fun_test.log(command_result)
+    fun_test.test_assert(command_result["status"], "Deleting {}:{} {} bytes EC volume on DUT instance".
+                         format(ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"]["ec"]))
+
+    # Unconfiguring ndata and nparity number of BLT volumes
+    for vtype in ["ndata", "nparity"]:
+        for i in range(ec_info[vtype]):
+            this_uuid = ec_info["uuids"][vtype][i]
+            command_result = storage_controller.delete_volume(
+                type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][vtype],
+                block_size=ec_info["volume_block"][vtype], name=vtype+"_"+this_uuid[-4:], uuid=this_uuid,
+                command_duration=command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Deleting {} {} {} {} bytes volume on DUT instance".
+                                 format(i, vtype, ec_info["volume_types"][vtype], ec_info["volume_capacity"][vtype]))
+
+
 class ECVolumeLevelScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -105,30 +237,107 @@ class ECVolumeLevelScript(FunTestScript):
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
-        self.dpcsh_host = DpcshProxy(ip=tb_config["dpcsh_proxy"]["ip"],
-                                     dpcsh_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
-                                     user=tb_config["dpcsh_proxy"]["user"],
-                                     password=tb_config["dpcsh_proxy"]["passwd"])
 
-        self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
-                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
+        # Parsing the global config and assign them as object members
+        config_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Config file being used: {}".format(config_file))
+        config_dict = utils.parse_file_to_json(config_file)
 
-        # Start the dpcsh proxy and ensure that the funos & dpcsh proxy is started to ready to accept inputs
-        status = self.dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
-                                                   dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
-        fun_test.test_assert(status, "Start dpcsh with {} in tcp proxy mode".
-                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))
-        status = ""
-        status = self.dpcsh_host.ensure_started(max_time=900, interval=10)
-        fun_test.test_assert(status, "dpcsh proxy ready")
-        self.dpcsh_host.network_controller_obj.disconnect()
+        if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
+            fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
+            fun_test.log("Going to use the script level defaults")
+            self.bootargs = Fs.DEFAULT_BOOT_ARGS
+            self.disable_f1_index = None
+            self.f1_in_use = 0
+            self.syslog_level = 2
+            self.command_timeout = 5
+            self.retries = 24
+        else:
+            for k, v in config_dict["GlobalSetup"].items():
+                setattr(self, k, v)
 
-        # Setting the syslog level to 2
-        status = self.storage_controller.poke("params/syslog/level 2")
-        fun_test.test_assert(status, "Setting syslog level to 2")
+        fun_test.log("Global Config: {}".format(self.__dict__))
 
-        fun_test.shared_variables["dpcsh_host"] = self.dpcsh_host
+        # Pulling the testbed type and its config
+        self.test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
+        fun_test.log("Testbed-type: {}".format(self.test_bed_type))
+        self.test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(self.test_bed_type)
+        fun_test.log("{} Testbed Config: {}".format(self.test_bed_type, self.test_bed_spec))
+        fun_test.simple_assert(self.test_bed_spec, "Test-bed spec for {}".format(self.test_bed_type))
+        fun_test.shared_variables["test_bed_type"] = self.test_bed_type
+        fun_test.shared_variables["test_bed_spec"] = self.test_bed_spec
+
+        print "Network Host Config: {}".format(self.test_bed_spec["nw_host"][0][0])
+        print "Network Host IP: {}".format(self.test_bed_spec["nw_host"][0][0]["mgmt_ip"])
+
+        # Initializing the FS
+        fs = Fs.get(boot_args=self.bootargs, disable_f1_index=self.disable_f1_index)
+        fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
+
+        f1 = fs.get_f1(index=1)
+        fun_test.shared_variables["fs"] = fs
+        fun_test.shared_variables["f1"] = f1
+
+        self.db_log_time = datetime.now()
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
+
+        # Initializing the Network attached host
+        end_host_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ip"]
+        end_host_user = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_username"]
+        end_host_passwd = ssh_password=self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_password"]
+        self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
+        fun_test.shared_variables["end_host"] = self.end_host
+
+        host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
+        # host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
+        fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
+
+        interface_ip_config = "sudo ip addr add {} dev {}".format(
+            self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"],
+            self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"])
+        interface_mac_config= "sudo ip link set {} address {}".format(
+            self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
+            self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_mac"])
+        link_up_cmd = "sudo ip link set {} up".format(
+            self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"])
+        static_arp_cmd = "sudo arp -s {} {}".format(
+            self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["gw"],
+            self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["arp"])
+
+        interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
+                                                                timeout=self.command_timeout)
+        fun_test.test_assert(interface_ip_config_status, "Configuring test interface IP address")
+        interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
+                                                          timeout=self.command_timeout)
+        fun_test.test_assert(interface_mac_status, "Assigning MAC to test interface")
+        link_up_status = self.end_host.sudo_command(command=link_up_cmd,
+                                                          timeout=self.command_timeout)
+        fun_test.test_assert(link_up_status, "Bringing up test link")
+        interface_up_status = self.end_host.ifconfig_up_down(
+            interface=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
+            action="up")
+        fun_test.test_assert(interface_up_status, "Bringing up test interface")
+        route_add_status = self.end_host.ip_route_add(
+            network=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["net"],
+            gateway= self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["gw"],
+            outbound_interface=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
+            timeout=self.command_timeout)
+        fun_test.test_assert(route_add_status, "Adding route to F1")
+        arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
+        fun_test.test_assert(arp_add_status, "Adding static ARP to F1 route")
+
+        self.storage_controller = f1.get_dpc_storage_controller()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
+
+        # Setting the syslog level
+        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
+                                                      legacy=False, command_duration=self.command_timeout)
+        fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
+
+        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                      command_duration=self.command_timeout)
+        fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+                                      message="Checking syslog level")
 
     def cleanup(self):
 
@@ -237,57 +446,18 @@ class ECVolumeLevelTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        # fio_bs_iodepth variable is a list of tuples in which the first element of the tuple refers the
-        # block size & second one refers the iodepth going to used for that block size
-        # Checking the block size and IO depth combo list availability
-        if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
-            benchmark_parsing = False
-            fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
-                              "the {} file".format(testcase, benchmark_file))
-
-        # Checking the availability of expected FIO results
-        if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
-            benchmark_parsing = False
-            fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
-                              "testcase is not available in the {} file".format(testcase, benchmark_file))
-
-        if len(self.fio_bs_iodepth) != len(self.expected_fio_result.keys()):
-            benchmark_parsing = False
-            fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
-
-        # Checking the availability of expected volume level internal stats at the end of every FIO run
-        if ('expected_volume_stats' not in benchmark_dict[testcase] or
-                not benchmark_dict[testcase]['expected_volume_stats']):
-            benchmark_parsing = False
-            fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
-                              "the {} file".format(testcase, benchmark_file))
-
-        if 'fio_pass_threshold' not in benchmark_dict[testcase]:
-            self.fio_pass_threshold = .05
-            fun_test.log("Setting FIO passing threshold percentage to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.fio_pass_threshold, testcase, benchmark_file))
-
-        if 'volume_pass_threshold' not in benchmark_dict[testcase]:
-            self.volume_pass_threshold = 20
-            fun_test.log("Setting volume passing threshold number to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.volume_pass_threshold, testcase, benchmark_file))
-
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
-                     format(testcase, self.fio_bs_iodepth))
-        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
-                     format(testcase, self.expected_fio_result))
-        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
-                     format(testcase, self.expected_volume_stats))
 
+        if not hasattr(self, "num_ssd"):
+            self.num_ssd = 1
+        if not hasattr(self, "num_volume"):
+            self.num_volume = 1
         # End of benchmarking json file parsing
 
-        self.dpcsh_host = fun_test.shared_variables["dpcsh_host"]
+        self.fs = fun_test.shared_variables["fs"]
+        self.f1 = fun_test.shared_variables["f1"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
-
-        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
-                              ssh_username=tb_config["tg_info"][0]["user"],
-                              ssh_password=tb_config["tg_info"][0]["passwd"])
+        self.end_host = fun_test.shared_variables["end_host"]
 
         fun_test.shared_variables["ec_coding"] = self.ec_coding
         self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
@@ -311,11 +481,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 not fun_test.shared_variables[self.ec_ratio]["setup_created"]:
             fun_test.shared_variables[self.ec_ratio] = {}
             fun_test.shared_variables[self.ec_ratio]["setup_created"] = False
-            fun_test.shared_variables[self.ec_ratio]["volume_types"] = self.volume_types
-            fun_test.shared_variables[self.ec_ratio]["volume_capacity"] = self.volume_capacity
-            fun_test.shared_variables[self.ec_ratio]["volume_block"] = self.volume_block
-            fun_test.shared_variables[self.ec_ratio]["ns_id"] = self.ns_id
-            self.uuids = {}
+            # fun_test.shared_variables[self.ec_ratio]["volume_types"] = self.volume_types
+            # fun_test.shared_variables[self.ec_ratio]["volume_capacity"] = self.volume_capacity
+            # fun_test.shared_variables[self.ec_ratio]["volume_block"] = self.volume_block
+            # fun_test.shared_variables[self.ec_ratio]["ns_id"] = self.ns_id
+            # self.uuids = {}
 
             # Configuring the controller
             command_result = {}
@@ -324,6 +494,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
 
+            '''
             # Configuring ndata and nparity number of BLT volumes
             for vtype in  sorted(self.ec_coding):
                 self.uuids[vtype] = []
@@ -374,6 +545,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create LS volume on DUT")
                 attach_uuid = self.uuids[self.volume_types["lsv"]]
+            '''
+
+            (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller, self.ec_info, self.command_timeout)
 
             # Attaching/Exporting the EC/LS volume to the external server
             command_result = {}

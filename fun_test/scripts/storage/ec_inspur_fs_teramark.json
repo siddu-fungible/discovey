@@ -1,63 +1,36 @@
 {
-  "EC21FioSeqWriteSeqReadOnly": {
-    // Erasure coding ratio
-    "ec_coding": {"ndata": 4, "nparity": 2},
-    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-    "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456, "jvol": 524288},
-    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+  "GlobalSetup": {
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test sku=SKU_FS1600_0 --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+    "disable_f1_index": 0,
+    "f1_in_use": 1,
+    "huid": [3, 2],
+    "ctlid": [2, 2],
+    "syslog_level": 2,
+    "command_timeout": 5,
+    "retries": 60
+  },
+  "RandReadWrite8kBlocks": {
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 34359738368,
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8
+    },
     // timeout used for the storage controller
     "command_timeout": 30,
     "iter_interval": 120,
-    "use_lsv": 1,
     // Head room needed for the LS volume in percentage
-    "lsv_pct": 0.32,
-    "check_lsv_stats": 0,
     "ns_id": 1,
+    "attach_transport": "TCP",
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
-    // FIO commandline arguments
-    "fio_cmd_args": {"size": "4m", "direct": 1, "timeout": 300},
-    "fio_modes": ["write", "read"],
-    // The below is the list of tuples in which the first element of the tuple represents the FIO block size in kB and
-    // the second element represents the IO depth
-    // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
-    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
-    // Passing threshold for the FIO results from the expected benchmark values
-    "fio_pass_threshold": 0.05,
-    // Passing threshold of the internal volume stats from the expected benchmark values
-    "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme0",
-    "expected_fio_result": {
-      "(4, 8)": {"write": {"write": {"bw": 160, "iops": 40675, "latency": 197}},
-                 "read": {"read": {"bw": 363, "iops": 91461, "latency": 89}}},
-      "(8, 8)": {"write": {"write": {"bw": 158, "iops": 20210, "latency": 396}},
-                 "read": {"read": {"bw": 512, "iops": 64243, "latency": 125}}},
-      "(16, 8)": {"write": {"write": {"bw": 150, "iops": 9642, "latency": 825}},
-                  "read": {"read": {"bw": 457, "iops": 28656, "latency": 278}}},
-      "(32, 8)": {"write": {"write": {"bw": 155, "iops": 4925, "latency": 1608}},
-                  "read": {"read": {"bw": 488, "iops": 15287, "latency": 522}}}
-    },
-    "expected_volume_stats": {
-      "write": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 32, "num_writes": 288},
-                "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 64, "num_writes": 288}},
-      "read": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 171, "num_writes": 0},
-               "VOL_TYPE_BLK_EC":{"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
-    },
-    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
-    // The first element is the expected value and the second element is the maximum threshold in absolute value
-    "expected_stats": {
-      "write": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      },
-      "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      }
-    }
+    "nvme_device": "/dev/nvme0"
   },
   "EC21FioRandWriteRandReadOnly": {
     "ec_coding": {"ndata": 4, "nparity": 2},
