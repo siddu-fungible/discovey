@@ -442,8 +442,7 @@ class ComE(Linux):
                                           expected=self.EXPECTED_FUNQ_DEVICE_ID[f1_index],
                                           message="F1_{} funq bind device found".format(f1_index))
         '''
-        expected_num_pfs_to_be_detected = self.NUM_F1S if self.disable_f1_index is None else self.NUM_F1S - 1
-        fun_test.test_assert_expected(actual=num_pfs_detected, expected=expected_num_pfs_to_be_detected, message="Expected number of PFs detected")
+        fun_test.test_assert(num_pfs_detected, "At least one PF detected")
         return True
 
     def ensure_dpc_running(self):
