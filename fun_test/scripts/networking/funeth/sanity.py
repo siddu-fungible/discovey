@@ -104,6 +104,7 @@ class FunethSanity(FunTestScript):
     def cleanup(self):
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fun_test.shared_variables["fs"].cleanup()
+        funeth_obj.unload()
         fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 
 
