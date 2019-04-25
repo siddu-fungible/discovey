@@ -111,11 +111,12 @@ class NetperfManager:
         result = True
 
         for perf_tuning_obj in self.perf_tuning_objs:
-            perf_tuning_obj.cpu_governor(lock_freq=False)
+            #perf_tuning_obj.cpu_governor(lock_freq=False)  # This is done in self.run()
             perf_tuning_obj.tcp()
             perf_tuning_obj.iptables()
 
         for linux_obj in self.linux_objs:
+            pass
 
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
@@ -137,31 +138,41 @@ class NetperfManager:
             #    if not result:
             #        break
 
-            # Install Netperf
-            for pkg in ('netperf',):
-                if not linux_obj.check_package(pkg):
-                    cmds = (
-                        'wget http://archive.ubuntu.com/ubuntu/pool/multiverse/n/netperf/netperf_2.6.0-2.1_amd64.deb',
-                        'apt install ./netperf_2.6.0-2.1_amd64.deb',
-                    )
-                    linux_obj.sudo_command(';'.join(cmds))
-                    result &= linux_obj.check_package(pkg)
-                    if not result:
-                        break
-
-            # Start netserver
-            if linux_obj.get_process_id_by_pattern('netserveer') is None:
-                cmd = 'taskset -c 8-15 /usr/bin/netserver'  # NU server NIC and F1 are both in NUA 1
-                linux_obj.sudo_command(cmd)
-                for ns in linux_obj.get_namespaces():
-                    linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
-                result &= linux_obj.get_process_id_by_pattern('netserver') is not None
-                if not result:
-                    break
+            ## Install Netperf
+            #for pkg in ('netperf',):
+            #    if not linux_obj.check_package(pkg):
+            #        cmds = (
+            #            'wget http://archive.ubuntu.com/ubuntu/pool/multiverse/n/netperf/netperf_2.6.0-2.1_amd64.deb',
+            #            'apt install ./netperf_2.6.0-2.1_amd64.deb',
+            #        )
+            #        linux_obj.sudo_command(';'.join(cmds))
+            #        result &= linux_obj.check_package(pkg)
+            #        if not result:
+            #            break
+            #
+            ## Start netserver
+            #if linux_obj.get_process_id_by_pattern('netserveer') is None:
+            #    #cmd = 'taskset -c 8-15 /usr/bin/netserver'  # NU server NIC and F1 are both in NUA 1
+            #    cmd = '/usr/bin/netserver'  # NU server NIC and F1 are both in NUA 1
+            #    linux_obj.sudo_command(cmd)
+            #    for ns in linux_obj.get_namespaces():
+            #        linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
+            #    result &= linux_obj.get_process_id_by_pattern('netserver') is not None
+            #    if not result:
+            #        break
 
         #fun_test.sleep("Waiting for PTP clock sync", seconds=10)
 
         return result
+
+    def start_netserver(self, linux_obj, cpu_list=None):
+        linux_obj.pkill('netserver')
+        # cmd = 'taskset -c 8-15 /usr/bin/netserver'  # NU server NIC and F1 are both in NUA 1
+        if cpu_list:
+            cmd = 'taskset -c {} /usr/bin/netserver'.format(','.join([str(c) for c in cpu_list]))
+        else:
+            cmd = '/usr/bin/netserver'
+        linux_obj.sudo_command(cmd)
 
     def cleanup(self):
         result = True
@@ -194,6 +205,7 @@ class NetperfManager:
             for arg_dict in arg_dicts:
                 parallel = arg_dict.get('parallel', 1)
                 linux_obj = arg_dict.get('linux_obj')
+                linux_obj_dst = arg_dict.get('linux_obj_dst')
                 direction = arg_dict.get('suffix')
                 direction_list.append(direction)
                 dip = arg_dict.get('dip')
@@ -204,12 +216,17 @@ class NetperfManager:
                 ns = arg_dict.get('ns', None)
 
                 num_processes = 1 if measure_latency else parallel
+                cpu_list = []
                 for i in range(0, num_processes):
                     cpu = 15 -i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
+                    cpu_list.append(cpu)
                     mp_task_obj.add_task(
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
                         task_key='{}_{}'.format(direction, i))
+
+                # Start netserver
+                self.start_netserver(linux_obj_dst, cpu_list=cpu_list)
 
             mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list))
             rdict = {}
