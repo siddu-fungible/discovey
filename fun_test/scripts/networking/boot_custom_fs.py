@@ -14,8 +14,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
 
-        fun_test.test_assert_expected(expected="fs-7", actual=fun_test.get_job_environment_variable('test_bed_type'),
-                                      message="Correct FS was selected")
+        pass
 
     def cleanup(self):
         pass
@@ -26,9 +25,9 @@ class BootFS(FunTestCase):
         self.set_test_details(id=1,
                               summary=" Boot FS",
                               steps="""
-                              1. Get FS system : %s credentials, image and bootargs
+                              1. Get FS system credentials, image and bootargs
                               2. Boot up FS system
-                              """ % fun_test.get_job_environment_variable('test_bed_type'))
+                              """)
 
     def setup(self):
         pass
