@@ -8,6 +8,8 @@ from lib.system.fun_test import FunTestLibException
 from topology import ExpandedTopology
 from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
 from lib.system.utils import parse_file_to_json
+from lib.host.linux import Linux
+from lib.fun.fs import ComE
 
 
 class TopologyHelper:
@@ -29,6 +31,13 @@ class TopologyHelper:
     @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
+
+        if not self.spec:
+            test_bed_name = fun_test.get_job_environment_variable(variable="test_bed_type")
+            am = fun_test.get_asset_manager()
+            spec = am.get_test_bed_spec(name=test_bed_name)
+
+            fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
 
         self.expanded_topology = ExpandedTopology()
         # fun_test.simple_assert("dut_info" in spec, "dut_info in spec")  #TODO
@@ -60,7 +69,7 @@ class TopologyHelper:
                     interface_index = int(interface_index)
                     dut_interface_obj = dut_obj.add_interface(index=interface_index, type=interface_info['type'])
                     if "hosts" in interface_info:
-                        dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"])
+                        dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"], host_info=interface_info["host_info"])
                     elif 'vms' in interface_info:
                         if 'type' not in interface_info:
                             raise FunTestLibException("We must define an interface type")
@@ -75,6 +84,8 @@ class TopologyHelper:
                             dut_interface_obj.add_hypervisor(num_vms=interface_info["vms"])
                     elif 'ssds' in interface_info:
                         dut_interface_obj.add_drives_to_interface(num_ssds=interface_info["ssds"])
+                    elif 'dual' in interface_info:
+                        dut_interface_obj.set_dual_interface(interface_index=interface_info["dual"])
                 self.expanded_topology.duts[dut_index] = dut_obj
 
         if "tg_info" in spec:
@@ -92,9 +103,21 @@ class TopologyHelper:
 
     @fun_test.safe
     def deploy(self):
-        expanded_topology = self.get_expanded_topology()
-        fun_test.test_assert(self.allocate_topology(topology=expanded_topology), "Allocate Topology")
-        return expanded_topology
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology), "Allocate Topology")
+        return self.expanded_topology
+
+    @fun_test.safe
+    def set_dut_parameters(self, dut_index, **kwargs):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+            fun_test.simple_assert(self.expanded_topology, "Expanded Topology")
+        dut = self.expanded_topology.get_dut(index=dut_index)
+        fun_test.simple_assert(dut, "Dut index: {}".format(dut_index))
+        for key, value in kwargs.iteritems():
+            dut.spec[key] = value
+        pass
 
     @fun_test.safe
     def allocate_topology(self, topology):
@@ -127,8 +150,21 @@ class TopologyHelper:
                     if peer_info:
 
                         if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
-                            self.allocate_bare_metal(bare_metal_end_point=peer_info,
-                                                     orchestrator_obj=orchestrator)
+                            instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
+                                                                orchestrator_obj=orchestrator)
+                            fun_test.simple_assert(instance, "Bare-metal instance")
+
+                            if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
+                                fun_test.test_assert(instance.reboot(), "Host instance rebooted")
+                                disable_f1_index = dut_obj.get_instance().disable_f1_index
+                                com_e = ComE(host_ip=instance.host_ip, ssh_username=instance.ssh_username,
+                                             ssh_password=instance.ssh_password)
+                                com_e.initialize(disable_f1_index=disable_f1_index)
+                                fun_test.test_assert(com_e.detect_pfs(), "PFs detected on Host")
+                                fun_test.test_assert(com_e.setup_dpc(), "Setup DPC on Host")
+                                com_e.disconnect()
+
+
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                      orchestrator_obj=orchestrator)
@@ -157,7 +193,12 @@ class TopologyHelper:
 
     @fun_test.safe
     def allocate_bare_metal(self, bare_metal_end_point, orchestrator_obj=None):
-        raise Exception("Not Implemented")
+        host_info = bare_metal_end_point.host_info
+        host_spec = fun_test.get_asset_manager().get_host_spec(name=host_info["name"])
+        fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_info["name"]))
+        linux_obj = Linux(**host_spec)
+        bare_metal_end_point.add_instance(linux_obj)
+        return linux_obj
 
     @fun_test.safe
     def allocate_dut(self, dut_index, dut_obj, orchestrator_obj=None):

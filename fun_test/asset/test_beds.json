@@ -1,0 +1,62 @@
+{
+  "fs-11": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-11",
+        "disable_f1_index": 1,
+        "interface_info": {
+          "4": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": { "name": "poc-server-05" }
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          }
+        }
+      }
+    }
+  },
+  "fs-6": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-6"
+      }
+    }
+  },
+  "fs-9": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-9"
+      }
+    }
+  },
+  "fs-7": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-7"
+      }
+    }
+  },
+  "fs-15": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-15"
+      }
+    }
+  }
+}

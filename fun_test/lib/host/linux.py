@@ -1275,7 +1275,7 @@ class Linux(object, ToDictMixin):
         output = self.command(command)
         lines = output.split("\n")
         for line in lines:
-            m = re.search(r'((\d+):(\d+)\.(\d+))\s+(.*?):', line)
+            m = re.search(r'(([a-f\d]+):(\d+)\.(\d+))\s+(.*?):', line)
             if m:
                 id = m.group(1)
                 bus_number = m.group(2)
@@ -1840,12 +1840,12 @@ class Linux(object, ToDictMixin):
                 if command_output:
                     break
             except Exception as ex:
-                fun_test.sleep("Sleeping for the host to come up from reboot", timeout)
+                fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
                 self.disconnect()
                 self._set_defaults()
                 continue
         else:
-            fun_test.critical("Host didn't came up from reboot even after {} seconds".format(retries * timeout))
+            fun_test.critical("Host didn't come up from reboot even after {} seconds".format(retries * timeout))
             result = False
         if result:
             fun_test.sleep("Post-reboot", seconds=15)

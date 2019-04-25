@@ -149,7 +149,6 @@ class Bmc(Linux):
 
         # Ensure come restarted
         come_restart_timer = FunTimer(max_time=max_wait_time)
-        ping_result = False
         while not come_restart_timer.is_expired():
             ping_result = self.ping(come.host_ip)
             if ping_result:
@@ -351,7 +350,7 @@ class ComE(Linux):
         fun_test.simple_assert(self.setup_workspace(), "ComE workspace setup")
         fun_test.simple_assert(self.cleanup_dpc(), "Cleanup dpc")
         for f1_index in range(self.NUM_F1S):
-            self.command("rm {}".format(self.get_dpc_log_path(f1_index=f1_index)))
+            self.command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
         return True
 
     def get_dpc_port(self, f1_index):
@@ -417,21 +416,34 @@ class ComE(Linux):
         pass
 
     def detect_pfs(self):
-        devices = self.lspci(grep_filter="dad")
+        devices = self.lspci(grep_filter="1dad")
         fun_test.test_assert(devices, "PCI devices detected")
+
+        f1_index = 0
+        num_pfs_detected = 0
+        if self.disable_f1_index is not None:
+            f1_index = filter(lambda x: x != self.disable_f1_index, range(self.NUM_F1S))[0]
+
         for device in devices:
             if "Unassigned class" in device["device_class"]:
                 device_id = device["id"]
-                fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
-                f1_index = self.EXPECTED_FUNQ_DEVICE_ID.index(device_id)
+                # fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
                 self.funq_bind_device[f1_index] = device["id"]
 
+                if num_pfs_detected:
+                    f1_index += 1
+                num_pfs_detected += 1
+
+        '''
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
             fun_test.test_assert_expected(actual=self.funq_bind_device[f1_index],
                                           expected=self.EXPECTED_FUNQ_DEVICE_ID[f1_index],
                                           message="F1_{} funq bind device found".format(f1_index))
+        '''
+        expected_num_pfs_to_be_detected = self.NUM_F1S if self.disable_f1_index is None else self.NUM_F1S - 1
+        fun_test.test_assert_expected(actual=num_pfs_detected, expected=expected_num_pfs_to_be_detected, message="Expected number of PFs detected")
         return True
 
     def ensure_dpc_running(self):
@@ -553,10 +565,14 @@ class Fs(object, ToDictMixin):
     @staticmethod
     def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
         if not fs_spec:
+            am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
-            fs_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_type)
-            fun_test.simple_assert(fs_spec, "Test-bed spec for {}".format(test_bed_type))
+            test_bed_spec = am.get_test_bed_spec(name=test_bed_type)
+            fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_spec))
+            dut_name = test_bed_spec["dut_info"]["0"]["dut"]
+            fs_spec = am.get_fs_by_name(dut_name)
+            fun_test.simple_assert(fs_spec, "Fs spec for {}".format(dut_name))
 
         if not tftp_image_path:
             tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
@@ -597,14 +613,18 @@ class Fs(object, ToDictMixin):
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
-        fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come), "ComE rebooted successfully")
-        fun_test.test_assert(self.come_initialize(), "ComE initialized")
-        fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
-        fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
-        fun_test.test_assert(self.come.is_dpc_ready(), "DPC ready")
+        if "retimer" not in self.boot_args:
+            fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come), "ComE rebooted successfully")
+            fun_test.test_assert(self.come_initialize(), "ComE initialized")
+            fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
+            fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
+            fun_test.test_assert(self.come.is_dpc_ready(), "DPC ready")
+            for f1_index, f1 in self.f1s.iteritems():
+                f1.set_dpc_port(self.come.get_dpc_port(f1_index))
+        else:
+            fun_test.critical("Skipping ComE initialization as retimer was used")
 
-        for f1_index, f1 in self.f1s.iteritems():
-            f1.set_dpc_port(self.come.get_dpc_port(f1_index))
+
 
         return True
 
