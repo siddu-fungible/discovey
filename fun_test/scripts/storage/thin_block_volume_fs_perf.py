@@ -1091,7 +1091,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                # post_results("BLT_FS", test_method, *row_data_list)
+                post_results("BLT_FS", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="BLT Performance Table", table_name=self.summary, table_data=table_data)
