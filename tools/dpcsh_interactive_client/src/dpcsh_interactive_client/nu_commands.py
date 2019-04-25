@@ -2063,7 +2063,7 @@ class PeekCommands(object):
 
     def peek_le_resource_stats(self, cluster_id, grep_regex=None):
         cmd = "stats/resource/le/[%s]" % cluster_id
-        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        self._display_list_of_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
     def peek_zip_resource_stats(self, cluster_id, grep_regex=None):
         cmd = "stats/resource/zip/[%s]" % cluster_id
