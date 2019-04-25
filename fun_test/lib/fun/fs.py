@@ -51,9 +51,17 @@ class BootPhases:
 
 
 class Fpga(Linux):
+    NUM_F1S = 2
+
+    def __init__(self, disable_f1_index=None, **kwargs):
+        super(Fpga, self).__init__(**kwargs)
+        self.disable_f1_index = disable_f1_index
+
     def initialize(self, reset=False):
         fun_test.add_checkpoint("FPGA initialize")
-        for f1_index in range(2):
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
             self.reset_f1(f1_index=f1_index)
         fun_test.sleep("FPGA reset", seconds=10)
 
@@ -83,10 +91,11 @@ class Bmc(Linux):
     U_BOOT_F1_PROMPT = "f1 #"
     NUM_F1S = 2
 
-    def __init__(self, disable_f1_index=None, **kwargs):
+    def __init__(self, disable_f1_index=None, disable_uart_logger=False, **kwargs):
         super(Bmc, self).__init__(**kwargs)
         self.uart_log_threads = {}
         self.disable_f1_index = disable_f1_index
+        self.disable_uart_logger = disable_uart_logger
 
     @fun_test.safe
     def ping(self,
@@ -175,7 +184,8 @@ class Bmc(Linux):
     def start_uart_log_listener(self, f1_index):
         t = UartLogger(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         self.uart_log_threads[f1_index] = t
-        t.start()
+        if not self.disable_uart_logger:
+            t.start()
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
@@ -520,7 +530,6 @@ class Fs(object, ToDictMixin):
         self.tftp_image_path = tftp_image_path
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
-        self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
         self.boot_args = boot_args
         self.power_cycle_come = power_cycle_come
 
@@ -542,12 +551,12 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(test_bed_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
-        if not test_bed_spec:
+    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
+        if not fs_spec:
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
-            test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_type)
-            fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_type))
+            fs_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_type)
+            fun_test.simple_assert(fs_spec, "Test-bed spec for {}".format(test_bed_type))
 
         if not tftp_image_path:
             tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
@@ -557,10 +566,10 @@ class Fs(object, ToDictMixin):
             boot_args = fun_test.get_build_parameter("BOOTARGS")
             if not boot_args:
                 boot_args = Fs.DEFAULT_BOOT_ARGS
-        fun_test.simple_assert(test_bed_spec, "Testbed spec available")
-        bmc_spec = test_bed_spec["bmc"]
-        fpga_spec = test_bed_spec["fpga"]
-        come_spec = test_bed_spec["come"]
+        fun_test.simple_assert(fs_spec, "Testbed spec available")
+        bmc_spec = fs_spec["bmc"]
+        fpga_spec = fs_spec["fpga"]
+        come_spec = fs_spec["come"]
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
@@ -626,8 +635,10 @@ class Fs(object, ToDictMixin):
     def get_fpga(self):
         if not self.fpga:
             self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
-                              ssh_username=self.fpga_mgmt_ssh_username,
-                              ssh_password=self.fpga_mgmt_ssh_password, set_term_settings=True)
+                            ssh_username=self.fpga_mgmt_ssh_username,
+                            ssh_password=self.fpga_mgmt_ssh_password,
+                            set_term_settings=True,
+                             disable_f1_index=self.disable_f1_index)
         return self.fpga
 
     def get_come(self):
