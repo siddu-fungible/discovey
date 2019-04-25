@@ -458,6 +458,15 @@ class FunTest:
             raise Exception("{} path does not exist".format(file_name))
         return result
 
+    def read_file(self, file_name):
+        result = None
+        if os.path.exists(file_name):
+            with open(file_name, "r") as infile:
+                result = infile.read()
+        else:
+            raise Exception("{} path does not exist".format(file_name))
+        return result
+
     def get_wall_clock_time(self):
         return self.wall_clock_timer.elapsed_time()
 
