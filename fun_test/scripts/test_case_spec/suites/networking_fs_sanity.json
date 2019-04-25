@@ -1,5 +1,4 @@
 [
-  {"path": "networking/fs_boot.py", "abort_suite_on_failure": true},
   {"path": "networking/acl/test_acl_all_directions.py", "inputs": {"speed": "SPEED_25G"}},
   {"path": "networking/meter/test_meter_sanity.py", "inputs": {"speed": "SPEED_25G"}},
   {"path": "networking/qos/test_qos_strict_priority.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
