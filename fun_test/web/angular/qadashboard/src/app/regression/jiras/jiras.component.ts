@@ -50,5 +50,15 @@ export class JirasComponent implements OnInit {
 
   }
 
+  getJql() {
+    let s = "";
+    for (let key of Object.keys(this.jiraMap)) {
+      s += `id=${key} or `;
+    }
+
+    s = s.replace(/ or $/, "");
+    alert(s);
+    return s;
+  }
 
 }

@@ -55,6 +55,7 @@ export class JiraInfoComponent implements OnInit {
         this.jiraId = null;
         this.status = null;
         this.sortItems(this.jiraInfo);
+
       }, error => {
         this.loggerService.error("Fetching JiraIds failed");
         this.status = null;
@@ -104,6 +105,7 @@ export class JiraInfoComponent implements OnInit {
         this.resolvedBugs += 1;
       }
       info["openSince"] = this.getDaysSince(info['created']);
+      info["editingRemarks"] = false;
     }
     this.numResolved.emit(this.resolvedBugs);
     this.numActive.emit(this.activeBugs);
@@ -155,5 +157,16 @@ export class JiraInfoComponent implements OnInit {
     this.sortOrderByColumnName[columnName] = !this.sortOrderByColumnName[columnName];
     this.currentSortingColumn = columnName;
     this.sortItems(this.jiraInfo);
+  }
+
+  updateRemarks(id) {
+    this.jiraInfo[id].editingRemarks = true;
+    let payload = {};
+    payload["remarks"] = this.jiraInfo[id].remarks;
+    this.apiService.post(this.apiUrl + '/' + id, payload).subscribe(response => {
+      this.loggerService.success("Updated remarks");
+    }, error => {
+      this.loggerService.error("Failed to update remarks");
+    })
   }
 }
