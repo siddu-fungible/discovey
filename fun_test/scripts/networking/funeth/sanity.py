@@ -36,7 +36,7 @@ MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 def setup_nu_host(funeth_obj):
     linux_obj = funeth_obj.linux_obj_dict['nu']
-    if TB == 'FS7':
+    if TB in ('FS7', 'FS11'):
         fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
     fun_test.test_assert(funeth_obj.configure_interfaces('nu'), 'Configure NU host interface')
     fun_test.test_assert(funeth_obj.configure_ipv4_routes('nu'), 'Configure NU host IPv4 routes')
