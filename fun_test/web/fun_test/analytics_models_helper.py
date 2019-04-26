@@ -18,7 +18,8 @@ from dateutil.parser import parse
 from fun_settings import MAIN_WEB_APP
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 from lib.system.fun_test import *
-
+from web.fun_test.models_helper import add_jenkins_job_id_map
+from django.utils import timezone
 
 def get_time_from_timestamp(timestamp):
     time_obj = parse(timestamp)
@@ -60,9 +61,11 @@ class MetricHelper(object):
                 if hasattr(o, k):
                     setattr(o, k, v)
             o.save()
+            return None
         except ObjectDoesNotExist:
             o = self.model(**kwargs)
             o.save()
+            return o.id
 
     def get_entry(self, **kwargs):
         result = None
@@ -359,21 +362,21 @@ class AllocSpeedPerformanceHelper(MetricHelper):
             one_entry.save()
 
 
-class ModelHelper(object):
+class ModelHelper(MetricHelper):
     model = None
     units = None
     id = None
 
     def __init__(self, model_name):
-        self.metric_model = app_config.get_metric_models()[model_name]
-        m_obj = self.metric_model()
-        self.model = m_obj
+        self.model = app_config.get_metric_models()[model_name]
+        m_obj = self.model()
+        self.metric_model = m_obj
 
     def add_entry(self, **kwargs):
         result = None
         try:
             self.id = None
-            m_obj = self.model
+            m_obj = self.metric_model
             units = {}
             for key, value in kwargs.iteritems():
                 if key.endswith("_unit"):
@@ -382,37 +385,43 @@ class ModelHelper(object):
                 self.units = units
             if not self.units:
                 raise Exception('No units provided. Please provide the required units')
-
-            inputs = {}
-            outputs = {}
+            else:
+                for key,value in self.units.iteritems():
+                    kwargs[key] = value
+            new_kwargs = {}
 
             for key, value in kwargs.iteritems():
-                if key in ["timestamp", "date_time"]:
+                if key == "timestamp":
                     key = "date_time"
                     value = get_time_from_timestamp(value)
                 if hasattr(m_obj, "input_" + key):
-                    inputs["input_" + key] = value
-                    setattr(m_obj, "input_" + key, value)
+                    new_kwargs["input_" + key] = value
                 elif hasattr(m_obj, "output_" + key):
-                    outputs["output_" + key] = value
-                    setattr(m_obj, "output_" + key, value)
+                    new_kwargs["output_" + key] = value
                     if not key.endswith("_unit"):
                         key_unit = key + "_unit"
                         if not key_unit in self.units:
                             raise Exception('No matching units for the output {} found'.format(key))
                 elif hasattr(m_obj, key):
-                    setattr(m_obj, key, value)
+                    new_kwargs[key] = value
             try:
-                o = self.metric_model.objects.get(**inputs)
-                for k, v in outputs.iteritems():
-                    if hasattr(o, k):
-                        setattr(o, k, v)
-                o.save()
+                self.id = super(ModelHelper, self).add_entry(**new_kwargs)
+                if "input_version" in new_kwargs and "input_date_time" in new_kwargs:
+                    date_time = timezone.localtime(new_kwargs["input_date_time"])
+                    date_time = str(date_time).split(":")
+                    completion_date = date_time[0] + ":" + date_time[1]
+                    version = new_kwargs["input_version"]
+                    add_jenkins_job_id_map(jenkins_job_id=0,
+                                           fun_sdk_branch="",
+                                           git_commit="",
+                                           software_date=0,
+                                           hardware_version="",
+                                           completion_date=completion_date,
+                                           build_properties="", lsf_job_id="",
+                                           sdk_version=version)
                 result = True
-            except ObjectDoesNotExist:
-                m_obj.save()
-                self.id = m_obj.id
-                result = True
+            except Exception as ex:
+                fun_test.critical(str(ex))
         except Exception as ex:
             fun_test.critical(str(ex))
             raise ex
@@ -421,11 +430,9 @@ class ModelHelper(object):
     def set_units(self, **kwargs):
         result = None
         try:
-            m_obj = self.model
+            m_obj = self.metric_model
             for key, value in kwargs.iteritems():
-                if hasattr(m_obj, "output_" + key):
-                    setattr(m_obj, "output_" + key, value)
-                else:
+                if not hasattr(m_obj, "output_" + key):
                     raise Exception("Provided units do not match any output - {}".format(key))
             self.units = kwargs
             result = True
@@ -437,12 +444,12 @@ class ModelHelper(object):
     def set_status(self, status):
         result = None
         try:
-            m_obj = self.model
-            if hasattr(m_obj, "status"):
-                setattr(m_obj, "status", status)
-            if not self.units:
-                raise Exception('No units provided. Please provide the required units')
             if self.id:
+                m_obj = self.model.objects.get(id=self.id)
+                if hasattr(m_obj, "status"):
+                    setattr(m_obj, "status", status)
+                if not self.units:
+                    raise Exception('No units provided. Please provide the required units')
                 m_obj.save()
                 result = True
             else:
@@ -657,7 +664,7 @@ if __name__ == "__main__":
     # prepare_status_db()
     generic_helper = ModelHelper(model_name="TeraMarkFunTcpThroughputPerformance")
     d = {}
-    d["timestamp"] = "2019-04-18 09:44:02.007497-07:00"
+    d["timestamp"] = "2019-04-25 09:44:02.007497-07:00"
     d["mode"] = "100G"
     d["version"] = 6087
     d["flow_type"] = "FunTCP_Server_Throughput"
