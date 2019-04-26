@@ -718,7 +718,7 @@ if __name__ == "__main_ipsec_tunnel__":
                     work_in_progress=False).save()
     print "created charts for the IPSEC juniper customer teramarks"
 
-if __name__ == "__main__":
+if __name__ == "__main_version_addition__":
     networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance", "NuTransitPerformance"]
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     for model in networking_models:
@@ -737,3 +737,16 @@ if __name__ == "__main__":
                                    completion_date=completion_date,
                                    build_properties="", lsf_job_id="",
                                    sdk_version=version)
+
+if __name__ == "__main__":
+    internal_chart_names = ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps", "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets = json.loads(chart.data_sets)
+            input = {}
+            input["input_half_load_latency"] = False
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            ml.save_data_sets(data_sets=data_sets, chart=chart)
+            print "added half load latency"
