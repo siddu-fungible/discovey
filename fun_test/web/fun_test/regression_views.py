@@ -888,6 +888,7 @@ def jiras(request, script_pk, jira_id=None):
                             jira_data["id"] = jira_id
                             jira_data["summary"] = jira_response.fields.summary
                             jira_data["status"] = jira_response.fields.status
+                            jira_data["created"] = jira_response.fields.created
                             jira_info[jira_id] = jira_data
 
             except ObjectDoesNotExist:
