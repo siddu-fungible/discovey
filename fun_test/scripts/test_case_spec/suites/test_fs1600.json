@@ -1,3 +1,4 @@
 [
-  {"path": "examples/test_fs.py"}
+  {"path": "examples/test_fs.py"},
+  {"path": "examples/test_test_bed.py"}
 ]

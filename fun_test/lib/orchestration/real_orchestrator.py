@@ -10,13 +10,22 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
         self.dut_instance = None
 
     @staticmethod
-    def get():
-        s = RealOrchestrator()
+    def get(id):
+        s = RealOrchestrator(id=id)
         s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
         return s
 
-    def launch_dut_instance(self, dut_index, spec):
-        fs_obj = Fs.get()
+    def launch_dut_instance(self, dut_index, dut_obj):
+        fs_spec = None
+        disable_f1_index = None
+        boot_args = None
+        if "dut" in dut_obj.spec:
+            dut_name = dut_obj.spec["dut"]
+            fs_spec = fun_test.get_asset_manager().get_fs_by_name(dut_name)
+            if "disable_f1_index" in dut_obj.spec:
+                disable_f1_index = dut_obj.spec["disable_f1_index"]
+            boot_args = dut_obj.spec.get("custom_boot_args", None)
+        fs_obj = Fs.get(fs_spec=fs_spec, disable_f1_index=disable_f1_index, boot_args=boot_args)
 
         # Start Fs
         fun_test.test_assert(fs_obj.bootup(), "Fs bootup")

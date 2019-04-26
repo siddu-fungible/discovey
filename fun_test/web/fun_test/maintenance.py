@@ -33,6 +33,8 @@ from web.fun_test.analytics_models_helper import MetricChartHelper, BltVolumePer
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, BltVolumePerformance
 from web.fun_test.metrics_lib import MetricLib
+from web.fun_test.models_helper import add_jenkins_job_id_map
+from django.utils import timezone
 
 
 class MetricHelper(object):
@@ -618,7 +620,7 @@ if __name__ == "__main_removed_offloads__":
         ml.remove_attribute_from_data_sets(chart=entry, key="input_offloads")
     print "removed the input offloads from datasets"
 
-if __name__ == "__main__":
+if __name__ == "__main_fun_tcp__":
     internal_chart_names = ["funtcp_server_throughput_1tcp", "funtcp_server_throughput_4tcp"]
     frame_size = 1500
     flow_type = "FunTCP_Server_Throughput"
@@ -715,3 +717,23 @@ if __name__ == "__main_ipsec_tunnel__":
                     base_line_date=base_line_date,
                     work_in_progress=False).save()
     print "created charts for the IPSEC juniper customer teramarks"
+
+if __name__ == "__main__":
+    networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance"]
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    for model in networking_models:
+        metric_model = app_config.get_metric_models()[model]
+        entries = metric_model.objects.all()
+        for entry in entries:
+            date_time = timezone.localtime(entry.input_date_time)
+            date_time = str(date_time).split(":")
+            completion_date = date_time[0] + ":" + date_time[1]
+            version = entry.input_version
+            add_jenkins_job_id_map(jenkins_job_id=0,
+                                   fun_sdk_branch="",
+                                   git_commit="",
+                                   software_date=0,
+                                   hardware_version="",
+                                   completion_date=completion_date,
+                                   build_properties="", lsf_job_id="",
+                                   sdk_version=version)

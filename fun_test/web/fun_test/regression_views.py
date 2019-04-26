@@ -512,7 +512,8 @@ def build_to_date_map(request):
                                "fun_sdk_branch": entry.fun_sdk_branch,
                                "git_commit": entry.git_commit,
                                "build_properties": entry.build_properties,
-                               "lsf_job_id": entry.lsf_job_id}
+                               "lsf_job_id": entry.lsf_job_id,
+                               "sdk_version": entry.sdk_version}
             # print str(dt)
         except Exception as ex:
             print ex

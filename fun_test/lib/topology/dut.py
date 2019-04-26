@@ -14,16 +14,17 @@ class DutInterface(ToDictMixin):
         self.index = index  # interface index
         self.peer_info = None
         self.type = type  # pcie, ethernet
+        self.dual_interface_index = None
 
     def get_peer_instance(self):
         return self.peer_info
 
-    def add_hosts(self, num_hosts=0):
+    def add_hosts(self, num_hosts=0, host_info=None):
         # fun_test.simple_assert(num_hosts or num_vms, "num hosts or num vms")
 
         if num_hosts:
             fun_test.debug("User intended baremetal for Interface: {}".format(self.index))
-            self.peer_info = BareMetalEndPoint()
+            self.peer_info = BareMetalEndPoint(host_info=host_info)
 
     def add_qemu_colocated_hypervisor(self, num_vms=0, vm_start_mode=None, vm_host_os=None):
         if num_vms:
@@ -40,6 +41,9 @@ class DutInterface(ToDictMixin):
 
     def add_drives_to_interface(self, num_ssds=0):
         fun_test.simple_assert(num_ssds, "Num ssds")
+
+    def set_dual_interface(self, interface_index):
+        self.dual_interface_index = interface_index
 
 
 class Dut(ToDictMixin):
@@ -89,4 +93,10 @@ class Dut(ToDictMixin):
         return self.interfaces[interface_index]
 
     def get_host_on_interface(self, interface_index, host_index):
-        return self.interfaces[interface_index].get_peer_instance().get_host_instance(host_index=host_index)
+        host = None
+        interface_obj = self.interfaces[interface_index]
+        if not interface_obj.dual_interface_index:
+            host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
+        else:
+            host = self.get_host_on_interface(interface_index=interface_obj.dual_interface_index, host_index=host_index)
+        return host

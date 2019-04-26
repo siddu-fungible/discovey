@@ -14,6 +14,9 @@ class AssetManager:
     SIMPLE_HOSTS_ASSET_SPEC = ASSET_DIR + "/simple_hosts.json"
     DOCKER_HOSTS_ASSET_SPEC = ASSET_DIR + "/docker_hosts.json"
     DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC = ASSET_DIR + "/docker_hosts_development.json"
+    TEST_BED_SPEC = ASSET_DIR + "/test_beds.json"
+    FS_SPEC = ASSET_DIR + "/fs.json"
+    HOSTS_SPEC = ASSET_DIR + "/hosts.json"
 
     def __init__(self):
         self.docker_host = None  # TODO
@@ -91,7 +94,7 @@ class AssetManager:
                 orchestrator = self.docker_host_orchestrator
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
                 if not self.real_orchestrator:
-                    self.real_orchestrator = RealOrchestrator.get()
+                    self.real_orchestrator = RealOrchestrator.get(id=dut_index)
                 orchestrator = self.real_orchestrator
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -102,7 +105,7 @@ class AssetManager:
     @fun_test.safe
     def get_fs_by_name(self, name):
         result = None
-        fs_json = ASSET_DIR + "/fs.json"
+        fs_json = self.FS_SPEC
         json_spec = parse_file_to_json(file_name=fs_json)
         for fs in json_spec:
             if fs["name"] == name:
@@ -143,6 +146,16 @@ class AssetManager:
             result["status"] = True
         return result
 
+    @fun_test.safe
+    def get_test_bed_spec(self, name):
+        all_test_bed_specs = parse_file_to_json(file_name=self.TEST_BED_SPEC)
+        result = all_test_bed_specs[name] if name in all_test_bed_specs else None
+        return result
 
+    @fun_test.safe
+    def get_host_spec(self, name):
+        all_hosts_specs = parse_file_to_json(file_name=self.HOSTS_SPEC)
+        result = all_hosts_specs.get(name, None)
+        return result
 
 asset_manager = AssetManager()

@@ -73,7 +73,7 @@
     }
   },
   {
-    "name": "fs-11",
+    "name": "fs-11-old",
     "bmc": {
       "mgmt_ip": "10.1.20.146",
       "mgmt_ssh_username": "sysadmin",
@@ -105,6 +105,42 @@
     },
     "come": {
       "mgmt_ip": "10.1.20.137",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
+  }, {
+    "name": "fs-11",
+    "bmc": {
+      "mgmt_ip": "10.1.21.16",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "mgmt_ip": "10.1.20.146",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
+
+    },
+    "come": {
+      "mgmt_ip": "10.1.20.22",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
+  }, {
+    "name": "fs-20",
+    "bmc": {
+      "mgmt_ip": "10.1.20.132",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "mgmt_ip": "10.1.21.28",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
+
+    },
+    "come": {
+      "mgmt_ip": "10.1.20.136",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }

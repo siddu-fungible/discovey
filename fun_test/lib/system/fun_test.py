@@ -289,8 +289,14 @@ class FunTest:
     def is_simulation(self):
         result = True
         test_bed_type = self.get_job_environment_variable(variable="test_bed_type")
-        if test_bed_type and test_bed_type != "simulation":
-            result = False
+        test_bed = self.get_job_environment_variable(variable="test_bed")
+
+        if test_bed_type:
+            if test_bed_type != "simulation":
+                result = False
+        elif test_bed:
+            if test_bed != "simulation":
+                result = False
         return result
 
     def get_job_inputs(self):
@@ -454,6 +460,15 @@ class FunTest:
             with open(file_name, "r") as infile:
                 contents = infile.read()
                 result = self.parse_string_to_json(contents)
+        else:
+            raise Exception("{} path does not exist".format(file_name))
+        return result
+
+    def read_file(self, file_name):
+        result = None
+        if os.path.exists(file_name):
+            with open(file_name, "r") as infile:
+                result = infile.read()
         else:
             raise Exception("{} path does not exist".format(file_name))
         return result

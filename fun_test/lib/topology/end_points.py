@@ -43,10 +43,17 @@ class VmEndPoint(EndPoint, ToDictMixin):
 class BareMetalEndPoint(EndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_BARE_METAL
 
-    def __init__(self):
+    def __init__(self, host_info):
         super(BareMetalEndPoint, self).__init__()
         self.mode = self.MODE_SIMULATION
+        self.host_info = host_info
+        self.instance = None
 
+    def add_instance(self, instance):
+        self.instance = instance
+
+    def get_host_instance(self, host_index):
+        return self.instance
 
 class HypervisorEndPoint(EndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_HYPERVISOR

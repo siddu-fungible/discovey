@@ -51,9 +51,17 @@ class BootPhases:
 
 
 class Fpga(Linux):
+    NUM_F1S = 2
+
+    def __init__(self, disable_f1_index=None, **kwargs):
+        super(Fpga, self).__init__(**kwargs)
+        self.disable_f1_index = disable_f1_index
+
     def initialize(self, reset=False):
         fun_test.add_checkpoint("FPGA initialize")
-        for f1_index in range(2):
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
             self.reset_f1(f1_index=f1_index)
         fun_test.sleep("FPGA reset", seconds=10)
 
@@ -83,10 +91,11 @@ class Bmc(Linux):
     U_BOOT_F1_PROMPT = "f1 #"
     NUM_F1S = 2
 
-    def __init__(self, disable_f1_index=None, **kwargs):
+    def __init__(self, disable_f1_index=None, disable_uart_logger=False, **kwargs):
         super(Bmc, self).__init__(**kwargs)
         self.uart_log_threads = {}
         self.disable_f1_index = disable_f1_index
+        self.disable_uart_logger = disable_uart_logger
 
     @fun_test.safe
     def ping(self,
@@ -140,7 +149,6 @@ class Bmc(Linux):
 
         # Ensure come restarted
         come_restart_timer = FunTimer(max_time=max_wait_time)
-        ping_result = False
         while not come_restart_timer.is_expired():
             ping_result = self.ping(come.host_ip)
             if ping_result:
@@ -175,7 +183,8 @@ class Bmc(Linux):
     def start_uart_log_listener(self, f1_index):
         t = UartLogger(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         self.uart_log_threads[f1_index] = t
-        t.start()
+        if not self.disable_uart_logger:
+            t.start()
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
@@ -341,7 +350,7 @@ class ComE(Linux):
         fun_test.simple_assert(self.setup_workspace(), "ComE workspace setup")
         fun_test.simple_assert(self.cleanup_dpc(), "Cleanup dpc")
         for f1_index in range(self.NUM_F1S):
-            self.command("rm {}".format(self.get_dpc_log_path(f1_index=f1_index)))
+            self.command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
         return True
 
     def get_dpc_port(self, f1_index):
@@ -407,21 +416,33 @@ class ComE(Linux):
         pass
 
     def detect_pfs(self):
-        devices = self.lspci(grep_filter="dad")
+        devices = self.lspci(grep_filter="1dad")
         fun_test.test_assert(devices, "PCI devices detected")
+
+        f1_index = 0
+        num_pfs_detected = 0
+        if self.disable_f1_index is not None:
+            f1_index = filter(lambda x: x != self.disable_f1_index, range(self.NUM_F1S))[0]
+
         for device in devices:
             if "Unassigned class" in device["device_class"]:
                 device_id = device["id"]
-                fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
-                f1_index = self.EXPECTED_FUNQ_DEVICE_ID.index(device_id)
+                # fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
                 self.funq_bind_device[f1_index] = device["id"]
 
+                if num_pfs_detected:
+                    f1_index += 1
+                num_pfs_detected += 1
+
+        '''
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
             fun_test.test_assert_expected(actual=self.funq_bind_device[f1_index],
                                           expected=self.EXPECTED_FUNQ_DEVICE_ID[f1_index],
                                           message="F1_{} funq bind device found".format(f1_index))
+        '''
+        fun_test.test_assert(num_pfs_detected, "At least one PF detected")
         return True
 
     def ensure_dpc_running(self):
@@ -520,7 +541,6 @@ class Fs(object, ToDictMixin):
         self.tftp_image_path = tftp_image_path
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
-        self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
         self.boot_args = boot_args
         self.power_cycle_come = power_cycle_come
 
@@ -542,12 +562,16 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(test_bed_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
-        if not test_bed_spec:
+    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
+        if not fs_spec:
+            am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
-            test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_type)
-            fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_type))
+            test_bed_spec = am.get_test_bed_spec(name=test_bed_type)
+            fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_spec))
+            dut_name = test_bed_spec["dut_info"]["0"]["dut"]
+            fs_spec = am.get_fs_by_name(dut_name)
+            fun_test.simple_assert(fs_spec, "Fs spec for {}".format(dut_name))
 
         if not tftp_image_path:
             tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
@@ -557,10 +581,10 @@ class Fs(object, ToDictMixin):
             boot_args = fun_test.get_build_parameter("BOOTARGS")
             if not boot_args:
                 boot_args = Fs.DEFAULT_BOOT_ARGS
-        fun_test.simple_assert(test_bed_spec, "Testbed spec available")
-        bmc_spec = test_bed_spec["bmc"]
-        fpga_spec = test_bed_spec["fpga"]
-        come_spec = test_bed_spec["come"]
+        fun_test.simple_assert(fs_spec, "Testbed spec available")
+        bmc_spec = fs_spec["bmc"]
+        fpga_spec = fs_spec["fpga"]
+        come_spec = fs_spec["come"]
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
@@ -588,14 +612,18 @@ class Fs(object, ToDictMixin):
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
-        fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come), "ComE rebooted successfully")
-        fun_test.test_assert(self.come_initialize(), "ComE initialized")
-        fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
-        fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
-        fun_test.test_assert(self.come.is_dpc_ready(), "DPC ready")
+        if "retimer" not in self.boot_args:
+            fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come), "ComE rebooted successfully")
+            fun_test.test_assert(self.come_initialize(), "ComE initialized")
+            fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
+            fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
+            fun_test.test_assert(self.come.is_dpc_ready(), "DPC ready")
+            for f1_index, f1 in self.f1s.iteritems():
+                f1.set_dpc_port(self.come.get_dpc_port(f1_index))
+        else:
+            fun_test.critical("Skipping ComE initialization as retimer was used")
 
-        for f1_index, f1 in self.f1s.iteritems():
-            f1.set_dpc_port(self.come.get_dpc_port(f1_index))
+
 
         return True
 
@@ -626,8 +654,10 @@ class Fs(object, ToDictMixin):
     def get_fpga(self):
         if not self.fpga:
             self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
-                              ssh_username=self.fpga_mgmt_ssh_username,
-                              ssh_password=self.fpga_mgmt_ssh_password, set_term_settings=True)
+                            ssh_username=self.fpga_mgmt_ssh_username,
+                            ssh_password=self.fpga_mgmt_ssh_password,
+                            set_term_settings=True,
+                             disable_f1_index=self.disable_f1_index)
         return self.fpga
 
     def get_come(self):
