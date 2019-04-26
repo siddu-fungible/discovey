@@ -13,6 +13,7 @@ export class JiraInfoComponent implements OnInit {
   @Input() allowDelete = true;
   @Input() allowAdd = true;
   @Input() allowContext: boolean = false;
+  @Input() summaryInHeader: boolean = true;
   jiraId: string = null;
   jiraInfo: any = [];
   editingJira: boolean = false;

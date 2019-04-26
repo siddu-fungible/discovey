@@ -20,6 +20,8 @@ export class SummaryJiraInfoComponent extends JiraInfoComponent {
         this.jiraInfo = (Object.values(response.data));
         this.setActiveResolvedBugs();
         this.status = null;
+        this.numBugs.emit(this.jiraInfo.length);
+
       }, error => {
         this.loggerService.error("Fetching BugIds failed");
         this.status = null;

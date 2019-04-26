@@ -1,16 +1,18 @@
 <div class="card">
   <div class="card card-primary">
     <div class="card-header min-padding">
-      <!--span><span style="color: red">Active </span>- {{ activeBugs }}
-      <span style="color: green">Resolved </span> - {{ resolvedBugs }}</span-->
-      <b>
-        <span class="no-padding text-color-red">Bugs
-          <sup><span class="text-color-red">{{ jiraInfo.length }}</span></sup>
+      <ng-container *ngIf="summaryInHeader; else NoSummaryInHeader">
+        <b>
+          <span class="no-padding text-color-red">Bugs
+            <sup><span class="text-color-red">{{ jiraInfo.length }}</span></sup>
+          </span>
+        </b>&nbsp;
+        <span><span style="color: red">Active </span>- {{ activeBugs }}
+                    <span style="color: green">Resolved </span> - {{ resolvedBugs }}
         </span>
-      </b>&nbsp;
-      <span><span style="color: red">Active </span>- {{ activeBugs }}
-                  <span style="color: green">Resolved </span> - {{ resolvedBugs }}
-      </span>
+      </ng-container>
+      <ng-template #NoSummaryInHeader>Bugs</ng-template>
+
 
       <button *ngIf="close.observers.length > 0" class="btn-sm btn-primary close-button" (click)="closePanel()">close <b
         style="color: white;">X</b></button>
