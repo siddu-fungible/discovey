@@ -620,7 +620,7 @@ if __name__ == "__main_removed_offloads__":
         ml.remove_attribute_from_data_sets(chart=entry, key="input_offloads")
     print "removed the input offloads from datasets"
 
-if __name__ == "__main__":
+if __name__ == "__main_fun_tcp__":
     internal_chart_names = ["funtcp_server_throughput_1tcp", "funtcp_server_throughput_4tcp"]
     frame_size = 1500
     flow_type = "FunTCP_Server_Throughput"

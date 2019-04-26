@@ -40,7 +40,6 @@
     <!--showing clicked point details when selected on a chart-->
     <div class="card" *ngIf="pointClicked && modelName !== 'MetricContainer'">
       <div class="properties-margin">
-        <cancel-btn-link [text]="'close'" style="float: right;" (onClick)="closePointInfo()"></cancel-btn-link>
         <table>
           <tr *ngFor="let point of pointInfo">
             <td class="no-wrap">
@@ -64,7 +63,7 @@
         <div style="padding: 4px;" *ngIf="showBuildProps && buildProps">
           <pre>{{ buildProps.value }}</pre>
         </div>
-
+        <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
       </div>
     </div>
     <!-- showing owner info and description only when leaf charts are clicked -->

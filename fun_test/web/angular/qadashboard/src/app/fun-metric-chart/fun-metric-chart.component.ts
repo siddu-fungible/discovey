@@ -21,6 +21,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
 
+  lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
+  versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
+
   status: string = null;
   showingTable: boolean;
   showingConfigure: boolean;
@@ -562,13 +565,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   openLsfUrl(lsfId): void {
-    let url = "http://palladium-jobs.fungible.local:8080/job/";
-    window.open(url + lsfId, '_blank');
+    window.open(this.lsfUrl + lsfId, '_blank');
   }
 
   openVersionUrl(version): void {
-    let url = "https://github.com/fungible-inc/FunOS/releases/tag/";
-    window.open(url + version, '_blank');
+    window.open(this.versionUrl + version, '_blank');
   }
 
   getAppName(source): string {
