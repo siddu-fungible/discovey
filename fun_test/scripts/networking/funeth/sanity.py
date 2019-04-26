@@ -1,8 +1,10 @@
 from lib.system.fun_test import *
 from lib.fun.fs import Fs
+from lib.topology.topology_helper import TopologyHelper
 from lib.host.network_controller import NetworkController
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
+
 import re
 
 
@@ -87,6 +89,26 @@ class FunethSanity(FunTestScript):
             DPC_PROXY_IP = '10.1.20.129'
             DPC_PROXY_PORT = 40220
 
+        elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+            # fs = Fs.get(disable_f1_index=1)
+            topology_helper = TopologyHelper()
+            topology_helper.set_dut_parameters(dut_index=0,
+                                               custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --retimer --all_100g")
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology deployed")
+            fs = topology.get_dut_instance(index=0)
+            fun_test.shared_variables["topology"] = topology
+
+            host_instance1 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=4)
+            #host_instance2 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=5)
+            #dpcsh_client = DpcshClient(target_ip=host_instance1.host_ip, target_port=fs.get_come().get_dpc_port(0))
+            #dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+            # TODO: get dpc proxy ip/port
+            global DPC_PROXY_IP
+            global DPC_PROXY_PORT
+            DPC_PROXY_IP = host_instance1.host_ip
+            DPC_PROXY_PORT = fs.get_come().get_dpc_port(0)
+
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
 
@@ -104,6 +126,8 @@ class FunethSanity(FunTestScript):
     def cleanup(self):
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fun_test.shared_variables["fs"].cleanup()
+        elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+            fun_test.shared_variables["topology"].cleanup()
         fun_test.shared_variables['funeth_obj'].unload()
         fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 
