@@ -1,0 +1,13 @@
+<div class="component">
+  <ng-container *ngIf="jiraMap">
+    <summary-jira-info
+      [summaryInHeader]="false"
+      *ngIf="jiraMap"
+      [bugInfoUrl]="'/common/bug_info'"
+      [data]="jiraMap"
+      [allowDelete]="false"
+      [allowContext]="true"
+      [allowAdd]="false"
+      [showDetails]="true"></summary-jira-info>
+  </ng-container>
+</div>

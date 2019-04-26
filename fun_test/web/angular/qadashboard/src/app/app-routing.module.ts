@@ -19,6 +19,7 @@ import {SchedulerAdminComponent} from "./scheduler-admin/scheduler-admin.compone
 import {LogViewerComponent} from "./log-viewer/log-viewer.component";
 import {UserComponent} from "./user/user.component";
 import {TestBedComponent} from "./regression/test-bed/test-bed.component";
+import {JirasComponent} from "./regression/jiras/jiras.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -34,6 +35,7 @@ const routes: Routes = [
   {path: 'performance/atomic/:id', component: FunMetricChartComponent},
   {path: 'regression/summary', component: RegressionSummaryComponent},
   {path: 'regression/admin', component: RegressionAdminComponent},
+  {path: 'regression/all_jiras_component', component: JirasComponent},
   {path: 'regression', component: RegressionComponent},
   {path: 'regression/jobs_by_tag/:tags', component: RegressionComponent},
   {path: 'regression/submit_job_page', component: SubmitJobComponent},

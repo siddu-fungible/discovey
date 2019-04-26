@@ -5,11 +5,11 @@ a {
   color: #337ab7;
 }
 td {
-  padding: 0;
+  /*padding: 0;*/
   vertical-align: middle;
 }
 th {
-  padding: 0;
+  /*padding: 0;*/
   vertical-align: middle;
 }
 .right-padding {
