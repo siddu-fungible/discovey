@@ -252,8 +252,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     let s = "Error";
     if (this.buildInfo && key in this.buildInfo) {
+      s = "";
       softwareDate = this.buildInfo[key]["software_date"];
-      s = "<b>Software date:</b> " + softwareDate + "<br>";
+      if (Number(softwareDate) > 0)
+        s = "<b>Software date:</b> " + softwareDate + "<br>";
       s += "<b>Value:</b> " + y + "<br>";
     } else {
       s = "<b>Value:</b> " + y + "<br>";
