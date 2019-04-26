@@ -1,8 +1,8 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test sku=SKU_FS1600_0 --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
-    "disable_f1_index": 0,
-    "f1_in_use": 1,
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
     "huid": [3, 2],
     "ctlid": [2, 2],
     "syslog_level": 2,
@@ -28,6 +28,8 @@
     // Head room needed for the LS volume in percentage
     "ns_id": 1,
     "attach_transport": "TCP",
+    "transport_port": 1099,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
     "nvme_device": "/dev/nvme0"

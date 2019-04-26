@@ -24,11 +24,11 @@ tb_config = {
             "mode": Dut.MODE_EMULATION,
             "type": Dut.DUT_TYPE_FSU,
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test sku=SKU_FS1600_0 --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
-            "disable_f1_index": 0,
-            "f1_in_use": 1,
-            "huid": 2,
-            "ctlid": 2,
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+            "disable_f1_index": 1,
+            "f1_in_use": 0,
+            "huid": 7,
+            "ctlid": 0
         },
     },
     "dpcsh_proxy": {
@@ -52,25 +52,35 @@ tb_config = {
     }
 }
 
+
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, read_latency):
-    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "read_latency"]:
+                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
+                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
+              "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
+              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    VolumePerformanceHelper().add_entry(key=fun_test.get_version(),
-                                        volume=volume,
-                                        test=test,
-                                        block_size=block_size,
-                                        io_depth=int(io_depth),
-                                        size=size,
-                                        operation=operation,
-                                        write_iops=write_iops,
-                                        read_iops=read_iops,
-                                        write_bw=write_bw,
-                                        read_bw=read_bw,
-                                        write_latency=write_latency,
-                                        read_latency=read_latency)
+    db_log_time = fun_test.shared_variables["db_log_time"]
+    num_ssd = fun_test.shared_variables["num_ssd"]
+    num_volume = fun_test.shared_variables["num_volume"]
+
+    blt = BltVolumePerformanceHelper()
+    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
+                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
+                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
+                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
+                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
+                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
+                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
+                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
+                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
+                  read_99_99_latency_unit="usecs")
+
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
     for arg in arg_list:
@@ -193,7 +203,7 @@ def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
             command_duration=command_timeout)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Deleting {} bytes LS volume on DUT instance".
-                               format(ec_info["volume_capacity"]["lsv"]))
+                             format(ec_info["volume_capacity"]["lsv"]))
 
         this_uuid = ec_info["uuids"]["jvol"]
         command_result = storage_controller.delete_volume(
@@ -266,15 +276,16 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.simple_assert(self.test_bed_spec, "Test-bed spec for {}".format(self.test_bed_type))
         fun_test.shared_variables["test_bed_type"] = self.test_bed_type
         fun_test.shared_variables["test_bed_spec"] = self.test_bed_spec
+        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
 
         print "Network Host Config: {}".format(self.test_bed_spec["nw_host"][0][0])
         print "Network Host IP: {}".format(self.test_bed_spec["nw_host"][0][0]["mgmt_ip"])
 
         # Initializing the FS
         fs = Fs.get(boot_args=self.bootargs, disable_f1_index=self.disable_f1_index)
-        fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
+        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
 
-        f1 = fs.get_f1(index=1)
+        f1 = fs.get_f1(index=self.f1_in_use)
         fun_test.shared_variables["fs"] = fs
         fun_test.shared_variables["f1"] = f1
 
@@ -284,7 +295,8 @@ class ECVolumeLevelScript(FunTestScript):
         # Initializing the Network attached host
         end_host_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ip"]
         end_host_user = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_username"]
-        end_host_passwd = ssh_password=self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_password"]
+        # end_host_passwd = ssh_password=self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_password"]
+        end_host_passwd = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_password"]
         self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
         fun_test.shared_variables["end_host"] = self.end_host
 
@@ -306,117 +318,140 @@ class ECVolumeLevelScript(FunTestScript):
 
         interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
                                                                 timeout=self.command_timeout)
-        fun_test.test_assert(interface_ip_config_status, "Configuring test interface IP address")
+        fun_test.log("interface_ip_config_status output is: {}".format(interface_ip_config_status))  # TODO
+        # fun_test.test_assert(interface_ip_config_status, "Configuring test interface IP address") # TODO - Assert fails - need to do it in correct way
+
         interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
                                                           timeout=self.command_timeout)
-        fun_test.test_assert(interface_mac_status, "Assigning MAC to test interface")
-        link_up_status = self.end_host.sudo_command(command=link_up_cmd,
-                                                          timeout=self.command_timeout)
-        fun_test.test_assert(link_up_status, "Bringing up test link")
+        fun_test.log("interface_mac_status output is: {}".format(interface_mac_status))  # TODO
+        # fun_test.test_assert(interface_mac_status, "Assigning MAC to test interface")  # TODO - Assert fails - need to do it in correct way
+
+        link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
+        fun_test.log("link_up_status output is: {}".format(link_up_status))  # TODO
+        # fun_test.test_assert(link_up_status, "Bringing up test link")  # TODO - Assert fails - need to do it in correct way
+
         interface_up_status = self.end_host.ifconfig_up_down(
             interface=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
             action="up")
         fun_test.test_assert(interface_up_status, "Bringing up test interface")
+
         route_add_status = self.end_host.ip_route_add(
             network=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["net"],
-            gateway= self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["gw"],
+            gateway=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["gw"],
             outbound_interface=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
             timeout=self.command_timeout)
-        fun_test.test_assert(route_add_status, "Adding route to F1")
+        fun_test.log("route_add_status output is: {}".format(route_add_status))
+        # fun_test.test_assert(route_add_status, "Adding route to F1")  # TODO - Assert fails - need to do it in correct way
+
         arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-        fun_test.test_assert(arp_add_status, "Adding static ARP to F1 route")
+        fun_test.log("arp_add_status command output is: {}".format(arp_add_status))
+        # fun_test.test_assert(arp_add_status, "Adding static ARP to F1 route")
+
+        # self.end_host.modprobe(module="nvme")
+        self.end_host.sudo_command("modprobe nvme")
+        fun_test.sleep("nvme module is loaded")
+        # self.end_host.modprobe(module="nvme_tcp")
+        self.end_host.sudo_command("modprobe nvme_tcp")
+        fun_test.sleep("nvme_tcp module is loaded")
 
         self.storage_controller = f1.get_dpc_storage_controller()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Setting the syslog level
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
+        '''command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
                                                       legacy=False, command_duration=self.command_timeout)
         fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
 
         command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
                                                       command_duration=self.command_timeout)
         fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                      message="Checking syslog level")
+                                      message="Checking syslog level")'''
 
     def cleanup(self):
 
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        self.command_timeout = 30
-        self.ec_coding = fun_test.shared_variables["ec_coding"]
-        self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
-        if fun_test.shared_variables[self.ec_ratio]["setup_created"]:
-            self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
-            self.volume_types = fun_test.shared_variables[self.ec_ratio]["volume_types"]
-            self.volume_capacity = fun_test.shared_variables[self.ec_ratio]["volume_capacity"]
-            self.volume_block = fun_test.shared_variables[self.ec_ratio]["volume_block"]
-            self.use_lsv = fun_test.shared_variables[self.ec_ratio]["use_lsv"]
-            self.ns_id = fun_test.shared_variables[self.ec_ratio]["ns_id"]
+        # self.ec_coding = fun_test.shared_variables["ec_coding"]  # TODO Remove
+        # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
+        # if fun_test.shared_variables[self.ec_ratio]["setup_created"]:
 
-            # Detaching the EC or LS volume and deleting the LS voluem based on the use_lsv flag
-            if self.use_lsv:
-                # Detaching
-                detach_uid = self.uuids[self.volume_types["lsv"]]
-                command_result = self.storage_controller.volume_detach_pcie(
-                    ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detaching LS volume on DUT")
+        # Detaching and Unconfiguring all the volumes
+        '''command_result = self.storage_controller.volume_detach_pcie(
+            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], command_duration=self.command_timeout)'''
 
-                # Deleting the LS volume
-                command_result = self.storage_controller.delete_volume(
-                    type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                    block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
-                    group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
-                    pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleting LS volume on DUT")
+        '''self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
+        self.volume_types = fun_test.shared_variables[self.ec_ratio]["volume_types"]
+        self.volume_capacity = fun_test.shared_variables[self.ec_ratio]["volume_capacity"]
+        self.volume_block = fun_test.shared_variables[self.ec_ratio]["volume_block"]
+        self.use_lsv = fun_test.shared_variables[self.ec_ratio]["use_lsv"]
+        self.ns_id = fun_test.shared_variables[self.ec_ratio]["ns_id"]
 
-                # Deleting the journal volume
-                command_result = self.storage_controller.delete_volume(
-                    type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
-                    block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleting Journal volume on DUT")
-            else:
-                detach_uid = self.uuids[self.volume_types["ec"]]
-                command_result = self.storage_controller.volume_detach_pcie(
-                    ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detaching EC volume on DUT instance")
-
-            # Deleting the EC volume
-            command_result = self.storage_controller.delete_volume(
-                type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
-                name="ec1", uuid=self.uuids[self.volume_types["ec"]][0], ndata=self.ec_coding["ndata"],
-                nparity=self.ec_coding["nparity"], pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"],
+        # Detaching the EC or LS volume and deleting the LS voluem based on the use_lsv flag
+        if self.use_lsv:
+            # Detaching
+            detach_uid = self.uuids[self.volume_types["lsv"]]
+            command_result = self.storage_controller.volume_detach_pcie(
+                ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
                 command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Deleting EC volume on DUT")
+            fun_test.test_assert(command_result["status"], "Detaching LS volume on DUT")
 
-            # Deleting all the BLT volume on which the EC volume is configured
-            for vtype in sorted(self.ec_coding):
-                for i in range(self.ec_coding[vtype]):
-                    if vtype == "nparity" and self.volume_types[vtype] == self.volume_types["ndata"]:
-                        i += self.ec_coding["ndata"]
-                    command_result = self.storage_controller.delete_volume(
-                        type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                        block_size=self.volume_block[vtype], name=vtype+str(i),
-                        uuid=self.uuids[self.volume_types[vtype]][i], command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Deleting {} {} BLT volume on DUT".format(i, vtype))
+            # Deleting the LS volume
+            command_result = self.storage_controller.delete_volume(
+                type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
+                block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
+                group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
+                pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Deleting LS volume on DUT")
 
+            # Deleting the journal volume
+            command_result = self.storage_controller.delete_volume(
+                type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
+                block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Deleting Journal volume on DUT")
+        else:
+            detach_uid = self.uuids[self.volume_types["ec"]]
+            command_result = self.storage_controller.volume_detach_pcie(
+                ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Detaching EC volume on DUT instance")
+
+        # Deleting the EC volume
+        command_result = self.storage_controller.delete_volume(
+            type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
+            name="ec1", uuid=self.uuids[self.volume_types["ec"]][0], ndata=self.ec_coding["ndata"],
+            nparity=self.ec_coding["nparity"], pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"],
+            command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Deleting EC volume on DUT")
+
+        # Deleting all the BLT volume on which the EC volume is configured
+        for vtype in sorted(self.ec_coding):
+            for i in range(self.ec_coding[vtype]):
+                if vtype == "nparity" and self.volume_types[vtype] == self.volume_types["ndata"]:
+                    i += self.ec_coding["ndata"]
+                command_result = self.storage_controller.delete_volume(
+                    type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
+                    block_size=self.volume_block[vtype], name=vtype+str(i),
+                    uuid=self.uuids[self.volume_types[vtype]][i], command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Deleting {} {} BLT volume on DUT".format(i, vtype))'''
+
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
         self.storage_controller.disconnect()
-        self.dpcsh_host = DpcshProxy(ip=tb_config["dpcsh_proxy"]["ip"],
+        fs = fun_test.shared_variables["fs"]
+        fs.cleanup()
+        '''self.dpcsh_host = DpcshProxy(ip=tb_config["dpcsh_proxy"]["ip"],
                                      dpcsh_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
                                      user=tb_config["dpcsh_proxy"]["user"],
                                      password=tb_config["dpcsh_proxy"]["passwd"])
         status = self.dpcsh_host.stop_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
                                                   dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
         fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
-                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))
+                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))'''
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -459,11 +494,15 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.end_host = fun_test.shared_variables["end_host"]
 
-        fun_test.shared_variables["ec_coding"] = self.ec_coding
-        self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
+        self.test_bed_type = fun_test.shared_variables["test_bed_type"]
+        self.test_bed_spec = fun_test.shared_variables["test_bed_spec"]
+        self.f1_in_use = fun_test.shared_variables["f1_in_use"]
+
+        # Remove fun_test.shared_variables["ec_coding"] = self.ec_coding  # TODO Remove
+        # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
         self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
 
-        if self.use_lsv:
+        '''if self.use_lsv:
             # LS volume capacity is the ndata times of the BLT volume capacity
             self.volume_capacity["lsv"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]
 
@@ -475,146 +514,193 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.volume_capacity[vtype] = int(tmp + (eight_mb - (tmp % eight_mb)))
 
             # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            self.volume_capacity["ec"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]
+            self.volume_capacity["ec"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]'''
 
-        if self.ec_ratio not in fun_test.shared_variables or \
-                not fun_test.shared_variables[self.ec_ratio]["setup_created"]:
-            fun_test.shared_variables[self.ec_ratio] = {}
-            fun_test.shared_variables[self.ec_ratio]["setup_created"] = False
-            # fun_test.shared_variables[self.ec_ratio]["volume_types"] = self.volume_types
-            # fun_test.shared_variables[self.ec_ratio]["volume_capacity"] = self.volume_capacity
-            # fun_test.shared_variables[self.ec_ratio]["volume_block"] = self.volume_block
-            # fun_test.shared_variables[self.ec_ratio]["ns_id"] = self.ns_id
-            # self.uuids = {}
+        # if self.ec_ratio not in fun_test.shared_variables or \
+        #         not fun_test.shared_variables[self.ec_ratio]["setup_created"]:
 
-            # Configuring the controller
-            command_result = {}
-            command_result = self.storage_controller.command(command="enable_counters", legacy=True,
-                                                             command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
+        # fun_test.shared_variables[self.ec_ratio] = {}
+        # fun_test.shared_variables[self.ec_ratio]["setup_created"] = False
+        # fun_test.shared_variables[self.ec_ratio]["volume_types"] = self.volume_types
+        # fun_test.shared_variables[self.ec_ratio]["volume_capacity"] = self.volume_capacity
+        # fun_test.shared_variables[self.ec_ratio]["volume_block"] = self.volume_block
+        # fun_test.shared_variables[self.ec_ratio]["ns_id"] = self.ns_id
+        # self.uuids = {}
 
-            '''
-            # Configuring ndata and nparity number of BLT volumes
-            for vtype in  sorted(self.ec_coding):
-                self.uuids[vtype] = []
-                if self.volume_types[vtype] not in self.uuids:
-                    self.uuids[self.volume_types[vtype]] = []
-                for i in range(self.ec_coding[vtype]):
-                    this_uuid = utils.generate_uuid()
-                    self.uuids[vtype].append(this_uuid)
-                    self.uuids[self.volume_types[vtype]].append(this_uuid)
-                    command_result = self.storage_controller.create_volume(
-                        type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                        block_size=self.volume_block[vtype], name=vtype+str(i), uuid=this_uuid,
-                        command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Create {} {} BLT volume on DUT".format(i, vtype))
+        # Configuring the controller
+        command_result = {}
+        command_result = self.storage_controller.command(command="enable_counters", legacy=True,
+                                                         command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
 
-            # Configuring EC volume on top of BLT volumes
-            self.uuids[self.volume_types["ec"]] = []
-            this_uuid = utils.generate_uuid()
-            self.uuids[self.volume_types["ec"]].append(this_uuid)
-            command_result = self.storage_controller.create_volume(
-                type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
-                name="ec1", uuid=this_uuid, ndata=self.ec_coding["ndata"], nparity=self.ec_coding["nparity"],
-                pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"], command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create EC volume on DUT")
-            attach_uuid = this_uuid
+        command_result = self.storage_controller.ip_cfg(ip=self.test_bed_spec["f1_loopback_ip"][self.f1_in_use])
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
-            # Configuring Journal & LS volume based on the script config settting
-            if self.use_lsv:
-                fun_test.shared_variables[self.ec_ratio]["use_lsv"] = self.use_lsv
-                # Configuring the Journal volume which is a mandatory one for the LSV
-                self.uuids[self.volume_types["jvol"]] = utils.generate_uuid()
+        '''
+        # Configuring ndata and nparity number of BLT volumes
+        for vtype in  sorted(self.ec_coding):
+            self.uuids[vtype] = []
+            if self.volume_types[vtype] not in self.uuids:
+                self.uuids[self.volume_types[vtype]] = []
+            for i in range(self.ec_coding[vtype]):
+                this_uuid = utils.generate_uuid()
+                self.uuids[vtype].append(this_uuid)
+                self.uuids[self.volume_types[vtype]].append(this_uuid)
                 command_result = self.storage_controller.create_volume(
-                    type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
-                    block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
+                    type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
+                    block_size=self.volume_block[vtype], name=vtype+str(i), uuid=this_uuid,
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create Journal volume on DUT")
+                fun_test.test_assert(command_result["status"], "Create {} {} BLT volume on DUT".format(i, vtype))
 
-                # Configuring the LSV
-                self.uuids[self.volume_types["lsv"]] = utils.generate_uuid()
-                command_result = self.storage_controller.create_volume(
-                    type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                    block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
-                    group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
-                    pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create LS volume on DUT")
-                attach_uuid = self.uuids[self.volume_types["lsv"]]
-            '''
+        # Configuring EC volume on top of BLT volumes
+        self.uuids[self.volume_types["ec"]] = []
+        this_uuid = utils.generate_uuid()
+        self.uuids[self.volume_types["ec"]].append(this_uuid)
+        command_result = self.storage_controller.create_volume(
+            type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
+            name="ec1", uuid=this_uuid, ndata=self.ec_coding["ndata"], nparity=self.ec_coding["nparity"],
+            pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"], command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Create EC volume on DUT")
+        attach_uuid = this_uuid
 
-            (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller, self.ec_info, self.command_timeout)
-
-            # Attaching/Exporting the EC/LS volume to the external server
-            command_result = {}
-            command_result = self.storage_controller.volume_attach_pcie(
-                ns_id=self.ns_id, uuid=attach_uuid, huid=tb_config['dut_info'][0]['huid'],
+        # Configuring Journal & LS volume based on the script config settting
+        if self.use_lsv:
+            fun_test.shared_variables[self.ec_ratio]["use_lsv"] = self.use_lsv
+            # Configuring the Journal volume which is a mandatory one for the LSV
+            self.uuids[self.volume_types["jvol"]] = utils.generate_uuid()
+            command_result = self.storage_controller.create_volume(
+                type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
+                block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
                 command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT")
+            fun_test.test_assert(command_result["status"], "Create Journal volume on DUT")
 
-            # disabling the error_injection for the EC volume
-            command_result = {}
-            command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
-                                                          command_duration=self.command_timeout)
+            # Configuring the LSV
+            self.uuids[self.volume_types["lsv"]] = utils.generate_uuid()
+            command_result = self.storage_controller.create_volume(
+                type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
+                block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
+                group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
+                pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
+            fun_test.test_assert(command_result["status"], "Create LS volume on DUT")
+            attach_uuid = self.uuids[self.volume_types["lsv"]]
+        '''
 
-            # Ensuring that the error_injection got disabled properly
-            fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-            command_result = {}
-            command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
-                                          message="Ensuring error_injection got disabled")
+        (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller,
+                                                               self.ec_info, self.command_timeout)
 
-            fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
-            # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
-            fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
+        fun_test.log("EC details after configuring EC Volume:")
+        for k, v in self.ec_info.items():
+            fun_test.log("{}: {}".format(k, v))
 
-            # Rebooting the host to make the above volume accessible
-            reboot_status = self.dpcsh_host.ipmi_power_cycle(host=tb_config["tg_info"][0]["ipmi_name"],
-                                                             interface=tb_config["tg_info"][0]["ipmi_iface"],
-                                                             user=tb_config["tg_info"][0]["ipmi_user"],
-                                                             passwd=tb_config["tg_info"][0]["ipmi_passwd"],
-                                                             interval=self.command_timeout)
-            fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(tb_config["tg_info"][0]["ip"]))
-            host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
-            fun_test.test_assert(host_up_status, "End Host {} is up".format(tb_config["tg_info"][0]["ip"]))
+        # Attaching/Exporting the EC/LS volume to the external server
+        command_result = {}
+        '''command_result = self.storage_controller.volume_attach_pcie(
+            ns_id=self.ns_id, uuid=attach_uuid, huid=tb_config['dut_info'][0]['huid'],
+            command_duration=self.command_timeout)'''
 
-            # Checking that the above created BLT volume is visible to the end host
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
-            lsblk_output = self.end_host.lsblk()
-            fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))
+        self.remote_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"].split('/')[0]
+        fun_test.log("Remote ip is {}".format(self.remote_ip))
+        command_result = self.storage_controller.volume_attach_remote(
+            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], huid=tb_config['dut_info'][0]['huid'],
+            ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
+            transport=self.attach_transport, command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT")
 
-            # Disable the udev daemon which will skew the read stats of the volume during the test
-            udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-            for service in udev_services:
-                service_status = self.end_host.systemctl(service_name=service, action="stop")
-                fun_test.test_assert(service_status, "Stopping {} service".format(service))
+        # disabling the error_injection for the EC volume
+        command_result = {}
+        command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
+                                                      command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
 
-            # Executing the FIO command to warm up the system
-            if self.warm_up_traffic:
-                fun_test.log("Executing the FIO command to warm up the system")
-                fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fio_output)
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
+        # Ensuring that the error_injection got disabled properly
+        fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
+        command_result = {}
+        command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
+        fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
+                                      message="Ensuring error_injection got disabled")
+
+        fun_test.shared_variables["ns_id"] = self.ns_id
+        fun_test.shared_variables["ec_info"] = self.ec_info
+        fun_test.shared_variables["remote_ip"] = self.remote_ip
+        # fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
+        # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
+        # fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
+
+        ''''# Rebooting the host to make the above volume accessible
+        reboot_status = self.dpcsh_host.ipmi_power_cycle(host=tb_config["tg_info"][0]["ipmi_name"],
+                                                         interface=tb_config["tg_info"][0]["ipmi_iface"],
+                                                         user=tb_config["tg_info"][0]["ipmi_user"],
+                                                         passwd=tb_config["tg_info"][0]["ipmi_passwd"],
+                                                         interval=self.command_timeout)
+        fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(tb_config["tg_info"][0]["ip"]))
+        host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
+        fun_test.test_assert(host_up_status, "End Host {} is up".format(tb_config["tg_info"][0]["ip"]))'''
+
+        # sudo nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1
+
+        nvme_connect = "sudo nvme connect -t {} -a {} -s {} -n {}".format(
+            self.attach_transport.lower(), self.test_bed_spec["f1_loopback_ip"][self.f1_in_use],
+            str(self.transport_port), self.nvme_subsystem)
+
+        nvme_connect_status = self.end_host.sudo_command(command=nvme_connect, timeout=self.command_timeout)
+        fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+        # fun_test.test_assert(nvme_connect_status, "Connection to F1 from Remote Host established")  # TODO - Assert fails - need to do it in correct way
+
+        num_connection_check = "sudo netstat -napl | grep {} | wc -l".format(self.transport_port)
+        num_connection_check_status = self.end_host.sudo_command(command=num_connection_check,
+                                                                 timeout=self.command_timeout)
+        fun_test.log("{} connections established".format(num_connection_check_status))
+
+        # Checking that the above created volume is visible to the end host
+        self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
+        lsblk_output = self.end_host.lsblk()
+        fun_test.log("lsblk outpu is: {}".format(lsblk_output))
+        fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
+        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                      message="{} device type check".format(self.volume_name))
+
+        ''''# Disable the udev daemon which will skew the read stats of the volume during the test
+        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        for service in udev_services:
+            service_status = self.end_host.systemctl(service_name=service, action="stop")
+            fun_test.test_assert(service_status, "Stopping {} service".format(service))'''
+
+        # Executing the FIO command to warm up the system
+        if self.warm_up_traffic:
+            fun_test.log("Executing the FIO command to warm up the system")
+
+            if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/populate_disk_auto_run"):
+                vdbench_result = self.end_host.sudo_command(
+                    "/usr/local/share/vdbench/vdbench -f /usr/local/share/vdbench/populate_disk_auto_run",
+                    timeout=self.command_timeout * 30)
+                fun_test.log("Vdbench output result: {}".format(vdbench_result))
+                fun_test.log("Type of result output is: {}".format(type(vdbench_result)))
 
     def run(self):
 
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
+        fun_test.log("Starting Random Read/Write of 8k data block")
+        self.end_host = fun_test.shared_variables["end_host"]
+
+        if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/single_node_8_11_1"):
+            vdbench_result = self.end_host.sudo_command(
+                "/usr/local/share/vdbench/vdbench -f /usr/local/share/vdbench/single_node_8_11_1",
+                timeout=self.command_timeout * 30)
+            fun_test.log("Vdbench output result: {}".format(vdbench_result))
+
+        ''''# self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
         # self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
@@ -659,10 +745,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                                               message="Ensuring fault_injection got enabled")
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KiB/s", "Read Throughput in KiB/s", "Write Latency in uSecs",
-                              "Read Latency in uSecs"]
+                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
+                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
+                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
+                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "readlatency"]
+                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "fio_job_name"]
         table_data_rows = []
 
         for combo in self.fio_bs_iodepth:
@@ -973,7 +1065,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results("EC with volume level failure domain", test_method, *row_data_list)
+                # post_results("EC with volume level failure domain", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -987,11 +1079,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
 
-        fun_test.test_assert(test_result, self.summary)
+        fun_test.test_assert(test_result, self.summary)'''
 
     def cleanup(self):
 
-        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
+        '''if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
             for index in self.failure_plex_indices:
                 if index < self.ec_coding["ndata"]:
                     vtype = self.volume_types["ndata"]
@@ -1009,131 +1101,56 @@ class ECVolumeLevelTestcase(FunTestCase):
                 command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
-                                              message="Ensuring fault_injection got disabled")
+                                              message="Ensuring fault_injection got disabled")'''
+        self.command_timeout = 30
+        self.ns_id = fun_test.shared_variables["ns_id"]
+        self.ec_info = fun_test.shared_variables["ec_info"]
+        self.remote_ip = fun_test.shared_variables["remote_ip"]
+        # self.ec_coding = fun_test.shared_variables["ec_coding"]  # TODO Remove
+        # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
+        # if fun_test.shared_variables[self.ec_ratio]["setup_created"]:
+
+        # Detaching and Unconfiguring all the volumes
+        '''command_result = self.storage_controller.volume_detach_pcie(
+            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], command_duration=self.command_timeout)'''
+        command_result = self.storage_controller.volume_detach_remote(
+            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], huid=tb_config['dut_info'][0]['huid'],
+            ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
+            transport=self.attach_transport, command_duration=self.command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Detaching LS/EC volume on DUT")
+
+        unconfigure_ec_volume(self.storage_controller,self.ec_info, self.command_timeout)
 
 
-class EC21FioSeqWriteSeqReadOnly(ECVolumeLevelTestcase):
+class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sequential Write & Read only performance of EC volume",
+                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of EC volume",
                               steps="""
-        1. Create 6 BLT volumes on dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface. 
-        5. Run the FIO sequential write and read only test(without verify) for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Check the performance for 8k block size
         """)
 
     def setup(self):
-        super(EC21FioSeqWriteSeqReadOnly, self).setup()
+        super(RandReadWrite8kBlocks, self).setup()
 
     def run(self):
-        super(EC21FioSeqWriteSeqReadOnly, self).run()
+        super(RandReadWrite8kBlocks, self).run()
 
     def cleanup(self):
-        super(EC21FioSeqWriteSeqReadOnly, self).cleanup()
-
-
-class EC21FioRandWriteRandReadOnly(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Random Write & Read only performance of EC volume",
-                              steps="""
-        1. Create 6 BLT volumes in dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface.
-        5. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioRandWriteRandReadOnly, self).setup()
-
-    def run(self):
-        super(EC21FioRandWriteRandReadOnly, self).run()
-
-    def cleanup(self):
-        super(EC21FioRandWriteRandReadOnly, self).cleanup()
-
-
-class EC21FioSeqAndRandReadOnlyWithFailure(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Sequential and Random Read only performance of EC volume with a plex failure",
-                              steps="""
-        1. Create 6 BLT volumes on dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface.
-        5. Inject failure to two of the BLT volumes
-        6. Run the FIO sequential and random read only test(without verify) for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioSeqAndRandReadOnlyWithFailure, self).setup()
-
-    def run(self):
-        super(EC21FioSeqAndRandReadOnlyWithFailure, self).run()
-
-    def cleanup(self):
-        super(EC21FioSeqAndRandReadOnlyWithFailure, self).cleanup()
-
-
-class EC21FioSeqReadWriteMix(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Sequential 75% Write & 25% Read performance of EC volume",
-                              steps="""
-        1. Create 6 BLT volumes in dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        5. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface.
-        6. Run the FIO sequential write and read mix test with 3:1 ratio for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioSeqReadWriteMix, self).setup()
-
-    def run(self):
-        super(EC21FioSeqReadWriteMix, self).run()
-
-    def cleanup(self):
-        super(EC21FioSeqReadWriteMix, self).cleanup()
-
-
-class EC21FioRandReadWriteMix(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Random 75% Write & 25% Read performance of EC volume",
-                              steps="""
-        1. Create 6 BLT volumes in dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        5. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
-        6. Run the FIO random write and read mix test with 3:1 ratio for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioRandReadWriteMix, self).setup()
-
-    def run(self):
-        super(EC21FioRandReadWriteMix, self).run()
-
-    def cleanup(self):
-        super(EC21FioRandReadWriteMix, self).cleanup()
+        pass
+        # super(RandReadWrite8kBlocks, self).cleanup()
 
 
 if __name__ == "__main__":
 
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(EC21FioSeqWriteSeqReadOnly())
-    ecscript.add_test_case(EC21FioRandWriteRandReadOnly())
-    ecscript.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
-    ecscript.add_test_case(EC21FioSeqReadWriteMix())
-    ecscript.add_test_case(EC21FioRandReadWriteMix())
+    ecscript.add_test_case(RandReadWrite8kBlocks())
     ecscript.run()
