@@ -110,6 +110,24 @@
                         "label": "4 TCP Flow(s)"
                       }
                     ]
+                  },
+                  {
+                    "info": "funtcp_server_cps",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_cps",
+                    "weight": 0,
+                    "label": "Connections per second",
+                    "children": []
+                  },
+                  {
+                    "info": "funtcp_server_cc",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_cc",
+                    "weight": 0,
+                    "label": "Concurrent Connections",
+                    "children": []
                   }
                 ]
               }
@@ -184,7 +202,7 @@
                     "leaf": false,
                     "name": "HU_NU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "1 TCP Flow(s)",
+                    "label": "1 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
@@ -223,7 +241,7 @@
                     "leaf": false,
                     "name": "NU_HU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "1 TCP Flow(s)",
+                    "label": "1 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
