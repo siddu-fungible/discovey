@@ -3,8 +3,6 @@
 
   <div class="row">
     <div class="col">
-
-
       <div class="card">
         <div class="card-header">
           Suite info
@@ -94,6 +92,12 @@
             </ng-container>
           </div>
           <div class="card-body">
+
+            <jira-info *ngIf="scriptInfo[scriptExecutionInfo.key]?.pk"
+                         [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].pk">
+            </jira-info>
+
+            <br>
             <table *ngIf="getKeys(scriptExecutionInfo.value).length > 0"
                    class="table table-hover table-responsive table-bordered">
               <thead>

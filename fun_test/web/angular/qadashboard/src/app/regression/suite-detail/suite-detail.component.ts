@@ -292,5 +292,9 @@ export class SuiteDetailComponent implements OnInit {
     window.open(url, '_blank');
   }
 
+  scriptPathToPk(scriptPath) {
+    return this.scriptInfo[scriptPath].pk;
+  }
+
 
 }
