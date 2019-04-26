@@ -719,7 +719,7 @@ if __name__ == "__main_ipsec_tunnel__":
     print "created charts for the IPSEC juniper customer teramarks"
 
 if __name__ == "__main__":
-    networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance"]
+    networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance", "NuTransitPerformance"]
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     for model in networking_models:
         metric_model = app_config.get_metric_models()[model]
