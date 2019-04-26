@@ -25,6 +25,7 @@ export class JiraInfoComponent implements OnInit {
   activeBugs: number = 0;
   resolvedBugs: number = 0;
 
+
   constructor(public apiService: ApiService, public loggerService: LoggerService) {
   }
 
