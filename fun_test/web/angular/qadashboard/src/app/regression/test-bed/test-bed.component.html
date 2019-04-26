@@ -24,7 +24,7 @@
 
               <tr *ngFor="let testBed of testBeds">
                 <td>{{ testBed.name }}</td>
-                <td><pre>{{ testBed.description }}</pre></td>
+                <td [innerHtml]="testBed.description | safeHtml"></td>
                 <td>
                   <span class="badge badge-danger"
                         *ngIf="automationStatus[testBed.name]?.numExecutions > 0; else freeAutomationStatus">In use</span>
