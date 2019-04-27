@@ -45,6 +45,8 @@ class BootFS(FunTestCase):
 
     def run(self):
         run_count = 1
+        success_count = 0
+        fail_count = 0
         t_end = time.time() + 60 * 60
         while time.time() < t_end:
             reach = self.check_reachability()
@@ -74,10 +76,19 @@ class BootFS(FunTestCase):
             linux_obj = Linux(host_ip=server_ip, ssh_username="localadmin", ssh_password="Precious1*")
             linux_obj.reboot()
             lspci_output = linux_obj.command(command="lspci -d 1dad:")
-            fun_test.log(lspci_output)
             sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
+            lspci_err = False
             for section in sections:
-                fun_test.test_assert(section in lspci_output, "{} seen".format(section))
+                if section not in lspci_output:
+                    lspci_err = True
+                    fun_test.critical("Under LSPCI {} not found".format(section))
+            if lspci_err:
+                fail_count += 1
+                fun_test.critical("This is a failed run %s" % run_count)
+            else:
+                success_count += 1
+            fun_test.log("Success Count = %s" % success_count)
+            fun_test.log("Fail Count = %s" % fail_count)
 
     def cleanup(self):
         pass
