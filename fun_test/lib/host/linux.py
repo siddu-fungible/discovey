@@ -2265,7 +2265,7 @@ class Linux(object, ToDictMixin):
                        "write_resp", "read_max", "write_max", "resp_stddev", "queue_depth", "cpu_sys_user", "cpu_sys"]
 
         # Building the vdbbench command
-        if not filename:
+        if filename:
             vdb_cmd = "sudo {}/vdbench -f {}".format(path, filename)
         else:
             vdb_cmd = "sudo {}/vdbench -t".format(path)
@@ -2281,13 +2281,17 @@ class Linux(object, ToDictMixin):
 
         # Parsing the vdbench output
         # Seraching for the line containing the final result using the below pattern
-        match = re.search(r'.*avg_\d+\-\d+.*', vdb_out, re.M)
-        if match:
-            fun_test.debug("Found final result line: {}".format(match.group(0)))
-            result_line = match.group(0)
-            result_line = result_line.split()
-            fun_test.debug("Parsed final result line: {}".format(result_line))
-        else:
+        vdb_out = vdb_out.split('\n')
+        result_line = ""
+        for line in vdb_out:
+            match = re.search(r'.*avg_\d+\-\d+.*', line, re.M)
+            if match:
+                fun_test.debug("Found final result line: {}".format(match.group(0)))
+                result_line = match.group(0)
+                result_line = result_line.split()
+                fun_test.debug("Parsed final result line: {}".format(result_line))
+
+        if not result_line:
             fun_test.critical("Unable to find the final result line...Aborting...")
             return vdb_result
 
