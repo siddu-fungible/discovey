@@ -183,8 +183,10 @@ def update_suite_execution(suite_execution_id,
     te.save()
     te.save()
     transaction.commit()
+    te = SuiteExecution.objects.get(execution_id=suite_execution_id)
+
     # print te.version
-    # print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, result, version, te.state)
+    print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state)
 
     return te
 
