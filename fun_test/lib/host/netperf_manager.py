@@ -35,8 +35,9 @@ class PerformanceTuning:
             'cpupower monitor',
             'cat /proc/cpuinfo | grep MHz',
         ])
-        for cmd in cmds:
-            self.linux_obj.sudo_command(cmd)
+        #for cmd in cmds:
+        #    self.linux_obj.sudo_command(cmd)
+        self.linux_obj.sudo_command(';'.join(cmds))
 
     def tcp(self):
         cmds = (
@@ -54,8 +55,10 @@ class PerformanceTuning:
             'sysctl -w net.ipv4.tcp_adv_win_scale=1',
             'sysctl -w net.ipv4.route.flush=1',
         )
-        for cmd in cmds:
-            self.linux_obj.sudo_command(cmd)
+        #for cmd in cmds:
+        #    self.linux_obj.sudo_command(cmd)
+        self.linux_obj.sudo_command(';'.join(cmds))
+
 
     def iptables(self):
         cmds = (
@@ -71,16 +74,18 @@ class PerformanceTuning:
             'iptables -F',
             'iptables -L',
         )
-        for cmd in cmds:
-            self.linux_obj.sudo_command(cmd)
+        #for cmd in cmds:
+        #    self.linux_obj.sudo_command(cmd)
+        self.linux_obj.sudo_command(';'.join(cmds))
 
     def mlnx_tune(self, profile='HIGH_THROUGHPUT'):
         """profile: HIGH_THROUGHPUT, or LOW_LATENCY_VMA"""
         cmds = (
             'mlnx_tune -p {}'.format(profile),
         )
-        for cmd in cmds:
-            self.linux_obj.sudo_command(cmd)
+        #for cmd in cmds:
+        #    self.linux_obj.sudo_command(cmd)
+        self.linux_obj.sudo_command(';'.join(cmds))
 
     def interrupt_coalesce(self, interfaces, disable=True):
         for interface in interfaces:
@@ -94,9 +99,9 @@ class PerformanceTuning:
                     'ethtool --coalesce {} rx-usecs 8 tx-usecs 16 rx-frames 128 tx-frames 32 adaptive-rx on'.format(
                         interface),
                 )
-            for cmd in cmds:
-                self.linux_obj.sudo_command(cmd)
-
+            #for cmd in cmds:
+            #    self.linux_obj.sudo_command(cmd)
+        self.linux_obj.sudo_command(';'.join(cmds))
 
 class NetperfManager:
     """Use netperf to measure throughput and latency between host pairs.
@@ -177,7 +182,8 @@ class NetperfManager:
     def cleanup(self):
         result = True
         for linux_obj in self.linux_objs:
-            for process in ('ptp4l', 'phc2sys', 'netserver'):
+            #for process in ('ptp4l', 'phc2sys', 'netserver'):
+            for process in ('netserver',):
                 linux_obj.pkill(process)
                 result &= linux_obj.get_process_id_by_pattern(process) is None
 
