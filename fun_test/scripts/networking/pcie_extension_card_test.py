@@ -34,7 +34,7 @@ class ScriptSetup(FunTestScript):
 class BootFS(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary=" Boot FS",
+                              summary=" Boot FS, reboot Server",
                               steps="""
                               1. Get FS system credentials, image and bootargs
                               2. Boot up FS system
