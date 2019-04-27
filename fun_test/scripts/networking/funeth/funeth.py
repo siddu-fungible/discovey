@@ -12,7 +12,9 @@ class Funeth:
     def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/ws'):
         self.tb_config_obj = tb_config_obj
         self.linux_obj_dict = {}
-        for nu_or_hu in ('nu', 'hu'):
+        self.nu_hosts = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('nu')])
+        self.hu_hosts = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('hu')])
+        for nu_or_hu in self.nu_hosts + self.hu_hosts:
             self.linux_obj_dict.update(
                 {nu_or_hu: Linux(host_ip=tb_config_obj.get_hostname(nu_or_hu),
                                  ssh_username=tb_config_obj.get_username(nu_or_hu),
@@ -28,21 +30,27 @@ class Funeth:
 
     def lspci(self):
         """Do lspci to check funeth controller."""
-        output = self.linux_obj_dict['hu'].command('lspci -d 1dad:')
-        return re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output) is not None
+        result = True
+        for hu in self.hu_hosts:
+            output = self.linux_obj_dict[hu].command('lspci -d 1dad:')
+            result &= re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output) is not None
+
+        return result
 
     def setup_workspace(self):
         """Set env WORKSPACE, which is used in fungible-host-driver compilation."""
-        self.linux_obj_dict['hu'].command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % self.ws)
+        for hu in self.hu_hosts:
+            self.linux_obj_dict[hu].command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % self.ws)
 
     def cleanup_workspace(self):
         """Restore old WORKSPACE if exists."""
-        self.linux_obj_dict['hu'].command('export WORKSPACE=$WSTMP')
+        for hu in self.hu_hosts:
+            self.linux_obj_dict[hu].command('export WORKSPACE=$WSTMP')
 
     def update_src(self):
         """Update driver source."""
 
-        def update_mirror(ws, repo, **kwargs):
+        def update_mirror(ws, repo, hu, **kwargs):
             mirror = kwargs.get('mirror', '/mnt/github-mirror')
 
             _ghbase = 'git@github.com:fungible-inc'
@@ -50,52 +58,60 @@ class Funeth:
 
             sys.stderr.write('+ [{0}] Update mirror: {1}\n'.format(asctime(), repo))
 
-            if not self.linux_obj_dict['hu'].check_file_directory_exists(mirror):
-                self.linux_obj_dict['hu'].create_directory(mirror, sudo=False)
+            if not self.linux_obj_dict[hu].check_file_directory_exists(mirror):
+                self.linux_obj_dict[hu].create_directory(mirror, sudo=False)
 
-            if self.linux_obj_dict['hu'].check_file_directory_exists(mirror + '/' + repo):
-                self.linux_obj_dict['hu'].command('cd {}; git remote update'.format(mirror + '/' + repo))
+            if self.linux_obj_dict[hu].check_file_directory_exists(mirror + '/' + repo):
+                self.linux_obj_dict[hu].command('cd {}; git remote update'.format(mirror + '/' + repo))
             else:
-                self.linux_obj_dict['hu'].command('cd {3}; {0} {1}/{2}.git {2}'.format(_cmd, _ghbase, repo, mirror))
+                self.linux_obj_dict[hu].command('cd {3}; {0} {1}/{2}.git {2}'.format(_cmd, _ghbase, repo, mirror))
 
         def local_checkout(ws, repo, **kwargs):
             subdir = kwargs.get('subdir', repo)
             branch = kwargs.get('branch', None)
             mirror = kwargs.get('mirror', '/mnt/github-mirror')
 
-            self.linux_obj_dict['hu'].command('cd {3}; git clone {0}/{1} {2}'.format(mirror, repo, subdir, ws))
+            self.linux_obj_dict[hu].command('cd {3}; git clone {0}/{1} {2}'.format(mirror, repo, subdir, ws))
             if branch:
-                self.linux_obj_dict['hu'].command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
+                self.linux_obj_dict[hu].command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
 
-        sdkdir = os.path.join(self.ws, 'FunSDK')
-        self.linux_obj_dict['hu'].command('sudo rm -rf {}'.format(self.ws))
-        self.linux_obj_dict['hu'].create_directory(self.ws, sudo=False)
+        result = True
+        for hu in self.hu_hosts:
+            sdkdir = os.path.join(self.ws, 'FunSDK')
+            self.linux_obj_dict[hu].command('sudo rm -rf {}'.format(self.ws))
+            self.linux_obj_dict[hu].create_directory(self.ws, sudo=False)
 
-        update_mirror(self.ws, 'fungible-host-drivers')
-        update_mirror(self.ws, 'FunSDK-small')
-        if self.funos_branch:
-            update_mirror(self.ws, 'FunOS')
+            update_mirror(self.ws, 'fungible-host-drivers', hu)
+            update_mirror(self.ws, 'FunSDK-small',hu)
+            if self.funos_branch:
+                update_mirror(self.ws, 'FunOS', hu)
 
-        # clone FunSDK, host-drivers, FunOS
-        local_checkout(self.ws, 'fungible-host-drivers', branch=self.fundrv_branch)
-        local_checkout(self.ws, 'FunSDK-small', subdir='FunSDK', branch=self.funsdk_branch)
-        if self.funos_branch:
-            local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
+            # clone FunSDK, host-drivers, FunOS
+            local_checkout(self.ws, 'fungible-host-drivers', branch=self.fundrv_branch)
+            local_checkout(self.ws, 'FunSDK-small', subdir='FunSDK', branch=self.funsdk_branch)
+            if self.funos_branch:
+                local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-        output = self.linux_obj_dict['hu'].command(
-            'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
-        return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+            output = self.linux_obj_dict[hu].command(
+                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
+            result &= re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+
+        return result
 
     def build(self):
         """Build driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         funsdkdir = os.path.join(self.ws, 'FunSDK')
 
-        if self.funos_branch:
-            self.linux_obj_dict['hu'].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
+        result = True
+        for hu in self.hu_hosts:
+            if self.funos_branch:
+                self.linux_obj_dict[hu].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
-        return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+            output = self.linux_obj_dict[hu].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
+            result &= re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+
+        return result
 
     def load(self, sriov=0, cc=False, debug=False):
         """Load driver."""
@@ -108,25 +124,29 @@ class Funeth:
         if sriov > 0:
             _modparams.append('sriov_test=yes')
 
-        self.linux_obj_dict['hu'].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
-                                          timeout=300)
+        result = True
+        for hu in self.hu_hosts:
+            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
+                                            timeout=300)
 
-        fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
+            fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
-        if cc:
-            self.pf_intf = 'fpg0'
+            if cc:
+                self.pf_intf = 'fpg0'
 
-        if sriov > 0:
-            sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
-            self.linux_obj_dict['hu'].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
-                                              timeout=300)
-            fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
-            self.linux_obj_dict['hu'].command('ifconfig -a')
+            if sriov > 0:
+                sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
+                self.linux_obj_dict[hu].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
+                                                timeout=300)
+                fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
+                self.linux_obj_dict[hu].command('ifconfig -a')
 
-        output1 = self.linux_obj_dict['hu'].command('lsmod')
-        output2 = self.linux_obj_dict['hu'].command('ifconfig %s' % self.pf_intf)
-        return re.search(r'funeth', output1) is not None and re.search(
-            r'Device not found', output2, re.IGNORECASE) is None
+            output1 = self.linux_obj_dict[hu].command('lsmod | grep funeth')
+            output2 = self.linux_obj_dict[hu].command('ifconfig %s' % self.pf_intf)
+            result &= re.search(r'funeth', output1) is not None and re.search(
+                r'Device not found', output2, re.IGNORECASE) is None
+
+        return result
 
     def configure_namespace_interfaces(self, nu_or_hu, ns):
         """Configure interfaces in a namespace."""
@@ -192,14 +212,10 @@ class Funeth:
 
         return result
 
-    def loopback_test(self, packet_count=100):
+    def loopback_test(self, packet_count=100, hu='hu'):
         """Do loopback test between PF and VF via NU."""
         ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
-        #output = self.linux_obj_dict['hu'].command('sudo ping -c {} -i 0.01 {}'.format(packet_count, ip_addr))
-        #return re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count),
-        #                 output) is not None
-        return self.linux_obj_dict['hu'].ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
-                                              sudo=True)
+        return self.linux_obj_dict[hu].ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1, sudo=True)
 
     def configure_namespace_ipv4_routes(self, nu_or_hu, ns):
         """Configure a namespace's IP routes to NU."""
@@ -246,14 +262,18 @@ class Funeth:
 
     def unload(self):
         """Unload driver."""
-        self.linux_obj_dict['hu'].command('sudo rmmod funeth; lsmod')
-        output = self.linux_obj_dict['hu'].command('lsmod')
-        return re.search(r'funeth', output) is None
+        result = True
+        for hu in self.hu_hosts:
+            self.linux_obj_dict[hu].command('sudo rmmod funeth')
+            output = self.linux_obj_dict[hu].command('lsmod | grep funeth')
+            result &= re.search(r'funeth', output) is None
 
-    def ifdown(self, intf):
+        return result
+
+    def ifdown(self, intf, hu='hu'):
         """Shut down interface."""
-        self.linux_obj_dict['hu'].command('sudo ip link set {} down'.format(intf))
+        self.linux_obj_dict[hu].command('sudo ip link set {} down'.format(intf))
 
-    def ifup(self, intf):
+    def ifup(self, intf, hu='hu'):
         """No shut interface."""
-        self.linux_obj_dict['hu'].command('sudo ip link set {} up'.format(intf))
+        self.linux_obj_dict[hu].command('sudo ip link set {} up'.format(intf))

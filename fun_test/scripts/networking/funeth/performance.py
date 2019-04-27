@@ -7,7 +7,6 @@ from lib.host.network_controller import NetworkController
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity
 import json
-import math
 import pprint
 
 
@@ -45,31 +44,28 @@ class FunethPerformance(sanity.FunethSanity):
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
-        linux_objs = [funeth_obj.linux_obj_dict['nu'], funeth_obj.linux_obj_dict['hu']]
+        #linux_objs = [funeth_obj.linux_obj_dict['nu'], funeth_obj.linux_obj_dict['hu']]
+        linux_objs = funeth_obj.linux_obj_dict.values()
         #self.iperf_manager_obj = IPerfManager(linux_objs)
         self.netperf_manager_obj = NetperfManager(linux_objs)
 
         #fun_test.test_assert(self.iperf_manager_obj.setup(), 'Set up for throughput/latency test')
         fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
 
-        network_controller_obj = NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
-                                                   dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True)
+        network_controller_objs = []
+        network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
+                                                         dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True))
+        # TODO: create network_controller_obj2 for F1_1
         # Configure small DF/Non-FCP thr to workaround SWOS-4771
-        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(#sf_thr=256,
-                                                                            #sf_xoff_thr=128,
-                                                                            #sx_thr=4000,
-                                                                            #dx_thr=4000,
-                                                                            df_thr=256,
-                                                                            #fcp_thr=8000,
-                                                                            #fcp_xoff_thr=7000,
-                                                                            nonfcp_thr=256,
-                                                                            nonfcp_xoff_thr=128,
-                                                                            #sample_copy_thr=255,
-                                                                            mode='nu')
-        fun_test.test_assert(buffer_pool_set, 'Configure QoS egress buffer pool')
+        for nc_obj in network_controller_objs:
+            buffer_pool_set = nc_obj.set_qos_egress_buffer_pool(df_thr=256,
+                                                                nonfcp_thr=256,
+                                                                nonfcp_xoff_thr=128,
+                                                                mode='nu')
+            fun_test.test_assert(buffer_pool_set, 'Configure QoS egress buffer pool')
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        fun_test.shared_variables['network_controller_obj'] = network_controller_obj
+        fun_test.shared_variables['network_controller_objs'] = network_controller_objs
 
     def cleanup(self):
         super(FunethPerformance, self).cleanup()
@@ -80,18 +76,19 @@ class FunethPerformance(sanity.FunethSanity):
 def collect_stats():
     try:
         # TODO: add mpstat and netstat
-        network_controller_obj = fun_test.shared_variables['network_controller_obj']
-        network_controller_obj.peek_fpg_port_stats(port_num=0)
-        #network_controller_obj.peek_fpg_port_stats(port_num=1)
-        #network_controller_obj.peek_fpg_port_stats(port_num=2)
-        network_controller_obj.peek_psw_global_stats()
-        #network_controller_obj.peek_fcp_global_stats()
-        network_controller_obj.peek_vp_packets()
-        #network_controller_obj.peek_per_vp_stats()
-        network_controller_obj.peek_resource_bam_stats()
-        network_controller_obj.peek_eqm_stats()
-        network_controller_obj.flow_list()
-        network_controller_obj.flow_list(blocked_only=True)
+        for nc_obj in fun_test.shared_variables['network_controller_objs']:
+            nc_obj.peek_fpg_port_stats(port_num=0)
+            nc_obj.peek_fpg_port_stats(port_num=4)
+            #nc_obj.peek_fpg_port_stats(port_num=1)
+            #nc_obj.peek_fpg_port_stats(port_num=2)
+            nc_obj.peek_psw_global_stats()
+            #nc_obj.peek_fcp_global_stats()
+            nc_obj.peek_vp_packets()
+            #nc_obj.peek_per_vp_stats()
+            nc_obj.peek_resource_bam_stats()
+            nc_obj.peek_eqm_stats()
+            nc_obj.flow_list()
+            nc_obj.flow_list(blocked_only=True)
     except:
         pass
 
@@ -118,12 +115,23 @@ class FunethPerformanceBase(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
 
         host_pairs = []
-        if flow_type.startswith('NU_HU'):
-            host_pairs = [('nu', 'hu'),]
-        elif flow_type.startswith('HU_NU'):
-            host_pairs = [('hu', 'nu'),]
-        elif flow_type.startswith('HU_HU'):
-            host_pairs = [('nu', 'hu'), ('hu', 'nu')]
+        bi_dir = False
+        if flow_type.startswith('HU_HU'):  # HU --> HU
+            # TODO: handle exception if hu_hosts len is 1
+            for i in range(0, len(funeth_obj.hu_hosts), 2):
+                host_pairs.append(funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1])
+        else:
+            for nu, hu in zip(funeth_obj.nu_hosts, funeth_obj.hu_hosts):
+                if flow_type.startswith('NU_HU'):  # NU --> HU
+                    host_pairs.append([nu, hu])
+                elif flow_type.startswith('HU_NU'):  # HU --> NU
+                    host_pairs.append([hu, nu])
+                elif flow_type.startswith('NU2HU'):  # NU <-> HU
+                    host_pairs.append([nu, hu])
+                    host_pairs.append([hu, nu])
+                    bi_dir = True
+                if parallel == 1:
+                    break
 
         suffixes = ('n2h', 'h2n')
         arg_dicts = []
@@ -139,14 +147,15 @@ class FunethPerformanceBase(FunTestCase):
                  'dip': dip,
                  'tool': tool,
                  'protocol': protocol,
-                 'parallel': parallel,
+                 'parallel': parallel/len(host_pairs) if not bi_dir else parallel/(len(host_pairs)/2),
                  'duration': duration,
                  'frame_size': frame_size,
                  'suffix': suffix,
                  }
             )
 
-        linux_objs = [arg_dict.get('linux_obj') for arg_dict in arg_dicts] + [arg_dict.get('linux_obj_dst') for arg_dict in arg_dicts]
+        #linux_objs = [arg_dict.get('linux_obj') for arg_dict in arg_dicts] + [arg_dict.get('linux_obj_dst') for arg_dict in arg_dicts]
+        linux_objs = funeth_obj.linux_obj_dict.values()
         perf_manager_obj = NetperfManager(linux_objs)
 
         # Collect stats before and after test run
@@ -196,144 +205,6 @@ class FunethPerformanceBase(FunTestCase):
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
-
-
-    def _run2(self, flow_type, tool='iperf3', protocol='udp', parallel=1, duration=30, frame_size=800, bw=BW_LIMIT):
-
-        funeth_obj = fun_test.shared_variables['funeth_obj']
-
-        linux_objs = []
-        linux_objs_dst = []
-        ns_dst_list = []
-        is_n2h = False
-        is_h2n = False
-        if flow_type.startswith('NU_HU'):
-            linux_obj = funeth_obj.linux_obj_dict['nu']
-            linux_obj_dst = funeth_obj.linux_obj_dict['hu']
-            ns = None
-            ns_dst = None
-            if 'VF' in flow_type:
-                dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
-                sip = None
-            else:  # Default use PF interface
-                dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
-                sip = None
-            perf_suffix = 'n2h'
-            is_n2h = True
-        elif flow_type.startswith('HU_NU'):
-            linux_obj = funeth_obj.linux_obj_dict['hu']
-            linux_obj_dst = funeth_obj.linux_obj_dict['nu']
-            ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
-            ns_dst = None
-            dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
-            sip = None
-            perf_suffix = 'h2n'
-            is_h2n = True
-        elif flow_type.startswith('HU_HU'):
-            linux_obj = funeth_obj.linux_obj_dict['hu']
-            linux_obj_dst = funeth_obj.linux_obj_dict['hu']
-            ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
-            ns_dst = funeth_obj.tb_config_obj.get_hu_vf_namespace()
-            if flow_type == 'HU_HU_NFCP':
-                dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
-                sip = None
-            elif flow_type.startswith('HU_HU_FCP'):
-                dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
-                                                                    funeth_obj.tb_config_obj.get_hu_vf_interface_fcp())
-                sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
-                                                                    funeth_obj.tb_config_obj.get_hu_pf_interface_fcp())
-
-
-        linux_objs.append(linux_obj)
-        linux_objs_dst.append(linux_obj_dst)
-        ns_dst_list.append(ns_dst)
-
-        # configure MSS by add iptable rule
-        if frame_size < 1500:
-            for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
-                cmds = (
-                    'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-                        frame_size-18-20-20),
-                    'iptables -t mangle -L',
-                )
-                for cmd in cmds:
-                    if ns_dst:
-                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-                    linux_obj_dst.sudo_command(cmd)
-
-        if tool == 'netperf':
-            perf_manager_obj = NetperfManager(linux_objs)
-        else:
-            perf_manager_obj = IPerfManager(linux_objs)
-        arg_dicts = [
-            {'linux_obj': linux_obj,
-             'perf_suffix': perf_suffix,
-             'is_n2h': is_n2h,
-             'is_h2n': is_h2n,
-             'dip': dip,
-             'sip': sip,
-             'tool': tool,
-             'protocol': protocol,
-             'parallel': parallel,
-             'duration': duration,
-             'frame_size': frame_size,
-             'bw': bw,
-             'ns': ns,
-             }
-        ]
-        if tool == 'netperf':
-            for arg_dict in arg_dicts:
-                arg_dict.pop('bw')  # 'bw' is n/a in NetperfManager
-
-        # Collect stats before and after test run
-        fun_test.log('Collect stats before test')
-        #collect_stats()
-        result = perf_manager_obj.run(*arg_dicts)
-        fun_test.log('Collect stats after test')
-        #collect_stats()
-
-        # Delete iptable rule
-        if frame_size < 1500:
-            for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
-                cmds = (
-                    'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
-                        frame_size-18-20-20),
-                    'iptables -t mangle -L',
-                )
-                for cmd in cmds:
-                    if ns_dst:
-                        cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
-                    linux_obj_dst.sudo_command(cmd)
-
-        # check for 'nan'
-        passed = True
-        for k, v in result.items():
-            if math.isnan(v):
-                result[k] = -1  # Update 'NaN' as -1 for infra to process, per John/Ashwin
-                passed = False
-
-        result.update(
-            {'flow_type': flow_type,
-             'frame_size': frame_size,
-             'protocol': protocol.upper(),
-             'offloads': False,  # TODO: pass in parameter
-             'num_flows': parallel,
-             'timestamp': '%s' % TIMESTAMP,  # Use same timestamp for all the results of same run, per John/Ashwin
-             'version': fun_test.get_version(),
-             }
-        )
-        fun_test.log('Results:\n{}'.format(pprint.pformat(result)))
-
-        # Update file with result
-        #if tool != 'netperf':  # TODO: Remove the check
-        with open(RESULT_FILE) as f:
-            r = json.load(f)
-            r.append(result)
-
-        with open(RESULT_FILE, 'w') as f:
-            json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
-
-        fun_test.test_assert(passed, 'Get throughput/latency test result')
 
 
 # iPerf3/owping
