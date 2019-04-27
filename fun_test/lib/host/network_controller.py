@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.dpcsh_client import DpcshClient
+from collections import OrderedDict
 
 
 class NetworkController(DpcshClient):
@@ -1618,12 +1619,79 @@ class NetworkController(DpcshClient):
         return result
 
 
-    def set_nu_benchmark_1(self, fpg, mode):
+    def set_nu_benchmark_1(self, fpg=None, mode=None, num_flows=None, flow_le_ddr=None, flow_state_ddr=None,
+                           sport=None, dport=None, protocol=None, ip_sa=None, ip_da=None, flow_offset=None,
+                           flow_inport=None, flow_outport=None, show=None):
         result = None
         try:
-            cmd_args = {"fpg": fpg, "mode": mode}
+            cmd_args = {}
+            if fpg:
+                cmd_args['fpg'] = fpg
+            if mode is not None:
+                cmd_args['mode'] = mode
+            if num_flows:
+                cmd_args['num_flows'] = num_flows
+            if flow_le_ddr is not None:
+                cmd_args['flow_le_ddr'] = flow_le_ddr
+            if flow_state_ddr is not None:
+                cmd_args['flow_state_ddr'] = flow_state_ddr
+            if sport:
+                cmd_args['sport'] = sport
+            if dport:
+                cmd_args['dport'] = dport
+            if protocol:
+                cmd_args['protocol'] = protocol
+            if ip_sa:
+                cmd_args['ip_sa'] = ip_sa
+            if ip_da:
+                cmd_args['ip_da'] = ip_da
+            if flow_offset is not None:
+                cmd_args['flow_offset'] = flow_offset
+            if flow_inport:
+                cmd_args['flow_inport'] = flow_inport
+            if flow_outport:
+                cmd_args['flow_outport'] = flow_outport
+            if show:
+                cmd_args['show'] = show
             cmd = ['benchmark', cmd_args]
-            result = self.json_execute(verb='nu', data=cmd)
+            result = self.json_execute(verb='nu', data=cmd, command_duration=60)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def set_nu_benchmark_flows(self, mode, sport, dport, protocol, ip_sa, ip_da, flow_offset,
+                           flow_inport, flow_outport):
+        result = None
+        try:
+            cmd_args = OrderedDict()
+            cmd_args['dport'] = dport
+            cmd_args['flow_inport'] = flow_inport
+            cmd_args['flow_offset'] = flow_offset
+            cmd_args['flow_outport'] = flow_outport
+            cmd_args['ip_da'] = ip_da
+            cmd_args['ip_sa'] = ip_sa
+            cmd_args['mode'] = int(mode)
+            cmd_args['protocol'] = int(protocol)
+            cmd_args['sport'] = sport
+            cmd = ['benchmark', cmd_args]
+            result = self.json_execute(verb='nu', data=cmd, command_duration=60)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def show_nu_benchmark(self, show, flow_offset=None, num_flows=None):
+        result = None
+        try:
+            cmd_args = {}
+            cmd_args['show'] = show
+            if num_flows:
+                cmd_args['num_flows'] = num_flows
+            if flow_offset:
+                cmd_args['flow_offset'] = flow_offset
+            if show:
+                cmd_args['show'] = show
+            cmd = ['benchmark', cmd_args]
+            result = self.json_execute(verb='nu', data=cmd, command_duration=60)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
