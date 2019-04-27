@@ -319,15 +319,20 @@ class ECVolumeLevelScript(FunTestScript):
         interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
                                                                 timeout=self.command_timeout)
         fun_test.log("interface_ip_config_status output is: {}".format(interface_ip_config_status))  # TODO
-        # fun_test.test_assert(interface_ip_config_status, "Configuring test interface IP address") # TODO - Assert fails - need to do it in correct way
+        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                      message="Configuring test interface IP address")
+        # fun_test.test_assert(interface_ip_config_status, "Configuring test interface IP address")  # TODO - Assert fails - need to do it in correct way
 
         interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
                                                           timeout=self.command_timeout)
         fun_test.log("interface_mac_status output is: {}".format(interface_mac_status))  # TODO
+        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                      message="Assigning MAC to test interface")
         # fun_test.test_assert(interface_mac_status, "Assigning MAC to test interface")  # TODO - Assert fails - need to do it in correct way
 
         link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
         fun_test.log("link_up_status output is: {}".format(link_up_status))  # TODO
+        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
         # fun_test.test_assert(link_up_status, "Bringing up test link")  # TODO - Assert fails - need to do it in correct way
 
         interface_up_status = self.end_host.ifconfig_up_down(
@@ -341,11 +346,14 @@ class ECVolumeLevelScript(FunTestScript):
             outbound_interface=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
             timeout=self.command_timeout)
         fun_test.log("route_add_status output is: {}".format(route_add_status))
+        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
         # fun_test.test_assert(route_add_status, "Adding route to F1")  # TODO - Assert fails - need to do it in correct way
 
         arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
         fun_test.log("arp_add_status command output is: {}".format(arp_add_status))
-        # fun_test.test_assert(arp_add_status, "Adding static ARP to F1 route")
+        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                      message="Adding static ARP to F1 route")
+        # fun_test.test_assert(arp_add_status, "Adding static ARP to F1 route")  # TODO - Assert fails - need to do it in correct way
 
         # self.end_host.modprobe(module="nvme")
         self.end_host.sudo_command("modprobe nvme")
@@ -654,6 +662,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         nvme_connect_status = self.end_host.sudo_command(command=nvme_connect, timeout=self.command_timeout)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                      message="Connection to F1 from Remote Host established")
         # fun_test.test_assert(nvme_connect_status, "Connection to F1 from Remote Host established")  # TODO - Assert fails - need to do it in correct way
 
         num_connection_check = "sudo netstat -napl | grep {} | wc -l".format(self.transport_port)
@@ -682,7 +692,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/populate_disk_auto_run"):
                 vdbench_result = self.end_host.sudo_command(
                     "/usr/local/share/vdbench/vdbench -f /usr/local/share/vdbench/populate_disk_auto_run",
-                    timeout=self.command_timeout * 30)
+                    timeout=self.command_timeout * 20)
                 fun_test.log("Vdbench output result: {}".format(vdbench_result))
                 fun_test.log("Type of result output is: {}".format(type(vdbench_result)))
 
@@ -697,7 +707,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/single_node_8_11_1"):
             vdbench_result = self.end_host.sudo_command(
                 "/usr/local/share/vdbench/vdbench -f /usr/local/share/vdbench/single_node_8_11_1",
-                timeout=self.command_timeout * 30)
+                timeout=self.command_timeout * 20)
             fun_test.log("Vdbench output result: {}".format(vdbench_result))
 
         ''''# self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
