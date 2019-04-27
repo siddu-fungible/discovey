@@ -97,15 +97,28 @@ class ScriptSetup(FunTestScript):
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
-        pass
+        if not older_build:
+            fwd_benchmark_ports = [8, 12]
+            for fpg in fwd_benchmark_ports:
+                result = network_controller_obj.set_nu_benchmark_1(mode=0, fpg=fpg)
+                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
+
+            result = network_controller_obj.set_etp(pkt_adj_size=24)
+            fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 24")
+        else:
+            fwd_benchmark_ports = [8, 12]
+            for fpg in fwd_benchmark_ports:
+                result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=0, erp=1, nh_id=4097, clbp_idx=20)
+                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
 
 class TestFwdPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
     flow_direction = FLOW_TYPE_NU_VP_NU_FWD_NFCP
-    tcc_file_name = "nu_fwd_benchmark.tcc"  # Uni-directional
+    tcc_file_name = "nu_fwd_benchmark_swap.tcc"  # Uni-directional
     spray = True
+    half_load_latency = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -124,7 +137,7 @@ class TestFwdPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX]" % (
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -221,7 +234,8 @@ class TestFwdPerformance(FunTestCase):
                                                                       mode=mode,
                                                                       flow_direction=self.flow_direction,
                                                                       file_name=OUTPUT_JSON_FILE_NAME,
-                                                                      num_flows=128000000)
+                                                                      num_flows=128000000,
+                                                                      half_load_latency=self.half_load_latency)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
@@ -229,23 +243,32 @@ class TestFwdPerformance(FunTestCase):
     def cleanup(self):
         self.template_obj.cleanup()
 
-        if not older_build:
-            fwd_benchmark_ports = [8, 12]
-            for fpg in fwd_benchmark_ports:
-                result = network_controller_obj.set_nu_benchmark_1(mode=0, fpg=fpg)
-                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
-            result = network_controller_obj.set_etp(pkt_adj_size=24)
-            fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 24")
-        else:
-            fwd_benchmark_ports = [8, 12]
-            for fpg in fwd_benchmark_ports:
-                result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=0, erp=1, nh_id=4097, clbp_idx=20)
-                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
+class TestFwdLatency(TestFwdPerformance):
+    tc_id = 2
+    template_obj = None
+    flow_direction = FLOW_TYPE_NU_VP_NU_FWD_NFCP
+    tcc_file_name = "nu_fwd_benchmark_latency.tcc"  # Uni-directional
+    spray = True
+    half_load_latency = True
+
+    def describe(self):
+        self.set_test_details(id=self.tc_id,
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get latency" % (
+                                  self.flow_direction, self.spray),
+                              steps="""
+                              1. Dump PSW, BAM and vppkts stats before tests 
+                              2. Initialize RFC-2544 and load existing tcc configuration 
+                              3. Start Sequencer
+                              4. Wait for sequencer to complete
+                              5. Dump PSW, BAM and vppkts stats after tests
+                              5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
+                              """)
 
 if __name__ == '__main__':
     ts = ScriptSetup()
 
     # Multi flows
     ts.add_test_case(TestFwdPerformance())
+    ts.add_test_case(TestFwdLatency())
     ts.run()
