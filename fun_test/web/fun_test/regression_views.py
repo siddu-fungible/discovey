@@ -836,6 +836,7 @@ def all_regression_jiras(request):
                         jira_data["id"] = jira_id
                         jira_data["summary"] = jira_response.fields.summary
                         jira_data["status"] = jira_response.fields.status
+                        jira_data["priority"] = jira_response.fields.priority
                         jira_info[jira_id] = jira_data
 
             result = jira_info
@@ -870,9 +871,14 @@ def jiras(request, script_pk, jira_id=None):
     if request.method == "GET":
         jira_info = {}
         try:
-            c = RegresssionScripts.objects.get(pk=script_pk)
+            if script_pk:
+                c = RegresssionScripts.objects.get(pk=script_pk)
             try:
-                scripts = ScriptInfo.objects.filter(script_id=script_pk)
+                q = Q()
+                if script_pk is not None:
+                    q = q & Q(script_id=script_pk)
+
+                scripts = ScriptInfo.objects.filter(q)
                 if scripts:
                     for script in scripts:
                         if script.bug:
@@ -882,6 +888,7 @@ def jiras(request, script_pk, jira_id=None):
                             jira_data["id"] = jira_id
                             jira_data["summary"] = jira_response.fields.summary
                             jira_data["status"] = jira_response.fields.status
+                            jira_data["created"] = jira_response.fields.created
                             jira_info[jira_id] = jira_data
 
             except ObjectDoesNotExist:

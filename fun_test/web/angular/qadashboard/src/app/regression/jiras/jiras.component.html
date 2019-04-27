@@ -1,0 +1,17 @@
+<div class="component">
+  <ng-container *ngIf="jiraMap">
+    <summary-jira-info
+      [summaryInHeader]="false"
+      *ngIf="jiraMap"
+      [bugInfoUrl]="'/common/bug_info'"
+      [data]="jiraMap"
+      [allowDelete]="false"
+      [allowContext]="true"
+      [allowAdd]="false"
+      [showDetails]="true">
+
+    </summary-jira-info>
+
+    <button class="button btn-primary" (click)="getJql()">Get JQL</button>
+  </ng-container>
+</div>
