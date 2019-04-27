@@ -278,9 +278,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["test_bed_spec"] = self.test_bed_spec
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
 
-        print "Network Host Config: {}".format(self.test_bed_spec["nw_host"][0][0])
-        print "Network Host IP: {}".format(self.test_bed_spec["nw_host"][0][0]["mgmt_ip"])
-
         # Initializing the FS
         fs = Fs.get(boot_args=self.bootargs, disable_f1_index=self.disable_f1_index)
         fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
@@ -318,22 +315,20 @@ class ECVolumeLevelScript(FunTestScript):
 
         interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
                                                                 timeout=self.command_timeout)
-        fun_test.log("interface_ip_config_status output is: {}".format(interface_ip_config_status))  # TODO
+        fun_test.log("interface_ip_config_status output is: {}".format(interface_ip_config_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                       message="Configuring test interface IP address")
-        # fun_test.test_assert(interface_ip_config_status, "Configuring test interface IP address")  # TODO - Assert fails - need to do it in correct way
+
 
         interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
                                                           timeout=self.command_timeout)
-        fun_test.log("interface_mac_status output is: {}".format(interface_mac_status))  # TODO
+        fun_test.log("interface_mac_status output is: {}".format(interface_mac_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                       message="Assigning MAC to test interface")
-        # fun_test.test_assert(interface_mac_status, "Assigning MAC to test interface")  # TODO - Assert fails - need to do it in correct way
 
         link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-        fun_test.log("link_up_status output is: {}".format(link_up_status))  # TODO
+        fun_test.log("link_up_status output is: {}".format(link_up_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
-        # fun_test.test_assert(link_up_status, "Bringing up test link")  # TODO - Assert fails - need to do it in correct way
 
         interface_up_status = self.end_host.ifconfig_up_down(
             interface=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
@@ -347,33 +342,47 @@ class ECVolumeLevelScript(FunTestScript):
             timeout=self.command_timeout)
         fun_test.log("route_add_status output is: {}".format(route_add_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
-        # fun_test.test_assert(route_add_status, "Adding route to F1")  # TODO - Assert fails - need to do it in correct way
 
         arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
         fun_test.log("arp_add_status command output is: {}".format(arp_add_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                       message="Adding static ARP to F1 route")
-        # fun_test.test_assert(arp_add_status, "Adding static ARP to F1 route")  # TODO - Assert fails - need to do it in correct way
 
+        '''
         # self.end_host.modprobe(module="nvme")
         self.end_host.sudo_command("modprobe nvme")
         fun_test.sleep("nvme module is loaded")
         # self.end_host.modprobe(module="nvme_tcp")
         self.end_host.sudo_command("modprobe nvme_tcp")
         fun_test.sleep("nvme_tcp module is loaded")
+        '''
+
+        # Loading the nvme and nvme_tcp modules
+        self.end_host.modprobe(module="nvme")
+        fun_test.sleep("Loading nvme module", 2)
+        command_result = self.end_host.lsmod(module="nvme")
+        fun_test.simple_assert(command_result, "Loading nvme module")
+        fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
+
+        self.end_host.modprobe(module="nvme_tcp")
+        fun_test.sleep("Loading nvme module", 2)
+        command_result = self.end_host.lsmod(module="nvme_tcp")
+        fun_test.simple_assert(command_result, "Loading nvme module")
+        fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
+                                      message="Loading nvme_tcp module")
 
         self.storage_controller = f1.get_dpc_storage_controller()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Setting the syslog level
-        '''command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
+        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
                                                       legacy=False, command_duration=self.command_timeout)
         fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
 
         command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
                                                       command_duration=self.command_timeout)
         fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                      message="Checking syslog level")'''
+                                      message="Checking syslog level")
 
     def cleanup(self):
 
@@ -510,191 +519,98 @@ class ECVolumeLevelTestcase(FunTestCase):
         # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
         self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
 
-        '''if self.use_lsv:
-            # LS volume capacity is the ndata times of the BLT volume capacity
-            self.volume_capacity["lsv"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]
+        if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
+            fun_test.shared_variables["ec"] = {}
+            fun_test.shared_variables["ec"]["setup_created"] = False
 
-            fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
-                         "rounding that to the nearest 8MB value")
-            eight_mb = 1024 * 1024 * 8
-            for vtype in  sorted(self.ec_coding):
-                tmp = self.volume_capacity[vtype] * (1 + self.lsv_pct)
-                self.volume_capacity[vtype] = int(tmp + (eight_mb - (tmp % eight_mb)))
-
-            # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            self.volume_capacity["ec"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]'''
-
-        # if self.ec_ratio not in fun_test.shared_variables or \
-        #         not fun_test.shared_variables[self.ec_ratio]["setup_created"]:
-
-        # fun_test.shared_variables[self.ec_ratio] = {}
-        # fun_test.shared_variables[self.ec_ratio]["setup_created"] = False
-        # fun_test.shared_variables[self.ec_ratio]["volume_types"] = self.volume_types
-        # fun_test.shared_variables[self.ec_ratio]["volume_capacity"] = self.volume_capacity
-        # fun_test.shared_variables[self.ec_ratio]["volume_block"] = self.volume_block
-        # fun_test.shared_variables[self.ec_ratio]["ns_id"] = self.ns_id
-        # self.uuids = {}
-
-        # Configuring the controller
-        command_result = {}
-        command_result = self.storage_controller.command(command="enable_counters", legacy=True,
-                                                         command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
-
-        command_result = self.storage_controller.ip_cfg(ip=self.test_bed_spec["f1_loopback_ip"][self.f1_in_use])
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
-
-        '''
-        # Configuring ndata and nparity number of BLT volumes
-        for vtype in  sorted(self.ec_coding):
-            self.uuids[vtype] = []
-            if self.volume_types[vtype] not in self.uuids:
-                self.uuids[self.volume_types[vtype]] = []
-            for i in range(self.ec_coding[vtype]):
-                this_uuid = utils.generate_uuid()
-                self.uuids[vtype].append(this_uuid)
-                self.uuids[self.volume_types[vtype]].append(this_uuid)
-                command_result = self.storage_controller.create_volume(
-                    type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                    block_size=self.volume_block[vtype], name=vtype+str(i), uuid=this_uuid,
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create {} {} BLT volume on DUT".format(i, vtype))
-
-        # Configuring EC volume on top of BLT volumes
-        self.uuids[self.volume_types["ec"]] = []
-        this_uuid = utils.generate_uuid()
-        self.uuids[self.volume_types["ec"]].append(this_uuid)
-        command_result = self.storage_controller.create_volume(
-            type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
-            name="ec1", uuid=this_uuid, ndata=self.ec_coding["ndata"], nparity=self.ec_coding["nparity"],
-            pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"], command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Create EC volume on DUT")
-        attach_uuid = this_uuid
-
-        # Configuring Journal & LS volume based on the script config settting
-        if self.use_lsv:
-            fun_test.shared_variables[self.ec_ratio]["use_lsv"] = self.use_lsv
-            # Configuring the Journal volume which is a mandatory one for the LSV
-            self.uuids[self.volume_types["jvol"]] = utils.generate_uuid()
-            command_result = self.storage_controller.create_volume(
-                type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
-                block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
-                command_duration=self.command_timeout)
+            # Configuring the controller
+            command_result = {}
+            command_result = self.storage_controller.command(command="enable_counters", legacy=True,
+                                                             command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create Journal volume on DUT")
+            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
 
-            # Configuring the LSV
-            self.uuids[self.volume_types["lsv"]] = utils.generate_uuid()
-            command_result = self.storage_controller.create_volume(
-                type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
-                group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
-                pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
+            command_result = self.storage_controller.ip_cfg(ip=self.test_bed_spec["f1_loopback_ip"][self.f1_in_use])
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create LS volume on DUT")
-            attach_uuid = self.uuids[self.volume_types["lsv"]]
-        '''
+            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
-        (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller,
-                                                               self.ec_info, self.command_timeout)
+            (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller,
+                                                                   self.ec_info, self.command_time)
+            fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
-        fun_test.log("EC details after configuring EC Volume:")
-        for k, v in self.ec_info.items():
-            fun_test.log("{}: {}".format(k, v))
+            fun_test.log("EC details after configuring EC Volume:")
+            for k, v in self.ec_info.items():
+                fun_test.log("{}: {}".format(k, v))
 
-        # Attaching/Exporting the EC/LS volume to the external server
-        command_result = {}
-        '''command_result = self.storage_controller.volume_attach_pcie(
-            ns_id=self.ns_id, uuid=attach_uuid, huid=tb_config['dut_info'][0]['huid'],
-            command_duration=self.command_timeout)'''
+            # Attaching/Exporting the EC/LS volume to the external server
+            self.remote_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"].split('/')[0]
+            command_result = self.storage_controller.volume_attach_remote(
+                ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], huid=tb_config['dut_info'][0]['huid'],
+                ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
+                transport=self.attach_transport, command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT")
 
-        self.remote_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"].split('/')[0]
-        fun_test.log("Remote ip is {}".format(self.remote_ip))
-        command_result = self.storage_controller.volume_attach_remote(
-            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], huid=tb_config['dut_info'][0]['huid'],
-            ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
-            transport=self.attach_transport, command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT")
+            # disabling the error_injection for the EC volume
+            command_result = {}
+            command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
+                                                          command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
 
-        # disabling the error_injection for the EC volume
-        command_result = {}
-        command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
-                                                      command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
+            # Ensuring that the error_injection got disabled properly
+            fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
+            command_result = {}
+            command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
+            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
+                                          message="Ensuring error_injection got disabled")
 
-        # Ensuring that the error_injection got disabled properly
-        fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-        command_result = {}
-        command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-        fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
-                                      message="Ensuring error_injection got disabled")
+            fun_test.shared_variables["ns_id"] = self.ns_id
+            fun_test.shared_variables["ec_info"] = self.ec_info
+            fun_test.shared_variables["remote_ip"] = self.remote_ip
+            fun_test.shared_variables["ec"]["setup_created"] = True
 
-        fun_test.shared_variables["ns_id"] = self.ns_id
-        fun_test.shared_variables["ec_info"] = self.ec_info
-        fun_test.shared_variables["remote_ip"] = self.remote_ip
-        # fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
-        # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
-        # fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
+            # sudo nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1
+            if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                nvme_connect_cmd = "sudo nvme connect -t {} -a {} -s {} -n {}".format(
+                    self.attach_transport.lower(), self.test_bed_spec["f1_loopback_ip"][self.f1_in_use],
+                    str(self.transport_port), self.nvme_subsystem)
+            else:
+                nvme_connect_cmd = "sudo nvme connect -t {} -a {} -s {} -n {} -i {}".format(
+                    self.attach_transport.lower(), self.test_bed_spec["f1_loopback_ip"][self.f1_in_use],
+                    str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
 
-        ''''# Rebooting the host to make the above volume accessible
-        reboot_status = self.dpcsh_host.ipmi_power_cycle(host=tb_config["tg_info"][0]["ipmi_name"],
-                                                         interface=tb_config["tg_info"][0]["ipmi_iface"],
-                                                         user=tb_config["tg_info"][0]["ipmi_user"],
-                                                         passwd=tb_config["tg_info"][0]["ipmi_passwd"],
-                                                         interval=self.command_timeout)
-        fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(tb_config["tg_info"][0]["ip"]))
-        host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
-        fun_test.test_assert(host_up_status, "End Host {} is up".format(tb_config["tg_info"][0]["ip"]))'''
+            nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
+            fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                          message="NVME Connect Status")
 
-        # sudo nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1
+            # Checking that the above created volume is visible to the end host
+            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
+            lsblk_output = self.end_host.lsblk()
+            fun_test.log("lsblk output is: {}".format(lsblk_output))
+            fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
+            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                          message="{} device type check".format(self.volume_name))
 
-        nvme_connect = "sudo nvme connect -t {} -a {} -s {} -n {}".format(
-            self.attach_transport.lower(), self.test_bed_spec["f1_loopback_ip"][self.f1_in_use],
-            str(self.transport_port), self.nvme_subsystem)
+            ''''# Disable the udev daemon which will skew the read stats of the volume during the test
+            udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+            for service in udev_services:
+                service_status = self.end_host.systemctl(service_name=service, action="stop")
+                fun_test.test_assert(service_status, "Stopping {} service".format(service))'''
 
-        nvme_connect_status = self.end_host.sudo_command(command=nvme_connect, timeout=self.command_timeout)
-        fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                      message="Connection to F1 from Remote Host established")
-        # fun_test.test_assert(nvme_connect_status, "Connection to F1 from Remote Host established")  # TODO - Assert fails - need to do it in correct way
+            # Executing the FIO command to warm up the system
+            if self.warm_up_traffic:
+                fun_test.log("Building the volume pre-populte config file")
+                self.volume_fill_file = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
+                self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
 
-        num_connection_check = "sudo netstat -napl | grep {} | wc -l".format(self.transport_port)
-        num_connection_check_status = self.end_host.sudo_command(command=num_connection_check,
-                                                                 timeout=self.command_timeout)
-        fun_test.log("{} connections established".format(num_connection_check_status))
-
-        # Checking that the above created volume is visible to the end host
-        self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
-        lsblk_output = self.end_host.lsblk()
-        fun_test.log("lsblk outpu is: {}".format(lsblk_output))
-        fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                      message="{} device type check".format(self.volume_name))
-
-        ''''# Disable the udev daemon which will skew the read stats of the volume during the test
-        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-        for service in udev_services:
-            service_status = self.end_host.systemctl(service_name=service, action="stop")
-            fun_test.test_assert(service_status, "Stopping {} service".format(service))'''
-
-        # Executing the FIO command to warm up the system
-        if self.warm_up_traffic:
-            fun_test.log("Executing the FIO command to warm up the system")
-
-            if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/populate_disk_auto_run"):
-                vdbench_result = self.end_host.sudo_command(
-                    "/usr/local/share/vdbench/vdbench -f /usr/local/share/vdbench/populate_disk_auto_run",
-                    timeout=self.command_timeout * 20)
+                fun_test.log("Starting Vdbench to pre-populate all the volumes")
+                vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, timeout=self.warm_up_timeout)
                 fun_test.log("Vdbench output result: {}".format(vdbench_result))
-                fun_test.log("Type of result output is: {}".format(type(vdbench_result)))
+
 
     def run(self):
 

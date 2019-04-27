@@ -2256,6 +2256,46 @@ class Linux(object, ToDictMixin):
         cmd = 'pkill {}'.format(process_name)
         return self.sudo_command(cmd)
 
+    @fun_test.safe
+    def run_vdbench(self, path="/usr/local/share/vdbench", filename=None, timeout=300):
+        vdb_out = ""
+        vdb_result = {}
+        # Vdbench's column output format
+        header_list = ["datetime", "interval", "iops", "throughput", "io_bytes", "read_pct", "resp_time", "read_resp",
+                       "write_resp", "read_max", "write_max", "resp_stddev", "queue_depth", "cpu_sys_user", "cpu_sys"]
+
+        # Building the vdbbench command
+        if not filename:
+            vdb_cmd = "sudo {}/vdbench -f {}".format(path, filename)
+        else:
+            vdb_cmd = "sudo {}/vdbench -t".format(path)
+
+        vdb_out = self.command(command=vdb_cmd, timeout=timeout)
+
+        # Checking whether the vdbench command got succeeded or not
+        if "Vdbench execution completed successfully" in vdb_out:
+            fun_test.debug("Vdbench command got completed successfully...Proceeding to parse its output")
+        else:
+            fun_test.critical("vdbench command didn't completed successfully...Aborting...")
+            return vdb_result
+
+        # Parsing the vdbench output
+        # Seraching for the line containing the final result using the below pattern
+        match = re.search(r'.*avg_\d+\-\d+.*', vdb_out, re.M)
+        if match:
+            fun_test.debug("Found final result line: {}".format(match.group(0)))
+            result_line = match.group(0)
+            result_line = result_line.split()
+            fun_test.debug("Parsed final result line: {}".format(result_line))
+        else:
+            fun_test.critical("Unable to find the final result line...Aborting...")
+            return vdb_result
+
+        for index, header in enumerate(header_list):
+            vdb_result[header] = result_line[index]
+
+        return vdb_result
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
