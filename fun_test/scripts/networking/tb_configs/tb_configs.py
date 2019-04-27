@@ -32,8 +32,8 @@ class TBConfigs:
                     if intf_dict[intf].get('type', None) == type:
                         return intf
 
-    def get_a_nu_interface(self):
-        namespaces = self.get_namespaces('nu')
+    def get_a_nu_interface(self, nu='nu'):
+        namespaces = self.get_namespaces(nu)
         for ns in namespaces:
             if ns is None:
                 ns = 'default'

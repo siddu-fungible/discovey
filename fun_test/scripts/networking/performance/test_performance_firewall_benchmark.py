@@ -9,7 +9,7 @@ from lib.fun.fs import *
 network_controller_obj = None
 spirent_config = None
 TIMESTAMP = None
-OUTPUT_JSON_FILE_NAME = "nu_rfc2544_fwd_performance.json"
+OUTPUT_JSON_FILE_NAME = "nu_rfc2544_le_performance.json"
 older_build = False
 
 
@@ -35,95 +35,49 @@ class ScriptSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
+
+        #TODO: To be enabled when dpcsh
         '''
-        checkpoint = "Configure QoS settings"
-        enable_pfc = network_controller_obj.enable_qos_pfc()
-        fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
-        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=7000,
-                                                                            nonfcp_xoff_thr=7000,
-                                                                            df_thr=4000,
-                                                                            dx_thr=4000,
-                                                                            fcp_thr=8000,
-                                                                            nonfcp_thr=8000,
-                                                                            sample_copy_thr=255,
-                                                                            sf_thr=4000,
-                                                                            sf_xoff_thr=3500,
-                                                                            sx_thr=4000)
-        fun_test.test_assert(buffer_pool_set, checkpoint)
+        mode = 3
+        num_flows = "16777216"
+        benchmark_ports = [8, 12]
+        
+        result = network_controller_obj.set_etp(pkt_adj_size=8)
+        fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 8")
 
-        checkpoint = "Configure HNU QoS settings"
-        enable_pfc = network_controller_obj.enable_qos_pfc(hnu=True)
-        fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
-        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=900,
-                                                                            nonfcp_xoff_thr=3500,
-                                                                            df_thr=2000,
-                                                                            dx_thr=1000,
-                                                                            fcp_thr=1000,
-                                                                            nonfcp_thr=4000,
-                                                                            sample_copy_thr=255,
-                                                                            sf_thr=2000,
-                                                                            sf_xoff_thr=1900,
-                                                                            sx_thr=250,
-                                                                            mode="hnu")
-        fun_test.test_assert(buffer_pool_set, checkpoint)
+        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=False,
+                                                             flow_state_ddr=False)
+        for fpg in benchmark_ports:
+            result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
+            fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
+        
+        output_2 = network_controller_obj.set_nu_benchmark_flows(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
+                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=0,
+                                                             flow_inport=8, flow_outport=12)
 
-        nu_port_list = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-        hnu_port_list = [0, 1, 2, 3]
-        shape = 0
-        for port in nu_port_list:
-            result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
-            fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        for port in hnu_port_list:
-            shape = 1
-            result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
-            fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
+        output_3 = network_controller_obj.set_nu_benchmark_flows(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
+                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=7987200,
+                                                             flow_inport=12, flow_outport=8)
         '''
-
-        if not older_build:
-            fwd_benchmark_ports = [8, 12]
-            for fpg in fwd_benchmark_ports:
-                result = network_controller_obj.set_nu_benchmark_1(mode=1, fpg=fpg)
-                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
-
-            result = network_controller_obj.set_etp(pkt_adj_size=8)
-            fun_test.simple_assert(result['status'], "Set pkt_adj_size")
-        else:
-            fwd_benchmark_ports = [8, 12]
-            for fpg in fwd_benchmark_ports:
-                result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=1, erp=1, nh_id=4097, clbp_idx=20)
-                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
-
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
-        if not older_build:
-            fwd_benchmark_ports = [8, 12]
-            for fpg in fwd_benchmark_ports:
-                result = network_controller_obj.set_nu_benchmark_1(mode=0, fpg=fpg)
-                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
-
-            result = network_controller_obj.set_etp(pkt_adj_size=24)
-            fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 24")
-        else:
-            fwd_benchmark_ports = [8, 12]
-            for fpg in fwd_benchmark_ports:
-                result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=0, erp=1, nh_id=4097, clbp_idx=20)
-                fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
+        pass
 
 
-class TestFwdPerformance(FunTestCase):
+class TestFirewallPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
-    flow_direction = FLOW_TYPE_NU_VP_NU_FWD_NFCP
-    tcc_file_name = "nu_fwd_benchmark_swap.tcc"  # Uni-directional
+    flow_direction = FLOW_TYPE_NU_LE_VP_NU_FWD_NFCP
+    tcc_file_name = "nu_le_benchmark_throughput.tcc"  # Uni-directional
     spray = True
     half_load_latency = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
-        if flow_direction == FLOW_TYPE_NU_VP_NU_FWD_NFCP:
-            dir_name = "nu_nu_vp_fwd"
+        if flow_direction == FLOW_TYPE_NU_LE_VP_NU_FWD_NFCP:
+            dir_name = "nu_le_vp_nu_firewall"
 
         config_type = "palladium_configs"
         dut_type = fun_test.shared_variables['dut_type']
@@ -184,6 +138,9 @@ class TestFwdPerformance(FunTestCase):
         fun_test.log("Fetching BAM stats before test")
         network_controller_obj.peek_bam_stats()
 
+        fun_test.log("Fetching flow output")
+        network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
+
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
         fun_test.test_assert(result, checkpoint)
@@ -201,7 +158,7 @@ class TestFwdPerformance(FunTestCase):
         diff_vp_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats_after)
         fun_test.log("VP Diff stats: %s" % diff_vp_stats)
 
-        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_DIRECT]) > 0,
+        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_LE]) > 0,
                              "Ensure packets are going through VP NU direct")
 
         fun_test.log("Fetching BAM stats after test")
@@ -209,6 +166,9 @@ class TestFwdPerformance(FunTestCase):
 
         fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
+
+        fun_test.log("Fetching flow output")
+        network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
 
         checkpoint = "Fetch summary result for latency and throughput for all frames and all iterations"
         result_dict = self.template_obj.get_throughput_summary_results_by_frame_size()
@@ -229,13 +189,13 @@ class TestFwdPerformance(FunTestCase):
 
         if self.spray:
             mode = self.template_obj.get_interface_mode_input_speed()
-            result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
+            result = self.template_obj.populate_performance_json_file_1(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
                                                                       mode=mode,
                                                                       flow_direction=self.flow_direction,
                                                                       file_name=OUTPUT_JSON_FILE_NAME,
                                                                       num_flows=128000000,
-                                                                      half_load_latency=self.half_load_latency)
+                                                                        half_load_latency=self.half_load_latency)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
@@ -244,11 +204,9 @@ class TestFwdPerformance(FunTestCase):
         self.template_obj.cleanup()
 
 
-class TestFwdLatency(TestFwdPerformance):
+class TestFirewallLatency(TestFirewallPerformance):
     tc_id = 2
-    template_obj = None
-    flow_direction = FLOW_TYPE_NU_VP_NU_FWD_NFCP
-    tcc_file_name = "nu_fwd_benchmark_latency.tcc"  # Uni-directional
+    tcc_file_name = "nu_le_benchmark_latency.tcc"  # Uni-directional
     spray = True
     half_load_latency = True
 
@@ -265,10 +223,11 @@ class TestFwdLatency(TestFwdPerformance):
                               5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
                               """)
 
+
 if __name__ == '__main__':
     ts = ScriptSetup()
 
     # Multi flows
-    ts.add_test_case(TestFwdPerformance())
-    ts.add_test_case(TestFwdLatency())
+    ts.add_test_case(TestFirewallPerformance())
+    ts.add_test_case(TestFirewallLatency())
     ts.run()

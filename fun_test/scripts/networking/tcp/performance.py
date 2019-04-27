@@ -18,6 +18,7 @@ setup_fpg1_file = "setup_fpg1.sh"
 setup_fpg1_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg1_file
 TIMESTAMP = None
 filename = "tcp_performance.json"
+use_mpstat = False
 
 
 def get_port_from_file(filepath):
@@ -119,20 +120,20 @@ class TcpPerformance_1_Conn(FunTestCase):
         # Check stale socket connections
         stale_connections = get_stale_socket_connections(linux_obj=nu_lab_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen are %s" % stale_connections)
-
+        '''
         target_file_path = "/tmp/" + setup_fpg1_file
         file_transfer = fun_test.scp(source_file_path=setup_fpg1_filepath, target_file_path=target_file_path,
                                      target_ip=nu_lab_ip, target_username=nu_lab_username,
                                      target_password=nu_lab_password)
         fun_test.simple_assert(file_transfer, "Ensure %s is scp to %s" % (setup_fpg1_file, nu_lab_ip))
-
+        
         fun_test.sleep("Letting file be copied", seconds=1)
 
         # Execute sh file
         fun_test.log("Creating interface and applying routes")
         output = execute_shell_file(linux_obj=nu_lab_obj, target_file=target_file_path)
         fun_test.simple_assert(output['output'], "Ensure file %s is executed" % target_file_path)
-
+        '''
         fun_test.log("Display applied routes")
         nu_lab_obj.get_ip_route()
 
@@ -154,14 +155,15 @@ class TcpPerformance_1_Conn(FunTestCase):
         netstat_1 = get_netstat_output(linux_obj=nu_lab_obj)
 
         # Start mpstat
-        version = fun_test.get_version()
-        mpstat_temp_filename = str(version) + "_" +str(self.num_flows) + '_mpstat.json'
-        mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
+        if use_mpstat:
+            version = fun_test.get_version()
+            mpstat_temp_filename = str(version) + "_" +str(self.num_flows) + '_mpstat.json'
+            mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
 
-        fun_test.log("Starting to run mpstat command")
-        mp_out = run_mpstat_command(linux_obj=mpstat_obj, interval=self.test_run_time, json_output=True,
-                                    output_file=mpstat_output_file, bg=True)
-        fun_test.add_checkpoint("Started mpstat command")
+            fun_test.log("Starting to run mpstat command")
+            mp_out = run_mpstat_command(linux_obj=mpstat_obj, interval=self.test_run_time, json_output=True,
+                                        output_file=mpstat_output_file, bg=True)
+            fun_test.add_checkpoint("Started mpstat command")
         
         # Execute sh file
         temp_filename = fun_test.get_temp_file_name() + '.txt'
@@ -195,9 +197,10 @@ class TcpPerformance_1_Conn(FunTestCase):
         fun_test.sleep("Letting files be generated", seconds=2)
 
         # Scp mpstat json to LOGS dir
-        mpstat_dump_filename = LOGS_DIR + "/%s" % mpstat_temp_filename
-        fun_test.scp(source_file_path=mpstat_output_file, source_ip=nu_lab_ip, source_username=nu_lab_username,
-                     source_password=nu_lab_password, target_file_path=mpstat_dump_filename, timeout=180)
+        if use_mpstat:
+            mpstat_dump_filename = LOGS_DIR + "/%s" % mpstat_temp_filename
+            fun_test.scp(source_file_path=mpstat_output_file, source_ip=nu_lab_ip, source_username=nu_lab_username,
+                         source_password=nu_lab_password, target_file_path=mpstat_dump_filename, timeout=180)
 
         fun_test.sleep("Letting file to be scp", seconds=2)
 
@@ -260,6 +263,6 @@ if __name__ == '__main__':
     ts = TcpPerformance()
 
     ts.add_test_case(TcpPerformance_1_Conn())
-    ts.add_test_case(TcpPerformance_2_Conn())
-    ts.add_test_case(TcpPerformance_4_Conn())
+    #ts.add_test_case(TcpPerformance_2_Conn())
+    #ts.add_test_case(TcpPerformance_4_Conn())
     ts.run()
