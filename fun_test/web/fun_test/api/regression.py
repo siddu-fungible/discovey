@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
-from web.fun_test.models import ScriptInfo
+from web.fun_test.models import ScriptInfo, RegresssionScripts
 from fun_settings import TEAM_REGRESSION_EMAIL
 import json
 from lib.utilities.send_mail import send_mail
@@ -124,5 +124,10 @@ def script_infos(request, pk):
         script_infos = ScriptInfo.objects.filter(q)
         result = []
         for script_info in script_infos:
-            result.append({"id": script_info.script_id, "bug": script_info.bug, "pk": script_info.pk})
+            regression_script = RegresssionScripts.objects.get(pk=script_info.pk)
+
+            result.append({"id": script_info.script_id,
+                           "bug": script_info.bug,
+                           "pk": script_info.pk,
+                           "script_path": regression_script.script_path})
     return result

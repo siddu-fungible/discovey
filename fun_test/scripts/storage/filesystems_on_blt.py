@@ -183,7 +183,7 @@ class FSOnBLTTestcase(FunTestCase):
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance")
 
-        self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
+        self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         self.volume_attached = False
 
@@ -216,35 +216,42 @@ class FSOnBLTTestcase(FunTestCase):
         fun_test.log(command_result)
         fun_test.simple_assert(command_result["status"], "Attaching BLT volume on DUT instance")
 
-        # Reloading the nvme driver before checking the disk
-        if self.reload_after_config:
-            command_result = self.host.nvme_restart()
-            fun_test.simple_assert(command_result, "Reloading nvme driver")
-
-        # Additional sleep after nvme reload, required due to changes in lib to avoid #SWOS-3822
-        self.attempt = 0
-        while self.attempt < self.max_retries:
-            fun_test.log("Current Attempt: {}, Max Attempts: {}".format(self.attempt + 1, self.max_retries))
-            fun_test.sleep("Waiting after nvme driver reload..", self.wait_time)
-            fun_test.log("Checking if device is available")
-            lsblk_output = self.host.lsblk("-b")
-            if self.volume_name in lsblk_output:
-                fun_test.log("Device is accessible, setting the queue_length to {} and continuing with "
-                             "test".format(self.queue_length))
-                # Setting queue_length
-                self.host.sudo_command("echo " + str(self.queue_length) + " >/sys/block/" + self.volume_name +
-                                  "/queue/nr_requests")
-                break
-            self.attempt += 1
+        # Resetting the nvme controller to make the newly created volume accessible to the host
+        for n in self.nvme_controller:
+            try:
+                self.reset_command = "echo 1 >/sys/class/nvme/nvme" + str(n) + "/reset_controller"
+                self.host.sudo_command(self.reset_command)
+            except:
+                fun_test.log("Ignoring the above command timeout")
+        fun_test.sleep("Sleeping for couple of seconds to the host to identify the volume", 5)
 
         # Checking that the volume is accessible to the host
         lsblk_output = self.host.lsblk("-b")
+        fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+        volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
+        for volume_name in lsblk_output:
+            match = re.search(volume_pattern, volume_name)
+            if match:
+                self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
+                self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                fun_test.test_assert_expected(expected=self.volume_name,
+                                              actual=lsblk_output[volume_name]["name"],
+                                              message="{} device available".format(self.volume_name))
+                break
+        else:
+            fun_test.test_assert(False, "{} device available".format(self.volume_name))
+
         fun_test.simple_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
         fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                       message="{} volume type check".format(self.volume_name))
         fun_test.test_assert_expected(expected=self.volume_params["volume_capacity"]["blt"],
                                       actual=lsblk_output[self.volume_name]["size"],
                                       message="{} volume size check".format(self.volume_name))
+
+        # Reducing the queue length of the block device
+        self.host.sudo_command("echo {} >/sys/block/{}/queue/nr_requests".format(str(self.queue_length),
+                                                                                 self.volume_name))
 
     def run(self):
 

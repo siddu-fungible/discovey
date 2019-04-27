@@ -12,6 +12,7 @@
         "leaf": false,
         "name": "Networking",
         "label": "Networking",
+        "weight": 1,
         "children": [
           {
             "info": "Lookup-engine",
@@ -69,255 +70,314 @@
             ]
           },
           {
-            "info": "NU_HNU",
+            "info": "funtcp",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "NU_HNU",
+            "name": "funtcp",
             "weight": 1,
-            "label": "NU->HNU NFCP Flow",
+            "label": "FunTCP",
             "children": [
               {
-                "info": "NU_HNU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HNU_output_throughput",
+                "info": "funtcp_server",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "funtcp_server",
                 "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "NU_HNU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HNU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "NU_HNU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HNU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
+                "label": "TCP Server",
+                "children": [
+                  {
+                    "info": "funtcp_server_throughput",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_throughput",
+                    "weight": 1,
+                    "label": "Throughput",
+                    "children": [
+                      {
+                        "info": "funtcp_server_throughput_1tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_1tcp",
+                        "weight": 1,
+                        "label": "1 TCP Flow(s)"
+                      },
+                      {
+                        "info": "funtcp_server_throughput_4tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_4tcp",
+                        "weight": 1,
+                        "label": "4 TCP Flow(s)"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "funtcp_server_cps",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_cps",
+                    "weight": 0,
+                    "label": "Connections per second",
+                    "children": []
+                  },
+                  {
+                    "info": "funtcp_server_cc",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_cc",
+                    "weight": 0,
+                    "label": "Concurrent Connections",
+                    "children": []
+                  }
+                ]
               }
             ]
           },
           {
-            "info": "HNU_HNU_FCP",
+            "info": "NU",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "HNU_HNU_FCP",
+            "name": "NU",
             "weight": 1,
-            "label": "HNU<->HNU FCP Flow",
+            "label": "NU",
             "children": [
               {
-                "info": "HNU_HNU_FCP_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_FCP_output_throughput",
+                "info": "NU_NU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_NU",
                 "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HNU_HNU_FCP_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_FCP_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HNU_HNU_FCP_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_FCP_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
+                "label": "NU->NU",
+                "children": [
+                  {
+                    "info": "NU_NU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_NU_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "NU_NU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_NU_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  },
+                  {
+                    "info": "NU_NU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_NU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
               }
             ]
           },
           {
-            "info": "HNU_HNU",
+            "info": "HU",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "HNU_HNU",
+            "name": "HU",
             "weight": 1,
-            "label": "HNU<->HNU NFCP Flow",
-            "children": [
-              {
-                "info": "HNU_HNU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HNU_HNU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HNU_HNU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "NU_NU",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "NU_NU",
-            "weight": 1,
-            "label": "NU->NU NFCP",
-            "children": [
-              {
-                "info": "NU_NU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_NU_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "NU_NU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_NU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "NU_NU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_NU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "HNU_NU",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "HNU_NU",
-            "weight": 1,
-            "label": "HNU->NU NFCP Flow",
-            "children": [
-              {
-                "info": "HNU_NU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_NU_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HNU_NU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_NU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HNU_NU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_NU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "HU_NU_NFCP",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "HU_NU_NFCP_non_teramark",
-            "weight": 1,
-            "label": "Host->Network",
-            "extensible_references": [
-              "HU_NU_NFCP"
-            ],
+            "label": "HU",
             "children": [
               {
                 "info": "HU_NU_NFCP",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "HU_NU_NFCP_1TCP_offloads_disabled",
+                "name": "HU_NU_NFCP_non_teramark",
                 "weight": 1,
-                "label": "1 TCP Flow(s)",
+                "label": "Host->Network",
+                "extensible_references": [
+                  "HU_NU_NFCP"
+                ],
                 "children": [
                   {
-                    "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
-                    "metric_model_name": "HuThroughputPerformance",
-                    "leaf": true,
-                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "info": "HU_NU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Throughput"
-                  },
+                    "label": "1 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "NU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_HU_NFCP_non_teramark",
+                "weight": 1,
+                "label": "Network->Host",
+                "extensible_references": [
+                  "NU_HU_NFCP"
+                ],
+                "children": [
                   {
-                    "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
-                    "metric_model_name": "HuThroughputPerformance",
-                    "leaf": true,
-                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "info": "NU_HU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "NU_HU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "1 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
                   }
                 ]
               }
             ]
           },
           {
-            "info": "NU_HU_NFCP",
+            "info": "HNU",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "NU_HU_NFCP_non_teramark",
+            "name": "HNU",
             "weight": 1,
-            "label": "Network->Host",
-            "extensible_references": [
-              "NU_HU_NFCP"
-            ],
+            "label": "HNU",
             "children": [
               {
-                "info": "NU_HU_NFCP",
+                "info": "NU_HNU",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "NU_HU_NFCP_1TCP_offloads_disabled",
+                "name": "NU_HNU",
                 "weight": 1,
-                "label": "1 TCP Flow(s)",
+                "label": "NU->HNU",
                 "children": [
                   {
-                    "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
-                    "metric_model_name": "HuThroughputPerformance",
+                    "info": "NU_HNU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
-                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "name": "NU_HNU_output_throughput",
                     "weight": 1,
                     "label": "Throughput"
                   },
                   {
-                    "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
-                    "metric_model_name": "HuThroughputPerformance",
+                    "info": "NU_HNU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
-                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "name": "NU_HNU_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
+                  },
+                  {
+                    "info": "NU_HNU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_HNU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
+              },
+              {
+                "info": "HNU_HNU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HNU_HNU",
+                "weight": 1,
+                "label": "HNU<->HNU",
+                "children": [
+                  {
+                    "info": "HNU_HNU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_HNU_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "HNU_HNU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_HNU_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  },
+                  {
+                    "info": "HNU_HNU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_HNU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
+              },
+              {
+                "info": "HNU_NU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HNU_NU",
+                "weight": 1,
+                "label": "HNU->NU",
+                "children": [
+                  {
+                    "info": "HNU_NU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_NU_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "HNU_NU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_NU_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  },
+                  {
+                    "info": "HNU_NU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_NU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
                   }
                 ]
               }
             ]
           }
-        ],
-        "weight": 1
+        ]
       },
       {
         "info": "Storage",
@@ -1791,7 +1851,7 @@
                     "leaf": false,
                     "name": "HU_NU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "8 TCP Flow(s)",
+                    "label": "8 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
@@ -1827,7 +1887,7 @@
                     "leaf": false,
                     "name": "NU_HU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "8 TCP Flow(s)",
+                    "label": "8 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
@@ -1844,42 +1904,6 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "info": "funtcp_server",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "funtcp_server",
-                "weight": 1,
-                "label": "FunTCP Server",
-                "children": [
-                  {
-                    "info": "funtcp_server_throughput",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "funtcp_server_throughput",
-                    "weight": 1,
-                    "label": "Throughput",
-                    "children": [
-                      {
-                        "info": "funtcp_server_throughput_1tcp",
-                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
-                        "name": "funtcp_server_throughput_1tcp",
-                        "weight": 1,
-                        "label": "1 TCP Flow(s)"
-                      },
-                      {
-                        "info": "funtcp_server_throughput_4tcp",
-                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
-                        "name": "funtcp_server_throughput_4tcp",
-                        "weight": 1,
-                        "label": "4 TCP Flow(s)"
                       }
                     ]
                   }
@@ -2131,7 +2155,7 @@
                     "leaf": false,
                     "name": "juniper_NU_VP_NU_FWD_NFCP",
                     "weight": 1,
-                    "label": "NU->VP->NU, FWD Benchmark",
+                    "label": "Basic FWD",
                     "children": [
                       {
                         "info": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
@@ -2155,7 +2179,7 @@
                         "leaf": true,
                         "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
                         "weight": 1,
-                        "label": "Latency"
+                        "label": "Latency - Full Load"
                       }
                     ]
                   },
@@ -2165,7 +2189,7 @@
                     "leaf": false,
                     "name": "juniper_NU_LE_VP_NU_FW",
                     "weight": 1,
-                    "label": "NU->LE->VP->NU, Firewall Benchmark",
+                    "label": "Flow Based Firewall",
                     "children": [
                       {
                         "info": "juniper_NU_LE_VP_NU_FW_output_throughput",

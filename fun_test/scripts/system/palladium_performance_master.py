@@ -21,6 +21,8 @@ import re
 from datetime import datetime
 from dateutil.parser import parse
 from scripts.system.metric_parser import MetricParser
+from django.utils import timezone
+from web.fun_test.models_helper import add_jenkins_job_id_map
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
@@ -53,23 +55,7 @@ jpeg_operations = {"Compression throughput": "Compression throughput with Driver
 nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
-internal_chart_names_for_flows = {
-    "NU_HNU_NFCP": ["NU_HNU_output_throughput", "NU_HNU_output_pps", "NU_HNU_output_latency_avg"],
-    "HNU_HNU_FCP": ["HNU_HNU_FCP_output_throughput", "HNU_HNU_FCP_output_pps", "HNU_HNU_FCP_output_latency_avg"],
-    "HNU_HNU_NFCP": ["HNU_HNU_output_throughput", "HNU_HNU_output_pps", "HNU_HNU_output_latency_avg"],
-    "NU_NU_NFCP": ["NU_NU_output_throughput", "NU_NU_output_pps", "NU_NU_output_latency_avg"],
-    "HNU_NU_NFCP": ["HNU_NU_output_throughput", "HNU_NU_output_pps", "HNU_NU_output_latency_avg"],
-    "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "HU_NU_NFCP_output_latency_avg"],
-    "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps", "HU_HU_NFCP_output_latency_avg"],
-    "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps", "HU_HU_FCP_output_latency_avg"],
-    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"],
-    "NU_VP_NU_FWD_NFCP": ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps",
-                          "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"],
-    "NU_LE_VP_NU_FW": ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
-                       "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
-}
-
-networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance"]
+networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance", "NuTransitPerformance"]
 
 
 def get_rounded_time():
@@ -139,6 +125,19 @@ def set_networking_chart_status():
                         chart.last_build_date = get_current_time()
                         chart.save()
                         break
+
+def add_version_to_jenkins_job_id_map(date_time, version):
+    date_time = timezone.localtime(date_time)
+    date_time = str(date_time).split(":")
+    completion_date = date_time[0] + ":" + date_time[1]
+    add_jenkins_job_id_map(jenkins_job_id=0,
+                           fun_sdk_branch="",
+                           git_commit="",
+                           software_date=0,
+                           hardware_version="",
+                           completion_date=completion_date,
+                           build_properties="", lsf_job_id="",
+                           sdk_version=version)
 
 
 class MyScript(FunTestScript):
@@ -1720,42 +1719,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         if date_time.year >= 2019:
                             metric_model = app_config.get_metric_models()[self.model]
                             MetricHelper(model=metric_model).add_entry(**d)
-                        if metrics["input_flow_type"] in internal_chart_names_for_flows:
-                            chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                            for names in chart_names:
-                                if "throughput" in names:
-                                    if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
-                                        set_chart_status(result=fun_test.FAILED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                    else:
-                                        set_chart_status(result=fun_test.PASSED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                if "pps" in names:
-                                    if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
-                                        set_chart_status(result=fun_test.FAILED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                    else:
-                                        set_chart_status(result=fun_test.PASSED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                if "latency" in names:
-                                    if metrics["output_latency_avg"] == -1 and metrics["input_frame_size"] == 800:
-                                        set_chart_status(result=fun_test.FAILED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                    else:
-                                        set_chart_status(result=fun_test.PASSED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
 
             self.result = fun_test.PASSED
         except Exception as ex:
@@ -2073,6 +2037,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                         d["input_date_time"] = date_time
                         metric_model = app_config.get_metric_models()[self.model]
                         MetricHelper(model=metric_model).add_entry(**d)
+                        add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
 
             self.result = fun_test.PASSED
         except Exception as ex:
@@ -2099,6 +2064,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             d["input_date_time"] = date_time
             metric_model = app_config.get_metric_models()[self.model]
             MetricHelper(model=metric_model).add_entry(**d)
+            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
         if "latency_avg" in line:
             metrics = dict(default_metrics)
             self.model = "HuLatencyPerformance"
@@ -2120,6 +2086,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             d["input_date_time"] = date_time
             metric_model = app_config.get_metric_models()[self.model]
             MetricHelper(model=metric_model).add_entry(**d)
+            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
 
 
 class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):

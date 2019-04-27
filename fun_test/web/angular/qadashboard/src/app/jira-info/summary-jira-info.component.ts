@@ -21,6 +21,7 @@ export class SummaryJiraInfoComponent extends JiraInfoComponent {
         this.setActiveResolvedBugs();
         this.status = null;
         this.numBugs.emit(this.jiraInfo.length);
+        this.sortItems(this.jiraInfo);
 
       }, error => {
         this.loggerService.error("Fetching BugIds failed");

@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
+import {CommonService} from "../services/common/common.service";
 
 @Component({
   selector: 'jira-info',
@@ -14,6 +15,7 @@ export class JiraInfoComponent implements OnInit {
   @Input() allowAdd = true;
   @Input() allowContext: boolean = false;
   @Input() summaryInHeader: boolean = true;
+  @Input() showDetails: boolean = false;
   jiraId: string = null;
   jiraInfo: any = [];
   editingJira: boolean = false;
@@ -22,17 +24,25 @@ export class JiraInfoComponent implements OnInit {
   @Output() close: EventEmitter<boolean> = new EventEmitter();
   @Output() numActive: EventEmitter<number> = new EventEmitter();
   @Output() numResolved: EventEmitter<number> = new EventEmitter();
+
   status: string = null;
   activeBugs: number = 0;
   resolvedBugs: number = 0;
+  sortOrderByColumnName: any = {};
+  currentSortingColumn: string = "Severity";
+  priorityList = ["Low", "Medium", "High", "Highest"];
 
-
-  constructor(public apiService: ApiService, public loggerService: LoggerService) {
+  constructor(public apiService: ApiService, public loggerService: LoggerService, public commonService: CommonService) {
   }
 
   ngOnInit() {
     this.fetchJiraIds();
+    this.sortOrderByColumnName["Severity"] = true;  // true == ascending
+    this.sortOrderByColumnName["Priority"] = true;
+    this.sortOrderByColumnName["Open since"] = true;
+
   }
+
 
   fetchJiraIds(): void {
     this.jiraInfo = [];
@@ -44,12 +54,48 @@ export class JiraInfoComponent implements OnInit {
         this.numBugs.emit(this.jiraInfo.length);
         this.jiraId = null;
         this.status = null;
+        this.sortItems(this.jiraInfo);
+
       }, error => {
         this.loggerService.error("Fetching JiraIds failed");
         this.status = null;
       });
     }
   }
+
+  sortItems(items) {
+    items.sort((a, b) => {
+      if (this.currentSortingColumn === 'Severity') {
+        if (a.severity > b.severity) {
+          return this.sortOrderByColumnName[this.currentSortingColumn] ? 1: -1;
+        } else if (a.severity < b.severity) {
+          return this.sortOrderByColumnName[this.currentSortingColumn] ? -1: 1;
+        } else {
+          return 0;
+        }
+      } else if (this.currentSortingColumn === 'Open since') {
+        if (a.openSince > b.openSince) {
+          return this.sortOrderByColumnName[this.currentSortingColumn] ? 1: -1;
+        } else if (a.openSince < b.openSince) {
+          return this.sortOrderByColumnName[this.currentSortingColumn] ? -1: 1;
+        } else {
+          return 0;
+        }
+      } else if (this.currentSortingColumn === 'Priority') {
+        let aPriorityIndex = this.priorityList.indexOf(a.priority);
+        let bPriorityIndex = this.priorityList.indexOf(b.priority);
+        if (aPriorityIndex > bPriorityIndex) {
+          return this.sortOrderByColumnName[this.currentSortingColumn] ? 1: -1;
+        } else if (aPriorityIndex < bPriorityIndex) {
+          return this.sortOrderByColumnName[this.currentSortingColumn] ? -1: 1;
+        } else {
+          return 0;
+        }
+
+      }
+    })
+  }
+
 
   setActiveResolvedBugs(): void {
     for (let info of this.jiraInfo) {
@@ -58,6 +104,8 @@ export class JiraInfoComponent implements OnInit {
       } else {
         this.resolvedBugs += 1;
       }
+      info["openSince"] = this.getDaysSince(info['created']);
+      info["editingRemarks"] = false;
     }
     this.numResolved.emit(this.resolvedBugs);
     this.numActive.emit(this.activeBugs);
@@ -97,4 +145,28 @@ export class JiraInfoComponent implements OnInit {
     window.open(url, '_blank');
   }
 
+  getDaysSince(d): number {
+    let today = new Date();
+    let oneDay = 24 * 60 * 60 * 1000;
+    let localDate = this.commonService.convertToLocalTimezone(d);
+    return Math.round(Math.abs((today.getTime() - localDate.getTime()) / (oneDay)));
+
+  }
+
+  setSortColumn(columnName) {
+    this.sortOrderByColumnName[columnName] = !this.sortOrderByColumnName[columnName];
+    this.currentSortingColumn = columnName;
+    this.sortItems(this.jiraInfo);
+  }
+
+  updateRemarks(id) {
+    this.jiraInfo[id].editingRemarks = true;
+    let payload = {};
+    payload["remarks"] = this.jiraInfo[id].remarks;
+    this.apiService.post(this.apiUrl + '/' + id, payload).subscribe(response => {
+      this.loggerService.success("Updated remarks");
+    }, error => {
+      this.loggerService.error("Failed to update remarks");
+    })
+  }
 }
