@@ -210,7 +210,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                        name=raw_vol_name,
                                                                        uuid=raw_vol_uuid,
                                                                        command_duration=self.command_timeout)['status'],
-                                 message="Create BLT volume uuid: {0}, name: {1}".format(raw_vol_uuid, raw_vol_name))
+                                 message="Create BLT volume, uuid: {0}, name: {1}".format(raw_vol_uuid, raw_vol_name))
             self.vols_created["raw"].append({"name": raw_vol_name, "uuid": raw_vol_uuid})
         plex_ids = [x['uuid'] for x in self.vols_created["raw"]]
 
@@ -226,7 +226,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                    nparity=self.ec_coding["nparity"],
                                                                    pvol_id=plex_ids,
                                                                    command_duration=self.command_timeout)['status'],
-                             message="Create EC volume uuid: {0}, name: {1}".format(ec_vol_uuid, ec_vol_name))
+                             message="Create EC volume, uuid: {0}, name: {1}".format(ec_vol_uuid, ec_vol_name))
         self.vols_created["ec"].append({"name": ec_vol_name, "uuid": ec_vol_uuid})
 
         # Create jvol
@@ -238,7 +238,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                    name=jvol_name,
                                                                    uuid=jvol_uuid,
                                                                    command_duration=self.command_timeout)['status'],
-                             message="Create Journal volume uuid: {0}, name: {1}".format(jvol_uuid, jvol_name))
+                             message="Create Journal volume, uuid: {0}, name: {1}".format(jvol_uuid, jvol_name))
         self.vols_created["jvol"].append({"name": jvol_name, "uuid": jvol_uuid})
 
         # Create required LSV
@@ -256,7 +256,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                    zip_effort=self.volume_info["lsv"]["zip_effort"],
                                                                    zip_filter=self.volume_info["lsv"]["zip_filter"],
                                                                    command_duration=self.command_timeout)['status'],
-                             message="Create Lsv volume uuid: {0}, name: {1}".format(lsv_vol_uuid, lsv_vol_name))
+                             message="Create Lsv volume, uuid: {0}, name: {1}".format(lsv_vol_uuid, lsv_vol_name))
         self.vols_created["lsv"].append({"name": lsv_vol_name, "uuid": lsv_vol_uuid})
 
         # Create Controller
@@ -266,7 +266,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                         ctlid=tb_config['dut_info'][0]['ctlid'],
                                                                         command_duration=self.command_timeout)[
                                  'status'],
-                             message="Attach LSV Volume {0} to Controller".format(lsv_vol_uuid))
+                             message="Attach LSV Volume {0} to the Controller".format(lsv_vol_uuid))
         '''
         ctrlr_uuid = utils.generate_uuid()
         fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
@@ -317,8 +317,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # Do fio write for 16K
         fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device, **self.write_ut_fio_cmd_args),
-                             message="Execute {0} write on nvme device {1}".format(self.nvme_block_device,
-                                                                                   self.write_ut_fio_cmd_args['size']))
+                             message="Execute {0} write on nvme device {1}".format(self.write_ut_fio_cmd_args['size'],
+                                                                                   self.nvme_block_device,))
 
         # Get updated write count
         resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
@@ -334,17 +334,15 @@ class ECVolumeLevelTestcase(FunTestCase):
         percnt_comp = get_comp_percent(bytes_sent, bytes_written)
         exp_comp_percent = self.write_ut_fio_cmd_args['buffer_compress_percentage']
         diff = abs(exp_comp_percent - percnt_comp)
-        fun_test.test_assert(
-            diff <= 10,
-            message="Percent file compressed: {0}%  for Input bytes: {1}, within 10% Error of expected value".format(
-                percnt_comp, bytes_sent))
+        fun_test.test_assert(diff <= 10,
+                             message="Compression percentage achieved: {0:04.2f}%, Input bytes sent: {1}, Compression"
+                                     " percentage achieved within 10% of error margin".format(percnt_comp, bytes_sent))
 
         # Disable the udev daemon which will skew the read stats of the volume during the test
         udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
         for service in udev_services:
             fun_test.test_assert(self.end_host.systemctl(service_name=service, action="stop"),
                                  "Stopping {} service".format(service))
-        fun_test.shared_variables['volumes_created'][testcase] = self.volume_info
 
     def run(self):
 
@@ -454,7 +452,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 class EC42FioReadEffortAuto(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume Effort: Auto",
+                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume"
+                                      " Effort: Auto",
                               steps="""
                               1. Execute writes on NVME device with compressibility 1%.
                               2. Perform sequential read for above write, log performance stats.
@@ -475,7 +474,8 @@ class EC42FioReadEffortAuto(ECVolumeLevelTestcase):
 class EC42FioReadEffort64Gbps(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume Effort: 64Gbps",
+                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume"
+                                      " Effort: 64Gbps",
                               steps="""
                               1. Execute writes on NVME device with compressibility 1%.
                               2. Perform sequential read for above write, log performance stats.
@@ -496,7 +496,8 @@ class EC42FioReadEffort64Gbps(ECVolumeLevelTestcase):
 class EC42FioReadEffort2Gbps(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume Effort: 2Gbps",
+                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume"
+                                      " Effort: 2Gbps",
                               steps="""
                               1. Execute writes on NVME device with compressibility 1%.
                               2. Perform sequential read for above write, log performance stats.

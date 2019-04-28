@@ -276,7 +276,7 @@
       "rw": "read",
       "direct": 1,
       "prio": 0,
-      "runtime": 300,
+      "runtime": 60,
       "timeout": 720
     },
     "write_ut_fio_cmd_args": {
@@ -295,15 +295,15 @@
     "nvme_device": "/dev/nvme0",
     "test_parameters": [
       {
-        "name": "Performance stats for 1% compressed data",
+        "name": "Performance stats with 1% Compressible data",
         "compress_percent": 1
       },
       {
-        "name": "Performance stats for 50% compressed data",
+        "name": "Performance stats with 50% Compressible data",
         "compress_percent": 50
       },
       {
-        "name": "Performance stats for 80% compressed data",
+        "name": "Performance stats with 80% Compressible data",
         "compress_percent": 80
       }
     ]
