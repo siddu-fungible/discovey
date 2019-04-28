@@ -302,6 +302,7 @@ class Bmc(Linux):
 
 
     def cleanup(self):
+        fun_test.sleep("Allowing to generate crash report", seconds=30)
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
             log = uart_log_thread.get_log()
