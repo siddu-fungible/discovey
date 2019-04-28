@@ -701,7 +701,7 @@ def process_killed_jobs():
             t = job_id_threads[killed_job_id]
             scheduler_logger.info("Job: {} Killing".format(get_job_string(killed_job_id)))
             try:
-                t.shutdown_suite()
+                t.shutdown_suite(reason=ShutdownReason.KILLED)
                 scheduler_logger.info("Job: {} Completed shutdown_suite".format(get_job_string(killed_job_id)))
             except Exception as ex:
                 scheduler_logger.exception(str(ex))

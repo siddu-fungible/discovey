@@ -427,11 +427,12 @@ class ComE(Linux):
         for device in devices:
             if "Unassigned class" in device["device_class"]:
                 device_id = device["id"]
-                # fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
-                self.funq_bind_device[f1_index] = device["id"]
-
                 if num_pfs_detected:
                     f1_index += 1
+                # fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
+                self.funq_bind_device[f1_index] = device_id
+
+
                 num_pfs_detected += 1
 
         '''
