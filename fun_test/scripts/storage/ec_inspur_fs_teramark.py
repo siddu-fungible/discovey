@@ -546,14 +546,15 @@ class ECVolumeLevelTestcase(FunTestCase):
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
 
-            # Attaching/Exporting the EC/LS volume to the external server
+            # Attaching/Exporting all the EC/LS volumes to the external server
             self.remote_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"].split('/')[0]
-            command_result = self.storage_controller.volume_attach_remote(
-                ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], huid=tb_config['dut_info'][0]['huid'],
-                ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
-                transport=self.attach_transport, command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT")
+            for num in self.ec_info["num_volumes"]:
+                command_result = self.storage_controller.volume_attach_remote(
+                    ns_id=num+1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
+                    ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
+                    transport=self.attach_transport, command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
 
             # disabling the error_injection for the EC volume
             command_result = {}
