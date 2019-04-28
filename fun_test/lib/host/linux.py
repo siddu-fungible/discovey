@@ -1599,7 +1599,7 @@ class Linux(object, ToDictMixin):
         # List contains the all pattern of all known/possible error from the FIO
         err_pat_list = [r'Assertion .* failed', r'.*err(or)*=.*']
 
-        fio_command = "sudo fio"
+        fio_command = "fio"
         fio_result = ""
         fio_dict = {}
 
@@ -1634,7 +1634,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug(fio_command)
 
         # Executing the fio command
-        fio_result = self.command(command=fio_command, timeout=timeout)
+        fio_result = self.sudo_command(command=fio_command, timeout=timeout)
         # fio_result += '\n'
         fun_test.debug(fio_result)
 
