@@ -312,7 +312,7 @@ class ECVolumeLevelScript(FunTestScript):
         self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
         fun_test.shared_variables["end_host"] = self.end_host
 
-        """
+        """ TODO: Reboot comment start (To avoid poc-server-03 reboot- remove before final commit)"""
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
         # host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
@@ -377,7 +377,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.simple_assert(command_result, "Loading nvme_tcp module")
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
                                       message="Loading nvme_tcp module")
-        """
+        """ TODO: Reboot comment stop (To avoid poc-server-03 reboot- remove before final commit)"""
 
         self.storage_controller = f1.get_dpc_storage_controller()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
@@ -558,9 +558,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
 
                 fun_test.log("Starting Vdbench to pre-populate all the volumes")
-                # vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
-                #                                            timeout=self.warm_up_timeout)
-                vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, timeout=self.warm_up_timeout)
+                vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
+                                                           timeout=self.warm_up_timeout)
                 fun_test.log("Vdbench output result: {}".format(vdbench_result))
 
 
@@ -840,8 +839,7 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).run()
 
     def cleanup(self):
-        pass
-        # super(RandReadWrite8kBlocks, self).cleanup()
+        super(RandReadWrite8kBlocks, self).cleanup()
 
 
 if __name__ == "__main__":
