@@ -77,10 +77,8 @@ def collect_stats():
     try:
         # TODO: add mpstat and netstat
         for nc_obj in fun_test.shared_variables['network_controller_objs']:
-            nc_obj.peek_fpg_port_stats(port_num=0)
-            nc_obj.peek_fpg_port_stats(port_num=4)
-            #nc_obj.peek_fpg_port_stats(port_num=1)
-            #nc_obj.peek_fpg_port_stats(port_num=2)
+            fpg0_stats = nc_obj.peek_fpg_port_stats(port_num=0)
+            fpg4_stats = nc_obj.peek_fpg_port_stats(port_num=4)
             nc_obj.peek_psw_global_stats()
             #nc_obj.peek_fcp_global_stats()
             nc_obj.peek_vp_packets()
@@ -89,6 +87,15 @@ def collect_stats():
             nc_obj.peek_eqm_stats()
             nc_obj.flow_list()
             nc_obj.flow_list(blocked_only=True)
+        fpg_rx_bytes = fpg0_stats[0].get('port_0-PORT_MAC_RX_OctetsReceivedOK', 0) + fpg4_stats[0].get(
+            'port_4-PORT_MAC_RX_OctetsReceivedOK', 0)
+        fpg_rx_pkts = fpg0_stats[0].get('port_0-PORT_MAC_RX_aFramesReceivedOK', 0) + fpg4_stats[0].get(
+            'port_4-PORT_MAC_RX_aFramesReceivedOK', 0)
+        fpg_tx_bytes = fpg0_stats[0].get('port_0-PORT_MAC_TX_OctetsReceivedOK', 0) + fpg4_stats[0].get(
+            'port_4-PORT_MAC_TX_OctetsReceivedOK', 0)
+        fpg_tx_pkts = fpg0_stats[0].get('port_0-PORT_MAC_TX_aFramesReceivedOK', 0) + fpg4_stats[0].get(
+            'port_4-PORT_MAC_TX_aFramesReceivedOK', 0)
+        return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
     except:
         pass
 
@@ -133,7 +140,7 @@ class FunethPerformanceBase(FunTestCase):
                 if parallel == 1:
                     break
 
-        suffixes = ('n2h', 'h2n')
+        suffixes = ('n2h', 'h2n', 'h2h')
         arg_dicts = []
         for shost, dhost in host_pairs:
             linux_obj_src = funeth_obj.linux_obj_dict[shost]
@@ -160,13 +167,32 @@ class FunethPerformanceBase(FunTestCase):
 
         # Collect stats before and after test run
         fun_test.log('Collect stats before test')
-        collect_stats()
+        fpg_tx_pkts1, _, fpg_rx_pkts1, _ = collect_stats()
         try:
             result = perf_manager_obj.run(*arg_dicts)
         except:
             result = {}
         fun_test.log('Collect stats after test')
-        collect_stats()
+        fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_stats()
+
+        import pdb; pdb.set_trace()
+        if flow_type.startswith('NU_HU'):
+            result.update(
+                {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+            )
+        elif flow_type.startswith('NU2HU'):
+            result.update(
+                {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration,
+                 'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+            )
+        elif flow_type.startswith('HU_NU'):
+            result.update(
+                {'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+            )
+        elif flow_type.startswith('HU_HU'):
+            result.update(
+                {'pps_h2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+            )
 
         # Check test passed or failed
         if any(v == -1 for v in result.values()):
