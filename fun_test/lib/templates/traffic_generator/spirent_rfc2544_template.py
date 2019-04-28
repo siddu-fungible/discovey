@@ -16,6 +16,7 @@ FLOW_TYPE_HNU_HNU_FCP = "HNU_HNU_FCP"
 FLOW_TYPE_HNU_NU_NFCP = "HNU_NU_NFCP"
 FLOW_TYPE_NU_HNU_NFCP = "NU_HNU_NFCP"
 FLOW_TYPE_NU_VP_NU_FWD_NFCP = "NU_VP_NU_FWD_NFCP"
+FLOW_TYPE_NU_LE_VP_NU_FWD_NFCP = "NU_LE_VP_NU_FWD_NFCP"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
@@ -364,7 +365,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         return result
 
     def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
-                                       file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None):
+                                       file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None,
+                                       half_load_latency=False):
         results = []
         output = True
         failed_result_found = False
@@ -375,6 +377,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 data_dict['mode'] = mode
                 data_dict['version'] = fun_test.get_version()
                 data_dict['timestamp'] = timestamp
+                data_dict['half_load_latency'] = half_load_latency
                 frame_size = float(records[0]['AvgFrameSize']) if records else None
                 actual_frame_size = frame_size
                 if frame_size == 8900.0:

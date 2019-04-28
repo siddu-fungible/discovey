@@ -35,22 +35,23 @@ MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
-    linux_obj = funeth_obj.linux_obj_dict['nu']
-    if TB in ('FS7', 'FS11'):
-        fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
-    fun_test.test_assert(funeth_obj.configure_interfaces('nu'), 'Configure NU host interface')
-    fun_test.test_assert(funeth_obj.configure_ipv4_routes('nu'), 'Configure NU host IPv4 routes')
-    cmds = [
-        'echo 1 > /proc/sys/net/ipv4/ip_forward',
-        'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter',
-        'echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter',
-        'echo 0 > /proc/sys/net/ipv4/conf/fpg1/rp_filter',
-        'echo 0 > /proc/sys/net/ipv4/conf/fpg2/rp_filter',
-    ]
-    for intf in funeth_obj.tb_config_obj.get_all_interfaces('nu'):
-        cmds.append('echo 0 > /proc/sys/net/ipv4/conf/{}/rp_filter'.format(intf))
-    for cmd in cmds:
-        linux_obj.sudo_command(cmd)
+    for nu in funeth_obj.nu_hosts:
+        linux_obj = funeth_obj.linux_obj_dict[nu]
+        if TB in ('FS7', 'FS11'):
+            fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
+        fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host interface')
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu), 'Configure NU host IPv4 routes')
+        #cmds = [
+        #    'echo 1 > /proc/sys/net/ipv4/ip_forward',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/fpg1/rp_filter',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/fpg2/rp_filter',
+        #]
+        #for intf in funeth_obj.tb_config_obj.get_all_interfaces('nu'):
+        #    cmds.append('echo 0 > /proc/sys/net/ipv4/conf/{}/rp_filter'.format(intf))
+        #for cmd in cmds:
+        #    linux_obj.sudo_command(cmd)
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
@@ -60,10 +61,11 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
-    fun_test.test_assert(funeth_obj.configure_interfaces('hu'), 'Configure funeth interfaces.')
-    fun_test.test_assert(funeth_obj.configure_ipv4_routes('hu'), 'Configure HU host IPv4 routes.')
-    #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
-    #                    'HU PF and VF interface loopback ping test via NU')
+    for hu in funeth_obj.hu_hosts:
+        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure funeth interfaces.')
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host IPv4 routes.')
+        #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
+        #                    'HU PF and VF interface loopback ping test via NU')
 
 
 class FunethSanity(FunTestScript):
@@ -108,6 +110,7 @@ class FunethSanity(FunTestScript):
             global DPC_PROXY_PORT
             DPC_PROXY_IP = host_instance1.host_ip
             DPC_PROXY_PORT = fs.get_come().get_dpc_port(0)
+            # TODO: get DPC_PROXY_IP2 and DPC_PROXY_PORT2 for F1_1
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
