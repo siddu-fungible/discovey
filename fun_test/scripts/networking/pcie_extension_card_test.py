@@ -47,7 +47,7 @@ class BootFS(FunTestCase):
         run_count = 1
         success_count = 0
         fail_count = 0
-        t_end = time.time() + 60 * 60
+        t_end = time.time() + 60 * 120
         while time.time() < t_end:
             reach = self.check_reachability()
             fun_test.test_assert(reach, message="Reachable test passed for run %s" % run_count)
