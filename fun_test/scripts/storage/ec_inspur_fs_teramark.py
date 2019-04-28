@@ -161,22 +161,22 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
                     block_size=ec_info["volume_block"][vtype], name=vtype+"_"+this_uuid[-4:], uuid=this_uuid,
                     command_duration=command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Creating {} {} {} {} bytes volume on DUT instance".
-                                     format(i, vtype, ec_info["volume_types"][vtype],
+                fun_test.test_assert(command_result["status"], "Creating {} {} {} {} {} bytes volume on DUT instance".
+                                     format(num, i, vtype, ec_info["volume_types"][vtype],
                                             ec_info["volume_capacity"][num][vtype]))
 
         # Configuring EC volume on top of BLT volumes
         this_uuid = utils.generate_uuid()
-        ec_info["uuids"]["ec"].append(this_uuid)
+        ec_info["uuids"][num]["ec"].append(this_uuid)
         command_result = storage_controller.create_volume(
-            type=ec_info["volume_types"][num]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
-            block_size=ec_info["volume_block"][num]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
+            type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
+            block_size=ec_info["volume_block"]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
             ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=ec_info["uuids"][num]["blt"],
             command_duration=command_timeout)
-        fun_test.test_assert(command_result["status"], "Creating {}:{} {} bytes EC volume on DUT instance".
-                             format(ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"][num]["ec"]))
+        fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on DUT instance".
+                             format(num, ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"][num]["ec"]))
         ec_info["attach_uuid"][num] = this_uuid
-        ec_info["attach_size"][num] = ec_info["volume_capacity"]["ec"]
+        ec_info["attach_size"][num] = ec_info["volume_capacity"][num]["ec"]
 
         # Configuring LS volume and its associated journal volume based on the script config setting
         if "use_lsv" in ec_info and ec_info["use_lsv"]:
@@ -186,8 +186,8 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
                 block_size=ec_info["volume_block"]["jvol"], name="jvol_"+this_uuid[-4:],
                 uuid=ec_info["uuids"][num]["jvol"], command_duration=command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Creating {} bytes Journal volume on DUT instance".
-                                 format(ec_info["volume_capacity"][num]["jvol"]))
+            fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on DUT instance".
+                                 format(num, ec_info["volume_capacity"][num]["jvol"]))
 
             this_uuid = utils.generate_uuid()
             ec_info["uuids"][num]["lsv"].append(this_uuid)
@@ -197,57 +197,59 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
                 group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"], pvol_id=ec_info["uuids"][num]["ec"],
                 command_duration=command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Creating {} bytes LS volume on DUT instance".
-                                 format(ec_info["volume_capacity"][num]["lsv"]))
+            fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT instance".
+                                 format(num, ec_info["volume_capacity"][num]["lsv"]))
             ec_info["attach_uuid"][num] = this_uuid
-            ec_info["attach_size"][num] = ec_info["volume_capacity"]["lsv"]
+            ec_info["attach_size"][num] = ec_info["volume_capacity"][num]["lsv"]
 
-        return (result, ec_info)
+    return (result, ec_info)
 
 
 def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
 
     # Unconfiguring LS volume based on the script config settting
-    if "use_lsv" in ec_info and ec_info["use_lsv"]:
-        this_uuid = ec_info["uuids"]["lsv"][0]
-        command_result = storage_controller.delete_volume(
-            type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"]["lsv"],
-            block_size=ec_info["volume_block"]["lsv"], name="lsv_"+this_uuid[-4:], uuid=this_uuid,
-            command_duration=command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Deleting {} bytes LS volume on DUT instance".
-                             format(ec_info["volume_capacity"]["lsv"]))
-
-        this_uuid = ec_info["uuids"]["jvol"]
-        command_result = storage_controller.delete_volume(
-            type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"]["jvol"],
-            block_size=ec_info["volume_block"]["jvol"], name="jvol_"+this_uuid[-4:], uuid=this_uuid,
-            command_duration=command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Deleting {} bytes Journal volume on DUT instance".
-                             format(ec_info["volume_capacity"]["jvol"]))
-
-    # Unconfiguring EC volume configured on top of BLT volumes
-    this_uuid = ec_info["uuids"]["ec"][0]
-    command_result = storage_controller.delete_volume(
-        type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"]["ec"],
-        block_size=ec_info["volume_block"]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
-        command_duration=command_timeout)
-    fun_test.log(command_result)
-    fun_test.test_assert(command_result["status"], "Deleting {}:{} {} bytes EC volume on DUT instance".
-                         format(ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"]["ec"]))
-
-    # Unconfiguring ndata and nparity number of BLT volumes
-    for vtype in ["ndata", "nparity"]:
-        for i in range(ec_info[vtype]):
-            this_uuid = ec_info["uuids"][vtype][i]
+    for num in xrange(ec_info["num_volumes"]):
+        if "use_lsv" in ec_info and ec_info["use_lsv"]:
+            this_uuid = ec_info["uuids"][num]["lsv"][0]
             command_result = storage_controller.delete_volume(
-                type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][vtype],
-                block_size=ec_info["volume_block"][vtype], name=vtype+"_"+this_uuid[-4:], uuid=this_uuid,
+                type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"][num]["lsv"],
+                block_size=ec_info["volume_block"]["lsv"], name="lsv_"+this_uuid[-4:], uuid=this_uuid,
                 command_duration=command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Deleting {} {} {} {} bytes volume on DUT instance".
-                                 format(i, vtype, ec_info["volume_types"][vtype], ec_info["volume_capacity"][vtype]))
+            fun_test.test_assert(command_result["status"], "Deleting {} {} bytes LS volume on DUT instance".
+                                 format(num, ec_info["volume_capacity"][num]["lsv"]))
+
+            this_uuid = ec_info["uuids"][num]["jvol"]
+            command_result = storage_controller.delete_volume(
+                type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
+                block_size=ec_info["volume_block"]["jvol"], name="jvol_"+this_uuid[-4:], uuid=this_uuid,
+                command_duration=command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Deleting {} {} bytes Journal volume on DUT instance".
+                                 format(num, ec_info["volume_capacity"][num]["jvol"]))
+
+        # Unconfiguring EC volume configured on top of BLT volumes
+        this_uuid = ec_info["uuids"][num]["ec"][0]
+        command_result = storage_controller.delete_volume(
+            type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
+            block_size=ec_info["volume_block"]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
+            command_duration=command_timeout)
+        fun_test.log(command_result)
+        fun_test.test_assert(command_result["status"], "Deleting {} {}:{} {} bytes EC volume on DUT instance".
+                             format(num, ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"][num]["ec"]))
+
+        # Unconfiguring ndata and nparity number of BLT volumes
+        for vtype in ["ndata", "nparity"]:
+            for i in range(ec_info[vtype]):
+                this_uuid = ec_info["uuids"][num][vtype][i]
+                command_result = storage_controller.delete_volume(
+                    type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
+                    block_size=ec_info["volume_block"][vtype], name=vtype+"_"+this_uuid[-4:], uuid=this_uuid,
+                    command_duration=command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Deleting {} {} {} {} {} bytes volume on DUT instance".
+                                     format(num, i, vtype, ec_info["volume_types"][vtype],
+                                            ec_info["volume_capacity"][num][vtype]))
 
 
 class ECVolumeLevelScript(FunTestScript):
@@ -310,6 +312,7 @@ class ECVolumeLevelScript(FunTestScript):
         self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
         fun_test.shared_variables["end_host"] = self.end_host
 
+        """
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
         # host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
@@ -374,6 +377,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.simple_assert(command_result, "Loading nvme_tcp module")
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
                                       message="Loading nvme_tcp module")
+        """
 
         self.storage_controller = f1.get_dpc_storage_controller()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
@@ -393,86 +397,26 @@ class ECVolumeLevelScript(FunTestScript):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # self.ec_coding = fun_test.shared_variables["ec_coding"]  # TODO Remove
         # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
-        # if fun_test.shared_variables[self.ec_ratio]["setup_created"]:
-
-        # Detaching and Unconfiguring all the volumes
-        '''command_result = self.storage_controller.volume_detach_pcie(
-            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], command_duration=self.command_timeout)'''
-
-        '''self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
-        self.volume_types = fun_test.shared_variables[self.ec_ratio]["volume_types"]
-        self.volume_capacity = fun_test.shared_variables[self.ec_ratio]["volume_capacity"]
-        self.volume_block = fun_test.shared_variables[self.ec_ratio]["volume_block"]
-        self.use_lsv = fun_test.shared_variables[self.ec_ratio]["use_lsv"]
-        self.ns_id = fun_test.shared_variables[self.ec_ratio]["ns_id"]
-
-        # Detaching the EC or LS volume and deleting the LS voluem based on the use_lsv flag
-        if self.use_lsv:
-            # Detaching
-            detach_uid = self.uuids[self.volume_types["lsv"]]
-            command_result = self.storage_controller.volume_detach_pcie(
-                ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
-                command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Detaching LS volume on DUT")
-
-            # Deleting the LS volume
-            command_result = self.storage_controller.delete_volume(
-                type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
-                group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
-                pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Deleting LS volume on DUT")
-
-            # Deleting the journal volume
-            command_result = self.storage_controller.delete_volume(
-                type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
-                block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
-                command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Deleting Journal volume on DUT")
-        else:
-            detach_uid = self.uuids[self.volume_types["ec"]]
-            command_result = self.storage_controller.volume_detach_pcie(
-                ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
-                command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Detaching EC volume on DUT instance")
-
-        # Deleting the EC volume
-        command_result = self.storage_controller.delete_volume(
-            type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
-            name="ec1", uuid=self.uuids[self.volume_types["ec"]][0], ndata=self.ec_coding["ndata"],
-            nparity=self.ec_coding["nparity"], pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"],
-            command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Deleting EC volume on DUT")
-
-        # Deleting all the BLT volume on which the EC volume is configured
-        for vtype in sorted(self.ec_coding):
-            for i in range(self.ec_coding[vtype]):
-                if vtype == "nparity" and self.volume_types[vtype] == self.volume_types["ndata"]:
-                    i += self.ec_coding["ndata"]
-                command_result = self.storage_controller.delete_volume(
-                    type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                    block_size=self.volume_block[vtype], name=vtype+str(i),
-                    uuid=self.uuids[self.volume_types[vtype]][i], command_duration=self.command_timeout)
+        self.ec_info = fun_test.shared_variables["ec_info"]
+        self.remote_ip = fun_test.shared_variables["remote_ip"]
+        self.attach_transport = fun_test.shared_variables["attach_transport"]
+        if fun_test.shared_variables["ec"]["setup_created"]:
+            # Detaching all the EC/LS volumes to the external server
+            for num in xrange(self.ec_info["num_volumes"]):
+                command_result = self.storage_controller.volume_detach_remote(
+                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
+                    ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
+                    transport=self.attach_transport, command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleting {} {} BLT volume on DUT".format(i, vtype))'''
+                fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
+            # Unconfiguring all the LSV/EC and it's plex volumes
+            unconfigure_ec_volume(storage_controller=self.storage_controller, ec_info=self.ec_info,
+                                  command_timeout=self.command_timeout)
+
         self.storage_controller.disconnect()
         fs = fun_test.shared_variables["fs"]
         fs.cleanup()
-        '''self.dpcsh_host = DpcshProxy(ip=tb_config["dpcsh_proxy"]["ip"],
-                                     dpcsh_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
-                                     user=tb_config["dpcsh_proxy"]["user"],
-                                     password=tb_config["dpcsh_proxy"]["passwd"])
-        status = self.dpcsh_host.stop_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
-                                                  dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
-        fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
-                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))'''
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -518,6 +462,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.test_bed_type = fun_test.shared_variables["test_bed_type"]
         self.test_bed_spec = fun_test.shared_variables["test_bed_spec"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
+        fun_test.shared_variables["attach_transport"] = self.attach_transport
 
         # Remove fun_test.shared_variables["ec_coding"] = self.ec_coding  # TODO Remove
         # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
@@ -548,7 +493,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Attaching/Exporting all the EC/LS volumes to the external server
             self.remote_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"].split('/')[0]
-            for num in self.ec_info["num_volumes"]:
+            for num in xrange(self.ec_info["num_volumes"]):
                 command_result = self.storage_controller.volume_attach_remote(
                     ns_id=num+1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
                     ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
@@ -613,6 +558,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
 
                 fun_test.log("Starting Vdbench to pre-populate all the volumes")
+                # vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
+                #                                            timeout=self.warm_up_timeout)
                 vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, timeout=self.warm_up_timeout)
                 fun_test.log("Vdbench output result: {}".format(vdbench_result))
 
@@ -625,14 +572,11 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.log("Starting Random Read/Write of 8k data block")
         self.end_host = fun_test.shared_variables["end_host"]
 
-        if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/single_node_8_11_1"):
+        '''if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/single_node_8_11_1"):
             vdbench_result = self.end_host.sudo_command(
                 "/usr/local/share/vdbench/vdbench -f /usr/local/share/vdbench/single_node_8_11_1",
                 timeout=self.command_timeout * 20)
-            fun_test.log("Vdbench output result: {}".format(vdbench_result))
-
-        ''''# self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
-        # self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
+            fun_test.log("Vdbench output result: {}".format(vdbench_result))'''
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -645,35 +589,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         initial_stats = {}
         final_stats = {}
         diff_stats = {}
-
-        volumes = []
-        for vtype in sorted(self.ec_coding):
-            if self.volume_types[vtype] not in volumes:
-                volumes.append(self.volume_types[vtype])
-        volumes.append(self.volume_types["ec"])
-        if self.use_lsv and self.check_lsv_stats:
-            volumes.append(self.volume_types["lsv"])
-
-        # Check any plex needs to be induced to fail and if so do the same
-        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-            for index in self.failure_plex_indices:
-                if index < self.ec_coding["ndata"]:
-                    vtype = self.volume_types["ndata"]
-                else:
-                    vtype = self.volume_types["nparity"]
-                    if self.volume_types["ndata"] != self.volume_types["nparity"]:
-                        index = index - self.ec_coding["ndata"]
-                command_result = self.storage_controller.fail_volume(uuid=self.uuids[vtype][index],
-                                                                     command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Inject failure to the BLT volume having the UUID "
-                                                               "{}".format(self.uuids[vtype][index]))
-                fun_test.sleep("Sleeping for a second to enable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, self.uuids[vtype][index], "stats")
-                command_result = self.storage_controller.peek(props_tree)
-                fun_test.log(command_result)
-                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
-                                              message="Ensuring fault_injection got enabled")
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -688,7 +603,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        for combo in self.fio_bs_iodepth:
+        '''for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
             internal_result[combo] = {}
@@ -722,46 +637,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 row_data_dict["iodepth"] = fio_iodepth
                 row_data_dict["size"] = self.fio_cmd_args["size"]
 
-                # Pulling initial volume stats of all the volumes from the DUT in dictionary format
-                fun_test.log("Pulling initial stats of the all the volumes from the DUT in dictionary format before "
-                             "the test")
-                initial_volume_status[combo][mode] = {}
-                for vtype in volumes:
-                    initial_volume_status[combo][mode][vtype] = {}
-                    for index, uuid in enumerate(self.uuids[vtype]):
-                        initial_volume_status[combo][mode][vtype][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, uuid, "stats")
-                        command_result = {}
-                        command_result = self.storage_controller.peek(storage_props_tree,
-                                                                      command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
-                                               format(vtype, index))
-                        initial_volume_status[combo][mode][vtype][index] = command_result["data"]
-                        fun_test.log("{} {} volume Status at the beginning of the test:".format(vtype, index))
-                        fun_test.log(initial_volume_status[combo][mode][vtype][index])
-
-                # Pulling the initial stats in dictionary format
-                initial_stats[combo][mode] = {}
-                for key, value in self.stats_list.items():
-                    if key not in initial_stats[combo][mode]:
-                        initial_stats[combo][mode][key] = {}
-                    if value:
-                        for item in value:
-                            props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree,
-                                                                          command_duration=self.command_timeout)
-                            fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
-                                                   format(props_tree))
-                            initial_stats[combo][mode][key][item] = command_result["data"]
-                    else:
-                        props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
-                                               format(props_tree))
-                        initial_stats[combo][mode][key] = command_result["data"]
-                    fun_test.log("{} stats at the beginning of the test:".format(key))
-                    fun_test.log(initial_stats[combo][mode][key])
-
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
                              "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
@@ -787,79 +662,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
-
-                # Pulling volume stats of all the volumes from the DUT in dictionary format after the test
-                fun_test.log("Pulling volume stats of all volumes after the FIO test")
-                final_volume_status[combo][mode] = {}
-                for vtype in volumes:
-                    final_volume_status[combo][mode][vtype] = {}
-                    for index, uuid in enumerate(self.uuids[vtype]):
-                        final_volume_status[combo][mode][vtype][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, uuid, "stats")
-                        command_result = {}
-                        command_result = self.storage_controller.peek(storage_props_tree,
-                                                                      command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
-                                               format(vtype, index))
-                        final_volume_status[combo][mode][vtype][index] = command_result["data"]
-                        fun_test.log("{} {} volume Status at the end of the test:".format(vtype, index))
-                        fun_test.log(final_volume_status[combo][mode][vtype][index])
-
-                # Pulling the final stats in dictionary format
-                final_stats[combo][mode] = {}
-                for key, value in self.stats_list.items():
-                    if key not in final_stats[combo][mode]:
-                        final_stats[combo][mode][key] = {}
-                    if value:
-                        for item in value:
-                            props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree,
-                                                                          command_duration=self.command_timeout)
-                            fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
-                                                   format(props_tree))
-                            final_stats[combo][mode][key][item] = command_result["data"]
-                    else:
-                        props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
-                                               format(props_tree))
-                        final_stats[combo][mode][key] = command_result["data"]
-                    fun_test.log("{} stats at the end of the test:".format(key))
-                    fun_test.log(final_stats[combo][mode][key])
-
-                # Finding the difference between the internal volume stats before and after the test
-                diff_volume_stats[combo][mode] = {}
-                for vtype in volumes:
-                    diff_volume_stats[combo][mode][vtype] = {}
-                    for index in range(len(self.uuids[vtype])):
-                        diff_volume_stats[combo][mode][vtype][index] = {}
-                        for fkey, fvalue in final_volume_status[combo][mode][vtype][index].items():
-                            # Don't compute the difference of stats which is not defined in expected_volume_stats in
-                            # the json config file
-                            if fkey not in expected_volume_stats[mode][vtype] or fkey == "fault_injection":
-                                diff_volume_stats[combo][mode][vtype][index][fkey] = fvalue
-                                continue
-                            if fkey in initial_volume_status[combo][mode][vtype][index]:
-                                ivalue = initial_volume_status[combo][mode][vtype][index][fkey]
-                                diff_volume_stats[combo][mode][vtype][index][fkey] = fvalue - ivalue
-                        fun_test.log("Difference of {} {} {} volume status before and after the test:".
-                                     format(vtype, index, vtype))
-                        fun_test.log(diff_volume_stats[combo][mode][vtype][index])
-
-                # Finding the difference between the stats before and after the test
-                diff_stats[combo][mode] = {}
-                for key, value in self.stats_list.items():
-                    diff_stats[combo][mode][key] = {}
-                    for fkey, fvalue in final_stats[combo][mode][key].items():
-                        ivalue = initial_stats[combo][mode][key][fkey]
-                        diff_stats[combo][mode][key][fkey] = fvalue - ivalue
-                    fun_test.log("Difference of {} stats before and after the test:".format(key))
-                    fun_test.log(diff_stats[combo][mode][key])
-
-                if not fio_output[combo][mode]:
-                    fio_result[combo][mode] = False
-                    fun_test.critical("No output from FIO test, hence moving to the next variation")
-                    continue
 
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[combo][mode].items():
@@ -1013,45 +815,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(test_result, self.summary)'''
 
     def cleanup(self):
-
-        '''if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-            for index in self.failure_plex_indices:
-                if index < self.ec_coding["ndata"]:
-                    vtype = self.volume_types["ndata"]
-                else:
-                    vtype = self.volume_types["nparity"]
-                    if self.volume_types["ndata"] != self.volume_types["nparity"]:
-                        index = index - self.ec_coding["ndata"]
-                command_result = self.storage_controller.fail_volume(uuid=self.uuids[vtype][index],
-                                                                     command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Disable failure from the {} volume having the UUID "
-                                                               "{}".format(vtype, self.uuids[vtype][index]))
-                fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, self.uuids[vtype][index], "stats")
-                command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
-                                              message="Ensuring fault_injection got disabled")'''
-        self.command_timeout = 30
-        self.ns_id = fun_test.shared_variables["ns_id"]
-        self.ec_info = fun_test.shared_variables["ec_info"]
-        self.remote_ip = fun_test.shared_variables["remote_ip"]
-        # self.ec_coding = fun_test.shared_variables["ec_coding"]  # TODO Remove
-        # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
-        # if fun_test.shared_variables[self.ec_ratio]["setup_created"]:
-
-        # Detaching and Unconfiguring all the volumes
-        '''command_result = self.storage_controller.volume_detach_pcie(
-            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], command_duration=self.command_timeout)'''
-        command_result = self.storage_controller.volume_detach_remote(
-            ns_id=self.ns_id, uuid=self.ec_info["attach_uuid"], huid=tb_config['dut_info'][0]['huid'],
-            ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
-            transport=self.attach_transport, command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Detaching LS/EC volume on DUT")
-
-        unconfigure_ec_volume(self.storage_controller,self.ec_info, self.command_timeout)
+        pass
 
 
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
