@@ -1,12 +1,13 @@
-Post-gres installation notes:
+# Post-gres installation notes:
 
-Ubuntu:
+## Ubuntu:
+```
 sudo apt-get install postgresql
 update-rc.d postgresql enable
 service postgresql start
 sudo -u postgres -i
 
-# psql
+psql
 psql (9.5.14)
 Type "help" for help.
 
@@ -15,3 +16,4 @@ CREATE ROLE
 postgres=# CREATE DATABASE fun_test;
 CREATE DATABASE
 postgres-# \q
+```
