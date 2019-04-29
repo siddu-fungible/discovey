@@ -1,5 +1,5 @@
 # Integration
-Integration testing infrastructure.  Fungible-written source only.
+Integration testing infrastructure.
 
 ## Introduction
 The Integration repository is organized as two major parts
@@ -13,4 +13,12 @@ fun_test has the following layout
 3. scripts
 4. scheduler
 5. web
-  This is where the web-server, logs and database control modules are located
+
+#### web
+This is where the web-server, regression logs and database control modules are located.
+The web-server operates in two modes, development mode and production mode (only used on the main regression server: integration.fungible.local)
+
+##### Web-server in production mode
+Refer: https://github.com/fungible-inc/Integration/blob/master/README-production-server.md
+
+##### Web-server in development mode
