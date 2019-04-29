@@ -1678,11 +1678,11 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
             for file in self.lines:
                 for line in file:
+                    metrics = collections.OrderedDict()
                     if "flow_type" in line:
                         if line["flow_type"] in nu_transit_flow_types:
                             line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
@@ -1704,6 +1704,8 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_latency_P99"] = line.get("latency_P99", -1)
                             metrics["output_latency_P90"] = line.get("latency_P90", -1)
                             metrics["output_latency_P50"] = line.get("latency_P50", -1)
+                        else:
+                            metrics["input_half_load_latency"] = line.get("half_load_latency", False)
                         metrics["input_number_flows"] = line.get("num_flows", 512000)
                         metrics["input_offloads"] = line.get("offloads", False)
                         metrics["input_protocol"] = line.get("protocol", "UDP")
