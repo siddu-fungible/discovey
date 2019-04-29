@@ -2,10 +2,12 @@
 
 ## Ubuntu installation:
 ```
-sudo apt-get install postgresql
-update-rc.d postgresql enable
-service postgresql start
-sudo -u postgres -i
+# sudo apt-get install postgresql
+# update-rc.d postgresql enable
+# service postgresql start
+
+
+# sudo -u postgres -i
 
 psql (9.5.14)
 Type "help" for help.
@@ -20,9 +22,11 @@ postgres-# \q
 
 ## Mac installation:
 ```
-brew install postgres
-brew services start postgresql
-psql postgres
+# brew install postgres
+# brew services start postgresql
+
+
+# psql postgres
 
 psql (9.5.14)
 Type "help" for help.
