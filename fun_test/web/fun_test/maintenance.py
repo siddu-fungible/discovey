@@ -751,7 +751,7 @@ if __name__ == "__main_add_half_load_latency__":
             ml.save_data_sets(data_sets=data_sets, chart=chart)
             print "added half load latency"
 
-if __name__ == "__main__":
+if __name__ == "__main_delete_27th data__":
     model = "TeraMarkJuniperNetworkingPerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model]
@@ -760,3 +760,16 @@ if __name__ == "__main__":
         # date_time = get_localized_time(entry.input_date_time)
         if entry.input_date_time.day >= 27:
             entry.delete()
+
+if __name__ == "__main__":
+    model_names = ["TeraMarkJuniperNetworkingPerformance", "NuTransitPerformance"]
+    entries = MetricChart.objects.all()
+    ml = MetricLib()
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            print json.loads(entry.data_sets)
+            data_sets = json.loads(entry.data_sets)
+            for data_set in data_sets:
+                if "input_number_flows" in data_set["inputs"]:
+                    data_set["inputs"]["input_num_flows"] = data_set["inputs"].pop("input_number_flows")
+            ml.save_data_sets(data_sets=data_sets, chart=entry)

@@ -1706,7 +1706,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_latency_P50"] = line.get("latency_P50", -1)
                         else:
                             metrics["input_half_load_latency"] = line.get("half_load_latency", False)
-                        metrics["input_number_flows"] = line.get("num_flows", 512000)
+                        metrics["input_num_flows"] = line.get("num_flows", 512000)
                         metrics["input_offloads"] = line.get("offloads", False)
                         metrics["input_protocol"] = line.get("protocol", "UDP")
                         metrics["output_jitter_max"] = line.get("jitter_max", -1)
