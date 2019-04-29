@@ -111,7 +111,7 @@ class MetricParser():
                     metrics["input_num_ctrlrs"] = json_value["num_ctrlrs"]
                     metrics["input_num_threads"] = json_value["num_threads"]
                     metrics["input_qdepth"] = json_value["qdepth"]
-                    metrics["input_total_numios"] = json_value["total_numios"]
+                    # metrics["input_total_numios"] = json_value["total_numios"]
                     metrics["input_io_size"] = json_value["io_size"]
             else:
                 n = re.search(
