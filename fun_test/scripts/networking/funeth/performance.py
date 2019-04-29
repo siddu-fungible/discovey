@@ -80,8 +80,11 @@ def collect_stats():
         fpg_stats = {}
         for nc_obj in fun_test.shared_variables['network_controller_objs']:
             for i in FPG_INTERFACES:
+                r = nc_obj.peek_fpg_port_stats(port_num=i)
+                if not r:
+                    r = [{}]
                 fpg_stats.update(
-                    {i: nc_obj.peek_fpg_port_stats(port_num=i)}
+                    {i: r}
                 )
             nc_obj.peek_psw_global_stats()
             #nc_obj.peek_fcp_global_stats()
