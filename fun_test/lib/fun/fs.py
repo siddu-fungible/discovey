@@ -22,9 +22,11 @@ class UartLogger(Thread):
 
     def run(self):
         nc = Netcat(ip=self.ip, port=self.port)
-
-        while not self.stopped and not fun_test.closed:
-            self.buf += nc.read_until(data="PUlsAr", timeout=0.00001)
+        try:
+            while not self.stopped and not fun_test.closed:
+                self.buf += nc.read_until(expected_data="PUlsAr", timeout=5)
+        except Exception as ex:
+            pass
 
     def get_log(self):
         return self.buf
@@ -173,11 +175,11 @@ class Bmc(Linux):
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
         nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc.write(command + "\n")
-        output = nc.read_until(data=expected, timeout=timeout)
+        output = nc.read_until(expected_data=expected, timeout=timeout)
         fun_test.log(output)
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output".format(expected))
-        nc.close()
+        output = nc.close()
         return output
 
     def start_uart_log_listener(self, f1_index):
@@ -305,11 +307,10 @@ class Bmc(Linux):
 
 
     def cleanup(self):
-        fun_test.sleep("Allowing to generate crash report", seconds=30)
+        fun_test.sleep("Allowing to generate full report", seconds=15)
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
             log = uart_log_thread.get_log()
-            uart_log_thread.close()
             with open(artifact_file_name, "w") as f:
                 f.write(log)
             fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
@@ -618,6 +619,8 @@ class Fs(object, ToDictMixin):
             if f1_index == self.disable_f1_index:
                 continue
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
+
+        for f1_index in range(self.NUM_F1S): # TODO: we need both uart logs regardless
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
         if "retimer" not in self.boot_args:
