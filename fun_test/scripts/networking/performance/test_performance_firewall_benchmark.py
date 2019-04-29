@@ -36,12 +36,10 @@ class ScriptSetup(FunTestScript):
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
-        #TODO: To be enabled when dpcsh
-        '''
         mode = 3
-        num_flows = "16777216"
+        num_flows = 16777216
         benchmark_ports = [8, 12]
-        
+
         result = network_controller_obj.set_etp(pkt_adj_size=8)
         fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 8")
 
@@ -50,16 +48,15 @@ class ScriptSetup(FunTestScript):
         for fpg in benchmark_ports:
             result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
-        
-        output_2 = network_controller_obj.set_nu_benchmark_flows(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
+
+        output_2 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=0,
                                                              flow_inport=8, flow_outport=12)
 
-
-        output_3 = network_controller_obj.set_nu_benchmark_flows(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
+        output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=7987200,
                                                              flow_inport=12, flow_outport=8)
-        '''
+
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
