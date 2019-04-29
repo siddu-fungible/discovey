@@ -22,9 +22,11 @@ class UartLogger(Thread):
 
     def run(self):
         nc = Netcat(ip=self.ip, port=self.port)
-
-        while not self.stopped and not fun_test.closed:
-            self.buf += nc.read_until(data="PUlsAr", timeout=0.00001)
+        try:
+            while not self.stopped and not fun_test.closed:
+                self.buf += nc.read_until(expected_data="PUlsAr", timeout=5)
+        except Exception as ex:
+            pass
 
     def get_log(self):
         return self.buf
@@ -135,7 +137,7 @@ class Bmc(Linux):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            self.uart_log_threads[i].close()
+            self.uart_log_threads[f1_index].close()
 
     def come_reset(self, come, max_wait_time=180, power_cycle=True):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
@@ -173,11 +175,11 @@ class Bmc(Linux):
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
         nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc.write(command + "\n")
-        output = nc.read_until(data=expected, timeout=timeout)
+        output = nc.read_until(expected_data=expected, timeout=timeout)
         fun_test.log(output)
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output".format(expected))
-        nc.close()
+        output = nc.close()
         return output
 
     def start_uart_log_listener(self, f1_index):
@@ -199,16 +201,19 @@ class Bmc(Linux):
         result = None
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
 
-        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset',
+        # self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset',
+        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected=self.U_BOOT_F1_PROMPT,
+
                             f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
 
         self.u_boot_command(
             command="setenv bootargs {}".format(
-                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index)
+                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
-        self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
+        # self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
+        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
 
@@ -302,10 +307,10 @@ class Bmc(Linux):
 
 
     def cleanup(self):
+        fun_test.sleep("Allowing to generate full report", seconds=15)
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
             log = uart_log_thread.get_log()
-            uart_log_thread.close()
             with open(artifact_file_name, "w") as f:
                 f.write(log)
             fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
@@ -526,7 +531,8 @@ class Fs(object, ToDictMixin):
                  tftp_image_path="funos-f1.stripped.gz",
                  boot_args=DEFAULT_BOOT_ARGS,
                  power_cycle_come=False,
-                 disable_f1_index=None):
+                 disable_f1_index=None,
+                 disable_uart_logger=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -544,6 +550,7 @@ class Fs(object, ToDictMixin):
         self.f1s = {}
         self.boot_args = boot_args
         self.power_cycle_come = power_cycle_come
+        self.disable_uart_logger = disable_uart_logger
 
     def reachability_check(self):
         # TODO
@@ -563,7 +570,7 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
+    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None, disable_uart_logger=None):
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -597,7 +604,8 @@ class Fs(object, ToDictMixin):
                   come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
                   tftp_image_path=tftp_image_path,
                   boot_args=boot_args,
-                  disable_f1_index=disable_f1_index)
+                  disable_f1_index=disable_f1_index,
+                  disable_uart_logger=disable_uart_logger)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True):
         if reboot_bmc:
@@ -648,7 +656,8 @@ class Fs(object, ToDictMixin):
         if not self.bmc:
             self.bmc = Bmc(disable_f1_index=disable_f1_index, host_ip=self.bmc_mgmt_ip,
                            ssh_username=self.bmc_mgmt_ssh_username,
-                           ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True)
+                           ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True,
+                           disable_uart_logger=self.disable_uart_logger)
             self.bmc.set_prompt_terminator(r'# $')
         return self.bmc
 

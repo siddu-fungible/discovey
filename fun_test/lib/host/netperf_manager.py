@@ -13,11 +13,13 @@ CPU_FREQ = '2.1G'
 class PerformanceTuning:
     def __init__(self, linux_obj):
         self.linux_obj = linux_obj
+        self.num_cpus = linux_obj.get_number_cpus()
 
     def cpu_governor(self, lock_freq=False):
         cmds = ['cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_driver',
+                'for i in {0..%d}; do echo performance > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done' % (self.num_cpus-1),
                 'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',
-                'for i in {0..31}; do echo performance > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done',]
+                ]
         if lock_freq:
             cmds.extend([
                 #'cpupower frequency-set -f {}'.format(CPU_FREQ),
@@ -121,7 +123,7 @@ class NetperfManager:
             perf_tuning_obj.iptables()
 
         for linux_obj in self.linux_objs:
-            pass
+            linux_obj.sudo_command('sysctl net.ipv6.conf.all.disable_ipv6=1')
 
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
@@ -270,7 +272,7 @@ class NetperfManager:
 
                     result[direction].update(
                         {'throughput': calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
-                         'pps': calculate_pps(protocol, frame_size, throughput),
+                         #'pps': calculate_pps(protocol, frame_size, throughput),
                         }
                     )
 
