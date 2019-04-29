@@ -47,10 +47,18 @@
             <td id="{{ flatNode.gUid }}" class="child-transition">
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
-              <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="flatNode.node.leaf" [routerLink]=""
-                 (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}<span *ngIf="flatNode.node.workInProgress"> - (work in progress)</span></a>
-              <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="!flatNode.node.leaf" [routerLink]=""
-                 (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}<span *ngIf="flatNode.node.workInProgress"> - (work in progress)</span></a>
+              <ng-container *ngIf="flatNode.node.leaf">
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                 (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
+                *ngIf="flatNode.node.workInProgress"><app-smart-label [value]="'work in progress'"
+                                                                         [type]="'warning'"></app-smart-label></span>
+              </ng-container>
+              <ng-container *ngIf="!flatNode.node.leaf">
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                 (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
+                *ngIf="flatNode.node.workInProgress"><app-smart-label [value]="'work in progress'"
+                                                                         [type]="'warning'"></app-smart-label></span>
+              </ng-container>
               <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>
               <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
