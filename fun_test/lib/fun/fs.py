@@ -310,7 +310,7 @@ class Bmc(Linux):
 
 
     def cleanup(self):
-        fun_test.sleep("Allowing to generate full report", seconds=15)
+        fun_test.sleep("Allowing time to generate full report", seconds=45)
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
             uart_log_thread.close()
