@@ -1,4 +1,5 @@
 import socket
+import select
 
 class Netcat:
     def __init__(self, ip, port):
@@ -9,7 +10,7 @@ class Netcat:
     def read(self, length=1024):
         return self.socket.recv(length)
 
-    def read_until(self, data, timeout=None):
+    def read_until2(self, data, timeout=None):
         if timeout:
             self.socket.settimeout(timeout)
         buf = ""
@@ -21,6 +22,17 @@ class Netcat:
         except Exception as ex:
             pass
         return buf
+
+    def read_until(self, data, timeout=None):
+        if timeout:
+            self.socket.settimeout(timeout)
+        readable, writable, exceptional = select.select(
+            [self.socket], [], [self.socket])
+        received_data = ""
+        for s in readable:
+            while data not in received_data:
+                received_data += s.recv(1024)
+        return received_data
 
     def write(self, data):
         self.socket.send(data)

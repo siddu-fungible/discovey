@@ -199,16 +199,19 @@ class Bmc(Linux):
         result = None
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
 
-        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset',
+        # self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset',
+        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected=self.U_BOOT_F1_PROMPT,
+
                             f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
 
         self.u_boot_command(
             command="setenv bootargs {}".format(
-                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index)
+                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
-        self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
+        # self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
+        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
 
@@ -527,7 +530,8 @@ class Fs(object, ToDictMixin):
                  tftp_image_path="funos-f1.stripped.gz",
                  boot_args=DEFAULT_BOOT_ARGS,
                  power_cycle_come=False,
-                 disable_f1_index=None):
+                 disable_f1_index=None,
+                 disable_uart_logger=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -545,6 +549,7 @@ class Fs(object, ToDictMixin):
         self.f1s = {}
         self.boot_args = boot_args
         self.power_cycle_come = power_cycle_come
+        self.disable_uart_logger = disable_uart_logger
 
     def reachability_check(self):
         # TODO
@@ -564,7 +569,7 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
+    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None, disable_uart_logger=None):
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -598,7 +603,8 @@ class Fs(object, ToDictMixin):
                   come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
                   tftp_image_path=tftp_image_path,
                   boot_args=boot_args,
-                  disable_f1_index=disable_f1_index)
+                  disable_f1_index=disable_f1_index,
+                  disable_uart_logger=disable_uart_logger)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True):
         if reboot_bmc:
@@ -649,7 +655,8 @@ class Fs(object, ToDictMixin):
         if not self.bmc:
             self.bmc = Bmc(disable_f1_index=disable_f1_index, host_ip=self.bmc_mgmt_ip,
                            ssh_username=self.bmc_mgmt_ssh_username,
-                           ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True)
+                           ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True,
+                           disable_uart_logger=self.disable_uart_logger)
             self.bmc.set_prompt_terminator(r'# $')
         return self.bmc
 
