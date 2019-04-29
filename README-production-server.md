@@ -1,5 +1,5 @@
 
-# Setup needed for the main regression server (production mode)
+# Setup needed for the regression server in production mode
 
 ## Initial setup
 All configuration steps below need to be performed with "qa-admin" as the user
