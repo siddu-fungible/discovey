@@ -7,25 +7,25 @@ All configuration steps below need to be performed with "qa-admin" as the user
 ### Account settings
 
 ~~~~
-sudo adduser qa-admin sudo
-qa-admin@qa-ubuntu-01:~$ echo $PRODUCTION_MODE
+# sudo adduser qa-admin sudo
+# echo $PRODUCTION_MODE
 1
-qa-admin@qa-ubuntu-01:~$ cat ~/.bash_profile
+# cat ~/.bash_profile
 if [ -f $HOME/.bashrc ]; then
         source $HOME/.bashrc
 fi
 
-export LC_ALL=en_US.UTF-8
-export LANG=en_US.UTF-8
+# export LC_ALL=en_US.UTF-8
+# export LANG=en_US.UTF-8
 qa-admin@qa-ubuntu-01:~$ cat ~/.bashrc 
-export PRODUCTION_MODE=1
-export PYTHONPATH=/project/users/QA/regression/Integration/fun_test
+# export PRODUCTION_MODE=1
+# export PYTHONPATH=/project/users/QA/regression/Integration/fun_test
 ~~~~
 
 ### Install Python modules
 ```
-cd /project/users/QA/regression/Integration/fun_test  
-pip install -r requirements.txt --user  
+# cd /project/users/QA/regression/Integration/fun_test  
+# pip install -r requirements.txt --user  
 ```
 
 ### Install Postgres database
@@ -34,7 +34,7 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-i
 
 ### Postgres settings
 ~~~~
-mkdir /project/users/QA/regression/database
+# mkdir /project/users/QA/regression/database
 qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep "data_dir"   /etc/postgresql/9.5/main/postgresql.conf  
 #data_directory = '/var/lib/postgresql/9.5/main'		# use data in another directory   
 data_directory = '/project/users/QA/regression/database/postgresql’ 
