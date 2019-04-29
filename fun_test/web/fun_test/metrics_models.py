@@ -1159,7 +1159,7 @@ class NuTransitPerformance(models.Model):
     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1000000)
+    input_num_flows = models.IntegerField(verbose_name="Number of flows", default=1000000)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="UDP")
 
@@ -1276,7 +1276,7 @@ class TeraMarkJuniperNetworkingPerformance(models.Model):
     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=0)
+    input_num_flows = models.IntegerField(verbose_name="Number of flows", default=0)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="UDP")
     input_half_load_latency = models.BooleanField(default=False)
