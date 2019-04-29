@@ -28,6 +28,11 @@ cd /project/users/QA/regression/Integration/fun_test
 pip install -r requirements.txt --user  
 ```
 
+### Install postgres database
+```
+Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-installation-notes.md
+```
+
 ### Postgres settings
 ~~~~
 mkdir /project/users/QA/regression/database
