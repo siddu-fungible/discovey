@@ -1,4 +1,4 @@
-# Post-gres installation notes:
+# Postgres installation notes:
 
 ## Ubuntu installation:
 ```
