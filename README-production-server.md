@@ -60,21 +60,22 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo i
 
 ## Starting the web-server
 ~~~~
-cd /project/users/QA/regression/Integration/fun_test
-export PYTHONPATH=`pwd`
-export PRODUCTION_MODE=1
-python web/manage.py migrate --database=default
-cd web/angular/qadashboard/
-ng build --prod  --output-hashing none
-nohup python web/start_production_server.py &> server.out  &
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# export PRODUCTION_MODE=1
+# python web/manage.py migrate --database=default
+# cd web/angular/qadashboard/
+# ng build --prod  --output-hashing none
+# nohup python web/start_production_server.py &> server.out  &
 ~~~~
 
 ## Starting/Re-starting the scheduler
 - Ensure the web-server was started successfully
 ~~~~
-cd /project/users/QA/regression/Integration/fun_test
-export PYTHONPATH=`pwd`
-export PRODUCTION_MODE=1
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# export PRODUCTION_MODE=1
+# scheduler/restart_scheduler.sh
 ~~~~
 - Ensure that ps -ef | grep scheduler_main does not show any entry
 
