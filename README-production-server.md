@@ -22,13 +22,13 @@ export PRODUCTION_MODE=1
 export PYTHONPATH=/project/users/QA/regression/Integration/fun_test
 ~~~~
 
-### Install python modules
+### Install Python modules
 ```
 cd /project/users/QA/regression/Integration/fun_test  
 pip install -r requirements.txt --user  
 ```
 
-### Install postgres database
+### Install Postgres database
 Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-installation-notes.md
 
 
