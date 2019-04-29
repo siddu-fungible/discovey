@@ -13,3 +13,4 @@ fun_test has the following layout
 3. scripts
 4. scheduler
 5. web
+  This is where the web-server, logs and database control modules are located
