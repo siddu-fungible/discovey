@@ -1886,7 +1886,6 @@ class TeraMarkRcnvmeReadWritePerformance(models.Model):
     input_num_ctrlrs = models.IntegerField(default=-1)
     input_num_threads = models.IntegerField(default=-1)
     input_qdepth = models.IntegerField(default=-1)
-    input_total_numios = models.IntegerField(default=-1)
     input_io_size = models.IntegerField(default=-1)
     input_ctrlr_id = models.IntegerField(default=-1)
     input_model = models.TextField(default="")
