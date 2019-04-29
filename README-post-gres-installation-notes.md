@@ -1,10 +1,21 @@
 # Post-gres installation notes:
 
-## Ubuntu:
+## Ubuntu installation:
 ```
 sudo apt-get install postgresql
 update-rc.d postgresql enable
 service postgresql start
+
+```
+
+## Mac installation:
+```
+brew install postgres
+brew services start postgresql
+```
+
+## Creating user and database
+```
 sudo -u postgres -i
 
 psql
