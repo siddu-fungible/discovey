@@ -738,7 +738,7 @@ if __name__ == "__main_version_addition__":
                                    build_properties="", lsf_job_id="",
                                    sdk_version=version)
 
-if __name__ == "__main__":
+if __name__ == "__main_add_half_load_latency__":
     internal_chart_names = ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps", "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"]
     ml = MetricLib()
     for internal_chart_name in internal_chart_names:
@@ -750,3 +750,13 @@ if __name__ == "__main__":
             data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
             ml.save_data_sets(data_sets=data_sets, chart=chart)
             print "added half load latency"
+
+if __name__ == "__main__":
+    model = "TeraMarkJuniperNetworkingPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model]
+    entries = metric_model.objects.all()
+    for entry in entries:
+        # date_time = get_localized_time(entry.input_date_time)
+        if entry.input_date_time.day >= 27:
+            entry.delete()
