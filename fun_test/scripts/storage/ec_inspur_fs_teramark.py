@@ -1,20 +1,15 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.topology_helper import TopologyHelper
-from lib.topology.dut import Dut, DutInterface
-from lib.fun.f1 import F1
-from lib.host.storage_controller import StorageController
+from lib.topology.dut import Dut
 from lib.host.traffic_generator import TrafficGenerator
-from web.fun_test.analytics_models_helper import VolumePerformanceHelper
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from lib.host.linux import Linux
-from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
 
 '''
-Script to track the performance of various read write combination of Erasure Coded volume using FIO
+Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using Vdbench
 '''
 
 tb_config = {
@@ -64,11 +59,11 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
 
     db_log_time = fun_test.shared_variables["db_log_time"]
     num_ssd = fun_test.shared_variables["num_ssd"]
-    num_volume = fun_test.shared_variables["num_volume"]
+    num_volumes = fun_test.shared_variables["num_volumes"]
 
     blt = BltVolumePerformanceHelper()
     blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
+                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volumes, fio_job_name=fio_job_name,
                   write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
                   write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
                   write_95_latency=write_95_latency, write_99_latency=write_99_latency,
@@ -314,7 +309,6 @@ class ECVolumeLevelScript(FunTestScript):
 
         """ TODO: Reboot comment start (To avoid poc-server-03 reboot- remove before final commit)"""
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
-        # host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
 
         interface_ip_config = "sudo ip addr add {} dev {}".format(
@@ -331,19 +325,15 @@ class ECVolumeLevelScript(FunTestScript):
 
         interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
                                                                 timeout=self.command_timeout)
-        fun_test.log("interface_ip_config_status output is: {}".format(interface_ip_config_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                       message="Configuring test interface IP address")
 
-
         interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
                                                           timeout=self.command_timeout)
-        fun_test.log("interface_mac_status output is: {}".format(interface_mac_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                       message="Assigning MAC to test interface")
 
         link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-        fun_test.log("link_up_status output is: {}".format(link_up_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
 
         interface_up_status = self.end_host.ifconfig_up_down(
@@ -356,11 +346,9 @@ class ECVolumeLevelScript(FunTestScript):
             gateway=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["gw"],
             outbound_interface=self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
             timeout=self.command_timeout)
-        fun_test.log("route_add_status output is: {}".format(route_add_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
 
         arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-        fun_test.log("arp_add_status command output is: {}".format(arp_add_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                       message="Adding static ARP to F1 route")
 
@@ -394,9 +382,6 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
 
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # self.ec_coding = fun_test.shared_variables["ec_coding"]  # TODO Remove
-        # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
         self.ec_info = fun_test.shared_variables["ec_info"]
         self.remote_ip = fun_test.shared_variables["remote_ip"]
         self.attach_transport = fun_test.shared_variables["attach_transport"]
@@ -450,8 +435,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         if not hasattr(self, "num_ssd"):
             self.num_ssd = 1
-        if not hasattr(self, "num_volume"):
-            self.num_volume = 1
         # End of benchmarking json file parsing
 
         self.fs = fun_test.shared_variables["fs"]
@@ -463,14 +446,16 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.test_bed_spec = fun_test.shared_variables["test_bed_spec"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         fun_test.shared_variables["attach_transport"] = self.attach_transport
+        num_ssd = self.num_ssd
+        fun_test.shared_variables["num_ssd"] = num_ssd
 
-        # Remove fun_test.shared_variables["ec_coding"] = self.ec_coding  # TODO Remove
-        # self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])  # TODO Remove
         self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
             fun_test.shared_variables["ec"]["setup_created"] = False
+            fun_test.shared_variables["ec_info"] = self.ec_info
+            fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Configuring the controller
             command_result = {}
@@ -493,6 +478,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Attaching/Exporting all the EC/LS volumes to the external server
             self.remote_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"].split('/')[0]
+            fun_test.shared_variables["remote_ip"] = self.remote_ip
             for num in xrange(self.ec_info["num_volumes"]):
                 command_result = self.storage_controller.volume_attach_remote(
                     ns_id=num+1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
@@ -517,12 +503,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                           message="Ensuring error_injection got disabled")
 
-            fun_test.shared_variables["ns_id"] = self.ns_id
-            fun_test.shared_variables["ec_info"] = self.ec_info
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
             fun_test.shared_variables["ec"]["setup_created"] = True
 
-            # sudo nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1
+            # Checking nvme-connect status
             if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
                 nvme_connect_cmd = "sudo nvme connect -t {} -a {} -s {} -n {}".format(
                     self.attach_transport.lower(), self.test_bed_spec["f1_loopback_ip"][self.f1_in_use],
@@ -561,33 +544,28 @@ class ECVolumeLevelTestcase(FunTestCase):
                 vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
                                                            timeout=self.warm_up_timeout)
                 fun_test.log("Vdbench output result: {}".format(vdbench_result))
-
+                fun_test.test_assert(vdbench_result,
+                                     "Vdbench run is completed for profile {}".format(self.warm_up_config_file))
 
     def run(self):
 
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
+        fun_test.sleep("Interval after warm-up traffic")
         fun_test.log("Starting Random Read/Write of 8k data block")
         self.end_host = fun_test.shared_variables["end_host"]
 
-        '''if self.end_host.check_file_directory_exists(path="/usr/local/share/vdbench/single_node_8_11_1"):
-            vdbench_result = self.end_host.sudo_command(
-                "/usr/local/share/vdbench/vdbench -f /usr/local/share/vdbench/single_node_8_11_1",
-                timeout=self.command_timeout * 20)
-            fun_test.log("Vdbench output result: {}".format(vdbench_result))'''
+        fun_test.log("Building the volume performance run config file")
+        self.perf_run_profile = "{}/{}".format(self.vdbench_path, self.perf_run_config_file)
+        self.end_host.create_file(file_name=self.perf_run_profile, contents=self.perf_run_vdb_config)
 
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
-        # & read only modes
-        fio_result = {}
-        fio_output = {}
-        internal_result = {}
-        initial_volume_status = {}
-        final_volume_status = {}
-        diff_volume_stats = {}
-        initial_stats = {}
-        final_stats = {}
-        diff_stats = {}
+        fun_test.log("Starting Vdbench performance run all the volumes")
+        vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, filename=self.perf_run_profile,
+                                                   timeout=self.perf_run_timeout)
+        fun_test.log("Vdbench output result: {}".format(vdbench_result))
+        fun_test.test_assert(vdbench_result,
+                             "Vdbench run is completed for profile {}".format(self.perf_run_config_file))
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -602,216 +580,42 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        '''for combo in self.fio_bs_iodepth:
-            fio_result[combo] = {}
-            fio_output[combo] = {}
-            internal_result[combo] = {}
-            initial_volume_status[combo] = {}
-            final_volume_status[combo] = {}
-            diff_volume_stats[combo] = {}
-            initial_stats[combo] = {}
-            final_stats[combo] = {}
-            diff_stats[combo] = {}
+        row_data_dict = {}
+        vdbench_run_name = self.perf_run_config_file
 
-            if combo in self.expected_volume_stats:
-                expected_volume_stats = self.expected_volume_stats[combo]
+        # Calculating Read/Write bandwidth and IOPS
+        if hasattr(self, "read_pct"):
+            read_bw = int(round(float(vdbench_result["throughput"]) * self.read_pct))
+            read_iops = int(round(float(vdbench_result["iops"]) * self.read_pct))
+            write_bw = int(round(float(vdbench_result["throughput"]) * (1 - self.read_pct)))
+            write_iops = int(round(float(vdbench_result["iops"]) * (1 - self.read_pct)))
+        else:
+            read_bw = int(round(float(vdbench_result["throughput"])))
+            read_iops = int(round(float(vdbench_result["iops"])))
+            write_bw = -1
+            write_iops = -1
+
+        row_data_dict["fio_job_name"] = vdbench_run_name
+        row_data_dict["readiops"] = read_iops
+        row_data_dict["readbw"] = read_bw
+        row_data_dict["writeiops"] = write_iops
+        row_data_dict["writebw"] = write_bw
+        row_data_dict["readclatency"] = int(round(float(vdbench_result["read_resp"])))
+        row_data_dict["writelatency"] = int(round(float(vdbench_result["write_resp"])))
+
+        # Building the table raw for this variation
+        row_data_list = []
+        for i in table_data_cols:
+            if i not in row_data_dict:
+                row_data_list.append(-1)
             else:
-                expected_volume_stats = self.expected_volume_stats
-
-            if combo in self.expected_stats:
-                expected_stats = self.expected_stats[combo]
-            else:
-                expected_stats = self.expected_stats
-
-            for mode in self.fio_modes:
-
-                tmp = combo.split(',')
-                fio_block_size = tmp[0].strip('() ') + 'k'
-                fio_iodepth = tmp[1].strip('() ')
-                fio_result[combo][mode] = True
-                internal_result[combo][mode] = True
-                row_data_dict = {}
-                row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = fio_block_size
-                row_data_dict["iodepth"] = fio_iodepth
-                row_data_dict["size"] = self.fio_cmd_args["size"]
-
-                # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
-                             "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
-                fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
-                                                                 bs=fio_block_size, iodepth=fio_iodepth,
-                                                                 **self.fio_cmd_args)
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fio_output[combo][mode])
-                # Boosting the fio output with the testbed performance multiplier
-                multiplier = tb_config["dut_info"][0]["perf_multiplier"]
-                for op, stats in fio_output[combo][mode].items():
-                    for field, value in stats.items():
-                        if field == "iops":
-                            fio_output[combo][mode][op][field] = int(round(value * multiplier))
-                        if field == "bw":
-                            # Converting the KBps to MBps
-                            fio_output[combo][mode][op][field] = int(round(value * multiplier / 1000))
-                        if field == "latency":
-                            fio_output[combo][mode][op][field] = int(round(value / multiplier))
-                fun_test.log("FIO Command Output after multiplication:")
-                fun_test.log(fio_output[combo][mode])
-
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
-
-                # Comparing the FIO results with the expected value for the current block size and IO depth combo
-                for op, stats in self.expected_fio_result[combo][mode].items():
-                    for field, value in stats.items():
-                        actual = fio_output[combo][mode][op][field]
-                        row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
-                                                     int((value * (1 + self.fio_pass_threshold))))
-                        if field == "latency":
-                            ifop = "greater"
-                            elseop = "lesser"
-                        else:
-                            ifop = "lesser"
-                            elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
-                        if compare(actual, value, self.fio_pass_threshold, ifop):
-                            fio_result[combo][mode] = False
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
-                        elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got {} than the expected range {}".
-                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
-                        else:
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} is within the expected range {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
-
-                # Comparing the internal volume stats with the expected value
-                for vtype in volumes:
-                    for index in range(len(self.uuids[vtype])):
-                        for ekey, evalue in expected_volume_stats[mode][vtype].items():
-                            if evalue == -1:
-                                fun_test.log("Ignoring the {}'s key checking for {} {} volume".format(ekey, vtype,
-                                                                                                      index))
-                                continue
-                            if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-                                if vtype == self.volume_types["ndata"] and index in self.failure_plex_indices:
-                                    if ekey == "fault_injection":
-                                        evalue = 1
-                                    else:
-                                        evalue = 0
-                                elif self.volume_types["ndata"] != self.volume_types["nparity"] and \
-                                        vtype == self.volume_types["nparity"] and (index + self.ec_coding["ndata"]) in \
-                                        self.failure_plex_indices:
-                                    if ekey == "fault_injection":
-                                        evalue = 1
-                                    else:
-                                        evalue = 0
-                            if ekey in diff_volume_stats[combo][mode][vtype][index]:
-                                actual = diff_volume_stats[combo][mode][vtype][index][ekey]
-                                # row_data_dict[ekey] = actual
-                                if actual != evalue:
-                                    if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
-                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
-                                                                "block size & IO depth combo {}".
-                                                                format(ekey, vtype, index, mode, combo), "PASSED",
-                                                                evalue, actual)
-                                        fun_test.critical("Final {} value {} of {} {} volume is within the expected "
-                                                          "range {}".format(ekey, actual, vtype, index, evalue))
-                                    elif (actual > evalue) and ((actual - evalue) <= self.volume_pass_threshold):
-                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
-                                                                "block size & IO depth combo {}".
-                                                                format(ekey, vtype, index, mode, combo), "PASSED",
-                                                                evalue, actual)
-                                        fun_test.critical("Final {} value {} of {} {} volume is within the expected "
-                                                          "range {}".format(ekey, actual, vtype, index, evalue))
-                                    else:
-                                        internal_result[combo][mode] = False
-                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
-                                                                "block size & IO depth combo {}".
-                                                                format(ekey, vtype, index, mode, combo), "FAILED",
-                                                                evalue, actual)
-                                        fun_test.critical("Final {} value {} of {} {} volume is not equal to the "
-                                                          "expected value {}".format(ekey, actual, vtype, index, evalue))
-                                else:
-                                    fun_test.add_checkpoint("{} check for {} {} volume for {} test for the block "
-                                                            "size & IO depth combo {}".
-                                                            format(ekey, vtype, index, mode, combo), "PASSED",
-                                                            evalue, actual)
-                                    fun_test.log("Final {} value {} of {} {} volume is equal to the expected value {}".
-                                                 format(ekey, actual, vtype, index, evalue))
-                            else:
-                                internal_result[combo][mode] = False
-                                fun_test.critical("{} is not found in {} {} volume status".format(ekey, vtype, index))
-
-                # Comparing the internal stats with the expected value
-                for key, value in expected_stats[mode].items():
-                    for ekey, evalue in expected_stats[mode][key].items():
-                        if ekey in diff_stats[combo][mode][key]:
-                            actual = diff_stats[combo][mode][key][ekey]
-                            evalue_list = evalue.strip("()").split(",")
-                            expected = int(evalue_list[0])
-                            threshold = int(evalue_list[1])
-                            if actual != expected:
-                                if actual < expected:
-                                    fun_test.add_checkpoint(
-                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                        "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
-                                    fun_test.log("Final {} value {} of {} stats is less than the expected range "
-                                                 "{}".format(ekey, key, actual, expected))
-                                elif (actual > expected) and ((actual - expected) <= threshold):
-                                    fun_test.add_checkpoint(
-                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                        "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
-                                    fun_test.log("Final {} value {} of {} stats is within the expected range {}".
-                                                 format(ekey, key, actual, expected))
-                                else:
-                                    internal_result[combo][mode] = False
-                                    fun_test.add_checkpoint(
-                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                        "{}".format(ekey, key, mode, combo), "FAILED", expected, actual)
-                                    fun_test.critical("Final {} value of {} stats {} is not equal to the expected value"
-                                                      " {}".format(ekey, key, actual, expected))
-                            else:
-                                fun_test.add_checkpoint(
-                                    "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                    "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
-                                fun_test.log("Final {} value of {} stats is equal to the expected value {}".
-                                             format(ekey, key, actual, expected))
-                        else:
-                            internal_result[combo][mode] = False
-                            fun_test.critical("{} is not found in {} stat".format(ekey, key))
-
-                # Building the table raw for this variation
-                row_data_list = []
-                for i in table_data_cols:
-                    if i not in row_data_dict:
-                        row_data_list.append(0)
-                    else:
-                        row_data_list.append(row_data_dict[i])
-                table_data_rows.append(row_data_list)
-                # post_results("EC with volume level failure domain", test_method, *row_data_list)
+                row_data_list.append(row_data_dict[i])
+        table_data_rows.append(row_data_list)
+        post_results("EC with 8k data block random read/write IOPS", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
-
-        # Posting the final status of the test result
-        fun_test.log(fio_result)
-        fun_test.log(internal_result)
-        test_result = True
-        for combo in self.fio_bs_iodepth:
-            for mode in self.fio_modes:
-                if not fio_result[combo][mode] or not internal_result[combo][mode]:
-                    test_result = False
-
-        fun_test.test_assert(test_result, self.summary)'''
+        fun_test.add_table(panel_header="8k data block random readn/write IOPS Performance Table",
+                           table_name=self.summary, table_data=table_data)
 
     def cleanup(self):
         pass
@@ -829,7 +633,7 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
         7. Run warm-up traffic using vdbench
-        8. Check the performance for 8k block size
+        8. Run the Performance for 8k transfer size Random read/write IOPS
         """)
 
     def setup(self):
