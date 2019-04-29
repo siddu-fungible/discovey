@@ -310,6 +310,7 @@ class Bmc(Linux):
         fun_test.sleep("Allowing to generate full report", seconds=15)
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
+            uart_log_thread.close()
             log = uart_log_thread.get_log()
             with open(artifact_file_name, "w") as f:
                 f.write(log)
