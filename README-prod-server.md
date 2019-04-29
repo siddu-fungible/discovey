@@ -23,10 +23,12 @@ export PYTHONPATH=/project/users/QA/regression/Integration/fun_test
 ~~~~
 
 ### Install python modules
+```
 cd /project/users/QA/regression/Integration/fun_test  
-pip install -r requirements.txt —user  
+pip install -r requirements.txt --user  
 mkdir /project/users/QA/regression/database  
 nohup python web/start_production_server.py & 
+```
 
 ### Postgres settings
 ~~~~
