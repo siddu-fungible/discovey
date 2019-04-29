@@ -8,6 +8,7 @@
 
 
 # sudo -u postgres -i
+# psql
 
 psql (9.5.14)
 Type "help" for help.
