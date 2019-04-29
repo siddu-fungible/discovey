@@ -29,6 +29,7 @@ PERF_RESULT_KEYS = ('throughput',
                     'latency_P90',
                     'latency_P99',
                     )
+FPG_INTERFACES = (0, 4,)
 
 
 class FunethPerformance(sanity.FunethSanity):
@@ -76,9 +77,12 @@ class FunethPerformance(sanity.FunethSanity):
 def collect_stats():
     try:
         # TODO: add mpstat and netstat
+        fpg_stats = {}
         for nc_obj in fun_test.shared_variables['network_controller_objs']:
-            fpg0_stats = nc_obj.peek_fpg_port_stats(port_num=0)
-            fpg4_stats = nc_obj.peek_fpg_port_stats(port_num=4)
+            for i in FPG_INTERFACES:
+                fpg_stats.update(
+                    {i: nc_obj.peek_fpg_port_stats(port_num=i)}
+                )
             nc_obj.peek_psw_global_stats()
             #nc_obj.peek_fcp_global_stats()
             nc_obj.peek_vp_packets()
@@ -87,14 +91,18 @@ def collect_stats():
             nc_obj.peek_eqm_stats()
             nc_obj.flow_list()
             nc_obj.flow_list(blocked_only=True)
-        fpg_rx_bytes = fpg0_stats[0].get('port_0-PORT_MAC_RX_OctetsReceivedOK', 0) + fpg4_stats[0].get(
-            'port_4-PORT_MAC_RX_OctetsReceivedOK', 0)
-        fpg_rx_pkts = fpg0_stats[0].get('port_0-PORT_MAC_RX_aFramesReceivedOK', 0) + fpg4_stats[0].get(
-            'port_4-PORT_MAC_RX_aFramesReceivedOK', 0)
-        fpg_tx_bytes = fpg0_stats[0].get('port_0-PORT_MAC_TX_OctetsReceivedOK', 0) + fpg4_stats[0].get(
-            'port_4-PORT_MAC_TX_OctetsReceivedOK', 0)
-        fpg_tx_pkts = fpg0_stats[0].get('port_0-PORT_MAC_TX_aFramesReceivedOK', 0) + fpg4_stats[0].get(
-            'port_4-PORT_MAC_TX_aFramesReceivedOK', 0)
+        fpg_rx_bytes = sum(
+            [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
+        )
+        fpg_rx_pkts = sum(
+            [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_aFramesReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
+        )
+        fpg_tx_bytes = sum(
+            [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_OctetsTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
+        )
+        fpg_tx_pkts = sum(
+            [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
+        )
         return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
     except:
         pass
@@ -140,7 +148,8 @@ class FunethPerformanceBase(FunTestCase):
                 if parallel == 1:
                     break
 
-        suffixes = ('n2h', 'h2n', 'h2h')
+        #suffixes = ('n2h', 'h2n', 'h2h')  TODO: add 'h2h'
+        suffixes = ('n2h', 'h2n')
         arg_dicts = []
         for shost, dhost in host_pairs:
             linux_obj_src = funeth_obj.linux_obj_dict[shost]
@@ -175,7 +184,6 @@ class FunethPerformanceBase(FunTestCase):
         fun_test.log('Collect stats after test')
         fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_stats()
 
-        import pdb; pdb.set_trace()
         if flow_type.startswith('NU_HU'):
             result.update(
                 {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}

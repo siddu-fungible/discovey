@@ -13,10 +13,11 @@ CPU_FREQ = '2.1G'
 class PerformanceTuning:
     def __init__(self, linux_obj):
         self.linux_obj = linux_obj
+        self.num_cpus = linux_obj.get_number_cpus()
 
     def cpu_governor(self, lock_freq=False):
         cmds = ['cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_driver',
-                'for i in {0..31}; do echo performance > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done',
+                'for i in {0..%d}; do echo performance > /sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor; done' % (self.num_cpus-1),
                 'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor',
                 ]
         if lock_freq:

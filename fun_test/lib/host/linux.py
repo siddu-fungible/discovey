@@ -2257,6 +2257,15 @@ class Linux(object, ToDictMixin):
         cmd = 'pkill {}'.format(process_name)
         return self.sudo_command(cmd)
 
+    @fun_test.safe
+    def get_number_cpus(self):
+        """Get number of CPUs."""
+        cmd = 'lscpu'
+        output = self.command(cmd)
+        match = re.search(r'CPU\(s\):\s+(\d+)', output)
+        if match:
+            return int(match.group(1))
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
