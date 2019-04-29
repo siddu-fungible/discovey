@@ -19,12 +19,13 @@ class UartLogger(Thread):
         self.port = port
         self.stopped = False
         self.buf = ""
+        self.nc = None
 
     def run(self):
-        nc = Netcat(ip=self.ip, port=self.port)
+        self.nc = Netcat(ip=self.ip, port=self.port)
         try:
             while not self.stopped and not fun_test.closed:
-                self.buf += nc.read_until(expected_data="PUlsAr", timeout=5)
+                self.buf += self.nc.read_until(expected_data="PUlsAr", timeout=5)
         except Exception as ex:
             pass
 
@@ -33,6 +34,8 @@ class UartLogger(Thread):
 
     def close(self):
         self.stopped = True
+        if self.nc:
+            self.buf += self.nc.close()
 
 
 class BootPhases:
