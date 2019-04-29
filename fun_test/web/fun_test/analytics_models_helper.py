@@ -664,16 +664,16 @@ if __name__ == "__main__":
     # prepare_status_db()
     generic_helper = ModelHelper(model_name="TeraMarkFunTcpThroughputPerformance")
     d = {}
-    d["timestamp"] = "2019-04-25 09:44:02.007497-07:00"
+    d["timestamp"] = "2019-04-29 11:17:31.124485-07:00"
     d["mode"] = "100G"
-    d["version"] = 6087
+    d["version"] = 6191
     d["flow_type"] = "FunTCP_Server_Throughput"
     d["frame_size"] = 1500
-    d["pps"] = 799339.1666666666
-    d["throughput"] = 95
+    d["pps"] = 1828805.0000000002
+    d["throughput"] = 21945.660000000003
     d["num_flows"] = 4
-    d["pps_unit"] = "pps"
-    d["throughput_unit"] = "Mbps"
+    #d["pps_unit"] = "pps"
+    #d["throughput_unit"] = "Mbps"
 
     unit = {}
     unit["pps_unit"] = "pps"
