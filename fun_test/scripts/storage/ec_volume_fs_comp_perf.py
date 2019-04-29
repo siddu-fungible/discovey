@@ -101,10 +101,19 @@ def get_comp_percent(orig_size, comp_size):
 def parse_perf_stats(perf_dict):
     for k in perf_dict:
         if k == "iops" or k == "latency":
-            perf_dict[k] = round(perf_dict[k])
+            perf_dict[k] = int(round(perf_dict[k]))
         if k == "bw":
-            perf_dict[k] = round(perf_dict[k] / 1000)
+            perf_dict[k] = int(round(perf_dict[k] / 1000))
     return perf_dict
+
+
+def parse_table_header(header_lst):
+    for h in xrange(len(header_lst)):
+        if header_lst[h] == "iops":
+            header_lst[h] += "(kops)"
+        if header_lst[h] == "bw":
+            header_lst[h] += "(MBps)"
+    header_lst.insert(0, "")
 
 
 class ECVolumeLevelScript(FunTestScript):
@@ -244,18 +253,13 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Create required LSV
         lsv_vol_name = "lsv_vol1"
         lsv_vol_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_volume(type=self.volume_info["lsv"]["type"],
-                                                                   capacity=self.volume_info["lsv"]["capacity"],
-                                                                   block_size=self.volume_info["lsv"]["block_size"],
-                                                                   name=lsv_vol_name,
+        fun_test.test_assert(self.storage_controller.create_volume(name=lsv_vol_name,
                                                                    uuid=lsv_vol_uuid,
                                                                    group=self.ec_coding["ndata"],
                                                                    jvol_uuid=jvol_uuid,
                                                                    pvol_id=[ec_vol_uuid],
-                                                                   compress=self.volume_info["lsv"]["compress"],
-                                                                   zip_effort=self.volume_info["lsv"]["zip_effort"],
-                                                                   zip_filter=self.volume_info["lsv"]["zip_filter"],
-                                                                   command_duration=self.command_timeout)['status'],
+                                                                   command_duration=self.command_timeout,
+                                                                   **self.volume_info['lsv'])['status'],
                              message="Create Lsv volume, uuid: {0}, name: {1}".format(lsv_vol_uuid, lsv_vol_name))
         self.vols_created["lsv"].append({"name": lsv_vol_name, "uuid": lsv_vol_uuid})
 
@@ -318,11 +322,11 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Do fio write for 16K
         fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device, **self.write_ut_fio_cmd_args),
                              message="Execute {0} write on nvme device {1}".format(self.write_ut_fio_cmd_args['size'],
-                                                                                   self.nvme_block_device,))
+                                                                                   self.nvme_block_device))
 
         # Get updated write count
         resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
-        fun_test.test_assert(resp, message="Get LSV stats before copmpression", ignore_on_success=True)
+        fun_test.test_assert(resp, message="Get LSV stats before compression", ignore_on_success=True)
         fun_test.test_assert(resp['data'][lsv_vol_uuid]['compression'],
                              message="Check compression related params are seen on LSV",
                              ignore_on_success=True)
@@ -405,18 +409,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                        command_duration=self.command_timeout)
 
             # Delete LSV Volume
-            self.storage_controller.delete_volume(type=self.volume_info["lsv"]["type"],
-                                                  capacity=self.volume_info["lsv"]["capacity"],
-                                                  block_size=self.volume_info["lsv"]["block_size"],
-                                                  name=lsv_name,
+            self.storage_controller.delete_volume(name=lsv_name,
                                                   uuid=lsv_uuid,
                                                   group=self.ec_coding["ndata"],
                                                   jvol_uuid=jvol_uuid,
                                                   pvol_id=[ec_uuid],
-                                                  compress=self.volume_info["lsv"]["compress"],
-                                                  zip_effort=self.volume_info["lsv"]["zip_effort"],
-                                                  zip_filter=self.volume_info["lsv"]["zip_filter"],
-                                                  command_duration=self.command_timeout)
+                                                  command_duration=self.command_timeout,
+                                                  **self.volume_info['lsv'])
             # Delete the Jvol
             self.storage_controller.delete_volume(type=self.volume_info["jvol"]["type"],
                                                   capacity=self.volume_info["jvol"]["capacity"],
@@ -515,9 +514,31 @@ class EC42FioReadEffort2Gbps(ECVolumeLevelTestcase):
         super(EC42FioReadEffort2Gbps, self).cleanup()
 
 
+class EC42FioReadCompDisabled(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Test Sequential and Random reads for 4:2 EC volume with Compression Disabled",
+                              steps="""
+                              1. Execute writes on NVME device with compressibility 1%.
+                              2. Perform sequential read for above write, log performance stats.
+                              3. Perform random read for above write, log performance stats.
+                              4. Repeat step 1,2,3 for 50% and 80% compressible data. 
+                              """)
+
+    def setup(self):
+        super(EC42FioReadCompDisabled, self).setup()
+
+    def run(self):
+        super(EC42FioReadCompDisabled, self).run()
+
+    def cleanup(self):
+        super(EC42FioReadCompDisabled, self).cleanup()
+
+
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(EC42FioReadEffortAuto())
     ecscript.add_test_case(EC42FioReadEffort64Gbps())
     ecscript.add_test_case(EC42FioReadEffort2Gbps())
+    ecscript.add_test_case(EC42FioReadCompDisabled())
     ecscript.run()
