@@ -619,8 +619,6 @@ class Fs(object, ToDictMixin):
             if f1_index == self.disable_f1_index:
                 continue
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
-
-        for f1_index in range(self.NUM_F1S): # TODO: we need both uart logs regardless
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
         if "retimer" not in self.boot_args:
