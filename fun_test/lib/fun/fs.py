@@ -135,7 +135,7 @@ class Bmc(Linux):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            self.uart_log_threads[i].close()
+            self.uart_log_threads[f1_index].close()
 
     def come_reset(self, come, max_wait_time=180, power_cycle=True):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
