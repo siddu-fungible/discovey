@@ -1,19 +1,17 @@
 from lib.system.fun_test import *
 from lib.system import utils
 from lib.topology.dut import Dut, DutInterface
-from lib.topology.topology_helper import TopologyHelper
 from lib.fun.f1 import F1
 from lib.host.traffic_generator import TrafficGenerator
-from lib.host.storage_controller import StorageController
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
-from lib.host.linux import Linux
 import re
 
 '''
-Script to measure performance for a Compression enabled Durable Volume 4:2 EC with Different Compression Effort and Compression Precentage.
+Script to measure performance for a Compression enabled Durable Volume 4:2 EC with Compression Effort Auto 
+and Compression Precentages (1%, 50% & 80%).
 '''
 
 tb_config = {
@@ -138,8 +136,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
-        '''self.storage_controller = StorageController(target_ip="10.1.21.48",
-                                                    target_port=40220)'''
 
         # Setting the syslog level to 2
         command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2],
@@ -385,7 +381,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                          self.read_fio_cmd_args['size'],
                                          self.read_fio_cmd_args['rw'],
                                          self.nvme_block_device))
-                perf_stats = parse_perf_stats(fio_read_output['read'])
+                perf_stats = parse_perf_stats(fio_read_output['read']) # TOdo append Block Size as well
                 if set_header:
                     set_header = False
                     table_data_header = sorted(perf_stats.keys())
@@ -401,6 +397,40 @@ class ECVolumeLevelTestcase(FunTestCase):
         for stats in stats_table_lst:
             fun_test.add_table(panel_header=testcase,
                                table_name=stats['table_name'], table_data=stats['table_data'])
+        # If Compression Enabled post results:
+        if 'compress' in self.volume_info['lsv'].keys():
+            pass
+
+    def post_results(self, test, test_stats):
+        blt = BltVolumePerformanceHelper()
+
+        db_log_time = datetime.now()
+
+        blt.add_entry(date_time=db_log_time,
+                      volume=self.num_volume,  # What is expected ?
+                      test=test,
+                      block_size=test_stats['block_size'],
+                      io_depth=test_stats['iodepth'],
+                      size=test_stats['size'],
+                      operation=test_stats['mode'],
+                      num_ssd=self.num_ssd,
+                      num_volume=self.num_volume,
+                      fio_job_name=test_stats['job_name'],
+                      read_iops=test_stats['iops'],
+                      read_throughput=test_stats['bw'],
+                      read_avg_latency=test_stats['latency'],
+                      read_90_latency=test_stats['latency90'],
+                      read_95_latency=test_stats['latency95'],
+                      read_99_latency=test_stats['latency99'],
+                      read_99_99_latency=test_stats['latency9999'],
+                      read_iops_unit="ops",
+                      read_throughput_unit="MBps",
+                      read_avg_latency_unit="usecs",
+                      read_90_latency_unit="usecs",
+                      read_95_latency_unit="usecs",
+                      read_99_latency_unit="usecs",
+                      read_99_99_latency_unit="usecs")
+
 
     def cleanup(self):
         try:

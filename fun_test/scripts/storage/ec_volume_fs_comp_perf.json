@@ -1,6 +1,6 @@
 {
   "EC42FioReadEffortAuto": {
-    "num_ssd": 1,
+    "num_ssd": 6,
     "num_volume": 1,
     "ec_coding": {
       "ndata": 4,
