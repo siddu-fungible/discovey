@@ -17,7 +17,7 @@
       "ndata": 4,
       "nparity": 2,
       //"capacity": 3298534883328, // 3TB
-      "capacity": 3221225472, // 3GB
+      "capacity": 10737418240, // 10GB
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
@@ -35,10 +35,10 @@
     "vdbench_path": "/usr/local/share/vdbench",
     "warm_up_traffic": 1,
     "warm_up_timeout": 900,
-    "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=1h,interval=10",
+    "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=1h,interval=30",
     "warm_up_config_file": "populate_disk",
     "read_pct": 0.875,
-    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1,size=1g\nwd=wd1,sd=sd*,seekpct=0,rdpct=87.5,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=1,interval=10,warmup=10",
+    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=87.5,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=10g,interval=10,warmup=10",
     "perf_run_config_file": "inspur_8k_random_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme0",
