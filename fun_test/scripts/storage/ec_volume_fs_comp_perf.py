@@ -302,45 +302,57 @@ class ECVolumeLevelTestcase(FunTestCase):
             ignore_on_success=True)
 
         # Check nvme device is visible to end host
-        self.nvme_block_device = self.nvme_device + "n" + str(self.volume_info['ctrlr']['nsid'])
-        nvme_device_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_info['ctrlr']['nsid'])
         lsblk_output = self.end_host.lsblk()
-        fun_test.test_assert(nvme_device_name in lsblk_output, "{} device available".format(nvme_device_name))
-        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[nvme_device_name]["type"],
-                                      message="{} device type check".format(nvme_device_name))
+
+        volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.volume_info["ctrlr"]["nsid"])
+        for volume_name in lsblk_output:
+            match = re.search(volume_pattern, volume_name)
+            if match:
+                self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(
+                    self.volume_info["ctrlr"]["nsid"])
+                self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                fun_test.test_assert_expected(expected=self.volume_name,
+                                              actual=lsblk_output[volume_name]["name"],
+                                              message="{} device available".format(self.volume_name))
+        fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
+        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                      message="{} device type check".format(self.volume_name))
 
         # Check Compression enabled on LSV before starting performance test
 
         # Get write count on LSV
-        resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
-        fun_test.test_assert(resp, message="Get LSV stats before copmpression", ignore_on_success=True)
-        fun_test.test_assert(resp['data'][self.vols_created['lsv'][0]['uuid']]['compression'],
-                             message="Check compression related params are seen on LSV",
-                             ignore_on_success=True)
-        init_write_count = resp['data'][lsv_vol_uuid]['stats']['write_bytes']
+        if 'compress' in self.volume_info['lsv'].keys():
+            resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
+            fun_test.test_assert(resp, message="Get LSV stats before copmpression", ignore_on_success=True)
+            fun_test.test_assert(resp['data'][self.vols_created['lsv'][0]['uuid']]['compression'],
+                                 message="Check compression related params are seen on LSV",
+                                 ignore_on_success=True)
+            init_write_count = resp['data'][lsv_vol_uuid]['stats']['write_bytes']
 
-        # Do fio write for 16K
-        fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device, **self.write_ut_fio_cmd_args),
-                             message="Execute {0} write on nvme device {1}".format(self.write_ut_fio_cmd_args['size'],
-                                                                                   self.nvme_block_device))
+            # Do fio write for 16K
+            fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device, **self.write_ut_fio_cmd_args),
+                                 message="Execute {0} write on nvme device {1}".format(
+                                     self.write_ut_fio_cmd_args['size'],
+                                     self.nvme_block_device))
 
-        # Get updated write count
-        resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
-        fun_test.test_assert(resp, message="Get LSV stats before compression", ignore_on_success=True)
-        fun_test.test_assert(resp['data'][lsv_vol_uuid]['compression'],
-                             message="Check compression related params are seen on LSV",
-                             ignore_on_success=True)
-        new_write_count = resp['data'][lsv_vol_uuid]['stats']['write_bytes']
+            # Get updated write count
+            resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
+            fun_test.test_assert(resp, message="Get LSV stats before compression", ignore_on_success=True)
+            fun_test.test_assert(resp['data'][lsv_vol_uuid]['compression'],
+                                 message="Check compression related params are seen on LSV",
+                                 ignore_on_success=True)
+            new_write_count = resp['data'][lsv_vol_uuid]['stats']['write_bytes']
 
-        bytes_sent = get_bytes_int(self.write_ut_fio_cmd_args['size'])
-        bytes_written = new_write_count - init_write_count
+            bytes_sent = get_bytes_int(self.write_ut_fio_cmd_args['size'])
+            bytes_written = new_write_count - init_write_count
 
-        percnt_comp = get_comp_percent(bytes_sent, bytes_written)
-        exp_comp_percent = self.write_ut_fio_cmd_args['buffer_compress_percentage']
-        diff = abs(exp_comp_percent - percnt_comp)
-        fun_test.test_assert(diff <= 10,
-                             message="Compression percentage achieved: {0:04.2f}%, Input bytes sent: {1}, Compression"
-                                     " percentage achieved within 10% of error margin".format(percnt_comp, bytes_sent))
+            percnt_comp = get_comp_percent(bytes_sent, bytes_written)
+            exp_comp_percent = self.write_ut_fio_cmd_args['buffer_compress_percentage']
+            diff = abs(exp_comp_percent - percnt_comp)
+            fun_test.test_assert(diff <= 10,
+                                 message="Compression percentage achieved: {0:04.2f}%, Input bytes sent: {1}, Compression"
+                                         " percentage achieved within 10% of error margin".format(percnt_comp,
+                                                                                                  bytes_sent))
 
         # Disable the udev daemon which will skew the read stats of the volume during the test
         udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
@@ -454,10 +466,13 @@ class EC42FioReadEffortAuto(ECVolumeLevelTestcase):
                               summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume"
                                       " Effort: Auto",
                               steps="""
-                              1. Execute writes on NVME device with compressibility 1%.
-                              2. Perform sequential read for above write, log performance stats.
-                              3. Perform random read for above write, log performance stats.
-                              4. Repeat step 1,2,3 for 50% and 80% compressible data. 
+                              1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
+                                 a Journal Volume and an LSV volume with compression enabled effort Auto.
+                              2. Attach LSV volume to the nvme controller.  
+                              3. Execute writes on NVME device.
+                              4. Perform sequential read for above write, log performance stats.
+                              5. Perform random read for above write, log performance stats.
+                              6. Repeat step 1,2,3 for 50% and 80% compressible data. 
                               """)
 
     def setup(self):
@@ -470,55 +485,14 @@ class EC42FioReadEffortAuto(ECVolumeLevelTestcase):
         super(EC42FioReadEffortAuto, self).cleanup()
 
 
-class EC42FioReadEffort64Gbps(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume"
-                                      " Effort: 64Gbps",
-                              steps="""
-                              1. Execute writes on NVME device with compressibility 1%.
-                              2. Perform sequential read for above write, log performance stats.
-                              3. Perform random read for above write, log performance stats.
-                              4. Repeat step 1,2,3 for 50% and 80% compressible data. 
-                              """)
-
-    def setup(self):
-        super(EC42FioReadEffort64Gbps, self).setup()
-
-    def run(self):
-        super(EC42FioReadEffort64Gbps, self).run()
-
-    def cleanup(self):
-        super(EC42FioReadEffort64Gbps, self).cleanup()
-
-
-class EC42FioReadEffort2Gbps(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Test Sequential and Random reads for Compression enabled 4:2 EC volume"
-                                      " Effort: 2Gbps",
-                              steps="""
-                              1. Execute writes on NVME device with compressibility 1%.
-                              2. Perform sequential read for above write, log performance stats.
-                              3. Perform random read for above write, log performance stats.
-                              4. Repeat step 1,2,3 for 50% and 80% compressible data. 
-                              """)
-
-    def setup(self):
-        super(EC42FioReadEffort2Gbps, self).setup()
-
-    def run(self):
-        super(EC42FioReadEffort2Gbps, self).run()
-
-    def cleanup(self):
-        super(EC42FioReadEffort2Gbps, self).cleanup()
-
-
 class EC42FioReadCompDisabled(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=2,
                               summary="Test Sequential and Random reads for 4:2 EC volume with Compression Disabled",
                               steps="""
+                              1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
+                                 a Journal Volume and an LSV volume.
+                              2. Attach LSV volume to the nvme controller.
                               1. Execute writes on NVME device with compressibility 1%.
                               2. Perform sequential read for above write, log performance stats.
                               3. Perform random read for above write, log performance stats.
@@ -538,7 +512,7 @@ class EC42FioReadCompDisabled(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(EC42FioReadEffortAuto())
-    ecscript.add_test_case(EC42FioReadEffort64Gbps())
-    ecscript.add_test_case(EC42FioReadEffort2Gbps())
     ecscript.add_test_case(EC42FioReadCompDisabled())
+    init_time = time.time()
     ecscript.run()
+    fun_test.add_checkpoint("Script Run time: {}", time.time() - init_time)
