@@ -15,6 +15,7 @@ from scheduler.scheduler_global import SuiteType, JobStatusType
 from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
+import traceback
 
 import logging
 from fun_settings import COMMON_WEB_LOGGER_NAME
@@ -186,8 +187,12 @@ def update_suite_execution(suite_execution_id,
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
 
     # print te.version
-    print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state)
-
+    # print "Begin:"
+    # traceback.print_stack()
+    # print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state)
+    # traceback.print_stack()
+    #sys.stdout.flush()
+    # print "End:"
     return te
 
 def finalize_suite_execution(suite_execution_id):
