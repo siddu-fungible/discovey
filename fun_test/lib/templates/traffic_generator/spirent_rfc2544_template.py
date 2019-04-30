@@ -392,7 +392,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 data_dict = OrderedDict()
                 data_dict['mode'] = mode
                 data_dict['version'] = fun_test.get_version()
-                data_dict['timestamp'] = timestamp
+                data_dict['timestamp'] = str(timestamp)
                 data_dict['half_load_latency'] = half_load_latency
                 frame_size = float(records[0]['AvgFrameSize']) if records else None
                 actual_frame_size = frame_size
@@ -454,6 +454,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 unit_dict["throughput_unit"] = "Mbps"
                 add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict, unit_dict=unit_dict)
                 fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+                fun_test.add_checkpoint("Entry added to model %s" % model_name)
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
