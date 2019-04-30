@@ -50,13 +50,13 @@
               <ng-container *ngIf="flatNode.node.leaf">
                 <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
                  (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
-                *ngIf="flatNode.node.workInProgress"><app-smart-label [value]="'work in progress'"
+                *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                          [type]="'warning'"></app-smart-label></span>
               </ng-container>
               <ng-container *ngIf="!flatNode.node.leaf">
                 <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
                  (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
-                *ngIf="flatNode.node.workInProgress"><app-smart-label [value]="'work in progress'"
+                *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                          [type]="'warning'"></app-smart-label></span>
               </ng-container>
               <span *ngIf="!flatNode.node.leaf">
