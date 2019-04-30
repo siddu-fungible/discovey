@@ -111,6 +111,9 @@ class ScriptSetup(FunTestScript):
                 result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=0, erp=1, nh_id=4097, clbp_idx=20)
                 fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+            Fs.cleanup()
+
 
 class TestFwdPerformance(FunTestCase):
     tc_id = 1
@@ -235,7 +238,8 @@ class TestFwdPerformance(FunTestCase):
                                                                       flow_direction=self.flow_direction,
                                                                       file_name=OUTPUT_JSON_FILE_NAME,
                                                                       num_flows=128000000,
-                                                                      half_load_latency=self.half_load_latency)
+                                                                      half_load_latency=self.half_load_latency,
+                                                                      model_name=JUNIPER_PERFORMANCE_MODEL_NAME)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)

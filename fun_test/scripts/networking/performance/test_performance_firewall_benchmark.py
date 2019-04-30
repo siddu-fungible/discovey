@@ -66,14 +66,14 @@ class ScriptSetup(FunTestScript):
 class TestFirewallPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
-    flow_direction = FLOW_TYPE_NU_LE_VP_NU_FWD_NFCP
+    flow_direction = FLOW_TYPE_NU_LE_VP_NU_FW
     tcc_file_name = "nu_le_benchmark_throughput.tcc"  # Uni-directional
     spray = True
     half_load_latency = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
-        if flow_direction == FLOW_TYPE_NU_LE_VP_NU_FWD_NFCP:
+        if flow_direction == FLOW_TYPE_NU_LE_VP_NU_FW:
             dir_name = "nu_le_vp_nu_firewall"
 
         config_type = "palladium_configs"
@@ -186,19 +186,23 @@ class TestFirewallPerformance(FunTestCase):
 
         if self.spray:
             mode = self.template_obj.get_interface_mode_input_speed()
-            result = self.template_obj.populate_performance_json_file_1(result_dict=result_dict['summary_result'],
+            result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
                                                                       mode=mode,
                                                                       flow_direction=self.flow_direction,
                                                                       file_name=OUTPUT_JSON_FILE_NAME,
                                                                       num_flows=128000000,
-                                                                        half_load_latency=self.half_load_latency)
+                                                                      half_load_latency=self.half_load_latency,
+                                                                      model_name=JUNIPER_PERFORMANCE_MODEL_NAME)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
     def cleanup(self):
         self.template_obj.cleanup()
+
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+            Fs.cleanup()
 
 
 class TestFirewallLatency(TestFirewallPerformance):
