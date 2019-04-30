@@ -7,6 +7,7 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
+import re
 
 '''
 Script to track the performance of various read write combination of Erasure Coded volume using FIO
@@ -300,10 +301,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
-        # self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
-        #                       ssh_username=tb_config["tg_info"][0]["user"],
-        #                       ssh_password=tb_config["tg_info"][0]["passwd"])
-
         fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
 
@@ -311,7 +308,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         fun_test.shared_variables["ec_coding"] = self.ec_coding
         self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
-        self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
+        self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
+        self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
         if self.use_lsv:
             # LS volume capacity is the ndata times of the BLT volume capacity
@@ -434,12 +432,22 @@ class ECVolumeLevelTestcase(FunTestCase):
             # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
             fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
 
+            lsblk_output = self.end_host.lsblk("-b")
+            fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
             # Checking that the above created BLT volume is visible to the end host
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
-            lsblk_output = self.end_host.lsblk()
-            fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))
+            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
+            for volume_name in lsblk_output:
+                match = re.search(volume_pattern, volume_name)
+                if match:
+                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
+                    self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                    fun_test.test_assert_expected(expected=self.volume_name,
+                                                  actual=lsblk_output[volume_name]["name"],
+                                                  message="{} device available".format(self.volume_name))
+                    break
+            else:
+                fun_test.test_assert(False, "{} device available".format(self.volume_name))
 
             # Disable the udev daemon which will skew the read stats of the volume during the test
             udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
@@ -553,48 +561,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 row_data_dict["iodepth"] = fio_iodepth
                 row_data_dict["size"] = self.fio_cmd_args["size"]
 
-                # Pulling initial volume stats of all the volumes from the DUT in dictionary format
-                '''
-                fun_test.log("Pulling initial stats of the all the volumes from the DUT in dictionary format before "
-                             "the test")
-                initial_volume_status[combo][mode] = {}
-                for vtype in volumes:
-                    initial_volume_status[combo][mode][vtype] = {}
-                    for index, uuid in enumerate(self.uuids[vtype]):
-                        initial_volume_status[combo][mode][vtype][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, uuid, "stats")
-                        command_result = {}
-                        command_result = self.storage_controller.peek(storage_props_tree,
-                                                                      command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
-                                               format(vtype, index))
-                        initial_volume_status[combo][mode][vtype][index] = command_result["data"]
-                        fun_test.log("{} {} volume Status at the beginning of the test:".format(vtype, index))
-                        fun_test.log(initial_volume_status[combo][mode][vtype][index])
-
-                # Pulling the initial stats in dictionary format
-                initial_stats[combo][mode] = {}
-                for key, value in self.stats_list.items():
-                    if key not in initial_stats[combo][mode]:
-                        initial_stats[combo][mode][key] = {}
-                    if value:
-                        for item in value:
-                            props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree,
-                                                                          command_duration=self.command_timeout)
-                            fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
-                                                   format(props_tree))
-                            initial_stats[combo][mode][key][item] = command_result["data"]
-                    else:
-                        props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
-                                               format(props_tree))
-                        initial_stats[combo][mode][key] = command_result["data"]
-                    fun_test.log("{} stats at the beginning of the test:".format(key))
-                    fun_test.log(initial_stats[combo][mode][key])
-                '''
-
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
                              "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
@@ -623,76 +589,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
-
-                # Pulling volume stats of all the volumes from the DUT in dictionary format after the test
-                '''
-                fun_test.log("Pulling volume stats of all volumes after the FIO test")
-                final_volume_status[combo][mode] = {}
-                for vtype in volumes:
-                    final_volume_status[combo][mode][vtype] = {}
-                    for index, uuid in enumerate(self.uuids[vtype]):
-                        final_volume_status[combo][mode][vtype][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, uuid, "stats")
-                        command_result = {}
-                        command_result = self.storage_controller.peek(storage_props_tree,
-                                                                      command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
-                                               format(vtype, index))
-                        final_volume_status[combo][mode][vtype][index] = command_result["data"]
-                        fun_test.log("{} {} volume Status at the end of the test:".format(vtype, index))
-                        fun_test.log(final_volume_status[combo][mode][vtype][index])
-
-                # Pulling the final stats in dictionary format
-                final_stats[combo][mode] = {}
-                for key, value in self.stats_list.items():
-                    if key not in final_stats[combo][mode]:
-                        final_stats[combo][mode][key] = {}
-                    if value:
-                        for item in value:
-                            props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree,
-                                                                          command_duration=self.command_timeout)
-                            fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
-                                                   format(props_tree))
-                            final_stats[combo][mode][key][item] = command_result["data"]
-                    else:
-                        props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
-                        fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
-                                               format(props_tree))
-                        final_stats[combo][mode][key] = command_result["data"]
-                    fun_test.log("{} stats at the end of the test:".format(key))
-                    fun_test.log(final_stats[combo][mode][key])
-
-                # Finding the difference between the internal volume stats before and after the test
-                diff_volume_stats[combo][mode] = {}
-                for vtype in volumes:
-                    diff_volume_stats[combo][mode][vtype] = {}
-                    for index in range(len(self.uuids[vtype])):
-                        diff_volume_stats[combo][mode][vtype][index] = {}
-                        for fkey, fvalue in final_volume_status[combo][mode][vtype][index].items():
-                            # Don't compute the difference of stats which is not defined in expected_volume_stats in
-                            # the json config file
-                            if fkey not in expected_volume_stats[mode][vtype] or fkey == "fault_injection":
-                                diff_volume_stats[combo][mode][vtype][index][fkey] = fvalue
-                                continue
-                            if fkey in initial_volume_status[combo][mode][vtype][index]:
-                                ivalue = initial_volume_status[combo][mode][vtype][index][fkey]
-                                diff_volume_stats[combo][mode][vtype][index][fkey] = fvalue - ivalue
-                        fun_test.log("Difference of {} {} {} volume status before and after the test:".
-                                     format(vtype, index, vtype))
-                        fun_test.log(diff_volume_stats[combo][mode][vtype][index])
-
-                # Finding the difference between the stats before and after the test
-                diff_stats[combo][mode] = {}
-                for key, value in self.stats_list.items():
-                    diff_stats[combo][mode][key] = {}
-                    for fkey, fvalue in final_stats[combo][mode][key].items():
-                        ivalue = initial_stats[combo][mode][key][fkey]
-                        diff_stats[combo][mode][key][fkey] = fvalue - ivalue
-                    fun_test.log("Difference of {} stats before and after the test:".format(key))
-                    fun_test.log(diff_stats[combo][mode][key])
-                '''
 
                 if not fio_output[combo][mode]:
                     fio_result[combo][mode] = False
@@ -731,104 +627,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
-
-                # Comparing the internal volume stats with the expected value
-                '''
-                for vtype in volumes:
-                    for index in range(len(self.uuids[vtype])):
-                        for ekey, evalue in expected_volume_stats[mode][vtype].items():
-                            if evalue == -1:
-                                fun_test.log("Ignoring the {}'s key checking for {} {} volume".format(ekey, vtype,
-                                                                                                      index))
-                                continue
-                            if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-                                if vtype == self.volume_types["ndata"] and index in self.failure_plex_indices:
-                                    if ekey == "fault_injection":
-                                        evalue = 1
-                                    else:
-                                        evalue = 0
-                                elif self.volume_types["ndata"] != self.volume_types["nparity"] and \
-                                        vtype == self.volume_types["nparity"] and (index + self.ec_coding["ndata"]) in \
-                                        self.failure_plex_indices:
-                                    if ekey == "fault_injection":
-                                        evalue = 1
-                                    else:
-                                        evalue = 0
-                            if ekey in diff_volume_stats[combo][mode][vtype][index]:
-                                actual = diff_volume_stats[combo][mode][vtype][index][ekey]
-                                # row_data_dict[ekey] = actual
-                                if actual != evalue:
-                                    if (actual < evalue) and ((evalue - actual) <= self.volume_pass_threshold):
-                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
-                                                                "block size & IO depth combo {}".
-                                                                format(ekey, vtype, index, mode, combo), "PASSED",
-                                                                evalue, actual)
-                                        fun_test.critical("Final {} value {} of {} {} volume is within the expected "
-                                                          "range {}".format(ekey, actual, vtype, index, evalue))
-                                    elif (actual > evalue) and ((actual - evalue) <= self.volume_pass_threshold):
-                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
-                                                                "block size & IO depth combo {}".
-                                                                format(ekey, vtype, index, mode, combo), "PASSED",
-                                                                evalue, actual)
-                                        fun_test.critical("Final {} value {} of {} {} volume is within the expected "
-                                                          "range {}".format(ekey, actual, vtype, index, evalue))
-                                    else:
-                                        internal_result[combo][mode] = False
-                                        fun_test.add_checkpoint("{} check for {} {} volume for {} test for the "
-                                                                "block size & IO depth combo {}".
-                                                                format(ekey, vtype, index, mode, combo), "FAILED",
-                                                                evalue, actual)
-                                        fun_test.critical("Final {} value {} of {} {} volume is not equal to the "
-                                                          "expected value {}".format(ekey, actual, vtype, index, evalue))
-                                else:
-                                    fun_test.add_checkpoint("{} check for {} {} volume for {} test for the block "
-                                                            "size & IO depth combo {}".
-                                                            format(ekey, vtype, index, mode, combo), "PASSED",
-                                                            evalue, actual)
-                                    fun_test.log("Final {} value {} of {} {} volume is equal to the expected value {}".
-                                                 format(ekey, actual, vtype, index, evalue))
-                            else:
-                                internal_result[combo][mode] = False
-                                fun_test.critical("{} is not found in {} {} volume status".format(ekey, vtype, index))
-
-                # Comparing the internal stats with the expected value
-                for key, value in expected_stats[mode].items():
-                    for ekey, evalue in expected_stats[mode][key].items():
-                        if ekey in diff_stats[combo][mode][key]:
-                            actual = diff_stats[combo][mode][key][ekey]
-                            evalue_list = evalue.strip("()").split(",")
-                            expected = int(evalue_list[0])
-                            threshold = int(evalue_list[1])
-                            if actual != expected:
-                                if actual < expected:
-                                    fun_test.add_checkpoint(
-                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                        "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
-                                    fun_test.log("Final {} value {} of {} stats is less than the expected range "
-                                                 "{}".format(ekey, key, actual, expected))
-                                elif (actual > expected) and ((actual - expected) <= threshold):
-                                    fun_test.add_checkpoint(
-                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                        "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
-                                    fun_test.log("Final {} value {} of {} stats is within the expected range {}".
-                                                 format(ekey, key, actual, expected))
-                                else:
-                                    internal_result[combo][mode] = False
-                                    fun_test.add_checkpoint(
-                                        "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                        "{}".format(ekey, key, mode, combo), "FAILED", expected, actual)
-                                    fun_test.critical("Final {} value of {} stats {} is not equal to the expected value"
-                                                      " {}".format(ekey, key, actual, expected))
-                            else:
-                                fun_test.add_checkpoint(
-                                    "{} check of {} stats for the {} test for the block size & IO depth combo "
-                                    "{}".format(ekey, key, mode, combo), "PASSED", expected, actual)
-                                fun_test.log("Final {} value of {} stats is equal to the expected value {}".
-                                             format(ekey, key, actual, expected))
-                        else:
-                            internal_result[combo][mode] = False
-                            fun_test.critical("{} is not found in {} stat".format(ekey, key))
-                '''
 
                 # Building the table raw for this variation
                 row_data_list = []
@@ -924,82 +722,9 @@ class EC42FioRandReadOnly(ECVolumeLevelTestcase):
         super(EC42FioRandReadOnly, self).cleanup()
 
 
-class EC21FioSeqAndRandReadOnlyWithFailure(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Sequential and Random Read only performance of EC volume with a plex failure",
-                              steps="""
-        1. Create 6 BLT volumes on dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface.
-        5. Inject failure to two of the BLT volumes
-        6. Run the FIO sequential and random read only test(without verify) for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioSeqAndRandReadOnlyWithFailure, self).setup()
-
-    def run(self):
-        super(EC21FioSeqAndRandReadOnlyWithFailure, self).run()
-
-    def cleanup(self):
-        super(EC21FioSeqAndRandReadOnlyWithFailure, self).cleanup()
-
-
-class EC21FioSeqReadWriteMix(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Sequential 75% Write & 25% Read performance of EC volume",
-                              steps="""
-        1. Create 6 BLT volumes in dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        5. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface.
-        6. Run the FIO sequential write and read mix test with 3:1 ratio for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioSeqReadWriteMix, self).setup()
-
-    def run(self):
-        super(EC21FioSeqReadWriteMix, self).run()
-
-    def cleanup(self):
-        super(EC21FioSeqReadWriteMix, self).cleanup()
-
-
-class EC21FioRandReadWriteMix(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Random 75% Write & 25% Read performance of EC volume",
-                              steps="""
-        1. Create 6 BLT volumes in dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        5. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
-        6. Run the FIO random write and read mix test with 3:1 ratio for various block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioRandReadWriteMix, self).setup()
-
-    def run(self):
-        super(EC21FioRandReadWriteMix, self).run()
-
-    def cleanup(self):
-        super(EC21FioRandReadWriteMix, self).cleanup()
-
-
 if __name__ == "__main__":
 
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(EC42FioSeqReadOnly())
     ecscript.add_test_case(EC42FioRandReadOnly())
-    # ecscript.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
-    # ecscript.add_test_case(EC21FioSeqReadWriteMix())
-    # ecscript.add_test_case(EC21FioRandReadWriteMix())
     ecscript.run()

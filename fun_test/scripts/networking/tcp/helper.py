@@ -2,6 +2,10 @@ from lib.system.fun_test import *
 from collections import OrderedDict
 import pickle
 import json
+from web.fun_test.analytics_models_helper import ModelHelper
+
+
+TCP_PERFORMANCE_MODEL_NAME = "TeraMarkFunTcpThroughputPerformance"
 
 
 def _parse_file_to_json_in_order(file_name):
@@ -24,7 +28,20 @@ def create_counters_file(json_file_name, counter_dict):
         fun_test.critical(str(ex))
     return result
 
-def populate_performance_json_file(flow_type, frame_size, num_flows, throughput_n2t, pps_n2t,
+def use_model_helper(model_name, data_dict, unit_dict):
+    result = False
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        status = fun_test.PASSED
+        generic_helper.set_units(**unit_dict)
+        generic_helper.add_entry(**data_dict)
+        generic_helper.set_status(status)
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+def populate_performance_json_file(flow_type, model_name, frame_size, num_flows, throughput_n2t, pps_n2t,
                                    timestamp, filename, protocol="TCP", mode="100G"):
     results = []
     output = False
@@ -36,7 +53,7 @@ def populate_performance_json_file(flow_type, frame_size, num_flows, throughput_
                        "pps": pps_n2t,
                        "protocol": protocol,
                        "throughput": throughput_n2t,
-                       "timestamp": timestamp,
+                       "timestamp": str(timestamp),
                        "version": fun_test.get_version()
                        }
         results.append(output_dict)
@@ -51,6 +68,13 @@ def populate_performance_json_file(flow_type, frame_size, num_flows, throughput_
             file_created = create_counters_file(json_file_name=file_path,
                                                      counter_dict=results)
             fun_test.simple_assert(file_created, "Create Performance JSON file")
+
+        unit_dict = {}
+        unit_dict["pps_unit"] = "pps"
+        unit_dict["throughput_unit"] = "Mbps"
+        add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
+        fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+        fun_test.add_checkpoint("Entry added to model %s" % model_name)
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
