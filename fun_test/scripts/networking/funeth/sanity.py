@@ -95,7 +95,7 @@ class FunethSanity(FunTestScript):
             # fs = Fs.get(disable_f1_index=1)
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,
-                                               custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --retimer --all_100g")
+                                               custom_boot_args="app=hw_hsu_test retimer=1 --dpc-uart --dpc-server --csr-replay --all_100g")
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
