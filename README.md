@@ -1,15 +1,25 @@
 # Integration
+Integration testing infrastructure.
 
-Installation:
-```
-# git clone git@github.com:fungible-inc/Integration.git
-# cd Integration/fun_test
-# export PYTHONPATH=`pwd`
-# pip install -r requirements.txt --user
+## Introduction
+The Integration repository is organized as two major parts
+1. fun_test (Containing regression infrastructure code, including scripts)
+2. tools (Containing light-weight tools and Dockerfiles, which are not directly used by fun_test)
 
+### fun_test
+fun_test has the following layout
+1. assets
+2. system
+3. scripts
+4. scheduler
+5. web
 
-# python web/start_server.py [OPTIONAL]
+#### web
+This is where the web-server, regression logs and database control modules are located.
+The web-server operates in two modes, development mode and production mode (only used on the main regression server: integration.fungible.local)
 
-# cd scripts
-# python examples/sanity.py 
-```
+##### Web-server in production mode
+Refer: https://github.com/fungible-inc/Integration/blob/master/README-production-server.md
+
+##### Web-server in development mode
+Refer: https://github.com/fungible-inc/Integration/blob/master/README-development-server.md
