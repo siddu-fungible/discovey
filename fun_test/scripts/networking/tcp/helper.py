@@ -74,6 +74,7 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
         unit_dict["throughput_unit"] = "Mbps"
         add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
         fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+        fun_test.add_checkpoint("Entry added to model %s" % model_name)
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
