@@ -30,7 +30,7 @@
     "fio_job_name": {"read": "4gbps"},
     // Passing threshold of the internal volume stats from the expected benchmark values
     "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme0",
+    "nvme_device": "/dev/nvme",
     "expected_fio_result": {
       "(4, 16)": {"read": {"read": {"bw": 429, "iops": 105, "clatency": 149, "latency90": 180, "latency95": 206, "latency99": 269, "latency9999": 416}}}
     },
@@ -77,7 +77,7 @@
     "fio_pass_threshold": 0.05,
     "fio_job_name": {"randread": "4gbps"},
     "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme0",
+    "nvme_device": "/dev/nvme",
     "expected_fio_result": {
       "(4, 16)": {"randread": {"read": {"bw": 429, "iops": 105, "clatency": 149, "latency90": 180, "latency95": 206, "latency99": 269, "latency9999": 416}}}
     },

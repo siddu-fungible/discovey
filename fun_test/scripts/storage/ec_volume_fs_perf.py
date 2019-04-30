@@ -7,6 +7,7 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
+import re
 
 '''
 Script to track the performance of various read write combination of Erasure Coded volume using FIO
@@ -300,10 +301,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
-        # self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
-        #                       ssh_username=tb_config["tg_info"][0]["user"],
-        #                       ssh_password=tb_config["tg_info"][0]["passwd"])
-
         fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
 
@@ -311,7 +308,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         fun_test.shared_variables["ec_coding"] = self.ec_coding
         self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
-        self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
+        self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
+        self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
         if self.use_lsv:
             # LS volume capacity is the ndata times of the BLT volume capacity
@@ -434,12 +432,22 @@ class ECVolumeLevelTestcase(FunTestCase):
             # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
             fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
 
+            lsblk_output = self.end_host.lsblk("-b")
+            fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
             # Checking that the above created BLT volume is visible to the end host
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
-            lsblk_output = self.end_host.lsblk()
-            fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))
+            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
+            for volume_name in lsblk_output:
+                match = re.search(volume_pattern, volume_name)
+                if match:
+                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
+                    self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                    fun_test.test_assert_expected(expected=self.volume_name,
+                                                  actual=lsblk_output[volume_name]["name"],
+                                                  message="{} device available".format(self.volume_name))
+                    break
+            else:
+                fun_test.test_assert(False, "{} device available".format(self.volume_name))
 
             # Disable the udev daemon which will skew the read stats of the volume during the test
             udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
