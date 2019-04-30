@@ -1,3 +1,4 @@
+from lib.system.fun_test import fun_test
 import socket
 import select
 import time
@@ -30,7 +31,7 @@ class Netcat:
         if timeout:
             self.socket.settimeout(timeout)
         return_from_function = False
-        while expected_data not in self.buffer and not self.terminate and not return_from_function:
+        while not fun_test.closed and expected_data not in self.buffer and not self.terminate and not return_from_function:
             try:
                 readable, writable, exceptional = select.select(
                     [self.socket], [], [], timeout)
