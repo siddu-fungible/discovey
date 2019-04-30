@@ -25,7 +25,6 @@ TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
 NUM_FLOWS = (1, 8,)  # TODO: May add more
-PARALLEL = 8  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = ('throughput',
                     'pps',
@@ -36,7 +35,8 @@ PERF_RESULT_KEYS = ('throughput',
                     'latency_P90',
                     'latency_P99',
                     )
-FPG_INTERFACES = (0, 4,)
+#FPG_INTERFACES = (0, 4,)  # TODO: add fpg4
+FPG_INTERFACES = (0,)
 
 
 class FunethPerformance(sanity.FunethSanity):
@@ -81,40 +81,38 @@ class FunethPerformance(sanity.FunethSanity):
 
 
 def collect_stats():
-    try:
-        # TODO: add mpstat and netstat
-        fpg_stats = {}
-        for nc_obj in fun_test.shared_variables['network_controller_objs']:
-            for i in FPG_INTERFACES:
-                r = nc_obj.peek_fpg_port_stats(port_num=i)
-                if not r:
-                    r = [{}]
-                fpg_stats.update(
-                    {i: r}
-                )
-            nc_obj.peek_psw_global_stats()
-            #nc_obj.peek_fcp_global_stats()
-            nc_obj.peek_vp_packets()
-            #nc_obj.peek_per_vp_stats()
-            nc_obj.peek_resource_bam_stats()
-            nc_obj.peek_eqm_stats()
-            nc_obj.flow_list()
-            nc_obj.flow_list(blocked_only=True)
-        fpg_rx_bytes = sum(
-            [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
-        )
-        fpg_rx_pkts = sum(
-            [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_aFramesReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
-        )
-        fpg_tx_bytes = sum(
-            [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_OctetsTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
-        )
-        fpg_tx_pkts = sum(
-            [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
-        )
-        return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
-    except:
-        pass
+    # TODO: add mpstat and netstat
+    fpg_stats = {}
+    for nc_obj in fun_test.shared_variables['network_controller_objs']:
+        for i in FPG_INTERFACES:
+            r = nc_obj.peek_fpg_port_stats(port_num=i)
+            # TODO: handle None
+            #if not r:
+            #    r = [{}]
+            fpg_stats.update(
+                {i: r}
+            )
+        nc_obj.peek_psw_global_stats()
+        #nc_obj.peek_fcp_global_stats()
+        nc_obj.peek_vp_packets()
+        #nc_obj.peek_per_vp_stats()
+        #nc_obj.peek_resource_bam_stats()
+        #nc_obj.peek_eqm_stats()
+        #nc_obj.flow_list()
+        #nc_obj.flow_list(blocked_only=True)
+    fpg_rx_bytes = sum(
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
+    )
+    fpg_rx_pkts = sum(
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_aFramesReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
+    )
+    fpg_tx_bytes = sum(
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_OctetsTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
+    )
+    fpg_tx_pkts = sum(
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
+    )
+    return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
 def get_fpg_packet_stats():
