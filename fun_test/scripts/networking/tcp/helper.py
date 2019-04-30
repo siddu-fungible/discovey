@@ -163,18 +163,15 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
                 [host['date'], host['machine'], host['nodename'], host['number-of-cpus'], host['release'],
                  host['sysname']])
 
-        print hosts_table
-
-        stats_table = PrettyTable(['timestamp', 'cpu-load'])
+        stats_table = PrettyTable(['timestamp', 'cpu-load', 'node-load'])
         stats_table.title = 'Statistics'
 
         for host in mpstat_dict['sysstat']['hosts']:
             for stat in host['statistics']:
                 cpu_load_table = _create_nested_table(stat=stat, key_name='cpu-load')
+                node_load_table = _create_nested_table(stat=stat, key_name='node-load')
 
-                stats_table.add_row([stat['timestamp'], cpu_load_table])
-
-        print stats_table
+                stats_table.add_row([stat['timestamp'], cpu_load_table, node_load_table])
 
         mpstat_dump_filepath = LOGS_DIR + "/%s" % dump_filename
         lines = ['<=======> Mpstat output <=======>\n', '\n<=======> Hosts MetaData <=======>\n',
