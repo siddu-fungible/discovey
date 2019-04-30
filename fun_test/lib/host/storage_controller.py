@@ -60,6 +60,20 @@ class StorageController(DpcshClient):
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
 
+    def attach_controller(self, command_duration=TIMEOUT, **kwargs):
+        param_dict = {"class": "controller",
+                      "opcode": "ATTACH",
+                      "params": {}}
+        for key in kwargs:
+            param_dict["params"][key] = kwargs[key]
+        return self.json_execute(verb=self.mode, data=param_dict, command_duration=command_duration)
+
+    def create_controller(self, command_duration=TIMEOUT, **kwargs):
+        param_dict = {"class": "controller", "opcode": "CREATE", "params": {}}
+        for key in kwargs:
+            param_dict["params"][key] = kwargs[key]
+        return self.json_execute(verb=self.mode, data=param_dict, command_duration=command_duration)
+
     def volume_detach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=2, command_duration=TIMEOUT):
         detach_dict = {"class": "controller",
                        "opcode": "DETACH",

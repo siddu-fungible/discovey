@@ -9,6 +9,7 @@ from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 from scripts.networking.nu_config_manager import *
 import sqlite3
+from web.fun_test.analytics_models_helper import ModelHelper
 
 FLOW_TYPE_NU_NU_NFCP = "NU_NU_NFCP"
 FLOW_TYPE_HNU_HNU_NFCP = "HNU_HNU_NFCP"
@@ -16,7 +17,9 @@ FLOW_TYPE_HNU_HNU_FCP = "HNU_HNU_FCP"
 FLOW_TYPE_HNU_NU_NFCP = "HNU_NU_NFCP"
 FLOW_TYPE_NU_HNU_NFCP = "NU_HNU_NFCP"
 FLOW_TYPE_NU_VP_NU_FWD_NFCP = "NU_VP_NU_FWD_NFCP"
-FLOW_TYPE_NU_LE_VP_NU_FWD_NFCP = "NU_LE_VP_NU_FWD_NFCP"
+FLOW_TYPE_NU_LE_VP_NU_FW = "NU_LE_VP_NU_FW"
+JUNIPER_PERFORMANCE_MODEL_NAME = "TeraMarkJuniperNetworkingPerformance"
+HNU_PERFORMANCE_MODEL_NAME = "NuTransitPerformance"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
@@ -364,7 +367,20 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             scheduler_logger.critical(str(ex))
         return result
 
-    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
+    def use_model_helper(self, model_name, data_dict, unit_dict):
+        result = False
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            status = fun_test.PASSED
+            generic_helper.set_units(**unit_dict)
+            generic_helper.add_entry(**data_dict)
+            generic_helper.set_status(status)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def populate_performance_json_file(self, result_dict, model_name, timestamp, flow_direction, mode=DUT_MODE_25G,
                                        file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None,
                                        half_load_latency=False):
         results = []
@@ -376,7 +392,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 data_dict = OrderedDict()
                 data_dict['mode'] = mode
                 data_dict['version'] = fun_test.get_version()
-                data_dict['timestamp'] = timestamp
+                data_dict['timestamp'] = str(timestamp)
                 data_dict['half_load_latency'] = half_load_latency
                 frame_size = float(records[0]['AvgFrameSize']) if records else None
                 actual_frame_size = frame_size
@@ -432,6 +448,13 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 fun_test.simple_assert(file_created, "Create Performance JSON file")
             if failed_result_found:
                 output = False
+            if model_name == JUNIPER_PERFORMANCE_MODEL_NAME:
+                unit_dict = {}
+                unit_dict["pps_unit"] = "pps"
+                unit_dict["throughput_unit"] = "Mbps"
+                add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict, unit_dict=unit_dict)
+                fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+                fun_test.add_checkpoint("Entry added to model %s" % model_name)
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
