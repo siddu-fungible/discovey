@@ -107,8 +107,6 @@ def parse_perf_stats(perf_dict):
 
 def parse_table_header(header_lst):
     for h in xrange(len(header_lst)):
-        if header_lst[h] == "iops":
-            header_lst[h] += "(kops)"
         if header_lst[h] == "bw":
             header_lst[h] += "(MBps)"
     header_lst.insert(0, "")
@@ -149,7 +147,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables["volumes_created"] = {}
+        fun_test.shared_variables["run_time"] = datetime.now()
 
     def cleanup(self):
         try:
@@ -375,18 +373,26 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Do seq and rand read for the writes
             for mode in self.read_modes:
                 self.read_fio_cmd_args['rw'] = mode
+                self.read_fio_cmd_args['name'] = "{0}_{1}_{2}".format(self.read_fio_cmd_args['name'],
+                                                                      mode,
+                                                                      self.write_fio_cmd_args[
+                                                                          'buffer_compress_percentage'])
                 fio_read_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.read_fio_cmd_args)
                 fun_test.test_assert(fio_read_output,
                                      message="Execute {0} {1} on nvme device {2} ".format(
                                          self.read_fio_cmd_args['size'],
                                          self.read_fio_cmd_args['rw'],
                                          self.nvme_block_device))
-                perf_stats = parse_perf_stats(fio_read_output['read']) # TOdo append Block Size as well
+                perf_stats = parse_perf_stats(fio_read_output['read'])
                 if set_header:
                     set_header = False
                     table_data_header = sorted(perf_stats.keys())
                 table_row1 = [perf_stats[key] for key in table_data_header]
-
+                perf_stats['block_size'] = self.read_fio_cmd_args['bs']
+                perf_stats['operation'] = self.read_fio_cmd_args['rw']
+                perf_stats['job_name'] = self.read_fio_cmd_args['name']
+                if 'compress' in self.volume_info['lsv'].keys():
+                    self.post_results(test=testcase, test_stats=perf_stats)  # publish only compression stats on db
                 table_row1.insert(0, "<b>{}</b>".format(mode.capitalize()))
                 table_rows.append(table_row1)
             table_data_header.insert(0, "")  # Align Table according to rows
@@ -397,17 +403,12 @@ class ECVolumeLevelTestcase(FunTestCase):
         for stats in stats_table_lst:
             fun_test.add_table(panel_header=testcase,
                                table_name=stats['table_name'], table_data=stats['table_data'])
-        # If Compression Enabled post results:
-        if 'compress' in self.volume_info['lsv'].keys():
-            pass
 
     def post_results(self, test, test_stats):
         blt = BltVolumePerformanceHelper()
 
-        db_log_time = datetime.now()
-
-        blt.add_entry(date_time=db_log_time,
-                      volume=self.num_volume,  # What is expected ?
+        blt.add_entry(date_time=fun_test.shared_variables['run_time'],
+                      volume=self.num_volume,
                       test=test,
                       block_size=test_stats['block_size'],
                       io_depth=test_stats['iodepth'],
@@ -430,7 +431,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                       read_95_latency_unit="usecs",
                       read_99_latency_unit="usecs",
                       read_99_99_latency_unit="usecs")
-
 
     def cleanup(self):
         try:

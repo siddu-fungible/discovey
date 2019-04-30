@@ -68,6 +68,7 @@
       "iodepth": 19,
       "size": "25G",
       "rw": "read",
+      "name": "ec_fio_25G_",
       "direct": 1,
       "prio": 0,
       "runtime": 300,
