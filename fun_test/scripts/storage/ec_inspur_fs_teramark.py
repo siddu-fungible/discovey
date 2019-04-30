@@ -536,7 +536,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Executing the FIO command to warm up the system
             if self.warm_up_traffic:
-                fun_test.log("Building the volume pre-populte config file")
+                fun_test.log("Building the volume pre-populte config file for Vdbench")
                 self.volume_fill_file = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
                 self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
 
