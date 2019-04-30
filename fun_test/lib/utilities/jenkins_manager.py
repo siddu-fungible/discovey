@@ -2,6 +2,7 @@ import jenkins
 import time
 import re
 import requests
+import json
 from requests.auth import HTTPBasicAuth
 
 
@@ -45,10 +46,10 @@ DEFAULT_BUILD_PARAMS = {
 }
 
 class JenkinsManager():
-    JENKINS_BASE_URL = "http://jenkins-sw-master:8080/"
+    JENKINS_BASE_URL = "http://jenkins-sw-master:8080"
     SERVICE_PASSWORD = '117071d3cb2cae6c964099664b271e4011'
     SERVICE_USERNAME = 'jenkins.service'
-    def __init__(self, job_name):
+    def __init__(self, job_name="emulation/fun_on_demand"):
         self.jenkins_server = jenkins.Jenkins(self.JENKINS_BASE_URL, username=self.SERVICE_USERNAME,
                                      password=self.SERVICE_PASSWORD)
         self.job_name = job_name
@@ -76,6 +77,10 @@ class JenkinsManager():
                 build_number = status["executable"]["number"]
         return build_number
 
+    def get_build_url(self, build_number):
+        s = "{}/job/emulation/job/fun_on_demand/{}/".format(self.JENKINS_BASE_URL, build_number)
+        return s
+
     def get_job_info(self, build_number):
         info = self.jenkins_server.get_build_info(self.job_name, build_number)
         return info
@@ -94,10 +99,40 @@ class JenkinsManager():
         s = "/job/emulation/job/fun_on_demand/{}/execution/node/{}/ws/emulation_image/funos-f1.stripped".format(build_number, node_number)
         return s
 
+    def get_bld_props_path(self, build_number):
+        bld_props_path = None
+        job_info = self.get_job_info(build_number=build_number)
+        if job_info["artifacts"]:
+            bld_props_path = job_info["artifacts"][0]["fileName"]
+        return bld_props_path
+
+    def get_bld_props(self, build_number, bld_props_path):
+        bld_props = None
+        url = "{}/job/emulation/job/fun_on_demand/{}/artifact/{}".format(self.JENKINS_BASE_URL,
+                                                                         build_number,
+                                                                         bld_props_path)
+        r = requests.get(url, auth=HTTPBasicAuth(self.SERVICE_USERNAME, self.SERVICE_PASSWORD))
+        if r.status_code == 200:
+            bld_props = r.content
+            bld_props = json.loads(bld_props)
+        return bld_props
+
     def download_file(self, source_path, target_path):
-        url = "{}{}".format(self.JENKINS_BASE_URL, source_path)
+        url = "{}/{}".format(self.JENKINS_BASE_URL, source_path)
         r = requests.get(url, auth=HTTPBasicAuth(self.SERVICE_USERNAME, self.SERVICE_PASSWORD))
         open(target_path, 'wb').write(r.content)
+
+    def get_image_path(self, build_number):
+        image_path = None
+        job_info = self.get_job_info(build_number=build_number)
+        if "description" in job_info:
+            build_description = job_info["description"]
+            if build_description:
+                m = re.search('Built image at (\S+)', build_description)
+                if m:
+                    image_path = m.group(1)
+                    print "Image-path: {}".format(image_path)
+        return image_path
 
 if __name__ == "__main__":
     jenkins_manager = JenkinsManager()
@@ -115,8 +150,14 @@ if __name__ == "__main__":
 
     job_info = jenkins_manager.get_job_info(build_number=build_number)
     while job_info["building"]:
-        j = jenkins_manager.get_job_info(build_number=build_number)
+        job_info = jenkins_manager.get_job_info(build_number=build_number)
         time.sleep(3)
+
+    bld_props_path = None
+    print ("Bld Props: {}".format(jenkins_manager.get_bld_props(build_number=build_number,
+                                                                bld_props_path=jenkins_manager.get_bld_props_path(build_number=build_number))))
+    print ("Description: {}".format(jenkins_manager.get_image_path(build_number=build_number)))
+
 
     print "Result: {}".format(job_info["result"])
     node_number = jenkins_manager.get_node_number(build_number=build_number)
