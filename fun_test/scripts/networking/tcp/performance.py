@@ -158,12 +158,13 @@ class TcpPerformance_1_Conn(FunTestCase):
         # Start mpstat
         version = fun_test.get_version()
         if use_mpstat:
-            mpstat_temp_filename = str(version) + "_" +str(self.num_flows) + '_mpstat.json'
+            mpstat_temp_filename = str(version) + "_" + str(self.num_flows) + '_mpstat.txt'
             mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
 
             fun_test.log("Starting to run mpstat command")
-            mp_out = run_mpstat_command(linux_obj=mpstat_obj, interval=self.test_run_time, json_output=True,
+            mp_out = run_mpstat_command(linux_obj=mpstat_obj, interval=self.test_run_time,
                                         output_file=mpstat_output_file, bg=True)
+            fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command")
         
         # Execute sh file
@@ -199,9 +200,8 @@ class TcpPerformance_1_Conn(FunTestCase):
 
         # Scp mpstat json to LOGS dir
         if use_mpstat:
-            mpstat_dump_filename = LOGS_DIR + "/%s" % mpstat_temp_filename
-            fun_test.scp(source_file_path=mpstat_output_file, source_ip=nu_lab_ip, source_username=nu_lab_username,
-                         source_password=nu_lab_password, target_file_path=mpstat_dump_filename, timeout=180)
+            populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_obj,
+                                        dump_filename=mpstat_temp_filename)
 
         fun_test.sleep("Letting file to be scp", seconds=2)
 
