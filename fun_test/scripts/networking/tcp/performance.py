@@ -18,7 +18,7 @@ setup_fpg1_file = "setup_fpg1.sh"
 setup_fpg1_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg1_file
 TIMESTAMP = None
 filename = "tcp_performance.json"
-use_mpstat = False
+use_mpstat = True
 
 
 def get_port_from_file(filepath):
