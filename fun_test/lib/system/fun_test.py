@@ -1171,6 +1171,7 @@ class FunTestScript(object):
                 self.test_cases = new_order
 
             ids = set()
+            fun_test.log("Test-case count: {}".format(len(self.test_cases)))
             for test_case in self.test_cases:
                 test_case.describe()
                 if test_case.id in ids:
@@ -1178,6 +1179,7 @@ class FunTestScript(object):
                 ids.add(test_case.id)
                 if fun_test.selected_test_case_ids:
                     if test_case.id not in fun_test.selected_test_case_ids:
+                        fun_test.log("test-case-id: {} not in selected test-cases: {}".format(test_case.id, fun_test.selected_test_case_ids))
                         continue
                 if fun_test.suite_execution_id:
                     suite_execution_tags = fun_test.get_suite_execution_tags()
