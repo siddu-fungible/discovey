@@ -194,7 +194,8 @@
           <th class="text-center">State</th>
           <th class="text-center">Submitter</th>
           <th class="text-center">Suite</th>
-          <th class="text-center">Next schedule</th>
+          <th class="text-center">Schedule</th>
+          <th class="text-center">Test-bed</th>
 
         </tr>
         <ng-container *ngFor="let suiteExecution of items">
@@ -211,7 +212,19 @@
             <td>
               {{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
             </td>
-            <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
+
+            <ng-container [ngSwitch]="suiteExecution.fields.scheduling_type">
+              <td *ngSwitchCase="'periodic'">
+                {{ requestedDaysToString(suiteExecution.fields.requested_days) + "[" + getRequestedTime(suiteExecution.fields.requested_hour, suiteExecution.fields.requested_minute) + "]" }}
+              </td>
+              <td *ngSwitchCase="'today'">
+                {{ "[" + getRequestedTime(suiteExecution.fields.requested_hour, suiteExecution.fields.requested_minute) + "]" }}
+              </td>
+              <td *ngSwitchCase="'repeat'">
+                Repeat in: {{ suiteExecution.fields.repeat_in_minutes }} minutes
+              </td>
+            </ng-container>
+            <td>{{ suiteExecution.fields.test_bed_type }}</td>
 
           </tr>
         </ng-container>

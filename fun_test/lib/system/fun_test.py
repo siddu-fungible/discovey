@@ -247,6 +247,11 @@ class FunTest:
                 self.build_parameters["DISABLE_ASSERTIONS"] = user_supplied_build_parameters["DISABLE_ASSERTIONS"]
             if "FUNOS_MAKEFLAGS" in user_supplied_build_parameters:
                 self.build_parameters["FUNOS_MAKEFLAGS"] = user_supplied_build_parameters["FUNOS_MAKEFLAGS"]
+            if "BRANCH_FunOS" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunOS"] = user_supplied_build_parameters["BRANCH_FunOS"]
+            if "BRANCH_FunSDK" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunSDK"] = user_supplied_build_parameters["BRANCH_FunSDK"]
+
 
     def get_build_parameters(self):
         return self.build_parameters
@@ -433,8 +438,13 @@ class FunTest:
         tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" is build_parameters else None
         fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
 
+        submitter_email = None
+        if fun_test.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+            submitter_email = suite_execution.submitter_email
+
         bh = BuildHelper(parameters=build_parameters)
-        emulation_image = bh.build_emulation_image()
+        emulation_image = bh.build_emulation_image(submitter_email=submitter_email)
         fun_test.test_assert(emulation_image, "Build emulation image")
         self.build_parameters["tftp_image_path"] = emulation_image
         result = True
@@ -1171,6 +1181,7 @@ class FunTestScript(object):
                 self.test_cases = new_order
 
             ids = set()
+            fun_test.log("Test-case count: {}".format(len(self.test_cases)))
             for test_case in self.test_cases:
                 test_case.describe()
                 if test_case.id in ids:
@@ -1178,6 +1189,7 @@ class FunTestScript(object):
                 ids.add(test_case.id)
                 if fun_test.selected_test_case_ids:
                     if test_case.id not in fun_test.selected_test_case_ids:
+                        fun_test.log("test-case-id: {} not in selected test-cases: {}".format(test_case.id, fun_test.selected_test_case_ids))
                         continue
                 if fun_test.suite_execution_id:
                     suite_execution_tags = fun_test.get_suite_execution_tags()
