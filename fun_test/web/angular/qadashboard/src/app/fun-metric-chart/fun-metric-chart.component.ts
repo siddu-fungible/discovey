@@ -23,6 +23,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
+  fileInfoUrl = "/static/logs/";
 
   status: string = null;
   showingTable: boolean;
@@ -82,6 +83,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   changingVizUnit: string = null;
   selectedUnit: string = null;
   category: string[] = [];
+  nwInfoFiles: string[] = [];
 
   //category of the units for the unit conversion
   latency_category: string[] = ["nsecs", "usecs", "msecs", "secs"];
@@ -115,6 +117,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.status = "Updating";
     this.showingTable = false;
+    this.nwInfoFiles = [];
     this.showingConfigure = false;
     this.headers = null;
     this.metricId = -1;
@@ -299,8 +302,19 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Software date"] = softwareDate;
       if (hardwareVersion !== "")
         s["Hardware version"] = hardwareVersion;
-      if (version !== "")
+      if (version !== "") {
+        this.nwInfoFiles = [];
         s["SDK version"] = "bld_" + version;
+        let payload = {};
+        payload["version"] = version;
+        this.apiService.post('/regression/get_networking_artifacts', payload).subscribe((data) => {
+          if (data) {
+            this.nwInfoFiles = data.data;
+          }
+        }, error => {
+          this.loggerService.error("Fetch networking artifacts");
+        });
+      }
       if (this.buildInfo[key]["git_commit"] !== "")
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
       if (buildProperties !== "")
@@ -390,6 +404,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.maxExpected = null;
     this.maxDataPoint = null;
     this.category = [];
+    this.nwInfoFiles = [];
     this.selectedUnit = null;
   }
 
@@ -572,6 +587,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   openVersionUrl(version): void {
     window.open(this.versionUrl + version, '_blank');
+  }
+
+  openFileInfoUrl(file): void {
+    window.open(this.fileInfoUrl + file, '_blank');
   }
 
   getAppName(source): string {
@@ -790,7 +809,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hour = ((Number(timeString[0]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[0] + ":";
     let minutes = ((Number(timeString[1]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[1] + ":";
     let seconds = ((Number(timeString[2]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[2] + " ";
-    let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " +  hour + minutes + seconds + keySplitString[2];
+    let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " + hour + minutes + seconds + keySplitString[2];
     return keyString;
   }
 
