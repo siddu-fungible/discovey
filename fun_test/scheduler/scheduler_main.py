@@ -90,7 +90,6 @@ class QueueWorker(Thread):
         state = JobStatusType.IN_PROGRESS
         container_suite_execution.state = state
         container_suite_execution.save()
-        container_suite_execution.save()
         try:
             container_spec = parse_suite(suite_name=container_suite_path)
             container_suite_level_tags = json.loads(container_suite_execution.tags)
@@ -106,7 +105,6 @@ class QueueWorker(Thread):
             version = determine_version(build_url=common_build_url)
             if version:
                 container_suite_execution.version = version
-                container_suite_execution.save()
                 container_suite_execution.save()
             for item in container_spec:
                 item_suite = parse_suite(suite_name=item)
@@ -218,9 +216,7 @@ class QueueWorker(Thread):
         suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
         scheduler_logger.info("{} Executing".format(get_job_string_from_spec(job_spec=suite_execution)))
         t = SuiteWorker(job_spec=suite_execution)
-        suite_execution.state = JobStatusType.IN_PROGRESS
-        suite_execution.save()
-        suite_execution.save()
+        models_helper.update_suite_execution(suite_execution_id=job_id, state=JobStatusType.IN_PROGRESS)
         t.initialize()
         # t.start()
         # t.run()
@@ -250,10 +246,8 @@ def queue_job(job_id):
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id,
                            test_bed_type=job_spec.test_bed_type)
         new_job.save()
-        new_job.save()
         models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
         time.sleep(1)
-        models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
 
     else:
         if job_spec:
@@ -839,11 +833,9 @@ def process_auto_scheduled_jobs():
             if auto_scheduled_job.scheduling_type == SchedulingType.TODAY and auto_scheduled_job.repeat_in_minutes > 0:
                 auto_scheduled_job.scheduling_type = SchedulingType.REPEAT
                 auto_scheduled_job.save()
-                auto_scheduled_job.save()
             scheduler_logger.info("{} instantiating auto-scheduled job to {}".format(
                 get_job_string_from_spec(job_spec=auto_scheduled_job),
                 get_job_string_from_spec(job_spec=cloned_job)))
-            cloned_job.save()
             cloned_job.save()
 
 

@@ -669,7 +669,8 @@ if __name__ == "__main_fun_tcp__":
     print "created charts for the FunTCP networking teramarks"
 
 if __name__ == "__main_ipsec_tunnel__":
-    internal_chart_names = ["juniper_crypto_single_tunnel_output_throughput", "juniper_crypto_single_tunnel_output_pps", "juniper_crypto_multi_tunnel_output_throughput", "juniper_crypto_multi_tunnel_output_pps"]
+    internal_chart_names = ["juniper_crypto_single_tunnel_output_throughput", "juniper_crypto_single_tunnel_output_pps",
+                            "juniper_crypto_multi_tunnel_output_throughput", "juniper_crypto_multi_tunnel_output_pps"]
     model_name = "JuniperCryptoTunnelPerformance"
     input_algorithm = "AES_GCM"
     description = "TBD"
@@ -719,7 +720,8 @@ if __name__ == "__main_ipsec_tunnel__":
     print "created charts for the IPSEC juniper customer teramarks"
 
 if __name__ == "__main_version_addition__":
-    networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance", "NuTransitPerformance"]
+    networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
+                         "NuTransitPerformance"]
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     for model in networking_models:
         metric_model = app_config.get_metric_models()[model]
@@ -739,7 +741,8 @@ if __name__ == "__main_version_addition__":
                                    sdk_version=version)
 
 if __name__ == "__main_add_half_load_latency__":
-    internal_chart_names = ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps", "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"]
+    internal_chart_names = ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                            "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"]
     ml = MetricLib()
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
@@ -761,7 +764,7 @@ if __name__ == "__main_delete_27th data__":
         if entry.input_date_time.day >= 27:
             entry.delete()
 
-if __name__ == "__main__":
+if __name__ == "__main_changed_num_flows__":
     model_names = ["TeraMarkJuniperNetworkingPerformance", "NuTransitPerformance"]
     entries = MetricChart.objects.all()
     ml = MetricLib()
@@ -773,3 +776,305 @@ if __name__ == "__main__":
                 if "input_number_flows" in data_set["inputs"]:
                     data_set["inputs"]["input_num_flows"] = data_set["inputs"].pop("input_number_flows")
             ml.save_data_sets(data_sets=data_sets, chart=entry)
+
+if __name__ == "__main_12ssd_blt__":
+    fio_job_names = ["fio_read_12blt", "fio_randread_12blt"]
+    internal_chart_names = ["read_4kb12vol12ssd_nvmetcp_output_bandwidth",
+                            "read_4kb12vol12ssd_nvmetcp_output_iops",
+                            "rand_read_4kb12vol12ssd_nvmetcp_output_bandwidth",
+                            "rand_read_4kb12vol12ssd_nvmetcp_output_iops"]
+    model_name = "BltVolumePerformance"
+    positive = True
+    base_line_date = datetime(year=2019, month=4, day=29, minute=0, hour=0, second=0)
+    owner = "Manu KS (manu.ks@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/12blt_fs_perf.py"
+
+    for internal_chart_name in internal_chart_names:
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "MBps"
+        else:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
+        if chart_name == "Throughput":
+            output_name = "output_read_throughput"
+        else:
+            output_name = "output_read_iops"
+
+        if "rand_read" in internal_chart_name:
+            operation = "randread"
+            fio_job_name = "fio_randread_12blt"
+        else:
+            operation = "read"
+            fio_job_name = "fio_read_12blt"
+
+        data_sets = []
+        name = "Samsung PM1725b"
+        one_data_set = {}
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+        one_data_set["inputs"]["input_operation"] = operation
+        one_data_set["name"] = name
+        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info=owner,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created throughput charts for blt volume with 12 ssds"
+
+    internal_chart_names = ["read_4kb12vol12ssd_4_nvmetcp_output_latency",
+                            "rand_read_4kb12vol12ssd_4_nvmetcp_output_latency"]
+    y1_axis_title = "usecs"
+    output_read_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
+    chart_name = "Latency"
+    positive = False
+
+    for internal_chart_name in internal_chart_names:
+        if "rand_read" in internal_chart_name:
+            operation = "randread"
+            fio_job_name = "fio_randread_12blt"
+        else:
+            operation = "read"
+            fio_job_name = "fio_read_12blt"
+
+        data_sets = []
+        for output_name in output_read_names:
+            if "_avg_" in output_name:
+                name = "avg"
+            elif "_99_99_" in output_name:
+                name = "99.99%"
+            else:
+                name = "99%"
+
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info=owner,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created latency charts for blt volume 12 ssds"
+
+if __name__ == "__main__":
+    fio_job_names = ["fio_read_memvol_seq_read", "fio_randread_memvol_rand_read", "fio_write_memvol_seq_write",
+                     "fio_randwrite_memvol_rand_write", "fio_readwrite_memvol_seq_read_write",
+                     "fio_randrw_memvol_rand_read_write"]
+    internal_chart_names = ["memvol_sequential_read_output_bandwidth",
+                            "memvol_sequential_read_output_iops",
+                            "memvol_random_read_output_bandwidth",
+                            "memvol_random_read_output_iops", "memvol_sequential_write_output_bandwidth",
+                            "memvol_sequential_write_output_iops", "memvol_random_write_output_bandwidth",
+                            "memvol_random_write_output_iops", "memvol_seq_read_write_output_bandwidth",
+                            "memvol_seq_read_write_output_iops",
+                            "memvol_random_read_write_output_bandwidth", "memvol_random_read_write_output_iops"]
+    model_name = "BltVolumePerformance"
+    positive = True
+    base_line_date = datetime(year=2019, month=4, day=27, minute=0, hour=0, second=0)
+    owner = "Radhika Naik (radhika.naik@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/memvol_fs_perf_updated.py"
+
+    for internal_chart_name in internal_chart_names:
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "MBps"
+            if "seq_read_write" in internal_chart_name:
+                operation = "readwrite"
+                fio_job_name = "fio_readwrite_memvol_seq_read_write"
+                output_names = ["output_read_throughput", "output_write_throughput"]
+            elif "random_read_write" in internal_chart_name:
+                operation = "randrw"
+                fio_job_name = "fio_randrw_memvol_rand_read_write"
+                output_names = ["output_read_throughput", "output_write_throughput"]
+            elif "sequential_read" in internal_chart_name:
+                operation = "read"
+                fio_job_name = "fio_read_memvol_seq_read"
+                output_names = ["output_read_throughput"]
+            elif "random_read" in internal_chart_name:
+                operation = "randread"
+                fio_job_name = "fio_randread_memvol_rand_read"
+                output_names = ["output_read_throughput"]
+            elif "sequential_write" in internal_chart_name:
+                operation = "write"
+                fio_job_name = "fio_write_memvol_seq_write"
+                output_names = ["output_write_throughput"]
+            elif "random_write" in internal_chart_name:
+                operation = "randwrite"
+                fio_job_name = "fio_randwrite_memvol_rand_write"
+                output_names = ["output_write_throughput"]
+        else:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
+            if "seq_read_write" in internal_chart_name:
+                operation = "readwrite"
+                fio_job_name = "fio_readwrite_memvol_seq_read_write"
+                output_names = ["output_read_iops", "output_write_iops"]
+            elif "random_read_write" in internal_chart_name:
+                operation = "randrw"
+                fio_job_name = "fio_randrw_memvol_rand_read_write"
+                output_names = ["output_read_iops", "output_write_iops"]
+            elif "sequential_read" in internal_chart_name:
+                operation = "read"
+                fio_job_name = "fio_read_memvol_seq_read"
+                output_names = ["output_read_iops"]
+            elif "random_read" in internal_chart_name:
+                operation = "randread"
+                fio_job_name = "fio_randread_memvol_rand_read"
+                output_names = ["output_read_iops"]
+            elif "sequential_write" in internal_chart_name:
+                operation = "write"
+                fio_job_name = "fio_write_memvol_seq_write"
+                output_names = ["output_write_iops"]
+            elif "random_write" in internal_chart_name:
+                operation = "randwrite"
+                fio_job_name = "fio_randwrite_memvol_rand_write"
+                output_names = ["output_write_iops"]
+
+
+        data_sets = []
+        for output_name in output_names:
+            if operation == "randrw":
+                if "read" in output_name:
+                    name = "randread"
+                else:
+                    name = "randwrite"
+            elif operation == "readwrite":
+                if "read" in output_name:
+                    name = "read"
+                else:
+                    name = "write"
+            else:
+                name = operation
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info=owner,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created throughput and iops charts for memvol"
+
+    internal_chart_names = ["memvol_sequential_read_output_latency_avg",
+                            "memvol_random_read_output_latency_avg", "memvol_sequential_write_output_latency_avg",
+                            "memvol_random_write_output_latency_avg",
+                            "memvol_seq_read_write_output_latency_avg", "memvol_random_read_write_output_latency_avg"]
+    y1_axis_title = "usecs"
+    output_read_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
+    output_write_names = ["output_write_avg_latency", "output_write_99_latency", "output_write_99_99_latency"]
+    chart_name = "Latency"
+    positive = False
+
+    for internal_chart_name in internal_chart_names:
+        if "seq_read_write" in internal_chart_name:
+            operation = "readwrite"
+            fio_job_name = "fio_readwrite_memvol_seq_read_write"
+            output_names = output_read_names + output_write_names
+        elif "random_read_write" in internal_chart_name:
+            operation = "randrw"
+            fio_job_name = "fio_randrw_memvol_rand_read_write"
+            output_names = output_read_names + output_write_names
+        elif "sequential_read" in internal_chart_name:
+            operation = "read"
+            fio_job_name = "fio_read_memvol_seq_read"
+            output_names = output_read_names
+        elif "random_read" in internal_chart_name:
+            operation = "randread"
+            fio_job_name = "fio_randread_memvol_rand_read"
+            output_names = output_read_names
+        elif "sequential_write" in internal_chart_name:
+            operation = "write"
+            fio_job_name = "fio_write_memvol_seq_write"
+            output_names = output_write_names
+        elif "random_write" in internal_chart_name:
+            operation = "randwrite"
+            fio_job_name = "fio_randwrite_memvol_rand_write"
+            output_names = output_write_names
+
+        data_sets = []
+        for output_name in output_names:
+            if "_avg_" in output_name:
+                name = "avg"
+            elif "_99_99_" in output_name:
+                name = "99.99%"
+            else:
+                name = "99%"
+
+            if operation == "randrw":
+                if "read" in output_name:
+                    name = "randread-" + name
+                else:
+                    name = "randwrite-" + name
+            elif operation == "readwrite":
+                if "read" in output_name:
+                    name = "read-" + name
+                else:
+                    name = "write-" + name
+
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info=owner,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created latency charts for memvol"

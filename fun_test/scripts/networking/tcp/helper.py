@@ -56,6 +56,7 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
                        "timestamp": str(timestamp),
                        "version": fun_test.get_version()
                        }
+        fun_test.log("FunOS version is %s" % output_dict['version'])
         results.append(output_dict)
         file_path = LOGS_DIR + "/%s" % filename
         contents = _parse_file_to_json_in_order(file_name=file_path)

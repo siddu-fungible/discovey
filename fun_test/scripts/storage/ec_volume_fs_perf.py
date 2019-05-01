@@ -428,7 +428,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                           message="Ensuring error_injection got disabled")
 
-            fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
             # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
             fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
 
@@ -444,10 +443,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                     self.volume_name = self.nvme_block_device.replace("/dev/", "")
                     fun_test.test_assert_expected(expected=self.volume_name,
                                                   actual=lsblk_output[volume_name]["name"],
-                                                  message="{} device available".format(self.volume_name))
+                                                  message="NVME block device availability")
                     break
             else:
                 fun_test.test_assert(False, "{} device available".format(self.volume_name))
+            fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
+            fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
+            fun_test.shared_variables["volume_name"] = self.volume_name
 
             # Disable the udev daemon which will skew the read stats of the volume during the test
             udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
@@ -469,7 +471,13 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
+        if self.ec_ratio in fun_test.shared_variables or fun_test.shared_variables[self.ec_ratio]["setup_created"]:
+            self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
+            self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
+            self.volume_name = fun_test.shared_variables["volume_name"]
+        else:
+            fun_test.simple_assert(False, "Setup Section Status")
+
         # self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only

@@ -19,8 +19,7 @@
   "testbeds": [
     "simulation",
     "fs-6",
-    "fs-7",
-    "fs-9"
+    "fs-7"
   ],
   "modules": [
     {

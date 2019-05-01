@@ -8,6 +8,7 @@ from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
 import re
+import fun_global
 
 '''
 Script to measure performance for a Compression enabled Durable Volume 4:2 EC with Compression Effort Auto 
@@ -358,7 +359,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
         stats_table_lst = []
-
+        job_perfix = self.read_fio_cmd_args['name']
         for test in self.test_parameters:
 
             set_header = True
@@ -373,7 +374,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Do seq and rand read for the writes
             for mode in self.read_modes:
                 self.read_fio_cmd_args['rw'] = mode
-                self.read_fio_cmd_args['name'] = "{0}_{1}_{2}".format(self.read_fio_cmd_args['name'],
+                self.read_fio_cmd_args['name'] = "{0}_{1}_{2}".format(job_perfix,
                                                                       mode,
                                                                       self.write_fio_cmd_args[
                                                                           'buffer_compress_percentage'])
@@ -383,6 +384,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                                          self.read_fio_cmd_args['size'],
                                          self.read_fio_cmd_args['rw'],
                                          self.nvme_block_device))
+                fun_test.test_assert(self.storage_controller.peek(
+                    props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))['status'],
+                                     message="Execute peek to check F1 status", ignore_on_success=True)
                 perf_stats = parse_perf_stats(fio_read_output['read'])
                 if set_header:
                     set_header = False
@@ -391,7 +395,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 perf_stats['block_size'] = self.read_fio_cmd_args['bs']
                 perf_stats['operation'] = self.read_fio_cmd_args['rw']
                 perf_stats['job_name'] = self.read_fio_cmd_args['name']
-                if 'compress' in self.volume_info['lsv'].keys():
+                if 'compress' in self.volume_info['lsv'].keys() and fun_global.is_production_mode():
                     self.post_results(test=testcase, test_stats=perf_stats)  # publish only compression stats on db
                 table_row1.insert(0, "<b>{}</b>".format(mode.capitalize()))
                 table_rows.append(table_row1)
@@ -400,8 +404,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             stats_table_lst.append({'table_name': test['name'], 'table_data': table_data})
 
         # Print Tabulated Stats
+        panel_header = testcase + " Performance Stats"
         for stats in stats_table_lst:
-            fun_test.add_table(panel_header=testcase,
+            fun_test.add_table(panel_header=panel_header,
                                table_name=stats['table_name'], table_data=stats['table_data'])
 
     def post_results(self, test, test_stats):
