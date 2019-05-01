@@ -7,10 +7,13 @@ from lib.host.linux import Linux
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
+import re
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using Vdbench
 '''
+
+# TODO: vdbench config content variable: /dev/nvme0n1: change it dynamically according to controller assigned.
 
 tb_config = {
     "name": "Basic Storage",
@@ -385,6 +388,7 @@ class ECVolumeLevelScript(FunTestScript):
         self.ec_info = fun_test.shared_variables["ec_info"]
         self.remote_ip = fun_test.shared_variables["remote_ip"]
         self.attach_transport = fun_test.shared_variables["attach_transport"]
+        """
         if fun_test.shared_variables["ec"]["setup_created"]:
             # Detaching all the EC/LS volumes to the external server
             for num in xrange(self.ec_info["num_volumes"]):
@@ -402,6 +406,7 @@ class ECVolumeLevelScript(FunTestScript):
         self.storage_controller.disconnect()
         fs = fun_test.shared_variables["fs"]
         fs.cleanup()
+        """
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -449,7 +454,9 @@ class ECVolumeLevelTestcase(FunTestCase):
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
 
-        self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
+        # self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
+        self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
+        self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
@@ -503,8 +510,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                           message="Ensuring error_injection got disabled")
 
-            fun_test.shared_variables["ec"]["setup_created"] = True
-
             # Checking nvme-connect status
             if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
                 nvme_connect_cmd = "sudo nvme connect -t {} -a {} -s {} -n {}".format(
@@ -520,13 +525,34 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                           message="NVME Connect Status")
 
-            # Checking that the above created volume is visible to the end host
+            ''''# Checking that the above created volume is visible to the end host
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
             lsblk_output = self.end_host.lsblk()
             fun_test.log("lsblk output is: {}".format(lsblk_output))
             fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))
+                                          message="{} device type check".format(self.volume_name))'''
+
+            lsblk_output = self.end_host.lsblk("-b")
+            fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+            # Checking that the above created BLT volume is visible to the end host
+            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
+            for volume_name in lsblk_output:
+                match = re.search(volume_pattern, volume_name)
+                if match:
+                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
+                    self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                    fun_test.test_assert_expected(expected=self.volume_name,
+                                                  actual=lsblk_output[volume_name]["name"],
+                                                  message="{} device available".format(self.volume_name))
+                    break
+            else:
+                fun_test.test_assert(False, "{} device available".format(self.volume_name))
+
+            fun_test.shared_variables["ec"]["setup_created"] = True
+            fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
+            fun_test.shared_variables["volume_name"] = self.volume_name
 
             ''''# Disable the udev daemon which will skew the read stats of the volume during the test
             udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
@@ -552,7 +578,13 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        fun_test.sleep("Interval after warm-up traffic")
+        if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
+            self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
+            self.volume_name = fun_test.shared_variables["volume_name"]
+        else:
+            fun_test.simple_assert(False, "Setup Section Status")
+
+        fun_test.sleep("Interval before starting traffic", self.iter_interval)
         fun_test.log("Starting Random Read/Write of 8k data block")
         self.end_host = fun_test.shared_variables["end_host"]
 
@@ -583,7 +615,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         row_data_dict = {}
         vdbench_run_name = self.perf_run_config_file
 
-        # Calculating Read/Write bandwidth and IOPS
+        # Vdbench gives cumulative output, Calculating Read/Write bandwidth and IOPS
         if hasattr(self, "read_pct"):
             read_bw = int(round(float(vdbench_result["throughput"]) * self.read_pct))
             read_iops = int(round(float(vdbench_result["iops"]) * self.read_pct))
@@ -600,8 +632,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         row_data_dict["readbw"] = read_bw
         row_data_dict["writeiops"] = write_iops
         row_data_dict["writebw"] = write_bw
-        row_data_dict["readclatency"] = int(round(float(vdbench_result["read_resp"])))
-        row_data_dict["writelatency"] = int(round(float(vdbench_result["write_resp"])))
+
+        # Converting response values from milliseconds to microseconds
+        row_data_dict["readclatency"] = int(round(float(vdbench_result["read_resp"]) * 1000))
+        row_data_dict["writelatency"] = int(round(float(vdbench_result["write_resp"]) * 1000))
 
         # Building the table raw for this variation
         row_data_list = []
@@ -611,7 +645,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             else:
                 row_data_list.append(row_data_dict[i])
         table_data_rows.append(row_data_list)
-        post_results("EC with 8k data block random read/write IOPS", test_method, *row_data_list)
+        post_results("Performance Table", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="8k data block random readn/write IOPS Performance Table",
@@ -646,8 +680,35 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).cleanup()
 
 
+class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Inspur TC 8.11.2: 1024k data block sequential read/write IOPS performance"
+                                      "of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for 1024k transfer size Random read/write IOPS
+        """)
+
+    def setup(self):
+        super(SequentialReadWrite1024kBlocks, self).setup()
+
+    def run(self):
+        super(SequentialReadWrite1024kBlocks, self).run()
+
+    def cleanup(self):
+        super(SequentialReadWrite1024kBlocks, self).cleanup()
+
+
 if __name__ == "__main__":
 
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.run()

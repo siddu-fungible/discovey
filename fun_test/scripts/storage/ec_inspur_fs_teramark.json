@@ -26,7 +26,7 @@
     },
     // timeout used for the storage controller
     "command_timeout": 30,
-    "iter_interval": 120,
+    "iter_interval": 60,
     // Head room needed for the LS volume in percentage
     "ns_id": 1,
     "attach_transport": "TCP",
@@ -37,11 +37,46 @@
     "warm_up_timeout": 900,
     "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=1h,interval=30",
     "warm_up_config_file": "populate_disk",
-    "read_pct": 0.875,
-    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=87.5,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=10g,interval=10,warmup=10",
+    "read_pct": 0.7,
+    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=8\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=10g,interval=10,warmup=10",
     "perf_run_config_file": "inspur_8k_random_read_write_vdbench",
     "perf_run_timeout": 180,
-    "nvme_device": "/dev/nvme0",
+    "nvme_device": "/dev/nvme",
+    "io_queues": 0
+  },
+  "SequentialReadWrite1024kBlocks": {
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "ndata": 4,
+      "nparity": 2,
+      //"capacity": 3298534883328, // 3TB
+      "capacity": 10737418240, // 10GB
+      "use_lsv": 1,
+      "lsv_pct": 0.7,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    // timeout used for the storage controller
+    "command_timeout": 30,
+    "iter_interval": 60,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "vdbench_path": "/usr/local/share/vdbench",
+    "warm_up_traffic": 1,
+    "warm_up_timeout": 900,
+    "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=1h,interval=30",
+    "warm_up_config_file": "populate_disk",
+    "read_pct": 0.7,
+    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=10g,interval=10,warmup=10",
+    "perf_run_config_file": "inspur_1024_sequential_read_write_vdbench",
+    "perf_run_timeout": 180,
+    "nvme_device": "/dev/nvme",
     "io_queues": 0
   }
 }
