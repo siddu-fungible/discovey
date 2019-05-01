@@ -884,7 +884,7 @@ if __name__ == "__main_12ssd_blt__":
                     work_in_progress=False).save()
     print "created latency charts for blt volume 12 ssds"
 
-if __name__ == "__main__":
+if __name__ == "__main_memvol__":
     fio_job_names = ["fio_read_memvol_seq_read", "fio_randread_memvol_rand_read", "fio_write_memvol_seq_write",
                      "fio_randwrite_memvol_rand_write", "fio_readwrite_memvol_seq_read_write",
                      "fio_randrw_memvol_rand_read_write"]
@@ -1078,3 +1078,61 @@ if __name__ == "__main__":
                     base_line_date=base_line_date,
                     work_in_progress=False).save()
     print "created latency charts for memvol"
+
+if __name__ == "__main__":
+    internal_chart_names = ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
+                            "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets = json.loads(chart.data_sets)
+            input = {}
+            input["input_half_load_latency"] = False
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            ml.save_data_sets(data_sets=data_sets, chart=chart)
+            print "added half load latency"
+
+    entry = MetricChart.objects.get(internal_chart_name="juniper_NU_LE_VP_NU_FW_output_latency_avg")
+    if entry:
+        data_sets = json.loads(entry.data_sets)
+        input = {}
+        input["input_half_load_latency"] = True
+        data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name='Latency - Half Load',
+                    metric_id=metric_id,
+                    internal_chart_name="juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=entry.description,
+                    owner_info=entry.owner_info,
+                    source=entry.source,
+                    positive=False,
+                    y1_axis_title='usecs',
+                    visualization_unit='usecs',
+                    metric_model_name=entry.metric_model_name,
+                    base_line_date=entry.base_line_date,
+                    work_in_progress=False).save()
+
+    entry = MetricChart.objects.get(internal_chart_name="juniper_NU_VP_NU_FWD_NFCP_output_latency_avg")
+    if entry:
+        data_sets = json.loads(entry.data_sets)
+        input = {}
+        input["input_half_load_latency"] = True
+        data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name='Latency - Half Load',
+                    metric_id=metric_id,
+                    internal_chart_name="juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=entry.description,
+                    owner_info=entry.owner_info,
+                    source=entry.source,
+                    positive=False,
+                    y1_axis_title='usecs',
+                    visualization_unit='usecs',
+                    metric_model_name=entry.metric_model_name,
+                    base_line_date=entry.base_line_date,
+                    work_in_progress=False).save()
