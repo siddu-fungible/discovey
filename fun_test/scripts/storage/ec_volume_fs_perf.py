@@ -443,7 +443,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     self.volume_name = self.nvme_block_device.replace("/dev/", "")
                     fun_test.test_assert_expected(expected=self.volume_name,
                                                   actual=lsblk_output[volume_name]["name"],
-                                                  message="{} device available".format(self.volume_name))
+                                                  message="NVME block device availability")
                     break
             else:
                 fun_test.test_assert(False, "{} device available".format(self.volume_name))
