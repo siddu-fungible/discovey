@@ -1,6 +1,6 @@
 {
   "EC42FioReadEffortAuto": {
-    "num_ssd": 6,
+    "num_ssd": 12,
     "num_volume": 1,
     "ec_coding": {
       "ndata": 4,
@@ -68,7 +68,7 @@
       "iodepth": 19,
       "size": "25G",
       "rw": "read",
-      "name": "ec_fio_25G_",
+      "name": "ec_fio_25G",
       "direct": 1,
       "prio": 0,
       "runtime": 300,
@@ -104,7 +104,7 @@
     ]
   },
   "EC42FioReadCompDisabled": {
-    "num_ssd": 1,
+    "num_ssd": 12,
     "num_volume": 1,
     "ec_coding": {
       "ndata": 4,
@@ -169,6 +169,7 @@
       "iodepth": 19,
       "size": "25G",
       "rw": "read",
+      "name": "ec_fio_25G",
       "direct": 1,
       "prio": 0,
       "runtime": 300,
