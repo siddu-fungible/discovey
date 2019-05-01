@@ -17,10 +17,10 @@ class BuildHelper():
         self.disable_assertions = disable_assertions
         self.jenkins_manager = JenkinsManager(job_name=job_name)
 
-    def build_emulation_image(self):
+    def build_emulation_image(self, submitter_email=None):
         result = None
         parameters = self.parameters
-        queue_item = self.jenkins_manager.build(params=parameters)
+        queue_item = self.jenkins_manager.build(params=parameters, extra_emails=[submitter_email])
         build_number = None
         max_wait_for_build_start = 60
         build_start_timer = FunTimer(max_time=max_wait_for_build_start)

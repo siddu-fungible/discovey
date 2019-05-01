@@ -44,8 +44,10 @@ export class SubmitJobComponent implements OnInit {
   bootArgs: string = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit";
   withJenkinsBuild: boolean = false;
   disableAssertions: boolean = true;
-  funOsMakeFlags: string = null;
 
+  funOsMakeFlags: string = null;
+  branchFunOs: string = null;
+  branchFunSdk: string = null;
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
   privateFunosTgzUrl: string = null;
@@ -255,6 +257,8 @@ export class SubmitJobComponent implements OnInit {
         }
         payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
         payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
+        payload["environment"]["build_parameters"]["BRANCH_FunOS"] = this.branchFunOs;
+        payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
       }
     }
 

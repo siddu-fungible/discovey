@@ -64,9 +64,18 @@ class JenkinsManager():
                 print("Error Key: {} is not in the BUILD params".format(key))
         return params
 
-    def build(self, params):
+    def build(self, params, extra_emails=None):
         # self.jenkins_server.get_job_info('emulation/fun_on_demand', build_number)
-        queue_item = self.jenkins_server.build_job(self.job_name, self._apply_params(user_params=params))
+        new_params = self._apply_params(user_params=params)
+        emails = "john.abraham@fungible.com"
+        if extra_emails:
+            emails += ","
+            for extra_email in extra_emails:
+                emails += extra_email + ','
+            if emails.endswith(","):
+                emails = emails[:-1]
+        new_params["EXTRA_EMAIL"] = emails
+        queue_item = self.jenkins_server.build_job(self.job_name, new_params)
         return queue_item
 
     def get_build_number(self, queue_item):
