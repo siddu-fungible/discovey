@@ -563,6 +563,238 @@
             ]
           },
           {
+            "info": "memvol",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "memvol",
+            "label": "MemVol",
+            "weight": 1,
+            "children": [
+              {
+                "info": "memvol_sequential_read",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_sequential_read",
+                "label": "Sequential Read",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_sequential_read_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_sequential_read_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_sequential_read_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_sequential_read_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_sequential_read_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_sequential_read_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "memvol_random_read",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_random_read",
+                "label": "Random Read",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_random_read_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_read_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_read_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "memvol_sequential_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_sequential_write",
+                "label": "Sequential Write",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_sequential_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_sequential_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_sequential_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_sequential_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_sequential_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_sequential_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "memvol_random_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_random_write",
+                "label": "Random Write",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_random_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "memvol_seq_read_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_seq_read_write",
+                "label": "Sequential Read Write",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_seq_read_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_seq_read_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_seq_read_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_seq_read_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_seq_read_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_seq_read_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "memvol_random_read_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_random_read_write",
+                "label": "Random Read Write",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_random_read_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_read_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_read_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "info": "Volume Type",
             "metric_model_name": "MetricContainer",
             "leaf": false,
