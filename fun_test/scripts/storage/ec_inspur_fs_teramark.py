@@ -14,6 +14,7 @@ Script to track the Inspur Performance Cases of various read write combination o
 '''
 
 # TODO: vdbench config content variable: /dev/nvme0n1: change it dynamically according to controller assigned.
+# TODO: Increase Volumes and volume size once related bugs are fixed
 
 tb_config = {
     "name": "Basic Storage",
@@ -388,7 +389,6 @@ class ECVolumeLevelScript(FunTestScript):
         self.ec_info = fun_test.shared_variables["ec_info"]
         self.remote_ip = fun_test.shared_variables["remote_ip"]
         self.attach_transport = fun_test.shared_variables["attach_transport"]
-        """
         if fun_test.shared_variables["ec"]["setup_created"]:
             # Detaching all the EC/LS volumes to the external server
             for num in xrange(self.ec_info["num_volumes"]):
@@ -406,7 +406,6 @@ class ECVolumeLevelScript(FunTestScript):
         self.storage_controller.disconnect()
         fs = fun_test.shared_variables["fs"]
         fs.cleanup()
-        """
 
 
 class ECVolumeLevelTestcase(FunTestCase):
