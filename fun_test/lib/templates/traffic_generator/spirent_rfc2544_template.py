@@ -436,6 +436,14 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     results.append(data_dict)
                     fun_test.debug(results)
 
+                    if model_name == JUNIPER_PERFORMANCE_MODEL_NAME:
+                        unit_dict = {}
+                        unit_dict["pps_unit"] = "pps"
+                        unit_dict["throughput_unit"] = "Mbps"
+                        add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict,
+                                                          unit_dict=unit_dict)
+                        fun_test.add_checkpoint("Entry added to model %s" % model_name)
+
             file_path = LOGS_DIR + "/%s" % file_name
             contents = self._parse_file_to_json_in_order(file_name=file_path)
             if contents:
@@ -449,13 +457,6 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 fun_test.simple_assert(file_created, "Create Performance JSON file")
             if failed_result_found:
                 output = False
-            if model_name == JUNIPER_PERFORMANCE_MODEL_NAME:
-                unit_dict = {}
-                unit_dict["pps_unit"] = "pps"
-                unit_dict["throughput_unit"] = "Mbps"
-                add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict, unit_dict=unit_dict)
-                fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
-                fun_test.add_checkpoint("Entry added to model %s" % model_name)
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
