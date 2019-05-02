@@ -36,8 +36,6 @@ class ScriptSetup(FunTestScript):
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
-        '''
-
         mode = 3
         num_flows = 16777216
         benchmark_ports = [8, 12]
@@ -58,7 +56,7 @@ class ScriptSetup(FunTestScript):
         output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10000-16144", protocol=17,
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=6291456,
                                                              flow_inport=12, flow_outport=8)
-        '''
+
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
