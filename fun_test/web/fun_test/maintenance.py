@@ -1079,7 +1079,7 @@ if __name__ == "__main_memvol__":
                     work_in_progress=False).save()
     print "created latency charts for memvol"
 
-if __name__ == "__main__":
+if __name__ == "__main__half_load_charts__":
     internal_chart_names = ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
                             "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
     ml = MetricLib()
@@ -1136,3 +1136,19 @@ if __name__ == "__main__":
                     metric_model_name=entry.metric_model_name,
                     base_line_date=entry.base_line_date,
                     work_in_progress=False).save()
+
+if __name__ == "__main__":
+    model = "TeraMarkJuniperNetworkingPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model]
+    entries = metric_model.objects.all()
+    for entry in entries:
+        if entry.output_latency_avg_unit == "us":
+            print entry
+            entry.output_latency_avg_unit = "usecs"
+            entry.output_latency_max_unit = "usecs"
+            entry.output_latency_min_unit = "usecs"
+            entry.output_jitter_min_unit = "usecs"
+            entry.output_jitter_max_unit = "usecs"
+            entry.output_jitter_avg_unit = "usecs"
+            entry.save()
