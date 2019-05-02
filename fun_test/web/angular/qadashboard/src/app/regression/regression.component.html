@@ -215,10 +215,10 @@
 
             <ng-container [ngSwitch]="suiteExecution.fields.scheduling_type">
               <td *ngSwitchCase="'periodic'">
-                {{ requestedDaysToString(suiteExecution.fields.requested_days) + "[" + getRequestedTime(suiteExecution.fields.requested_hour, suiteExecution.fields.requested_minute) + "]" }}
+                {{ requestedDaysToString(suiteExecution.fields.requested_days) + "[" + getRequestedTime(suiteExecution.fields.requested_hour, suiteExecution.fields.requested_minute) + "]" + suiteExecution.fields.timezone_string }}
               </td>
               <td *ngSwitchCase="'today'">
-                {{ "[" + getRequestedTime(suiteExecution.fields.requested_hour, suiteExecution.fields.requested_minute) + "]" }}
+                {{ "[" + getRequestedTime(suiteExecution.fields.requested_hour, suiteExecution.fields.requested_minute) + "]" + suiteExecution.fields.timezone_string }}
               </td>
               <td *ngSwitchCase="'repeat'">
                 Repeat in: {{ suiteExecution.fields.repeat_in_minutes }} minutes

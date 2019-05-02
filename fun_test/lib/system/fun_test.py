@@ -251,6 +251,10 @@ class FunTest:
                 self.build_parameters["BRANCH_FunOS"] = user_supplied_build_parameters["BRANCH_FunOS"]
             if "BRANCH_FunSDK" in user_supplied_build_parameters:
                 self.build_parameters["BRANCH_FunSDK"] = user_supplied_build_parameters["BRANCH_FunSDK"]
+            if "BRANCH_FunControlPlane" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunControlPlane"] = user_supplied_build_parameters["BRANCH_FunControlPlane"]
+            if "SKIP_DASM_C" in user_supplied_build_parameters:
+                self.build_parameters["SKIP_DASM_C"] = user_supplied_build_parameters["SKIP_DASM_C"]
 
 
     def get_build_parameters(self):

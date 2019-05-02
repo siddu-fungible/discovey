@@ -34,6 +34,7 @@ import dateutil.parser
 import re
 from django.apps import apps
 import time
+import glob
 from django.db import transaction
 from django.db.models import Q
 from scheduler.scheduler_global import SchedulerJobPriority, QueueOperations
@@ -1082,4 +1083,14 @@ def testbeds(request):
     testbeds = TestBed.objects.all()
     for testbed in testbeds:
         result[testbed.name] = {"name": testbed.name, "description": testbed.description}
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def get_networking_artifacts(request, sdk_version):
+    files = glob.glob("{}/*{}*.json".format(LOGS_DIR, sdk_version))
+    result = []
+    for file in files:
+        result.append(os.path.basename(file))
     return result
