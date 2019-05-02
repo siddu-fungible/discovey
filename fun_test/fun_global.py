@@ -82,6 +82,8 @@ def get_utc_offset():
     return offset
 
 class PerfUnit:
+    # Units taken from Bertrand's perf library 'perf_metric.h' from FUNOS common utils. Link given below:
+    # https://github.com/fungible-inc/FunOS/blob/master/utils/common/perf_metric.h
     UNIT_USECS = "usecs"
     UNIT_NSECS = "nsecs"
     UNIT_MSECS = "msecs"
