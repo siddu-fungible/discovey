@@ -213,9 +213,10 @@ class TcpPerformance_1_Conn(FunTestCase):
         netstat_2 = get_netstat_output(linux_obj=nu_lab_obj)
 
         # Get diff stats
-        netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '_netstat.json'
-        populate = populate_netstat_json_file(old_stats=netstat_1, new_stats=netstat_2, filename=netstat_temp_filename)
-        fun_test.test_assert(populate, "Populate netstat into json file")
+        netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '_netstat.txt'
+        diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+        fun_test.test_assert(populate, "Populate netstat into txt file")
 
         output = network_controller_obj.get_flow_list()
         fun_test.log("Log flow list")

@@ -141,12 +141,33 @@ def run_mpstat_command(linux_obj, decimal_place=2, interval=5, output_file=None,
     return out
 
 
-def _create_nested_table(stat, key_name):
+def create_nested_table(stat, key_name):
     table_obj = None
     try:
         table_obj = PrettyTable(stat[key_name][0].keys())
         for record in stat[key_name]:
             table_obj.add_row(record.values())
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return table_obj
+
+
+def create_interrupts_table(stat, key_name):
+    table_obj = None
+    try:
+        table_obj = PrettyTable(stat[key_name][0].keys())
+        for record in stat[key_name]:
+            rows = []
+            for key in record:
+                if type(record[key]) == list:
+                    inner_table = PrettyTable(record[key][0].keys())
+                    inner_table.align = 'l'
+                    for _record in record[key]:
+                        inner_table.add_row(_record.values())
+                    rows.append(inner_table)
+                else:
+                    rows.append(record[key])
+            table_obj.add_row(rows)
     except Exception as ex:
         fun_test.critical(str(ex))
     return table_obj
@@ -166,18 +187,22 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
                  host['sysname']])
 
         stats_table = PrettyTable(['timestamp', 'cpu-load', 'node-load'])
-        stats_table.title = 'Statistics'
+        interrupts_table = PrettyTable(['timestamp', 'sum-interrupts', 'soft-interrupts'])
 
         for host in mpstat_dict['sysstat']['hosts']:
             for stat in host['statistics']:
-                cpu_load_table = _create_nested_table(stat=stat, key_name='cpu-load')
-                node_load_table = _create_nested_table(stat=stat, key_name='node-load')
+                cpu_load_table = create_nested_table(stat=stat, key_name='cpu-load')
+                node_load_table = create_nested_table(stat=stat, key_name='node-load')
+                sum_interrupts_table = create_interrupts_table(stat=stat, key_name='sum-interrupts')
+                soft_interrupts_table = create_interrupts_table(stat=stat, key_name='soft-interrupts')
 
                 stats_table.add_row([stat['timestamp'], cpu_load_table, node_load_table])
+                interrupts_table.add_row([stat['timestamp'], sum_interrupts_table, soft_interrupts_table])
 
         mpstat_dump_filepath = LOGS_DIR + "/%s" % dump_filename
         lines = ['<=======> Mpstat output <=======>\n', '\n<=======> Hosts MetaData <=======>\n',
-                 hosts_table.get_string(), '\n<=======> Statistics <=======>\n', stats_table.get_string()]
+                 hosts_table.get_string(), '\n<=======> Statistics <=======>\n', stats_table.get_string(),
+                 '\n<=======> Interrupts <=======>\n', interrupts_table.get_string()]
         with open(mpstat_dump_filepath, 'w') as f:
             f.writelines(lines)
 
@@ -259,6 +284,7 @@ def get_netstat_output(linux_obj, options=['s','t'], keys=['Tcp','TcpExt']):
         fun_test.critical(str(ex))
     return output
 
+
 def get_diff_stats(old_stats, new_stats):
     result = {}
     try:
@@ -279,25 +305,26 @@ def get_diff_stats(old_stats, new_stats):
         fun_test.critical(str(ex))
     return result
 
-def populate_netstat_json_file(old_stats, new_stats, filename):
-    results = []
+
+def populate_netstat_output_file(diff_stats, filename):
     output = False
     try:
-        output_dict = get_diff_stats(old_stats=old_stats, new_stats=new_stats)
-        results.append(output_dict)
         file_path = LOGS_DIR + "/%s" % filename
-        '''
-        contents = _parse_file_to_json_in_order(file_name=file_path)
-        if contents:
-            append_new_results = contents + results
-            file_created = create_counters_file(json_file_name=file_path,
-                                                     counter_dict=append_new_results)
-            fun_test.simple_assert(file_created, "Create netstat JSON file")
-        else:
-        '''
-        file_created = create_counters_file(json_file_name=file_path,
-                                                    counter_dict=results)
-        fun_test.simple_assert(file_created, "Create netstat JSON file")
+        netstat_table = PrettyTable(diff_stats.keys())
+        rows = []
+        for key in diff_stats:
+            inner_table = PrettyTable(['Name', 'Value'])
+            inner_table.align = 'l'
+            inner_table.border = False
+            inner_table.header = False
+            for _key, _val in diff_stats[key].iteritems():
+                inner_table.add_row([_key, _val])
+            rows.append(inner_table)
+        netstat_table.add_row(rows)
+
+        lines = ['<=======> Netstat output <=======>\n', netstat_table.get_string()]
+        with open(file_path, 'w') as f:
+            f.writelines(lines)
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -323,6 +350,7 @@ def _remove_dict_key(org_dict, remove_key):
         elif isinstance(val, list) or isinstance(val, dict):
             return _remove_dict_key(val, remove_key)
     return org_dict
+
 
 def trim_json_contents(filepath):
     result = False
