@@ -1137,7 +1137,7 @@ if __name__ == "__main__half_load_charts__":
                     base_line_date=entry.base_line_date,
                     work_in_progress=False).save()
 
-if __name__ == "__main__":
+if __name__ == "__main_us_to_usecs__":
     model = "TeraMarkJuniperNetworkingPerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model]
@@ -1151,4 +1151,16 @@ if __name__ == "__main__":
             entry.output_jitter_min_unit = "usecs"
             entry.output_jitter_max_unit = "usecs"
             entry.output_jitter_avg_unit = "usecs"
+            entry.save()
+
+if __name__ == "__main__":
+    model = "TeraMarkJuniperNetworkingPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model]
+    entries = metric_model.objects.all()
+    for entry in entries:
+        if entry.input_flow_type == "NU_VP_NU_FWD_NFCP" and entry.input_date_time.day == 2 and entry.input_date_time.month == 5 and entry.input_date_time.year == 2019:
+            print entry
+            entry.output_throughput_unit = "Gbps"
+            entry.output_pps_unit = "Mpps"
             entry.save()
