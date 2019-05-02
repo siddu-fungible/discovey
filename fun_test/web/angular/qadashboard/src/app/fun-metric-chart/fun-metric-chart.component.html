@@ -59,9 +59,8 @@
             </td>
           </tr>
           <tr *ngIf="nwInfoFiles.length!==0" class="word-break">
-            <td><b>Info files:</b></td>
-            <td><span *ngFor="let file of nwInfoFiles"><a [routerLink]=""
-                                                          (click)="openFileInfoUrl(file)">{{ file }}</a><br></span>
+            <td style="vertical-align: top"><b>Info files:</b></td>
+            <td><span *ngFor="let file of nwInfoFiles"><a href="{{LOGS_DIR}}/{{file}}" target="_blank">{{ file }}</a><br></span>
             </td>
           </tr>
         </table>

@@ -23,7 +23,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
-  fileInfoUrl = "/static/logs/";
+  LOGS_DIR = "/static/logs";
 
   status: string = null;
   showingTable: boolean;
@@ -305,14 +305,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       if (version !== "") {
         this.nwInfoFiles = [];
         s["SDK version"] = "bld_" + version;
-        let payload = {};
-        payload["version"] = version;
-        this.apiService.post('/regression/get_networking_artifacts', payload).subscribe((data) => {
+        this.status = "Fetching networking artifacts";
+        this.apiService.get('/regression/get_networking_artifacts/' + version).subscribe((data) => {
           if (data) {
             this.nwInfoFiles = data.data;
           }
+          this.status = null;
         }, error => {
           this.loggerService.error("Fetch networking artifacts");
+          this.status = null;
         });
       }
       if (this.buildInfo[key]["git_commit"] !== "")
@@ -587,10 +588,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   openVersionUrl(version): void {
     window.open(this.versionUrl + version, '_blank');
-  }
-
-  openFileInfoUrl(file): void {
-    window.open(this.fileInfoUrl + file, '_blank');
   }
 
   getAppName(source): string {
