@@ -128,10 +128,10 @@ def get_total_throughput(output, num_conns):
     return result
 
 
-def run_mpstat_command(linux_obj, decimal_place=2, interval=5, output_file=None, bg=False):
+def run_mpstat_command(linux_obj, count=2, interval=5, output_file=None, bg=False):
     out = None
     try:
-        cmd = "mpstat -A -o JSON %s %s" % (decimal_place, interval)
+        cmd = "mpstat -A -o JSON %s %s" % (interval, count)
         fun_test.log("mpstat command formed is %s" % cmd)
         if bg:
             out = linux_obj.start_bg_process(command=cmd, output_file=output_file)
@@ -374,7 +374,6 @@ def populate_flow_list_output_file(result, filename):
         for key in sorted(result):
             table_obj = inner_table_obj(result=result[key])
             master_table_obj.add_row([key, table_obj])
-        print master_table_obj
 
         lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
         with open(file_path, 'w') as f:
@@ -411,22 +410,47 @@ def get_nested_dict_stats(result):
     return master_table_obj
 
 
+def dma_resource_table(result):
+    table_obj = PrettyTable(['color', 'qdepth'])
+    try:
+        for record in result:
+            table_obj.add_row(record.values())
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return table_obj
+
+
 def populate_pc_resource_output_file(network_controller_obj, filename, pc_id):
     output = False
     try:
         file_path = LOGS_DIR + "/%s" % filename
+
         result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
         master_table_obj = get_nested_dict_stats(result=result)
-        lines = ['<=======> Peek Stats Resource PC %d output <=======>\n' % pc_id, master_table_obj.get_string()]
-        print master_table_obj
+        lines = ['<=======> Peek Stats Resource PC %d output <=======>\n' % pc_id, master_table_obj.get_string(),
+                 '\n\n\n']
+
+        result = network_controller_obj.peek_resource_dma_stats(pc_id=pc_id)
+        master_table_obj = dma_resource_table(result=result)
+        lines.append('<=======> Peek Stats Resource DMA %d output <=======>\n' % pc_id)
+        lines.append(master_table_obj.get_string())
+
         for index in range(0, 4):
-            fun_test.sleep(message="Peek stats resource pc %d" % pc_id, seconds=1)
+            fun_test.sleep(message="Peek stats resource pc/dma %d" % pc_id, seconds=1)
+
             result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
             master_table_obj = get_nested_dict_stats(result=result)
             lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
             lines.append(master_table_obj.get_string())
+            lines.append('\n\n\n')
 
-        with open(file_path, 'w') as f:
+            result = network_controller_obj.peek_resource_dma_stats(pc_id=pc_id)
+            master_table_obj = dma_resource_table(result=result)
+            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append(master_table_obj.get_string())
+            lines.append('\n\n\n')
+
+        with open(file_path, 'a') as f:
             f.writelines(lines)
         output = True
     except Exception as ex:

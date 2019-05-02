@@ -94,7 +94,7 @@ class TcpPerformance(FunTestScript):
         mpstat_obj2 = copy.deepcopy(nu_lab_obj)
 
     def cleanup(self):
-        if fun_test.shared_variables['fs']:
+        if 'fs' in fun_test.shared_variables:
             fs = fun_test.shared_variables['fs']
             fs.cleanup()
 
@@ -103,7 +103,7 @@ class TcpPerformance1Conn(FunTestCase):
     default_frame_size = 1500
     perf_filename = "perf_1_tcp_connection.sh"
     perf_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + perf_filename
-    test_run_time = 30
+    test_run_time = 10
     num_flows = 1
     output_file = None
     netperf_remote_port = None
@@ -136,14 +136,12 @@ class TcpPerformance1Conn(FunTestCase):
         # Execute sh file
         fun_test.log("Creating interface and applying routes")
         output = execute_shell_file(linux_obj=nu_lab_obj, target_file=target_file_path)
-        fun_test.simple_assert(output['output'], "Ensure file %s is executed" % target_file_path)
+        fun_test.simple_assert(output['result'], "Ensure file %s is executed" % target_file_path)
 
         fun_test.log("Display applied routes")
         nu_lab_obj.get_ip_route()
 
     def run(self):
-        pc_id = 2
-
         fun_test.log("SCP file %s to %s" % (self.perf_filename, nu_lab_obj.host_ip))
 
         target_file_path = "/tmp/" + self.perf_filename
@@ -164,7 +162,7 @@ class TcpPerformance1Conn(FunTestCase):
         if use_mpstat:
             fun_test.log("Starting to run mpstat command")
             mp_out = run_mpstat_command(linux_obj=mpstat_obj, interval=self.test_run_time,
-                                        output_file=mpstat_output_file, bg=True)
+                                        output_file=mpstat_output_file, bg=True, count=6)
             fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command")
         
@@ -178,16 +176,20 @@ class TcpPerformance1Conn(FunTestCase):
 
         checkpoint = "Get Flow list during test"
         output = network_controller_obj.get_flow_list()
+        fun_test.simple_assert(output['status'], 'Get Flow List')
         flowlist_temp_filename = str(version) + "_" + str(self.num_flows) + '_flowlist.txt'
-        fun_test.simple_assert(populate_flow_list_output_file(result=output, filename=flowlist_temp_filename),
+        fun_test.simple_assert(populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
                                checkpoint)
 
-        checkpoint = "Peek stats resource pc %d" % pc_id
+        checkpoint = "Peek stats resource pc 1"
         resource_pc_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_pc.txt'
         fun_test.simple_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
                                                                 filename=resource_pc_temp_filename,
-                                                                pc_id=pc_id), checkpoint)
-        fun_test.sleep("Letting traffic be run", seconds=self.test_run_time + 10)
+                                                                pc_id=1), checkpoint)
+        fun_test.simple_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                                                filename=resource_pc_temp_filename,
+                                                                pc_id=2), checkpoint)
+        fun_test.sleep("Letting traffic be run", seconds=60)
 
         netperf_output = nu_lab_obj.command("cat %s" % output_file)
         fun_test.test_assert(netperf_output, "Ensure throughput value is seen")
@@ -199,16 +201,6 @@ class TcpPerformance1Conn(FunTestCase):
 
         pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
         fun_test.log("PPS value is %s" % pps)
-
-        # Parse output to get json
-        output = populate_performance_json_file(mode=mode, flow_type="FunTCP_Server_Throughput",
-                                                frame_size=self.default_frame_size,
-                                                num_flows=self.num_flows,
-                                                throughput_n2t=total_throughput, pps_n2t=pps, timestamp=TIMESTAMP,
-                                                filename=filename, model_name=TCP_PERFORMANCE_MODEL_NAME)
-        fun_test.test_assert(output, "JSON file populated")
-
-        fun_test.sleep("Letting files be generated", seconds=2)
 
         # Scp mpstat json to LOGS dir
         if use_mpstat:
@@ -225,6 +217,14 @@ class TcpPerformance1Conn(FunTestCase):
         diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
         populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
         fun_test.test_assert(populate, "Populate netstat into txt file")
+
+        # Parse output to get json
+        output = populate_performance_json_file(mode=mode, flow_type="FunTCP_Server_Throughput",
+                                                frame_size=self.default_frame_size,
+                                                num_flows=self.num_flows,
+                                                throughput_n2t=total_throughput, pps_n2t=pps, timestamp=TIMESTAMP,
+                                                filename=filename, model_name=TCP_PERFORMANCE_MODEL_NAME)
+        fun_test.test_assert(output, "JSON file populated")
 
     def cleanup(self):
         if self.output_file:
