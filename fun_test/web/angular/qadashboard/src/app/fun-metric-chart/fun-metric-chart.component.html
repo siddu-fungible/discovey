@@ -103,7 +103,7 @@
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
         <br>
-        <div [innerHTML]="inner.currentDescription"></div>
+        <div [innerHTML]="inner.currentDescription | safeHtml"></div>
         <div *ngIf="editingDescription">
           <br>
           <textarea rows="4" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
