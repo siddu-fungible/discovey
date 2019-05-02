@@ -2257,7 +2257,7 @@ class Linux(object, ToDictMixin):
         return self.sudo_command(cmd)
 
     @fun_test.safe
-    def run_vdbench(self, path="/usr/local/share/vdbench", filename=None, timeout=300):
+    def vdbench(self, path="/usr/local/share/vdbench", filename=None, timeout=300):
         vdb_out = ""
         vdb_result = {}
         # Vdbench's column output format
@@ -2266,21 +2266,21 @@ class Linux(object, ToDictMixin):
 
         # Building the vdbbench command
         if filename:
-            vdb_cmd = "sudo {}/vdbench -f {}".format(path, filename)
+            vdb_cmd = "{}/vdbench -f {}".format(path, filename)
         else:
-            vdb_cmd = "sudo {}/vdbench -t".format(path)
+            vdb_cmd = "{}/vdbench -t".format(path)
 
-        vdb_out = self.command(command=vdb_cmd, timeout=timeout)
+        vdb_out = self.sudo_command(command=vdb_cmd, timeout=timeout)
 
         # Checking whether the vdbench command got succeeded or not
         if "Vdbench execution completed successfully" in vdb_out:
             fun_test.debug("Vdbench command got completed successfully...Proceeding to parse its output")
         else:
-            fun_test.critical("vdbench command didn't completed successfully...Aborting...")
+            fun_test.critical("Vdbench command didn't complete successfully...Aborting...")
             return vdb_result
 
         # Parsing the vdbench output
-        # Seraching for the line containing the final result using the below pattern
+        # Serach for the line containing the final result using the below pattern
         vdb_out = vdb_out.split('\n')
         result_line = ""
         for line in vdb_out:

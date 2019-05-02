@@ -566,7 +566,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
 
                 fun_test.log("Starting Vdbench to pre-populate all the volumes")
-                vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
+                vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
                                                            timeout=self.warm_up_timeout)
                 fun_test.log("Vdbench output result: {}".format(vdbench_result))
                 fun_test.test_assert(vdbench_result,
@@ -592,7 +592,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.end_host.create_file(file_name=self.perf_run_profile, contents=self.perf_run_vdb_config)
 
         fun_test.log("Starting Vdbench performance run all the volumes")
-        vdbench_result = self.end_host.run_vdbench(path=self.vdbench_path, filename=self.perf_run_profile,
+        vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.perf_run_profile,
                                                    timeout=self.perf_run_timeout)
         fun_test.log("Vdbench output result: {}".format(vdbench_result))
         fun_test.test_assert(vdbench_result,
