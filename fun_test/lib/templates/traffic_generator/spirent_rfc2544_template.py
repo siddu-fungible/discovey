@@ -405,9 +405,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     if max_rate_record:
                         data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
-                        throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
-                                                                        frame_size=frame_size)
-                        data_dict['throughput'] = round(throughput, 2)
+                        #throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
+                        #                                                frame_size=frame_size)
+                        #data_dict['throughput'] = round(throughput, 2)
+                        data_dict['throughput'] = round(float(max_rate_record['OfferedLoad(Mbps)']), 2)
                         data_dict['latency_min'] = round(float(max_rate_record['MinimumLatency(us)']), 2)
                         data_dict['latency_max'] = round(float(max_rate_record['MaximumLatency(us)']), 2)
                         data_dict['latency_avg'] = round(float(max_rate_record['AverageLatency(us)']), 2)
