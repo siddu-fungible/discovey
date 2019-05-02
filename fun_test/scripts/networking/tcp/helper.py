@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from collections import OrderedDict
 from prettytable import PrettyTable
+from datetime import datetime
 import pickle
 import json
 import re
@@ -329,6 +330,113 @@ def populate_netstat_output_file(diff_stats, filename):
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+def inner_table_obj(result):
+    table_obj = PrettyTable(['Field Name', 'Counter'])
+    table_obj.align = 'l'
+    table_obj.sortby = 'Field Name'
+    try:
+        for key in sorted(result):
+            if key == 'cookie':
+                table_obj.add_row([key, result[key]])
+            elif type(result[key]) == list:
+                for record in sorted(result[key]):
+                    if type(record) == dict:
+                        inner_table = PrettyTable()
+                        inner_table.align = 'l'
+                        for _key, val in record.iteritems():
+                            if type(val) == dict:
+                                if 'packets' in val or 'bytes' in val:
+                                    _table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    _table_obj.sortby = 'Field Name'
+                                else:
+                                    _table_obj = PrettyTable()
+                                _table_obj.align = 'l'
+                                for inner_key in val:
+                                    _table_obj.add_row([inner_key, val[inner_key]])
+                                inner_table.add_row([_key, _table_obj])
+                            else:
+                                inner_table.add_row([_key, val])
+                        table_obj.add_row([key, inner_table])
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return table_obj
+
+
+def populate_flow_list_output_file(result, filename):
+    output = False
+    try:
+        file_path = LOGS_DIR + "/%s" % filename
+        master_table_obj = PrettyTable()
+        master_table_obj.align = 'l'
+        master_table_obj.header = False
+        for key in sorted(result):
+            table_obj = inner_table_obj(result=result[key])
+            master_table_obj.add_row([key, table_obj])
+        print master_table_obj
+
+        lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
+        with open(file_path, 'w') as f:
+            f.writelines(lines)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def get_nested_dict_stats(result):
+    master_table_obj = PrettyTable()
+    master_table_obj.align = 'l'
+    master_table_obj.border = False
+    master_table_obj.header = False
+    try:
+        for key in sorted(result):
+            table_obj = PrettyTable(['Field Name', 'Counter'])
+            table_obj.align = 'l'
+            for _key in sorted(result[key]):
+                if isinstance(result[key][_key], dict):
+                    table_obj = PrettyTable()
+                    table_obj.align = 'l'
+                    inner_table_obj = PrettyTable(['Field Name', 'Counter'])
+                    inner_table_obj.align = 'l'
+                    for _key1 in sorted(result[key][_key]):
+                        inner_table_obj.add_row([_key1, result[key][_key][_key1]])
+                    table_obj.add_row([_key, inner_table_obj])
+                table_obj.add_row([_key, result[key][_key]])
+            master_table_obj.add_row([key, table_obj])
+        print master_table_obj
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return master_table_obj
+
+
+def populate_pc_resource_output_file(network_controller_obj, filename, pc_id):
+    output = False
+    try:
+        file_path = LOGS_DIR + "/%s" % filename
+        result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
+        master_table_obj = get_nested_dict_stats(result=result)
+        lines = ['<=======> Peek Stats Resource PC %d output <=======>\n' % pc_id, master_table_obj.get_string()]
+        print master_table_obj
+        for index in range(0, 4):
+            fun_test.sleep(message="Peek stats resource pc %d" % pc_id, seconds=1)
+            result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
+            master_table_obj = get_nested_dict_stats(result=result)
+            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append(master_table_obj.get_string())
+
+        with open(file_path, 'w') as f:
+            f.writelines(lines)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def get_timestamp():
+    ts = time.time()
+    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_stale_socket_connections(linux_obj, port_value):
