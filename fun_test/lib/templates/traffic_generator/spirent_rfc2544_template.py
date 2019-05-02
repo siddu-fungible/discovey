@@ -440,6 +440,12 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         unit_dict = {}
                         unit_dict["pps_unit"] = "pps"
                         unit_dict["throughput_unit"] = "Mbps"
+                        unit_dict["latency_min_unit"] = "us"
+                        unit_dict["latency_max_unit"] = "us"
+                        unit_dict["latency_avg_unit"] = "us"
+                        unit_dict["jitter_min_unit"] = "us"
+                        unit_dict["jitter_max_unit"] = "us"
+                        unit_dict["jitter_avg_unit"] = "us"
                         add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict,
                                                           unit_dict=unit_dict)
                         fun_test.add_checkpoint("Entry added to model %s" % model_name)
