@@ -49,12 +49,12 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
 
-        output_2 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
+        output_2 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10000-16144", protocol=17,
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=0,
                                                              flow_inport=8, flow_outport=12)
 
-        output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10-7810", protocol=17,
-                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=7987200,
+        output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10000-16144", protocol=17,
+                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=6291456,
                                                              flow_inport=12, flow_outport=8)
 
         TIMESTAMP = get_current_time()
@@ -157,6 +157,9 @@ class TestFirewallPerformance(FunTestCase):
 
         fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_LE]) > 0,
                              "Ensure packets are going through VP NU direct")
+
+        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS]) == 0,
+                             "Ensure packets dont have lookup miss")
 
         fun_test.log("Fetching BAM stats after test")
         network_controller_obj.peek_bam_stats()

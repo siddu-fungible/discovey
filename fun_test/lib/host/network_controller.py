@@ -1286,6 +1286,32 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def peek_resource_pc_stats(self, pc_id):
+        stats = None
+        try:
+            cmd = "stats/resource/pc/[%s]" % pc_id
+            fun_test.debug("Getting resource pc stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get resource pc stats")
+            fun_test.debug("Resource PC stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_resource_dma_stats(self, pc_id):
+        stats = None
+        try:
+            cmd = "stats/resource/dma/[%s]" % pc_id
+            fun_test.debug("Getting resource DMA stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get resource DMA stats")
+            fun_test.debug("Resource DMA stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
     def peek_eqm_stats(self):
         stats = None
         try:
@@ -1700,7 +1726,7 @@ class NetworkController(DpcshClient):
         result = None
         try:
             cmd = ['list']
-            result = self.json_execute(verb='flow', data=cmd)
+            result = self.json_execute(verb='flow', data=cmd, command_duration=40)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
