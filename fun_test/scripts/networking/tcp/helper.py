@@ -1,7 +1,9 @@
 from lib.system.fun_test import *
 from collections import OrderedDict
+from prettytable import PrettyTable
 import pickle
 import json
+import re
 from web.fun_test.analytics_models_helper import ModelHelper
 
 
@@ -18,6 +20,7 @@ def _parse_file_to_json_in_order(file_name):
         scheduler_logger.critical(str(ex))
     return result
 
+
 def create_counters_file(json_file_name, counter_dict):
     result = False
     try:
@@ -27,6 +30,7 @@ def create_counters_file(json_file_name, counter_dict):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
 
 def use_model_helper(model_name, data_dict, unit_dict):
     result = False
@@ -40,6 +44,7 @@ def use_model_helper(model_name, data_dict, unit_dict):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
 
 def populate_performance_json_file(flow_type, model_name, frame_size, num_flows, throughput_n2t, pps_n2t,
                                    timestamp, filename, protocol="TCP", mode="100G"):
@@ -81,8 +86,10 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
         fun_test.critical(str(ex))
     return output
 
+
 def get_pps_from_mbps(mbps, byte_frame_size):
     return (float(mbps) * 1000000) / (byte_frame_size * 8)
+
 
 def execute_shell_file(linux_obj, target_file, output_file=None):
     output = {}
@@ -99,6 +106,7 @@ def execute_shell_file(linux_obj, target_file, output_file=None):
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
 
 def get_total_throughput(output, num_conns):
     result = {}
@@ -118,20 +126,64 @@ def get_total_throughput(output, num_conns):
         fun_test.critical(str(ex))
     return result
 
-def run_mpstat_command(linux_obj, decimal_place=2, interval=5, json_output=False, output_file=None, bg=False):
+
+def run_mpstat_command(linux_obj, decimal_place=2, interval=5, output_file=None, bg=False):
+    out = None
     try:
-        cmd = "mpstat -A %s %s" % (decimal_place, interval)
-        if json_output:
-            cmd += " -o JSON"
-        if output_file:
-            cmd += " > %s" % output_file
-        if bg:
-            cmd += " &"
+        cmd = "mpstat -A -o JSON %s %s" % (decimal_place, interval)
         fun_test.log("mpstat command formed is %s" % cmd)
-        out = linux_obj.command(command=cmd)
+        if bg:
+            out = linux_obj.start_bg_process(command=cmd, output_file=output_file)
+        else:
+            out = linux_obj.command(command=cmd)
     except Exception as ex:
         fun_test.critical(str(ex))
     return out
+
+
+def _create_nested_table(stat, key_name):
+    table_obj = None
+    try:
+        table_obj = PrettyTable(stat[key_name][0].keys())
+        for record in stat[key_name]:
+            table_obj.add_row(record.values())
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return table_obj
+
+
+def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
+    mpstat_dump_filepath = None
+    try:
+        contents = linux_obj.read_file(file_name=output_file, include_last_line=False)
+        n_c = re.sub(r'.*Done.*', "", contents)
+        mpstat_dict = json.loads(n_c)
+        hosts_table = PrettyTable(['Date', 'Machine', 'Node Name', 'No of CPUs', 'release', 'sysname'])
+
+        for host in mpstat_dict['sysstat']['hosts']:
+            hosts_table.add_row(
+                [host['date'], host['machine'], host['nodename'], host['number-of-cpus'], host['release'],
+                 host['sysname']])
+
+        stats_table = PrettyTable(['timestamp', 'cpu-load', 'node-load'])
+        stats_table.title = 'Statistics'
+
+        for host in mpstat_dict['sysstat']['hosts']:
+            for stat in host['statistics']:
+                cpu_load_table = _create_nested_table(stat=stat, key_name='cpu-load')
+                node_load_table = _create_nested_table(stat=stat, key_name='node-load')
+
+                stats_table.add_row([stat['timestamp'], cpu_load_table, node_load_table])
+
+        mpstat_dump_filepath = LOGS_DIR + "/%s" % dump_filename
+        lines = ['<=======> Mpstat output <=======>\n', '\n<=======> Hosts MetaData <=======>\n',
+                 hosts_table.get_string(), '\n<=======> Statistics <=======>\n', stats_table.get_string()]
+        with open(mpstat_dump_filepath, 'w') as f:
+            f.writelines(lines)
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return mpstat_dump_filepath
 
 
 def read_and_dump_output(linux_obj, read_filename, dump_filename):
@@ -149,6 +201,7 @@ def read_and_dump_output(linux_obj, read_filename, dump_filename):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
 
 def _parse_list_to_dict(list1):
     out_dict = {}
