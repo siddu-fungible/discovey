@@ -42,7 +42,9 @@ DEFAULT_BUILD_PARAMS = {
     "BRANCH_FunJenkins": "",
     "BRANCH_FunDevelopment": "",
     "BRANCH_FunTools": "",
-    "RUN_PIPELINE": ""
+    "RUN_PIPELINE": "",
+    "BRANCH_FunControlPlane": "",
+    "SKIP_DASM_C": "false"
 }
 
 class JenkinsManager():

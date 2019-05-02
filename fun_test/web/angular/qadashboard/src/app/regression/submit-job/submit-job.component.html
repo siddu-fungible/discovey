@@ -80,7 +80,7 @@
                 </td>
               </tr>
               <tr>
-                  <td><input (change)="disableAssertions = !disableAssertions" type="checkbox" name="disable-assertions" [checked]="disableAssertions"> Disable assertions </td>
+                  <td><input (change)="disableAssertions = !disableAssertions" type="checkbox" name="disable-assertions" [checked]="disableAssertions"> DISABLE_ASSERTIONS </td>
               </tr>
               <tr>
                 <td><label for="branch-funos">BRANCH_FunOS</label></td>
@@ -93,6 +93,13 @@
               <tr>
                 <td><label for="funos-makeflags">FUNOS_MAKEFLAGS</label></td>
                 <td><input style='width:100%' id="funos-makeflags" name="funos-makeflags" [(ngModel)]="funOsMakeFlags" type="text"/></td>
+              </tr>
+              <tr>
+                <td><label for="branch-funcontrolplane">BRANCH_FunControlPlane</label></td>
+                <td><input style='width:100%' id="branch-funcontrolplane" name="branch-funcontrolplane" [(ngModel)]="branchFunControlPlane" type="text"/></td>
+              </tr>
+              <tr>
+                  <td><input (change)="skipDasmC = !skipDasmC" type="checkbox" name="skip-dasm" [checked]="skipDasmC"> SKIP_DASM_C </td>
               </tr>
               <tr>
                 <td colspan="2">
