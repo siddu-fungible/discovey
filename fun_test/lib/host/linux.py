@@ -2280,7 +2280,7 @@ class Linux(object, ToDictMixin):
             return vdb_result
 
         # Parsing the vdbench output
-        # Serach for the line containing the final result using the below pattern
+        # Searching for the line containing the final result using the below pattern
         vdb_out = vdb_out.split('\n')
         result_line = ""
         for line in vdb_out:

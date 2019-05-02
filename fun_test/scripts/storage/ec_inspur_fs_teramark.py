@@ -267,6 +267,16 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Config file being used: {}".format(config_file))
         config_dict = utils.parse_file_to_json(config_file)
 
+        test_beds_config_file = fun_test.get_script_parent_directory() + "/../../asset/test_beds.json"
+        fun_test.log("Config file to fetch Host test setup details from file {}".format(test_beds_config_file))
+        test_beds_config_dict = utils.parse_file_to_json(test_beds_config_file)
+        fun_test.log("Test beds config: {}".format(test_beds_config_dict))
+
+        hosts_config_file = fun_test.get_script_parent_directory() + "/../../asset/hosts.json"
+        fun_test.log("Config file to fetch Host test property details from file {}".format(hosts_config_file))
+        hosts_config_dict = utils.parse_file_to_json(hosts_config_file)
+        fun_test.log("Host config: {}".format(hosts_config_dict))
+
         if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
             fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
             fun_test.log("Going to use the script level defaults")
@@ -303,11 +313,15 @@ class ECVolumeLevelScript(FunTestScript):
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
+        self.nw_hostname = \
+            test_beds_config_dict[self.test_bed_type]["dut_info"][str(self.f1_in_use)]["interface_info"][
+                "nw_host_list"][0]
+        fun_test.log("Network info is: {}".format(self.nw_hostname))
+
         # Initializing the Network attached host
-        end_host_ip = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ip"]
-        end_host_user = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_username"]
-        # end_host_passwd = ssh_password=self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_password"]
-        end_host_passwd = self.test_bed_spec["nw_host"][self.f1_in_use][0]["mgmt_ssh_password"]
+        end_host_ip = hosts_config_dict[self.nw_hostname]["nw_host"]["mgmt_ip"]
+        end_host_user = hosts_config_dict[self.nw_hostname]["nw_host"]["mgmt_ssh_username"]
+        end_host_passwd = hosts_config_dict[self.nw_hostname]["nw_host"]["mgmt_ssh_password"]
         self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
         fun_test.shared_variables["end_host"] = self.end_host
 
@@ -315,15 +329,15 @@ class ECVolumeLevelScript(FunTestScript):
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
 
-        interface_ip_config = "sudo ip addr add {} dev {}".format(
+        interface_ip_config = "ip addr add {} dev {}".format(
             self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_ip"],
             self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"])
-        interface_mac_config= "sudo ip link set {} address {}".format(
+        interface_mac_config= "ip link set {} address {}".format(
             self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"],
             self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_mac"])
-        link_up_cmd = "sudo ip link set {} up".format(
+        link_up_cmd = "ip link set {} up".format(
             self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_interface_name"])
-        static_arp_cmd = "sudo arp -s {} {}".format(
+        static_arp_cmd = "arp -s {} {}".format(
             self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["gw"],
             self.test_bed_spec["nw_host"][self.f1_in_use][0]["test_net_route"]["arp"])
 
