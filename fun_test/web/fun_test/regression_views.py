@@ -1089,7 +1089,7 @@ def testbeds(request):
 @csrf_exempt
 @api_safe_json_response
 def get_networking_artifacts(request, sdk_version):
-    files = glob.glob("{}/*{}*.json".format(LOGS_DIR, sdk_version))
+    files = glob.glob("{}/*{}*.*".format(LOGS_DIR, sdk_version))
     result = []
     for file in files:
         result.append(os.path.basename(file))
