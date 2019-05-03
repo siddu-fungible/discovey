@@ -97,7 +97,7 @@
           "0": {
             "type": "INTERFACE_TYPE_ETHERNET",
             "hosts": 1,
-            "host_info": ["poc-server-03"]
+            "host_info": { "name": "poc-server-03" }
           }
         }
       }
