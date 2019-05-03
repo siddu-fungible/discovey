@@ -1866,6 +1866,7 @@ class Linux(object, ToDictMixin):
         if not non_blocking:
             for i in range(retries):
                 try:
+                    self.ping(dst="127.0.0.1")
                     command_output = self.command(command="pwd", timeout=timeout)
                     if command_output:
                         break
