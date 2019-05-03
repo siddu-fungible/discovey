@@ -69,11 +69,11 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
         if contents:
             append_new_results = contents + results
             file_created = create_counters_file(json_file_name=file_path,
-                                                     counter_dict=append_new_results)
+                                                counter_dict=append_new_results)
             fun_test.simple_assert(file_created, "Create Performance JSON file")
         else:
             file_created = create_counters_file(json_file_name=file_path,
-                                                     counter_dict=results)
+                                                counter_dict=results)
             fun_test.simple_assert(file_created, "Create Performance JSON file")
 
         unit_dict = {}
