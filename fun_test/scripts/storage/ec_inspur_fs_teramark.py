@@ -98,7 +98,6 @@ def compare(actual, expected, threshold, operation):
 
 
 def configure_ec_volume(storage_controller, ec_info, command_timeout):
-
     result = True
     if "ndata" not in ec_info or "nparity" not in ec_info or "capacity" not in ec_info:
         result = False
@@ -133,14 +132,14 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
             fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
                          "rounding that to the nearest 8KB value")
             ec_info["volume_capacity"][num]["jvol"] = ec_info["lsv_chunk_size"] * ec_info["volume_block"]["lsv"] * \
-                                                 ec_info["jvol_size_multiplier"]
+                                                      ec_info["jvol_size_multiplier"]
 
             for vtype in ["ndata", "nparity"]:
                 tmp = int(round(ec_info["volume_capacity"][num][vtype] * (1 + ec_info["lsv_pct"])))
                 # Aligning the capacity the nearest nKB(volume block size) boundary
                 ec_info["volume_capacity"][num][vtype] = ((tmp + (ec_info["volume_block"][vtype] - 1)) /
-                                                        ec_info["volume_block"][vtype]) * \
-                                                        ec_info["volume_block"][vtype]
+                                                          ec_info["volume_block"][vtype]) * \
+                                                         ec_info["volume_block"][vtype]
 
         # Setting the EC volume capacity to ndata times of ndata volume capacity
         ec_info["volume_capacity"][num]["ec"] = ec_info["volume_capacity"][num]["ndata"] * ec_info["ndata"]
@@ -159,7 +158,7 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
                 ec_info["uuids"][num]["blt"].append(this_uuid)
                 command_result = storage_controller.create_volume(
                     type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
-                    block_size=ec_info["volume_block"][vtype], name=vtype+"_"+this_uuid[-4:], uuid=this_uuid,
+                    block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
                     command_duration=command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating {} {} {} {} {} bytes volume on DUT instance".
@@ -171,7 +170,7 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
         ec_info["uuids"][num]["ec"].append(this_uuid)
         command_result = storage_controller.create_volume(
             type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
-            block_size=ec_info["volume_block"]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
+            block_size=ec_info["volume_block"]["ec"], name="ec_" + this_uuid[-4:], uuid=this_uuid,
             ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=ec_info["uuids"][num]["blt"],
             command_duration=command_timeout)
         fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on DUT instance".
@@ -184,7 +183,7 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
             ec_info["uuids"][num]["jvol"] = utils.generate_uuid()
             command_result = storage_controller.create_volume(
                 type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
-                block_size=ec_info["volume_block"]["jvol"], name="jvol_"+this_uuid[-4:],
+                block_size=ec_info["volume_block"]["jvol"], name="jvol_" + this_uuid[-4:],
                 uuid=ec_info["uuids"][num]["jvol"], command_duration=command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on DUT instance".
@@ -194,7 +193,7 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
             ec_info["uuids"][num]["lsv"].append(this_uuid)
             command_result = storage_controller.create_volume(
                 type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"][num]["lsv"],
-                block_size=ec_info["volume_block"]["lsv"], name="lsv_"+this_uuid[-4:], uuid=this_uuid,
+                block_size=ec_info["volume_block"]["lsv"], name="lsv_" + this_uuid[-4:], uuid=this_uuid,
                 group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"], pvol_id=ec_info["uuids"][num]["ec"],
                 command_duration=command_timeout)
             fun_test.log(command_result)
@@ -207,14 +206,13 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
 
 
 def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
-
     # Unconfiguring LS volume based on the script config settting
     for num in xrange(ec_info["num_volumes"]):
         if "use_lsv" in ec_info and ec_info["use_lsv"]:
             this_uuid = ec_info["uuids"][num]["lsv"][0]
             command_result = storage_controller.delete_volume(
                 type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"][num]["lsv"],
-                block_size=ec_info["volume_block"]["lsv"], name="lsv_"+this_uuid[-4:], uuid=this_uuid,
+                block_size=ec_info["volume_block"]["lsv"], name="lsv_" + this_uuid[-4:], uuid=this_uuid,
                 command_duration=command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Deleting {} {} bytes LS volume on DUT instance".
@@ -223,7 +221,7 @@ def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
             this_uuid = ec_info["uuids"][num]["jvol"]
             command_result = storage_controller.delete_volume(
                 type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
-                block_size=ec_info["volume_block"]["jvol"], name="jvol_"+this_uuid[-4:], uuid=this_uuid,
+                block_size=ec_info["volume_block"]["jvol"], name="jvol_" + this_uuid[-4:], uuid=this_uuid,
                 command_duration=command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Deleting {} {} bytes Journal volume on DUT instance".
@@ -233,7 +231,7 @@ def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
         this_uuid = ec_info["uuids"][num]["ec"][0]
         command_result = storage_controller.delete_volume(
             type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
-            block_size=ec_info["volume_block"]["ec"], name="ec_"+this_uuid[-4:], uuid=this_uuid,
+            block_size=ec_info["volume_block"]["ec"], name="ec_" + this_uuid[-4:], uuid=this_uuid,
             command_duration=command_timeout)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Deleting {} {}:{} {} bytes EC volume on DUT instance".
@@ -245,7 +243,7 @@ def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
                 this_uuid = ec_info["uuids"][num][vtype][i]
                 command_result = storage_controller.delete_volume(
                     type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
-                    block_size=ec_info["volume_block"][vtype], name=vtype+"_"+this_uuid[-4:], uuid=this_uuid,
+                    block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
                     command_duration=command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Deleting {} {} {} {} {} bytes volume on DUT instance".
@@ -362,8 +360,8 @@ class ECVolumeLevelScript(FunTestScript):
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
                                                              self.host_config["test_interface_name"])
-        interface_mac_config= "ip link set {} address {}".format(self.host_config["test_interface_name"],
-                                                                 self.test_network["test_interface_mac"])
+        interface_mac_config = "ip link set {} address {}".format(self.host_config["test_interface_name"],
+                                                                  self.test_network["test_interface_mac"])
         link_up_cmd = "ip link set {} up".format(self.host_config["test_interface_name"])
         static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
                                                self.test_network["test_net_route"]["arp"])
@@ -535,7 +533,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.ec_info["num_volumes"]):
                 command_result = self.storage_controller.volume_attach_remote(
-                    ns_id=num+1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
+                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
                     ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
                     transport=self.attach_transport, command_duration=self.command_timeout)
                 fun_test.log(command_result)
@@ -615,7 +613,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 fun_test.log("Starting Vdbench to pre-populate all the volumes")
                 vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
-                                                           timeout=self.warm_up_timeout)
+                                                       timeout=self.warm_up_timeout)
                 fun_test.log("Vdbench output result: {}".format(vdbench_result))
                 fun_test.test_assert(vdbench_result,
                                      "Vdbench run is completed for profile {}".format(self.warm_up_config_file))
@@ -641,7 +639,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         fun_test.log("Starting Vdbench performance run all the volumes")
         vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.perf_run_profile,
-                                                   timeout=self.perf_run_timeout)
+                                               timeout=self.perf_run_timeout)
         fun_test.log("Vdbench output result: {}".format(vdbench_result))
         fun_test.test_assert(vdbench_result,
                              "Vdbench run is completed for profile {}".format(self.perf_run_config_file))
@@ -754,7 +752,6 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
 
 
 if __name__ == "__main__":
-
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
     ecscript.add_test_case(SequentialReadWrite1024kBlocks())

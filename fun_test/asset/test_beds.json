@@ -8,7 +8,9 @@
           "0": {
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
-            "host_info": { "name": "poc-server-10" }
+            "host_info": {
+              "name": "poc-server-10"
+            }
           },
           "1": {
             "type": "INTERFACE_TYPE_PCIE",
@@ -25,7 +27,9 @@
           "4": {
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
-            "host_info": { "name": "poc-server-05" }
+            "host_info": {
+              "name": "poc-server-05"
+            }
           },
           "5": {
             "type": "INTERFACE_TYPE_PCIE",
@@ -44,12 +48,16 @@
           "0": {
             "type": "INTERFACE_TYPE_ETHERNET",
             "hosts": 1,
-            "host_info": { "name": "poc-server-06" }
+            "host_info": {
+              "name": "poc-server-06"
+            }
           },
           "4": {
             "type": "INTERFACE_TYPE_ETHERNET",
             "hosts": 1,
-            "host_info": { "name": "poc-server-07" }
+            "host_info": {
+              "name": "poc-server-07"
+            }
           }
         }
       }
@@ -97,7 +105,9 @@
           "0": {
             "type": "INTERFACE_TYPE_ETHERNET",
             "hosts": 1,
-            "host_info": { "name": "poc-server-03" }
+            "host_info": {
+              "name": "poc-server-03"
+            }
           }
         }
       }
