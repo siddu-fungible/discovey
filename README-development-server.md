@@ -16,7 +16,6 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-i
 # cd /project/users/QA/regression/Integration/fun_test
 # export PYTHONPATH=`pwd`
 # export DEVELOPMENT_MODE=1
-# python web/manage.py makemigrations
 # python web/manage.py migrate --database=default
 # cd web/angular/qadashboard/
 # npm install
