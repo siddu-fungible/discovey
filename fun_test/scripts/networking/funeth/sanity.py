@@ -27,8 +27,10 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.23.5'
+    DPC_PROXY_IP = '10.1.20.137'
     DPC_PROXY_PORT = 40220
+    DPC_PROXY_IP2 = '10.1.20.137'
+    DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
@@ -88,8 +90,12 @@ class FunethSanity(FunTestScript):
             # TODO: get dpc proxy ip/port
             global DPC_PROXY_IP
             global DPC_PROXY_PORT
-            DPC_PROXY_IP = '10.1.20.129'
+            global DPC_PROXY_IP2
+            global DPC_PROXY_PORT2
+            DPC_PROXY_IP = '10.1.20.137'
             DPC_PROXY_PORT = 40220
+            DPC_PROXY_IP2 = '10.1.20.137'
+            DPC_PROXY_PORT2 = 40221
 
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             # fs = Fs.get(disable_f1_index=1)
