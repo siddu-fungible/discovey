@@ -87,13 +87,13 @@ class FunethSanity(FunTestScript):
             # fs = Fs.get(disable_f1_index=1)
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,
-                                               custom_boot_args="app=hw_hsu_test retimer=1 --dpc-uart --dpc-server --csr-replay --all_100g")
+                                               custom_boot_args="app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g")
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
             fun_test.shared_variables["topology"] = topology
 
-            host_instance1 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=4)
+            #host_instance1 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=4)
             #host_instance2 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=5)
             #dpcsh_client = DpcshClient(target_ip=host_instance1.host_ip, target_port=fs.get_come().get_dpc_port(0))
             #dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
