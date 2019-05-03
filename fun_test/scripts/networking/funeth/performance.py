@@ -13,7 +13,7 @@ import pprint
 
 TB = sanity.TB
 inputs = fun_test.get_job_inputs()
-if inputs.get('debug', 0):
+if inputs and inputs.get('debug', 0):
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
 else:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'

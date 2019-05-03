@@ -305,6 +305,15 @@ class Bmc(Linux):
         self.position_support_scripts()
         return True
 
+    def reset_come(self):
+        self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
+        bmc_files = self.command(command='ls')
+        if "come.sh" in bmc_files:
+            self.command(command="./come.sh 2")
+        elif "come-power.sh" in bmc_files:
+            self.command(command="./come-power.sh")
+        return True
+
     def host_power_cycle(self):
         return self.ipmi_power_cycle(host=self.host_ip, user="admin", passwd="admin")
 
@@ -726,6 +735,13 @@ class Fs(object, ToDictMixin):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
         fun_test.simple_assert(bmc._connect(), "BMC connected")
         fun_test.simple_assert(bmc.initialize(), "BMC initialize")
+
+        return bmc
+
+    def from_bmc_reset_come(self):
+        bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
+        fun_test.simple_assert(bmc._connect(), "BMC connected")
+        fun_test.simple_assert(bmc.reset_come(), "BMC reset COMe")
 
         return bmc
 

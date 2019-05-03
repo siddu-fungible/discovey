@@ -44,6 +44,10 @@ RCNVME_READ = "qa_rcnvme_read"
 RCNVME_RANDOM_READ = "qa_rcnvme_random_read"
 RCNVME_WRITE = "qa_rcnvme_write"
 RCNVME_RANDOM_WRITE = "qa_rcnvme_random_write"
+RCNVME_READ_ALL = "qa_rcnvme_read_all"
+RCNVME_RANDOM_READ_ALL = "qa_rcnvme_random_read_all"
+RCNVME_WRITE_ALL = "qa_rcnvme_write_all"
+RCNVME_RANDOM_WRITE_ALL = "qa_rcnvme_random_write_all"
 TERAMARK_CRYPTO_SINGLE_TUNNEL = "crypto_single_tunnel_teramark"
 TERAMARK_CRYPTO_MULTI_TUNNEL = "crypto_multi_tunnel_teramark"
 
@@ -153,7 +157,8 @@ class MyScript(FunTestScript):
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
-                RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL]
+                RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL, RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
+                RCNVME_RANDOM_WRITE_ALL]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1946,9 +1951,10 @@ class TeraMarkRcnvmeReadPerformanceTC(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
+        if self.result == fun_test.FAILED:
+            set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                         test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                         git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -2144,6 +2150,45 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
+class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_READ_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=41,
+                              summary="Rcnvme read all Performance Test on F1",
+                              steps="Steps 1")
+
+class RcnvmeRandomReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_RANDOM_READ_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=42,
+                              summary="Rcnvme random read all drives Performance Test on F1",
+                              steps="Steps 1")
+
+
+class RcnvmeWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_WRITE_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=43,
+                              summary="Rcnvme write all Performance Test on F1",
+                              steps="Steps 1")
+
+
+class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_RANDOM_WRITE_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=44,
+                              summary="Rcnvme random write all Performance Test on F1",
+                              steps="Steps 1")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -2196,7 +2241,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
     myscript.add_test_case(F1FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkNfaPerformanceTC())
-    myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
+    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
@@ -2204,6 +2249,10 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkHuPerformanceTC())
     myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTC())
     myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTC())
+    myscript.add_test_case(RcnvmeReadAllPerformanceTC())
+    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTC())
+    myscript.add_test_case(RcnvmeWriteAllPerformanceTC())
+    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

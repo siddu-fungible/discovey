@@ -27,8 +27,10 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.23.5'
+    DPC_PROXY_IP = '10.1.20.137'
     DPC_PROXY_PORT = 40220
+    DPC_PROXY_IP2 = '10.1.20.137'
+    DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
@@ -81,17 +83,7 @@ class FunethSanity(FunTestScript):
     def setup(self):
 
         # Boot up FS1600
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get(disable_f1_index=1)
-            fun_test.shared_variables["fs"] = fs
-            fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
-            # TODO: get dpc proxy ip/port
-            global DPC_PROXY_IP
-            global DPC_PROXY_PORT
-            DPC_PROXY_IP = '10.1.20.129'
-            DPC_PROXY_PORT = 40220
-
-        elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             # fs = Fs.get(disable_f1_index=1)
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,
@@ -106,10 +98,11 @@ class FunethSanity(FunTestScript):
             #dpcsh_client = DpcshClient(target_ip=host_instance1.host_ip, target_port=fs.get_come().get_dpc_port(0))
             #dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
             # TODO: get dpc proxy ip/port
+            come = fs.get_come()
             global DPC_PROXY_IP
             global DPC_PROXY_PORT
-            DPC_PROXY_IP = host_instance1.host_ip
-            DPC_PROXY_PORT = fs.get_come().get_dpc_port(0)
+            DPC_PROXY_IP = come.host_ip
+            DPC_PROXY_PORT = come.get_dpc_port(0)
             # TODO: get DPC_PROXY_IP2 and DPC_PROXY_PORT2 for F1_1
 
         tb_config_obj = tb_configs.TBConfigs(TB)

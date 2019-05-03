@@ -97,7 +97,8 @@ class Linux(object, ToDictMixin):
                  connect_retry_timeout_max=20,
                  use_paramiko=False,
                  localhost=None,
-                 set_term_settings=True):
+                 set_term_settings=True,
+                 **kwargs):
 
         self.host_ip = host_ip
         self.ssh_username = ssh_username
@@ -122,6 +123,7 @@ class Linux(object, ToDictMixin):
         self.telnet_port = telnet_port
         self.telnet_username = telnet_username
         self.telnet_password = telnet_password
+        self.extra_attributes = kwargs
         self.post_init()
 
     @staticmethod

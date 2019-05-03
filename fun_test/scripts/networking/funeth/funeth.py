@@ -235,7 +235,11 @@ class Funeth:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                 else:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
-            result &= re.search(r'{} via {}'.format(prefix, nexthop), output) is not None
+            if prefix.endswith('/32'):
+                p = prefix.rstrip('/32')
+            else:
+                p = prefix
+            result &= re.search(r'{} via {}'.format(p, nexthop), output) is not None
 
             # ARP
             router_mac = self.tb_config_obj.get_router_mac()

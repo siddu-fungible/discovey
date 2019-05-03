@@ -1,15 +1,13 @@
-from lib.system.fun_test import FunTestLibException, fun_test
 from lib.host.dpcsh_client import DpcshClient
+from lib.system.fun_test import *
 from lib.system import utils
-import json, time
-import socket, fcntl, errno
-import os, sys
-
 
 class StorageController(DpcshClient):
     TIMEOUT = 2
+
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
-        super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
+        super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port,
+                                                verbose=verbose)
 
     def ip_cfg(self, ip, command_duration=TIMEOUT):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip}}
@@ -38,6 +36,33 @@ class StorageController(DpcshClient):
         delete_dict["params"]["name"] = name
         return self.json_execute(verb=self.mode, data=delete_dict, command_duration=command_duration)
 
+    def create_controller(self, ctrlr_uuid, transport, command_duration=TIMEOUT, **kwargs):
+        create_dict = {"class": "controller",
+                       "opcode": "CREATE",
+                       "params": {"ctrlr_uuid": ctrlr_uuid, "transport": transport}}
+        if kwargs:
+            for key in kwargs:
+                create_dict["params"][key] = kwargs[key]
+        return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
+
+    def attach_volume_to_controller(self, ctrlr_uuid, ns_id, vol_uuid, command_duration=TIMEOUT):
+        attach_dict = {"class": "controller",
+                       "opcode": "ATTACH",
+                       "params": {"ctrlr_uuid": ctrlr_uuid, "nsid": ns_id, "vol_uuid": vol_uuid}}
+        return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
+
+    def detach_volume_from_controller(self, ctrlr_uuid, ns_id, command_duration=TIMEOUT):
+        detach_dict = {"class": "controller",
+                       "opcode": "DETACH",
+                       "params": {"ctrlr_uuid": ctrlr_uuid, "nsid": ns_id}}
+        return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
+
+    def delete_controller(self, ctrlr_uuid, command_duration=TIMEOUT):
+        delete_dict = {"class": "controller",
+                       "opcode": "DELETE",
+                       "params": {"ctrlr_uuid": ctrlr_uuid}}
+        return self.json_execute(verb=self.mode, data=delete_dict, command_duration=command_duration)
+
     def volume_attach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT, **kwargs):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
@@ -63,20 +88,6 @@ class StorageController(DpcshClient):
                        "opcode": "ATTACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
-
-    def attach_controller(self, command_duration=TIMEOUT, **kwargs):
-        param_dict = {"class": "controller",
-                      "opcode": "ATTACH",
-                      "params": {}}
-        for key in kwargs:
-            param_dict["params"][key] = kwargs[key]
-        return self.json_execute(verb=self.mode, data=param_dict, command_duration=command_duration)
-
-    def create_controller(self, command_duration=TIMEOUT, **kwargs):
-        param_dict = {"class": "controller", "opcode": "CREATE", "params": {}}
-        for key in kwargs:
-            param_dict["params"][key] = kwargs[key]
-        return self.json_execute(verb=self.mode, data=param_dict, command_duration=command_duration)
 
     def volume_detach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=2, command_duration=TIMEOUT):
         detach_dict = {"class": "controller",
