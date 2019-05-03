@@ -62,3 +62,5 @@ TFTP_SERVER_IP = "10.1.21.48"
 TFTP_SERVER_SSH_USERNAME = "auto_admin"
 TFTP_SERVER_SSH_PASSWORD = "fun123"
 TFTP_DIRECTORY = "/tftpboot"
+
+REGRESSION_SERVICE_HOST = "regression_service_host"

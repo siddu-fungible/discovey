@@ -92,8 +92,12 @@ def suite_executions(request, id):
         for suite_execution in suite_executions:
             one_record = {"execution_id": suite_execution.execution_id,
                           "state": suite_execution.state,
-                          "result": suite_execution.result}
+                          "result": suite_execution.result,
+                          "environment": json.loads(suite_execution.environment)}
             records.append(one_record)
+            if id is not None:
+                result = one_record
+                break
         result = records if len(records) else None
         if is_completed:
             if records:

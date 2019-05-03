@@ -131,8 +131,12 @@ class Linux(object, ToDictMixin):
         :rtype: object
         """
         prop = asset_properties
-        return Linux(host_ip=prop["host_ip"], ssh_username=prop["mgmt_ssh_username"],
-                     ssh_password=prop["mgmt_ssh_password"], ssh_port=prop["mgmt_ssh_port"])
+        ssh_username = prop.get("mgmt_ssh_username", prop["ssh_username"])
+        ssh_password = prop.get("mgmt_ssh_password", prop["ssh_password"])
+        ssh_port = prop.get("mgmt_ssh_port", 22)
+
+        return Linux(host_ip=prop["host_ip"], ssh_username=ssh_username,
+                     ssh_password=ssh_password, ssh_port=ssh_port)
 
     def enable_logs(self, enable=True):
         if enable:
@@ -1267,14 +1271,23 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def lspci(self, grep_filter=None):
+    def lspci(self, grep_filter=None, verbose=False, device=None):
         result = []
         command = "lspci"
+        if verbose:
+            command += " -vvv"
+        if device:
+            command += " -d {}".format(device)
         if grep_filter:
             command += " | grep {}".format(grep_filter)
-        output = self.command(command)
+        output = self.sudo_command(command)
         lines = output.split("\n")
+
+        current_record = None
+        current_capabilities_record = None
+        parsing_capabilty = None
         for line in lines:
+
             m = re.search(r'(([a-f\d]+):(\d+)\.(\d+))\s+(.*?):', line)
             if m:
                 id = m.group(1)
@@ -1286,8 +1299,24 @@ class Linux(object, ToDictMixin):
                           "bus_number": bus_number,
                           "device_number": device_number,
                           "function_number": function_number,
-                          "device_class": device_class}
+                          "device_class": device_class,
+                          "capabilities": {}}
+                current_record = record
                 result.append(record)
+
+            if verbose:
+                m2 = re.search(r'\s+Capabilities: \[(\d+)\]', line)  # Capabilities: [80] Express (v2) Endpoint, MSI 00
+                if m2:
+                    current_record["capabilities"][m2.group(1)] = {}
+                    current_capabilities_record = current_record["capabilities"][m2.group(1)]
+
+                    parsing_capabilty = True
+                if parsing_capabilty:
+                    m3 = re.search("LnkSta:.*Width\s+(x\d+)", line)
+                    if m3:
+                        if current_capabilities_record is not None:
+                            current_capabilities_record["LnkSta"] = {}
+                            current_capabilities_record["LnkSta"]["Width"] = m3.group(1)
         return result
 
     @fun_test.safe
@@ -1812,7 +1841,7 @@ class Linux(object, ToDictMixin):
         return fio_dict
 
     @fun_test.safe
-    def reboot(self, timeout=5, retries=6):
+    def reboot(self, timeout=5, retries=6, non_blocking=None):
 
         result = True
         disconnect = True
@@ -1820,18 +1849,19 @@ class Linux(object, ToDictMixin):
         # Rebooting the host
         try:
             self.sudo_command(command="reboot", timeout=timeout)
+
         except Exception as ex:
             self.disconnect()
             self._set_defaults()
             disconnect = False
 
-        fun_test.sleep("Waiting for the host to go down", seconds=10)
-        if disconnect:
-            try:
-                self.disconnect()
-                self._set_defaults()
-            except:
-                pass
+            fun_test.sleep("Waiting for the host to go down", seconds=10)
+            if disconnect:
+                try:
+                    self.disconnect()
+                    self._set_defaults()
+                except:
+                    pass
 
         for i in range(retries):
             try:
@@ -1848,6 +1878,25 @@ class Linux(object, ToDictMixin):
             result = False
         if result:
             fun_test.sleep("Post-reboot", seconds=15)
+
+        if not non_blocking:
+            for i in range(retries):
+                try:
+                    self.ping(dst="127.0.0.1")
+                    command_output = self.command(command="pwd", timeout=timeout)
+                    if command_output:
+                        break
+                except Exception as ex:
+                    fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
+                    self.disconnect()
+                    self._set_defaults()
+                    continue
+            else:
+                fun_test.critical("Host didn't come up from reboot even after {} seconds".format(retries * timeout))
+                result = False
+            if result:
+                fun_test.sleep("Post-reboot", seconds=15)
+
         return result
 
     @fun_test.safe
