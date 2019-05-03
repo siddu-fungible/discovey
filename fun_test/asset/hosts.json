@@ -3,5 +3,35 @@
     "host_ip": "poc-server-05",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
+  },
+  "poc-server-06": {
+    "host_ip": "poc-server-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "poc-server-07": {
+    "host_ip": "poc-server-07",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "poc-server-08": {
+    "host_ip": "poc-server-08",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "poc-server-09": {
+    "host_ip": "poc-server-09",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "poc-server-10": {
+    "host_ip": "poc-server-10",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "regression_service_host": {
+    "host_ip": "qa-ubuntu-02",
+    "ssh_username": "auto_admin",
+    "ssh_password": "fun123"
   }
 }

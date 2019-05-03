@@ -56,14 +56,15 @@ class Dut(ToDictMixin):
     MODE_EMULATION = "MODE_EMULATION"
     MODE_REAL = "MODE_REAL"
 
-    TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance"]
+    TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance", "fpg_interfaces"]
 
 
 
     def __init__(self, type, index, mode=MODE_SIMULATION, spec=None, start_mode=None):
         self.type = type
         self.index = index
-        self.interfaces = {}
+        self.interfaces = {}  # For PCIe interfaces
+        self.fpg_interfaces = {}
         self.spec = spec
         self.mode = mode
         self.instance = None
@@ -80,6 +81,11 @@ class Dut(ToDictMixin):
         self.interfaces[index] = dut_interface_obj
         return dut_interface_obj
 
+    def add_fpg_interface(self, index, type):
+        dut_interface_obj = DutInterface(index=index, type=type)
+        self.fpg_interfaces[index] = dut_interface_obj
+        return dut_interface_obj
+
     def set_start_mode(self, mode):
         self.start_mode = mode
 
@@ -92,11 +98,18 @@ class Dut(ToDictMixin):
     def get_interface(self, interface_index):
         return self.interfaces[interface_index]
 
+    def get_fpg_interface(self, interface_index):
+        return self.fpg_interfaces[interface_index]
+
     def get_host_on_interface(self, interface_index, host_index):
-        host = None
         interface_obj = self.interfaces[interface_index]
         if not interface_obj.dual_interface_index:
             host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
         else:
             host = self.get_host_on_interface(interface_index=interface_obj.dual_interface_index, host_index=host_index)
+        return host
+
+    def get_host_on_fpg_interface(self, interface_index, host_index):
+        interface_obj = self.fpg_interfaces[interface_index]
+        host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
         return host

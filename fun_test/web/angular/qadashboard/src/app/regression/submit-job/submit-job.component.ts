@@ -49,7 +49,7 @@ export class SubmitJobComponent implements OnInit {
   branchFunOs: string = null;
   branchFunSdk: string = null;
   branchFunControlPlane: string = null;
-  skipDasmC: boolean = false;
+  skipDasmC: boolean = true;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;

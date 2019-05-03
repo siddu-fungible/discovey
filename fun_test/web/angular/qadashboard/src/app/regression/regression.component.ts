@@ -30,7 +30,6 @@ export class RegressionComponent implements OnInit {
   suiteExecutionsCount: number;
   recordsPerPage: number;
   @Input() tags: string;
-  @Input() filterString: string = Filter.ALL;
   items: any;
   logDir: any;
   status: string = "Fetching Data";
