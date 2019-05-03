@@ -8,11 +8,8 @@
     "host_ip": "poc-server-03",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
-    "nw_host":
+    "test_network":
     {
-      "mgmt_ip": "10.1.23.39",
-      "mgmt_ssh_username": "localadmin",
-      "mgmt_ssh_password": "Precious1*",
       "test_interface_name": "enp175s0",
       "test_interface_ip": "21.1.1.1/24",
       "test_interface_mac": "fe:dc:ba:44:66:31",
