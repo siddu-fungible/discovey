@@ -8,6 +8,8 @@ from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
 import re
+from lib.topology.topology_helper import TopologyHelper
+from lib.host.storage_controller import StorageController
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using Vdbench
@@ -23,7 +25,7 @@ tb_config = {
             "mode": Dut.MODE_EMULATION,
             "type": Dut.DUT_TYPE_FSU,
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
             "disable_f1_index": 1,
             "f1_in_use": 0,
             "huid": 7,
@@ -259,9 +261,6 @@ class ECVolumeLevelScript(FunTestScript):
         """)
 
     def setup(self):
-        # topology_obj_helper = TopologyHelper(spec=topology_dict)
-        # topology = topology_obj_helper.deploy()
-
         # Parsing the global config and assign them as object members
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
@@ -292,17 +291,31 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
+        """NewChange
+        topology_helper = TopologyHelper()
+        fun_test.log("topology_helper output is: {}".format(topology_helper))
+        fun_test.log("Setting dut params")
+        topology_helper.set_dut_parameters(dut_index=self.f1_in_use, custom_boot_args=self.bootargs)
+        fun_test.log("Started topology deploy")
+        topology = topology_helper.deploy()
+        fun_test.log("topology output is: {}".format(topology))
+        fun_test.test_assert(topology, "Topology deployed")
+
+        fs = topology.get_dut_instance(index=self.f1_in_use)
+        fun_test.shared_variables["fs"] = fs
+        NewChange"""
+
         # Pulling the testbed type and its config
         self.test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
         fun_test.log("Testbed-type: {}".format(self.test_bed_type))
         self.test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(self.test_bed_type)
         fun_test.log("{} Testbed Config: {}".format(self.test_bed_type, self.test_bed_spec))
         fun_test.simple_assert(self.test_bed_spec, "Test-bed spec for {}".format(self.test_bed_type))
+
         fun_test.shared_variables["test_bed_type"] = self.test_bed_type
         fun_test.shared_variables["test_bed_spec"] = self.test_bed_spec
-        fun_test.shared_variables["test_beds_config_dict"] =self.test_beds_config_dict
-        fun_test.shared_variables["hosts_config_dict"] = self.hosts_config_dict
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
+        fun_test.shared_variables["test_network"] = self.test_network
 
         # Initializing the FS
         fs = Fs.get(boot_args=self.bootargs, disable_f1_index=self.disable_f1_index)
@@ -312,19 +325,34 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = fs
         fun_test.shared_variables["f1"] = f1
 
+        self.test_bed_config = self.test_beds_config_dict[self.test_bed_type]["dut_info"]
+        fun_test.shared_variables["test_bed_config"] = self.test_bed_config
+
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        self.nw_hostname = \
-            self.test_beds_config_dict[self.test_bed_type]["dut_info"][str(self.f1_in_use)]["interface_info"][
-                "nw_host_list"][0]
-        fun_test.shared_variables["nw_hostname"] = self.nw_hostname
-        fun_test.log("Network info is: {}".format(self.nw_hostname))
+        for interface in self.test_bed_config[str(self.f1_in_use)]["fpg_interface_info"]:
+            if "host_info" in self.test_bed_config[str(self.f1_in_use)]["fpg_interface_info"][interface]:
+                self.nw_hostname = \
+                    self.test_bed_config[str(self.f1_in_use)]["fpg_interface_info"][interface]["host_info"]["name"]
+                break
+
+        self.host_config = self.hosts_config_dict[self.nw_hostname]
+        fun_test.shared_variables["host_config"] = self.host_config
 
         # Initializing the Network attached host
-        end_host_ip = self.hosts_config_dict[self.nw_hostname]["host_ip"]
-        end_host_user = self.hosts_config_dict[self.nw_hostname]["ssh_username"]
-        end_host_passwd = self.hosts_config_dict[self.nw_hostname]["ssh_password"]
+        end_host_ip = self.host_config["host_ip"]
+        end_host_user = self.host_config["ssh_username"]
+        end_host_passwd = self.host_config["ssh_password"]
+
+        """NewChange
+        fun_test.log("End host object formation")
+        self.end_host = topology.get_host_instance(dut_index=0, host_index=0, fpg_interface_index=0)
+        fun_test.log(self.end_host, "Host instance on fpg interface 0: {}".format(str(self.end_host)))
+        fun_test.log("end host object is created")
+        end_host_ip = self.end_host.host_ip
+        fun_test.log("host_ip is: {}".format(end_host_ip)) NewChange"""
+
         self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
         fun_test.shared_variables["end_host"] = self.end_host
 
@@ -332,17 +360,13 @@ class ECVolumeLevelScript(FunTestScript):
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
 
-        interface_ip_config = "ip addr add {} dev {}".format(
-            self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_ip"],
-            self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_name"])
-        interface_mac_config= "ip link set {} address {}".format(
-            self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_name"],
-            self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_mac"])
-        link_up_cmd = "ip link set {} up".format(
-            self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_name"])
-        static_arp_cmd = "arp -s {} {}".format(
-            self.hosts_config_dict[self.nw_hostname]["test_network"]["test_net_route"]["gw"],
-            self.hosts_config_dict[self.nw_hostname]["test_network"]["test_net_route"]["arp"])
+        interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
+                                                             self.host_config["test_interface_name"])
+        interface_mac_config= "ip link set {} address {}".format(self.host_config["test_interface_name"],
+                                                                 self.test_network["test_interface_mac"])
+        link_up_cmd = "ip link set {} up".format(self.host_config["test_interface_name"])
+        static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
+                                               self.test_network["test_net_route"]["arp"])
 
         interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
                                                                 timeout=self.command_timeout)
@@ -357,16 +381,14 @@ class ECVolumeLevelScript(FunTestScript):
         link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
 
-        interface_up_status = self.end_host.ifconfig_up_down(
-            interface=self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_name"],
-            action="up")
+        interface_up_status = self.end_host.ifconfig_up_down(interface=self.host_config["test_interface_name"],
+                                                             action="up")
         fun_test.test_assert(interface_up_status, "Bringing up test interface")
 
-        route_add_status = self.end_host.ip_route_add(
-            network=self.hosts_config_dict[self.nw_hostname]["test_network"]["test_net_route"]["net"],
-            gateway=self.hosts_config_dict[self.nw_hostname]["test_network"]["test_net_route"]["gw"],
-            outbound_interface=self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_name"],
-            timeout=self.command_timeout)
+        route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
+                                                      gateway=self.test_network["test_net_route"]["gw"],
+                                                      outbound_interface=self.host_config["test_interface_name"],
+                                                      timeout=self.command_timeout)
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
 
         arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
@@ -389,6 +411,10 @@ class ECVolumeLevelScript(FunTestScript):
         """ TODO: Reboot comment stop (To avoid poc-server-03 reboot- remove before final commit)"""
 
         self.storage_controller = f1.get_dpc_storage_controller()
+        """NewChange
+        self.come = fs.get_come()
+        self.storage_controller = StorageController(target_ip=self.come.host_ip, target_port=self.come.get_dpc_port(0))
+        NewChange"""
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Setting the syslog level
@@ -422,6 +448,7 @@ class ECVolumeLevelScript(FunTestScript):
 
         self.storage_controller.disconnect()
         fs = fun_test.shared_variables["fs"]
+        fun_test.sleep("Allowing buffer time before calling fs clean-up", 60)
         fs.cleanup()
 
 
@@ -465,9 +492,9 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.test_bed_type = fun_test.shared_variables["test_bed_type"]
         self.test_bed_spec = fun_test.shared_variables["test_bed_spec"]
-        self.test_beds_config_dict = fun_test.shared_variables["test_beds_config_dict"]
-        self.hosts_config_dict = fun_test.shared_variables["hosts_config_dict"]
-        self.nw_hostname = fun_test.shared_variables["nw_hostname"]
+        self.test_bed_config = fun_test.shared_variables["test_bed_config"]
+        self.host_config = fun_test.shared_variables["host_config"]
+        self.test_network = fun_test.shared_variables["test_network"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         num_ssd = self.num_ssd
@@ -490,13 +517,12 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
 
-            command_result = self.storage_controller.ip_cfg(
-                ip=self.hosts_config_dict[self.nw_hostname]["test_network"]["f1_loopback_ip"])
+            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
-            (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller,
-                                                                   self.ec_info, self.command_timeout)
+            (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller, self.ec_info,
+                                                                   self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
             fun_test.log("EC details after configuring EC Volume:")
@@ -504,8 +530,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("{}: {}".format(k, v))
 
             # Attaching/Exporting all the EC/LS volumes to the external server
-            self.remote_ip = self.hosts_config_dict[self.nw_hostname]["test_network"]["test_interface_ip"].split('/')[0]
+            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
             fun_test.shared_variables["remote_ip"] = self.remote_ip
+
             for num in xrange(self.ec_info["num_volumes"]):
                 command_result = self.storage_controller.volume_attach_remote(
                     ns_id=num+1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
@@ -532,20 +559,18 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Checking nvme-connect status
             if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                nvme_connect_cmd = "sudo nvme connect -t {} -a {} -s {} -n {}".format(
-                    self.attach_transport.lower(),
-                    self.hosts_config_dict[self.nw_hostname]["test_network"]["f1_loopback_ip"],
-                    str(self.transport_port), self.nvme_subsystem)
+                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
+                                                                                 self.test_network["f1_loopback_ip"],
+                                                                                 str(self.transport_port),
+                                                                                 self.nvme_subsystem)
             else:
-                nvme_connect_cmd = "sudo nvme connect -t {} -a {} -s {} -n {} -i {}".format(
-                    self.attach_transport.lower(),
-                    self.hosts_config_dict[self.nw_hostname]["test_network"]["f1_loopback_ip"],
-                    str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
+                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
+                    self.attach_transport.lower(), self.test_network["f1_loopback_ip"], str(self.transport_port),
+                    self.nvme_subsystem, str(self.io_queues))
 
             nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
             fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="NVME Connect Status")
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
 
             ''''# Checking that the above created volume is visible to the end host
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)

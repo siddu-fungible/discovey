@@ -93,15 +93,12 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-20",
         "disable_f1_index": 1,
-        "interface_info": {
-          "4": {
-            "type": "INTERFACE_TYPE_PCIE",
+        "fpg_interface_info": {
+          "0": {
+            "type": "INTERFACE_TYPE_ETHERNET",
             "hosts": 1,
-            "host_info": {
-              "name": "poc-server-03"
-            }
-          },
-          "nw_host_list": ["poc-server-03"]
+            "host_info": { "name": "poc-server-03" }
+          }
         }
       }
     }
