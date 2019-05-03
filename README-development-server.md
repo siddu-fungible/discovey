@@ -28,7 +28,7 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-i
 ~~~~
 # cd /project/users/QA/regression/Integration/fun_test
 # export PYTHONPATH=`pwd`
-# export PRODUCTION_MODE=1
+# export DEVELOPMENT_MODE=1
 # scheduler/restart_scheduler.sh
 ~~~~
 - Ensure that ps -ef | grep scheduler_main does not show any entry

@@ -150,17 +150,19 @@ class Bmc(Linux):
         # fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
 
         fun_test.log("Rebooting ComE")
-        come.reboot(retries=15)
+        reboot_result = come.reboot(retries=15)
 
-        # Ensure come restarted
         come_restart_timer = FunTimer(max_time=max_wait_time)
-        while not come_restart_timer.is_expired():
-            ping_result = self.ping(come.host_ip)
-            if ping_result:
-                break
-            fun_test.sleep("ComE power up")
+        if reboot_result:
+            # Ensure come restarted
 
-        if come_restart_timer.is_expired():
+            while not come_restart_timer.is_expired():
+                ping_result = self.ping(come.host_ip, count=20)
+                if ping_result:
+                    break
+                fun_test.sleep("ComE power up")
+
+        if come_restart_timer.is_expired() and not reboot_result:
             fun_test.critical("ComE did not power up. Trying to power-cycle")
             if power_cycle:
                 fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")

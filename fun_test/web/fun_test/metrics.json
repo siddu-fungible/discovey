@@ -2623,6 +2623,15 @@
                 "weight": 0,
                 "label": "Inspur",
                 "children": []
+              },
+              {
+                "info": "AliBaba",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "teramarks_customer_alibaba",
+                "weight": 0,
+                "label": "Alibaba",
+                "children": []
               }
             ]
           }
