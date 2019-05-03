@@ -44,13 +44,13 @@ class StorageController(DpcshClient):
                 create_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
-    def attach_vol_to_controller(self, ctrlr_uuid, ns_id, vol_uuid, command_duration=TIMEOUT):
+    def attach_volume_to_controller(self, ctrlr_uuid, ns_id, vol_uuid, command_duration=TIMEOUT):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
                        "params": {"ctrlr_uuid": ctrlr_uuid, "nsid": ns_id, "vol_uuid": vol_uuid}}
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
 
-    def detach_vol_from_controller(self, ctrlr_uuid, ns_id, command_duration=TIMEOUT):
+    def detach_volume_from_controller(self, ctrlr_uuid, ns_id, command_duration=TIMEOUT):
         detach_dict = {"class": "controller",
                        "opcode": "DETACH",
                        "params": {"ctrlr_uuid": ctrlr_uuid, "nsid": ns_id}}
