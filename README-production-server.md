@@ -63,7 +63,6 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo i
 # cd /project/users/QA/regression/Integration/fun_test
 # export PYTHONPATH=`pwd`
 # export PRODUCTION_MODE=1
-# python web/manage.py makemigrations
 # python web/manage.py migrate --database=default
 # cd web/angular/qadashboard/
 # npm install
