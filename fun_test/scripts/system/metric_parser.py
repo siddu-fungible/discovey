@@ -34,7 +34,7 @@ class MetricParser():
         elif "Dfa" in model_name or "Nfa" in model_name:
             return self.dfa_nfa(logs=logs, date_time=date_time)
         elif "Rcnvme" in model_name:
-            return self.rcnvme(logs=logs, date_time=date_time)
+            return self.rcnvme(logs=logs, date_time=date_time, model_name=model_name)
         elif "HuLatency" in model_name or "HuThroughput" in model_name:
             return self.hu_networking(logs=logs, date_time=date_time)
         elif "JuniperCrypto" in model_name:
@@ -87,7 +87,7 @@ class MetricParser():
         result["status"] = self.status == RESULTS["PASSED"]
         return result
 
-    def rcnvme(self, logs, date_time):
+    def rcnvme(self, logs, date_time, model_name):
         match_found = False
         result = {}
         result["data"] = []
@@ -127,9 +127,14 @@ class MetricParser():
                     else:
                         metrics["input_pci_vendor_id"] = json_value["pci_vendor_id"]
                         metrics["input_pci_device_id"] = json_value["pci_device_id"]
-                o = re.search(
-                    r'rcnvme_total_(?P<operation>\S+)\s+(\S+\s+)?(?P<value>{.*})\s+\[(?P<metric_name>\S+)\]',
-                    line)
+                if model_name == "TeraMarkRcnvmeReadWriteAllPerformance":
+                    o = re.search(
+                        r'rcnvme_consolidated_(?P<operation>\S+)\s+(\S+\s+)?(?P<value>{.*})\s+\[(?P<metric_name>\S+)\]',
+                        line)
+                else:
+                    o = re.search(
+                        r'rcnvme_total_(?P<operation>\S+)\s+(\S+\s+)?(?P<value>{.*})\s+\[(?P<metric_name>\S+)\]',
+                        line)
                 if o:
                     match_found = True
                     json_value = json.loads(o.group("value"))
