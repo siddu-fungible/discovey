@@ -4,6 +4,12 @@
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
   },
+  "poc-server-03": {
+    "host_ip": "poc-server-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_name": "enp175s0"
+  },
   "poc-server-06": {
     "host_ip": "poc-server-06",
     "ssh_username": "localadmin",
