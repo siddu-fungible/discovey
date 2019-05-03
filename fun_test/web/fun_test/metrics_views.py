@@ -32,6 +32,7 @@ from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
 from web.fun_test.metrics_models import Triage, TriageFlow
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
+from web.fun_test.db_fixup import get_rounded_time
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -294,7 +295,9 @@ def scores(request):
     except:
         pass
     if chart:
-        date_range = [chart.base_line_date, datetime.now()]
+        from_date = chart.base_line_date
+        to_date = get_rounded_time(datetime.now())
+        date_range = [from_date, to_date]
         entries = MetricChartStatus.objects.filter(date_time__range=date_range,
                                                    metric_id=metric_id)
 
