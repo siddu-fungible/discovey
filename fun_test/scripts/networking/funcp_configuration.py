@@ -8,6 +8,7 @@ from lib.fun.fs import *
 import json
 
 test_bed_name = ""
+fs = None
 
 
 class ScriptSetup(FunTestScript):
@@ -40,14 +41,15 @@ class BootFS(FunTestCase):
         pass
 
     def run(self):
+        global fs
         test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
-        img_path = "funos-f1.stripped_30apr_funcp.gz"
+        img_path = "funos-f1.stripped_3may_100g_funcp.gz"
         fs = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path,
-                    boot_args="app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats"
-                              "--disable-wu-watchdog --dpc-server --dpc-uart --mgmt --serdesinit")
+                    boot_args="app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats "
+                              "--dpc-server --dpc-uart --mgmt --serdesinit")
         fs_1 = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path,
                       boot_args="app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 --all_100g --dis-stats "
-                                "--disable-wu-watchdog --dpc-server --dpc-uart --mgmt  --serdesinit")
+                                "--dpc-server --dpc-uart --mgmt  --serdesinit")
         fun_test.simple_assert(fs, "Succesfully fetched image, credentials and bootargs")
         fun_test.test_assert(fs.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
@@ -60,8 +62,26 @@ class BootFS(FunTestCase):
             fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args),
             "U-Bootup f1: {} complete".format(1))
         fs.bmc.start_uart_log_listener(f1_index=1)
-        fun_test.test_assert(fs.come_reset(power_cycle=True),
+        fun_test.test_assert(fs.come_reset(power_cycle=True, non_blocking=True),
                              "ComE rebooted successfully")
+        fun_test.sleep(message="waiting for COMe", seconds=120)
+        come_ping_test = False
+        come_ping_test_count = 0
+        while not come_ping_test:
+            response = os.system("ping -c 1 " + test_bed_spec['come']['mgmt_ip'])
+            if response == 0:
+                come_ping_test = True
+            else:
+                fun_test.sleep(message="Waiting for COMe to be pingable", seconds=15)
+                come_ping_test_count+=0
+                if come_ping_test_count >10:
+                    fun_test.test_assert_expected(expected=True, actual=come_ping_test, message="Come ping test")
+                    break
+        ssh_test_come = fs.come.check_ssh()
+        if not ssh_test_come:
+            fun_test.test_assert(fs.from_bmc_reset_come(), "BMC Reset COMe")
+            fun_test.sleep(message="Power cycling COMe", seconds=150)
+
         fun_test.test_assert(fs.come_initialize(), "ComE initialized")
         fun_test.test_assert(fs.come.detect_pfs(), "Fungible PFs detected")
         fun_test.test_assert(fs.come.setup_dpc(), "Setup DPC")
@@ -99,14 +119,24 @@ class BringupFunCP(FunTestCase):
             else:
                 fun_test.sleep(message="Waiting for Come to be pingable", seconds=30)
                 if count == 5:
-                    fun_test.test_assert(expression=self.Come_reach, message="Reach COMe")
                     break
+        fun_test.test_assert(expression=self.Come_reach, message="Reach COMe")
 
     def run(self):
 
         linux_obj_come = Linux(host_ip=self.test_bed_spec['come']['mgmt_ip'],
                                ssh_username=self.test_bed_spec['come']['mgmt_ssh_username'],
                                ssh_password=self.test_bed_spec['come']['mgmt_ssh_password'])
+        ssh_test_come = linux_obj_come.check_ssh()
+        if not ssh_test_come:
+            fun_test.test_assert(fs.from_bmc_reset_come(), "BMC Reset COMe")
+            ssh_test_count = 0
+            while True:
+                fun_test.sleep(message="Power cycling COMe", seconds=120)
+                if (ssh_test_count > 1) or ssh_test_come:
+                    fun_test.test_assert_expected(expected=ssh_test_come, actual=True, message="")
+                    break
+                ssh_test_count += 1
         come_lspci = linux_obj_come.lspci(grep_filter="1dad:")
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
         git_pull = linux_obj_come.command("git pull")
@@ -128,7 +158,7 @@ class BringupFunCP(FunTestCase):
         pass
 
 
-class ConfigureFunCPAbstractConfig(FunTestCase):
+class ConfigureFunCPMpgIP(FunTestCase):
     test_bed_spec = None
     linux_obj_come = None
     docker_names = []
@@ -149,24 +179,31 @@ class ConfigureFunCPAbstractConfig(FunTestCase):
         print "\n"+docker_output
         self.docker_names = self.linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
         fun_test.test_assert_expected(expected=2, actual=len(self.docker_names), message="Make sure 2 dockers are up")
-
+        self.linux_obj_come.disconnect()
     def run(self):
-        f1_0_name = "".join(s for s in self.docker_names if "0" in s.lower())
-        self.linux_obj_come.command(command="docker exec -it "+f1_0_name.rstrip()+" bash")
-        self.linux_obj_come.command(command="sudo ifconfig mpg up")
-        self.linux_obj_come.command(command="sudo ifconfig mpg hw ether 00:f1:1d:ad:09:3d")
-        self.linux_obj_come.command(command="sudo dhclient -v -i mpg")
-        self.linux_obj_come.command(command="ifconfig mpg")
-        ifconfig_output = self.linux_obj_come.command(command="ifconfig mpg").split('\r\n')[1]
-        mpg_ip = ifconfig_output.split()[1]
-        self.linux_obj_come.command(command="cd /workspace/FunControlPlane/scripts/docker/combined_cfg/")
-        self.linux_obj_come.command(command="ls")
-        result = self.linux_obj_come.command(command="sudo ifconfig fpg1 up")
-        result = self.linux_obj_come.command(command="./apply_abstract_config.py --server " + mpg_ip +
-                                            " --json ./abstract_cfg/T1_abstract_cfg.json")
+        mpg_ips = {}
 
-        self.linux_obj_come.command(command="ls")
-        print result
+        for docker_name in self.docker_names:
+            self.linux_obj_come.command(command="docker exec -it "+docker_name.rstrip()+" bash", timeout=300)
+            self.linux_obj_come.command(command="sudo ifconfig mpg up", timeout=300)
+            self.linux_obj_come.command(command="sudo ifconfig mpg hw ether 00:f1:1d:ad:10:3d", timeout=300)
+            self.linux_obj_come.command(command="sudo dhclient -v -i mpg", timeout=300)
+            self.linux_obj_come.command(command="ifconfig mpg")
+            ifconfig_output = self.linux_obj_come.command(command="ifconfig mpg").split('\r\n')[1]
+            self.linux_obj_come.command(command="ls")
+            mpg_ip = ifconfig_output.split()[1]
+            mpg_ips[docker_name.rstrip] = mpg_ip
+            self.linux_obj_come.disconnect()
+
+        fun_test.log(mpg_ips)
+        # self.linux_obj_come.command(command="cd /workspace/FunControlPlane/scripts/docker/combined_cfg/")
+        # self.linux_obj_come.command(command="ls")
+        # result = self.linux_obj_come.command(command="sudo ifconfig fpg1 up", timeout=300)
+        # result = self.linux_obj_come.command(command="./apply_abstract_config.py --server " + mpg_ips['F1-0'] +
+        #                                     " --json ./abstract_cfg/T1_abstract_cfg.json", timeout=300)
+        #
+        # self.linux_obj_come.command(command="ls")
+        # print result
     def cleanup(self):
         pass
 
@@ -175,5 +212,5 @@ if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BootFS())
     ts.add_test_case(BringupFunCP())
-    ts.add_test_case(ConfigureFunCPAbstractConfig())
+    # ts.add_test_case(ConfigureFunCPMpgIP())
     ts.run()
