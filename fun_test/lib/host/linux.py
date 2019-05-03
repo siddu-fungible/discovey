@@ -1863,26 +1863,9 @@ class Linux(object, ToDictMixin):
                 except:
                     pass
 
-        for i in range(retries):
-            try:
-                command_output = self.command(command="pwd", timeout=timeout)
-                if command_output:
-                    break
-            except Exception as ex:
-                fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
-                self.disconnect()
-                self._set_defaults()
-                continue
-        else:
-            fun_test.critical("Host didn't come up from reboot even after {} seconds".format(retries * timeout))
-            result = False
-        if result:
-            fun_test.sleep("Post-reboot", seconds=15)
-
         if not non_blocking:
             for i in range(retries):
                 try:
-                    self.ping(dst="127.0.0.1")
                     command_output = self.command(command="pwd", timeout=timeout)
                     if command_output:
                         break
