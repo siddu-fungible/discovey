@@ -1053,15 +1053,12 @@ peek_cc_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", d
 
 peek_dma_resource_stats_parser = peek_resource_stats_parsers.add_parser('dma', help='Peek dma resource stats')
 peek_dma_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
-peek_dma_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_le_resource_stats_parser = peek_resource_stats_parsers.add_parser('le', help='Peek le resource stats')
 peek_le_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
-peek_le_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_zip_resource_stats_parser = peek_resource_stats_parsers.add_parser('zip', help='Peek zip resource stats')
 peek_zip_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
-peek_zip_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_rgx_resource_stats_parser = peek_resource_stats_parsers.add_parser('rgx', help='Peek rgx resource stats')
 peek_rgx_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
