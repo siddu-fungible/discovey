@@ -63,9 +63,10 @@ class TopologyHelper:
                 # Create DUT object
                 dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode)
 
+                interfaces = {}  #TODO Actually SSD interfaces, will need to rename it
                 if "interface_info" in dut_info:
                     interfaces = dut_info["interface_info"]
-                else:
+                elif "pcie_interface_info" in dut_info:
                     interfaces = dut_info["pcie_interface_info"]
 
                 fpg_interfaces = {}
