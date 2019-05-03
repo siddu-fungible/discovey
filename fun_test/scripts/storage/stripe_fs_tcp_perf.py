@@ -146,7 +146,7 @@ class BLTVolumePerformanceScript(FunTestScript):
             ns_id = 1
             # Detach volume from NVMe-OF controller
             for cur_uuid in fun_test.shared_variables["ctrlr_uuid"]:
-                command_result = self.storage_controller.detach_vol_from_controller(
+                command_result = self.storage_controller.detach_volume_from_controller(
                     ns_id=self.stripe_details["ns_id"],
                     ctrlr_uuid=cur_uuid, command_duration=5)
                 fun_test.test_assert(command_result["status"], "Detaching Stripe volume on DUT")
@@ -368,9 +368,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
                 # Attach volume to NVMe-OF controller
                 self.ns_id = host_index + 1
-                command_result = self.storage_controller.attach_vol_to_controller(ctrlr_uuid=cur_uuid,
-                                                                                  ns_id=self.ns_id,
-                                                                                  vol_uuid=self.stripe_uuid)
+                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
+                                                                                     ns_id=self.ns_id,
+                                                                                     vol_uuid=self.stripe_uuid)
 
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attach NVMeOF controller {} to stripe vol {} over {}".
