@@ -133,8 +133,8 @@ class Linux(object, ToDictMixin):
         :rtype: object
         """
         prop = asset_properties
-        ssh_username = prop.get("mgmt_ssh_username", prop["ssh_username"])
-        ssh_password = prop.get("mgmt_ssh_password", prop["ssh_password"])
+        ssh_username = prop.get("mgmt_ssh_username", prop.get("ssh_username"))
+        ssh_password = prop.get("mgmt_ssh_password", prop.get("ssh_password"))
         ssh_port = prop.get("mgmt_ssh_port", 22)
 
         return Linux(host_ip=prop["host_ip"], ssh_username=ssh_username,

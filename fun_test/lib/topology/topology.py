@@ -48,7 +48,7 @@ class ExpandedTopology(ToDictMixin):
         for interface_index, interface_obj in interfaces.iteritems():
             interface_index = interface_index
             host = dut.get_host_on_interface(interface_index=interface_index, host_index=0)
-            if host.host_ip not in hosts[host]:
+            if host.host_ip not in hosts:
                 hosts[host.host_ip] = {"interfaces": [interface_obj], "host_obj": host}
             else:
                 hosts[host.host_ip]["interfaces"].append(interface_obj)
