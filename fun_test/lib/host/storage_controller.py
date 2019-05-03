@@ -72,11 +72,14 @@ class StorageController(DpcshClient):
                 attach_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
 
-    def volume_detach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT):
+    def volume_detach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT, **kwargs):
         detach_dict = {"class": "controller",
                        "opcode": "DETACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
                                   "remote_ip": remote_ip}}
+        if kwargs:
+            for key in kwargs:
+                detach_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
 
     def volume_attach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=2, command_duration=TIMEOUT):
