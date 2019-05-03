@@ -47,7 +47,11 @@ class ExpandedTopology(ToDictMixin):
         hosts = {}
         for interface_index, interface_obj in interfaces.iteritems():
             interface_index = interface_index
-            hosts[interface_index] = dut.get_host_on_interface(interface_index=interface_index, host_index=0)
+            host = dut.get_host_on_interface(interface_index=interface_index, host_index=0)
+            if host.host_ip not in hosts[host]:
+                hosts[host.host_ip] = {"interfaces": [interface_obj], "host_obj": host}
+            else:
+                hosts[host.host_ip]["interfaces"].append(interface_obj)
         return hosts
 
     def get_host_instances_on_ssd_interfaces(self, dut_index):

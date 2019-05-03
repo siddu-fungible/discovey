@@ -109,7 +109,7 @@ class Dut(ToDictMixin):
 
     def get_host_on_interface(self, interface_index, host_index):
         interface_obj = self.interfaces[interface_index]
-        if not interface_obj.dual_interface_index:
+        if interface_obj.dual_interface_index is None:
             host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
         else:
             host = self.get_host_on_interface(interface_index=interface_obj.dual_interface_index, host_index=host_index)
