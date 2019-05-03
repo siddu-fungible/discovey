@@ -452,7 +452,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict,
                                                           unit_dict=unit_dict)
                         fun_test.add_checkpoint("Entry added for frame size %s to model %s" % (frame_size, model_name))
-
+            '''
             file_path = LOGS_DIR + "/%s" % file_name
             contents = self._parse_file_to_json_in_order(file_name=file_path)
             if contents:
@@ -464,6 +464,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 file_created = self.create_counters_file(json_file_name=file_path,
                                                          counter_dict=results)
                 fun_test.simple_assert(file_created, "Create Performance JSON file")
+            '''
             if any_result_failed:
                 fun_test.log("Failed result found")
                 output = False
