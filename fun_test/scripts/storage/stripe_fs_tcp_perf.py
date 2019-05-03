@@ -1,16 +1,11 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.topology_helper import TopologyHelper
-from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
 from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper, BltVolumePerformanceHelper
 from lib.host.linux import Linux
-from lib.host.palladium import DpcshProxy
-from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
-import uuid
 from datetime import datetime
 
 '''
@@ -21,34 +16,11 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "mode": Dut.MODE_EMULATION,
-            "type": Dut.DUT_TYPE_FSU,
-            "ip": "server26",
-            "user": REGRESSION_USER,
-            "passwd": REGRESSION_USER_PASSWORD,
-            "emu_target": "palladium",
-            "model": "StorageNetwork2",
-            "run_mode": "build_only",
-            "pci_mode": "all",
             "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test --serial sku=SKU_FS1600_0 --all_100g"
                        " --dis-stats --dpc-server --dpc-uart --csr-replay --nofreeze",
-            "huid": 7,
-            "ctlid": 0,
-            "interface_info": {
-                0: {
-                    "vms": 0,
-                    "type": DutInterface.INTERFACE_TYPE_PCIE
-                }
-            },
-            "start_mode": F1.START_MODE_DPCSH_ONLY,
             "perf_multiplier": 1,
             "f1_ip": "29.1.1.1",
-            "tcp_port": 1099,
-            "hosts": [
-                ("poc-server-01", "20.1.1.1", "20.1.1.2")
-                # ,
-                # ("poc-server-02", "21.1.1.1")      # poc-server-02
-                ]
+            "tcp_port": 1099
         },
     },
     "tg_info": {
@@ -57,19 +29,29 @@ tb_config = {
             "ip": "poc-server-01",
             "user": "localadmin",
             "passwd": "Precious1*",
-            "net_ip": "20.1.1.1",
-            "gw_ip": "20.1.1.2",
+            "iface_name": "enp175s0",
+            "iface_ip": "20.1.1.1",
+            "iface_gw": "20.1.1.2",
+            "iface_mac": "fe:dc:ba:44:66:30"
         },
         1: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
             "ip": "poc-server-02",
             "user": "localadmin",
             "passwd": "Precious1*",
-            "net_ip": "21.1.1.1",
-            "gw_ip": "21.1.1.2"
+            "iface_name": "enp175s0",
+            "iface_ip": "21.1.1.1",
+            "iface_gw": "21.1.1.2",
+            "iface_mac": "fe:dc:ba:44:66:31"
         }
     }
 }
+
+
+# Disconnect linux objects
+def fio_parser(arg1, **kwargs):
+    arg1.pcie_fio(**kwargs)
+    arg1.disconnect()
 
 
 def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
@@ -131,13 +113,11 @@ class BLTVolumePerformanceScript(FunTestScript):
         """)
 
     def setup(self):
-        # topology_obj_helper = TopologyHelper(spec=topology_dict)
-        # topology = topology_obj_helper.deploy()
 
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
 
-        fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
+        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
@@ -161,19 +141,27 @@ class BLTVolumePerformanceScript(FunTestScript):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
         try:
-            # TODO : NVMe disconnect from host
             self.blt_details = fun_test.shared_variables["blt_details"]
             self.stripe_details = fun_test.shared_variables["stripe_details"]
-            command_result = self.storage_controller.detach_vol_from_controller(ns_id=self.stripe_details["ns_id"],
-                                                                        ctrlr_uuid=self.ctrlr_uuid,
-                                                                        command_duration=30)
-            fun_test.test_assert(command_result["status"], "Detaching Stripe volume on DUT")
+            ns_id = 1
+            # Detach volume from NVMe-OF controller
+            for cur_uuid in fun_test.shared_variables["ctrlr_uuid"]:
+                command_result = self.storage_controller.detach_vol_from_controller(
+                    ns_id=self.stripe_details["ns_id"],
+                    ctrlr_uuid=cur_uuid, command_duration=5)
+                fun_test.test_assert(command_result["status"], "Detaching Stripe volume on DUT")
+                ns_id += 1
+
+            # Delete controller on FS
+            for cur_uuid in fun_test.shared_variables["ctrlr_uuid"]:
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=cur_uuid, command_result=5)
+                fun_test.test_assert(command_result["status"], "Delete NVMe controller on DUT")
 
             # Deleting Stripe volume
             command_result = self.storage_controller.delete_volume(type=self.stripe_details["type"],
                                                                    name="stripevol1",
                                                                    uuid=fun_test.shared_variables["stripe_uuid"],
-                                                                   command_duration=10)
+                                                                   command_duration=5)
             fun_test.test_assert(command_result["status"], "Deleting Stripe vol with uuid {} on DUT".
                                  format(fun_test.shared_variables["stripe_uuid"]))
 
@@ -184,13 +172,26 @@ class BLTVolumePerformanceScript(FunTestScript):
                 command_result = self.storage_controller.delete_volume(type=self.blt_details["type"],
                                                                        name="thin_block" + str(x),
                                                                        uuid=cur_uuid,
-                                                                       command_duration=10)
-                fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".format(x, cur_uuid))
+                                                                       command_duration=5)
+                fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                     format(x, cur_uuid))
 
-            # TODO: Delete controller
-
+            # Disconnect from x86
+            for end_host in fun_test.shared_variables["end_host_list"]:
+                command_result = end_host.sudo_command(
+                    "nvme disconnect -n nqn.2017-05.com.fungible:nss-uuid1 -d nvme0n1")
+                fun_test.log(command_result)
         except:
-            pass
+            fun_test.log("Clean-up of volumes failed")
+
+        try:
+            # Disconnect from x86
+            for end_host in fun_test.shared_variables["end_host_list"]:
+                command_result = end_host.sudo_command(
+                    "nvme disconnect -n nqn.2017-05.com.fungible:nss-uuid1 -d nvme0n1")
+                fun_test.log(command_result)
+        except:
+            fun_test.log("Disconnect failed.")
 
         fun_test.log("FS cleanup")
         fun_test.shared_variables["fs"].cleanup()
@@ -268,7 +269,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         fs = fun_test.shared_variables["fs"]
-        self.come_host = fs.get_come()
+        self.dpc_host = fs.get_come()
 
         # Create linux objects for all end hosts
         self.end_host_list = []
@@ -279,6 +280,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                       ssh_password=tb_config['tg_info'][host_index]['passwd']
                       )
                 )
+        fun_test.shared_variables["end_host_list"] = self.end_host_list
 
         f1 = fun_test.shared_variables["f1"]
 
@@ -290,11 +292,12 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["stripe_details"] = self.stripe_details
 
             # self.end_host.enter_sudo()
-            self.come_host.modprobe(module="nvme")
+            self.dpc_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
-            command_result = self.come_host.lsmod(module="nvme")
+            command_result = self.dpc_host.lsmod(module="nvme")
             fun_test.simple_assert(command_result, "Loading nvme module")
-            fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
+            fun_test.test_assert_expected(expected="nvme", actual=command_result['name'],
+                                          message="Loading nvme module")
 
             # Configuring Local thin block volume
             command_result = self.storage_controller.json_execute(verb="enable_counters",
@@ -343,75 +346,93 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                                  format(self.stripe_uuid))
 
             # Create TCP controller for each host attached to FS
+            self.ctrlr_uuid = []
+            fun_test.shared_variables["host_count"] = self.host_count
+            nvme_transport = self.transport_type
             for host_index in range(0, self.host_count):
-                self.ctrlr_uuid = utils.generate_uuid()
-                self.transport = "TCP"
+                cur_uuid = utils.generate_uuid()
+                self.ctrlr_uuid.append(cur_uuid)
                 self.nqn = "nqn" + str(host_index+1)
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                    transport=self.transport,
-                                                                    remote_ip=tb_config['tg_info'][host_index]['net_ip'],
-                                                                    nqn=self.nqn,
-                                                                    port=tb_config['dut_info'][0]['tcp_port'])
+
+                # Create NVMe-OF controller
+                command_result = self.storage_controller.create_controller(
+                    ctrlr_uuid=cur_uuid,
+                    transport=unicode.upper(nvme_transport),
+                    remote_ip=tb_config['tg_info'][host_index]['iface_ip'],
+                    nqn=self.nqn,
+                    port=tb_config['dut_info'][0]['tcp_port'], command_duration=5)
 
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create storage controller for TCP with uuid {} on DUT".
-                                 format(self.ctrlr_uuid))
+                                     format(cur_uuid))
 
-                # Attach volume to TCP controller
+                # Attach volume to NVMe-OF controller
                 self.ns_id = host_index + 1
-                command_result = self.storage_controller.attach_vol_to_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                              ns_id=self.ns_id,
-                                                                              vol_uuid=self.stripe_uuid)
+                command_result = self.storage_controller.attach_vol_to_controller(ctrlr_uuid=cur_uuid,
+                                                                                  ns_id=self.ns_id,
+                                                                                  vol_uuid=self.stripe_uuid)
 
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Attach storage controller {} to uuid {} over TCP".
-                                 format(self.ctrlr_uuid, self.stripe_uuid))
+                fun_test.test_assert(command_result["status"], "Attach NVMeOF controller {} to stripe vol {} over {}".
+                                     format(cur_uuid, self.stripe_uuid, nvme_transport))
 
-            # fun_test.shared_variables["blt"]["setup_created"] = True # Moved after warm up traffic
-            # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
-
-            # ns-rescan is only required if volumes are created through dpcsh commands
-            # command_result = self.end_host.sudo_command("nvme ns-rescan /dev/nvme0")
-            # fun_test.log("ns-rescan output is: {}".format(command_result))
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
 
             # Checking that the above created striped volume is visible to the end host
-            for end_host in self.end_host_list:
+            for host_index in range(0, self.host_count):
+                end_host = self.end_host_list[host_index]
                 # Load nvme and nvme_tcp modules
-                end_host.modprobe("nvme")
-                end_host.modprobe("nvme_tcp")
-                fun_test.sleep("Loaded NVMe modules", seconds=5)
+                command_result = end_host.command("lsmod | grep -w nvme")
+                if "nvme" in command_result:
+                    fun_test.log("nvme driver is loaded")
+                else:
+                    fun_test.log("Loading nvme")
+                    end_host.modprobe("nvme")
+                    end_host.modprobe("nvme_core")
+                command_result = end_host.lsmod("nvme_tcp")
+                if "nvme_tcp" in command_result:
+                    fun_test.log("nvme_tcp driver is loaded")
+                else:
+                    fun_test.log("Loading nvme_tcp")
+                    end_host.modprobe("nvme_tcp")
+                    end_host.modprobe("nvme_fabrics")
 
-                # Configure routes
-                # TODO: Hardocded for 1 host right now
+                # Configure routes on the hosts
                 command_result = end_host.command("route | grep 29.1.1")
                 if "29.1.1.0" in command_result:
                     fun_test.log("IP and GW already set")
                 else:
+                    iface_ip = tb_config['tg_info'][host_index]['iface_ip']
+                    iface_mac = tb_config['tg_info'][host_index]['iface_mac']
+                    iface_gw = tb_config['tg_info'][host_index]['iface_gw']
+                    iface_name = tb_config['tg_info'][host_index]['iface_name']
                     fun_test.log("Set IP & GW")
-                    end_host.sudo_command("ip addr add 20.1.1.1/24 dev enp175s0")
-                    end_host.sudo_command("ip link set enp175s0 address fe:dc:ba:44:66:30")
-                    end_host.sudo_command("ip link set enp175s0 up")
-                    end_host.sudo_command("route add -net 29.1.1.0/24 gw 20.1.1.2")
-                    end_host.sudo_command("arp -s 20.1.1.2 00:de:ad:be:ef:00")
-
+                    end_host.sudo_command("ip addr add {}/24 dev {}".format(iface_ip, iface_name))
+                    end_host.sudo_command("ip link set {} address {}".format(iface_name, iface_mac))
+                    end_host.sudo_command("ip link set {} up".format(iface_name))
+                    end_host.sudo_command("route add -net 29.1.1.0/24 gw {}".format(iface_gw))
+                    end_host.sudo_command("arp -s {} 00:de:ad:be:ef:00".format(iface_gw))
 
                 # NVME connect to volume on FS
-                end_host.sudo_command("nvme connect -t tcp -a {} -s {} -n nqn.2017-05.com.fungible:nss-uuid1 -i 8".
-                                 format(tb_config['dut_info'][0]['f1_ip'], tb_config['dut_info'][0]['tcp_port']))
-                fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
+                end_host.sudo_command("nvme connect -t {} -a {} -s {} -n nqn.2017-05.com.fungible:nss-uuid1 -i {}".
+                                      format(unicode.lower(nvme_transport),
+                                             tb_config['dut_info'][0]['f1_ip'],
+                                             tb_config['dut_info'][0]['tcp_port'],
+                                             self.nvme_io_q))
+                fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
+
                 volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
                 lsblk_output = end_host.lsblk()
                 fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
                                               message="{} device type check".format(volume_name))
 
-            # Writing 20GB data on volume from 1 host (one time task)
+            # Pre-condition volume from 1 host (one time task)
             if not hasattr(self, "create_file_system") or not self.create_file_system:
                 if self.warm_up_traffic:
-                    fun_test.log("Initial Write IO to volume, this might take long time depending on fio "
-                                 "--size provided")
+                    fun_test.log("Initial Write IO to volume, this might take long time depending on size")
                     fio_output = self.end_host_list[0].pcie_fio(filename=self.nvme_block_device,
                                                                 **self.warm_up_fio_cmd_args)
                     fun_test.test_assert(fio_output, "Pre-populating the volume")
@@ -441,21 +462,10 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 end_host.command("sudo mount -o ro /dev/nvme0n1 /mnt")
         """
 
-        # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
-        # self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-        # storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.blt_details["type"], self.thin_uuid,
-        #                                             "stats")
-
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in random readonly
         fio_result = {}
         fio_output = {}
         internal_result = {}
-        initial_volume_status = {}
-        final_volume_status = {}
-        diff_volume_stats = {}
-        initial_stats = {}
-        final_stats = {}
-        diff_stats = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -471,17 +481,15 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         table_data_rows = []
 
         for combo in self.fio_bs_iodepth:
-            # TODO: Make runs asynchronous for each host
+            thread_id = {}
+            end_host_thread = {}
+            thread_count = 1
             for end_host in self.end_host_list:
                 fio_result[combo] = {}
                 fio_output[combo] = {}
                 internal_result[combo] = {}
-                initial_volume_status[combo] = {}
-                final_volume_status[combo] = {}
-                diff_volume_stats[combo] = {}
-                initial_stats[combo] = {}
-                final_stats[combo] = {}
-                diff_stats[combo] = {}
+
+                # end_host_thread[thread_count] = end_host.clone()
 
                 for mode in self.fio_modes:
 
@@ -504,18 +512,18 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     end_host.sudo_command("sync")
                     end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
 
-                    # Check EQM stats before test
-                    self.eqm_stats_before = {}
-                    self.eqm_stats_before = self.storage_controller.peek(props_tree="stats/eqm")
-
-                    # Get iostat results
-                    self.iostat_host_thread = end_host.clone()
-                    iostat_thread = fun_test.execute_thread_after(time_in_seconds=1,
-                                                                  func=get_iostat,
-                                                                  host_thread=self.iostat_host_thread,
-                                                                  sleep_time=self.fio_cmd_args["runtime"]/4,
-                                                                  iostat_interval=self.iostat_details["interval"],
-                                                                  iostat_iter=self.iostat_details["iterations"] + 1)
+                    # # Check EQM stats before test
+                    # self.eqm_stats_before = {}
+                    # self.eqm_stats_before = self.storage_controller.peek(props_tree="stats/eqm")
+#
+                    # # Get iostat results
+                    # self.iostat_host_thread = end_host.clone()
+                    # iostat_thread = fun_test.execute_thread_after(time_in_seconds=1,
+                    #                                               func=get_iostat,
+                    #                                               host_thread=self.iostat_host_thread,
+                    #                                               sleep_time=self.fio_cmd_args["runtime"]/4,
+                    #                                               iostat_interval=self.iostat_details["interval"],
+                    #                                               iostat_iter=self.iostat_details["iterations"] + 1)
 
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_" + mode + "_" + self.fio_job_name[mode]
@@ -525,23 +533,39 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         test_filename = "/mnt/testfile.dat"
                     else:
                         test_filename = self.nvme_block_device
+                    # wait_time = self.host_count + 1 - thread_count
+                    # thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                    #                                                         func=fio_parser,
+                    #                                                         arg1=end_host_thread[thread_count],
+                    #                                                         filename=test_filename,
+                    #                                                         rw=mode,
+                    #                                                         bs=fio_block_size,
+                    #                                                         iodepth=fio_iodepth,
+                    #                                                         name=fio_job_name,
+                    #                                                         **self.fio_cmd_args)
+                    # fun_test.sleep("Fio threadzz", seconds=1)
+                    # thread_count += 1
+
                     fio_output[combo][mode] = end_host.pcie_fio(filename=test_filename,
                                                                 rw=mode,
                                                                 bs=fio_block_size,
                                                                 iodepth=fio_iodepth,
                                                                 name=fio_job_name,
                                                                 **self.fio_cmd_args)
+            # for x in range(1, self.host_count + 1, 1):
+            #     fun_test.log("Joining thread {}".format(x))
+            #     fun_test.join_thread(fun_test_thread_id=thread_id[x])
 
             fun_test.log("FIO Command Output:")
             fun_test.log(fio_output[combo][mode])
             fun_test.test_assert(fio_output[combo][mode], "Fio {} test for bs {} & iodepth {}".
-                                format(mode, fio_block_size, fio_iodepth))
+                                 format(mode, fio_block_size, fio_iodepth))
 
-            fun_test.join_thread(fun_test_thread_id=iostat_thread)
-            self.iostat_output = fun_test.shared_variables["iostat_output"].split("\n")
-
-            self.eqm_stats_after = {}
-            self.eqm_stats_after = self.storage_controller.peek(props_tree="stats/eqm")
+            # fun_test.join_thread(fun_test_thread_id=iostat_thread)
+            # self.iostat_output = fun_test.shared_variables["iostat_output"].split("\n")
+#
+            # self.eqm_stats_after = {}
+            # self.eqm_stats_after = self.storage_controller.peek(props_tree="stats/eqm")
 
             for end_host in self.end_host_list:
                 if hasattr(self, "create_file_system") and self.create_file_system:
@@ -568,7 +592,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.log("The avg TPS is : {}".format(avg_tps))
             fun_test.log("The avg read rate is {} KB/s".format(avg_kbs_read))
             fun_test.log("The IO size is {} kB".format(avg_kbs_read/avg_tps))
-            """
+            
 
             for field, value in self.eqm_stats_before["data"].items():
                 current_value = self.eqm_stats_after["data"][field]
@@ -577,6 +601,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     stat_delta = current_value - value
                     fun_test.critical("There is a mismatch in {} stat, delta {}".
                                       format(field, stat_delta))
+            """
 
             # Boosting the fio output with the testbed performance multiplier
             multiplier = tb_config["dut_info"][0]["perf_multiplier"]
@@ -645,7 +670,8 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             # post_results("Stripe_XFS_Vol_FS", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Stripe Vol XFS Perf Table", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="TCP Stripe Vol XFS Perf Table", table_name=self.summary,
+                           table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -660,7 +686,6 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
-        # self.storage_controller.disconnect()
         pass
 
 
@@ -696,7 +721,7 @@ class BLTFioRandRead12(StripedVolumePerformanceTestcase):
 if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
-    bltscript.add_test_case(BLTFioRandRead12XFS())
+#    bltscript.add_test_case(BLTFioRandRead12XFS())
     bltscript.add_test_case(BLTFioRandRead12())
 
     bltscript.run()
