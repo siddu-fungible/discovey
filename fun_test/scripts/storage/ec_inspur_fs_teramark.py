@@ -18,41 +18,6 @@ Script to track the Inspur Performance Cases of various read write combination o
 # TODO: vdbench config content variable: /dev/nvme0n1: change it dynamically according to controller assigned.
 # TODO: Increase Volumes and volume size once related bugs are fixed
 
-tb_config = {
-    "name": "Basic Storage",
-    "dut_info": {
-        0: {
-            "mode": Dut.MODE_EMULATION,
-            "type": Dut.DUT_TYPE_FSU,
-            "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
-            "disable_f1_index": 1,
-            "f1_in_use": 0,
-            "huid": 7,
-            "ctlid": 0
-        },
-    },
-    "dpcsh_proxy": {
-        "ip": "server120",
-        "user": REGRESSION_USER,
-        "passwd": REGRESSION_USER_PASSWORD,
-        "dpcsh_port": 50221,
-        "dpcsh_tty": "/dev/ttyUSB8"
-    },
-    "tg_info": {
-        0: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "cadence-pc-5",
-            "user": "localadmin",
-            "passwd": "Precious1*",
-            "ipmi_name": "cadence-pc-5-ilo",
-            "ipmi_iface": "lanplus",
-            "ipmi_user": "ADMIN",
-            "ipmi_passwd": "ADMIN",
-        }
-    }
-}
-
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
@@ -434,9 +399,8 @@ class ECVolumeLevelScript(FunTestScript):
             # Detaching all the EC/LS volumes to the external server
             for num in xrange(self.ec_info["num_volumes"]):
                 command_result = self.storage_controller.volume_detach_remote(
-                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
-                    ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
-                    transport=self.attach_transport, command_duration=self.command_timeout)
+                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
+                    remote_ip=self.remote_ip, transport=self.attach_transport, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
@@ -533,9 +497,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.ec_info["num_volumes"]):
                 command_result = self.storage_controller.volume_attach_remote(
-                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=tb_config['dut_info'][0]['huid'],
-                    ctlid=tb_config['dut_info'][0]['ctlid'], remote_ip=self.remote_ip,
-                    transport=self.attach_transport, command_duration=self.command_timeout)
+                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
+                    remote_ip=self.remote_ip, transport=self.attach_transport, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
 
@@ -754,5 +717,5 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.run()

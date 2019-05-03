@@ -102,7 +102,7 @@
         "dut": "fs-20",
         "disable_f1_index": 1,
         "fpg_interface_info": {
-          "0": {
+          "4": {
             "type": "INTERFACE_TYPE_ETHERNET",
             "hosts": 1,
             "host_info": {
