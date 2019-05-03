@@ -155,7 +155,7 @@ class Bmc(Linux):
         # Ensure come restarted
         come_restart_timer = FunTimer(max_time=max_wait_time)
         while not come_restart_timer.is_expired():
-            ping_result = self.ping(come.host_ip)
+            ping_result = self.ping(come.host_ip, count=20)
             if ping_result:
                 break
             fun_test.sleep("ComE power up")
