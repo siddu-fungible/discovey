@@ -76,6 +76,12 @@ class Dut(ToDictMixin):
     def set_instance(self, instance):
         self.instance = instance
 
+    def get_ssd_interfaces(self):
+        return self.interfaces
+
+    def get_fpg_interfaces(self):
+        return self.fpg_interfaces
+
     def add_interface(self, index, type):
         dut_interface_obj = DutInterface(index=index, type=type)
         self.interfaces[index] = dut_interface_obj
