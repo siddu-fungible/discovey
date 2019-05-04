@@ -550,12 +550,12 @@ class BLTVolumePerformanceScript(FunTestScript):
         self.storage_controller = f1.get_dpc_storage_controller()
 
         # Setting the syslog level to 2
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 6], legacy=False)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to 6")
+        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False)
+        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
 
         command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
                                                       command_duration=5)
-        fun_test.test_assert_expected(expected=6, actual=command_result["data"], message="Checking syslog level")
+        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["sysstat_install"] = False
