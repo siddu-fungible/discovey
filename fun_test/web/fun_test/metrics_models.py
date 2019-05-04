@@ -1812,6 +1812,7 @@ class TeraMarkLookupEnginePerformance(models.Model):
     output_lookup_per_sec_min_unit = models.TextField(default="lookups/sec")
     output_lookup_per_sec_avg_unit = models.TextField(default="lookups/sec")
     output_lookup_per_sec_max_unit = models.TextField(default="lookups/sec")
+    input_operation = models.TextField(default="")
     tag = "analytics"
 
     def __str__(self):
