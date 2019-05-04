@@ -327,20 +327,33 @@ class MetricParser():
                     metrics["input_test"] = "le_test_perf"
                     metrics["input_memory"] = value_json["memory"]
                     metrics["input_operation"] = value_json["operation"]
-                    if "value" in value_json:
-                        metrics["output_lookup_per_sec_min"] = -1
-                        metrics["output_lookup_per_sec_avg"] = int(value_json["value"])
-                        metrics["output_lookup_per_sec_max"] = -1
-                    else:
-                        metrics["output_lookup_per_sec_min"] = int(value_json["min"])
-                        metrics["output_lookup_per_sec_avg"] = int(value_json["avg"])
-                        metrics["output_lookup_per_sec_max"] = int(value_json["max"])
-                    metrics["output_lookup_per_sec_min_unit"] = value_json["unit"]
-                    metrics["output_lookup_per_sec_avg_unit"] = value_json["unit"]
-                    metrics["output_lookup_per_sec_max_unit"] = value_json["unit"]
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_min", default=-1)
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_max",
+                                     default=-1)
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_avg",
+                                     default=-1)
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_min_unit",
+                                     default=-1)
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_max_unit",
+                                     default=-1)
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_avg_unit",
+                                     default=-1)
                     self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                     result["data"].append(d)
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
         return result
+
+    def set_metrics(self, value_json, metrics, key, default):
+        if "unit" in key:
+            metrics[key] = value_json.get("unit", default)
+        elif "min" in key:
+            metrics[key] = value_json.get("min", default)
+        elif "max" in key:
+            metrics[key] = value_json.get("max", default)
+        elif "avg" in key:
+            if "value" in value_json:
+                metrics[key] = value_json.get("value", default)
+            else:
+                metrics[key] = value_json.get("avg", default)
