@@ -20,7 +20,7 @@
             "leaf": false,
             "name": "Lookup-engine",
             "label": "Lookup-engine",
-            "weight": 0,
+            "weight": 1,
             "children": [
               {
                 "info": "HT HBM non-coherent - FP HBM non-coherent",
@@ -1218,7 +1218,7 @@
             "leaf": false,
             "name": "Lookup-engine",
             "label": "Lookup-engine",
-            "weight": 0,
+            "weight": 1,
             "reference": true
           },
           {
