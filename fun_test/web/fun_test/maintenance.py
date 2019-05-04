@@ -1220,7 +1220,7 @@ if __name__ == "__main_rcnvme_12drives__":
                         base_line_date=base_line_date).save()
     print "chart creation for RCNVME 12 drives is done"
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur_charts__":
     model_name = "BltVolumePerformance"
     base_line_date = datetime(year=2019, month=5, day=2, minute=0, hour=0, second=0)
     owner = "Ravi Hulle (ravi.hulle@fungible.com)"
@@ -1275,3 +1275,19 @@ if __name__ == "__main__":
                     metric_model_name=model_name,
                     base_line_date=base_line_date).save()
     print "chart creation for inspur single f1 is done"
+
+if __name__ == "__main__":
+    internal_chart_names = ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                            "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg", "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
+                            "juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
+                            "juniper_NU_LE_VP_NU_FW_output_latency_avg", "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets = json.loads(chart.data_sets)
+            input = {}
+            input["input_memory"] = "HBM"
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            ml.save_data_sets(data_sets=data_sets, chart=chart)
+            print "added HBM memory {}".format(chart.chart_name)
