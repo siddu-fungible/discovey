@@ -251,7 +251,7 @@ def parse_mpstat_file(arg1, number_of_cores):
                         if (iowait > 2):
                             error_msg = error_msg + '\n' + "IO wait for core %s : %s [greater than 0]" % (core, iowait)
                             iowait_flag = False
-                        elif (total_cpu_usage > 99):
+                        elif (total_cpu_usage > 80):
                             error_msg = error_msg + '\n' + "Cpu usage for core %s: %s [greater than 99 percent]" \
                                         % (core, total_cpu_usage)
                             cpu_flag = False
@@ -474,18 +474,20 @@ def function_flow(handle, num_jobs, iodepth, number_of_cores):
         eqm_parameter_after = int(eqm_stats_after["data"]["EFI->EQC Enqueue Interface valid"])
         fun_test.debug("Eqm stats before fio : %s" % eqm_stats_before)
         fun_test.debug("Eqm stats after fio  : %s" % eqm_stats_after)
-        difference_eqm = eqm_parameter_after - eqm_parameter_before
+        difference_eqm = abs(eqm_parameter_after - eqm_parameter_before)
         eqm_flag = False
-        if difference_eqm < 5 and difference_eqm >= 0:
+        if difference_eqm >= 0 and difference_eqm <= 5:
             eqm_flag = True
     except:
         fun_test.critical("Error in feching eqm stats")
+        difference_eqm=0
         eqm_flag = True
 
     special_condition = False
-    if cpu_flag and not (iowait_flag or eqm_flag):
+    if (not cpu_flag and iowait_flag and eqm_flag):
         special_condition = True
-
+        final_working = False
+        first = 0
     elif iowait_flag and cpu_flag and eqm_flag:
         final_working = True
     else:
@@ -548,12 +550,12 @@ class BLTVolumePerformanceScript(FunTestScript):
         self.storage_controller = f1.get_dpc_storage_controller()
 
         # Setting the syslog level to 2
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
+        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 6], legacy=False)
+        fun_test.test_assert(command_result["status"], "Setting syslog level to 6")
 
         command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
                                                       command_duration=5)
-        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
+        fun_test.test_assert_expected(expected=6, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["sysstat_install"] = False

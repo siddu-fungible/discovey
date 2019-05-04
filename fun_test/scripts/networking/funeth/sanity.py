@@ -37,12 +37,20 @@ MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
+    if TB in ('FS7', 'FS11'):
+        for nu in funeth_obj.nu_hosts:
+            linux_obj = funeth_obj.linux_obj_dict[nu]
+            fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
+    fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
     for nu in funeth_obj.nu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[nu]
-        if TB in ('FS7', 'FS11'):
-            fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
-        fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host interface')
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu), 'Configure NU host IPv4 routes')
+        #if TB in ('FS7', 'FS11'):
+            #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
+        fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu), 'Configure NU host {} IPv4 routes'.format(
+            linux_obj.host_ip))
         #cmds = [
         #    'echo 1 > /proc/sys/net/ipv4/ip_forward',
         #    'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter',
@@ -62,10 +70,13 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
-        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure funeth interfaces.')
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host IPv4 routes.')
+        linux_obj = funeth_obj.linux_obj_dict[hu]
+        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
+            linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
 

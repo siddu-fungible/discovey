@@ -49,18 +49,19 @@ class TcpPerformance(FunTestScript):
             mpstat_obj, mpstat_obj2, mode, TIMESTAMP
 
         TIMESTAMP = get_current_time()
-
+        nu_config_obj = NuConfigManager()
+        f1_index = nu_config_obj.get_f1_index()
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get()
+            fs = Fs.get(disable_f1_index=f1_index)
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 
-        nu_config_obj = NuConfigManager()
         speed = nu_config_obj.get_speed()
         mode = str(speed/1000) + "G"
         dut_type = nu_config_obj.DUT_TYPE
         fun_test.shared_variables['dut_type'] = dut_type
         dut_config = nu_config_obj.read_dut_config()
+
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
