@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
 from lib.host.iperf_manager import IPerfManager
-from lib.host.netperf_manager import NetperfManager
+from lib.host import netperf_manager as nm
 from lib.host.network_controller import NetworkController
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity
@@ -21,8 +21,8 @@ TIMESTAMP = get_current_time()
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'),
     ('NU_HU_NFCP', 'NU -> HU non-FCP'),
-#    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 #    ('HU_HU_NFCP', 'HU -> HU non-FCP'),
+    #    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 ])
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
@@ -38,8 +38,7 @@ PERF_RESULT_KEYS = ('throughput',
                     'latency_P90',
                     'latency_P99',
                     )
-#FPG_INTERFACES = (0, 4,)  # TODO: add fpg4
-FPG_INTERFACES = (0,)
+FPG_INTERFACES = (0, 4,)
 
 
 class FunethPerformance(sanity.FunethSanity):
@@ -57,7 +56,7 @@ class FunethPerformance(sanity.FunethSanity):
         funeth_obj = funeth.Funeth(tb_config_obj)
         linux_objs = funeth_obj.linux_obj_dict.values()
         #self.iperf_manager_obj = IPerfManager(linux_objs)
-        self.netperf_manager_obj = NetperfManager(linux_objs)
+        self.netperf_manager_obj = nm.NetperfManager(linux_objs)
 
         #fun_test.test_assert(self.iperf_manager_obj.setup(), 'Set up for throughput/latency test')
         fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
@@ -76,6 +75,7 @@ class FunethPerformance(sanity.FunethSanity):
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         fun_test.shared_variables['network_controller_objs'] = network_controller_objs
+        fun_test.shared_variables['netperf_manager_obj'] = self.netperf_manager_obj
 
     def cleanup(self):
         super(FunethPerformance, self).cleanup()
@@ -138,6 +138,7 @@ class FunethPerformanceBase(FunTestCase):
 
     def _run(self, flow_type, tool='netperf', protocol='tcp', parallel=1, frame_size=1500, duration=30):
         funeth_obj = fun_test.shared_variables['funeth_obj']
+        perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
 
         host_pairs = []
         bi_dir = False
@@ -181,8 +182,8 @@ class FunethPerformanceBase(FunTestCase):
             )
 
         #linux_objs = [arg_dict.get('linux_obj') for arg_dict in arg_dicts] + [arg_dict.get('linux_obj_dst') for arg_dict in arg_dicts]
-        linux_objs = funeth_obj.linux_obj_dict.values()
-        perf_manager_obj = NetperfManager(linux_objs)
+        #linux_objs = funeth_obj.linux_obj_dict.values()
+        #perf_manager_obj = NetperfManager(linux_objs)
 
         # Collect stats before and after test run
         fun_test.log('Collect stats before test')
@@ -208,9 +209,11 @@ class FunethPerformanceBase(FunTestCase):
                 {'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
             )
         elif flow_type.startswith('HU_HU'):
+            # HU -> HU via local F1, no FPG stats
             result.update(
-                {'pps_h2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+                {'pps_h2h': nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
             )
+
 
         # Check test passed or failed
         if any(v == -1 for v in result.values()):

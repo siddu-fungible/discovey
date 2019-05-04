@@ -959,7 +959,6 @@ if __name__ == "__main_memvol__":
                 fio_job_name = "fio_randwrite_memvol_rand_write"
                 output_names = ["output_write_iops"]
 
-
         data_sets = []
         for output_name in output_names:
             if operation == "randrw":
@@ -1166,7 +1165,7 @@ if __name__ == "__main_fix_units__":
             entry.output_pps_unit = "Mpps"
             entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main_rcnvme_12drives__":
     operations = ["sequential_read", "sequential_write", "random_read", "random_write"]
     outputs = ["output_bandwidth", "output_iops", "output_latency_avg"]
     for operation in operations:
@@ -1221,3 +1220,58 @@ if __name__ == "__main__":
                         base_line_date=base_line_date).save()
     print "chart creation for RCNVME 12 drives is done"
 
+if __name__ == "__main__":
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=5, day=2, minute=0, hour=0, second=0)
+    owner = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/ec_inspur_fs_teramark.py"
+    outputs = ["output_bandwidth", "output_iops", "output_latency"]
+    internal_chart_names = ["inspur_rand_read_write_8k_block_output_bandwidth",
+                            "inspur_rand_read_write_8k_block_output_latency",
+                            "inspur_rand_read_write_8k_block_output_iops"]
+    fio_job_name = "inspur_8k_random_read_write_vdbench"
+    for internal_chart_name in internal_chart_names:
+        data_sets = []
+        positive = True
+        if "bandwidth" in internal_chart_name:
+            y1_axis_title = "MBps"
+            chart_name = "Throughput"
+            output_names = ["output_read_throughput", "output_write_throughput"]
+        elif "iops" in internal_chart_name:
+            y1_axis_title = "ops"
+            chart_name = "IOPS"
+            output_names = ["output_read_iops", "output_write_iops"]
+        else:
+            y1_axis_title = "usecs"
+            chart_name = "Latency"
+            positive = False
+            output_names = ["output_read_avg_latency", "output_write_avg_latency"]
+        for output_name in output_names:
+            if "read" in output_name:
+                name = "read"
+            else:
+                name = "write"
+            if "latency" in output_name:
+                name += "-avg"
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info=owner,
+                    source=source,
+                    work_in_progress=False,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+    print "chart creation for inspur single f1 is done"

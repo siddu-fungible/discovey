@@ -2790,7 +2790,52 @@
                 "name": "teramarks_customer_inspur",
                 "weight": 0,
                 "label": "Inspur",
-                "children": []
+                "children": [
+                  {
+                    "info": "inspur_single_f1_host",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_single_f1_host",
+                    "weight": 1,
+                    "label": "Single F1 Single Host",
+                    "children": [
+                      {
+                        "info": "inspur_rand_read_write_8k_block",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "inspur_rand_read_write_8k_block",
+                        "weight": 1,
+                        "label": "Random Read Write 8K Data Block",
+                        "children": [
+                          {
+                            "info": "inspur_rand_read_write_8k_block_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "inspur_rand_read_write_8k_block_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "inspur_rand_read_write_8k_block_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "inspur_rand_read_write_8k_block_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "inspur_rand_read_write_8k_block_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "inspur_rand_read_write_8k_block_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               {
                 "info": "AliBaba",
