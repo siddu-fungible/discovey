@@ -182,7 +182,7 @@ def update_suite_execution(suite_execution_id,
     if completed_time:
         te.completed_time = completed_time
     te.save()
-    # te.save()
+    te.save()
     # transaction.commit()
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
 
