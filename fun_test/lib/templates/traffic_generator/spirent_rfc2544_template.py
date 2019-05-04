@@ -443,8 +443,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
 
                     if model_name == JUNIPER_PERFORMANCE_MODEL_NAME and not failed_result_found:
                         unit_dict = {}
-                        unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
-                        unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
+                        unit_dict["pps_unit"] = PerfUnit.UNIT_MPPS
+                        unit_dict["throughput_unit"] = PerfUnit.UNIT_GBITS_PER_SEC
                         unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
                         unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
                         unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
