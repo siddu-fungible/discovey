@@ -132,17 +132,19 @@ class Funeth:
             fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
             if cc:
-                self.pf_intf = 'fpg0'
+                pf_intf = 'fpg0'
+            else:
+                pf_intf = self.tb_config_obj.get_hu_pf_interface(hu)
 
             if sriov > 0:
-                sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
+                sriov_en = '/sys/class/net/{0}/device'.format(pf_intf)
                 self.linux_obj_dict[hu].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
                                                 timeout=300)
                 fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
                 self.linux_obj_dict[hu].command('ifconfig -a')
 
             output1 = self.linux_obj_dict[hu].command('lsmod | grep funeth')
-            output2 = self.linux_obj_dict[hu].command('ifconfig %s' % self.pf_intf)
+            output2 = self.linux_obj_dict[hu].command('ifconfig %s' % pf_intf)
             result &= re.search(r'funeth', output1) is not None and re.search(
                 r'Device not found', output2, re.IGNORECASE) is None
 

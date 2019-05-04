@@ -62,7 +62,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure funeth interfaces.')
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host IPv4 routes.')
