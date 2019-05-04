@@ -2797,7 +2797,7 @@
                     "leaf": false,
                     "name": "inspur_single_f1_host",
                     "weight": 1,
-                    "label": "Single F1 Single Host",
+                    "label": "8_11_1:8K_RAND_RW, F1(s)=1",
                     "children": [
                       {
                         "info": "inspur_rand_read_write_8k_block",
