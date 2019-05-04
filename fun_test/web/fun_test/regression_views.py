@@ -313,7 +313,7 @@ def suite_executions_count(request, state_filter_string):
                                           state_filter_string=state_filter_string,
                                           tags=tags,
                                           submitter_email=submitter_email,
-                                          test_bed_type=test_bed_type, suite_path=suite_path)
+                                          test_bed_type=test_bed_type, suite_path=suite_path, save_suite_info=False)
     return count
 
 
