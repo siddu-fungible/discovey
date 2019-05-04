@@ -35,6 +35,7 @@ from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, BltVolum
 from web.fun_test.metrics_lib import MetricLib
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from django.utils import timezone
+from fun_global import PerfUnit
 
 
 class MetricHelper(object):
@@ -958,7 +959,6 @@ if __name__ == "__main_memvol__":
                 fio_job_name = "fio_randwrite_memvol_rand_write"
                 output_names = ["output_write_iops"]
 
-
         data_sets = []
         for output_name in output_names:
             if operation == "randrw":
@@ -1079,7 +1079,7 @@ if __name__ == "__main_memvol__":
                     work_in_progress=False).save()
     print "created latency charts for memvol"
 
-if __name__ == "__main__":
+if __name__ == "__main__half_load_charts__":
     internal_chart_names = ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
                             "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
     ml = MetricLib()
@@ -1136,3 +1136,173 @@ if __name__ == "__main__":
                     metric_model_name=entry.metric_model_name,
                     base_line_date=entry.base_line_date,
                     work_in_progress=False).save()
+
+if __name__ == "__main_us_to_usecs__":
+    model = "TeraMarkJuniperNetworkingPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model]
+    entries = metric_model.objects.all()
+    for entry in entries:
+        if entry.output_latency_avg_unit == "us":
+            print entry
+            entry.output_latency_avg_unit = "usecs"
+            entry.output_latency_max_unit = "usecs"
+            entry.output_latency_min_unit = "usecs"
+            entry.output_jitter_min_unit = "usecs"
+            entry.output_jitter_max_unit = "usecs"
+            entry.output_jitter_avg_unit = "usecs"
+            entry.save()
+
+if __name__ == "__main_fix_units__":
+    model = "TeraMarkJuniperNetworkingPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model]
+    entries = metric_model.objects.all()
+    for entry in entries:
+        if entry.input_flow_type == "NU_VP_NU_FWD_NFCP" and entry.input_date_time.day == 2 and entry.input_date_time.month == 5 and entry.input_date_time.year == 2019:
+            print entry
+            entry.output_throughput_unit = "Gbps"
+            entry.output_pps_unit = "Mpps"
+            entry.save()
+
+if __name__ == "__main_rcnvme_12drives__":
+    operations = ["sequential_read", "sequential_write", "random_read", "random_write"]
+    outputs = ["output_bandwidth", "output_iops", "output_latency_avg"]
+    for operation in operations:
+        for output in outputs:
+            data_sets = []
+            positive = True
+            if "bandwidth" in output:
+                y1_axis_title = "Mbps"
+                chart_name = "Throughput"
+                name = "throughput"
+            elif "iops" in output:
+                y1_axis_title = "ops"
+                chart_name = "IOPS"
+                name = "iops"
+            else:
+                y1_axis_title = "nsecs"
+                chart_name = "Latency"
+                positive = False
+                name = "avg"
+            internal_name = "rcnvme_12_" + operation + '_' + output
+            if "sequential" in operation:
+                dev_access = "sequential"
+            else:
+                dev_access = "random"
+            if "read" in operation:
+                io_type = "RCNVME_TEST_TYPE_RO"
+            else:
+                io_type = "RCNVME_TEST_TYPE_WO"
+            base_line_date = datetime(year=2019, month=4, day=14, minute=0, hour=0, second=0)
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_io_type"] = io_type
+            one_data_set["inputs"]["input_dev_access"] = dev_access
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+            metric_id = LastMetricId.get_next_id()
+            model_name = "TeraMarkRcnvmeReadWriteAllPerformance"
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Raju Vasudevan (raju.vasudevan@fungible.com)",
+                        source="https://github.com/fungible-inc/FunOS/blob/ad5f77ba0db25525eed4a3ac4822562b7ccf5d9c/apps/rcnvme_test.c",
+                        work_in_progress=False,
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date).save()
+    print "chart creation for RCNVME 12 drives is done"
+
+if __name__ == "__main_inspur_charts__":
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=5, day=2, minute=0, hour=0, second=0)
+    owner = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/ec_inspur_fs_teramark.py"
+    outputs = ["output_bandwidth", "output_iops", "output_latency"]
+    internal_chart_names = ["inspur_rand_read_write_8k_block_output_bandwidth",
+                            "inspur_rand_read_write_8k_block_output_latency",
+                            "inspur_rand_read_write_8k_block_output_iops"]
+    fio_job_name = "inspur_8k_random_read_write_vdbench"
+    for internal_chart_name in internal_chart_names:
+        data_sets = []
+        positive = True
+        if "bandwidth" in internal_chart_name:
+            y1_axis_title = "MBps"
+            chart_name = "Throughput"
+            output_names = ["output_read_throughput", "output_write_throughput"]
+        elif "iops" in internal_chart_name:
+            y1_axis_title = "ops"
+            chart_name = "IOPS"
+            output_names = ["output_read_iops", "output_write_iops"]
+        else:
+            y1_axis_title = "usecs"
+            chart_name = "Latency"
+            positive = False
+            output_names = ["output_read_avg_latency", "output_write_avg_latency"]
+        for output_name in output_names:
+            if "read" in output_name:
+                name = "read"
+            else:
+                name = "write"
+            if "latency" in output_name:
+                name += "-avg"
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info=owner,
+                    source=source,
+                    work_in_progress=False,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+    print "chart creation for inspur single f1 is done"
+
+if __name__ == "__main_HBM__":
+    internal_chart_names = ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                            "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg", "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
+                            "juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
+                            "juniper_NU_LE_VP_NU_FW_output_latency_avg", "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets = json.loads(chart.data_sets)
+            input = {}
+            input["input_memory"] = "HBM"
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            ml.save_data_sets(data_sets=data_sets, chart=chart)
+            print "added HBM memory {}".format(chart.chart_name)
+
+if __name__ == "__main__":
+    internal_chart_names = ["HT HBM non-coherent - FP HBM non-coherent", "HT HBM coherent - FP HBM coherent",
+                            "HT DDR non-coherent - FP DDR non-coherent", "HT DDR coherent - FP DDR coherent",
+                            "TCAM"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets = json.loads(chart.data_sets)
+            input = {}
+            input["input_operation"] = "lookups"
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            ml.save_data_sets(data_sets=data_sets, chart=chart)
+            print "added lookups operation {}".format(chart.chart_name)

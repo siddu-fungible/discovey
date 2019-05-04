@@ -148,7 +148,7 @@ class QueueWorker(Thread):
         if True:
 
             queue_lock.acquire()
-            # scheduler_logger.info("Lock-acquire: QueueWorker")
+            scheduler_logger.info("Lock-acquire: QueueWorker")
 
             try:
                 de_queued_jobs = []
@@ -191,7 +191,7 @@ class QueueWorker(Thread):
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
             # scheduler_logger.info("QueueWorker: Before lock release")
-            # scheduler_logger.info("Lock-release: QueueWorker")
+            scheduler_logger.info("Lock-release: QueueWorker")
             queue_lock.release()
             time.sleep(5)
 
@@ -247,6 +247,7 @@ def queue_job(job_id):
                            test_bed_type=job_spec.test_bed_type)
         new_job.save()
         models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
+
         time.sleep(1)
 
     else:
@@ -753,8 +754,7 @@ def process_submissions():
             if job_spec and schedule_it and (scheduling_time >= 0):
                 t = threading.Timer(scheduling_time, timer_dispatch, (job_spec.execution_id,))
                 job_id_timers[job_id] = t
-                job_spec.set_properties(scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time),
-                                        state=JobStatusType.SCHEDULED)
+                models_helper.update_suite_execution(suite_execution_id=job_id, scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time), state=JobStatusType.SCHEDULED)
                 t.start()
             if scheduling_time < 0:
                 scheduler_logger.critical("{} Unable to process job submission. Scheduling time in the past".format(

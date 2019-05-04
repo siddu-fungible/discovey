@@ -20,6 +20,7 @@ import {LogViewerComponent} from "./log-viewer/log-viewer.component";
 import {UserComponent} from "./user/user.component";
 import {TestBedComponent} from "./regression/test-bed/test-bed.component";
 import {JirasComponent} from "./regression/jiras/jiras.component";
+import {JobSpecComponent} from "./regression/job-spec/job-spec.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -42,7 +43,8 @@ const routes: Routes = [
   {path: 'regression/test_bed', component: TestBedComponent},
   {path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
-  {path: 'regression/:filterString', component: RegressionComponent},
+  {path: 'regression/job_spec_detail/:id', component: JobSpecComponent},
+  {path: 'regression', component: RegressionComponent},
   {path: 'regression/scheduler/admin', component: SchedulerAdminComponent},
   {path: 'common/alerts', component: AlertsComponent},
   {path: 'common/logs', component: LogViewerComponent},

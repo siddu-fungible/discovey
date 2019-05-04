@@ -138,26 +138,31 @@ class BLTVolumePerformanceScript(FunTestScript):
         # pass
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
-        self.blt_details = fun_test.shared_variables["blt_details"]
-        self.end_host_inst = fun_test.shared_variables["end_host_inst"]
-        command_result = self.end_host_inst.sudo_command(
-            "nvme disconnect -n nqn.2017-05.com.fungible:nss-uuid1 -d nvme0n1")
-        fun_test.log(command_result)
+        try:
+            self.blt_details = fun_test.shared_variables["blt_details"]
+            self.end_host_inst = fun_test.shared_variables["end_host_inst"]
+            command_result = self.end_host_inst.sudo_command(
+                "nvme disconnect -n nqn.2017-05.com.fungible:nss-uuid1 -d nvme0n1")
+            fun_test.log(command_result)
 
-        thin_uuid = fun_test.shared_variables["thin_uuid"]
-        blt_count = fun_test.shared_variables["blt_count"]
-        for x in range(1, blt_count + 1, 1):
-            curr_uuid = thin_uuid[x-1]
-            command_result = self.storage_controller.volume_detach_remote(
-                ns_id=x, uuid=curr_uuid, remote_ip=tb_config['tg_info'][0]['remote_ip'])
-            if not command_result["status"]:
-                fun_test.test_assert(command_result["status"], "Detach of BLT {} with uuid {}".format(x, curr_uuid))
-            command_result = self.storage_controller.delete_volume(type=self.blt_details["type"],
-                                                                   name="thin_block" + str(x),
-                                                                   uuid=curr_uuid,
-                                                                   command_duration=30)
-            if not command_result["status"]:
-                fun_test.test_assert(command_result["status"], "Delete of BLT {} with uuid {}".format(x, curr_uuid))
+            thin_uuid = fun_test.shared_variables["thin_uuid"]
+            blt_count = fun_test.shared_variables["blt_count"]
+            for x in range(1, blt_count + 1, 1):
+                curr_uuid = thin_uuid[x-1]
+                command_result = self.storage_controller.volume_detach_remote(
+                    ns_id=x, uuid=curr_uuid, remote_ip=tb_config['tg_info'][0]['remote_ip'])
+                if not command_result["status"]:
+                    fun_test.test_assert(command_result["status"], "Detach of BLT {} with uuid {}".
+                                         format(x, curr_uuid))
+                command_result = self.storage_controller.delete_volume(type=self.blt_details["type"],
+                                                                       name="thin_block" + str(x),
+                                                                       uuid=curr_uuid,
+                                                                       command_duration=30)
+                if not command_result["status"]:
+                    fun_test.test_assert(command_result["status"], "Delete of BLT {} with uuid {}".
+                                         format(x, curr_uuid))
+        except:
+            fun_test.log("Clean-up of volume failed.")
 
         fun_test.log("FS cleanup")
         fun_test.shared_variables["fs"].cleanup()

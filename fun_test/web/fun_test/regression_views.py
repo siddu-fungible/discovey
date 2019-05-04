@@ -313,7 +313,7 @@ def suite_executions_count(request, state_filter_string):
                                           state_filter_string=state_filter_string,
                                           tags=tags,
                                           submitter_email=submitter_email,
-                                          test_bed_type=test_bed_type, suite_path=suite_path)
+                                          test_bed_type=test_bed_type, suite_path=suite_path, save_suite_info=False)
     return count
 
 
@@ -1089,7 +1089,7 @@ def testbeds(request):
 @csrf_exempt
 @api_safe_json_response
 def get_networking_artifacts(request, sdk_version):
-    files = glob.glob("{}/*{}*.json".format(LOGS_DIR, sdk_version))
+    files = glob.glob("{}/*{}*.*".format(LOGS_DIR, sdk_version))
     result = []
     for file in files:
         result.append(os.path.basename(file))

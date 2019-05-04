@@ -2,9 +2,10 @@ import json
 import dill
 
 from asset.asset_manager import *
+from fun_settings import REGRESSION_SERVICE_HOST
 from dut import Dut, DutInterface
 from lib.host.traffic_generator import Fio, LinuxHost
-from lib.system.fun_test import FunTestLibException
+from lib.system.fun_test import FunTestLibException, FunTimer
 from topology import ExpandedTopology
 from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
 from lib.system.utils import parse_file_to_json
@@ -62,8 +63,17 @@ class TopologyHelper:
                 # Create DUT object
                 dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode)
 
-                interfaces = dut_info["interface_info"]
+                interfaces = {}  # TODO Actually SSD interfaces, will need to rename it
+                if "interface_info" in dut_info:
+                    interfaces = dut_info["interface_info"]
+                elif "pcie_interface_info" in dut_info:
+                    interfaces = dut_info["pcie_interface_info"]
+                elif "ssd_interface_info" in dut_info:
+                    interfaces = dut_info["ssd_interface_info"]
 
+                fpg_interfaces = {}
+                if "fpg_interface_info" in dut_info:
+                    fpg_interfaces = dut_info["fpg_interface_info"]
                 # Assign endpoints on interfaces
                 for interface_index, interface_info in interfaces.items():
                     interface_index = int(interface_index)
@@ -88,6 +98,12 @@ class TopologyHelper:
                         dut_interface_obj.set_dual_interface(interface_index=interface_info["dual"])
                 self.expanded_topology.duts[dut_index] = dut_obj
 
+                for interface_index, interface_info in fpg_interfaces.items():
+                    interface_index = int(interface_index)
+                    dut_interface_obj = dut_obj.add_fpg_interface(index=interface_index, type=interface_info['type'])
+                    if "hosts" in interface_info:
+                        dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"], host_info=interface_info["host_info"])
+
         if "tg_info" in spec:
             tgs = spec["tg_info"]
             for tg_index, tg_info in tgs.items():
@@ -105,8 +121,11 @@ class TopologyHelper:
     def deploy(self):
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
-        fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology), "Allocate Topology")
+        fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology), "Allocate topology")
+        if not fun_test.is_simulation():
+            fun_test.test_assert(self.validate_topology(), "Validate topology")
         return self.expanded_topology
+
 
     @fun_test.safe
     def set_dut_parameters(self, dut_index, **kwargs):
@@ -118,6 +137,44 @@ class TopologyHelper:
         for key, value in kwargs.iteritems():
             dut.spec[key] = value
         pass
+
+    @fun_test.safe
+    def validate_topology(self):
+        topology = self.expanded_topology
+        duts = topology.duts
+
+        for dut_index, dut_obj in duts.items():
+            fun_test.debug("Validating DUT readiness {}".format(dut_index))
+            fun_test.test_assert(dut_obj.get_instance().is_ready(), "DUT: {} ready".format(dut_index))
+
+            for interface_index, interface_info in dut_obj.interfaces.items():
+                fun_test.debug("Validating peer on DUT interface {}".format(interface_index))
+                peer_info = interface_info.peer_info
+                if peer_info:
+                    if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
+                        host_instance = peer_info.get_host_instance()
+                        am = fun_test.get_asset_manager()
+                        host_spec = am.get_host_spec(name=REGRESSION_SERVICE_HOST)
+                        service_host = Linux.get(host_spec)
+                        ping_result = False
+                        instance_ready = False
+                        max_wait_time = 180 # TODO this is in the wrong place
+                        max_wait_timer = FunTimer(max_time=max_wait_time)
+                        while not ping_result and not instance_ready and not max_wait_timer.is_expired():
+                            ping_result = service_host.ping(dst=host_instance.host_ip)
+                            if ping_result:
+                                try:
+                                    host_instance._connect()
+                                    host_instance.command('pwd')
+                                    instance_ready = True
+                                    break
+                                except Exception as ex:
+                                    pass
+                                break
+                        fun_test.simple_assert(not max_wait_timer.is_expired(), "Instance reboot max-wait time: {} expired".format(max_wait_time))
+                        fun_test.test_assert(instance_ready, "Instance: {} ready".format(str(host_instance)))
+                        host_instance.lspci(grep_filter="1dad")
+        return True
 
     @fun_test.safe
     def allocate_topology(self, topology):
@@ -155,7 +212,10 @@ class TopologyHelper:
                             fun_test.simple_assert(instance, "Bare-metal instance")
 
                             if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
-                                fun_test.test_assert(instance.reboot(), "Host instance rebooted")
+                                fun_test.test_assert(instance.reboot(non_blocking=True), "Host instance: {} rebooted".format(str(instance)))
+                                # instance.lspci(grep_filter="1dad")
+                                pass
+                                '''
                                 disable_f1_index = dut_obj.get_instance().disable_f1_index
                                 com_e = ComE(host_ip=instance.host_ip, ssh_username=instance.ssh_username,
                                              ssh_password=instance.ssh_password)
@@ -163,7 +223,25 @@ class TopologyHelper:
                                 fun_test.test_assert(com_e.detect_pfs(), "PFs detected on Host")
                                 fun_test.test_assert(com_e.setup_dpc(), "Setup DPC on Host")
                                 com_e.disconnect()
+                                '''
 
+                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
+                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                     orchestrator_obj=orchestrator)
+                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
+                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                     orchestrator_obj=orchestrator)
+
+                for interface_index, interface_info in dut_obj.fpg_interfaces.items():
+                    fun_test.debug("Setting up DUT FPG interface {}".format(interface_index))
+                    peer_info = interface_info.peer_info
+                    # fun_test.simple_assert(peer_info, "Peer info")
+                    if peer_info:
+
+                        if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
+                            instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
+                                                                orchestrator_obj=orchestrator)
+                            fun_test.simple_assert(instance, "Bare-metal instance")
 
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,

@@ -10,6 +10,7 @@ from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 from scripts.networking.nu_config_manager import *
 import sqlite3
 from web.fun_test.analytics_models_helper import ModelHelper
+from fun_global import PerfUnit
 
 FLOW_TYPE_NU_NU_NFCP = "NU_NU_NFCP"
 FLOW_TYPE_HNU_HNU_NFCP = "HNU_HNU_NFCP"
@@ -385,9 +386,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                                        half_load_latency=False):
         results = []
         output = True
-        failed_result_found = False
+        any_result_failed = False
         try:
             for key in result_dict:
+                failed_result_found = False
                 records = result_dict[key]
                 data_dict = OrderedDict()
                 data_dict['mode'] = mode
@@ -398,6 +400,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 actual_frame_size = frame_size
                 if frame_size == 8900.0:
                     frame_size = 9000.0
+                elif frame_size == 66.0:
+                    frame_size = 64.0
                 if frame_size:
                     data_dict['flow_type'] = flow_direction
                     data_dict['frame_size'] = frame_size
@@ -405,9 +409,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     if max_rate_record:
                         data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
-                        throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
-                                                                        frame_size=frame_size)
-                        data_dict['throughput'] = round(throughput, 2)
+                        #throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
+                        #                                                frame_size=frame_size)
+                        #data_dict['throughput'] = round(throughput, 2)
+                        data_dict['throughput'] = round(float(max_rate_record['OfferedLoad(Mbps)']), 2)
                         data_dict['latency_min'] = round(float(max_rate_record['MinimumLatency(us)']), 2)
                         data_dict['latency_max'] = round(float(max_rate_record['MaximumLatency(us)']), 2)
                         data_dict['latency_avg'] = round(float(max_rate_record['AverageLatency(us)']), 2)
@@ -426,6 +431,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         data_dict['jitter_max'] = -1
                         data_dict['jitter_avg'] = -1
                         failed_result_found = True
+                        any_result_failed = True
 
                     if num_flows:
                         data_dict['num_flows'] = num_flows
@@ -435,6 +441,20 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     results.append(data_dict)
                     fun_test.debug(results)
 
+                    if model_name == JUNIPER_PERFORMANCE_MODEL_NAME and not failed_result_found:
+                        unit_dict = {}
+                        unit_dict["pps_unit"] = PerfUnit.UNIT_MPPS
+                        unit_dict["throughput_unit"] = PerfUnit.UNIT_GBITS_PER_SEC
+                        unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
+                        unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
+                        unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
+                        unit_dict["jitter_min_unit"] = PerfUnit.UNIT_USECS
+                        unit_dict["jitter_max_unit"] = PerfUnit.UNIT_USECS
+                        unit_dict["jitter_avg_unit"] = PerfUnit.UNIT_USECS
+                        add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict,
+                                                          unit_dict=unit_dict)
+                        fun_test.add_checkpoint("Entry added for frame size %s to model %s" % (frame_size, model_name))
+            '''
             file_path = LOGS_DIR + "/%s" % file_name
             contents = self._parse_file_to_json_in_order(file_name=file_path)
             if contents:
@@ -446,15 +466,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 file_created = self.create_counters_file(json_file_name=file_path,
                                                          counter_dict=results)
                 fun_test.simple_assert(file_created, "Create Performance JSON file")
-            if failed_result_found:
+            '''
+            if any_result_failed:
+                fun_test.log("Failed result found")
                 output = False
-            if model_name == JUNIPER_PERFORMANCE_MODEL_NAME:
-                unit_dict = {}
-                unit_dict["pps_unit"] = "pps"
-                unit_dict["throughput_unit"] = "Mbps"
-                add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict, unit_dict=unit_dict)
-                fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
-                fun_test.add_checkpoint("Entry added to model %s" % model_name)
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
