@@ -175,11 +175,15 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR + "/web.log"
+        }
     },
     'loggers': {
         'web': {
-            'handlers': ['console'],
-            'level': 'INFO',
+            'handlers': ['file'],
+            'level': 'DEBUG',
         },
     },
 }
