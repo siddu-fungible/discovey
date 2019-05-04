@@ -163,7 +163,7 @@ def update_suite_execution(suite_execution_id,
                            state=None,
                            suite_path=None,
                            completed_time=None):
-    # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
+    print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result
@@ -182,14 +182,14 @@ def update_suite_execution(suite_execution_id,
     if completed_time:
         te.completed_time = completed_time
     te.save()
-    te.save()
-    transaction.commit()
+    # te.save()
+    # transaction.commit()
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
 
     # print te.version
     # print "Begin:"
     # traceback.print_stack()
-    # print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state)
+    print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state)
     # traceback.print_stack()
     #sys.stdout.flush()
     # print "End:"
