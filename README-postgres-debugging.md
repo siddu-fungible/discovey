@@ -6,8 +6,8 @@
     ~~~~
 3. Ensure postgres is running. Refer notes above
 4. Enable query logging on Postgres
-    a. Determine the location where the HBA file is.
 
+    a. Determine the location where the HBA file is.
         John-Abrahams-MacBook-Pro:fun_test johnabraham$ psql postgres
         psql (10.4)
         Type "help" for help.
