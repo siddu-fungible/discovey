@@ -1280,6 +1280,7 @@ class TeraMarkJuniperNetworkingPerformance(models.Model):
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="UDP")
     input_half_load_latency = models.BooleanField(default=False)
+    input_memory = models.TextField(default="HBM")
 
     def __str__(self):
         s = ""
