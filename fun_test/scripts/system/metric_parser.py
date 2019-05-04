@@ -327,17 +327,7 @@ class MetricParser():
                     metrics["input_test"] = "le_test_perf"
                     metrics["input_memory"] = value_json["memory"]
                     metrics["input_operation"] = value_json["operation"]
-                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_min", default=-1)
-                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_max",
-                                     default=-1)
-                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_avg",
-                                     default=-1)
-                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_min_unit",
-                                     default=-1)
-                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_max_unit",
-                                     default=-1)
-                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec_avg_unit",
-                                     default=-1)
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec", default=-1)
                     self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                     result["data"].append(d)
@@ -346,14 +336,13 @@ class MetricParser():
         return result
 
     def set_metrics(self, value_json, metrics, key, default):
-        if "unit" in key:
-            metrics[key] = value_json.get("unit", default)
-        elif "min" in key:
-            metrics[key] = value_json.get("min", default)
-        elif "max" in key:
-            metrics[key] = value_json.get("max", default)
-        elif "avg" in key:
-            if "value" in value_json:
-                metrics[key] = value_json.get("value", default)
-            else:
-                metrics[key] = value_json.get("avg", default)
+        metrics[key + "_min"] = value_json.get("min", default)
+        metrics[key + "_max"] = value_json.get("max", default)
+        if "avg" in value_json:
+            metrics[key + "_avg"] = value_json.get("avg", default)
+        else:
+            metrics[key + "_avg"] = value_json.get("value", default)
+        if "unit" in value_json:
+            metrics[key + "_min_unit"] = value_json.get("unit", default)
+            metrics[key + "_max_unit"] = value_json.get("unit", default)
+            metrics[key + "_avg_unit"] = value_json.get("unit", default)
