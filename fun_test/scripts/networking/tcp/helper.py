@@ -371,13 +371,14 @@ def populate_flow_list_output_file(result, filename):
         master_table_obj = PrettyTable()
         master_table_obj.align = 'l'
         master_table_obj.header = False
-        for key in sorted(result):
-            table_obj = inner_table_obj(result=result[key])
-            master_table_obj.add_row([key, table_obj])
+        if result:
+            for key in sorted(result):
+                table_obj = inner_table_obj(result=result[key])
+                master_table_obj.add_row([key, table_obj])
 
-        lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
-        with open(file_path, 'w') as f:
-            f.writelines(lines)
+            lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
+            with open(file_path, 'w') as f:
+                f.writelines(lines)
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
