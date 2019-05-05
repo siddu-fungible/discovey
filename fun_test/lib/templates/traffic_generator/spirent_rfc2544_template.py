@@ -21,11 +21,14 @@ FLOW_TYPE_NU_VP_NU_FWD_NFCP = "NU_VP_NU_FWD_NFCP"
 FLOW_TYPE_NU_LE_VP_NU_FW = "NU_LE_VP_NU_FW"
 JUNIPER_PERFORMANCE_MODEL_NAME = "TeraMarkJuniperNetworkingPerformance"
 HNU_PERFORMANCE_MODEL_NAME = "NuTransitPerformance"
+MEMORY_TYPE_HBM = "HBM"
+MEMORY_TYPE_DDR = "DDR"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     USER_WORKING_DIR = "USER_WORKING_DIR"
     FRAME_SIZE_64 = "64.0"
+    FRAME_SIZE_66 = "66.0"
     FRAME_SIZE_1500 = "1500.0"
     FRAME_SIZE_800 = "800.0"
     FRAME_SIZE_IMIX = None
@@ -237,6 +240,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     data_dict = OrderedDict(record)
                     if 'AvgFrameSize' in data_dict and self.FRAME_SIZE_64 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_64].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_66 == data_dict['AvgFrameSize']:
+                        result[self.FRAME_SIZE_64].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_1500 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_1500].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_800 == data_dict['AvgFrameSize']:
@@ -383,7 +388,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
 
     def populate_performance_json_file(self, result_dict, model_name, timestamp, flow_direction, mode=DUT_MODE_25G,
                                        file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None,
-                                       half_load_latency=False):
+                                       half_load_latency=False, memory=None):
         results = []
         output = True
         any_result_failed = False
@@ -405,6 +410,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 if frame_size:
                     data_dict['flow_type'] = flow_direction
                     data_dict['frame_size'] = frame_size
+                if memory:
+                    data_dict['memory'] = memory
 
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     if max_rate_record:
