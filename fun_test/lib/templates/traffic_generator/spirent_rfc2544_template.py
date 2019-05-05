@@ -401,6 +401,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 data_dict['version'] = fun_test.get_version()
                 data_dict['timestamp'] = str(timestamp)
                 data_dict['half_load_latency'] = half_load_latency
+
+                if memory:
+                    data_dict['memory'] = memory
+
                 frame_size = float(records[0]['AvgFrameSize']) if records else None
                 actual_frame_size = frame_size
                 if frame_size == 8900.0:
@@ -410,8 +414,6 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 if frame_size:
                     data_dict['flow_type'] = flow_direction
                     data_dict['frame_size'] = frame_size
-                if memory:
-                    data_dict['memory'] = memory
 
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     if max_rate_record:
