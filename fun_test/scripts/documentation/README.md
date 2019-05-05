@@ -1,3 +1,11 @@
+The scripts directory has the following layout
+
+1. examples
+2. networking
+3. storage
+4. bugs_and_analyses
+5. TBD ....
+
 ## bugs_and_analyses
 
 This is the location of
