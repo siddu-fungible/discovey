@@ -1726,7 +1726,7 @@ class NetworkController(DpcshClient):
         result = None
         try:
             cmd = ['list']
-            result = self.json_execute(verb='flow', data=cmd, command_duration=40)
+            result = self.json_execute(verb='flow', data=cmd, command_duration=120)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
