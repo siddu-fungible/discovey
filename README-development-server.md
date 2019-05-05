@@ -1,4 +1,4 @@
-## Setup need for a development environment
+## Setting up a development environment for the first time
 
 ### Install Python modules
 ```
@@ -32,3 +32,7 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-i
 # scheduler/restart_scheduler.sh
 ~~~~
 - Ensure that ps -ef | grep scheduler_main does not show any entry
+
+## Updating the development environment
+
+TBD

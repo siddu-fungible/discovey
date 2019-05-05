@@ -60,3 +60,4 @@
        sudo systemctl stop postgresql
        sudo systemctl start postgresql
 
+    d. The logs should be available under the logs directory under the postgres directory (In the case above: /usr/local/var/postgres/logs)
