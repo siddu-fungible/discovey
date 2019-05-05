@@ -15,7 +15,7 @@ fun_test has the following layout
 5. web
 
 #### web
-This is where the web-server, regression logs and database control modules are located.
+This is the location of the web-server, regression logs and database control modules are located.
 The web-server operates in two modes, development mode and production mode (only used on the main regression server: integration.fungible.local)
 
 ##### Web-server in production mode
