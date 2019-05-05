@@ -10,4 +10,6 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/docu
 Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/readme_development_server.md
 
 ## Debugging
-## Location of the logs
+### Location of the logs
+
+The web-server's logs are located under LOGS_DIR/web.log
