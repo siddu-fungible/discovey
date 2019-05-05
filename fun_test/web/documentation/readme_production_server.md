@@ -29,7 +29,7 @@ qa-admin@qa-ubuntu-01:~$ cat ~/.bashrc
 ```
 
 ### Install Postgres database
-Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-installation-notes.md
+Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/postgres_notes.md
 
 
 ### Postgres settings
