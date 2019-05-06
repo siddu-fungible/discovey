@@ -214,6 +214,31 @@ class Funeth:
 
         return result
 
+    def enable_namespace_interfaces_tso(self, nu_or_hu, ns=None):
+        """Enable interfaces TSO in a namespace."""
+        result = True
+        for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            cmd = 'ethtool -K {} tso on'.format(intf)
+            cmd_chk = 'ethtool -k {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {} {}; sudo ip netns exec {}'.format(ns, cmd, cmd_chk)]
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+            match = re.search(r'tcp-segmentation-offload: on', output)
+            result &= match is not None
+
+        return result
+
+    def enable_tso(self, nu_or_hu):
+        """Enable TSO to the interfaces."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.enable_namespace_interfaces_tso(nu_or_hu, ns)
+
+        return result
+
     def loopback_test(self, packet_count=100, hu='hu'):
         """Do loopback test between PF and VF via NU."""
         ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
