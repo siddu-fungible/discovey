@@ -118,7 +118,7 @@
     "operation": "randrw",
     //"perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=1\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=1\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=8t,interval=10,warmup=10",
     "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=512g,interval=10,warmup=10",
-    "perf_run_config_file": "inspur_1024k_sequential_read_write_vdbench",
+    "perf_run_config_file": "inspur_1024k_rand_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
     "io_queues": 0
