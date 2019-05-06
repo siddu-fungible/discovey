@@ -2800,22 +2800,6 @@
                     "label": "8_11_1:8K_RAND_RW, F1(s)=1",
                     "children": [
                       {
-                        "info": "inspur_rand_read_write_8k_block_output_bandwidth",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "inspur_rand_read_write_8k_block_output_bandwidth",
-                        "weight": 1,
-                        "label": "Throughput"
-                      },
-                      {
-                        "info": "inspur_rand_read_write_8k_block_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "inspur_rand_read_write_8k_block_output_latency",
-                        "weight": 1,
-                        "label": "Latency"
-                      },
-                      {
                         "info": "inspur_rand_read_write_8k_block_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,

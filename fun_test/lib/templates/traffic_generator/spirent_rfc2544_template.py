@@ -388,7 +388,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
 
     def populate_performance_json_file(self, result_dict, model_name, timestamp, flow_direction, mode=DUT_MODE_25G,
                                        file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None,
-                                       half_load_latency=False, memory=None):
+                                       half_load_latency=False, memory=None, update_charts=True, update_json=False):
         results = []
         output = True
         any_result_failed = False
@@ -450,32 +450,32 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     results.append(data_dict)
                     fun_test.debug(results)
 
-                    if model_name == JUNIPER_PERFORMANCE_MODEL_NAME and not failed_result_found:
-                        unit_dict = {}
-                        unit_dict["pps_unit"] = PerfUnit.UNIT_MPPS
-                        unit_dict["throughput_unit"] = PerfUnit.UNIT_GBITS_PER_SEC
-                        unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
-                        unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
-                        unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
-                        unit_dict["jitter_min_unit"] = PerfUnit.UNIT_USECS
-                        unit_dict["jitter_max_unit"] = PerfUnit.UNIT_USECS
-                        unit_dict["jitter_avg_unit"] = PerfUnit.UNIT_USECS
-                        add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict,
-                                                          unit_dict=unit_dict)
-                        fun_test.add_checkpoint("Entry added for frame size %s to model %s" % (frame_size, model_name))
-            '''
-            file_path = LOGS_DIR + "/%s" % file_name
-            contents = self._parse_file_to_json_in_order(file_name=file_path)
-            if contents:
-                append_new_results = contents + results
-                file_created = self.create_counters_file(json_file_name=file_path,
-                                                         counter_dict=append_new_results)
-                fun_test.simple_assert(file_created, "Create Performance JSON file")
-            else:
-                file_created = self.create_counters_file(json_file_name=file_path,
-                                                         counter_dict=results)
-                fun_test.simple_assert(file_created, "Create Performance JSON file")
-            '''
+                    if update_charts:
+                        if model_name == JUNIPER_PERFORMANCE_MODEL_NAME and not failed_result_found:
+                            unit_dict = {}
+                            unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
+                            unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
+                            unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["jitter_min_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["jitter_max_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["jitter_avg_unit"] = PerfUnit.UNIT_USECS
+                            add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict,
+                                                              unit_dict=unit_dict)
+                            fun_test.add_checkpoint("Entry added for frame size %s to model %s" % (frame_size, model_name))
+            if update_json:
+                file_path = LOGS_DIR + "/%s" % file_name
+                contents = self._parse_file_to_json_in_order(file_name=file_path)
+                if contents:
+                    append_new_results = contents + results
+                    file_created = self.create_counters_file(json_file_name=file_path,
+                                                             counter_dict=append_new_results)
+                    fun_test.simple_assert(file_created, "Create Performance JSON file")
+                else:
+                    file_created = self.create_counters_file(json_file_name=file_path,
+                                                             counter_dict=results)
+                    fun_test.simple_assert(file_created, "Create Performance JSON file")
             if any_result_failed:
                 fun_test.log("Failed result found")
                 output = False
