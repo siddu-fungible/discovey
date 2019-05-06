@@ -140,7 +140,7 @@ class TestFirewallPerformance(FunTestCase):
         network_controller_obj.peek_bam_stats()
 
         fun_test.log("Fetching flow output")
-        network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
+        #network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
 
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
@@ -172,7 +172,7 @@ class TestFirewallPerformance(FunTestCase):
         network_controller_obj.peek_per_vp_stats()
 
         fun_test.log("Fetching flow output")
-        network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
+        #network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
 
         checkpoint = "Fetch summary result for latency and throughput for all frames and all iterations"
         result_dict = self.template_obj.get_throughput_summary_results_by_frame_size()
