@@ -8,8 +8,6 @@ from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 from datetime import datetime
-from lib.templates.storage.fio_perf_helper import FioPerfHelper
-
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
@@ -322,7 +320,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             fun_test.sleep("x86 Config done", seconds=5)
             command_result = self.end_host.sudo_command(
-                "nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1 -i 1")
+                "nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1 -i 8")
             fun_test.log(command_result)
 
             # Checking that the above created BLT volume is visible to the end host
@@ -375,23 +373,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        ##
-        fun_test.enable_debug()
-        obj = FioPerfHelper(handle=self.end_host,
-                            dpc_conntroller=self.storage_controller,
-                            fio_testfile_size=self.fio_cmd_args["size"],
-                            fio_rwmode=self.fio_modes[0],
-                            nvme_device_name=self.nvme_block_device,
-                            fio_test_runtime=20,
-                            num_jobs=1,
-                            iodepth=1,
-                            num_cores=1,
-                            cpu_usage_limit=90,
-                            iowait_limit=10,
-                            max_iodepth=8)
-        use_iodepth = obj.get_fio_iodepth()
-        ##
-
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
@@ -435,7 +416,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
                                                                  rw=mode,
                                                                  bs=fio_block_size,
-                                                                 iodepth=use_iodepth,
+                                                                 iodepth=fio_iodepth,
                                                                  name=fio_job_name,
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
