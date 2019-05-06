@@ -107,7 +107,7 @@
         <div [innerHTML]="inner.currentDescription | safeHtml"></div>
         <div *ngIf="editingDescription">
           <br>
-          <textarea rows="4" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
+          <textarea rows="30" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
           <button class="btn btn-success" (click)="submit()">Submit</button>
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
