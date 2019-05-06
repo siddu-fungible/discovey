@@ -17,28 +17,34 @@ fi
 
 # export LC_ALL=en_US.UTF-8
 # export LANG=en_US.UTF-8
-qa-admin@qa-ubuntu-01:~$ cat ~/.bashrc 
+qa-admin@qa-ubuntu-01:~$ cat ~/.bashrc
 # export PRODUCTION_MODE=1
 # export PYTHONPATH=/project/users/QA/regression/Integration/fun_test
 ~~~~
 
 ### Install Python modules
 ```
-# cd /project/users/QA/regression/Integration/fun_test  
-# pip install -r requirements.txt --user  
+# cd /project/users/QA/regression/Integration/fun_test
+# pip install -r requirements.txt --user
 ```
 
 ### Install Postgres database
-Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-installation-notes.md
+Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/postgres_notes.md
 
 
 ### Postgres settings
+#### Prepare the data-directory
 ~~~~
-# mkdir /project/users/QA/regression/database
-qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep "data_dir"   /etc/postgresql/9.5/main/postgresql.conf  
-#data_directory = '/var/lib/postgresql/9.5/main'		# use data in another directory   
-data_directory = '/project/users/QA/regression/database/postgresql’ 
 
+# mkdir /project/users/QA/regression/database
+
+qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep "data_dir"   /etc/postgresql/9.5/main/postgresql.conf
+#data_directory = '/var/lib/postgresql/9.5/main'		# use data in another directory
+data_directory = '/project/users/QA/regression/database/postgresql’
+~~~~
+
+#### Start the Postgres service
+~~~~
 qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo systemctl stop postgresql
 qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo systemctl start postgresql
 qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo systemctl status postgresql
@@ -70,20 +76,12 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo i
 # nohup python web/start_production_server.py &> server.out  &
 ~~~~
 
-## Starting/Re-starting the scheduler
+## Starting the scheduler
 - Ensure the web-server was started successfully
+- Ensure that 'ps -ef | grep scheduler_main' does not show any entry
 ~~~~
 # cd /project/users/QA/regression/Integration/fun_test
 # export PYTHONPATH=`pwd`
 # export PRODUCTION_MODE=1
 # scheduler/restart_scheduler.sh
 ~~~~
-- Ensure that ps -ef | grep scheduler_main does not show any entry
-
-## Debugging postgres
-Check: /var/log/syslog, 
-Run without daemon mode:
-/usr/lib/postgresql/9.5/bin/postgres -d 3 -D /project/users/QA/regression/database/postgresql/9.5/main  -c config_file=/etc/postgresql/9.5/main/postgresql.conf 
-
-
-

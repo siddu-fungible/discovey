@@ -4,10 +4,10 @@ import re
 import json
 import collections
 
-base_tag = "qa_triage_soak_dma_below_4k"
+base_tag = "qa_triage_malloc_agent"
 iteration = 1
 lsf_server = LsfStatusServer()
-num_commits = 2
+num_commits = 64
 num_sections = 4
 step = num_commits/num_sections
 if not step:
@@ -37,18 +37,10 @@ for git_commit, value in lsf_results.iteritems():
     tag = value["tag"]
     lines = output_text.split("\n")
     for line in lines:
-        m = re.search('Bandwidth for DMA memcpy for size 1024B', line, re.MULTILINE|re.DOTALL)
+        m = re.search('fun_magent_rate_malloc_free_per_sec', line, re.MULTILINE|re.DOTALL)
         if m:
 
             c = GitManager().get_commit(sha=git_commit)
             d = c["commit"]["committer"]["date"]
-            print git_commit, tag, line, d
+            print git_commit, tag, line, d, m.group(0)
 
-        '''
-        m = re.search(r'bcopy \(coherent, dma\) 4KB 20 times; average bandwidth:', line, re.MULTILINE|re.DOTALL)
-        if m:
-
-            m2 = re.search(r'{\s+"value":\s+(\S+),.*}', line)
-            if m2:
-                print git_commit, m2.group(1)
-        '''

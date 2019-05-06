@@ -2057,17 +2057,46 @@ class PeekCommands(object):
         cmd = "stats/resource/cc"
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_dma_resource_stats(self, cluster_id, grep_regex=None):
+    def _display_resource_color_qdepth(self, cmd, cluster_id):
+        prev_result = {}
+        while True:
+            try:
+                result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                table_obj = None
+                if result:
+                    if prev_result:
+                        table_obj = PrettyTable(['color', 'color diff', 'qdepth', 'qdepth Diff'])
+                        for index in range(0, len(sorted(result))):
+                            diff_result = self._get_difference(result=result[index], prev_result=prev_result[index])
+                            table_obj.add_row([result[index]['color'], diff_result['color'], result[index]['qdepth'],
+                                               diff_result['qdepth']])
+                    else:
+                        table_obj = PrettyTable(['color', 'qdepth'])
+                        for record in sorted(result):
+                            table_obj.add_row(record.values())
+                prev_result = result
+                print table_obj
+                print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                time.sleep(TIME_INTERVAL)
+            except KeyboardInterrupt:
+                self.dpc_client.disconnect()
+                break
+            except Exception as ex:
+                print "ERROR: %s" % str(ex)
+                self.dpc_client.disconnect()
+                break
+
+    def peek_dma_resource_stats(self, cluster_id):
         cmd = "stats/resource/dma/[%s]" % cluster_id
-        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        self._display_resource_color_qdepth(cmd=cmd, cluster_id=cluster_id)
 
-    def peek_le_resource_stats(self, cluster_id, grep_regex=None):
+    def peek_le_resource_stats(self, cluster_id):
         cmd = "stats/resource/le/[%s]" % cluster_id
-        self._display_list_of_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        self._display_resource_color_qdepth(cmd=cmd, cluster_id=cluster_id)
 
-    def peek_zip_resource_stats(self, cluster_id, grep_regex=None):
+    def peek_zip_resource_stats(self, cluster_id):
         cmd = "stats/resource/zip/[%s]" % cluster_id
-        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        self._display_resource_color_qdepth(cmd=cmd, cluster_id=cluster_id)
 
     def peek_rgx_resource_stats(self, cluster_id, grep_regex=None):
         cmd = "stats/resource/rgx/[%s]" % cluster_id

@@ -106,11 +106,7 @@ def parse_perf_stats(perf_dict):
     return perf_dict
 
 
-def parse_table_header(header_lst):
-    for h in xrange(len(header_lst)):
-        if header_lst[h] == "bw":
-            header_lst[h] += "(MBps)"
-    header_lst.insert(0, "")
+VOL_TYPE = "EC_COMP_FS_VOL"
 
 
 class ECVolumeLevelScript(FunTestScript):
@@ -393,9 +389,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                     table_data_header = sorted(perf_stats.keys())
                 table_row1 = [perf_stats[key] for key in table_data_header]
                 perf_stats['block_size'] = self.read_fio_cmd_args['bs']
+                perf_stats['iodepth'] = self.read_fio_cmd_args['iodepth']
                 perf_stats['operation'] = self.read_fio_cmd_args['rw']
                 perf_stats['job_name'] = self.read_fio_cmd_args['name']
+                perf_stats['size'] = self.read_fio_cmd_args['size']
+
                 if 'compress' in self.volume_info['lsv'].keys() and fun_global.is_production_mode():
+                    fun_test.log("Updating the following stats on database: {}".format(perf_stats))
                     self.post_results(test=testcase, test_stats=perf_stats)  # publish only compression stats on db
                 table_row1.insert(0, "<b>{}</b>".format(mode.capitalize()))
                 table_rows.append(table_row1)
@@ -413,12 +413,12 @@ class ECVolumeLevelTestcase(FunTestCase):
         blt = BltVolumePerformanceHelper()
 
         blt.add_entry(date_time=fun_test.shared_variables['run_time'],
-                      volume=self.num_volume,
+                      volume=VOL_TYPE,
                       test=test,
                       block_size=test_stats['block_size'],
                       io_depth=test_stats['iodepth'],
                       size=test_stats['size'],
-                      operation=test_stats['mode'],
+                      operation=test_stats['operation'],
                       num_ssd=self.num_ssd,
                       num_volume=self.num_volume,
                       fio_job_name=test_stats['job_name'],

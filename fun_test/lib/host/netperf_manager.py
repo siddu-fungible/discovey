@@ -4,10 +4,9 @@ import pprint
 import re
 
 
-# Server has 2 socket, each CPU has 8 cores, 2 threads, NUMA 0: 0-7,16-23, NUMA 1: 8-15,24-31
+# Server has 2 socket, each CPU (Silver 4110) has 8 cores, NUMA 0: 0-7, NUMA 1: 8-15
 # scaling_governor is set to performance mode.
 # If locked, CPU frequency is 2.4GHz; if turbo boost, it can go up to 3.0GHz.
-CPU_FREQ = '2.1G'
 
 
 class PerformanceTuning:
@@ -37,8 +36,6 @@ class PerformanceTuning:
             'cpupower monitor',
             'cat /proc/cpuinfo | grep MHz',
         ])
-        #for cmd in cmds:
-        #    self.linux_obj.sudo_command(cmd)
         self.linux_obj.sudo_command(';'.join(cmds))
 
     def tcp(self):
@@ -57,8 +54,6 @@ class PerformanceTuning:
             'sysctl -w net.ipv4.tcp_adv_win_scale=1',
             'sysctl -w net.ipv4.route.flush=1',
         )
-        #for cmd in cmds:
-        #    self.linux_obj.sudo_command(cmd)
         self.linux_obj.sudo_command(';'.join(cmds))
 
 
@@ -76,8 +71,6 @@ class PerformanceTuning:
             'iptables -F',
             'iptables -L',
         )
-        #for cmd in cmds:
-        #    self.linux_obj.sudo_command(cmd)
         self.linux_obj.sudo_command(';'.join(cmds))
 
     def mlnx_tune(self, profile='HIGH_THROUGHPUT'):
@@ -85,8 +78,6 @@ class PerformanceTuning:
         cmds = (
             'mlnx_tune -p {}'.format(profile),
         )
-        #for cmd in cmds:
-        #    self.linux_obj.sudo_command(cmd)
         self.linux_obj.sudo_command(';'.join(cmds))
 
     def interrupt_coalesce(self, interfaces, disable=True):
@@ -101,9 +92,8 @@ class PerformanceTuning:
                     'ethtool --coalesce {} rx-usecs 8 tx-usecs 16 rx-frames 128 tx-frames 32 adaptive-rx on'.format(
                         interface),
                 )
-            #for cmd in cmds:
-            #    self.linux_obj.sudo_command(cmd)
         self.linux_obj.sudo_command(';'.join(cmds))
+
 
 class NetperfManager:
     """Use netperf to measure throughput and latency between host pairs.
@@ -125,6 +115,7 @@ class NetperfManager:
         for linux_obj in self.linux_objs:
             linux_obj.sudo_command('sysctl net.ipv6.conf.all.disable_ipv6=1')
 
+            # All the required packages are manually installed, so no need to do it in script
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
             #    result &= linux_obj.install_package(pkg)

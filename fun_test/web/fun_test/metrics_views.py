@@ -32,6 +32,7 @@ from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
 from web.fun_test.metrics_models import Triage, TriageFlow
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
+from web.fun_test.db_fixup import get_rounded_time
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -135,7 +136,8 @@ def chart_info(request):
                   "owner_info": chart.owner_info,
                   "source": chart.source,
                   "base_line_date": chart.base_line_date,
-                  "visualization_unit": chart.visualization_unit}
+                  "visualization_unit": chart.visualization_unit,
+                  "pk": chart.pk}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
@@ -293,7 +295,9 @@ def scores(request):
     except:
         pass
     if chart:
-        date_range = [chart.base_line_date, datetime.now()]
+        from_date = chart.base_line_date
+        to_date = get_rounded_time(datetime.now())
+        date_range = [from_date, to_date]
         entries = MetricChartStatus.objects.filter(date_time__range=date_range,
                                                    metric_id=metric_id)
 
@@ -849,9 +853,9 @@ def fetch_jira_info(request, metric_id):
                 jira_response = validate_jira(jira_id)
                 jira_data = {}
                 jira_data["id"] = jira_id
-                jira_data["summary"] = jira_response.fields.summary
-                jira_data["status"] = jira_response.fields.status
-                jira_info[jira_id] = jira_data
+                jira_data["summary"] = jira_response.fields.summary if jira_response else None
+                jira_data["status"] = jira_response.fields.status if jira_response else None
+                jira_info[jira_id] = jira_data if jira_response else None
     except ObjectDoesNotExist:
         logger.critical("No data found - fetching jira ids for metric id {}".format(metric_id))
     return jira_info
@@ -889,9 +893,9 @@ def jiras(request, metric_id, jira_id=None):
                     jira_response = validate_jira(jira_id)
                     jira_data = {}
                     jira_data["id"] = jira_id
-                    jira_data["summary"] = jira_response.fields.summary
-                    jira_data["status"] = jira_response.fields.status
-                    jira_data["created"] = jira_response.fields.created
+                    jira_data["summary"] = jira_response.fields.summary if jira_response else None
+                    jira_data["status"] = jira_response.fields.status if jira_response else None
+                    jira_data["created"] = jira_response.fields.created if jira_response else None
                     jira_info[jira_id] = jira_data
             result = jira_info
         except ObjectDoesNotExist:

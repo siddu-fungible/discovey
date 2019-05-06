@@ -56,14 +56,15 @@ class Dut(ToDictMixin):
     MODE_EMULATION = "MODE_EMULATION"
     MODE_REAL = "MODE_REAL"
 
-    TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance"]
+    TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance", "fpg_interfaces"]
 
 
 
     def __init__(self, type, index, mode=MODE_SIMULATION, spec=None, start_mode=None):
         self.type = type
         self.index = index
-        self.interfaces = {}
+        self.interfaces = {}  # For PCIe interfaces
+        self.fpg_interfaces = {}
         self.spec = spec
         self.mode = mode
         self.instance = None
@@ -75,9 +76,20 @@ class Dut(ToDictMixin):
     def set_instance(self, instance):
         self.instance = instance
 
+    def get_ssd_interfaces(self):
+        return self.interfaces
+
+    def get_fpg_interfaces(self):
+        return self.fpg_interfaces
+
     def add_interface(self, index, type):
         dut_interface_obj = DutInterface(index=index, type=type)
         self.interfaces[index] = dut_interface_obj
+        return dut_interface_obj
+
+    def add_fpg_interface(self, index, type):
+        dut_interface_obj = DutInterface(index=index, type=type)
+        self.fpg_interfaces[index] = dut_interface_obj
         return dut_interface_obj
 
     def set_start_mode(self, mode):
@@ -92,11 +104,21 @@ class Dut(ToDictMixin):
     def get_interface(self, interface_index):
         return self.interfaces[interface_index]
 
+    def get_fpg_interface(self, interface_index):
+        return self.fpg_interfaces[interface_index]
+
     def get_host_on_interface(self, interface_index, host_index):
-        host = None
         interface_obj = self.interfaces[interface_index]
-        if not interface_obj.dual_interface_index:
+        return self.get_host_on_interface_obj(interface_obj=interface_obj, host_index=host_index)
+
+    def get_host_on_interface_obj(self, interface_obj, host_index=None):
+        if interface_obj.dual_interface_index is None:
             host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
         else:
             host = self.get_host_on_interface(interface_index=interface_obj.dual_interface_index, host_index=host_index)
+        return host
+
+    def get_host_on_fpg_interface(self, interface_index, host_index):
+        interface_obj = self.fpg_interfaces[interface_index]
+        host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
         return host

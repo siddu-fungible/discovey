@@ -60,8 +60,8 @@ class GitManager:
 
 if __name__ == "__main__":
     gm = GitManager()
-    from_sha = "dd9437f417778929fc9b01b3162384be0ea0f5ef"
-    to_sha = "dd9437f417778929fc9b01b3162384be0ea0f5ef"
+    from_sha = "0c5a8071dbc08a62d06da84dff71cd0da7b2b546"
+    to_sha = "f81f0cfd3aa00b927c46c1eb57496e97eaeaffed"
 
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))

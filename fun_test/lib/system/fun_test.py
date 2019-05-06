@@ -251,6 +251,10 @@ class FunTest:
                 self.build_parameters["BRANCH_FunOS"] = user_supplied_build_parameters["BRANCH_FunOS"]
             if "BRANCH_FunSDK" in user_supplied_build_parameters:
                 self.build_parameters["BRANCH_FunSDK"] = user_supplied_build_parameters["BRANCH_FunSDK"]
+            if "BRANCH_FunControlPlane" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunControlPlane"] = user_supplied_build_parameters["BRANCH_FunControlPlane"]
+            if "SKIP_DASM_C" in user_supplied_build_parameters:
+                self.build_parameters["SKIP_DASM_C"] = user_supplied_build_parameters["SKIP_DASM_C"]
 
 
     def get_build_parameters(self):
@@ -742,8 +746,9 @@ class FunTest:
     def sleep(self, message, seconds=5):
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
-        self._print_log_green("zzz...: Sleeping for :" + str(seconds) + "s : " + message,
-                              calling_module=calling_module)
+        message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
+        self._print_log_green(message=message, calling_module=calling_module)
+        self.fun_xml_obj.log(log=message, newline=True)
         time.sleep(seconds)
 
     def safe(self, the_function):

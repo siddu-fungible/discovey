@@ -28,7 +28,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
         fs_obj = Fs.get(fs_spec=fs_spec, disable_f1_index=disable_f1_index, boot_args=boot_args)
 
         # Start Fs
-        fun_test.test_assert(fs_obj.bootup(), "Fs bootup")
+        fun_test.test_assert(fs_obj.bootup(non_blocking=True), "Fs bootup")
 
         # TODO: Just for backward compatibility with simulation scripts
         come = fs_obj.get_come()

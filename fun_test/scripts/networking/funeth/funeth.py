@@ -132,17 +132,19 @@ class Funeth:
             fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
             if cc:
-                self.pf_intf = 'fpg0'
+                pf_intf = 'fpg0'
+            else:
+                pf_intf = self.tb_config_obj.get_hu_pf_interface(hu)
 
             if sriov > 0:
-                sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
+                sriov_en = '/sys/class/net/{0}/device'.format(pf_intf)
                 self.linux_obj_dict[hu].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
                                                 timeout=300)
                 fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
                 self.linux_obj_dict[hu].command('ifconfig -a')
 
             output1 = self.linux_obj_dict[hu].command('lsmod | grep funeth')
-            output2 = self.linux_obj_dict[hu].command('ifconfig %s' % self.pf_intf)
+            output2 = self.linux_obj_dict[hu].command('ifconfig %s' % pf_intf)
             result &= re.search(r'funeth', output1) is not None and re.search(
                 r'Device not found', output2, re.IGNORECASE) is None
 
@@ -212,6 +214,31 @@ class Funeth:
 
         return result
 
+    def enable_namespace_interfaces_tso(self, nu_or_hu, ns=None):
+        """Enable interfaces TSO in a namespace."""
+        result = True
+        for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            cmd = 'ethtool -K {} tso on'.format(intf)
+            cmd_chk = 'ethtool -k {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {} {}; sudo ip netns exec {}'.format(ns, cmd, cmd_chk)]
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+            match = re.search(r'tcp-segmentation-offload: on', output)
+            result &= match is not None
+
+        return result
+
+    def enable_tso(self, nu_or_hu):
+        """Enable TSO to the interfaces."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.enable_namespace_interfaces_tso(nu_or_hu, ns)
+
+        return result
+
     def loopback_test(self, packet_count=100, hu='hu'):
         """Do loopback test between PF and VF via NU."""
         ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
@@ -235,7 +262,11 @@ class Funeth:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                 else:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
-            result &= re.search(r'{} via {}'.format(prefix, nexthop), output) is not None
+            if prefix.endswith('/32'):
+                p = prefix.rstrip('/32')
+            else:
+                p = prefix
+            result &= re.search(r'{} via {}'.format(p, nexthop), output) is not None
 
             # ARP
             router_mac = self.tb_config_obj.get_router_mac()

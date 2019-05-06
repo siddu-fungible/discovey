@@ -8,7 +8,8 @@
         <a (click)="setTimeMode('week')"> Week </a>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <b><u><a (click)="setTimeMode('all')"> All </a></u></b>
-        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit" (ngModelChange)="onUnitChange($event)" style="float: right">
+        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit"
+                (ngModelChange)="onUnitChange($event)" style="float: right">
           <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
         </select>
       </div>
@@ -16,7 +17,8 @@
         <b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <a (click)="setTimeMode('all')"> All </a>
-        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit" (ngModelChange)="onUnitChange($event)" style="float: right">
+        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit"
+                (ngModelChange)="onUnitChange($event)" style="float: right">
           <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
         </select>
       </div>
@@ -24,7 +26,8 @@
         <a (click)="setTimeMode('week')"> Week </a>/
         <b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/
         <a (click)="setTimeMode('all')"> All </a>
-        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit" (ngModelChange)="onUnitChange($event)" style="float: right">
+        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit"
+                (ngModelChange)="onUnitChange($event)" style="float: right">
           <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
         </select>
       </div>
@@ -55,10 +58,18 @@
               <a [routerLink]="" (click)="openVersionUrl(point.value)">{{ point.value }}</a>
             </td>
           </tr>
+          <tr *ngIf="nwInfoFiles.length!==0" class="word-break">
+            <td style="vertical-align: top"><b>Info files:</b></td>
+            <td><span *ngFor="let file of nwInfoFiles"><a href="{{LOGS_DIR}}/{{file}}"
+                                                          target="_blank">{{ file }}</a><br></span>
+            </td>
+          </tr>
         </table>
-        <a *ngIf="!showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Show Build
+        <a *ngIf="!showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Show
+          Build
           Properties</a>
-        <a *ngIf="showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Hide Build
+        <a *ngIf="showBuildProps && buildProps.value" [routerLink]="" (click)="showBuildProps = !showBuildProps">Hide
+          Build
           Properties</a><br>
         <div style="padding: 4px;" *ngIf="showBuildProps && buildProps">
           <pre>{{ buildProps.value }}</pre>
@@ -93,7 +104,7 @@
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
         <br>
-        <div [innerHTML]="inner.currentDescription"></div>
+        <div [innerHTML]="inner.currentDescription | safeHtml"></div>
         <div *ngIf="editingDescription">
           <br>
           <textarea rows="4" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
@@ -103,8 +114,8 @@
       </div>
       <br>
       <!--<button (click)="openTriaging()"-->
-              <!--class="btn btn-sm failed-label no-margin git-commit">-->
-        <!--Triage-->
+      <!--class="btn btn-sm failed-label no-margin git-commit">-->
+      <!--Triage-->
       <!--</button>-->
       <!--<span style="float: right;">-->
       <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
@@ -152,6 +163,7 @@
         <div *ngIf="showingTable" scrollTo>
           <h3 style="float: left;">{{ chartName }}</h3>
           <fun-table [data]="data"></fun-table>
+          <p class="no-margin"><a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores link</a></p>
         </div>
       </div>
     </div>
@@ -209,12 +221,14 @@
             gradient
           </p>
           <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+          <p class="no-margin"><a target="_blank" href="/admin/fun_test/metricchart/{{ chartInfo.pk }}/change/">Admin link</a></p>
           <div class="row">
             <div style="padding: 10px;">
               <button class="btn btn-success" (click)="submit()">Submit</button>
               <a (click)="showConfigure()"> Cancel</a>
             </div>
           </div>
+
         </div>
       </div>
     </div>

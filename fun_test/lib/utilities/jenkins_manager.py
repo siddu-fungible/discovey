@@ -3,6 +3,7 @@ import time
 import re
 import requests
 import json
+from lib.system.fun_test import FunTimer, fun_test
 from requests.auth import HTTPBasicAuth
 
 
@@ -42,7 +43,9 @@ DEFAULT_BUILD_PARAMS = {
     "BRANCH_FunJenkins": "",
     "BRANCH_FunDevelopment": "",
     "BRANCH_FunTools": "",
-    "RUN_PIPELINE": ""
+    "RUN_PIPELINE": "",
+    "BRANCH_FunControlPlane": "",
+    "SKIP_DASM_C": "true"
 }
 
 class JenkinsManager():
@@ -64,7 +67,13 @@ class JenkinsManager():
                 print("Error Key: {} is not in the BUILD params".format(key))
         return params
 
-    def build(self, params, extra_emails=None):
+    def build(self, params, extra_emails=None, wait_time_for_build_complete=None):
+        """
+        :param params:
+        :param extra_emails:
+        :param wait_time_for_build_complete:  if set, we will ensure that the build completes before we return from the function
+        :return: a queue item if wait_time_for_build_complete is not None, otherwise it returns the result of the build
+        """
         # self.jenkins_server.get_job_info('emulation/fun_on_demand', build_number)
         new_params = self._apply_params(user_params=params)
         emails = "john.abraham@fungible.com"
@@ -75,8 +84,36 @@ class JenkinsManager():
             if emails.endswith(","):
                 emails = emails[:-1]
         new_params["EXTRA_EMAIL"] = emails
-        queue_item = self.jenkins_server.build_job(self.job_name, new_params)
-        return queue_item
+        result = self.jenkins_server.build_job(self.job_name, new_params)
+        fun_test.sleep(message="Waiting for build to be queued", seconds=10)
+        queue_item = result
+        if wait_time_for_build_complete is not None:
+            result = None
+            wait_for_build_timer = FunTimer(max_time=wait_time_for_build_complete)
+            build_number = None
+            while not wait_for_build_timer.is_expired():
+
+                if not build_number:
+                    try:
+                        fun_test.sleep("Waiting for build number")
+                        build_number = self.get_build_number(queue_item=queue_item)
+                        if build_number:
+                            fun_test.log("Found build number: {}".format(build_number))
+                            continue
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                else:
+                    job_info = self.get_job_info(build_number=build_number)
+                    while job_info["building"] and not wait_for_build_timer.is_expired():
+                        job_info = self.get_job_info(build_number=build_number)
+                        fun_test.sleep("Waiting as the job is still building", seconds=60)
+                    if wait_for_build_timer.is_expired():
+                        fun_test.critical("Build wait time expired. Wait-time: {}".format(wait_time_for_build_complete))
+                        break
+                    else:
+                        result = job_info["result"]
+                        break
+        return result
 
     def get_build_number(self, queue_item):
         build_number = None
