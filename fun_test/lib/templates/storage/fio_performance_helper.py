@@ -1,7 +1,6 @@
-from lib.system.fun_test import *
 from lib.host.linux import *
+from lib.system.fun_test import *
 import re
-from datetime import datetime
 
 '''
 Script to find the best performance numbers 
@@ -11,7 +10,8 @@ Script to find the best performance numbers
 class FioPerfHelper(object):
     def __init__(self, handle, fio_testfile_size, dpc_conntroller, num_jobs=1, iodepth=1,
                  num_cores=1, fio_rwmode='read', nvme_device_name='/dev/nvme0n1', fio_test_runtime=20,
-                 cpu_usage_limit=90, iowait_limit=5, iostat_skip_lines=6, block_size="4k", ioengine="libaio"):
+                 cpu_usage_limit=80, iowait_limit=2, iostat_skip_lines=10, block_size="4k", ioengine="libaio",
+                 max_iodepth=500, eqm_limit=5):
 
         self.handle = handle
         self.dpc_conntroller = dpc_conntroller
@@ -28,11 +28,13 @@ class FioPerfHelper(object):
         self.cpu_usage_limit = cpu_usage_limit
         self.iowait_limit = iowait_limit
         self.iostat_skip_lines = iostat_skip_lines
+        self.max_iodepth = max_iodepth
+        self.eqm_limit = eqm_limit
         # Initialize
         self.overall_results_list = []
 
-    def cores_allowed(self, num_cores):
-        cpus_allowed = self.cores_allowed_list[:num_cores]
+    def cores_allowed_comma_format(self, cores_allowed_list, num_cores):
+        cpus_allowed = cores_allowed_list[:num_cores]
         comma_format = ','.join(cpus_allowed)
         return comma_format
 
@@ -44,46 +46,32 @@ class FioPerfHelper(object):
         iostat_device = self.nvme_device_name[5:]
         cmd = "iostat -d %s 1" % (iostat_device)
         pid = self.handle.start_bg_process(command=cmd, output_file="iostat.txt", timeout=self.fio_test_runtime * 2)
-        # Try to get the pid number of the process
-        try:
-            fun_test.debug("Pid of iostat : {}".format(pid))
-            self.pid_dictionary["iostat"] = pid
-            return pid
-        except:
-            fun_test.critical("Unable to fetch the pid of iostat")
-            return False
+        return pid
 
-    def start_mpstat_in_background(self, start=1):
+    def start_mpstat_in_background(self, num_cores_str_format=None):
         '''
         Start storing mpstat results in the file
         '''
-        number_of_cores = self.present_result["num_cores"]
-        fun_test.debug("Starting the mpstat in background")
-        num_cores_str_format = self.cores_allowed(number_of_cores)
+        if not num_cores_str_format:
+            number_of_cores = self.present_result["num_cores"]
+            fun_test.debug("Starting the mpstat in background")
+            num_cores_str_format = self.cores_allowed_comma_format(self.cores_allowed_list, number_of_cores)
         cmd = "mpstat -P %s 1" % (num_cores_str_format)
         pid = self.handle.start_bg_process(command=cmd, output_file="mpstat.txt", timeout=self.fio_test_runtime * 2)
-
-        # Try to get the pid number of the process
-        try:
-            fun_test.debug("Pid of mpstat : {}".format(pid))
-            self.pid_dictionary["mpstat"] = pid
-            return pid
-        except:
-            fun_test.critical("Unable to fetch the pid of mpstat")
-            return False
+        return pid
 
     def run_fio_command(self):
         '''
         Runs the fio command using the given credentials
         '''
-        cores_str_format = self.cores_allowed(self.present_result["num_cores"])
+        cores_str_format = self.cores_allowed_comma_format(self.cores_allowed_list, self.present_result["num_cores"])
         fun_test.debug("Cpus allowed are : {}".format(cores_str_format))
         fun_test.log_section("\n\nStarting traffic")
         fun_test.log("\nStarting Fio with "
                      "\nNumber of jobs  : %s "
                      "\nIodepth         : %s "
                      "\nNumber of cores : %s"
-                     "\nFio mode        : %s" %
+                     "\nFio rw mode     : %s" %
                      (self.present_result["num_jobs"],
                       self.present_result["iodepth"],
                       self.present_result["num_cores"],
@@ -147,6 +135,7 @@ class FioPerfHelper(object):
                     iostat_list.append(tmp_dict.copy())
                     fun_test.debug(tmp_dict)
             except:
+                # Skip the lines which are unparsable
                 fun_test.log("Unable to parse this line : {}".format(line))
 
         if iostat_list:
@@ -172,9 +161,9 @@ class FioPerfHelper(object):
                          % (max_tps, max_kbread, average_tps, average_kbps_read))
             fun_test.debug("Overall result list : {}".format(result_dictionary))
             return result_dictionary
-
         else:
             fun_test.critical("Error in parsing {} file".format(iostat_file_location))
+            return False
 
     def parse_mpstat_file(self, mpstat_file_location="mpstat.txt", iowait_limit=0, cpu_usage_limit=90):
         '''
@@ -203,35 +192,31 @@ class FioPerfHelper(object):
             match_values = re.findall(r'(?<= )[0-9.]+', line)
             number_of_values = len(match_values)
             if number_of_values == 11:
-                try:
-                    tmp_dict = {}
-                    core = int(match_values[0])
-                    user_cpu_usage = float(match_values[1])
-                    system_cpu_uage = float(match_values[3])
-                    total_cpu_usage = round(user_cpu_usage + system_cpu_uage, 2)
-                    iowait = float(match_values[4])
-                    idle = float(match_values[10])
-                    tmp_dict['core'] = core
-                    tmp_dict['total_cpu_usage'] = total_cpu_usage
-                    tmp_dict['iowait'] = iowait
-                    tmp_dict['idle'] = idle
-                    mpstat_list.append(tmp_dict)
-                    fun_test.debug(tmp_dict)
-
-                    if iowait > iowait_limit:
-                        error_msg = error_msg + "Iowait of core {} is {} [greater than {}]\n" \
-                            .format(core, iowait, iowait_limit)
-                        iowait_error = True
-                    if total_cpu_usage > cpu_usage_limit:
-                        error_msg = error_msg + "Cpu usage of core {} is {} [greater than {}]\n" \
-                            .format(core, total_cpu_usage, cpu_usage_limit)
-                        cpu_error = True
-                    if total_cpu_usage > maximum_cpu_usage:
-                        maximum_cpu_usage = total_cpu_usage
-                    if iowait > maximum_iowait:
-                        maximum_iowait = iowait
-                except:
-                    fun_test.debug("Unable to parse the line : {}".format(line))
+                tmp_dict = {}
+                core = int(match_values[0])
+                user_cpu_usage = float(match_values[1])
+                system_cpu_uage = float(match_values[3])
+                total_cpu_usage = round(user_cpu_usage + system_cpu_uage, 2)
+                iowait = float(match_values[4])
+                idle = float(match_values[10])
+                tmp_dict['core'] = core
+                tmp_dict['total_cpu_usage'] = total_cpu_usage
+                tmp_dict['iowait'] = iowait
+                tmp_dict['idle'] = idle
+                mpstat_list.append(tmp_dict)
+                fun_test.debug(tmp_dict)
+                if iowait > iowait_limit:
+                    error_msg = error_msg + "Iowait of core {} is {} [greater than {}]\n" \
+                        .format(core, iowait, iowait_limit)
+                    iowait_error = True
+                if total_cpu_usage > cpu_usage_limit:
+                    error_msg = error_msg + "Cpu usage of core {} is {} [greater than {}]\n" \
+                        .format(core, total_cpu_usage, cpu_usage_limit)
+                    cpu_error = True
+                if total_cpu_usage > maximum_cpu_usage:
+                    maximum_cpu_usage = total_cpu_usage
+                if iowait > maximum_iowait:
+                    maximum_iowait = iowait
 
         mpstat_result_dictionary['maximum_cpu_usage'] = maximum_cpu_usage
         mpstat_result_dictionary['maximum_iowait'] = maximum_iowait
@@ -274,8 +259,8 @@ class FioPerfHelper(object):
         self.present_result["fio_test_runtime"] = self.fio_test_runtime
 
         self.clear_iostat_mpstat_file()
-        self.start_iostat_in_background()
-        self.start_mpstat_in_background()
+        self.pid_dictionary["iostat"] = self.start_iostat_in_background()
+        self.pid_dictionary["mpstat"] = self.start_mpstat_in_background()
 
         eqm_before = self.get_eqm_number()
         self.present_result["eqm_before_fio"] = eqm_before
@@ -284,7 +269,7 @@ class FioPerfHelper(object):
         self.present_result["eqm_after_fio"] = eqm_after
         eqm_difference = abs(eqm_after - eqm_before)
 
-        if eqm_difference >= 0 and eqm_difference <= 5:
+        if eqm_difference >= 0 and eqm_difference <= self.eqm_limit:
             eqm_error = False
         else:
             eqm_error = True
@@ -293,20 +278,24 @@ class FioPerfHelper(object):
 
         self.present_result["eqm_error"] = eqm_error
         self.present_result["eqm_difference"] = eqm_difference
-        self.handle.kill_process(self.pid_dictionary["iostat"])
-        self.handle.kill_process(self.pid_dictionary["mpstat"])
+        self.handle.kill_process(self.pid_dictionary["iostat"], kill_seconds=1)
+        self.handle.kill_process(self.pid_dictionary["mpstat"], kill_seconds=1)
 
         iostat_result_list = self.parse_iostat_file()
+        if not iostat_result_list:
+            return False
         self.update_iostat_result(iostat_result_list)
 
         mpstat_result_list = self.parse_mpstat_file(iowait_limit=self.iowait_limit,
                                                     cpu_usage_limit=self.cpu_usage_limit)
+        if not mpstat_result_list:
+            return False
 
         self.update_mpstat_result(mpstat_result_list)
 
-        overall_result = "Passed"
+        overall_result = fun_test.PASSED
         if eqm_error or self.present_result["iowait_error"] or self.present_result["cpu_usage_error"]:
-            overall_result = "Failed"
+            overall_result = fun_test.FAILED
         self.present_result["overall_result"] = overall_result
         self.overall_results_list.append(self.present_result)
         self.print_key_value_sorted(title="Result", dictionary=self.present_result)
@@ -315,9 +304,79 @@ class FioPerfHelper(object):
 
     ''' Logic function design section '''
 
-    def get_fio_iodepth(self):
+    ''' iodepth logic '''
+
+    def get_fio_iodepth(self, numa=False, max_time=1200):
+
         self.overall_results_list = []
-        self.form_cores_allowed_list_numa()
+        if numa:
+            self.cores_allowed_list = self.form_cores_allowed_list_numa()
+        else:
+            self.cores_allowed_list = self.form_cores_allowed_list()
+        if not self.cores_allowed_list:
+            return False
+        self.analyse_fio()
+        self.best_result = self.present_result.copy()
+        first = 0
+        last = 0
+        flag = True
+        iodepth = self.present_result['iodepth']
+        num_jobs = self.present_result['num_jobs']
+        timer = FunTimer(max_time)
+        while not timer.is_expired():
+            condition = self.iodepth_condition()
+            if condition == "working":
+                first = iodepth
+                if flag:
+                    iodepth = iodepth * 2
+                else:
+                    iodepth = ((iodepth + last) / 2)
+            elif condition == 'not_working':
+                last = iodepth
+                flag = False
+                iodepth = ((first + last) / 2)
+
+            if (iodepth == last or iodepth == first):
+                break
+
+            self.iodepth = iodepth
+            self.num_jobs = num_jobs
+            self.num_cores = num_jobs
+            self.limit_number_of_cores()
+            self.analyse_fio()
+            if iodepth >= self.max_iodepth:
+                break
+
+        self.iodepth = iodepth
+        self.num_jobs = num_jobs
+        self.num_cores = num_jobs
+        self.print_the_overall_summary()
+        self.print_the_final_result()
+        self.cleanup_everything()
+        if self.iodepth == 0:
+            self.iodepth = 1
+        return self.iodepth
+
+    def iodepth_condition(self):
+
+        if (self.present_result["overall_result"] == fun_test.PASSED and
+                self.best_result["maximum_tps"] <= self.present_result["maximum_kbr"] and
+                self.best_result['maximum_kbr'] <= self.present_result['maximum_kbr']):
+            self.best_result = self.present_result.copy()
+            return 'working'
+        else:
+            return "not_working"
+
+    ''' Num jobs , iodepth and num cores logic'''
+
+    def get_fio_iodepth_num_jobs_num_cores(self, numa=False, max_time=1200):
+        self.overall_results_list = []
+        if numa:
+            self.cores_allowed_list = self.form_cores_allowed_list_numa()
+        else:
+            self.cores_allowed_list = self.form_cores_allowed_list()
+        if not self.cores_allowed_list:
+            return False
         self.analyse_fio()
         self.best_result = self.present_result.copy()
         first = 0
@@ -327,8 +386,9 @@ class FioPerfHelper(object):
         iodepth = self.present_result['iodepth']
         num_jobs = self.present_result['num_jobs']
         forced = False
-        while True:
-            condition = self.iodepth_condition()
+        timer = FunTimer(max_time)
+        while not timer.is_expired():
+            condition = self.iodepth_num_jobs_cores_condition()
             if condition == "working":
                 worked = True
                 first = iodepth
@@ -346,10 +406,11 @@ class FioPerfHelper(object):
                 s_first = first
                 s_last = iodepth
                 worked = False
+                first = 0
             elif condition == 'values_are_low':
                 forced = True
 
-            if iodepth == last or iodepth == first and (worked):
+            if (iodepth == last or iodepth == first) and worked:
                 break
             elif (iodepth == last or iodepth == first and not (worked)) or forced:
                 forced = False
@@ -365,7 +426,12 @@ class FioPerfHelper(object):
             self.num_cores = num_jobs
             self.limit_number_of_cores()
             self.analyse_fio()
+            if iodepth >= self.max_iodepth:
+                break
 
+        self.iodepth = iodepth
+        self.num_jobs = num_jobs
+        self.num_cores = num_jobs
         self.print_the_overall_summary()
         self.print_the_final_result()
         self.cleanup_everything()
@@ -373,18 +439,18 @@ class FioPerfHelper(object):
             self.iodepth = 1
         return self.num_jobs, self.iodepth, self.num_cores
 
-    def iodepth_condition(self):
+    def iodepth_num_jobs_cores_condition(self):
         if (self.present_result["cpu_usage_error"] and not
-            (self.present_result['iowait_error'] or
-             self.present_result['eqm_error'])):
+            (self.present_result['iowait_error']) and not
+                (self.present_result['eqm_error'])):
             return "cpu_error"
 
-        elif (self.present_result["overall_result"] == "Passed" and
+        elif (self.present_result["overall_result"] == fun_test.PASSED and
               self.best_result["maximum_tps"] <= self.present_result["maximum_kbr"] and
               self.best_result['maximum_kbr'] <= self.present_result['maximum_kbr']):
             self.best_result = self.present_result.copy()
             return 'working'
-        elif (self.present_result["overall_result"] == "Passed" and
+        elif (self.present_result["overall_result"] == fun_test.PASSED and
               self.best_result["maximum_tps"] >= self.present_result["maximum_kbr"] and
               self.best_result['maximum_kbr'] >= self.present_result['maximum_kbr']):
             return 'values_are_low'
@@ -393,19 +459,24 @@ class FioPerfHelper(object):
 
     '''  MMAP Logic '''
 
-    def get_num_jobs_num_cores(self):
+    def get_num_jobs_num_cores(self, numa=False, max_time=1200):
         # self.cpu_usage_limit = 99
         # self.iowait_limit = 99
 
         self.overall_results_list = []
-        # Find the number of cores the system has and form a list
-        self.form_cores_allowed_list_numa()
+        # Form a list of allowed cores using numa and lscpu
+        if numa:
+            self.cores_allowed_list = self.form_cores_allowed_list_numa()
+        else:
+            self.cores_allowed_list = self.form_cores_allowed_list()
+        if not self.cores_allowed_list:
+            return False
         # initially run once with the results obtained and than continue with applying logic
         self.analyse_fio()
         # Best results stores the best performance paramters
         self.best_result = self.present_result.copy()
-
-        while True:
+        timer = FunTimer(max_time)
+        while not timer.is_expired():
             self.print_key_value_sorted(title="Previous result", dictionary=self.best_result)
             condition = self.num_jobs_condition()
 
@@ -430,8 +501,8 @@ class FioPerfHelper(object):
             self.print_the_overall_summary()
             self.print_the_final_result()
             return self.num_jobs, self.num_cores
-
-        while True:
+        timer = FunTimer(max_time)
+        while not timer.is_expired():
             self.analyse_fio()
             self.print_key_value_sorted(title="Previous result", dictionary=self.best_result)
             condition = self.num_jobs_condition()
@@ -448,7 +519,7 @@ class FioPerfHelper(object):
                 return self.num_jobs, self.num_cores
 
     def num_jobs_condition(self):
-        if (self.present_result["overall_result"] == "Passed" and
+        if (self.present_result["overall_result"] == fun_test.PASSED and
             self.best_result["maximum_tps"] <= self.present_result["maximum_kbr"] and
                 self.best_result['maximum_kbr'] <= self.present_result['maximum_kbr']):
 
@@ -457,8 +528,8 @@ class FioPerfHelper(object):
         else:
             return 'not_working'
 
-    def start_fio_analysis(self, num_jobs, iodepth, num_cores, fio_rwmode='read',
-                           fio_test_runtime=60):
+    def start_fio_analysis(self, cpus_allowed, num_jobs, iodepth, num_cores, fio_rwmode='read',
+                           numa=False, fio_test_runtime=60):
 
         self.present_result = {}
         self.pid_dictionary = {}
@@ -469,13 +540,18 @@ class FioPerfHelper(object):
         self.present_result["fio_rwmode"] = fio_rwmode
         self.present_result["fio_test_runtime"] = fio_test_runtime
 
-        self.clear_iostat_mpstat_file()
-        self.start_iostat_in_background()
-        self.start_mpstat_in_background()
+        if numa:
+            self.cores_allowed_list = self.form_cores_allowed_list_numa()
+        else:
+            self.cores_allowed_list = self.form_cores_allowed_list()
+        if not self.cores_allowed_list:
+            return False
 
+        self.clear_iostat_mpstat_file()
+        self.pid_dictionary["iostat"] = self.start_iostat_in_background()
+        self.pid_dictionary["mpstat"] = self.start_mpstat_in_background(num_cores_str_format=cpus_allowed)
         eqm_before = self.get_eqm_number()
         self.present_result["eqm_before_fio"] = eqm_before
-        self.fio_start_time = datetime.utcnow()
 
     def get_fio_analysis_results(self):
         eqm_after = self.get_eqm_number()
@@ -495,15 +571,19 @@ class FioPerfHelper(object):
         self.handle.kill_process(self.pid_dictionary["mpstat"])
 
         iostat_result_list = self.parse_iostat_file()
+        if not iostat_result_list:
+            return False
         self.update_iostat_result(iostat_result_list)
 
         mpstat_result_list = self.parse_mpstat_file(iowait_limit=self.iowait_limit,
                                                     cpu_usage_limit=self.cpu_usage_limit)
+        if not mpstat_result_list:
+            return False
         self.update_mpstat_result(mpstat_result_list)
 
-        overall_result = "Passed"
+        overall_result = fun_test.PASSED
         if eqm_error or self.present_result["iowait_error"] or self.present_result["cpu_usage_error"]:
-            overall_result = "Failed"
+            overall_result = fun_test.FAILED
         self.present_result["overall_result"] = overall_result
         # self.overall_results_list.append(self.present_result)
         self.print_key_value_sorted(title="Fio Result", dictionary=self.present_result)
@@ -522,27 +602,20 @@ class FioPerfHelper(object):
         self.print_key_value_sorted(title="\nFinal values", dictionary=self.overall_results_list[index])
 
     def update_iostat_result(self, iostat_result_dictionary):
-        if iostat_result_dictionary:
-            self.present_result["average_tps"] = iostat_result_dictionary['average_tps']
-            self.present_result["average_kbr"] = iostat_result_dictionary['average_kbr']
-            self.present_result["maximum_tps"] = iostat_result_dictionary['maximum_tps']
-            self.present_result['maximum_kbr'] = iostat_result_dictionary['maximum_kbr']
-            self.iostat_list = iostat_result_dictionary['iostat_list']
-        else:
-            fun_test.log("Iostat data error")
-            return
+        self.present_result["average_tps"] = iostat_result_dictionary['average_tps']
+        self.present_result["average_kbr"] = iostat_result_dictionary['average_kbr']
+        self.present_result["maximum_tps"] = iostat_result_dictionary['maximum_tps']
+        self.present_result['maximum_kbr'] = iostat_result_dictionary['maximum_kbr']
+        self.iostat_list = iostat_result_dictionary['iostat_list']
 
     def update_mpstat_result(self, mpstat_result_dictionary):
-        if mpstat_result_dictionary:
-            self.present_result["maximum_cpu_usage"] = mpstat_result_dictionary['maximum_cpu_usage']
-            self.present_result["maximum_iowait"] = mpstat_result_dictionary['maximum_iowait']
-            self.present_result["cpu_usage_error"] = mpstat_result_dictionary['cpu_usage_error']
-            self.present_result["iowait_error"] = mpstat_result_dictionary['iowait_error']
-            self.present_result['error_msg'] = mpstat_result_dictionary["error_msg"]
-            self.mpstat_list = mpstat_result_dictionary["mpstat_list"]
-        else:
-            fun_test.log("Mpstat data error")
-            return
+        self.present_result["maximum_cpu_usage"] = mpstat_result_dictionary['maximum_cpu_usage']
+        self.present_result["maximum_iowait"] = mpstat_result_dictionary['maximum_iowait']
+        self.present_result["cpu_usage_error"] = mpstat_result_dictionary['cpu_usage_error']
+        self.present_result["iowait_error"] = mpstat_result_dictionary['iowait_error']
+        self.present_result['error_msg'] = self.present_result['error_msg'] + mpstat_result_dictionary["error_msg"]
+        self.mpstat_list = mpstat_result_dictionary["mpstat_list"]
+
 
     def clear_iostat_mpstat_file(self):
         '''
@@ -553,10 +626,8 @@ class FioPerfHelper(object):
         self.handle.command(cmd)
         cmd = " > mpstat.txt"
         self.handle.command(cmd)
-        cmd = "rm -r iostat.txt;rm -r mpstat.txt"
-        self.handle.command(cmd)
-        self.handle.command("ls")
-        time.sleep(1)
+        self.handle.remove_file(file_name="iostat.txt")
+        self.handle.remove_file(file_name="mpstat.txt")
         fun_test.debug("Cleared the iostat.txt and mpstat.txt")
 
     def get_eqm_number(self):
@@ -572,9 +643,7 @@ class FioPerfHelper(object):
         '''
         will not let num_cores to be more than cpu cores present
         '''
-        cmd = "nproc --all"
-        output = self.handle.command(cmd)
-        number_of_cores_present = int(output)
+        number_of_cores_present = self.handle.get_number_cpus()
         if self.num_cores > (number_of_cores_present - 1):
             self.num_cores = number_of_cores_present - 1
         return self.num_cores
@@ -601,73 +670,46 @@ class FioPerfHelper(object):
         '''
         self.iostat_skip_lines = skip_lines
 
-    def get_the_free_memory(self):
-        '''
-        Execute the free -m command and grep the free space and return
-        '''
-        cmd = "free -m"
-        output = self.handle.command(cmd)
-        split_into_lines = output.split('\n')
-        for line in split_into_lines:
-            try:
-                values_list = re.findall(r'(?<= )[0-9]+', line)
-                if len(values_list) == 6:
-                    free_space = int(values_list[2])
-                    return free_space
-            except:
-                fun_test.critical("Unable to feth the free space")
-
     def clear_the_cache(self):
         # get free memory before clearing cache
-        free_memory = self.get_the_free_memory()
+        free_memory_dictionary = self.handle.free_m()
+        free_memory = free_memory_dictionary['free']
         fun_test.log("Free memory before clearing cache {}".format(free_memory))
         # clear all the cache
-        self.handle.command()
+        cmd = "echo 3 > /proc/sys/vm/drop_caches"
+        self.handle.command(cmd)
+        # get free memory after clearing cache
+        free_memory_dictionary = self.handle.free_m()
+        free_memory = free_memory_dictionary['free']
+        fun_test.log("Free memory after clearing cache {}".format(free_memory))
 
     def cleanup_everything(self):
         self.clear_iostat_mpstat_file()
-        self.handle.kill_process(self.pid_dictionary["iostat"])
-        self.handle.kill_process(self.pid_dictionary["mpstat"])
+        self.handle.kill_process(self.pid_dictionary["iostat"], kill_seconds=1)
+        self.handle.kill_process(self.pid_dictionary["mpstat"], kill_seconds=1)
 
     def form_cores_allowed_list_numa(self):
-        self.cores_allowed_list = []
-        cmd = "lspci | grep -i mellanox"
-        output = self.handle.command(cmd)
-        match_bus = re.search(r'[a-z0-9.:]+', output)
-        if match_bus:
-            bus_id = match_bus.group()
-            fun_test.log("Bus id : {}".format(bus_id))
-            cmd = "lspci -v -s {}".format(bus_id)
-            output = self.handle.command(cmd)
-            match_numa_node = re.search(r'(?<=NUMA node )[0-9]', output)
-            if match_numa_node:
-                numa_node = match_numa_node.group()
-                fun_test.log("NUMA node : {}".format(numa_node))
-
-                cmd = "lscpu | grep -i node{}".format(numa_node)
-                output = self.handle.command(cmd)
-                list_of_cpus_allowed = re.findall(r'[0-9]+-[0-9]+', output)
-                for cpu_range in list_of_cpus_allowed:
-                    split_into_numer = cpu_range.split('-')
-                    split_into_numer = map(int, split_into_numer)
-                    start = split_into_numer[0]
-                    end = split_into_numer[1]
-                    if start == 0:
-                        start = 1
-                    list_of_numbers = range(start, end + 1)
-                    self.cores_allowed_list += list_of_numbers
-                self.cores_allowed_list = map(str, self.cores_allowed_list)
-                fun_test.log("Cores allowed list : {}".format(self.cores_allowed_list))
-                return self.cores_allowed_list
+        output = self.handle.lspci(grep_filter="-i mellanox")
+        id = output[0]['id']
+        output = self.handle.lspci(slot=id, verbose=True)
+        numa_node = output[0]['numa_node']
+        try:
+            lscpu_dictionary = self.handle.lscpu(grep_filter="node{}".format(numa_node))
+            num_cores_data = lscpu_dictionary.values()
+            numbers_list = re.findall(r'[0-9]+', num_cores_data)
+            numbers_list_int = map(int, numbers_list)
+            len_num = len(numbers_list_int)
+            cores_allowed_list = []
+            for index in range(0, len_num, 2):
+                cores_allowed_list += range(numbers_list_int[index], numbers_list_int[index+1]+1)
+            cores_allowed_list = map(str, cores_allowed_list)
+            return cores_allowed_list
+        except:
+            fun_test.critical("NUMA node CPU(s) data not obtained")
+            return False
 
     def form_cores_allowed_list(self):
-        cmd = 'nproc --all'
-        output = self.handle.command(cmd)
-        number_of_cores_present = int(output)
-        self.cores_allowed_list = map(str, range(1, number_of_cores_present))
-        fun_test.log("Cores allowed list : {}".format(self.cores_allowed_list))
-        return self.cores_allowed_list
-
-
-
-
+        number_of_cores_present = self.handle.get_number_cpus()
+        cores_allowed_list = map(str, range(1, number_of_cores_present))
+        fun_test.log("Cores allowed list : {}".format(cores_allowed_list))
+        return cores_allowed_list
