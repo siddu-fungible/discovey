@@ -15,6 +15,7 @@ from lib.host.storage_controller import StorageController
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using Vdbench
 '''
 
+
 # TODO: vdbench config content variable: /dev/nvme0n1: change it dynamically according to controller assigned.
 # TODO: Increase Volumes and volume size once related bugs are fixed
 
@@ -319,7 +320,6 @@ class ECVolumeLevelScript(FunTestScript):
         self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
         fun_test.shared_variables["end_host"] = self.end_host
 
-        """ TODO: Reboot comment start (To avoid poc-server-03 reboot- remove before final commit)"""
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
 
@@ -371,7 +371,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.simple_assert(command_result, "Loading nvme_tcp module")
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
                                       message="Loading nvme_tcp module")
-        """ TODO: Reboot comment stop (To avoid poc-server-03 reboot- remove before final commit)"""
 
         self.storage_controller = f1.get_dpc_storage_controller()
         """NewChange
@@ -640,6 +639,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         row_data_dict["readbw"] = read_bw
         row_data_dict["writeiops"] = write_iops
         row_data_dict["writebw"] = write_bw
+        row_data_dict["mode"] = self.operation
 
         # Converting response values from milliseconds to microseconds
         row_data_dict["readclatency"] = int(round(float(vdbench_result["read_resp"]) * 1000))
@@ -714,8 +714,112 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
         super(SequentialReadWrite1024kBlocks, self).cleanup()
 
 
+class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Inspur TC 8.11.3: Integrated  model read/write IOPS performance of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for Integrated Model read/write IOPS
+        """)
+
+    def setup(self):
+        super(IntegratedModelReadWriteIOPS, self).setup()
+
+    def run(self):
+        super(IntegratedModelReadWriteIOPS, self).run()
+
+    def cleanup(self):
+        super(IntegratedModelReadWriteIOPS, self).cleanup()
+
+
+class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for OLTP model read/write IOPS
+        """)
+
+    def setup(self):
+        super(OLTPModelReadWriteIOPS, self).setup()
+
+    def run(self):
+        super(OLTPModelReadWriteIOPS, self).run()
+
+    def cleanup(self):
+        super(OLTPModelReadWriteIOPS, self).cleanup()
+
+
+class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for OLAP model Random read/write IOPS
+        """)
+
+    def setup(self):
+        super(OLAPModelReadWriteIOPS, self).setup()
+
+    def run(self):
+        super(OLAPModelReadWriteIOPS, self).run()
+
+    def cleanup(self):
+        super(OLAPModelReadWriteIOPS, self).cleanup()
+
+
+class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="Inspur TC 8.11.6: 8k data block random read/write latency test of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for 8k transfer size Random read/write latency
+        """)
+
+    def setup(self):
+        super(RandReadWrite8kBlocksLatencyTest, self).setup()
+
+    def run(self):
+        super(RandReadWrite8kBlocksLatencyTest, self).run()
+
+    def cleanup(self):
+        super(RandReadWrite8kBlocksLatencyTest, self).cleanup()
+
+
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()
