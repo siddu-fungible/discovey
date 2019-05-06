@@ -3,8 +3,8 @@
     "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
     "disable_f1_index": 1,
     "f1_in_use": 0,
-    "syslog_level": 2,
-    "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 1099},
+    "syslog_level": "default",
+    "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 1099, "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"},
     "command_timeout": 5,
     "retries": 60,
     "test_network":
@@ -22,7 +22,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 34359738368,
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
@@ -30,20 +30,24 @@
       "num_volumes": 1
     },
     // timeout used for the storage controller
-    "command_timeout": 5,
+    "command_timeout": 10,
     "min_timeout": 60,
-    "f1_fs_timeout_ratio": [1073741824, 2],
-    "fs_cp_timeout_ratio": [1073741824, 4],
+    "f1_fs_timeout_ratio": [1073741824, 3],
+    "fs_cp_timeout_ratio": [1073741824, 10],
+    "status_interval": 10,
     "ns_id": 1,
-    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "io_queues": 0,
-    "nvme_device": "/dev/nvme",
-    "mount_point": "/mnt/ssd",
-    "fs_type": "ext3",
-    "test_file_size": 21474836480,
     "back_pressure": false,
+    "nvme_device": "/dev/nvme",
+    "mount_path": "/mnt/ssd",
+    "trigger_plex_failure": true,
+    // failure mode can take random or fixed as its value. If it is fixed, initialize failure_plex_indicies
+    "failure_mode": "random",
+    "failure_start_time_ratio": 0.05,
+    "fs_type": "ext3",
+    "test_volume_start_index": 0,
+    "test_file_size": 10737418240,
     // Ensure that dividing block size with the test_file_size doesn't give any fractions
-    "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": "1048576"},
-    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096}
+    "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": 1048576}
   }
 }

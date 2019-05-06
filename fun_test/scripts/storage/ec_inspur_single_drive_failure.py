@@ -7,6 +7,7 @@ from lib.host.linux import Linux
 from lib.fun.fs import Fs
 from datetime import datetime
 import re
+import random
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 
@@ -33,7 +34,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.syslog_level = 2
+            self.syslog_level = "default"
             self.command_timeout = 5
             self.retries = 24
         else:
@@ -125,16 +126,13 @@ class ECVolumeLevelScript(FunTestScript):
 
         interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
                                                                 timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                      message="Configuring test interface IP address")
+        fun_test.test_assert(not interface_ip_config_status, message="Configuring test interface IP address")
 
-        interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
-                                                          timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                      message="Assigning MAC to test interface")
+        interface_mac_status = self.end_host.sudo_command(command=interface_mac_config, timeout=self.command_timeout)
+        fun_test.test_assert(not interface_mac_status, message="Assigning MAC to test interface")
 
         link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
+        fun_test.test_assert(not link_up_status, message="Bringing up test link")
 
         interface_up_status = self.end_host.ifconfig_up_down(interface=self.host_config["test_interface_name"],
                                                              action="up")
@@ -144,11 +142,10 @@ class ECVolumeLevelScript(FunTestScript):
                                                       gateway=self.test_network["test_net_route"]["gw"],
                                                       outbound_interface=self.host_config["test_interface_name"],
                                                       timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
+        fun_test.test_assert(not route_add_status, message="Adding route to F1")
 
         arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                      message="Adding static ARP to F1 route")
+        fun_test.test_assert(not arp_add_status, message="Adding static ARP to F1 route")
 
         # Loading the nvme and nvme_tcp modules
         self.end_host.modprobe(module="nvme")
@@ -164,7 +161,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
                                       message="Loading nvme_tcp module")
 
-        self.storage_controller = f1.get_dpc_storage_controller()
+        self.storage_controller = self.f1.get_dpc_storage_controller()
         """NewChange
         self.come = fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip, target_port=self.come.get_dpc_port(0))
@@ -172,14 +169,17 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Setting the syslog level
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                      legacy=False, command_duration=self.command_timeout)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
+        if self.syslog_level != "default":
+            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
+                                                          legacy=False, command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
 
-        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                      command_duration=self.command_timeout)
-        fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                      message="Checking syslog level")
+            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                          command_duration=self.command_timeout)
+            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+                                          message="Checking syslog level")
+        else:
+            fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
     def cleanup(self):
         self.storage_controller.disconnect()
@@ -215,9 +215,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             setattr(self, k, v)
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-
-        if not hasattr(self, "num_ssd"):
-            self.num_ssd = 1
         # End of benchmarking json file parsing
 
         self.fs = fun_test.shared_variables["fs"]
@@ -250,7 +247,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
-        (ec_config_status, self.ec_info) = self.configure_ec_volume(self.ec_info, self.command_timeout)
+        (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                       self.command_timeout)
         fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
         self.volume_configured = True
@@ -294,7 +292,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
             nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(
                 self.attach["transport"].lower(), self.test_network["f1_loopback_ip"], str(self.attach["port"]),
-                self.nvme_subsystem)
+                self.attach["nvme_subsystem"])
         else:
             nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
                 self.attach["transport"].lower(), self.test_network["f1_loopback_ip"], str(self.attach["port"]),
@@ -316,14 +314,14 @@ class ECVolumeLevelTestcase(FunTestCase):
             if match:
                 ctlr_id = match.group(1)
                 ns_id = match.group(2)
-                self.nvme_block_device_list.append(self.nvme_device + str(ctlr_id) + "n" + str(ns_id))
+                self.nvme_block_device_list.append(self.nvme_device + ctlr_id + "n" + ns_id)
                 self.volume_name_list.append(self.nvme_block_device.replace("/dev/", ""))
                 fun_test.test_assert_expected(expected=self.volume_name_list[-1],
                                               actual=lsblk_output[volume_name]["name"],
                                               message="{} device available".format(self.volume_name_list[-1]))
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
                                               message="{} device type check".format(self.volume_name_list[-1]))
-                fun_test.test_assert_expected(expected=self.ec_info["attach_size"][ns_id + 1],
+                fun_test.test_assert_expected(expected=self.ec_info["attach_size"][int(ns_id) - 1],
                                               actual=lsblk_output[volume_name]["size"],
                                               message="{} volume size check".format(self.volume_name_list[-1]))
 
@@ -344,6 +342,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def run(self):
 
+        # Test Preparation
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
         # Else going to extract the same
         if "device_id" not in self.ec_info:
@@ -353,7 +352,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["device_id"] = {}
             for num in xrange(self.ec_info["num_volumes"]):
                 self.ec_info["drive_uuid"][num] = []
-                self.ec_info["device_uuid"][num] = []
+                self.ec_info["device_id"][num] = []
                 for blt_uuid in self.ec_info["uuids"][num]["blt"]:
                     blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid,
                                                              "stats")
@@ -364,8 +363,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
                                              format(blt_uuid))
-                    drive_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "drives",
-                                                            blt_stats["data"]["drive_uuid"])
+                    drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                               "drives", blt_stats["data"]["drive_uuid"])
                     drive_stats = self.storage_controller.peek(drive_props_tree)
                     fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
                                            format(blt_stats["data"]["drive_uuid"]))
@@ -375,13 +374,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
                                              format(blt_stats["data"]["drive_uuid"]))
 
+        fun_test.log("EC plex volumes UUID      : {}".format(self.ec_info["uuids"][0]["blt"]))
+        fun_test.log("EC plex volumes drive UUID: {}".format(self.ec_info["drive_uuid"][0]))
+        fun_test.log("EC plex volumes device ID : {}".format(self.ec_info["device_id"][0]))
 
         # Creating the filesystem in the volumes configured and available to the host
         if self.fs_type == "xfs":
             install_status = self.end_host.install_package("xfsprogs")
             fun_test.test_assert(install_status, "Installing XFS Package")
 
-        for num in xrange(self.ec_info["num_volumes"]):
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             size = self.ec_info["attach_size"][num]
             # Set the timeout for the filesystem create command based on its size
             fs_create_timeout = (size / self.f1_fs_timeout_ratio[0]) * self.f1_fs_timeout_ratio[1]
@@ -389,32 +391,83 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fs_create_timeout = self.min_timeout
             fs_status = self.end_host.create_filesystem(self.fs_type, self.nvme_block_device_list[num],
                                                         timeout=fs_create_timeout)
-            fun_test.test_assert(fs_status, "Creating {} filesystem on EC volume {}".format(self.fs_type,
-                                                                                            self.volume_name_list[num]))
-            command_result = self.end_host.create_directory(self.mount_point + str(num))
-            fun_test.test_assert(command_result, "Creating mount point directory {}".
-                                 format(self.mount_point + str(num)))
-            command_result = self.end_host.mount_volume(self.nvme_block_device_list[num], self.mount_point + str(num))
+            fun_test.test_assert(fs_status, "Creating {} filesystem on EC volume {}".
+                                 format(self.fs_type, self.volume_name_list[num]))
+            # Creating mount point
+            mount_point = self.mount_path + str(num + 1)
+            command_result = self.end_host.create_directory(mount_point)
+            fun_test.test_assert(command_result, "Creating mount point directory {}".format(mount_point))
+            # Mounting the volume into the mount point
+            command_result = self.end_host.mount_volume(self.nvme_block_device_list[num], mount_point)
             fun_test.simple_assert(command_result, "Mounting EC volume {} on {}".
-                                   format(self.nvme_block_device_list[num], self.mount_point + str(num)))
+                                   format(self.nvme_block_device_list[num], mount_point))
             lsblk_output = self.end_host.lsblk("-b")
-            fun_test.test_assert_expected(expected=self.mount_point + str(num),
+            fun_test.test_assert_expected(expected=mount_point,
                                           actual=lsblk_output[self.volume_name_list[num]]["mount_point"],
                                           message="Mounting EC volume {} on {}".format(self.nvme_block_device_list[num],
-                                                                                       self.mount_point + str(num)))
+                                                                                       mount_point))
 
         # Creating input file
-        self.dd_create_file["count"] = self.test_file_size / self.dd_write_args["block_size"]
+        self.dd_create_file["count"] = self.test_file_size / self.dd_create_file["block_size"]
 
-        # Write a file into the EC volume of size self.input_file_size bytes
-        return_size = self.host.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
-        fun_test.test_assert_expected(self.input_file_size, return_size, "Creating {} bytes test input file".
+        # Write a file into the EC volume of size self.test_file_size bytes
+        return_size = self.end_host.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
+        fun_test.test_assert_expected(self.test_file_size, return_size, "Creating {} bytes test input file".
                                       format(self.test_file_size))
-        self.input_md5sum = self.host.md5sum(file_name=self.dd_create_file["output_file"],
+        self.src_md5sum = self.end_host.md5sum(file_name=self.dd_create_file["output_file"],
                                              timeout=self.dd_create_file["count"])
-        fun_test.test_assert(self.input_md5sum, "Finding md5sum of input file {}".
+        fun_test.test_assert(self.src_md5sum, "Finding md5sum of source file {}".
                              format(self.dd_create_file["output_file"]))
 
+
+        # Test Preparation Done
+        # Starting the test
+        cp_timeout = (self.test_file_size / self.fs_cp_timeout_ratio[0]) * self.fs_cp_timeout_ratio[1]
+        if cp_timeout < self.min_timeout:
+            cp_timeout = self.min_timeout
+
+        if hasattr(self, "back_pressure") and self.back_pressure:
+            # Start the vdbench here to pro
+            pass
+
+        # Copying the file into the volume
+        source_file = self.dd_create_file["output_file"]
+        dst_file = self.mount_path + str(self.test_volume_start_index + 1) + "/file1"
+        cp_cmd = "sudo cp {} {}".format(source_file, dst_file)
+        self.end_host.start_bg_process(command=cp_cmd)
+
+        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
+            if self.failure_mode == "random" or not hasattr(self, "failure_plex_index"):
+                self.failure_plex_index = random.randint(0, self.ec_info["ndata"] + self.ec_info["nparity"] - 1)
+            if hasattr(self, "failure_start_time_ratio"):
+                wait_time = int(round(cp_timeout * self.failure_start_time_ratio))
+                fail_uuid = self.ec_info["uuids"][self.test_volume_start_index]["blt"][self.failure_plex_index]
+                fail_device = self.ec_info["device_id"][self.test_volume_start_index][self.failure_plex_index]
+                fun_test.sleep(message="Sleeping for {} seconds before failing the device having the BLT volume {}".
+                               format(wait_time, fail_uuid), seconds=wait_time)
+            device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
+                                                                        command_duration=self.command_timeout)
+            fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
+
+        timer = FunTimer(max_time=cp_timeout)
+        while not timer.is_expired():
+            fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
+            output = self.end_host.get_process_id_by_pattern(process_pat=cp_cmd)
+            if not output:
+                fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file))
+                break
+        else:
+            fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file))
+
+        dst_file_info = self.end_host.get_file_info(dst_file)
+        fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(dst_file))
+        fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
+                                      message="Copying {} bytes file into {}".format(self.test_file_size, dst_file))
+
+        self.dst_md5sum = self.end_host.md5sum(file_name=dst_file, timeout=cp_timeout)
+        fun_test.test_assert(self.dst_md5sum, "Finding md5sum of copied file {}".format(dst_file))
+        fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
+                                      message="Comparing md5sum of source & destination file")
 
 
     def cleanup(self):

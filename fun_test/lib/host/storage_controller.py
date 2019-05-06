@@ -184,6 +184,20 @@ class StorageController(DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
+    def enable_device(self, device_id, command_duration=TIMEOUT):
+        device_dict = {
+            "class": "device",
+            "opcode": "ERROR_INJECT_DISABLE",
+            "params": {"device_id": device_id}}
+        return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
+
+    def disable_device(self, device_id, command_duration=TIMEOUT):
+        device_dict = {
+            "class": "device",
+            "opcode": "ERROR_INJECT_ENABLE",
+            "params": {"device_id": device_id}}
+        return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
+
     def configure_ec_volume(self, ec_info, command_timeout):
 
         result = True

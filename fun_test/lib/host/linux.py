@@ -2335,6 +2335,7 @@ class Linux(object, ToDictMixin):
 
         return vdb_result
 
+    @fun_test.safe
     def get_number_cpus(self):
         """Get number of CPUs."""
         cmd = 'lscpu'
@@ -2342,6 +2343,25 @@ class Linux(object, ToDictMixin):
         match = re.search(r'CPU\(s\):\s+(\d+)', output)
         if match:
             return int(match.group(1))
+
+    @fun_test.safe
+    def get_file_info(self, file, sudo=False, timeout=10):
+        file_info = {}
+        header_list = ["permissions", "links", "owner", "group", "size", "month", "day", "time", "name"]
+
+        # Currently the method is going to return the info of the first file from the ls -l output
+        ls_cmd = "ls -l {} | head -1".format(file)
+        if sudo:
+            output = self.sudo_command(command=ls_cmd, timeout=timeout)
+        else:
+            output = self.command(command=ls_cmd, timeout=timeout)
+
+        if output and "No such file or directory" not in output:
+            output = output.split()
+            for index, header in enumerate(header_list):
+                file_info[header] = output[index]
+
+        return file_info
 
 
 class LinuxBackup:
