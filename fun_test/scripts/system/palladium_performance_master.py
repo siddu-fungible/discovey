@@ -1984,6 +1984,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_offloads"] = line.get("offloads", False)
                         metrics["input_protocol"] = line.get("protocol", "TCP")
                         metrics["input_version"] = line.get("version", "")
+                        metrics["input_num_hosts"] = line.get("num_hosts", 1)
                         date_time = get_time_from_timestamp(line["timestamp"])
                         if "throughput_h2n" in line:
                             self.model = "HuThroughputPerformance"
