@@ -8,3 +8,7 @@ fun_test has the following layout
 
 ### web
 Documentation: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/README.md
+
+## Data-store
+
+A place to store test-input files that are large.
