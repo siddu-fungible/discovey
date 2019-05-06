@@ -1273,13 +1273,15 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def lspci(self, grep_filter=None, verbose=False, device=None):
+    def lspci(self, grep_filter=None, verbose=False, device=None, slot=None):
         result = []
         command = "lspci"
         if verbose:
             command += " -vvv"
         if device:
             command += " -d {}".format(device)
+        if slot:
+            command += " -s {}".format(slot)
         if grep_filter:
             command += " | grep {}".format(grep_filter)
         output = self.sudo_command(command)
@@ -1307,6 +1309,9 @@ class Linux(object, ToDictMixin):
                 result.append(record)
 
             if verbose:
+                match_numa_node = re.search(r'(?<=NUMA node: )[0-9]+', line)
+                if match_numa_node:
+                    current_record['numa_node'] = int(match_numa_node.group())
                 m2 = re.search(r'\s+Capabilities: \[(\d+)\]', line)  # Capabilities: [80] Express (v2) Endpoint, MSI 00
                 if m2:
                     current_record["capabilities"][m2.group(1)] = {}
@@ -2342,6 +2347,42 @@ class Linux(object, ToDictMixin):
         match = re.search(r'CPU\(s\):\s+(\d+)', output)
         if match:
             return int(match.group(1))
+
+    @fun_test.safe
+    def free_m(self):
+        cmd = "free -m"
+        output = self.command(cmd)
+        values_list = re.findall(r'[0-9]+', output)
+        if values_list:
+            values_list_int = map(int, values_list)
+            values = {
+                "total": values_list_int[0],
+                "used": values_list_int[1],
+                "free": values_list_int[2],
+                "shared": values_list_int[3],
+                "cache": values_list_int[4],
+                "available": values_list_int[5],
+                "swap_total": values_list_int[6],
+                "swap_used": values_list_int[7],
+                "swap_free": values_list_int[8]
+            }
+            return values
+
+    @fun_test.safe
+    def lscpu(self, grep_filter=None):
+        cmd = "lscpu"
+        if grep_filter:
+            cmd = cmd + ' | grep {}'.format(grep_filter)
+        output = self.command(cmd)
+        lines = output.split('\n')
+        lscpu_dictionary = {}
+        for line in lines:
+            match_key_value = re.search(r'(.*):(.*)', line)
+            if match_key_value:
+                key = match_key_value.group(1)
+                value = match_key_value.group(2).strip()
+                lscpu_dictionary[key] = value
+        return lscpu_dictionary
 
 
 class LinuxBackup:
