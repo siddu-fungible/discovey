@@ -376,6 +376,110 @@
                 ]
               }
             ]
+          },
+          {
+            "info": "non_teramarks_customer",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "non_teramarks_customer",
+            "weight": 1,
+            "label": "Customer",
+            "children": [
+              {
+                "info": "Juniper",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "non_teramarks_customer_juniper",
+                "weight": 1,
+                "label": "Juniper",
+                "children": [
+                  {
+                    "info": "juniper_NU_VP_NU_FWD_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_NU_VP_NU_FWD_NFCP",
+                    "weight": 1,
+                    "label": "Basic FWD",
+                    "children": [
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "weight": 1,
+                        "label": "Latency - Full Load"
+                      },
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_half_laod_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
+                        "weight": 1,
+                        "label": "Latency - Half Load"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "juniper_NU_LE_VP_NU_FW",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_NU_LE_VP_NU_FW",
+                    "weight": 1,
+                    "label": "Flow Based Firewall, HBM",
+                    "children": [
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_throughput",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_pps",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
+                        "weight": 1,
+                        "label": "Latency - Full Load"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
+                        "weight": 1,
+                        "label": "Latency - Half Load"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -2582,84 +2686,42 @@
                 "label": "Juniper",
                 "children": [
                   {
-                    "info": "juniper_NU_VP_NU_FWD_NFCP",
+                    "info": "juniper_NU_LE_VP_NU_FW_DDR",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "juniper_NU_VP_NU_FWD_NFCP",
+                    "name": "juniper_NU_LE_VP_NU_FW_DDR",
                     "weight": 1,
-                    "label": "Basic FWD",
+                    "label": "Flow Based Firewall, DDR",
                     "children": [
                       {
-                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
+                        "info": "juniper_NU_LE_VP_NU_FW_DDR_output_throughput",
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
                         "leaf": true,
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
+                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
-                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                        "info": "juniper_NU_LE_VP_NU_FW_DDR_output_pps",
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
                         "leaf": true,
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
-                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "info": "juniper_NU_LE_VP_NU_FW_DDR_output_latency_avg",
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
                         "leaf": true,
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_latency_avg",
                         "weight": 1,
                         "label": "Latency - Full Load"
                       },
                       {
-                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_half_laod_latency_avg",
+                        "info": "juniper_NU_LE_VP_NU_FW_DDR_output_half_load_latency_avg",
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
                         "leaf": true,
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
-                        "weight": 1,
-                        "label": "Latency - Half Load"
-                      }
-                    ]
-                  },
-                  {
-                    "info": "juniper_NU_LE_VP_NU_FW",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "juniper_NU_LE_VP_NU_FW",
-                    "weight": 1,
-                    "label": "Flow Based Firewall",
-                    "children": [
-                      {
-                        "info": "juniper_NU_LE_VP_NU_FW_output_throughput",
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
-                        "name": "juniper_NU_LE_VP_NU_FW_output_throughput",
-                        "weight": 1,
-                        "label": "Throughput"
-                      },
-                      {
-                        "info": "juniper_NU_LE_VP_NU_FW_output_pps",
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
-                        "name": "juniper_NU_LE_VP_NU_FW_output_pps",
-                        "weight": 1,
-                        "label": "Packets per sec"
-                      },
-                      {
-                        "info": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
-                        "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
-                        "weight": 1,
-                        "label": "Latency - Full Load"
-                      },
-                      {
-                        "info": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
-                        "name": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
+                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_half_load_latency_avg",
                         "weight": 1,
                         "label": "Latency - Half Load"
                       }
@@ -2806,6 +2868,24 @@
                         "name": "inspur_rand_read_write_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "inspur_single_f1_host_6",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_single_f1_host_6",
+                    "weight": 1,
+                    "label": "8_11_6:8K_RAND_RW, F1(s)=1",
+                    "children": [
+                      {
+                        "info": "inspur_rand_read_write_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }

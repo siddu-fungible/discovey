@@ -1307,7 +1307,7 @@ if __name__ == "__main_opeartion_lookups__":
             ml.save_data_sets(data_sets=data_sets, chart=chart)
             print "added lookups operation {}".format(chart.chart_name)
 
-if __name__ == "__main__":
+if __name__ == "__main_unit_fix__":
     model = "TeraMarkJuniperNetworkingPerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model]
@@ -1319,3 +1319,33 @@ if __name__ == "__main__":
             entry.output_throughput_unit = "Mbps"
             entry.output_pps_unit = "pps"
             entry.save()
+
+if __name__ == "__main__":
+    model = "TeraMarkJuniperNetworkingPerformance"
+    ml = MetricLib()
+    entries = MetricChart.objects.filter(metric_model_name=model)
+    for entry in entries:
+        if "NU_LE_VP_NU_FW" in entry.internal_chart_name:
+            print entry
+            data_sets = json.loads(entry.data_sets)
+            input = {}
+            input["input_memory"] = "DDR"
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+            metric_id = LastMetricId.get_next_id()
+            index = entry.internal_chart_name.find('output')
+            internal_name = entry.internal_chart_name[:index] + 'DDR_' + entry.internal_chart_name[index:]
+            MetricChart(chart_name=entry.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=entry.description,
+                        owner_info=entry.owner_info,
+                        positive=entry.positive,
+                        y1_axis_title=entry.y1_axis_title,
+                        visualization_unit=entry.visualization_unit,
+                        source=entry.source,
+                        metric_model_name=entry.metric_model_name,
+                        base_line_date=base_line_date).save()
+    print "added charts for DDR flow based firewall"
