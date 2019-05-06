@@ -71,7 +71,7 @@
     "nvme_device": "/dev/nvme",
     "io_queues": 0
   },
-  "SequentialReadWrite1024kBlocks": {
+  "RandReadWrite1024kBlocks": {
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
