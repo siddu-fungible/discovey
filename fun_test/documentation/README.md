@@ -12,7 +12,7 @@ Documentation: https://github.com/fungible-inc/Integration/blob/master/fun_test/
 ## Data-store
 
 A place to store test-input files that are large.
-Currently it is set to 'data_store' in the parent directory of the Integration repo.
+Currently, it is set to 'data_store' in the parent directory of the Integration repo.
 Ex: /project/users/QA/regression/data_store
 
 The data-store directory can be accessed using
