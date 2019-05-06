@@ -1188,6 +1188,7 @@ class HuThroughputPerformance(models.Model):
     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="TCP")
+    input_num_hosts = models.IntegerField(verbose_name="Number of Hosts", default=1)
 
     def __str__(self):
         s = ""
@@ -1243,6 +1244,7 @@ class HuLatencyPerformance(models.Model):
     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="TCP")
+    input_num_hosts = models.IntegerField(verbose_name="Number of Hosts", default=1)
 
     def __str__(self):
         s = ""
