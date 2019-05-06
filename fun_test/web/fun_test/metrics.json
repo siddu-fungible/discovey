@@ -2664,8 +2664,18 @@
                         ]
                       }
                     ]
-                  },
-                   {
+                  }
+                ]
+              },
+              {
+                "info": "Durable Volume EC + Compression",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "durable_volume_ec_compression",
+                "weight": 1,
+                "label": "Durable Volume - EC + Compression",
+                "children": [
+                  {
                     "info": "4kb_one_volume_12_ssd_durable_volume_ec",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,

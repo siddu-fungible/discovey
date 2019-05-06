@@ -1426,11 +1426,13 @@ if __name__ == "__main__":
                     leaf=True,
                     description="TBD",
                     owner_info="Aamir Shaikh (aamir.shaikh@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/ec_volume_fs_comp_perf.py",
                     positive=positive,
                     y1_axis_title=y1_axis_title,
                     visualization_unit=y1_axis_title,
                     metric_model_name=model_name,
-                    base_line_date=base_line_date).save()
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
         mmt = MileStoneMarkers(metric_id=metric_id,
                                milestone_date=datetime(year=2018, month=9, day=16),
                                milestone_name="Tape-out")
