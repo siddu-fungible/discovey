@@ -19,3 +19,9 @@ The data-store directory can be accessed using
 ```
 from fun_settings import DATA_STORE_DIR
 ```
+### Suggestions for the data-store directories layout
+
+```
+data-store/storage
+data-store/networking
+```
