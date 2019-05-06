@@ -546,6 +546,10 @@ def convert_to_base_unit(output_value, output_unit):
         elif output_unit in packets_per_sec_category:
             if output_unit == "Mpps":
                 output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "Kpps":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "Gpps":
+                output_value = float(output_value * math.pow(10, 9))
     return output_value
 
 
