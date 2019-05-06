@@ -1320,7 +1320,7 @@ if __name__ == "__main_unit_fix__":
             entry.output_pps_unit = "pps"
             entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main_created_DDR_FW__":
     model = "TeraMarkJuniperNetworkingPerformance"
     ml = MetricLib()
     entries = MetricChart.objects.filter(metric_model_name=model)
@@ -1349,3 +1349,15 @@ if __name__ == "__main__":
                         metric_model_name=entry.metric_model_name,
                         base_line_date=base_line_date).save()
     print "added charts for DDR flow based firewall"
+
+if __name__ == "__main__":
+    model_name = "HuThroughputPerformance"
+    charts = MetricChart.objects.filter(metric_model_name=model_name)
+    ml = MetricLib()
+    for chart in charts:
+        data_sets = json.loads(chart.data_sets)
+        input = {}
+        input["input_num_hosts"] = 1
+        data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+        ml.save_data_sets(data_sets=data_sets, chart=chart)
+        print "added number of hosts field for {}".format(chart.chart_name)
