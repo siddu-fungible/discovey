@@ -30,7 +30,6 @@ export class RegressionComponent implements OnInit {
   suiteExecutionsCount: number;
   recordsPerPage: number;
   @Input() tags: string;
-  @Input() filterString: string = Filter.ALL;
   items: any;
   logDir: any;
   status: string = "Fetching Data";
@@ -343,6 +342,29 @@ export class RegressionComponent implements OnInit {
 
   testClick(suiteExecutionId, suitePath) {
     this.reRunService.submitReRun(suiteExecutionId, suitePath);
+  }
+
+  requestedDaysToString(days) {
+    let d = JSON.parse(days);
+    let s = "";
+    d.map(day => {
+      s += day.charAt(0).toUpperCase() + day.charAt(1) + " ,";
+    });
+    s = s.replace(/,$/, "");
+    return s;
+  }
+
+  getRequestedTime(hour, minute) {
+    let s = "";
+    if (hour < 10) {
+      s += "0";
+    }
+    s += hour + ":";
+    if (minute < 10) {
+      s += "0";
+    }
+    s += minute;
+    return s;
   }
 
 }

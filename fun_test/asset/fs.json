@@ -10,14 +10,14 @@
       "mgmt_ip": "10.1.21.211",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
-
     },
     "come": {
       "mgmt_ip": "10.1.21.213",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
-  }, {
+  },
+  {
     "name": "fs-7",
     "bmc": {
       "mgmt_ip": "10.1.20.19",
@@ -28,14 +28,14 @@
       "mgmt_ip": "10.1.20.157",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
-
     },
     "come": {
-      "mgmt_ip": "10.1.20.129",
+      "mgmt_ip": "10.1.21.8",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
-  }, {
+  },
+  {
     "name": "fs-6",
     "bmc": {
       "mgmt_ip": "10.1.20.153",
@@ -46,14 +46,14 @@
       "mgmt_ip": "10.1.20.124",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
-
     },
     "come": {
       "mgmt_ip": "10.1.20.154",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
-  }, {
+  },
+  {
     "name": "fs-11-old",
     "bmc": {
       "mgmt_ip": "10.1.20.146",
@@ -64,14 +64,14 @@
       "mgmt_ip": "10.1.20.145",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
-
     },
     "come": {
       "mgmt_ip": "10.1.20.166",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
-  }, {
+  },
+  {
     "name": "fs-15",
     "bmc": {
       "mgmt_ip": "10.1.20.112",
@@ -84,11 +84,12 @@
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.20.137",
+      "mgmt_ip": "10.1.20.170",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
-  }, {
+  },
+  {
     "name": "fs-11",
     "bmc": {
       "mgmt_ip": "10.1.21.16",
@@ -99,14 +100,14 @@
       "mgmt_ip": "10.1.20.146",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
-
     },
     "come": {
-      "mgmt_ip": "10.1.20.22",
+      "mgmt_ip": "10.1.20.137",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
-  }, {
+  },
+  {
     "name": "fs-20",
     "bmc": {
       "mgmt_ip": "10.1.20.132",
@@ -117,7 +118,6 @@
       "mgmt_ip": "10.1.21.28",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
-
     },
     "come": {
       "mgmt_ip": "10.1.20.136",

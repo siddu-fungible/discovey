@@ -37,6 +37,7 @@ operations_category = ["op", "Kop", "Mop", "Gop"]
 cycles_category = ["cycles"]
 bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
 bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
+packets_per_sec_category = ["pps", "Mpps"]
 
 
 def get_rounded_time(dt):
@@ -542,13 +543,16 @@ def convert_to_base_unit(output_value, output_unit):
                 output_value = float(output_value * math.pow(10, 6))
             elif output_unit == "Gop":
                 output_value = float(output_value * math.pow(10, 9))
+        elif output_unit in packets_per_sec_category:
+            if output_unit == "Mpps":
+                output_value = float(output_value * math.pow(10, 6))
     return output_value
 
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="HU_NU_NFCP")
-    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=True)
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="rcnvme")
+    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")

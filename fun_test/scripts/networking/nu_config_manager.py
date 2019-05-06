@@ -41,6 +41,9 @@ class NuConfigManager(object):
     INTEGRATION_FLOW_TYPE = "integration_flow"
     DUT_TYPE = None
     CHASSIS_TYPE = None
+    F1_INDEX_1 = 1  # Will ignore F1_1 and boot F1_0 during bootup
+    F1_INDEX_0 = 0  # Will ignore F1_0 and boot F1_1 during bootup
+    F1_INDEX = None
 
     def __init__(self):
         self.get_dut_type()
@@ -62,6 +65,18 @@ class NuConfigManager(object):
             if set_speed[-1] == 'G':
                 self.SPEED = int(set_speed[:-1]) * 1000
         return self.SPEED
+
+    def get_f1_index(self):
+        self.F1_INDEX = None
+        job_inputs = fun_test.get_job_inputs()
+        if job_inputs and 'disable_f1_index' in job_inputs:
+            if int(job_inputs['disable_f1_index']) == self.F1_INDEX_0:
+                self.F1_INDEX = self.F1_INDEX_0
+            elif int(job_inputs['disable_f1_index']) == self.F1_INDEX_1:
+                self.F1_INDEX = self.F1_INDEX_1
+        else:
+            self.F1_INDEX = None
+        return self.F1_INDEX
 
     def _parse_file_to_json_in_order(self, file_name):
         result = None
@@ -96,6 +111,12 @@ class NuConfigManager(object):
                     if 'UART_HOST' in job_environment and 'UART_TCP_PORT_0' in job_environment:
                         result['dpcsh_tcp_proxy_ip'] = job_environment['UART_HOST']
                         result['dpcsh_tcp_proxy_port'] = int(job_environment['UART_TCP_PORT_0'])
+                    if self.F1_INDEX == self.F1_INDEX_1:
+                        result['dpcsh_tcp_proxy_ip'] = result['dpcsh_tcp_proxy_ip']
+                        result['dpcsh_tcp_proxy_port'] = result['dpcsh_tcp_proxy_port1']
+                    elif self.F1_INDEX == self.F1_INDEX_0:
+                        result['dpcsh_tcp_proxy_ip'] = result['dpcsh_tcp_proxy_ip']
+                        result['dpcsh_tcp_proxy_port'] = result['dpcsh_tcp_proxy_port2']
                     break
             dut_spirent_map = self.read_dut_spirent_map()
             result['ports'] = []

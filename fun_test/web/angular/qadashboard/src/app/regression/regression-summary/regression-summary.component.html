@@ -72,6 +72,7 @@
                   <b>
                     <span *ngIf="numBugs > 0" class="no-padding text-color-red">Bugs
                       <sup><span class="text-color-red">{{ numBugs }}</span></sup>
+
                     </span>
                   </b>&nbsp;
                   <span><span style="color: red">Active </span>- {{ numBugsActive }}
@@ -86,6 +87,7 @@
                              (numActive)="updateNumBugsActive($event, null)"
                              (numResolved)="updateNumBugsResolved($event, null)">
                   </jira-info-->
+                  &nbsp;<a href="/regression/all_jiras_component" target="_blank"><i class="fa fa-external-link"></i></a>
                   <summary-jira-info [summaryInHeader]="false" [ngClass]='{hidden: !showGlobalBugPanel}' *ngIf="globalJiraMap" [bugInfoUrl]="'/common/bug_info'" [data]="globalJiraMap" [allowDelete]="false" [allowContext]="true" [allowAdd]="false" (numBugs)="updateNumBugs($event, null)"
                              (numActive)="updateNumBugsActive($event, null)"
                              (numResolved)="updateNumBugsResolved($event, null)"></summary-jira-info>
@@ -176,6 +178,8 @@
                 &nbsp;
                 <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
                    class="anchor-button pseudo-anchor">details</u>
+
+
               </td>
               <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
               <td>{{ scriptInfo.value.historyResults.numFailed }}</td>

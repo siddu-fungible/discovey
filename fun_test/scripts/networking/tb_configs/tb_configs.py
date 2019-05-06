@@ -32,8 +32,8 @@ class TBConfigs:
                     if intf_dict[intf].get('type', None) == type:
                         return intf
 
-    def get_a_nu_interface(self):
-        namespaces = self.get_namespaces('nu')
+    def get_a_nu_interface(self, nu='nu'):
+        namespaces = self.get_namespaces(nu)
         for ns in namespaces:
             if ns is None:
                 ns = 'default'
@@ -41,17 +41,17 @@ class TBConfigs:
             if interfaces:
                 return interfaces[0].keys()[0]
 
-    def get_hu_pf_interface(self):
-        return self.configs['hu']['pf_interface']
+    def get_hu_pf_interface(self, hu='hu'):
+        return self.configs[hu]['pf_interface']
 
-    def get_hu_vf_interface(self):
-        return self.configs['hu']['vf_interface']
+    def get_hu_vf_interface(self, hu='hu'):
+        return self.configs[hu]['vf_interface']
 
-    def get_hu_pf_interface_fcp(self):
-        return self.configs['hu']['pf_interface_fcp']
+    def get_hu_pf_interface_fcp(self, hu='hu'):
+        return self.configs[hu]['pf_interface_fcp']
 
-    def get_hu_vf_interface_fcp(self):
-        return self.configs['hu']['vf_interface_fcp']
+    def get_hu_vf_interface_fcp(self, hu='hu'):
+        return self.configs[hu]['vf_interface_fcp']
 
     def get_namespaces(self, nu_or_hu):
         return [n if n != 'default' else None for n in self.configs[nu_or_hu]['namespaces'].keys()]

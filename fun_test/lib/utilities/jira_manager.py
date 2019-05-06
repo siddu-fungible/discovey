@@ -8,10 +8,10 @@ import os, traceback
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 if not logger.handlers:
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.ERROR)
     handler = logging.StreamHandler(sys.stdout)
     logger.addHandler(hdlr=handler)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.ERROR)
 
 class JiraManager:
     def __init__(self, project_name=TCMS_PROJECT):

@@ -21,6 +21,8 @@ import re
 from datetime import datetime
 from dateutil.parser import parse
 from scripts.system.metric_parser import MetricParser
+from django.utils import timezone
+from web.fun_test.models_helper import add_jenkins_job_id_map
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
@@ -42,6 +44,10 @@ RCNVME_READ = "qa_rcnvme_read"
 RCNVME_RANDOM_READ = "qa_rcnvme_random_read"
 RCNVME_WRITE = "qa_rcnvme_write"
 RCNVME_RANDOM_WRITE = "qa_rcnvme_random_write"
+RCNVME_READ_ALL = "qa_rcnvme_read_all"
+RCNVME_RANDOM_READ_ALL = "qa_rcnvme_random_read_all"
+RCNVME_WRITE_ALL = "qa_rcnvme_write_all"
+RCNVME_RANDOM_WRITE_ALL = "qa_rcnvme_random_write_all"
 TERAMARK_CRYPTO_SINGLE_TUNNEL = "crypto_single_tunnel_teramark"
 TERAMARK_CRYPTO_MULTI_TUNNEL = "crypto_multi_tunnel_teramark"
 
@@ -53,23 +59,8 @@ jpeg_operations = {"Compression throughput": "Compression throughput with Driver
 nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
-internal_chart_names_for_flows = {
-    "NU_HNU_NFCP": ["NU_HNU_output_throughput", "NU_HNU_output_pps", "NU_HNU_output_latency_avg"],
-    "HNU_HNU_FCP": ["HNU_HNU_FCP_output_throughput", "HNU_HNU_FCP_output_pps", "HNU_HNU_FCP_output_latency_avg"],
-    "HNU_HNU_NFCP": ["HNU_HNU_output_throughput", "HNU_HNU_output_pps", "HNU_HNU_output_latency_avg"],
-    "NU_NU_NFCP": ["NU_NU_output_throughput", "NU_NU_output_pps", "NU_NU_output_latency_avg"],
-    "HNU_NU_NFCP": ["HNU_NU_output_throughput", "HNU_NU_output_pps", "HNU_NU_output_latency_avg"],
-    "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "HU_NU_NFCP_output_latency_avg"],
-    "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps", "HU_HU_NFCP_output_latency_avg"],
-    "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps", "HU_HU_FCP_output_latency_avg"],
-    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"],
-    "NU_VP_NU_FWD_NFCP": ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps",
-                          "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"],
-    "NU_LE_VP_NU_FW": ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
-                       "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
-}
-
-networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance"]
+networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
+                     "NuTransitPerformance"]
 
 
 def get_rounded_time():
@@ -117,6 +108,7 @@ def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, j
         chart.last_git_commit = git_commit
         chart.save()
 
+
 def set_networking_chart_status():
     for model in networking_models:
         metric_model = app_config.get_metric_models()[model]
@@ -141,6 +133,20 @@ def set_networking_chart_status():
                         break
 
 
+def add_version_to_jenkins_job_id_map(date_time, version):
+    date_time = timezone.localtime(date_time)
+    date_time = str(date_time).split(":")
+    completion_date = date_time[0] + ":" + date_time[1]
+    add_jenkins_job_id_map(jenkins_job_id=0,
+                           fun_sdk_branch="",
+                           git_commit="",
+                           software_date=0,
+                           hardware_version="",
+                           completion_date=completion_date,
+                           build_properties="", lsf_job_id="",
+                           sdk_version=version)
+
+
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -154,7 +160,9 @@ class MyScript(FunTestScript):
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
-                RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL]
+                RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
+                RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
+                RCNVME_RANDOM_WRITE_ALL]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1413,6 +1421,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
 
 class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_LOOKUP
+    model = "TeraMarkLookupEnginePerformance"
 
     def describe(self):
         self.set_test_details(id=19,
@@ -1420,49 +1429,19 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            teramark_begin = False
-            for line in self.lines:
-                if "TeraMark Begin" in line:
-                    teramark_begin = True
-                if teramark_begin:
-                    m = re.search(
-                        r'{\s+"memory":\s+"(?P<memory>.*)",\s+"unit":\s+"(?P<unit>\S+)",\s+"min":\s+(?P<minimum>\d+),\s+"avg":\s+(?P<average>\d+),\s+"max":\s+(?P<maximum>\d+)\s+}',
-                        line)
-                    if m:
-                        input_memory = m.group("memory")
-                        output_lookup_per_sec_min = int(m.group("minimum"))
-                        output_lookup_per_sec_avg = int(m.group("average"))
-                        output_lookup_per_sec_max = int(m.group("maximum"))
-                        output_lookup_per_sec_min_unit = m.group("unit")
-                        output_lookup_per_sec_avg_unit = m.group("unit")
-                        output_lookup_per_sec_max_unit = m.group("unit")
-                        input_test = "le_test_perf"
-                        fun_test.log("memory: {}, lookup per sec: min {}, avg {}, max {}".format(input_memory,
-                                                                                                 output_lookup_per_sec_min,
-                                                                                                 output_lookup_per_sec_avg,
-                                                                                                 output_lookup_per_sec_max))
-                        metrics["input_test"] = input_test
-                        metrics["input_memory"] = input_memory
-                        metrics["output_lookup_per_sec_min"] = output_lookup_per_sec_min
-                        metrics["output_lookup_per_sec_avg"] = output_lookup_per_sec_avg
-                        metrics["output_lookup_per_sec_max"] = output_lookup_per_sec_max
-                        metrics["output_lookup_per_sec_min_unit"] = output_lookup_per_sec_min_unit
-                        metrics["output_lookup_per_sec_avg_unit"] = output_lookup_per_sec_avg_unit
-                        metrics["output_lookup_per_sec_max_unit"] = output_lookup_per_sec_max_unit
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        MetricHelper(model=TeraMarkLookupEnginePerformance).add_entry(**d)
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt)
 
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
-
         except Exception as ex:
             fun_test.critical(str(ex))
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkLookupEnginePerformance")
+                                     git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1679,11 +1658,11 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
             for file in self.lines:
                 for line in file:
+                    metrics = collections.OrderedDict()
                     if "flow_type" in line:
                         if line["flow_type"] in nu_transit_flow_types:
                             line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
@@ -1705,7 +1684,9 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_latency_P99"] = line.get("latency_P99", -1)
                             metrics["output_latency_P90"] = line.get("latency_P90", -1)
                             metrics["output_latency_P50"] = line.get("latency_P50", -1)
-                        metrics["input_number_flows"] = line.get("num_flows", 512000)
+                        else:
+                            metrics["input_half_load_latency"] = line.get("half_load_latency", False)
+                        metrics["input_num_flows"] = line.get("num_flows", 512000)
                         metrics["input_offloads"] = line.get("offloads", False)
                         metrics["input_protocol"] = line.get("protocol", "UDP")
                         metrics["output_jitter_max"] = line.get("jitter_max", -1)
@@ -1720,42 +1701,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         if date_time.year >= 2019:
                             metric_model = app_config.get_metric_models()[self.model]
                             MetricHelper(model=metric_model).add_entry(**d)
-                        if metrics["input_flow_type"] in internal_chart_names_for_flows:
-                            chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                            for names in chart_names:
-                                if "throughput" in names:
-                                    if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
-                                        set_chart_status(result=fun_test.FAILED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                    else:
-                                        set_chart_status(result=fun_test.PASSED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                if "pps" in names:
-                                    if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
-                                        set_chart_status(result=fun_test.FAILED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                    else:
-                                        set_chart_status(result=fun_test.PASSED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                if "latency" in names:
-                                    if metrics["output_latency_avg"] == -1 and metrics["input_frame_size"] == 800:
-                                        set_chart_status(result=fun_test.FAILED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
-                                    else:
-                                        set_chart_status(result=fun_test.PASSED,
-                                                         suite_execution_id=fun_test.get_suite_execution_id(),
-                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                         git_commit="", internal_chart_name=names)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
 
             self.result = fun_test.PASSED
         except Exception as ex:
@@ -1980,9 +1926,10 @@ class TeraMarkRcnvmeReadPerformanceTC(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
+        if self.result == fun_test.FAILED:
+            set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                         test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                         git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -2073,6 +2020,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                         d["input_date_time"] = date_time
                         metric_model = app_config.get_metric_models()[self.model]
                         MetricHelper(model=metric_model).add_entry(**d)
+                        add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
 
             self.result = fun_test.PASSED
         except Exception as ex:
@@ -2089,7 +2037,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                 metrics["output_throughput_h2n"] = (float(
                     line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
                 metrics["output_pps_h2n"] = (float(
-                    line["pps"]) / 1000000) if "pps" in line and  line["pps"] != -1 else -1
+                    line["pps"]) / 1000000) if "pps" in line and line["pps"] != -1 else -1
             else:
                 metrics["output_throughput_n2h"] = (float(
                     line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
@@ -2099,6 +2047,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             d["input_date_time"] = date_time
             metric_model = app_config.get_metric_models()[self.model]
             MetricHelper(model=metric_model).add_entry(**d)
+            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
         if "latency_avg" in line:
             metrics = dict(default_metrics)
             self.model = "HuLatencyPerformance"
@@ -2120,6 +2069,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             d["input_date_time"] = date_time
             metric_model = app_config.get_metric_models()[self.model]
             MetricHelper(model=metric_model).add_entry(**d)
+            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
 
 
 class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
@@ -2148,6 +2098,7 @@ class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO_MULTI_TUNNEL
     model = "JuniperCryptoTunnelPerformance"
@@ -2173,6 +2124,46 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
                                      git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_READ_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=41,
+                              summary="Rcnvme read all Performance Test on F1",
+                              steps="Steps 1")
+
+
+class RcnvmeRandomReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_RANDOM_READ_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=42,
+                              summary="Rcnvme random read all drives Performance Test on F1",
+                              steps="Steps 1")
+
+
+class RcnvmeWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_WRITE_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=43,
+                              summary="Rcnvme write all Performance Test on F1",
+                              steps="Steps 1")
+
+
+class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_RANDOM_WRITE_ALL
+    model = "TeraMarkRcnvmeReadWriteAllPerformance"
+
+    def describe(self):
+        self.set_test_details(id=44,
+                              summary="Rcnvme random write all Performance Test on F1",
+                              steps="Steps 1")
 
 
 class PrepareDbTc(FunTestCase):
@@ -2227,7 +2218,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
     myscript.add_test_case(F1FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkNfaPerformanceTC())
-    myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
+    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
     myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
@@ -2235,6 +2226,10 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkHuPerformanceTC())
     myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTC())
     myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTC())
+    myscript.add_test_case(RcnvmeReadAllPerformanceTC())
+    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTC())
+    myscript.add_test_case(RcnvmeWriteAllPerformanceTC())
+    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

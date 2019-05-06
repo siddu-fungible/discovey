@@ -80,3 +80,45 @@ def get_utc_offset():
     now = datetime.datetime.now(pytz.timezone(TIME_ZONE))
     offset = now.utcoffset().total_seconds() / 60 / 60
     return offset
+
+class PerfUnit:
+    # Units taken from Bertrand's perf library 'perf_metric.h' from FUNOS common utils. Link given below:
+    # https://github.com/fungible-inc/FunOS/blob/master/utils/common/perf_metric.h
+    UNIT_USECS = "usecs"
+    UNIT_NSECS = "nsecs"
+    UNIT_MSECS = "msecs"
+    UNIT_SECS = "secs"
+
+    UNIT_OPS = "ops"
+    UNIT_KOPS = "Kops"
+    UNIT_MOPS = "Mops"
+    UNIT_GOPS = "Gops"
+
+    UNIT_OP = "op"
+    UNIT_KOP = "Kop"
+    UNIT_MOP = "Mop"
+    UNIT_GOP = "Gop"
+
+    UNIT_CYCLES = "cycles"
+
+    UNIT_BITS = "b"
+    UNIT_BYTES = "B"
+    UNIT_KB = "KB"
+    UNIT_MB = "MB"
+    UNIT_GB = "GB"
+    UNIT_TB = "TB"
+
+    UNIT_BITS_PER_SEC = "bps"
+    UNIT_KBITS_PER_SEC = "Kbps"
+    UNIT_MBITS_PER_SEC = "Mbps"
+    UNIT_GBITS_PER_SEC = "Gbps"
+    UNIT_TBITS_PER_SEC = "Tbps"
+
+    UNIT_BYTES_PER_SEC = "Bps"
+    UNIT_KBYTES_PER_SEC = "KBps"
+    UNIT_MBYTES_PER_SEC = "MBps"
+    UNIT_GBYTES_PER_SEC = "GBps"
+    UNIT_TBYTES_PER_SEC = "TBps"
+
+    UNIT_PPS = "pps"
+    UNIT_MPPS = "Mpps"

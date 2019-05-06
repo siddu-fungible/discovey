@@ -1159,7 +1159,7 @@ class NuTransitPerformance(models.Model):
     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1000000)
+    input_num_flows = models.IntegerField(verbose_name="Number of flows", default=1000000)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="UDP")
 
@@ -1276,9 +1276,11 @@ class TeraMarkJuniperNetworkingPerformance(models.Model):
     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
-    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=0)
+    input_num_flows = models.IntegerField(verbose_name="Number of flows", default=0)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="UDP")
+    input_half_load_latency = models.BooleanField(default=False)
+    input_memory = models.TextField(default="HBM")
 
     def __str__(self):
         s = ""
@@ -1810,6 +1812,7 @@ class TeraMarkLookupEnginePerformance(models.Model):
     output_lookup_per_sec_min_unit = models.TextField(default="lookups/sec")
     output_lookup_per_sec_avg_unit = models.TextField(default="lookups/sec")
     output_lookup_per_sec_max_unit = models.TextField(default="lookups/sec")
+    input_operation = models.TextField(default="")
     tag = "analytics"
 
     def __str__(self):
@@ -1885,7 +1888,44 @@ class TeraMarkRcnvmeReadWritePerformance(models.Model):
     input_num_ctrlrs = models.IntegerField(default=-1)
     input_num_threads = models.IntegerField(default=-1)
     input_qdepth = models.IntegerField(default=-1)
-    input_total_numios = models.IntegerField(default=-1)
+    input_io_size = models.IntegerField(default=-1)
+    input_ctrlr_id = models.IntegerField(default=-1)
+    input_model = models.TextField(default="")
+    input_fw_rev = models.TextField(default="")
+    input_serial = models.TextField(default="")
+    input_pci_vendor_id = models.TextField(default="")
+    input_pci_device_id = models.TextField(default="")
+    input_count = models.IntegerField(default=-1)
+    input_metric_name = models.TextField(default="")
+    output_bandwidth = models.FloatField(verbose_name="Mbps", default=-1)
+    output_latency_min = models.BigIntegerField(verbose_name="Min nsecs", default=-1)
+    output_latency_avg = models.BigIntegerField(verbose_name="Avg nsecs", default=-1)
+    output_latency_max = models.BigIntegerField(verbose_name="Max nsecs", default=-1)
+    output_iops = models.BigIntegerField(verbose_name="ops per sec", default=-1)
+    output_bandwidth_unit = models.TextField(default="Mbps")
+    output_latency_min_unit = models.TextField(default="nsecs")
+    output_latency_avg_unit = models.TextField(default="nsecs")
+    output_latency_max_unit = models.TextField(default="nsecs")
+    output_iops_unit = models.TextField(default="ops")
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkRcnvmeReadWriteAllPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_operation = models.TextField( default="")
+    input_io_type = models.TextField(default="")
+    input_dev_access = models.TextField(default="")
+    input_num_ctrlrs = models.TextField(default="")
+    input_num_threads = models.IntegerField(default=-1)
+    input_qdepth = models.IntegerField(default=-1)
     input_io_size = models.IntegerField(default=-1)
     input_ctrlr_id = models.IntegerField(default=-1)
     input_model = models.TextField(default="")

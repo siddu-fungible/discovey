@@ -34,6 +34,7 @@ import dateutil.parser
 import re
 from django.apps import apps
 import time
+import glob
 from django.db import transaction
 from django.db.models import Q
 from scheduler.scheduler_global import SchedulerJobPriority, QueueOperations
@@ -312,7 +313,7 @@ def suite_executions_count(request, state_filter_string):
                                           state_filter_string=state_filter_string,
                                           tags=tags,
                                           submitter_email=submitter_email,
-                                          test_bed_type=test_bed_type, suite_path=suite_path)
+                                          test_bed_type=test_bed_type, suite_path=suite_path, save_suite_info=False)
     return count
 
 
@@ -836,6 +837,7 @@ def all_regression_jiras(request):
                         jira_data["id"] = jira_id
                         jira_data["summary"] = jira_response.fields.summary
                         jira_data["status"] = jira_response.fields.status
+                        jira_data["priority"] = jira_response.fields.priority
                         jira_info[jira_id] = jira_data
 
             result = jira_info
@@ -870,9 +872,14 @@ def jiras(request, script_pk, jira_id=None):
     if request.method == "GET":
         jira_info = {}
         try:
-            c = RegresssionScripts.objects.get(pk=script_pk)
+            if script_pk:
+                c = RegresssionScripts.objects.get(pk=script_pk)
             try:
-                scripts = ScriptInfo.objects.filter(script_id=script_pk)
+                q = Q()
+                if script_pk is not None:
+                    q = q & Q(script_id=script_pk)
+
+                scripts = ScriptInfo.objects.filter(q)
                 if scripts:
                     for script in scripts:
                         if script.bug:
@@ -882,6 +889,7 @@ def jiras(request, script_pk, jira_id=None):
                             jira_data["id"] = jira_id
                             jira_data["summary"] = jira_response.fields.summary
                             jira_data["status"] = jira_response.fields.status
+                            jira_data["created"] = jira_response.fields.created
                             jira_info[jira_id] = jira_data
 
             except ObjectDoesNotExist:
@@ -1075,4 +1083,14 @@ def testbeds(request):
     testbeds = TestBed.objects.all()
     for testbed in testbeds:
         result[testbed.name] = {"name": testbed.name, "description": testbed.description}
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def get_networking_artifacts(request, sdk_version):
+    files = glob.glob("{}/*{}*.*".format(LOGS_DIR, sdk_version))
+    result = []
+    for file in files:
+        result.append(os.path.basename(file))
     return result

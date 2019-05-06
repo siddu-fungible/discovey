@@ -751,19 +751,16 @@ class CmdController(Cmd):
         self._peek_cmd_obj.peek_cc_resource_stats(grep_regex=grep_regex)
 
     def peek_dma_resource_stats(self, args):
-        grep_regex = args.grep
         cluster_id = args.cluster_id
-        self._peek_cmd_obj.peek_dma_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_dma_resource_stats(cluster_id=cluster_id)
 
     def peek_le_resource_stats(self, args):
-        grep_regex = args.grep
         cluster_id = args.cluster_id
-        self._peek_cmd_obj.peek_le_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_le_resource_stats(cluster_id=cluster_id)
 
     def peek_zip_resource_stats(self, args):
-        grep_regex = args.grep
         cluster_id = args.cluster_id
-        self._peek_cmd_obj.peek_zip_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_zip_resource_stats(cluster_id=cluster_id)
 
     def peek_rgx_resource_stats(self, args):
         grep_regex = args.grep
@@ -1174,7 +1171,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.20.129", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

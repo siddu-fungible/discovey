@@ -19,18 +19,23 @@ class UartLogger(Thread):
         self.port = port
         self.stopped = False
         self.buf = ""
+        self.nc = None
 
     def run(self):
-        nc = Netcat(ip=self.ip, port=self.port)
-
-        while not self.stopped and not fun_test.closed:
-            self.buf += nc.read_until(data="PUlsAr", timeout=0.00001)
+        self.nc = Netcat(ip=self.ip, port=self.port)
+        try:
+            while not self.stopped and not fun_test.closed:
+                self.buf += self.nc.read_until(expected_data="PUlsAr", timeout=5)
+        except Exception as ex:
+            pass
 
     def get_log(self):
         return self.buf
 
     def close(self):
         self.stopped = True
+        if self.nc:
+            self.buf += self.nc.close()
 
 
 class BootPhases:
@@ -57,7 +62,7 @@ class Fpga(Linux):
         super(Fpga, self).__init__(**kwargs)
         self.disable_f1_index = disable_f1_index
 
-    def initialize(self, reset=False):
+    def initialize(self):
         fun_test.add_checkpoint("FPGA initialize")
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
@@ -135,9 +140,9 @@ class Bmc(Linux):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            self.uart_log_threads[i].close()
+            self.uart_log_threads[f1_index].close()
 
-    def come_reset(self, come, max_wait_time=180, power_cycle=True):
+    def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
         fun_test.test_assert(self.ping(come.host_ip), "ComE reachable before reset")
 
@@ -145,25 +150,39 @@ class Bmc(Linux):
         # fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
 
         fun_test.log("Rebooting ComE")
-        come.reboot(retries=15)
+        reboot_result = come.reboot(retries=15, non_blocking=non_blocking)
+        fun_test.test_assert(reboot_result, "ComE reboot initiated")
+        if not non_blocking:
+            fun_test.test_assert(self.ensure_come_is_up(come=come, max_wait_time=max_wait_time, power_cycle=power_cycle), "Ensure ComE is up")
 
-        # Ensure come restarted
+        return True
+
+    def ensure_come_is_up(self, come, max_wait_time=180, power_cycle=True):
+        come_up = False
         come_restart_timer = FunTimer(max_time=max_wait_time)
-        while not come_restart_timer.is_expired():
-            ping_result = self.ping(come.host_ip)
+        # Ensure ComE restarted
+
+        while not come_restart_timer.is_expired() and not come_up:
+            ping_result = self.ping(come.host_ip, count=20)
             if ping_result:
-                break
+                try:
+                    come._connect()
+                    come.command("pwd")
+                    come_up = True
+                    break
+                except Exception as ex:
+                    pass
+
             fun_test.sleep("ComE power up")
 
-        if come_restart_timer.is_expired():
+        if come_restart_timer.is_expired() and not come_up:
             fun_test.critical("ComE did not power up. Trying to power-cycle")
             if power_cycle:
                 fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")
-                fun_test.sleep("Power-cyling ComE", seconds=10)
+                fun_test.sleep("Power-cycling ComE", seconds=10)
                 fun_test.test_assert(self.is_host_pingable(host_ip=come.host_ip, max_time=max_wait_time),
                                      "ComE reachable after power-cycle")
-
-        return True
+        return come_up
 
     def set_boot_phase(self, index, phase):
         self.boot_phase = phase
@@ -173,11 +192,11 @@ class Bmc(Linux):
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
         nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc.write(command + "\n")
-        output = nc.read_until(data=expected, timeout=timeout)
+        output = nc.read_until(expected_data=expected, timeout=timeout)
         fun_test.log(output)
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output".format(expected))
-        nc.close()
+        output = nc.close()
         return output
 
     def start_uart_log_listener(self, f1_index):
@@ -199,16 +218,19 @@ class Bmc(Linux):
         result = None
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
 
-        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset',
+        # self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset',
+        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected=self.U_BOOT_F1_PROMPT,
+
                             f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
 
         self.u_boot_command(
             command="setenv bootargs {}".format(
-                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index)
+                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
-        self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
+        # self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
+        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
 
@@ -283,6 +305,15 @@ class Bmc(Linux):
         self.position_support_scripts()
         return True
 
+    def reset_come(self):
+        self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
+        bmc_files = self.command(command='ls')
+        if "come.sh" in bmc_files:
+            self.command(command="./come.sh 2")
+        elif "come-power.sh" in bmc_files:
+            self.command(command="./come-power.sh")
+        return True
+
     def host_power_cycle(self):
         return self.ipmi_power_cycle(host=self.host_ip, user="admin", passwd="admin")
 
@@ -302,10 +333,11 @@ class Bmc(Linux):
 
 
     def cleanup(self):
+        fun_test.sleep("Allowing time to generate full report", seconds=45)
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
-            log = uart_log_thread.get_log()
             uart_log_thread.close()
+            log = uart_log_thread.get_log()
             with open(artifact_file_name, "w") as f:
                 f.write(log)
             fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
@@ -351,6 +383,10 @@ class ComE(Linux):
         fun_test.simple_assert(self.cleanup_dpc(), "Cleanup dpc")
         for f1_index in range(self.NUM_F1S):
             self.command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
+
+        fun_test.test_assert(self.detect_pfs(), "Fungible PFs detected")
+        fun_test.test_assert(self.setup_dpc(), "Setup DPC")
+        fun_test.test_assert(self.is_dpc_ready(), "DPC ready")
         return True
 
     def get_dpc_port(self, f1_index):
@@ -427,11 +463,12 @@ class ComE(Linux):
         for device in devices:
             if "Unassigned class" in device["device_class"]:
                 device_id = device["id"]
-                # fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
-                self.funq_bind_device[f1_index] = device["id"]
-
                 if num_pfs_detected:
                     f1_index += 1
+                # fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
+                self.funq_bind_device[f1_index] = device_id
+
+
                 num_pfs_detected += 1
 
         '''
@@ -525,7 +562,8 @@ class Fs(object, ToDictMixin):
                  tftp_image_path="funos-f1.stripped.gz",
                  boot_args=DEFAULT_BOOT_ARGS,
                  power_cycle_come=False,
-                 disable_f1_index=None):
+                 disable_f1_index=None,
+                 disable_uart_logger=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -543,6 +581,8 @@ class Fs(object, ToDictMixin):
         self.f1s = {}
         self.boot_args = boot_args
         self.power_cycle_come = power_cycle_come
+        self.disable_uart_logger = disable_uart_logger
+        self.come_initialized = False
 
     def reachability_check(self):
         # TODO
@@ -562,7 +602,7 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None):
+    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None, disable_uart_logger=None):
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -596,9 +636,11 @@ class Fs(object, ToDictMixin):
                   come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
                   tftp_image_path=tftp_image_path,
                   boot_args=boot_args,
-                  disable_f1_index=disable_f1_index)
+                  disable_f1_index=disable_f1_index,
+                  disable_uart_logger=disable_uart_logger)
 
-    def bootup(self, reboot_bmc=False, power_cycle_come=True):
+    def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
+
         if reboot_bmc:
             fun_test.test_assert(self.reboot_bmc(), "Reboot BMC")
         fun_test.test_assert(self.bmc_initialize(), "BMC initialize")
@@ -612,24 +654,38 @@ class Fs(object, ToDictMixin):
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
-        if "retimer" not in self.boot_args:
-            fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come), "ComE rebooted successfully")
-            fun_test.test_assert(self.come_initialize(), "ComE initialized")
-            fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
-            fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
-            fun_test.test_assert(self.come.is_dpc_ready(), "DPC ready")
+
+
+        # if "retimer" not in self.boot_args:
+        if True:
+            self.get_come()
+            fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come, non_blocking=non_blocking), "ComE rebooted successfully. Non-blocking: {}".format(non_blocking))
+            if not non_blocking:
+                fun_test.test_assert(self.come.initialize(disable_f1_index=self.disable_f1_index), "ComE initialized")
+                self.come_initialized = True
+                '''
+                fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
+                fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
+                fun_test.test_assert(self.come.is_dpc_ready(), "DPC ready")
+                '''
             for f1_index, f1 in self.f1s.iteritems():
                 f1.set_dpc_port(self.come.get_dpc_port(f1_index))
-        else:
-            fun_test.critical("Skipping ComE initialization as retimer was used")
 
-
+        # else:
+        #    fun_test.critical("Skipping ComE initialization as retimer was used")
 
         return True
 
-    def come_reset(self, power_cycle=None):
-        return self.bmc.come_reset(come=self.get_come(), power_cycle=power_cycle)
+    def is_ready(self):
+        if not self.come_initialized:
+            come = self.get_come()
+            fun_test.test_assert(self.bmc.ensure_come_is_up(come=come, max_wait_time=180, power_cycle=True), "Ensure ComE is up")
+            fun_test.test_assert(come.initialize(disable_f1_index=self.disable_f1_index), "ComE initialized")
+            self.come_initialized = True
+        return True
 
+    def come_reset(self, power_cycle=None, non_blocking=None):
+        return self.bmc.come_reset(come=self.get_come(), power_cycle=power_cycle, non_blocking=non_blocking)
 
     def re_initialize(self):
         self.get_bmc(disable_f1_index=self.disable_f1_index)
@@ -647,7 +703,8 @@ class Fs(object, ToDictMixin):
         if not self.bmc:
             self.bmc = Bmc(disable_f1_index=disable_f1_index, host_ip=self.bmc_mgmt_ip,
                            ssh_username=self.bmc_mgmt_ssh_username,
-                           ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True)
+                           ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True,
+                           disable_uart_logger=self.disable_uart_logger)
             self.bmc.set_prompt_terminator(r'# $')
         return self.bmc
 
@@ -678,6 +735,13 @@ class Fs(object, ToDictMixin):
         bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
         fun_test.simple_assert(bmc._connect(), "BMC connected")
         fun_test.simple_assert(bmc.initialize(), "BMC initialize")
+
+        return bmc
+
+    def from_bmc_reset_come(self):
+        bmc = self.get_bmc(disable_f1_index=self.disable_f1_index)
+        fun_test.simple_assert(bmc._connect(), "BMC connected")
+        fun_test.simple_assert(bmc.reset_come(), "BMC reset COMe")
 
         return bmc
 

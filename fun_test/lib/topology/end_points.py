@@ -52,7 +52,7 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
     def add_instance(self, instance):
         self.instance = instance
 
-    def get_host_instance(self, host_index):
+    def get_host_instance(self, host_index=None):
         return self.instance
 
 class HypervisorEndPoint(EndPoint, ToDictMixin):

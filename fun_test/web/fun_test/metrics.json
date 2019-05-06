@@ -12,6 +12,7 @@
         "leaf": false,
         "name": "Networking",
         "label": "Networking",
+        "weight": 1,
         "children": [
           {
             "info": "Lookup-engine",
@@ -69,255 +70,314 @@
             ]
           },
           {
-            "info": "NU_HNU",
+            "info": "funtcp",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "NU_HNU",
+            "name": "funtcp",
             "weight": 1,
-            "label": "NU->HNU NFCP Flow",
+            "label": "FunTCP",
             "children": [
               {
-                "info": "NU_HNU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HNU_output_throughput",
+                "info": "funtcp_server",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "funtcp_server",
                 "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "NU_HNU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HNU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "NU_HNU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_HNU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
+                "label": "TCP Server",
+                "children": [
+                  {
+                    "info": "funtcp_server_throughput",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_throughput",
+                    "weight": 1,
+                    "label": "Throughput",
+                    "children": [
+                      {
+                        "info": "funtcp_server_throughput_1tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_1tcp",
+                        "weight": 1,
+                        "label": "1 TCP Flow(s)"
+                      },
+                      {
+                        "info": "funtcp_server_throughput_4tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_4tcp",
+                        "weight": 1,
+                        "label": "4 TCP Flow(s)"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "funtcp_server_cps",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_cps",
+                    "weight": 0,
+                    "label": "Connections per second",
+                    "children": []
+                  },
+                  {
+                    "info": "funtcp_server_cc",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "funtcp_server_cc",
+                    "weight": 0,
+                    "label": "Concurrent Connections",
+                    "children": []
+                  }
+                ]
               }
             ]
           },
           {
-            "info": "HNU_HNU_FCP",
+            "info": "NU",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "HNU_HNU_FCP",
+            "name": "NU",
             "weight": 1,
-            "label": "HNU<->HNU FCP Flow",
+            "label": "NU",
             "children": [
               {
-                "info": "HNU_HNU_FCP_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_FCP_output_throughput",
+                "info": "NU_NU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_NU",
                 "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HNU_HNU_FCP_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_FCP_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HNU_HNU_FCP_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_FCP_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
+                "label": "NU->NU",
+                "children": [
+                  {
+                    "info": "NU_NU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_NU_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "NU_NU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_NU_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  },
+                  {
+                    "info": "NU_NU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_NU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
               }
             ]
           },
           {
-            "info": "HNU_HNU",
+            "info": "HU",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "HNU_HNU",
+            "name": "HU",
             "weight": 1,
-            "label": "HNU<->HNU NFCP Flow",
-            "children": [
-              {
-                "info": "HNU_HNU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HNU_HNU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HNU_HNU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_HNU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "NU_NU",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "NU_NU",
-            "weight": 1,
-            "label": "NU->NU NFCP",
-            "children": [
-              {
-                "info": "NU_NU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_NU_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "NU_NU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_NU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "NU_NU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "NU_NU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "HNU_NU",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "HNU_NU",
-            "weight": 1,
-            "label": "HNU->NU NFCP Flow",
-            "children": [
-              {
-                "info": "HNU_NU_output_throughput",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_NU_output_throughput",
-                "weight": 1,
-                "label": "Throughput"
-              },
-              {
-                "info": "HNU_NU_output_pps",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_NU_output_pps",
-                "weight": 1,
-                "label": "Packets per sec"
-              },
-              {
-                "info": "HNU_NU_output_latency_avg",
-                "metric_model_name": "NuTransitPerformance",
-                "leaf": true,
-                "name": "HNU_NU_output_latency_avg",
-                "weight": 1,
-                "label": "Latency"
-              }
-            ]
-          },
-          {
-            "info": "HU_NU_NFCP",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "HU_NU_NFCP_non_teramark",
-            "weight": 1,
-            "label": "Host->Network",
-            "extensible_references": [
-              "HU_NU_NFCP"
-            ],
+            "label": "HU",
             "children": [
               {
                 "info": "HU_NU_NFCP",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "HU_NU_NFCP_1TCP_offloads_disabled",
+                "name": "HU_NU_NFCP_non_teramark",
                 "weight": 1,
-                "label": "1 TCP Flow(s)",
+                "label": "Host->Network",
+                "extensible_references": [
+                  "HU_NU_NFCP"
+                ],
                 "children": [
                   {
-                    "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
-                    "metric_model_name": "HuThroughputPerformance",
-                    "leaf": true,
-                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "info": "HU_NU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Throughput"
-                  },
+                    "label": "1 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "NU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_HU_NFCP_non_teramark",
+                "weight": 1,
+                "label": "Network->Host",
+                "extensible_references": [
+                  "NU_HU_NFCP"
+                ],
+                "children": [
                   {
-                    "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
-                    "metric_model_name": "HuThroughputPerformance",
-                    "leaf": true,
-                    "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "info": "NU_HU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "NU_HU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "1 TCP Flow(s), 1 Host(s)",
+                    "children": [
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
                   }
                 ]
               }
             ]
           },
           {
-            "info": "NU_HU_NFCP",
+            "info": "HNU",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "NU_HU_NFCP_non_teramark",
+            "name": "HNU",
             "weight": 1,
-            "label": "Network->Host",
-            "extensible_references": [
-              "NU_HU_NFCP"
-            ],
+            "label": "HNU",
             "children": [
               {
-                "info": "NU_HU_NFCP",
+                "info": "NU_HNU",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "NU_HU_NFCP_1TCP_offloads_disabled",
+                "name": "NU_HNU",
                 "weight": 1,
-                "label": "1 TCP Flow(s)",
+                "label": "NU->HNU",
                 "children": [
                   {
-                    "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
-                    "metric_model_name": "HuThroughputPerformance",
+                    "info": "NU_HNU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
-                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                    "name": "NU_HNU_output_throughput",
                     "weight": 1,
                     "label": "Throughput"
                   },
                   {
-                    "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
-                    "metric_model_name": "HuThroughputPerformance",
+                    "info": "NU_HNU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
-                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                    "name": "NU_HNU_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
+                  },
+                  {
+                    "info": "NU_HNU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_HNU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
+              },
+              {
+                "info": "HNU_HNU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HNU_HNU",
+                "weight": 1,
+                "label": "HNU<->HNU",
+                "children": [
+                  {
+                    "info": "HNU_HNU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_HNU_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "HNU_HNU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_HNU_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  },
+                  {
+                    "info": "HNU_HNU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_HNU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
+              },
+              {
+                "info": "HNU_NU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HNU_NU",
+                "weight": 1,
+                "label": "HNU->NU",
+                "children": [
+                  {
+                    "info": "HNU_NU_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_NU_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "HNU_NU_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_NU_output_pps",
+                    "weight": 1,
+                    "label": "Packets per sec"
+                  },
+                  {
+                    "info": "HNU_NU_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HNU_NU_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
                   }
                 ]
               }
             ]
           }
-        ],
-        "weight": 1
+        ]
       },
       {
         "info": "Storage",
@@ -353,36 +413,362 @@
             "weight": 1,
             "children": [
               {
-                "info": "rcnvme_sequential_read",
+                "info": "rcnvme_single_drive",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "rcnvme_sequential_read",
+                "name": "rcnvme_single_drive",
+                "label": "Single Drive",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "rcnvme_sequential_read",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_sequential_read",
+                    "label": "Sequential Read",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_sequential_read_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_sequential_read_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_sequential_read_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_sequential_read_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_sequential_read_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_sequential_read_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "rcnvme_random_read",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_random_read",
+                    "label": "Random Read",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_random_read_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_random_read_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_random_read_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_random_read_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_random_read_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_random_read_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "rcnvme_sequential_write",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_sequential_write",
+                    "label": "Sequential Write",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_sequential_write_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_sequential_write_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_sequential_write_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_sequential_write_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_sequential_write_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_sequential_write_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "rcnvme_random_write",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_random_write",
+                    "label": "Random Write",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_random_write_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_random_write_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_random_write_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_random_write_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_random_write_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                        "leaf": true,
+                        "name": "rcnvme_random_write_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "rcnvme_multiple_drives",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "rcnvme_multiple_drives",
+                "label": "Multiple Drives",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "rcnvme_12_sequential_read",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_12_sequential_read",
+                    "label": "Sequential Read",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_12_sequential_read_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_sequential_read_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_sequential_read_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_sequential_read_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_sequential_read_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_sequential_read_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "rcnvme_12_random_read",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_12_random_read",
+                    "label": "Random Read",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_12_random_read_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_random_read_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_random_read_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_random_read_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_random_read_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_random_read_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "rcnvme_12_sequential_write",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_12_sequential_write",
+                    "label": "Sequential Write",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_12_sequential_write_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_sequential_write_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_sequential_write_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_sequential_write_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_sequential_write_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_sequential_write_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "rcnvme_12_random_write",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rcnvme_12_random_write",
+                    "label": "Random Write",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "rcnvme_12_random_write_output_bandwidth",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_random_write_output_bandwidth",
+                        "label": "Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_random_write_output_iops",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_random_write_output_iops",
+                        "label": "IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "rcnvme_12_random_write_output_latency_avg",
+                        "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
+                        "leaf": true,
+                        "name": "rcnvme_12_random_write_output_latency_avg",
+                        "label": "Latency",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "info": "memvol",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "memvol",
+            "label": "MemVol",
+            "weight": 1,
+            "children": [
+              {
+                "info": "memvol_sequential_read",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_sequential_read",
                 "label": "Sequential Read",
                 "weight": 1,
                 "children": [
                   {
-                    "info": "rcnvme_sequential_read_output_bandwidth",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_sequential_read_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_sequential_read_output_bandwidth",
+                    "name": "memvol_sequential_read_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_sequential_read_output_iops",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_sequential_read_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_sequential_read_output_iops",
+                    "name": "memvol_sequential_read_output_iops",
                     "label": "IOPS",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_sequential_read_output_latency_avg",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_sequential_read_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_sequential_read_output_latency_avg",
+                    "name": "memvol_sequential_read_output_latency_avg",
                     "label": "Latency",
                     "children": [],
                     "weight": 1
@@ -390,36 +776,36 @@
                 ]
               },
               {
-                "info": "rcnvme_random_read",
+                "info": "memvol_random_read",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "rcnvme_random_read",
+                "name": "memvol_random_read",
                 "label": "Random Read",
                 "weight": 1,
                 "children": [
                   {
-                    "info": "rcnvme_random_read_output_bandwidth",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_random_read_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_random_read_output_bandwidth",
+                    "name": "memvol_random_read_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_random_read_output_iops",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_random_read_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_random_read_output_iops",
+                    "name": "memvol_random_read_output_iops",
                     "label": "IOPS",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_random_read_output_latency_avg",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_random_read_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_random_read_output_latency_avg",
+                    "name": "memvol_random_read_output_latency_avg",
                     "label": "Latency",
                     "children": [],
                     "weight": 1
@@ -427,36 +813,36 @@
                 ]
               },
               {
-                "info": "rcnvme_sequential_write",
+                "info": "memvol_sequential_write",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "rcnvme_sequential_write",
+                "name": "memvol_sequential_write",
                 "label": "Sequential Write",
                 "weight": 1,
                 "children": [
                   {
-                    "info": "rcnvme_sequential_write_output_bandwidth",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_sequential_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_sequential_write_output_bandwidth",
+                    "name": "memvol_sequential_write_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_sequential_write_output_iops",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_sequential_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_sequential_write_output_iops",
+                    "name": "memvol_sequential_write_output_iops",
                     "label": "IOPS",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_sequential_write_output_latency_avg",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_sequential_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_sequential_write_output_latency_avg",
+                    "name": "memvol_sequential_write_output_latency_avg",
                     "label": "Latency",
                     "children": [],
                     "weight": 1
@@ -464,36 +850,110 @@
                 ]
               },
               {
-                "info": "rcnvme_random_write",
+                "info": "memvol_random_write",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "rcnvme_random_write",
+                "name": "memvol_random_write",
                 "label": "Random Write",
                 "weight": 1,
                 "children": [
                   {
-                    "info": "rcnvme_random_write_output_bandwidth",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_random_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_random_write_output_bandwidth",
+                    "name": "memvol_random_write_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_random_write_output_iops",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_random_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_random_write_output_iops",
+                    "name": "memvol_random_write_output_iops",
                     "label": "IOPS",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "rcnvme_random_write_output_latency_avg",
-                    "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
+                    "info": "memvol_random_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
                     "leaf": true,
-                    "name": "rcnvme_random_write_output_latency_avg",
+                    "name": "memvol_random_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "memvol_seq_read_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_seq_read_write",
+                "label": "Sequential Read Write",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_seq_read_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_seq_read_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_seq_read_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_seq_read_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_seq_read_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_seq_read_write_output_latency_avg",
+                    "label": "Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "memvol_random_read_write",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "memvol_random_read_write",
+                "label": "Random Read Write",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memvol_random_read_write_output_bandwidth",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_write_output_bandwidth",
+                    "label": "Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_read_write_output_iops",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_write_output_iops",
+                    "label": "IOPS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "memvol_random_read_write_output_latency_avg",
+                    "metric_model_name": "BltVolumePerformance",
+                    "leaf": true,
+                    "name": "memvol_random_read_write_output_latency_avg",
                     "label": "Latency",
                     "children": [],
                     "weight": 1
@@ -1696,74 +2156,28 @@
                 "label": "JPEG",
                 "children": [
                   {
-                    "info": "Compression-ratio",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "Compression-ratio",
+                    "info": "JPEG Compression_Compression-ratio",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "JPEG Compression_Compression-ratio",
                     "weight": 1,
-                    "label": "Compression-ratio",
-                    "children": [
-                      {
-                        "info": "JPEG Compression_Compression-ratio",
-                        "metric_model_name": "TeraMarkJpegPerformance",
-                        "leaf": true,
-                        "name": "JPEG Compression_Compression-ratio",
-                        "weight": 1,
-                        "label": "Compression-ratio"
-                      }
-                    ]
+                    "label": "Compression-ratio"
                   },
                   {
-                    "info": "JPEG Decompress",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "JPEG Decompress",
+                    "info": "JPEG Decompress_output_average_bandwidth",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "JPEG Decompress_output_average_bandwidth",
                     "weight": 1,
-                    "label": "Decompression",
-                    "children": [
-                      {
-                        "info": "JPEG Decompress_output_average_bandwidth",
-                        "metric_model_name": "TeraMarkJpegPerformance",
-                        "leaf": true,
-                        "name": "JPEG Decompress_output_average_bandwidth",
-                        "weight": 1,
-                        "label": "Throughput (including driver)"
-                      },
-                      {
-                        "info": "Decompression Accelerator throughput_output_average_bandwidth",
-                        "metric_model_name": "TeraMarkJpegPerformance",
-                        "leaf": true,
-                        "name": "Decompression Accelerator throughput_output_average_bandwidth",
-                        "weight": 1,
-                        "label": "Throughput (excluding driver)"
-                      }
-                    ]
+                    "label": "Decompression Throughput"
                   },
                   {
-                    "info": "Compression throughput with Driver",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "Compression throughput with Driver",
+                    "info": "Compression throughput with Driver_output_average_bandwidth",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Compression throughput with Driver_output_average_bandwidth",
                     "weight": 1,
-                    "label": "Compression",
-                    "children": [
-                      {
-                        "info": "Compression throughput with Driver_output_average_bandwidth",
-                        "metric_model_name": "TeraMarkJpegPerformance",
-                        "leaf": true,
-                        "name": "Compression throughput with Driver_output_average_bandwidth",
-                        "weight": 1,
-                        "label": "Throughput (including driver)"
-                      },
-                      {
-                        "info": "Compression Accelerator throughput_output_average_bandwidth",
-                        "metric_model_name": "TeraMarkJpegPerformance",
-                        "leaf": true,
-                        "name": "Compression Accelerator throughput_output_average_bandwidth",
-                        "weight": 1,
-                        "label": "Throughput (excluding driver)"
-                      }
-                    ]
+                    "label": "Compression Throughput"
                   }
                 ]
               }
@@ -1791,7 +2205,7 @@
                     "leaf": false,
                     "name": "HU_NU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "8 TCP Flow(s)",
+                    "label": "8 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
@@ -1827,7 +2241,7 @@
                     "leaf": false,
                     "name": "NU_HU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
-                    "label": "8 TCP Flow(s)",
+                    "label": "8 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
@@ -1844,42 +2258,6 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "info": "funtcp_server",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "funtcp_server",
-                "weight": 1,
-                "label": "FunTCP Server",
-                "children": [
-                  {
-                    "info": "funtcp_server_throughput",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "funtcp_server_throughput",
-                    "weight": 1,
-                    "label": "Throughput",
-                    "children": [
-                      {
-                        "info": "funtcp_server_throughput_1tcp",
-                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
-                        "name": "funtcp_server_throughput_1tcp",
-                        "weight": 1,
-                        "label": "1 TCP Flow(s)"
-                      },
-                      {
-                        "info": "funtcp_server_throughput_4tcp",
-                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
-                        "name": "funtcp_server_throughput_4tcp",
-                        "weight": 1,
-                        "label": "4 TCP Flow(s)"
                       }
                     ]
                   }
@@ -2016,6 +2394,84 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "info": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
+                    "weight": 1,
+                    "label": "SSD(s)=12, Vol(s)=12, Block-size=4KB",
+                    "children": [
+                      {
+                        "info": "Sequential Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "read_4kb_12_volume_12_ssd_raw_block_nvmetcp",
+                        "weight": 1,
+                        "label": "Sequential Read",
+                        "children": [
+                          {
+                            "info": "read_4kb12vol12ssd_nvmetcp_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb12vol12ssd_nvmetcp_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "read_4kb12vol12ssd_4_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb12vol12ssd_4_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "read_4kb12vol12ssd_nvmetcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb12vol12ssd_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      },
+                      {
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "rand_read_4kb_12_volume_12_ssd_raw_block_nvmetcp",
+                        "weight": 1,
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "rand_read_4kb12vol12ssd_nvmetcp_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb12vol12ssd_nvmetcp_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "rand_read_4kb12vol12ssd_4_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb12vol12ssd_4_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "rand_read_4kb12vol12ssd_nvmetcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb12vol12ssd_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               },
@@ -2131,7 +2587,7 @@
                     "leaf": false,
                     "name": "juniper_NU_VP_NU_FWD_NFCP",
                     "weight": 1,
-                    "label": "NU->VP->NU, FWD Benchmark",
+                    "label": "Basic FWD",
                     "children": [
                       {
                         "info": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
@@ -2155,7 +2611,15 @@
                         "leaf": true,
                         "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
                         "weight": 1,
-                        "label": "Latency"
+                        "label": "Latency - Full Load"
+                      },
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_half_laod_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
+                        "weight": 1,
+                        "label": "Latency - Half Load"
                       }
                     ]
                   },
@@ -2165,7 +2629,7 @@
                     "leaf": false,
                     "name": "juniper_NU_LE_VP_NU_FW",
                     "weight": 1,
-                    "label": "NU->LE->VP->NU, Firewall Benchmark",
+                    "label": "Flow Based Firewall",
                     "children": [
                       {
                         "info": "juniper_NU_LE_VP_NU_FW_output_throughput",
@@ -2189,7 +2653,15 @@
                         "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
                         "weight": 1,
-                        "label": "Latency"
+                        "label": "Latency - Full Load"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
+                        "weight": 1,
+                        "label": "Latency - Half Load"
                       }
                     ]
                   },
@@ -2310,6 +2782,43 @@
                     ]
                   }
                 ]
+              },
+              {
+                "info": "Inspur",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "teramarks_customer_inspur",
+                "weight": 0,
+                "label": "Inspur",
+                "children": [
+                  {
+                    "info": "inspur_single_f1_host",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_single_f1_host",
+                    "weight": 1,
+                    "label": "8_11_1:8K_RAND_RW, F1(s)=1",
+                    "children": [
+                      {
+                        "info": "inspur_rand_read_write_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "AliBaba",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "teramarks_customer_alibaba",
+                "weight": 0,
+                "label": "Alibaba",
+                "children": []
               }
             ]
           }

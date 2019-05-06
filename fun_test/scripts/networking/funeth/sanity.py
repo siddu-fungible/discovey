@@ -27,30 +27,41 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.23.5'
+    DPC_PROXY_IP = '10.1.20.137'
     DPC_PROXY_PORT = 40220
+    DPC_PROXY_IP2 = '10.1.20.137'
+    DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
-    linux_obj = funeth_obj.linux_obj_dict['nu']
-    if TB == 'FS7':
-        fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
-    fun_test.test_assert(funeth_obj.configure_interfaces('nu'), 'Configure NU host interface')
-    fun_test.test_assert(funeth_obj.configure_ipv4_routes('nu'), 'Configure NU host IPv4 routes')
-    cmds = [
-        'echo 1 > /proc/sys/net/ipv4/ip_forward',
-        'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter',
-        'echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter',
-        'echo 0 > /proc/sys/net/ipv4/conf/fpg1/rp_filter',
-        'echo 0 > /proc/sys/net/ipv4/conf/fpg2/rp_filter',
-    ]
-    for intf in funeth_obj.tb_config_obj.get_all_interfaces('nu'):
-        cmds.append('echo 0 > /proc/sys/net/ipv4/conf/{}/rp_filter'.format(intf))
-    for cmd in cmds:
-        linux_obj.sudo_command(cmd)
+    if TB in ('FS7', 'FS11'):
+        for nu in funeth_obj.nu_hosts:
+            linux_obj = funeth_obj.linux_obj_dict[nu]
+            fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
+    fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
+    for nu in funeth_obj.nu_hosts:
+        linux_obj = funeth_obj.linux_obj_dict[nu]
+        #if TB in ('FS7', 'FS11'):
+            #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
+        fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu), 'Configure NU host {} IPv4 routes'.format(
+            linux_obj.host_ip))
+        #cmds = [
+        #    'echo 1 > /proc/sys/net/ipv4/ip_forward',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/fpg1/rp_filter',
+        #    'echo 0 > /proc/sys/net/ipv4/conf/fpg2/rp_filter',
+        #]
+        #for intf in funeth_obj.tb_config_obj.get_all_interfaces('nu'):
+        #    cmds.append('echo 0 > /proc/sys/net/ipv4/conf/{}/rp_filter'.format(intf))
+        #for cmd in cmds:
+        #    linux_obj.sudo_command(cmd)
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
@@ -59,11 +70,17 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
-    fun_test.test_assert(funeth_obj.configure_interfaces('hu'), 'Configure funeth interfaces.')
-    fun_test.test_assert(funeth_obj.configure_ipv4_routes('hu'), 'Configure HU host IPv4 routes.')
-    #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
-    #                    'HU PF and VF interface loopback ping test via NU')
+        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+    for hu in funeth_obj.hu_hosts:
+        linux_obj = funeth_obj.linux_obj_dict[hu]
+        fun_test.test_assert(funeth_obj.enable_tso(hu), 'Enable HU host {} funeth interfaces TSO.'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
+            linux_obj.host_ip))
+        #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
+        #                    'HU PF and VF interface loopback ping test via NU')
 
 
 class FunethSanity(FunTestScript):
@@ -79,35 +96,27 @@ class FunethSanity(FunTestScript):
     def setup(self):
 
         # Boot up FS1600
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get(disable_f1_index=1)
-            fun_test.shared_variables["fs"] = fs
-            fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
-            # TODO: get dpc proxy ip/port
-            global DPC_PROXY_IP
-            global DPC_PROXY_PORT
-            DPC_PROXY_IP = '10.1.20.129'
-            DPC_PROXY_PORT = 40220
-
-        elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             # fs = Fs.get(disable_f1_index=1)
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,
-                                               custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --retimer --all_100g")
+                                               custom_boot_args="app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g")
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
             fun_test.shared_variables["topology"] = topology
 
-            host_instance1 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=4)
+            #host_instance1 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=4)
             #host_instance2 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=5)
             #dpcsh_client = DpcshClient(target_ip=host_instance1.host_ip, target_port=fs.get_come().get_dpc_port(0))
             #dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
             # TODO: get dpc proxy ip/port
+            come = fs.get_come()
             global DPC_PROXY_IP
             global DPC_PROXY_PORT
-            DPC_PROXY_IP = host_instance1.host_ip
-            DPC_PROXY_PORT = fs.get_come().get_dpc_port(0)
+            DPC_PROXY_IP = come.host_ip
+            DPC_PROXY_PORT = come.get_dpc_port(0)
+            # TODO: get DPC_PROXY_IP2 and DPC_PROXY_PORT2 for F1_1
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)

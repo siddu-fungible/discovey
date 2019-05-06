@@ -122,13 +122,12 @@ class SiteState():
             '''
 
         except ObjectDoesNotExist:
-            if len(children):
-                m = MetricChart(metric_model_name="MetricContainer",
+            m = MetricChart(metric_model_name="MetricContainer",
                                 internal_chart_name=metric["name"],
                                 chart_name=metric["label"],
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
                                 description=description)
-                m.save()
+            m.save()
         if "reference" in metric and metric["reference"]:
             pass
         else:

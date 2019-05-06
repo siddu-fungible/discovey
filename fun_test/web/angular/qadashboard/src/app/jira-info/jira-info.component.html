@@ -26,19 +26,34 @@
       </div>
       <fun-spinner [status]="status"></fun-spinner>
       <div style="margin-top: 2px" *ngIf="jiraInfo.length>0">
-        <table class="table no-padding no-margin table-responsive">
+        <table class="table table-responsive">
           <tr>
-            <th *ngIf="allowDelete" style="width: 5%">
+            <th *ngIf="allowDelete">
             </th>
-            <th style="width: 10%">
+            <th>
               JIRA Id
             </th>
-            <th style="width: 40%">
+            <th>
               Summary
             </th>
-            <th style="width: 10%">
+            <th>
               Status
             </th>
+            <ng-container *ngIf="showDetails">
+              <th>
+                Severity <i class="fa fa-sort" (click)="setSortColumn('Severity')"></i>
+              </th>
+              <th>
+                Priority <i class="fa fa-sort" (click)="setSortColumn('Priority')"></i>
+              </th>
+              <th>
+                Created by
+              </th>
+              <th>
+                Open since <i class="fa fa-sort" (click)="setSortColumn('Open since')"></i>
+              </th>
+            </ng-container>
+
             <th *ngIf="allowContext" style="width: 30%">
               Context
             </th>
@@ -52,12 +67,27 @@
             <td>
               <a href="http://jira.fungible.local/browse/{{ info['id'] }}" target="_blank">{{ info['id'] }}</a>
             </td>
-            <td style="max-width: 175px">
+            <td>
               {{ info["summary"] }}
             </td>
             <td>
               {{ info["status"] }}
             </td>
+            <ng-container *ngIf="showDetails">
+              <td>
+                {{ info["severity"] }}
+              </td>
+              <td>
+                {{ info["priority"] }}
+              </td>
+              <td>
+                {{ info["creator"] }}
+              </td>
+              <td>
+                {{ info["openSince"] }}
+              </td>
+            </ng-container>
+
             <td *ngIf="allowContext">
               <span [innerHTML]="data[info['id']]?.context"></span>
             </td>

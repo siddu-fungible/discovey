@@ -9,6 +9,8 @@ from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 from scripts.networking.nu_config_manager import *
 import sqlite3
+from web.fun_test.analytics_models_helper import ModelHelper
+from fun_global import PerfUnit
 
 FLOW_TYPE_NU_NU_NFCP = "NU_NU_NFCP"
 FLOW_TYPE_HNU_HNU_NFCP = "HNU_HNU_NFCP"
@@ -16,11 +18,17 @@ FLOW_TYPE_HNU_HNU_FCP = "HNU_HNU_FCP"
 FLOW_TYPE_HNU_NU_NFCP = "HNU_NU_NFCP"
 FLOW_TYPE_NU_HNU_NFCP = "NU_HNU_NFCP"
 FLOW_TYPE_NU_VP_NU_FWD_NFCP = "NU_VP_NU_FWD_NFCP"
+FLOW_TYPE_NU_LE_VP_NU_FW = "NU_LE_VP_NU_FW"
+JUNIPER_PERFORMANCE_MODEL_NAME = "TeraMarkJuniperNetworkingPerformance"
+HNU_PERFORMANCE_MODEL_NAME = "NuTransitPerformance"
+MEMORY_TYPE_HBM = "HBM"
+MEMORY_TYPE_DDR = "DDR"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     USER_WORKING_DIR = "USER_WORKING_DIR"
     FRAME_SIZE_64 = "64.0"
+    FRAME_SIZE_66 = "66.0"
     FRAME_SIZE_1500 = "1500.0"
     FRAME_SIZE_800 = "800.0"
     FRAME_SIZE_IMIX = None
@@ -232,6 +240,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     data_dict = OrderedDict(record)
                     if 'AvgFrameSize' in data_dict and self.FRAME_SIZE_64 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_64].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_66 == data_dict['AvgFrameSize']:
+                        result[self.FRAME_SIZE_64].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_1500 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_1500].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_800 == data_dict['AvgFrameSize']:
@@ -363,22 +373,44 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             scheduler_logger.critical(str(ex))
         return result
 
-    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
-                                       file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None):
+    def use_model_helper(self, model_name, data_dict, unit_dict):
+        result = False
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            status = fun_test.PASSED
+            generic_helper.set_units(**unit_dict)
+            generic_helper.add_entry(**data_dict)
+            generic_helper.set_status(status)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def populate_performance_json_file(self, result_dict, model_name, timestamp, flow_direction, mode=DUT_MODE_25G,
+                                       file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None,
+                                       half_load_latency=False, memory=None, update_charts=True, update_json=False):
         results = []
         output = True
-        failed_result_found = False
+        any_result_failed = False
         try:
             for key in result_dict:
+                failed_result_found = False
                 records = result_dict[key]
                 data_dict = OrderedDict()
                 data_dict['mode'] = mode
                 data_dict['version'] = fun_test.get_version()
-                data_dict['timestamp'] = timestamp
+                data_dict['timestamp'] = str(timestamp)
+                data_dict['half_load_latency'] = half_load_latency
+
+                if memory:
+                    data_dict['memory'] = memory
+
                 frame_size = float(records[0]['AvgFrameSize']) if records else None
                 actual_frame_size = frame_size
                 if frame_size == 8900.0:
                     frame_size = 9000.0
+                elif frame_size == 66.0:
+                    frame_size = 64.0
                 if frame_size:
                     data_dict['flow_type'] = flow_direction
                     data_dict['frame_size'] = frame_size
@@ -386,9 +418,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     if max_rate_record:
                         data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
-                        throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
-                                                                        frame_size=frame_size)
-                        data_dict['throughput'] = round(throughput, 2)
+                        #throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
+                        #                                                frame_size=frame_size)
+                        #data_dict['throughput'] = round(throughput, 2)
+                        data_dict['throughput'] = round(float(max_rate_record['OfferedLoad(Mbps)']), 2)
                         data_dict['latency_min'] = round(float(max_rate_record['MinimumLatency(us)']), 2)
                         data_dict['latency_max'] = round(float(max_rate_record['MaximumLatency(us)']), 2)
                         data_dict['latency_avg'] = round(float(max_rate_record['AverageLatency(us)']), 2)
@@ -407,6 +440,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         data_dict['jitter_max'] = -1
                         data_dict['jitter_avg'] = -1
                         failed_result_found = True
+                        any_result_failed = True
 
                     if num_flows:
                         data_dict['num_flows'] = num_flows
@@ -416,18 +450,34 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     results.append(data_dict)
                     fun_test.debug(results)
 
-            file_path = LOGS_DIR + "/%s" % file_name
-            contents = self._parse_file_to_json_in_order(file_name=file_path)
-            if contents:
-                append_new_results = contents + results
-                file_created = self.create_counters_file(json_file_name=file_path,
-                                                         counter_dict=append_new_results)
-                fun_test.simple_assert(file_created, "Create Performance JSON file")
-            else:
-                file_created = self.create_counters_file(json_file_name=file_path,
-                                                         counter_dict=results)
-                fun_test.simple_assert(file_created, "Create Performance JSON file")
-            if failed_result_found:
+                    if update_charts:
+                        if model_name == JUNIPER_PERFORMANCE_MODEL_NAME and not failed_result_found:
+                            unit_dict = {}
+                            unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
+                            unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
+                            unit_dict["latency_min_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["latency_max_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["latency_avg_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["jitter_min_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["jitter_max_unit"] = PerfUnit.UNIT_USECS
+                            unit_dict["jitter_avg_unit"] = PerfUnit.UNIT_USECS
+                            add_entry = self.use_model_helper(model_name=model_name, data_dict=data_dict,
+                                                              unit_dict=unit_dict)
+                            fun_test.add_checkpoint("Entry added for frame size %s to model %s" % (frame_size, model_name))
+            if update_json:
+                file_path = LOGS_DIR + "/%s" % file_name
+                contents = self._parse_file_to_json_in_order(file_name=file_path)
+                if contents:
+                    append_new_results = contents + results
+                    file_created = self.create_counters_file(json_file_name=file_path,
+                                                             counter_dict=append_new_results)
+                    fun_test.simple_assert(file_created, "Create Performance JSON file")
+                else:
+                    file_created = self.create_counters_file(json_file_name=file_path,
+                                                             counter_dict=results)
+                    fun_test.simple_assert(file_created, "Create Performance JSON file")
+            if any_result_failed:
+                fun_test.log("Failed result found")
                 output = False
         except Exception as ex:
             fun_test.critical(str(ex))

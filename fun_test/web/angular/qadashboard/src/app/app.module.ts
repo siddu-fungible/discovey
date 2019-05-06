@@ -55,6 +55,8 @@ import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-
 import { ReactiveFormsModule } from '@angular/forms';
 import { UserComponent } from './user/user.component';
 import { TestBedComponent } from './regression/test-bed/test-bed.component';
+import { JirasComponent } from './regression/jiras/jiras.component';
+import { JobSpecComponent } from './regression/job-spec/job-spec.component';
 
 @NgModule({
   declarations: [
@@ -94,7 +96,9 @@ import { TestBedComponent } from './regression/test-bed/test-bed.component';
     QueueViewerComponent,
     SectionHorizontalLineComponent,
     UserComponent,
-    TestBedComponent
+    TestBedComponent,
+    JirasComponent,
+    JobSpecComponent
   ],
   imports: [
     BsDropdownModule,

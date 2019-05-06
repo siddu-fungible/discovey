@@ -1,15 +1,8 @@
 # Integration
+Integration testing infrastructure.
 
-Installation:
-```
-# git clone git@github.com:fungible-inc/Integration.git
-# cd Integration/fun_test
-# export PYTHONPATH=`pwd`
-# pip install -r requirements.txt --user
+## Introduction
+The Integration repository is organized as two major parts
+1. fun_test (Containing regression infrastructure code, including scripts). Refer to the README at: https://github.com/fungible-inc/Integration/blob/master/fun_test/documentation/README.md
+2. tools (Containing light-weight tools and Dockerfiles, which are not directly used by fun_test)
 
-
-# python web/start_server.py [OPTIONAL]
-
-# cd scripts
-# python examples/sanity.py 
-```

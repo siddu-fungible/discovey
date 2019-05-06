@@ -130,6 +130,8 @@ class AssetManager:
             credits = 3
         elif test_bed_type.lower().startswith("emulation"):
             credits = 3
+        elif test_bed_type.lower().startswith("task"):
+            credits = 10
         else:
             credits = 1
         in_progress_count = in_progress_suites.count()

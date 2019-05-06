@@ -4,16 +4,16 @@ import re
 import json
 import collections
 
-base_tag = "qa_triage_ecdh_p256_"
-iteration = 5
+base_tag = "qa_triage_malloc_agent"
+iteration = 1
 lsf_server = LsfStatusServer()
-num_commits = 3
+num_commits = 64
 num_sections = 4
 step = num_commits/num_sections
 if not step:
     step = 1
 lsf_results = collections.OrderedDict()
-prefix = "{}{}".format(base_tag, iteration)
+prefix = "{}_{}".format(base_tag, iteration)
 for i in range(0, num_commits, step):
     this_tag = "{}_{}".format(prefix, i)
     print "This-tag: {}".format(this_tag)
@@ -37,18 +37,10 @@ for git_commit, value in lsf_results.iteritems():
     tag = value["tag"]
     lines = output_text.split("\n")
     for line in lines:
-        m = re.search('ECDH\s+P256', line, re.MULTILINE|re.DOTALL)
+        m = re.search('fun_magent_rate_malloc_free_per_sec', line, re.MULTILINE|re.DOTALL)
         if m:
 
             c = GitManager().get_commit(sha=git_commit)
             d = c["commit"]["committer"]["date"]
-            print git_commit, tag, line, d
+            print git_commit, tag, line, d, m.group(0)
 
-        '''
-        m = re.search(r'bcopy \(coherent, dma\) 4KB 20 times; average bandwidth:', line, re.MULTILINE|re.DOTALL)
-        if m:
-
-            m2 = re.search(r'{\s+"value":\s+(\S+),.*}', line)
-            if m2:
-                print git_commit, m2.group(1)
-        '''

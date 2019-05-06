@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import TestBed
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
-from web.fun_test.models import ScriptInfo
+from web.fun_test.models import ScriptInfo, RegresssionScripts
 from fun_settings import TEAM_REGRESSION_EMAIL
 import json
 from lib.utilities.send_mail import send_mail
@@ -92,8 +92,12 @@ def suite_executions(request, id):
         for suite_execution in suite_executions:
             one_record = {"execution_id": suite_execution.execution_id,
                           "state": suite_execution.state,
-                          "result": suite_execution.result}
+                          "result": suite_execution.result,
+                          "environment": json.loads(suite_execution.environment)}
             records.append(one_record)
+            if id is not None:
+                result = one_record
+                break
         result = records if len(records) else None
         if is_completed:
             if records:
@@ -124,5 +128,10 @@ def script_infos(request, pk):
         script_infos = ScriptInfo.objects.filter(q)
         result = []
         for script_info in script_infos:
-            result.append({"id": script_info.script_id, "bug": script_info.bug, "pk": script_info.pk})
+            regression_script = RegresssionScripts.objects.get(pk=script_info.pk)
+
+            result.append({"id": script_info.script_id,
+                           "bug": script_info.bug,
+                           "pk": script_info.pk,
+                           "script_path": regression_script.script_path})
     return result
