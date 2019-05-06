@@ -72,6 +72,8 @@ class TestFirewallPerformance(FunTestCase):
     spray = True
     half_load_latency = False
     num_flows = 128000000
+    update_charts = True
+    update_json = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -199,7 +201,8 @@ class TestFirewallPerformance(FunTestCase):
                                                                       num_flows=self.num_flows,
                                                                       half_load_latency=self.half_load_latency,
                                                                       model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
-                                                                      memory=MEMORY_TYPE_HBM)
+                                                                      memory=MEMORY_TYPE_HBM, update_charts=self.update_charts,
+                                                                      update_json=self.update_json)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
@@ -217,6 +220,8 @@ class TestFirewallLatency(TestFirewallPerformance):
     spray = True
     half_load_latency = True
     num_flows = 128000000
+    update_charts = True
+    update_json = False
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
@@ -235,12 +240,37 @@ class TestFirewallSingleFlow(TestFirewallPerformance):
     tc_id = 3
     tcc_file_name = "nu_le_benchmark_hbm_single_flow.tcc"  # Uni-directional
     spray = True
-    half_load_latency = True
+    half_load_latency = False
     num_flows = 1
+    update_charts = False
+    update_json = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput and  latency "
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput and "
+                                      "full load latency for single flow using HBM" % (
+                                  self.flow_direction, self.spray),
+                              steps="""
+                              1. Dump PSW, BAM and vppkts stats before tests 
+                              2. Initialize RFC-2544 and load existing tcc configuration 
+                              3. Start Sequencer
+                              4. Wait for sequencer to complete
+                              5. Dump PSW, BAM and vppkts stats after tests
+                              5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
+                              """)
+
+class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
+    tc_id = 4
+    tcc_file_name = "nu_le_benchmark_hbm_single_flow_half_load.tcc"  # Uni-directional
+    spray = True
+    half_load_latency = True
+    num_flows = 1
+    update_charts = False
+    update_json = True
+
+    def describe(self):
+        self.set_test_details(id=self.tc_id,
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get half load latency "
                                       "for single flow using HBM" % (
                                   self.flow_direction, self.spray),
                               steps="""
@@ -259,4 +289,6 @@ if __name__ == '__main__':
     # Multi flows
     ts.add_test_case(TestFirewallPerformance())
     ts.add_test_case(TestFirewallLatency())
+    #ts.add_test_case(TestFirewallSingleFlow())
+    #ts.add_test_case(TestFirewallSingleFlowHalfLoad())
     ts.run()
