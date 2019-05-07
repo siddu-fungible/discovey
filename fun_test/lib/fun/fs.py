@@ -318,7 +318,7 @@ class Bmc(Linux):
         return True
 
     def host_power_cycle(self):
-        return self.ipmi_power_cycle(host=self.host_ip, user="admin", passwd="admin")
+        return self.ipmi_power_cycle(host=self.host_ip, user="admin", passwd="admin", chassis=False)  #TODO: What are these credentials
 
     def is_host_pingable(self, host_ip, max_time):
         result = False
@@ -685,7 +685,7 @@ class Fs(object, ToDictMixin):
     def is_ready(self):
         if not self.come_initialized:
             come = self.get_come()
-            fun_test.test_assert(self.bmc.ensure_come_is_up(come=come, max_wait_time=180, power_cycle=True), "Ensure ComE is up")
+            fun_test.test_assert(self.bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True), "Ensure ComE is up")
             fun_test.test_assert(come.initialize(disable_f1_index=self.disable_f1_index), "ComE initialized")
             self.come_initialized = True
         return True
