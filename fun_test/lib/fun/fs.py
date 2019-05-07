@@ -433,9 +433,12 @@ class ComE(Linux):
             self.command("cd $WORKSPACE/FunSDK/bin/Linux")
             self.modprobe("nvme")
             fun_test.sleep("After modprobe", seconds=5)
-            self.command("ls /dev/nvm*")
+
+            nvme_devices = self.list_files("/dev/nvme*")
+            fun_test.test_assert(nvme_devices, "At least one nvme device detected")
+            # self.command("ls /dev/nvm*")
             nvme_device_index = f1_index
-            if self.disable_f1_index is not None:
+            if len(nvme_devices) == 1:  # if only one nvme device was detected
                 nvme_device_index = 0
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --tcp_proxy={} &> {} &".format(nvme_device_index, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
             self.sudo_command(command)

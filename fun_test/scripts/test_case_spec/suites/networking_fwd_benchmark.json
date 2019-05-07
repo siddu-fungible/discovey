@@ -1,4 +1,4 @@
 [
-  {"path": "networking/performance/test_performance_fwd_benchmark.py", "inputs": {"speed": "SPEED_100G"}}
+  {"path": "networking/performance/test_performance_fwd_benchmark.py", "inputs": {"speed": "SPEED_100G", "disable_f1_index": 1}}
 
 ]

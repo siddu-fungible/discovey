@@ -24,9 +24,10 @@ class ScriptSetup(FunTestScript):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
         nu_config_obj = NuConfigManager()
-
+        f1_index = nu_config_obj.get_f1_index()
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get()
+            fs = Fs.get(disable_f1_index=f1_index)
+            fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 
         dut_type = nu_config_obj.DUT_TYPE
@@ -119,9 +120,11 @@ class TestFwdPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
     flow_direction = FLOW_TYPE_NU_VP_NU_FWD_NFCP
-    tcc_file_name = "nu_fwd_benchmark_swap.tcc"  # Uni-directional
+    tcc_file_name = "nu_fwd_benchmark_throughput.tcc"  # Uni-directional
     spray = True
     half_load_latency = False
+    update_charts = True
+    update_json = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -239,7 +242,9 @@ class TestFwdPerformance(FunTestCase):
                                                                       file_name=OUTPUT_JSON_FILE_NAME,
                                                                       num_flows=128000000,
                                                                       half_load_latency=self.half_load_latency,
-                                                                      model_name=JUNIPER_PERFORMANCE_MODEL_NAME)
+                                                                      model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
+                                                                      update_charts=self.update_charts,
+                                                                      update_json=self.update_json)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
@@ -255,6 +260,8 @@ class TestFwdLatency(TestFwdPerformance):
     tcc_file_name = "nu_fwd_benchmark_latency.tcc"  # Uni-directional
     spray = True
     half_load_latency = True
+    update_charts = True
+    update_json = False
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
