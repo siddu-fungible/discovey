@@ -300,7 +300,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
         fun_test.log("NVME Connect Status Output is: {}".format(nvme_connect_status))
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
+        fun_test.test_assert("Failed" not in nvme_connect_status, message="NVME Connect Status")
 
         lsblk_output = self.end_host.lsblk("-b")
         fun_test.simple_assert(lsblk_output, "Listing available volumes")
@@ -346,7 +346,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
         # Else going to extract the same
         if "device_id" not in self.ec_info:
-            fun_test.log("Drive and Device ID of the EC volume's plext volumes are not available in the ec_info..."
+            fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
                          "So going to pull that info")
             self.ec_info["drive_uuid"] = {}
             self.ec_info["device_id"] = {}
@@ -427,48 +427,112 @@ class ECVolumeLevelTestcase(FunTestCase):
             cp_timeout = self.min_timeout
 
         if hasattr(self, "back_pressure") and self.back_pressure:
-            # Start the vdbench here to pro
+            # Start the vdbench here to produce the back pressure
             pass
 
-        # Copying the file into the volume
+        # Copying the file into the all the test volumes
         source_file = self.dd_create_file["output_file"]
-        dst_file = self.mount_path + str(self.test_volume_start_index + 1) + "/file1"
-        cp_cmd = "sudo cp {} {}".format(source_file, dst_file)
-        self.end_host.start_bg_process(command=cp_cmd)
+        dst_file1 = []
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            dst_file1.append(self.mount_path + str(num + 1) + "/file1")
+            cp_cmd = "sudo cp {} {}".format(source_file, dst_file1[-1])
+            self.end_host.start_bg_process(command=cp_cmd)
 
-        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-            if self.failure_mode == "random" or not hasattr(self, "failure_plex_index"):
-                self.failure_plex_index = random.randint(0, self.ec_info["ndata"] + self.ec_info["nparity"] - 1)
+        # Check whether the drive failure needs to be triggered
+        if hasattr(self, "trigger_drive_failure") and self.trigger_drive_failure:
+            # Sleep for sometime before triggering the drive failure
+            wait_time = 2
             if hasattr(self, "failure_start_time_ratio"):
                 wait_time = int(round(cp_timeout * self.failure_start_time_ratio))
-                fail_uuid = self.ec_info["uuids"][self.test_volume_start_index]["blt"][self.failure_plex_index]
-                fail_device = self.ec_info["device_id"][self.test_volume_start_index][self.failure_plex_index]
-                fun_test.sleep(message="Sleeping for {} seconds before failing the device having the BLT volume {}".
-                               format(wait_time, fail_uuid), seconds=wait_time)
-            device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
-                                                                        command_duration=self.command_timeout)
-            fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
+            fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
+                           seconds=wait_time)
+            # Check whether the drive index to be failed is given or not. If not pick a random one
+            if self.failure_mode == "random" or not hasattr(self, "failure_drive_index"):
+                self.failure_drive_index = []
+                for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                    self.failure_drive_index.append(random.randint(0, self.ec_info["ndata"] +
+                                                                  self.ec_info["nparity"] - 1))
+            # Triggering the drive failure
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                fail_uuid = self.ec_info["uuids"][num]["blt"][self.failure_drive_index[num - self.test_volume_start_index]]
+                fail_device = self.ec_info["device_id"][num][self.failure_drive_index[num - self.test_volume_start_index]]
+                device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
+                                                                            command_duration=self.command_timeout)
+                fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
 
         timer = FunTimer(max_time=cp_timeout)
         while not timer.is_expired():
             fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
-            output = self.end_host.get_process_id_by_pattern(process_pat=cp_cmd)
+            output = self.end_host.get_process_id_by_pattern(process_pat=cp_cmd, multiple=True)
             if not output:
-                fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file))
+                fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file1))
                 break
         else:
-            fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file))
+            fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file1))
 
-        dst_file_info = self.end_host.get_file_info(dst_file)
-        fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(dst_file))
-        fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
-                                      message="Copying {} bytes file into {}".format(self.test_file_size, dst_file))
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            cur_dst_file = dst_file1[num - self.test_volume_start_index]
+            dst_file_info = self.end_host.get_file_info(cur_dst_file)
+            fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
+            fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
+                                          message="Copying {} bytes file into {}".format(self.test_file_size,
+                                                                                         cur_dst_file))
+            self.dst_md5sum = self.end_host.md5sum(file_name=cur_dst_file, timeout=cp_timeout)
+            fun_test.test_assert(self.dst_md5sum, "Finding md5sum of copied file {}".format(cur_dst_file))
+            fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
+                                          message="Comparing md5sum of source & destination file")
 
-        self.dst_md5sum = self.end_host.md5sum(file_name=dst_file, timeout=cp_timeout)
-        fun_test.test_assert(self.dst_md5sum, "Finding md5sum of copied file {}".format(dst_file))
-        fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
-                                      message="Comparing md5sum of source & destination file")
+        # Creating another input file
+        self.dd_create_file["count"] = self.test_file_size / self.dd_create_file["block_size"]
 
+        # Write a file into the EC volume of size self.test_file_size bytes
+        return_size = self.end_host.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
+        fun_test.test_assert_expected(self.test_file_size, return_size, "Creating {} bytes test input file".
+                                      format(self.test_file_size))
+        self.src_md5sum = self.end_host.md5sum(file_name=self.dd_create_file["output_file"],
+                                               timeout=self.dd_create_file["count"])
+        fun_test.test_assert(self.src_md5sum, "Finding md5sum of source file {}".
+                             format(self.dd_create_file["output_file"]))
+
+        # Copying the file into the volume
+        source_file = self.dd_create_file["output_file"]
+        dst_file2 = []
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            dst_file2.append(self.mount_path + str(num + 1) + "/file2")
+            cp_cmd = "sudo cp {} {}".format(source_file, dst_file2[-1])
+            self.end_host.start_bg_process(command=cp_cmd)
+
+        fun_test.sleep(message="Sleeping for {} seconds before bringing up the failed device(s)".
+                       format(wait_time), seconds=wait_time)
+
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            fail_uuid = self.ec_info["uuids"][num]["blt"][self.failure_drive_index[num - self.test_volume_start_index]]
+            fail_device = self.ec_info["device_id"][num][self.failure_drive_index[num - self.test_volume_start_index]]
+            device_up_status = self.storage_controller.enable_device(device_id=fail_device,
+                                                                     command_duration=self.command_timeout)
+            fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
+
+        timer = FunTimer(max_time=cp_timeout)
+        while not timer.is_expired():
+            fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
+            output = self.end_host.get_process_id_by_pattern(process_pat=cp_cmd, multiple=True)
+            if not output:
+                fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file2))
+                break
+        else:
+            fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file2))
+
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            cur_dst_file = dst_file2[num - self.test_volume_start_index]
+            dst_file_info = self.end_host.get_file_info(cur_dst_file)
+            fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
+            fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
+                                          message="Copying {} bytes file into {}".format(self.test_file_size,
+                                                                                         cur_dst_file))
+            self.dst_md5sum = self.end_host.md5sum(file_name=cur_dst_file, timeout=cp_timeout)
+            fun_test.test_assert(self.dst_md5sum, "Finding md5sum of copied file {}".format(cur_dst_file))
+            fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
+                                          message="Comparing md5sum of source & destination file")
 
     def cleanup(self):
 
