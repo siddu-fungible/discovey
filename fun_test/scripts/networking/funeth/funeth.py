@@ -126,7 +126,7 @@ class Funeth:
 
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=4'.format(drvdir, " ".join(_modparams)),
+            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=8'.format(drvdir, " ".join(_modparams)),
                                             timeout=300)
 
             fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
