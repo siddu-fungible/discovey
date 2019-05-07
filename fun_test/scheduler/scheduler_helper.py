@@ -251,6 +251,7 @@ def queue_dynamic_suite(dynamic_suite_spec,
                         emails=None,
                         environment=None,
                         test_bed_type=None,
+                        inputs=None,
                         build_url=None):
 
     return queue_job3(dynamic_suite_spec=dynamic_suite_spec,
@@ -260,7 +261,8 @@ def queue_dynamic_suite(dynamic_suite_spec,
                       test_bed_type=test_bed_type,
                       environment=environment,
                       build_url=build_url,
-                      submitter_email=submitter_email)
+                      submitter_email=submitter_email,
+                      inputs=inputs)
 
 def is_auto_scheduled(scheduling_type, repeat_in_minutes):
     return (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type == SchedulingType.PERIODIC)

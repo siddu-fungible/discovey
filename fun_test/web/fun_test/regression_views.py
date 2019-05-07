@@ -220,6 +220,7 @@ def submit_job(request):
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                 emails=emails,
                                 environment=environment,
+                                inputs=inputs,
                                 test_bed_type=test_bed_type,
                                 original_suite_execution_id=original_suite_execution_id,
                                 build_url=build_url,
@@ -962,6 +963,7 @@ def job_spec(request, job_id):
     result["emails"] = json.loads(suite_execution.emails)
     result["test_bed_type"] = suite_execution.test_bed_type
     result["environment"] = json.loads(suite_execution.environment)
+    result["inputs"] = json.loads(suite_execution.inputs)
     return result
 
 
