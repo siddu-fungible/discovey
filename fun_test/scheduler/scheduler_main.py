@@ -245,8 +245,9 @@ def queue_job(job_id):
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id,
                            test_bed_type=job_spec.test_bed_type)
-        models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
         new_job.save()
+        models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
+
         time.sleep(1)
 
     else:
@@ -753,8 +754,7 @@ def process_submissions():
             if job_spec and schedule_it and (scheduling_time >= 0):
                 t = threading.Timer(scheduling_time, timer_dispatch, (job_spec.execution_id,))
                 job_id_timers[job_id] = t
-                job_spec.set_properties(scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time),
-                                        state=JobStatusType.SCHEDULED)
+                models_helper.update_suite_execution(suite_execution_id=job_id, scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time), state=JobStatusType.SCHEDULED)
                 t.start()
             if scheduling_time < 0:
                 scheduler_logger.critical("{} Unable to process job submission. Scheduling time in the past".format(

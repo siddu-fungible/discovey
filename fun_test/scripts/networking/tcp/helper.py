@@ -22,6 +22,19 @@ def _parse_file_to_json_in_order(file_name):
     return result
 
 
+def get_nu_lab_host(file_path, host_name):
+    result = None
+    try:
+        hosts = fun_test.parse_file_to_json(file_name=file_path)
+        if host_name in hosts:
+            result = hosts[host_name]
+        else:
+            raise Exception("%s host entry not found in asset hosts.json")
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
 def create_counters_file(json_file_name, counter_dict):
     result = False
     try:
@@ -371,13 +384,14 @@ def populate_flow_list_output_file(result, filename):
         master_table_obj = PrettyTable()
         master_table_obj.align = 'l'
         master_table_obj.header = False
-        for key in sorted(result):
-            table_obj = inner_table_obj(result=result[key])
-            master_table_obj.add_row([key, table_obj])
+        if result:
+            for key in sorted(result):
+                table_obj = inner_table_obj(result=result[key])
+                master_table_obj.add_row([key, table_obj])
 
-        lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
-        with open(file_path, 'w') as f:
-            f.writelines(lines)
+            lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
+            with open(file_path, 'w') as f:
+                f.writelines(lines)
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))

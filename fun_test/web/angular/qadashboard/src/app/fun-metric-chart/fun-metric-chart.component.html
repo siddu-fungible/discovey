@@ -60,7 +60,8 @@
           </tr>
           <tr *ngIf="nwInfoFiles.length!==0" class="word-break">
             <td style="vertical-align: top"><b>Info files:</b></td>
-            <td><span *ngFor="let file of nwInfoFiles"><a href="{{LOGS_DIR}}/{{file}}" target="_blank">{{ file }}</a><br></span>
+            <td><span *ngFor="let file of nwInfoFiles"><a href="{{LOGS_DIR}}/{{file}}"
+                                                          target="_blank">{{ file }}</a><br></span>
             </td>
           </tr>
         </table>
@@ -106,7 +107,7 @@
         <div [innerHTML]="inner.currentDescription | safeHtml"></div>
         <div *ngIf="editingDescription">
           <br>
-          <textarea rows="4" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
+          <textarea rows="30" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
           <button class="btn btn-success" (click)="submit()">Submit</button>
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
@@ -162,6 +163,7 @@
         <div *ngIf="showingTable" scrollTo>
           <h3 style="float: left;">{{ chartName }}</h3>
           <fun-table [data]="data"></fun-table>
+          <p class="no-margin"><a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores link</a></p>
         </div>
       </div>
     </div>
@@ -219,11 +221,7 @@
             gradient
           </p>
           <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
-          <div class="row">
-            <div style="padding: 10px;">
-              <a target="_blank" href="/admin/fun_test/metricchart/{{ chartInfo.pk }}/change/">Admin link</a>
-            </div>
-          </div>
+          <p class="no-margin"><a target="_blank" href="/admin/fun_test/metricchart/{{ chartInfo.pk }}/change/">Admin link</a></p>
           <div class="row">
             <div style="padding: 10px;">
               <button class="btn btn-success" (click)="submit()">Submit</button>

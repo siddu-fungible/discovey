@@ -76,6 +76,12 @@ class Dut(ToDictMixin):
     def set_instance(self, instance):
         self.instance = instance
 
+    def get_ssd_interfaces(self):
+        return self.interfaces
+
+    def get_fpg_interfaces(self):
+        return self.fpg_interfaces
+
     def add_interface(self, index, type):
         dut_interface_obj = DutInterface(index=index, type=type)
         self.interfaces[index] = dut_interface_obj
@@ -103,7 +109,10 @@ class Dut(ToDictMixin):
 
     def get_host_on_interface(self, interface_index, host_index):
         interface_obj = self.interfaces[interface_index]
-        if not interface_obj.dual_interface_index:
+        return self.get_host_on_interface_obj(interface_obj=interface_obj, host_index=host_index)
+
+    def get_host_on_interface_obj(self, interface_obj, host_index=None):
+        if interface_obj.dual_interface_index is None:
             host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
         else:
             host = self.get_host_on_interface(interface_index=interface_obj.dual_interface_index, host_index=host_index)

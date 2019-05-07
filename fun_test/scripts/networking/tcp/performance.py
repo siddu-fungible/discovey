@@ -12,8 +12,8 @@ import re
 network_controller_obj = None
 nu_lab_handle = None
 app = "tcp_server"
-nu_lab_json = "nu_lab_info.json"
-nu_lab_info_file = SCRIPTS_DIR + "/networking/tcp/configs/" + nu_lab_json
+host_name = "poc-server-06"
+hosts_json_file = ASSET_DIR + "/hosts.json"
 setup_fpg1_file = "setup_fpg1.sh"
 setup_fpg1_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg1_file
 TIMESTAMP = None
@@ -49,18 +49,19 @@ class TcpPerformance(FunTestScript):
             mpstat_obj, mpstat_obj2, mode, TIMESTAMP
 
         TIMESTAMP = get_current_time()
-
+        nu_config_obj = NuConfigManager()
+        f1_index = nu_config_obj.get_f1_index()
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get()
+            fs = Fs.get(disable_f1_index=f1_index)
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 
-        nu_config_obj = NuConfigManager()
         speed = nu_config_obj.get_speed()
         mode = str(speed/1000) + "G"
         dut_type = nu_config_obj.DUT_TYPE
         fun_test.shared_variables['dut_type'] = dut_type
         dut_config = nu_config_obj.read_dut_config()
+
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
@@ -82,10 +83,11 @@ class TcpPerformance(FunTestScript):
         exec_app = network_controller_obj.execute_app(name=app)
 
         # Setup fpg1
-        file_json = fun_test.parse_file_to_json(nu_lab_info_file)
-        nu_lab_username = file_json['username']
-        nu_lab_ip = file_json['ip']
-        nu_lab_password = file_json['password']
+        host_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name)
+        fun_test.simple_assert(host_info, 'Host info fetched')
+        nu_lab_username = host_info['ssh_username']
+        nu_lab_ip = host_info['host_ip']
+        nu_lab_password = host_info['ssh_password']
         nu_lab_obj = Linux(host_ip=nu_lab_ip, ssh_username=nu_lab_username,
                            ssh_password=nu_lab_password)
 
@@ -112,10 +114,10 @@ class TcpPerformance1Conn(FunTestCase):
         self.set_test_details(id=1,
                               summary="Test Tcp performance for 1 connection for 1500B stream",
                               steps="""
-                              1. Setup fpg1 on nu-lab-04
+                              1. Setup fpg1 on %s
                               2. Run netperf file with 1 connection
                               3. Update tcp_performance.json file with throughput and pps
-                              """)
+                              """ % host_name)
 
     def setup(self):
         self.netperf_remote_port = get_port_from_file(self.perf_filepath)
@@ -176,7 +178,6 @@ class TcpPerformance1Conn(FunTestCase):
 
         checkpoint = "Get Flow list during test"
         output = network_controller_obj.get_flow_list()
-        fun_test.simple_assert(output['status'], 'Get Flow List')
         flowlist_temp_filename = str(version) + "_" + str(self.num_flows) + '_flowlist.txt'
         fun_test.simple_assert(populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
                                checkpoint)
@@ -245,10 +246,10 @@ class TcpPerformance2Conn(TcpPerformance1Conn):
         self.set_test_details(id=2,
                               summary="Test Tcp performance for 2 connections 1500B stream",
                               steps="""
-                              1. Setup fpg1 on nu-lab-04
+                              1. Setup fpg1 on %s
                               2. Run netperf file with 2 connection
                               3. Update tcp_performance.json file with throughput and pps
-                              """)
+                              """ % host_name)
 
 
 class TcpPerformance4Conn(TcpPerformance1Conn):
@@ -261,10 +262,26 @@ class TcpPerformance4Conn(TcpPerformance1Conn):
         self.set_test_details(id=3,
                               summary="Test Tcp performance for 4 connections 1500B stream",
                               steps="""
-                              1. Setup fpg1 on nu-lab-04
+                              1. Setup fpg1 on %s
                               2. Run netperf file with 4 connection
                               3. Update tcp_performance.json file with throughput and pps
-                              """)
+                              """ % host_name)
+
+
+class TcpPerformance8Conn(TcpPerformance1Conn):
+    num_flows = 8
+    perf_filename = "perf_8_tcp_connection.sh"
+    perf_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + perf_filename
+    netperf_remote_port = None
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Test Tcp performance for 8 connections 1500B stream",
+                              steps="""
+                              1. Setup fpg1 on %s
+                              2. Run netperf file with 8 connection
+                              3. Update tcp_performance.json file with throughput and pps
+                              """ % host_name)
 
 
 if __name__ == '__main__':
@@ -273,4 +290,5 @@ if __name__ == '__main__':
     ts.add_test_case(TcpPerformance1Conn())
     # ts.add_test_case(TcpPerformance_2_Conn())
     ts.add_test_case(TcpPerformance4Conn())
+    # ts.add_test_case(TcpPerformance8Conn())
     ts.run()

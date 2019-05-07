@@ -70,6 +70,15 @@ class FunTestCase1(FunTestCase):
         dpcsh_client1 = DpcshClient(target_ip=come.host_ip, target_port=come.get_dpc_port(1))
         dpcsh_client1.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
 
+        # Some more helpers
+        ssd_connected_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
+        for host_ip, host_info in ssd_connected_hosts.iteritems():
+            fun_test.log("SSD: Host-IP: {}: host: {} Interfaces: {}".format(host_ip, str(host_info["host_obj"]), str(host_info["interfaces"])))
+
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0)
+        for host_ip, host_info in fpg_connected_hosts.iteritems():
+            fun_test.log("FPG: Host-IP: {}: host: {} Interfaces: {}".format(host_ip, str(host_info["host_obj"]), str(host_info["interfaces"])))
+
 
 
 if __name__ == "__main__":

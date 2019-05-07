@@ -163,7 +163,7 @@ def update_suite_execution(suite_execution_id,
                            state=None,
                            suite_path=None,
                            completed_time=None):
-    # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
+    logger.debug("Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version))
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result
@@ -183,13 +183,13 @@ def update_suite_execution(suite_execution_id,
         te.completed_time = completed_time
     te.save()
     te.save()
-    transaction.commit()
+    # transaction.commit()
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
 
     # print te.version
     # print "Begin:"
     # traceback.print_stack()
-    # print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state)
+    logger.debug("End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state))
     # traceback.print_stack()
     #sys.stdout.flush()
     # print "End:"
@@ -216,7 +216,7 @@ def add_suite_execution(submitted_time,
                         scheduled_time,
                         completed_time,
                         suite_path="unknown",
-                        state=JobStatusType.SCHEDULED,
+                        state=JobStatusType.UNKNOWN,
                         tags=None,
                         suite_container_execution_id=-1,
                         test_bed_type=None,
@@ -497,7 +497,7 @@ def _get_suite_executions(execution_id=None,
                 if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
                     suite_result = RESULTS["KILLED"]
 
-            if save_suite_info or finalize:  #TODO: Perf too many saves
+            if finalize:  #TODO: Perf too many saves
                 se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
                 if finalize:
                     se.finalized = True
@@ -522,7 +522,7 @@ def _get_suite_executions(execution_id=None,
         suite_execution["fields"]["completed_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["completed_time"])))
 
     with transaction.atomic():
-        if save_suite_info:
+        if finalize:
             for se in ses:
                 se.save()
     return all_objects_dict

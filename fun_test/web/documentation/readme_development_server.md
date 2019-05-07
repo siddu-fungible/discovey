@@ -6,10 +6,8 @@
 # pip install -r requirements.txt --user
 ```
 
-
 ### Install Postgres database
-Refer: https://github.com/fungible-inc/Integration/blob/master/README-postgres-installation-notes.md
-
+Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/postgres_notes.md
 
 ### Starting the web-server
 ~~~~

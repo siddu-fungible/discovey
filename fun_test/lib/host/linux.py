@@ -97,7 +97,8 @@ class Linux(object, ToDictMixin):
                  connect_retry_timeout_max=20,
                  use_paramiko=False,
                  localhost=None,
-                 set_term_settings=True):
+                 set_term_settings=True,
+                 **kwargs):
 
         self.host_ip = host_ip
         self.ssh_username = ssh_username
@@ -122,6 +123,7 @@ class Linux(object, ToDictMixin):
         self.telnet_port = telnet_port
         self.telnet_username = telnet_username
         self.telnet_password = telnet_password
+        self.extra_attributes = kwargs
         self.post_init()
 
     @staticmethod
@@ -131,8 +133,8 @@ class Linux(object, ToDictMixin):
         :rtype: object
         """
         prop = asset_properties
-        ssh_username = prop.get("mgmt_ssh_username", prop["ssh_username"])
-        ssh_password = prop.get("mgmt_ssh_password", prop["ssh_password"])
+        ssh_username = prop.get("mgmt_ssh_username", prop.get("ssh_username"))
+        ssh_password = prop.get("mgmt_ssh_password", prop.get("ssh_password"))
         ssh_port = prop.get("mgmt_ssh_port", 22)
 
         return Linux(host_ip=prop["host_ip"], ssh_username=ssh_username,
@@ -1880,6 +1882,7 @@ class Linux(object, ToDictMixin):
                 result = False
             if result:
                 fun_test.sleep("Post-reboot", seconds=15)
+
         return result
 
     @fun_test.safe
@@ -2289,6 +2292,49 @@ class Linux(object, ToDictMixin):
         return self.sudo_command(cmd)
 
     @fun_test.safe
+    def vdbench(self, path="/usr/local/share/vdbench", filename=None, timeout=300):
+        vdb_out = ""
+        vdb_result = {}
+        # Vdbench's column output format
+        header_list = ["datetime", "interval", "iops", "throughput", "io_bytes", "read_pct", "resp_time", "read_resp",
+                       "write_resp", "read_max", "write_max", "resp_stddev", "queue_depth", "cpu_sys_user", "cpu_sys"]
+
+        # Building the vdbbench command
+        if filename:
+            vdb_cmd = "{}/vdbench -f {}".format(path, filename)
+        else:
+            vdb_cmd = "{}/vdbench -t".format(path)
+
+        vdb_out = self.sudo_command(command=vdb_cmd, timeout=timeout)
+
+        # Checking whether the vdbench command got succeeded or not
+        if "Vdbench execution completed successfully" in vdb_out:
+            fun_test.debug("Vdbench command got completed successfully...Proceeding to parse its output")
+        else:
+            fun_test.critical("Vdbench command didn't complete successfully...Aborting...")
+            return vdb_result
+
+        # Parsing the vdbench output
+        # Searching for the line containing the final result using the below pattern
+        vdb_out = vdb_out.split('\n')
+        result_line = ""
+        for line in vdb_out:
+            match = re.search(r'.*avg_\d+\-\d+.*', line, re.M)
+            if match:
+                fun_test.debug("Found final result line: {}".format(match.group(0)))
+                result_line = match.group(0)
+                result_line = result_line.split()
+                fun_test.debug("Parsed final result line: {}".format(result_line))
+
+        if not result_line:
+            fun_test.critical("Unable to find the final result line...Aborting...")
+            return vdb_result
+
+        for index, header in enumerate(header_list):
+            vdb_result[header] = result_line[index]
+
+        return vdb_result
+
     def get_number_cpus(self):
         """Get number of CPUs."""
         cmd = 'lscpu'

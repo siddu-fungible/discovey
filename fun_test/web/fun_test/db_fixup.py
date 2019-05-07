@@ -546,12 +546,16 @@ def convert_to_base_unit(output_value, output_unit):
         elif output_unit in packets_per_sec_category:
             if output_unit == "Mpps":
                 output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "Kpps":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "Gpps":
+                output_value = float(output_value * math.pow(10, 9))
     return output_value
 
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="juniper_NU_LE_VP_NU_FW")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="rcnvme")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)

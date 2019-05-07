@@ -1,3 +1,0 @@
-[
-  {"path": "networking/performance/test_performance_firewall_benchmark.py", "inputs": {"speed": "SPEED_100G"}}
-]
