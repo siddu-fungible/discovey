@@ -1188,6 +1188,7 @@ class HuThroughputPerformance(models.Model):
     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="TCP")
+    input_num_hosts = models.IntegerField(verbose_name="Number of Hosts", default=1)
 
     def __str__(self):
         s = ""
@@ -1243,6 +1244,7 @@ class HuLatencyPerformance(models.Model):
     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="TCP")
+    input_num_hosts = models.IntegerField(verbose_name="Number of Hosts", default=1)
 
     def __str__(self):
         s = ""
@@ -1280,6 +1282,7 @@ class TeraMarkJuniperNetworkingPerformance(models.Model):
     input_offloads = models.BooleanField(default=False)
     input_protocol = models.TextField(default="UDP")
     input_half_load_latency = models.BooleanField(default=False)
+    input_memory = models.TextField(default="HBM")
 
     def __str__(self):
         s = ""
@@ -1811,6 +1814,7 @@ class TeraMarkLookupEnginePerformance(models.Model):
     output_lookup_per_sec_min_unit = models.TextField(default="lookups/sec")
     output_lookup_per_sec_avg_unit = models.TextField(default="lookups/sec")
     output_lookup_per_sec_max_unit = models.TextField(default="lookups/sec")
+    input_operation = models.TextField(default="")
     tag = "analytics"
 
     def __str__(self):

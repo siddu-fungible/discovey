@@ -39,6 +39,8 @@ class MetricParser():
             return self.hu_networking(logs=logs, date_time=date_time)
         elif "JuniperCrypto" in model_name:
             return self.crypto_tunnel(logs=logs, date_time=date_time)
+        elif "LookupEngine" in model_name:
+            return self.lookup_engine(logs=logs, date_time=date_time)
         else:
             return {}
 
@@ -301,3 +303,46 @@ class MetricParser():
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
         return result
+
+    def lookup_engine(self, logs, date_time):
+        match_found = False
+        result = {}
+        result["data"] = []
+        teramark_begin = False
+        self.status = RESULTS["FAILED"]
+        metrics = collections.OrderedDict()
+        for line in logs:
+            if "TeraMark Begin" in line:
+                teramark_begin = True
+                continue
+            if "TeraMark End" in line:
+                teramark_begin = False
+            if teramark_begin:
+                m = re.search(
+                    r'(?P<value_json>{.*})',
+                    line)
+                if m:
+                    value_json = json.loads(m.group("value_json"))
+                    match_found = True
+                    metrics["input_test"] = "le_test_perf"
+                    metrics["input_memory"] = value_json["memory"]
+                    metrics["input_operation"] = value_json["operation"]
+                    self.set_metrics(value_json=value_json, metrics=metrics, key="output_lookup_per_sec", default=-1)
+                    self.status = RESULTS["PASSED"]
+                    d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
+                    result["data"].append(d)
+        result["match_found"] = match_found
+        result["status"] = self.status == RESULTS["PASSED"]
+        return result
+
+    def set_metrics(self, value_json, metrics, key, default):
+        metrics[key + "_min"] = value_json.get("min", default)
+        metrics[key + "_max"] = value_json.get("max", default)
+        if "avg" in value_json:
+            metrics[key + "_avg"] = value_json.get("avg", default)
+        else:
+            metrics[key + "_avg"] = value_json.get("value", default)
+        if "unit" in value_json:
+            metrics[key + "_min_unit"] = value_json.get("unit", default)
+            metrics[key + "_max_unit"] = value_json.get("unit", default)
+            metrics[key + "_avg_unit"] = value_json.get("unit", default)

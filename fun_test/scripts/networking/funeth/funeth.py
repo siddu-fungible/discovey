@@ -126,7 +126,7 @@ class Funeth:
 
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
+            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=8'.format(drvdir, " ".join(_modparams)),
                                             timeout=300)
 
             fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
@@ -211,6 +211,31 @@ class Funeth:
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             result &= self.configure_namespace_interfaces(nu_or_hu, ns)
+
+        return result
+
+    def enable_namespace_interfaces_tso(self, nu_or_hu, ns=None):
+        """Enable interfaces TSO in a namespace."""
+        result = True
+        for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            cmd = 'ethtool -K {} tso on'.format(intf)
+            cmd_chk = 'ethtool -k {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {} {}; sudo ip netns exec {}'.format(ns, cmd, cmd_chk)]
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+            match = re.search(r'tcp-segmentation-offload: on', output)
+            result &= match is not None
+
+        return result
+
+    def enable_tso(self, nu_or_hu):
+        """Enable TSO to the interfaces."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.enable_namespace_interfaces_tso(nu_or_hu, ns)
 
         return result
 

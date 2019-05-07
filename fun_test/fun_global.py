@@ -122,3 +122,5 @@ class PerfUnit:
 
     UNIT_PPS = "pps"
     UNIT_MPPS = "Mpps"
+    UNIT_KPPS = "Kpps"
+    UNIT_GPPS = "Gpps"

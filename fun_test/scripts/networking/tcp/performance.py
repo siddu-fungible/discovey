@@ -177,7 +177,6 @@ class TcpPerformance1Conn(FunTestCase):
 
         checkpoint = "Get Flow list during test"
         output = network_controller_obj.get_flow_list()
-        fun_test.simple_assert(output['status'], 'Get Flow List')
         flowlist_temp_filename = str(version) + "_" + str(self.num_flows) + '_flowlist.txt'
         fun_test.simple_assert(populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
                                checkpoint)

@@ -1059,6 +1059,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     } else if (this.packets_per_second_category.includes(outputUnit)) {
       if (outputUnit === "Mpps") {
         output = output * Math.pow(10, 6);
+      } else if (outputUnit === "Kpps") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "Gpps") {
+        output = output * Math.pow(10, 9);
       }
     }
 
@@ -1128,6 +1132,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     } else if (this.packets_per_second_category.includes(outputUnit)) {
       if (outputUnit === "Mpps") {
         output = output / Math.pow(10, 6);
+      } else if (outputUnit === "Kpps") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "Gpps") {
+        output = output / Math.pow(10, 9);
       }
     }
     return parseFloat(output.toFixed(this.DECIMAL_PRECISION));

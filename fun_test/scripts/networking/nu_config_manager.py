@@ -69,10 +69,10 @@ class NuConfigManager(object):
     def get_f1_index(self):
         self.F1_INDEX = None
         job_inputs = fun_test.get_job_inputs()
-        if job_inputs and 'f1_index' in job_inputs:
-            if int(job_inputs['f1_index']) == self.F1_INDEX_0:
+        if job_inputs and 'disable_f1_index' in job_inputs:
+            if int(job_inputs['disable_f1_index']) == self.F1_INDEX_0:
                 self.F1_INDEX = self.F1_INDEX_0
-            elif int(job_inputs['f1_index']) == self.F1_INDEX_1:
+            elif int(job_inputs['disable_f1_index']) == self.F1_INDEX_1:
                 self.F1_INDEX = self.F1_INDEX_1
         else:
             self.F1_INDEX = None
@@ -117,6 +117,9 @@ class NuConfigManager(object):
                     elif self.F1_INDEX == self.F1_INDEX_0:
                         result['dpcsh_tcp_proxy_ip'] = result['dpcsh_tcp_proxy_ip']
                         result['dpcsh_tcp_proxy_port'] = result['dpcsh_tcp_proxy_port2']
+                    else:
+                        result['dpcsh_tcp_proxy_ip'] = result['dpcsh_tcp_proxy_ip']
+                        result['dpcsh_tcp_proxy_port'] = result['dpcsh_tcp_proxy_port1']
                     break
             dut_spirent_map = self.read_dut_spirent_map()
             result['ports'] = []

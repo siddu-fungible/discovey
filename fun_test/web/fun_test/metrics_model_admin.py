@@ -11,9 +11,9 @@ from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformanc
 from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance, WuDispatchTestPerformance
 from web.fun_test.metrics_models import HuRawVolumePerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import SoakClassicMallocPerformance, SoakFunMallocPerformance
-from web.fun_test.metrics_models import WuStackSpeedTestPerformance
-from web.fun_test.metrics_models import MetricChartStatus
-from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance, FlowTestPerformance
+from web.fun_test.metrics_models import WuStackSpeedTestPerformance, TeraMarkFunTcpThroughputPerformance
+from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJuniperNetworkingPerformance
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance, FlowTestPerformance, BltVolumePerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh25519Performance, TeraMarkPkeEcdh256Performance, TeraMarkLookupEnginePerformance
 from web.fun_test.metrics_models import TeraMarkPkeRsaPerformance, TeraMarkPkeRsa4kPerformance, TeraMarkCryptoPerformance
 
@@ -141,6 +141,18 @@ class TeraMarkCryptoPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(TeraMarkLookupEnginePerformance)
 class TeraMarkLookupEnginePerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(BltVolumePerformance)
+class BltVolumePerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkJuniperNetworkingPerformance)
+class TeraMarkJuniperNetworkingPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkFunTcpThroughputPerformance)
+class TeraMarkFunTcpThroughputPerformanceeAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)

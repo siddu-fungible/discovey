@@ -4,6 +4,7 @@ import sys
 
 FUN_TEST_DIR = dirname(abspath(__file__))
 INTEGRATION_DIR = dirname(abspath(FUN_TEST_DIR))
+DATA_STORE_DIR = dirname(abspath(INTEGRATION_DIR)) + "/data_store"   # Storage area for test-input files
 SCHEDULER_DIR = FUN_TEST_DIR + "/scheduler"
 WEB_DIR = FUN_TEST_DIR + "/web"
 STASH_DIR = FUN_TEST_DIR + "/stash"

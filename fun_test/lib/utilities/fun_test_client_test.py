@@ -1,14 +1,14 @@
 from lib.utilities.fun_test_client import FunTestClient
-# base_url = "http://0.0.0.0:5000"
-base_url = "http://server17:5000"
-base_url = "http://integration.fungible.local"
+base_url = "http://0.0.0.0:5000"
+# base_url = "http://server17:5000"
+# base_url = "http://integration.fungible.local"
 
 fun_test_client = FunTestClient(base_url=base_url)
 
 suite_name = "test2.json"
 DEFAULT_BUILD_URL = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/"
 
-for i in range(10):
+for i in range(30):
 
     job_id = fun_test_client.submit_job(suite_path=suite_name,
                                         build_url=DEFAULT_BUILD_URL,

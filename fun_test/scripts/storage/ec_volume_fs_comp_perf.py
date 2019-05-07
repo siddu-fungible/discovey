@@ -106,6 +106,9 @@ def parse_perf_stats(perf_dict):
     return perf_dict
 
 
+VOL_TYPE = "EC_COMP_FS_VOL"
+
+
 class ECVolumeLevelScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -410,7 +413,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         blt = BltVolumePerformanceHelper()
 
         blt.add_entry(date_time=fun_test.shared_variables['run_time'],
-                      volume=self.num_volume,
+                      volume=VOL_TYPE,
                       test=test,
                       block_size=test_stats['block_size'],
                       io_depth=test_stats['iodepth'],

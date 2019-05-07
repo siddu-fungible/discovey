@@ -12,7 +12,7 @@ BUILD_PARAMS = {
     "RUN_MODE": "Batch",
     "PRIORITY": "high_priority",
     "BOOTARGS": "",
-    "MAX_DURATION": 5,
+    "MAX_DURATION": 20,
     "SECURE_BOOT": "fungible",
     "NOTE": "",
     "FAST_EXIT": "true",
@@ -41,7 +41,8 @@ BUILD_PARAMS = {
     "BRANCH_FunJenkins": "",
     "BRANCH_FunDevelopment": "",
     "BRANCH_FunTools": "",
-    "RUN_PIPELINE": ""
+    "RUN_PIPELINE": "",
+    "SKIP_DASM_C": "true"
 }
 
 
@@ -92,15 +93,15 @@ def do_score_triage(commits, bootargs, base_tag):
 if __name__ == "__main__":
     gm = GitManager()
 
-    from_sha = "23c650af59406ca6df7783ca7b3f93605c0172ad"
-    to_sha = "8713dd60ca4314a432b860468819e55f2768a114"
+    from_sha = "bda3af313c7b16c058987f4ee4964cf58773a818"
+    to_sha = "82b8695b8dcb90a89fe403b139f3a71fe9d4ba06"
 
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))
     for commit in commits:
         print commit["sha"], commit["commit"]["committer"]["date"]
     bootargs = "--serial app=bcopy_speed_test,bcopy_flood_speed_test"
-    bootargs = "app=soak_dma_memcpy"
-    iteration = 1
-    base_tag = "qa_triage_soak_dma_below_4k_{}".format(iteration)
+    bootargs = "--serial app=bcopy_speed_test,bcopy_flood_speed_test,alloc_speed_test,dispatch_speed_test,wu_send_speed_test,wu_latency_test,wustack_speed_test,soak_malloc_fun_malloc,soak_malloc_classic,fun_magent_perf_test"
+    iteration = 3
+    base_tag = "qa_triage_malloc_agent_{}".format(iteration)
     do_score_triage(commits, bootargs=bootargs, base_tag=base_tag)
