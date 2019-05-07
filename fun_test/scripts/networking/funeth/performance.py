@@ -88,6 +88,7 @@ def collect_stats(fpg_interfaces):
     # TODO: add mpstat and netstat
     fpg_stats = {}
     for nc_obj in fun_test.shared_variables['network_controller_objs']:
+        nc_obj.echo_hello()
         for i in fpg_interfaces:
             r = nc_obj.peek_fpg_port_stats(port_num=i)
             # TODO: handle None
