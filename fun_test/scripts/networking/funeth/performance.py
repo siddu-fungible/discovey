@@ -218,8 +218,8 @@ class FunethPerformanceBase(FunTestCase):
                 {'pps_h2h': nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
             )
 
-
         # Check test passed or failed
+        fun_test.log('NetperfManager Results:\n{}'.format(pprint.pformat(result)))
         if any(v == -1 for v in result.values()):
             passed = False
         else:
@@ -246,7 +246,7 @@ class FunethPerformanceBase(FunTestCase):
              'version': fun_test.get_version(),
              }
         )
-        fun_test.log('Results:\n{}'.format(pprint.pformat(result)))
+        fun_test.log('Final Results:\n{}'.format(pprint.pformat(result)))
 
         # Update file with result
         with open(RESULT_FILE) as f:
