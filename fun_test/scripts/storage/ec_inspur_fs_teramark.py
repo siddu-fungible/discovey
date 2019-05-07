@@ -688,7 +688,7 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).cleanup()
 
 
-class RandReadWrite1024kBlocks(ECVolumeLevelTestcase):
+class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Inspur TC 8.11.2: 1024k data block sequential read/write IOPS performance"
@@ -705,13 +705,13 @@ class RandReadWrite1024kBlocks(ECVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(RandReadWrite1024kBlocks, self).setup()
+        super(SequentialReadWrite1024kBlocks, self).setup()
 
     def run(self):
-        super(RandReadWrite1024kBlocks, self).run()
+        super(SequentialReadWrite1024kBlocks, self).run()
 
     def cleanup(self):
-        super(RandReadWrite1024kBlocks, self).cleanup()
+        super(SequentialReadWrite1024kBlocks, self).cleanup()
 
 
 class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
@@ -817,7 +817,7 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(RandReadWrite1024kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(IntegratedModelReadWriteIOPS())
     ecscript.add_test_case(OLTPModelReadWriteIOPS())
     ecscript.add_test_case(OLAPModelReadWriteIOPS())

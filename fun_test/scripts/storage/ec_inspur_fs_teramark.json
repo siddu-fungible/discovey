@@ -71,7 +71,7 @@
     "nvme_device": "/dev/nvme",
     "io_queues": 0
   },
-  "RandReadWrite1024kBlocks": {
+  "SequentialReadWrite1024kBlocks": {
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -115,10 +115,10 @@
     "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=6h,interval=30",
     "warm_up_config_file": "populate_disk",
     "read_pct": 0.7,
-    "operation": "randrw",
+    "operation": "rw",
     //"perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=1\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=1\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=8t,interval=10,warmup=10",
-    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=512g,interval=10,warmup=10",
-    "perf_run_config_file": "inspur_1024k_rand_read_write_vdbench",
+    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=0,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=512g,interval=10,warmup=10",
+    "perf_run_config_file": "inspur_1024k_sequential_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
     "io_queues": 0
