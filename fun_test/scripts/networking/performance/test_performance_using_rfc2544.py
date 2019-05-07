@@ -260,7 +260,10 @@ class TestTransitPerformance(FunTestCase):
             result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
                                                                       mode=mode,
-                                                                      flow_direction=self.flow_direction)
+                                                                      flow_direction=self.flow_direction,
+                                                                      model_name=HNU_PERFORMANCE_MODEL_NAME,
+                                                                      update_charts=False,
+                                                                      update_json=True)
             if not result:
                 fun_test.log("===================== Trying another trial for failed flow with extra debug logs %s "
                              "=====================" % self.flow_direction)
