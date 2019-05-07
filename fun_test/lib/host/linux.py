@@ -717,12 +717,7 @@ class Linux(object, ToDictMixin):
         lines = o.split('\n')
         files = []
         for line in lines:
-            if line.startswith("-"):
-                reg = re.compile(r'(.*) (\S+)')
-                m = reg.search(line)
-                if m:
-                    files.append({"info": m.group(1), "filename": m.group(2)})
-            if line.startswith("d"):
+            if line:
                 reg = re.compile(r'(.*) (\S+)')
                 m = reg.search(line)
                 if m:
