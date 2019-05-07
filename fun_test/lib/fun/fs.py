@@ -157,7 +157,7 @@ class Bmc(Linux):
 
         return True
 
-    def ensure_come_is_up(self, come, max_wait_time=180, power_cycle=True):
+    def ensure_come_is_up(self, come, max_wait_time=240, power_cycle=True):
         come_up = False
         come_restart_timer = FunTimer(max_time=max_wait_time)
         # Ensure ComE restarted

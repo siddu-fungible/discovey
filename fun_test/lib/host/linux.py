@@ -1900,10 +1900,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", chassis=True):
         result = True
+        chassis_string = "" if not chassis else " chassis"
+
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}".format(host, interface, user, passwd))
-        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power off".format(interface, host, user, passwd)
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {}{} power off".format(interface, host, user, passwd, chassis_string)
         expected_pat = r'Chassis Power Control: Down/Off'
         ipmi_out = self.command(command=ipmi_cmd)
         if ipmi_out:
@@ -1920,9 +1922,10 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", chassis=True):
         result = True
-        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power on".format(interface, host, user, passwd)
+        chassis_string = "" if not chassis else " chassis"
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {}{} power on".format(interface, host, user, passwd, chassis_string)
         expected_pat = r'Chassis Power Control: Up/On'
         ipmi_out = self.command(command=ipmi_cmd)
         if ipmi_out:
@@ -1939,14 +1942,14 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30):
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30, chassis=True):
         result = True
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
                                                                                          interval))
-        off_status = self.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd)
+        off_status = self.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd, chassis=chassis)
         if off_status:
             fun_test.sleep("Sleeping for {} seconds for the host to go down".format(interval), interval)
-            on_status = self.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd)
+            on_status = self.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd, chassis=chassis)
             if not on_status:
                 result = False
         else:
