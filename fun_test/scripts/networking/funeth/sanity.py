@@ -41,7 +41,7 @@ def setup_nu_host(funeth_obj):
         for nu in funeth_obj.nu_hosts:
             linux_obj = funeth_obj.linux_obj_dict[nu]
             fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
-    fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
+        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
     for nu in funeth_obj.nu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[nu]
         #if TB in ('FS7', 'FS11'):
