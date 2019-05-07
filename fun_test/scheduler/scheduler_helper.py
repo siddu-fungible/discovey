@@ -293,6 +293,8 @@ def queue_job3(suite_path=None,
         tags = []
     if not emails:
         emails = []
+    if not inputs:
+        inputs = {}
     if suite_type == SuiteType.DYNAMIC:
         original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
         suite_path = "Re({})".format(original_suite_execution.suite_path)
@@ -340,7 +342,7 @@ def queue_job3(suite_path=None,
         suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
 
         suite_execution.environment = json.dumps(environment)
-        suite_execution.inputs = inputs
+        suite_execution.inputs = json.dumps(inputs)
         suite_execution.build_url = build_url
         suite_execution.version = version
         suite_execution.requested_priority_category = requested_priority_category

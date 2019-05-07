@@ -315,7 +315,7 @@ class SuiteWorker(Thread):
 
         self.job_inputs = {}
         if hasattr(job_spec, "inputs"):
-            self.job_inputs = job_spec.inputs
+            self.job_inputs = json.loads(job_spec.inputs)
 
         self.job_dynamic_suite_spec = None
         if hasattr(job_spec, "dynamic_suite_spec"):
