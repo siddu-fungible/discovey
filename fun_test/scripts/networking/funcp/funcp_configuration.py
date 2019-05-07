@@ -7,6 +7,7 @@ from lib.host.linux import *
 from lib.fun.fs import *
 import json
 import random
+from scripts.networking.lib_nw import funcp
 
 test_bed_name = ""
 fs = None
@@ -166,10 +167,11 @@ class ConfigureFunCPMpgIP(FunTestCase):
     docker_names = []
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Configure FunCP on COMe using Abstract Config",
+                              summary="Bringup MPG interface and assign IPs",
                               steps="""
-                              1. All interface IPs
-                              2. Add routes
+                              1. Bring MPG up
+                              2. Add new MAC
+                              3. Get IP using DHCP
                               """)
 
     def setup(self):
@@ -231,20 +233,44 @@ class ConfigureFunCPMpgIP(FunTestCase):
 
 
 class AbstractConfig(FunTestCase):
+    test_bed_spec = None
+    abstract_configs = ""
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Configure FunCP on COMe using Abstract Config",
+                              summary="Create Config File and Execute Abstract Config",
                               steps="""
-                              1. All interface IPs
+                              1. Get MPG IPs
                               2. Add routes
                               """)
 
     def setup(self):
-        pass
+        self.test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
+
+        if not mpg_ips:
+            mpg_ips['F1-0'] = "10.1.21.29"
+            mpg_ips['F1-1'] = "10.1.21.27"
+
+        abstract_config_file = fun_test.get_script_parent_directory() + '/abstract_configs.json'
+        self.abstract_configs = fun_test.parse_file_to_json(abstract_config_file)
 
     def run(self):
-        pass
+        linux_obj = Linux(host_ip="qa-ubuntu-02", ssh_username="qa-admin", ssh_password="Precious1*")
+        workspace = '/tmp'
+        linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
+        funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
+
+        # Get FunControlPlane
+        fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
+        fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
+        linux_obj.command("cd "+workspace+"/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
+        for f1 in mpg_ips:
+            file_name = f1+"_abstract.json"
+            file_contents = self.abstract_configs[f1]
+            linux_obj.create_file(file_name=file_name, contents=json.dumps(file_contents))
+            linux_obj.command("cd "+workspace+"/FunControlPlane/scripts/docker/combined_cfg/")
+            linux_obj.command("./apply_abstract_config.py --server "+mpg_ips[f1]+" --json ./abstract_cfg/"+file_name)
+
 
     def cleanup(self):
         pass
@@ -254,4 +280,5 @@ if __name__ == '__main__':
     ts.add_test_case(BootFS())
     ts.add_test_case(BringupFunCP())
     ts.add_test_case(ConfigureFunCPMpgIP())
+    ts.add_test_case(AbstractConfig())
     ts.run()
