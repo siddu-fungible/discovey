@@ -6,10 +6,11 @@ from scripts.networking.helper import *
 from lib.host.linux import *
 from lib.fun.fs import *
 import json
+import random
 
 test_bed_name = ""
 fs = None
-
+mpg_ips={}
 
 class ScriptSetup(FunTestScript):
 
@@ -43,7 +44,7 @@ class BootFS(FunTestCase):
     def run(self):
         global fs
         test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
-        img_path = "funos-f1.stripped_3may_100g_funcp.gz"
+        img_path = "funos-f1.stripped_7may_funcp.gz"
         fs = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path,
                     boot_args="app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats "
                               "--dpc-server --dpc-uart --mgmt --serdesinit")
@@ -55,7 +56,7 @@ class BootFS(FunTestCase):
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
         fun_test.test_assert(fs.fpga_initialize(), "FPGA initiaize")
         fun_test.test_assert(fs.bmc.u_boot_load_image(index=0, tftp_image_path=fs.tftp_image_path,
-                                                        boot_args=fs.boot_args),
+                                                      boot_args=fs.boot_args),
                              "U-Bootup f1: {} complete".format(0))
         fs.bmc.start_uart_log_listener(f1_index=0)
         fun_test.test_assert(
@@ -66,6 +67,7 @@ class BootFS(FunTestCase):
                              "ComE rebooted successfully")
         fun_test.sleep(message="waiting for COMe", seconds=120)
         come_ping_test = False
+
         come_ping_test_count = 0
         while not come_ping_test:
             response = os.system("ping -c 1 " + test_bed_spec['come']['mgmt_ip'])
@@ -141,7 +143,7 @@ class BringupFunCP(FunTestCase):
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
         git_pull = linux_obj_come.command("git pull")
         prepare_docker_outout = linux_obj_come.command("./integration_test/emulation/test_system.py --prepare --docker",
-                                                       timeout=900)
+                                                       timeout=1200)
         sections = ['Cloning into \'FunSDK\'', 'Cloning into \'fungible-host-drivers\'',
                     'Cloning into \'FunControlPlane\'', 'Prepare End']
         for section in sections:
@@ -181,19 +183,39 @@ class ConfigureFunCPMpgIP(FunTestCase):
         fun_test.test_assert_expected(expected=2, actual=len(self.docker_names), message="Make sure 2 dockers are up")
         self.linux_obj_come.disconnect()
     def run(self):
-        mpg_ips = {}
 
+        linux_containers = {}
         for docker_name in self.docker_names:
-            self.linux_obj_come.command(command="docker exec -it "+docker_name.rstrip()+" bash", timeout=300)
-            self.linux_obj_come.command(command="sudo ifconfig mpg up", timeout=300)
-            self.linux_obj_come.command(command="sudo ifconfig mpg hw ether 00:f1:1d:ad:10:3d", timeout=300)
-            self.linux_obj_come.command(command="sudo dhclient -v -i mpg", timeout=300)
-            self.linux_obj_come.command(command="ifconfig mpg")
-            ifconfig_output = self.linux_obj_come.command(command="ifconfig mpg").split('\r\n')[1]
-            self.linux_obj_come.command(command="ls")
+            linux_containers[docker_name] = Linux(host_ip=self.test_bed_spec['come']['mgmt_ip'],
+                                                  ssh_username=self.test_bed_spec['come']['mgmt_ssh_username'],
+                                                  ssh_password=self.test_bed_spec['come']['mgmt_ssh_password'])
+            linux_containers[docker_name].command(command="docker exec -it "+docker_name.rstrip()+" bash", timeout=300)
+
+            linux_containers[docker_name].sudo_command(command="ifconfig mpg up", timeout=300)
+            random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
+                          random.randint(0x00, 0xff)]
+            mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
+            try:
+                linux_containers[docker_name].sudo_command(command="ifconfig mpg hw ether "+mac, timeout=60)
+            except:
+                linux_containers[docker_name].command(command="ifconfig mpg")
+                op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
+                for line in op:
+                    ether = False
+                    for word in line.split():
+                        if "ether" == word:
+                            ether = True
+                            continue
+                        if ether:
+                            fun_test.test_assert_expected(expected=mac, actual=word, message="Make sure MAC is updated")
+                            break
+            linux_containers[docker_name].sudo_command(command="dhclient -v -i mpg", timeout=300)
+            linux_containers[docker_name].command(command="ifconfig mpg")
+            ifconfig_output = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')[1]
+            linux_containers[docker_name].command(command="ls")
             mpg_ip = ifconfig_output.split()[1]
-            mpg_ips[docker_name.rstrip] = mpg_ip
-            self.linux_obj_come.disconnect()
+            mpg_ips[str(docker_name.rstrip)] = mpg_ip
+            linux_containers[docker_name].disconnect()
 
         fun_test.log(mpg_ips)
         # self.linux_obj_come.command(command="cd /workspace/FunControlPlane/scripts/docker/combined_cfg/")
@@ -208,9 +230,28 @@ class ConfigureFunCPMpgIP(FunTestCase):
         pass
 
 
+class AbstractConfig(FunTestCase):
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Configure FunCP on COMe using Abstract Config",
+                              steps="""
+                              1. All interface IPs
+                              2. Add routes
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        pass
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BootFS())
     ts.add_test_case(BringupFunCP())
-    # ts.add_test_case(ConfigureFunCPMpgIP())
+    ts.add_test_case(ConfigureFunCPMpgIP())
     ts.run()
