@@ -202,7 +202,7 @@ class NetperfManager:
 
             direction_list = []
             for arg_dict in arg_dicts:
-                parallel = arg_dict.get('parallel', 1)
+                num_flows = arg_dict.get('num_flows', 1)
                 linux_obj = arg_dict.get('linux_obj')
                 linux_obj_dst = arg_dict.get('linux_obj_dst')
                 direction = arg_dict.get('suffix')
@@ -214,7 +214,7 @@ class NetperfManager:
                 sip = arg_dict.get('sip', None)
                 ns = arg_dict.get('ns', None)
 
-                num_processes = 1 if measure_latency else parallel
+                num_processes = 1 if measure_latency else num_flows
                 cpu_list = []
                 for i in range(0, num_processes):
                     cpu = 15 -i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1

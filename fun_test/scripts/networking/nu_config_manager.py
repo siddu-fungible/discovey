@@ -117,6 +117,9 @@ class NuConfigManager(object):
                     elif self.F1_INDEX == self.F1_INDEX_0:
                         result['dpcsh_tcp_proxy_ip'] = result['dpcsh_tcp_proxy_ip']
                         result['dpcsh_tcp_proxy_port'] = result['dpcsh_tcp_proxy_port2']
+                    else:
+                        result['dpcsh_tcp_proxy_ip'] = result['dpcsh_tcp_proxy_ip']
+                        result['dpcsh_tcp_proxy_port'] = result['dpcsh_tcp_proxy_port1']
                     break
             dut_spirent_map = self.read_dut_spirent_map()
             result['ports'] = []
