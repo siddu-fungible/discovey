@@ -895,17 +895,20 @@ class CmdController(Cmd):
     def show_tech_nu_stats(self, args):
         filename = args.filename
         portlist = args.portlist
-        self._show_cmd_obj.show_stats(filename=filename, mode='nu', port_list=portlist)
+        fcp_tunnel_id = args.fcp_tunnel_id
+        self._show_cmd_obj.show_stats(filename=filename, mode='nu', port_list=portlist, fcp_tunnel_id=fcp_tunnel_id)
 
     def show_tech_hnu_stats(self, args):
         filename = args.filename
         portlist = args.portlist
-        self._show_cmd_obj.show_stats(filename=filename, mode='hnu', port_list=portlist)
+        fcp_tunnel_id = args.fcp_tunnel_id
+        self._show_cmd_obj.show_stats(filename=filename, mode='hnu', port_list=portlist, fcp_tunnel_id=fcp_tunnel_id)
 
     def show_tech_all_stats(self, args):
         filename = args.filename
         portlist = args.portlist
-        self._show_cmd_obj.show_stats(filename=filename, mode='all', port_list=portlist)
+        fcp_tunnel_id = args.fcp_tunnel_id
+        self._show_cmd_obj.show_stats(filename=filename, mode='all', port_list=portlist, fcp_tunnel_id=fcp_tunnel_id)
 
     def get_flow_list(self, args):
         grep_regex = args.grep
