@@ -22,6 +22,19 @@ def _parse_file_to_json_in_order(file_name):
     return result
 
 
+def get_nu_lab_host(file_path, host_name):
+    result = None
+    try:
+        hosts = fun_test.parse_file_to_json(file_name=file_path)
+        if host_name in hosts:
+            result = hosts[host_name]
+        else:
+            raise Exception("%s host entry not found in asset hosts.json")
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
 def create_counters_file(json_file_name, counter_dict):
     result = False
     try:
@@ -57,7 +70,6 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
                        "frame_size": frame_size,
                        "num_flows": num_flows,
                        "pps": pps_n2t,
-                       "protocol": protocol,
                        "throughput": throughput_n2t,
                        "timestamp": str(timestamp),
                        "version": fun_test.get_version()

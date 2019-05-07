@@ -2718,7 +2718,6 @@ class ShowCommands(PeekCommands):
                     command_dict['%s fpg %s stats' % (mode, port_num)] = self.peek_fpg_stats(port_num=int(port_num),
                                                                                              get_result_only=True,
                                                                                              mode=mode)
-            command_dict['%s fcp stats' % mode] = self.peek_fcp_tunnel_stats(get_result_only=True, mode=mode)
             command_dict['%s psw stats' % mode] = self.peek_psw_stats(get_result_only=True, mode=mode)
             command_dict['%s wro stats' % mode] = self.peek_wro_stats(get_result_only=True, mode=mode)
             command_dict['%s erp stats' % mode] = self.peek_erp_stats(get_result_only=True, mode=mode)
@@ -2734,7 +2733,7 @@ class ShowCommands(PeekCommands):
         if os.path.exists(filepath):
             os.remove(filepath)
 
-    def show_stats(self, filename, mode='nu', port_list=[]):
+    def show_stats(self, filename, mode='nu', port_list=[], fcp_tunnel_id=None):
         filepath = None
         command_dict = OrderedDict()
         try:
@@ -2750,6 +2749,8 @@ class ShowCommands(PeekCommands):
             command_dict['nhp stats'] = self.peek_nhp_stats(get_result_only=True)
             command_dict['sse stats'] = self.peek_sse_stats(get_result_only=True)
             command_dict['resource bam stats'] = self.peek_bam_resource_stats(get_result_only=True)
+            if fcp_tunnel_id:
+                command_dict['fcp stats'] = self.peek_fcp_tunnel_stats(get_result_only=True, tunnel_id=fcp_tunnel_id)
             if mode == 'nu' or mode == 'hnu':
                 command_dict = self.append_mode_specific_commands(command_dict=command_dict, port_list=port_list,
                                                                   mode=mode)

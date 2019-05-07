@@ -1133,12 +1133,14 @@ show_tech_nu_parser.add_argument('-filename', help="Specify a filename to save/a
                                                    "provided on console once commands run successfully", default=None,
                                     type=str)
 show_tech_nu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+show_tech_nu_parser.add_argument('-fcp_tunnel_id', type=int, help="FCP tunnel ID", default=None)
 
 show_tech_hnu_parser = show_tech_parsers.add_parser('hnu', help="Capture hnu stats")
 show_tech_hnu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
                                                    "If not provided it will create one. The entire filepath will be "
                                                    "provided on console once commands run successfully")
 show_tech_hnu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+show_tech_hnu_parser.add_argument('-fcp_tunnel_id', type=int, help="FCP tunnel ID", default=None)
 
 show_tech_all_parser = show_tech_parsers.add_parser('all', help="Capture all stats")
 show_tech_all_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
@@ -1146,6 +1148,7 @@ show_tech_all_parser.add_argument('-filename', help="Specify a filename to save/
                                                    "provided on console once commands run successfully", default=None,
                                      type=str)
 show_tech_all_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+show_tech_all_parser.add_argument('-fcp_tunnel_id', type=int, help="FCP tunnel ID", default=None)
 
 
 # ---------------------------------------------------------------------------------------------------
