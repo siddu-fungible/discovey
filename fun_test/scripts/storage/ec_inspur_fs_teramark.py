@@ -248,13 +248,21 @@ class ECVolumeLevelScript(FunTestScript):
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        self.end_host = topology.get_host_instance(dut_index=0, host_index=0, fpg_interface_index=4)
-        end_host_ip = self.end_host.host_ip
-        self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use)
+        for host_ip, host_info in fpg_connected_hosts.iteritems():
+            if "test_interface_name" in host_info["host_obj"].extra_attributes:
+                self.end_host = host_info["host_obj"]
+                self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
+                self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
+                fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
+                break
+        else:
+            fun_test.test_assert(False, "Host found with Test Interface")
+
         fun_test.shared_variables["end_host"] = self.end_host
 
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
-        fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
+        fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
                                                              self.test_interface_name)
