@@ -1362,7 +1362,7 @@ if __name__ == "__main_num_hosts__":
         ml.save_data_sets(data_sets=data_sets, chart=chart)
         print "added number of hosts field for {}".format(chart.chart_name)
 
-if __name__ == "__main__":
+if __name__ == "__main_12ssd_durable_vol__":
     internal_chart_names = ["read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
                             "read_4kb1vol12ssd_durable_volume_ec_output_iops",
                             "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
@@ -1438,3 +1438,64 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "created throughput, iops and latency charts for 12 ssd read and random read durable volume ec storage"
+
+if __name__ == "__main__":
+    internal_chart_names = ["NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
+                            "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
+                            "NU_HU_NFCP_1TCP_offloads_disabled_output_latency"]
+    frame_size = 1500
+    flow_types = ["HU_NU_NFCP", "NU_HU_NFCP"]
+    base_line_date = datetime(year=2019, month=1, day=26, minute=0, hour=0, second=0)
+    model_name = "HuLatencyPerformance"
+    chart_name = "Latency"
+    positive = False
+    y1_axis_title = "usecs"
+    output_names = ["output_latency_min", "output_latency_P50", "output_latency_P90", "output_latency_P99"]
+    for internal_chart_name in internal_chart_names:
+
+
+        if "1TCP" in internal_chart_name:
+            num_flows = 1
+        else:
+            num_flows = 8
+
+        if "HU_NU_NFCP" in internal_chart_name:
+            flow_type = "HU_NU_NFCP"
+            output_name = output_name + "_h2n"
+        else:
+            flow_type = "NU_HU_NFCP"
+            output_name = output_name + "_n2h"
+
+        description = "TBD"
+        data_sets = []
+        name = str(frame_size) + "B"
+        # if chart_name == "Latency":
+        #     name = name + "-avg"
+        one_data_set = {}
+        one_data_set["name"] = name
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_flow_type"] = flow_type
+        one_data_set["inputs"]["input_number_flows"] = num_flows
+        one_data_set["inputs"]["input_protocol"] = "TCP"
+        one_data_set["inputs"]["input_offloads"] = False
+        one_data_set["inputs"]["input_frame_size"] = frame_size
+        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/funeth/performance.py",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created charts for the new networking teramarks"
