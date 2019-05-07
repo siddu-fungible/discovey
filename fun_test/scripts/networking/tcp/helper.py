@@ -70,7 +70,6 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
                        "frame_size": frame_size,
                        "num_flows": num_flows,
                        "pps": pps_n2t,
-                       "protocol": protocol,
                        "throughput": throughput_n2t,
                        "timestamp": str(timestamp),
                        "version": fun_test.get_version()
