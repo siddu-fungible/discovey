@@ -178,7 +178,10 @@ class Bmc(Linux):
         if come_restart_timer.is_expired() and not come_up:
             fun_test.critical("ComE did not power up. Trying to power-cycle")
             if power_cycle:
-                fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")
+                try:
+                    fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
                 fun_test.sleep("Power-cycling ComE", seconds=10)
                 fun_test.test_assert(self.is_host_pingable(host_ip=come.host_ip, max_time=max_wait_time),
                                      "ComE reachable after power-cycle")
