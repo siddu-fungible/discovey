@@ -62,7 +62,7 @@ class SchedulingStates:
 
 
 class MetricChartStatus(models.Model):
-    metric_id = models.IntegerField(default=-1)
+    metric_id = models.IntegerField(default=-1, db_index=True)
     chart_name = models.TextField(default="Unknown")
     data_sets = JSONField()
     date_time = models.DateTimeField(default=datetime.now)
@@ -86,6 +86,11 @@ class MetricChartStatus(models.Model):
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
         return s
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['metric_id'])
+        ]
 
 class Triage(models.Model):
     metric_id = models.IntegerField(default=-1)

@@ -150,6 +150,22 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            build_properties="", lsf_job_id="",
                            sdk_version=version)
 
+def validate_and_parse(self):
+    try:
+        fun_test.test_assert(self.validate_job(), "validating job")
+        result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                         auto_add_to_db=True, date_time=self.dt)
+
+        fun_test.test_assert(result["match_found"], "Found atleast one entry")
+        self.result = fun_test.PASSED
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+
+    set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                 test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                 git_commit=self.git_commit, model_name=self.model)
+    fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -1433,20 +1449,7 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+        validate_and_parse(self=self)
 
 
 class FlowTestPerformanceTC(PalladiumPerformanceTc):
@@ -1549,21 +1552,7 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+        validate_and_parse(self=self)
 
 
 class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
@@ -2087,21 +2076,7 @@ class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+        validate_and_parse(self=self)
 
 
 class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
@@ -2114,21 +2089,7 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+        validate_and_parse(self=self)
 
 
 class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
@@ -2180,21 +2141,7 @@ class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+        validate_and_parse(self=self)
 
 class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
     tag = TLS_32_TUNNEL
