@@ -167,7 +167,7 @@ class TestTcpPerformance(FunTestCase):
         fun_test.log("# of connections: %d" % num_flows)
         fun_test.log("Publish results to performance site: %s" % publish_results)
         fun_test.log("FunOS Branch: %s" % branch_name)
-        fun_test.log("FunOS version: %d" % fun_test.get_version())
+        fun_test.log("FunOS version: %s" % fun_test.get_version())
 
         test_parameters = {'dest_ip': '29.1.1.2', 'protocol': 'tcp', 'num_flows': num_flows, 'duration': 60,
                            'port1': 1000, 'port2': 4555, 'send_size': '128K'}
