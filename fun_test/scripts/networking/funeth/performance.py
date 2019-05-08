@@ -21,8 +21,8 @@ TIMESTAMP = get_current_time()
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'),
     ('NU_HU_NFCP', 'NU -> HU non-FCP'),
-#    ('HU_HU_NFCP', 'HU -> HU non-FCP'),
-    #    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
+    ('HU_HU_NFCP', 'HU -> HU non-FCP'),
+#    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 ])
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
@@ -209,8 +209,7 @@ class FunethPerformanceBase(FunTestCase):
                 elif len(host_pairs) == num_hosts:
                     break
 
-        #suffixes = ('n2h', 'h2n', 'h2h')  TODO: add 'h2h'
-        suffixes = ('n2h', 'h2n')
+        suffixes = ('n2h', 'h2n', 'h2h')
         arg_dicts = []
         for shost, dhost in host_pairs:
             linux_obj_src = funeth_obj.linux_obj_dict[shost]
