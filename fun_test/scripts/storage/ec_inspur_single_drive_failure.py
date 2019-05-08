@@ -472,7 +472,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             cur_dst_file = dst_file1[num - self.test_volume_start_index]
-            dst_file_info = self.end_host.get_file_info(cur_dst_file)
+            dst_file_info = self.end_host.ls(cur_dst_file)
             fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
             fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
                                           message="Copying {} bytes file into {}".format(self.test_file_size,
@@ -524,7 +524,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             cur_dst_file = dst_file2[num - self.test_volume_start_index]
-            dst_file_info = self.end_host.get_file_info(cur_dst_file)
+            dst_file_info = self.end_host.ls(cur_dst_file)
             fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
             fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
                                           message="Copying {} bytes file into {}".format(self.test_file_size,

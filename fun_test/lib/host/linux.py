@@ -2343,7 +2343,7 @@ class Linux(object, ToDictMixin):
             return int(match.group(1))
 
     @fun_test.safe
-    def get_file_info(self, file, sudo=False, timeout=10):
+    def ls(self, file, sudo=False, timeout=10):
         file_info = {}
         header_list = ["permissions", "links", "owner", "group", "size", "month", "day", "time", "name"]
 
