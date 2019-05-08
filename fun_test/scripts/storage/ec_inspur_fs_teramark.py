@@ -1,10 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.dut import Dut
-from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
-from lib.host.linux import Linux
-from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.fs import Fs
 from datetime import datetime
 import re
@@ -14,6 +10,7 @@ from lib.host.storage_controller import StorageController
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using Vdbench
 '''
+
 
 # TODO: vdbench config content variable: /dev/nvme0n1: change it dynamically according to controller assigned.
 # TODO: Increase Volumes and volume size once related bugs are fixed
@@ -53,13 +50,6 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
         result.append(str(eval(arg)))
     result = ",".join(result)
     fun_test.log("Result: {}".format(result))
-
-
-def compare(actual, expected, threshold, operation):
-    if operation == "lesser":
-        return (actual < (expected * (1 - threshold)) and ((expected - actual) > 2))
-    else:
-        return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
 def configure_ec_volume(storage_controller, ec_info, command_timeout):
@@ -229,16 +219,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Config file being used: {}".format(config_file))
         config_dict = utils.parse_file_to_json(config_file)
 
-        test_beds_config_file = fun_test.get_script_parent_directory() + "/../../asset/test_beds.json"
-        fun_test.log("Config file to fetch Host test setup details from file {}".format(test_beds_config_file))
-        self.test_beds_config_dict = utils.parse_file_to_json(test_beds_config_file)
-        fun_test.log("Test beds config: {}".format(self.test_beds_config_dict))
-
-        hosts_config_file = fun_test.get_script_parent_directory() + "/../../asset/hosts.json"
-        fun_test.log("Config file to fetch Host test property details from file {}".format(hosts_config_file))
-        self.hosts_config_dict = utils.parse_file_to_json(hosts_config_file)
-        fun_test.log("Host config: {}".format(self.hosts_config_dict))
-
         if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
             fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
             fun_test.log("Going to use the script level defaults")
@@ -254,80 +234,42 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
-        """NewChange
-        topology_helper = TopologyHelper()
-        fun_test.log("topology_helper output is: {}".format(topology_helper))
-        fun_test.log("Setting dut params")
-        topology_helper.set_dut_parameters(dut_index=self.f1_in_use, custom_boot_args=self.bootargs)
-        fun_test.log("Started topology deploy")
-        topology = topology_helper.deploy()
-        fun_test.log("topology output is: {}".format(topology))
-        fun_test.test_assert(topology, "Topology deployed")
-
-        fs = topology.get_dut_instance(index=self.f1_in_use)
-        fun_test.shared_variables["fs"] = fs
-        NewChange"""
-
-        # Pulling the testbed type and its config
-        self.test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
-        fun_test.log("Testbed-type: {}".format(self.test_bed_type))
-        self.test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(self.test_bed_type)
-        fun_test.log("{} Testbed Config: {}".format(self.test_bed_type, self.test_bed_spec))
-        fun_test.simple_assert(self.test_bed_spec, "Test-bed spec for {}".format(self.test_bed_type))
-
-        fun_test.shared_variables["test_bed_type"] = self.test_bed_type
-        fun_test.shared_variables["test_bed_spec"] = self.test_bed_spec
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["test_network"] = self.test_network
 
-        # Initializing the FS
-        fs = Fs.get(boot_args=self.bootargs, disable_f1_index=self.disable_f1_index)
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(dut_index=self.f1_in_use, custom_boot_args=self.bootargs)
+        topology = topology_helper.deploy()
+        fun_test.test_assert(topology, "Topology deployed")
+        fun_test.shared_variables["topology"] = topology
 
-        f1 = fs.get_f1(index=self.f1_in_use)
-        fun_test.shared_variables["fs"] = fs
-        fun_test.shared_variables["f1"] = f1
-
-        self.test_bed_config = self.test_beds_config_dict[self.test_bed_type]["dut_info"]
-        fun_test.shared_variables["test_bed_config"] = self.test_bed_config
+        self.fs = topology.get_dut_instance(index=self.f1_in_use)
+        fun_test.shared_variables["fs"] = self.fs
 
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        for interface in self.test_bed_config[str(self.f1_in_use)]["fpg_interface_info"]:
-            if "host_info" in self.test_bed_config[str(self.f1_in_use)]["fpg_interface_info"][interface]:
-                self.nw_hostname = \
-                    self.test_bed_config[str(self.f1_in_use)]["fpg_interface_info"][interface]["host_info"]["name"]
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use)
+        for host_ip, host_info in fpg_connected_hosts.iteritems():
+            if "test_interface_name" in host_info["host_obj"].extra_attributes:
+                self.end_host = host_info["host_obj"]
+                self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
+                self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
+                fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
                 break
+        else:
+            fun_test.test_assert(False, "Host found with Test Interface")
 
-        self.host_config = self.hosts_config_dict[self.nw_hostname]
-        fun_test.shared_variables["host_config"] = self.host_config
-
-        # Initializing the Network attached host
-        end_host_ip = self.host_config["host_ip"]
-        end_host_user = self.host_config["ssh_username"]
-        end_host_passwd = self.host_config["ssh_password"]
-
-        """NewChange
-        fun_test.log("End host object formation")
-        self.end_host = topology.get_host_instance(dut_index=0, host_index=0, fpg_interface_index=0)
-        fun_test.log(self.end_host, "Host instance on fpg interface 0: {}".format(str(self.end_host)))
-        fun_test.log("end host object is created")
-        end_host_ip = self.end_host.host_ip
-        fun_test.log("host_ip is: {}".format(end_host_ip)) NewChange"""
-
-        self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
         fun_test.shared_variables["end_host"] = self.end_host
 
-        """ TODO: Reboot comment start (To avoid poc-server-03 reboot- remove before final commit)"""
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
-        fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
+        fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
-                                                             self.host_config["test_interface_name"])
-        interface_mac_config = "ip link set {} address {}".format(self.host_config["test_interface_name"],
+                                                             self.test_interface_name)
+        interface_mac_config = "ip link set {} address {}".format(self.test_interface_name,
                                                                   self.test_network["test_interface_mac"])
-        link_up_cmd = "ip link set {} up".format(self.host_config["test_interface_name"])
+        link_up_cmd = "ip link set {} up".format(self.test_interface_name)
         static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
                                                self.test_network["test_net_route"]["arp"])
 
@@ -344,13 +286,13 @@ class ECVolumeLevelScript(FunTestScript):
         link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
 
-        interface_up_status = self.end_host.ifconfig_up_down(interface=self.host_config["test_interface_name"],
+        interface_up_status = self.end_host.ifconfig_up_down(interface=self.test_interface_name,
                                                              action="up")
         fun_test.test_assert(interface_up_status, "Bringing up test interface")
 
         route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
                                                       gateway=self.test_network["test_net_route"]["gw"],
-                                                      outbound_interface=self.host_config["test_interface_name"],
+                                                      outbound_interface=self.test_interface_name,
                                                       timeout=self.command_timeout)
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
 
@@ -371,13 +313,9 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.simple_assert(command_result, "Loading nvme_tcp module")
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
                                       message="Loading nvme_tcp module")
-        """ TODO: Reboot comment stop (To avoid poc-server-03 reboot- remove before final commit)"""
 
-        self.storage_controller = f1.get_dpc_storage_controller()
-        """NewChange
-        self.come = fs.get_come()
+        self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip, target_port=self.come.get_dpc_port(0))
-        NewChange"""
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Setting the syslog level
@@ -409,9 +347,8 @@ class ECVolumeLevelScript(FunTestScript):
                                   command_timeout=self.command_timeout)
 
         self.storage_controller.disconnect()
-        fs = fun_test.shared_variables["fs"]
-        fun_test.sleep("Allowing buffer time before calling fs clean-up", 60)
-        fs.cleanup()
+        fun_test.sleep("Allowing buffer time before clean-up", 30)
+        fun_test.shared_variables["topology"].cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -447,15 +384,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        self.fs = fun_test.shared_variables["fs"]
-        self.f1 = fun_test.shared_variables["f1"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.end_host = fun_test.shared_variables["end_host"]
 
-        self.test_bed_type = fun_test.shared_variables["test_bed_type"]
-        self.test_bed_spec = fun_test.shared_variables["test_bed_spec"]
-        self.test_bed_config = fun_test.shared_variables["test_bed_config"]
-        self.host_config = fun_test.shared_variables["host_config"]
         self.test_network = fun_test.shared_variables["test_network"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         fun_test.shared_variables["attach_transport"] = self.attach_transport
@@ -533,14 +464,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
             fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
 
-            ''''# Checking that the above created volume is visible to the end host
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.ns_id)
-            lsblk_output = self.end_host.lsblk()
-            fun_test.log("lsblk output is: {}".format(lsblk_output))
-            fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))'''
-
             lsblk_output = self.end_host.lsblk("-b")
             fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
@@ -561,12 +484,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
             fun_test.shared_variables["volume_name"] = self.volume_name
-
-            ''''# Disable the udev daemon which will skew the read stats of the volume during the test
-            udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-            for service in udev_services:
-                service_status = self.end_host.systemctl(service_name=service, action="stop")
-                fun_test.test_assert(service_status, "Stopping {} service".format(service))'''
 
             # Executing the FIO command to warm up the system
             if self.warm_up_traffic:
@@ -640,6 +557,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         row_data_dict["readbw"] = read_bw
         row_data_dict["writeiops"] = write_iops
         row_data_dict["writebw"] = write_bw
+        row_data_dict["mode"] = self.operation
 
         # Converting response values from milliseconds to microseconds
         row_data_dict["readclatency"] = int(round(float(vdbench_result["read_resp"]) * 1000))
@@ -701,7 +619,7 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
         7. Run warm-up traffic using vdbench
-        8. Run the Performance for 1024k transfer size Random read/write IOPS
+        8. Run the Performance for 1024k transfer size Sequential read/write IOPS
         """)
 
     def setup(self):
@@ -714,8 +632,112 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
         super(SequentialReadWrite1024kBlocks, self).cleanup()
 
 
+class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Inspur TC 8.11.3: Integrated  model read/write IOPS performance of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for Integrated Model read/write IOPS
+        """)
+
+    def setup(self):
+        super(IntegratedModelReadWriteIOPS, self).setup()
+
+    def run(self):
+        super(IntegratedModelReadWriteIOPS, self).run()
+
+    def cleanup(self):
+        super(IntegratedModelReadWriteIOPS, self).cleanup()
+
+
+class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for OLTP model read/write IOPS
+        """)
+
+    def setup(self):
+        super(OLTPModelReadWriteIOPS, self).setup()
+
+    def run(self):
+        super(OLTPModelReadWriteIOPS, self).run()
+
+    def cleanup(self):
+        super(OLTPModelReadWriteIOPS, self).cleanup()
+
+
+class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for OLAP model Random read/write IOPS
+        """)
+
+    def setup(self):
+        super(OLAPModelReadWriteIOPS, self).setup()
+
+    def run(self):
+        super(OLAPModelReadWriteIOPS, self).run()
+
+    def cleanup(self):
+        super(OLAPModelReadWriteIOPS, self).cleanup()
+
+
+class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="Inspur TC 8.11.6: 8k data block random read/write latency test of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for 8k transfer size Random read/write latency
+        """)
+
+    def setup(self):
+        super(RandReadWrite8kBlocksLatencyTest, self).setup()
+
+    def run(self):
+        super(RandReadWrite8kBlocksLatencyTest, self).run()
+
+    def cleanup(self):
+        super(RandReadWrite8kBlocksLatencyTest, self).cleanup()
+
+
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()

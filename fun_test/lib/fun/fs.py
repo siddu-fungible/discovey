@@ -157,7 +157,7 @@ class Bmc(Linux):
 
         return True
 
-    def ensure_come_is_up(self, come, max_wait_time=180, power_cycle=True):
+    def ensure_come_is_up(self, come, max_wait_time=240, power_cycle=True):
         come_up = False
         come_restart_timer = FunTimer(max_time=max_wait_time)
         # Ensure ComE restarted
@@ -178,7 +178,10 @@ class Bmc(Linux):
         if come_restart_timer.is_expired() and not come_up:
             fun_test.critical("ComE did not power up. Trying to power-cycle")
             if power_cycle:
-                fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")
+                try:
+                    fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
                 fun_test.sleep("Power-cycling ComE", seconds=10)
                 fun_test.test_assert(self.is_host_pingable(host_ip=come.host_ip, max_time=max_wait_time),
                                      "ComE reachable after power-cycle")
@@ -315,7 +318,7 @@ class Bmc(Linux):
         return True
 
     def host_power_cycle(self):
-        return self.ipmi_power_cycle(host=self.host_ip, user="admin", passwd="admin")
+        return self.ipmi_power_cycle(host=self.host_ip, user="admin", passwd="admin", chassis=False)  #TODO: What are these credentials
 
     def is_host_pingable(self, host_ip, max_time):
         result = False
@@ -433,9 +436,12 @@ class ComE(Linux):
             self.command("cd $WORKSPACE/FunSDK/bin/Linux")
             self.modprobe("nvme")
             fun_test.sleep("After modprobe", seconds=5)
-            self.command("ls /dev/nvm*")
+
+            nvme_devices = self.list_files("/dev/nvme*")
+            fun_test.test_assert(nvme_devices, "At least one nvme device detected")
+            # self.command("ls /dev/nvm*")
             nvme_device_index = f1_index
-            if self.disable_f1_index is not None:
+            if len(nvme_devices) == 1:  # if only one nvme device was detected
                 nvme_device_index = 0
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --tcp_proxy={} &> {} &".format(nvme_device_index, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
             self.sudo_command(command)
@@ -679,7 +685,7 @@ class Fs(object, ToDictMixin):
     def is_ready(self):
         if not self.come_initialized:
             come = self.get_come()
-            fun_test.test_assert(self.bmc.ensure_come_is_up(come=come, max_wait_time=180, power_cycle=True), "Ensure ComE is up")
+            fun_test.test_assert(self.bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True), "Ensure ComE is up")
             fun_test.test_assert(come.initialize(disable_f1_index=self.disable_f1_index), "ComE initialized")
             self.come_initialized = True
         return True

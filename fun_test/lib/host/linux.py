@@ -717,12 +717,7 @@ class Linux(object, ToDictMixin):
         lines = o.split('\n')
         files = []
         for line in lines:
-            if line.startswith("-"):
-                reg = re.compile(r'(.*) (\S+)')
-                m = reg.search(line)
-                if m:
-                    files.append({"info": m.group(1), "filename": m.group(2)})
-            if line.startswith("d"):
+            if line:
                 reg = re.compile(r'(.*) (\S+)')
                 m = reg.search(line)
                 if m:
@@ -1905,10 +1900,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", chassis=True):
         result = True
+        chassis_string = "" if not chassis else " chassis"
+
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}".format(host, interface, user, passwd))
-        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power off".format(interface, host, user, passwd)
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {}{} power off".format(interface, host, user, passwd, chassis_string)
         expected_pat = r'Chassis Power Control: Down/Off'
         ipmi_out = self.command(command=ipmi_cmd)
         if ipmi_out:
@@ -1925,9 +1922,10 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", chassis=True):
         result = True
-        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power on".format(interface, host, user, passwd)
+        chassis_string = "" if not chassis else " chassis"
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {}{} power on".format(interface, host, user, passwd, chassis_string)
         expected_pat = r'Chassis Power Control: Up/On'
         ipmi_out = self.command(command=ipmi_cmd)
         if ipmi_out:
@@ -1944,14 +1942,14 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30):
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30, chassis=True):
         result = True
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
                                                                                          interval))
-        off_status = self.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd)
+        off_status = self.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd, chassis=chassis)
         if off_status:
             fun_test.sleep("Sleeping for {} seconds for the host to go down".format(interval), interval)
-            on_status = self.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd)
+            on_status = self.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd, chassis=chassis)
             if not on_status:
                 result = False
         else:
@@ -2335,6 +2333,7 @@ class Linux(object, ToDictMixin):
 
         return vdb_result
 
+    @fun_test.safe
     def get_number_cpus(self):
         """Get number of CPUs."""
         cmd = 'lscpu'
@@ -2342,6 +2341,25 @@ class Linux(object, ToDictMixin):
         match = re.search(r'CPU\(s\):\s+(\d+)', output)
         if match:
             return int(match.group(1))
+
+    @fun_test.safe
+    def ls(self, file, sudo=False, timeout=10):
+        file_info = {}
+        header_list = ["permissions", "links", "owner", "group", "size", "month", "day", "time", "name"]
+
+        # Currently the method is going to return the info of the first file from the ls -l output
+        ls_cmd = "ls -l {} | head -1".format(file)
+        if sudo:
+            output = self.sudo_command(command=ls_cmd, timeout=timeout)
+        else:
+            output = self.command(command=ls_cmd, timeout=timeout)
+
+        if output and "No such file or directory" not in output:
+            output = output.split()
+            for index, header in enumerate(header_list):
+                file_info[header] = output[index]
+
+        return file_info
 
 
 class LinuxBackup:

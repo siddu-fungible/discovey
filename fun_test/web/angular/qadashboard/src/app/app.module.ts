@@ -57,6 +57,7 @@ import { UserComponent } from './user/user.component';
 import { TestBedComponent } from './regression/test-bed/test-bed.component';
 import { JirasComponent } from './regression/jiras/jiras.component';
 import { JobSpecComponent } from './regression/job-spec/job-spec.component';
+import { JsonInputComponent } from './ui-elements/json-input/json-input.component';
 
 @NgModule({
   declarations: [
@@ -98,7 +99,8 @@ import { JobSpecComponent } from './regression/job-spec/job-spec.component';
     UserComponent,
     TestBedComponent,
     JirasComponent,
-    JobSpecComponent
+    JobSpecComponent,
+    JsonInputComponent
   ],
   imports: [
     BsDropdownModule,

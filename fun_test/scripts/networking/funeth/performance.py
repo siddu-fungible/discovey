@@ -1,9 +1,9 @@
 from lib.system.fun_test import *
 from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
-from lib.host.iperf_manager import IPerfManager
 from lib.host import netperf_manager as nm
 from lib.host.network_controller import NetworkController
+from scripts.networking.tcp import helper
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity
 from collections import OrderedDict
@@ -21,13 +21,14 @@ TIMESTAMP = get_current_time()
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'),
     ('NU_HU_NFCP', 'NU -> HU non-FCP'),
-#    ('HU_HU_NFCP', 'HU -> HU non-FCP'),
-    #    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
+    ('HU_HU_NFCP', 'HU -> HU non-FCP'),
+#    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 ])
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
 NUM_FLOWS = (1, 8,)  # TODO: May add more
+NUM_HOSTS = (1, 2,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = ('throughput',
                     'pps',
@@ -83,11 +84,62 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
 
 
-def collect_stats():
-    # TODO: add mpstat and netstat
+netstats_dict = {}
+mpstat_dict = {}
+
+
+def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0):
+
+    tc_id = fun_test.current_test_case_id
+
+    # netstat
+    fun_test.log("Capture netstat {} test".format(when))
+    netstats_dict[when] = {}
+    for linux_obj in linux_objs:
+        netstats_dict[when].update(
+            {linux_obj.host_ip: helper.get_netstat_output(linux_obj=linux_obj)}
+        )
+
+    ## flow list
+    #checkpoint = "Get Flow list {} test".format(when)
+    #network_controller_objs = fun_test.shared_variables['network_controller_objs']
+    #for nc_obj in network_controller_objs:
+    #    output = nc_obj.get_flow_list()
+    #    flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
+    #                                                               when)
+    #    fun_test.simple_assert(
+    #        helper.populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
+    #        checkpoint)
+
+    # mpstat
+    for linux_obj in linux_objs:
+        h = linux_obj.host_ip
+        mpstat_temp_filename = '{}_{}_mpstat_{}.txt'.format(str(version), tc_id, str(h))
+        mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
+        if when == 'before':
+            fun_test.log("Starting to run mpstat command")
+            mp_out = helper.run_mpstat_command(linux_obj=linux_obj, interval=2,
+                                               output_file=mpstat_output_file, bg=True, count=duration+5)
+            fun_test.log('mpstat cmd process id: %s' % mp_out)
+            fun_test.add_checkpoint("Started mpstat command in {}".format(h))
+        elif when == 'after':
+            # Scp mpstat json to LOGS dir
+            helper.populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=linux_obj,
+                                               dump_filename=mpstat_temp_filename)
+
+    if when == 'after':
+        # Get diff netstat
+        for h in netstats_dict['after']:
+            diff_netstat = helper.get_diff_stats(old_stats=netstats_dict['before'][h],
+                                                 new_stats=netstats_dict['after'][h])
+            netstat_temp_filename = '{}_{}_netstat_{}.txt'.format(str(version), tc_id, str(h))
+            populate = helper.populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+            fun_test.test_assert(populate, "Populate {} netstat into txt file".format(h))
+
     fpg_stats = {}
     for nc_obj in fun_test.shared_variables['network_controller_objs']:
-        for i in FPG_INTERFACES:
+        nc_obj.echo_hello()
+        for i in fpg_interfaces:
             r = nc_obj.peek_fpg_port_stats(port_num=i)
             # TODO: handle None
             #if not r:
@@ -101,19 +153,17 @@ def collect_stats():
         #nc_obj.peek_per_vp_stats()
         #nc_obj.peek_resource_bam_stats()
         #nc_obj.peek_eqm_stats()
-        #nc_obj.flow_list()
-        #nc_obj.flow_list(blocked_only=True)
     fpg_rx_bytes = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
     )
     fpg_rx_pkts = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_aFramesReceivedOK'.format(i), 0) for i in FPG_INTERFACES]
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_aFramesReceivedOK'.format(i), 0) for i in fpg_interfaces]
     )
     fpg_tx_bytes = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_OctetsTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_OctetsTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
     fpg_tx_pkts = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in FPG_INTERFACES]
+        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
@@ -136,7 +186,7 @@ class FunethPerformanceBase(FunTestCase):
             interval = 5
         fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
 
-    def _run(self, flow_type, tool='netperf', protocol='tcp', parallel=1, frame_size=1500, duration=30):
+    def _run(self, flow_type, tool='netperf', protocol='tcp', num_flows=1, num_hosts=1, frame_size=1500, duration=30):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
 
@@ -145,7 +195,7 @@ class FunethPerformanceBase(FunTestCase):
         if flow_type.startswith('HU_HU'):  # HU --> HU
             # TODO: handle exception if hu_hosts len is 1
             for i in range(0, len(funeth_obj.hu_hosts), 2):
-                host_pairs.append(funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1])
+                host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1]])
         else:
             for nu, hu in zip(funeth_obj.nu_hosts, funeth_obj.hu_hosts):
                 if flow_type.startswith('NU_HU'):  # NU --> HU
@@ -156,11 +206,12 @@ class FunethPerformanceBase(FunTestCase):
                     host_pairs.append([nu, hu])
                     host_pairs.append([hu, nu])
                     bi_dir = True
-                if parallel == 1:
+                if num_flows == 1:
+                    break
+                elif len(host_pairs) == num_hosts:
                     break
 
-        #suffixes = ('n2h', 'h2n', 'h2h')  TODO: add 'h2h'
-        suffixes = ('n2h', 'h2n')
+        suffixes = ('n2h', 'h2n', 'h2h')
         arg_dicts = []
         for shost, dhost in host_pairs:
             linux_obj_src = funeth_obj.linux_obj_dict[shost]
@@ -174,7 +225,7 @@ class FunethPerformanceBase(FunTestCase):
                  'dip': dip,
                  'tool': tool,
                  'protocol': protocol,
-                 'parallel': parallel/len(host_pairs) if not bi_dir else parallel/(len(host_pairs)/2),
+                 'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
                  'duration': duration,
                  'frame_size': frame_size,
                  'suffix': suffix,
@@ -186,14 +237,22 @@ class FunethPerformanceBase(FunTestCase):
         #perf_manager_obj = NetperfManager(linux_objs)
 
         # Collect stats before and after test run
+        version = fun_test.get_version()
         fun_test.log('Collect stats before test')
-        fpg_tx_pkts1, _, fpg_rx_pkts1, _ = collect_stats()
+        fpg_tx_pkts1, _, fpg_rx_pkts1, _ = collect_stats(FPG_INTERFACES[:num_hosts],
+                                                         funeth_obj.linux_obj_dict.values(),
+                                                         version,
+                                                         when='before',
+                                                         duration=duration)
         try:
             result = perf_manager_obj.run(*arg_dicts)
         except:
             result = {}
         fun_test.log('Collect stats after test')
-        fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_stats()
+        fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_stats(FPG_INTERFACES[:num_hosts],
+                                                         funeth_obj.linux_obj_dict.values(),
+                                                         version,
+                                                         when='after')
 
         if flow_type.startswith('NU_HU'):
             result.update(
@@ -214,8 +273,8 @@ class FunethPerformanceBase(FunTestCase):
                 {'pps_h2h': nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
             )
 
-
         # Check test passed or failed
+        fun_test.log('NetperfManager Results:\n{}'.format(pprint.pformat(result)))
         if any(v == -1 for v in result.values()):
             passed = False
         else:
@@ -235,13 +294,14 @@ class FunethPerformanceBase(FunTestCase):
             {'flow_type': flow_type,
              'frame_size': frame_size,
              'protocol': protocol.upper(),
-             'offloads': False,  # TODO: pass in parameter
-             'num_flows': parallel,
+             'offloads': True,  # TODO: pass in parameter
+             'num_flows': num_flows,
+             'num_hosts': num_hosts,
              'timestamp': '%s' % TIMESTAMP,  # Use same timestamp for all the results of same run, per John/Ashwin
-             'version': fun_test.get_version(),
+             'version': version,
              }
         )
-        fun_test.log('Results:\n{}'.format(pprint.pformat(result)))
+        fun_test.log('Final Results:\n{}'.format(pprint.pformat(result)))
 
         # Update file with result
         with open(RESULT_FILE) as f:
@@ -272,8 +332,8 @@ class FunethPerformanceFcpBase(FunethPerformanceBase):
     def cleanup(self):
         self._configure_fpg_mtu(FPG_MTU_DEFAULT)
 
-    def _run(self, flow_type='HU_HU_FCP', tool='netperf', protocol='tcp', parallel=1, frame_size=800, duration=30):
-        super(FunethPerformanceFcpBase, self)._run(flow_type=flow_type, tool=tool, protocol=protocol, parallel=parallel,
+    def _run(self, flow_type='HU_HU_FCP', tool='netperf', protocol='tcp', num_flows=1, frame_size=800, duration=30):
+        super(FunethPerformanceFcpBase, self)._run(flow_type=flow_type, tool=tool, protocol=protocol, num_flows=num_flows,
                                                    frame_size=frame_size, duration=duration)
 
 
@@ -318,12 +378,12 @@ class FunethPerformanceFcpSecureBase(FunethPerformanceFcpBase):
         super(FunethPerformanceFcpSecureBase, self).cleanup()
         self._configure_fcp_tunnel(secure=0)
 
-    def _run(self, flow_type='HU_HU_FCP_SEC', tool='netperf', protocol='tcp', parallel=1, frame_size=800, duration=30):
+    def _run(self, flow_type='HU_HU_FCP_SEC', tool='netperf', protocol='tcp', num_flows=1, frame_size=800, duration=30):
         super(FunethPerformanceFcpSecureBase, self)._run(flow_type=flow_type, tool=tool, protocol=protocol,
-                                                         parallel=parallel, frame_size=frame_size, duration=duration)
+                                                         num_flows=num_flows, frame_size=frame_size, duration=duration)
 
 
-def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flow, frame_size):
+def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):
 
     class TmpClass(FunethPerformanceBase):
 
@@ -331,13 +391,14 @@ def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flow, fr
             self.set_test_details(id=id, summary=summary, steps=steps)
 
         def run(self):
-            FunethPerformanceBase._run(self, flow_type, tool, protocol, num_flow, frame_size)
+            FunethPerformanceBase._run(self, flow_type, tool, protocol, num_flows, num_hosts, frame_size)
 
     return type('FunethPerformance_{}_{}B_{}_{}_{}flows'.format(flow_type.upper(),
                                                                 frame_size,
                                                                 protocol.upper(),
                                                                 tool.upper(),
-                                                                num_flow),
+                                                                num_flows,
+                                                                num_hosts),
                 (TmpClass,), {})
 
 
@@ -351,18 +412,20 @@ if __name__ == "__main__":
             for protocol in PROTOCOLS:
                 sub_id_frame_size = sub_id_protocol
                 for frame_size in FRAME_SIZES:
-                    sub_id_num_flow = sub_id_frame_size
-                    for num_flow in NUM_FLOWS:
-                        summary = "{}: throughput and latency test by {}, with {}, {}-byte packets and {} flows".format(
-                            FLOW_TYPES_DICT.get(flow_type), tool, protocol, frame_size, num_flow
-                        )
-                        steps = summary
-                        tcs.append(create_testcases(
-                            sub_id_num_flow, summary, steps, flow_type, tool, protocol, num_flow, frame_size)
-                        )
-                        #print "id: {}, summary: {}, flow_type: {}, tool: {}, protocol: {}, num_flow: {}, frame_size: {}".format(
-                        #    sub_id_num_flow, summary, flow_type, tool, protocol, num_flow, frame_size)
-                        sub_id_num_flow += 1
+                    sub_id_num_flows = sub_id_frame_size
+                    for num_flows in NUM_FLOWS:
+                        for num_hosts in NUM_HOSTS:
+                            summary = "{}: performance test by {}, with {}, {}-byte packets and {} flows in {} PCIe hosts".format(
+                                FLOW_TYPES_DICT.get(flow_type), tool, protocol, frame_size, num_flows, num_hosts
+                            )
+                            steps = summary
+                            #print sub_id_num_flows, summary
+                            tcs.append(create_testcases(
+                                sub_id_num_flows, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size)
+                            )
+                            sub_id_num_flows += 1
+                            if num_flows == 1 or flow_type == 'HU_HU_NFCP':
+                                break
                     sub_id_frame_size += 10
                 sub_id_protocol += 100
         id += 1000

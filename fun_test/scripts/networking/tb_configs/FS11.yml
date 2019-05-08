@@ -18,21 +18,21 @@ nu:
         - prefix: 53.1.1.1/32
           nexthop: 20.1.1.2
 
-#nu2:
-#  hostname: poc-server-07
-#  username: localadmin
-#  password: Precious1*
-#  mgmt_interface: eno1
-#  namespaces:
-#    default:
-#      interfaces:
-#        - fpg4:
-#            mac_addr: fe:dc:ba:44:66:31
-#            ipv4_addr: 21.1.1.1
-#            ipv4_netmask: 255.255.255.0
-#      routes:
-#        - prefix: 53.1.1.4/32
-#          nexthop: 21.1.1.2
+nu2:
+  hostname: poc-server-07
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  namespaces:
+    default:
+      interfaces:
+        - fpg4:
+            mac_addr: fe:dc:ba:44:66:31
+            ipv4_addr: 21.1.1.1
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 53.1.1.4/32
+          nexthop: 21.1.1.2
 
 # HU host
 hu:
@@ -48,25 +48,28 @@ hu:
         - hu1-f0:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 53.1.1.1
-            ipv4_netmask: 255.255.255.0
+            ipv4_netmask: 255.255.255.254
       routes:
         - prefix: 20.1.1.0/24
-          nexthop: 53.1.1.2
-
-#hu2:
-#  hostname: poc-server-10
-#  username: localadmin
-#  password: Precious1*
-#  mgmt_interface: eno1
-#  pf_interface: hu2-f0
-#  vf_interface: hu2-f8
-#  namespaces:
-#    default:
-#      interfaces:
-#        - hu2-f0:
-#            mac_addr: 00:de:ad:be:ef:11
-#            ipv4_addr: 53.1.1.4
-#            ipv4_netmask: 255.255.255.0
-#      routes:
-#        - prefix: 21.1.1.0/24
-#          nexthop: 53.1.1.2
+          nexthop: 53.1.1.0
+        - prefix: 53.1.1.4/32
+          nexthop: 53.1.1.0
+hu2:
+  hostname: poc-server-10
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pf_interface: hu2-f0
+  vf_interface: hu2-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 53.1.1.4
+            ipv4_netmask: 255.255.255.254
+      routes:
+        - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.5
+        - prefix: 53.1.1.1/32
+          nexthop: 53.1.1.5
