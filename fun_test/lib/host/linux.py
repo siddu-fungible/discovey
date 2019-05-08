@@ -2349,8 +2349,10 @@ class Linux(object, ToDictMixin):
             return int(match.group(1))
 
     @fun_test.safe
-    def free_m(self):
-        cmd = "free -m"
+    def free(self, memory=None):
+        cmd = "free"
+        if memory:
+            cmd += " -{}".format(memory)
         output = self.command(cmd)
         values_list = re.findall(r'[0-9]+', output)
         if values_list:
