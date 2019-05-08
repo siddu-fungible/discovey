@@ -50,6 +50,10 @@ RCNVME_WRITE_ALL = "qa_rcnvme_write_all"
 RCNVME_RANDOM_WRITE_ALL = "qa_rcnvme_random_write_all"
 TERAMARK_CRYPTO_SINGLE_TUNNEL = "crypto_single_tunnel_teramark"
 TERAMARK_CRYPTO_MULTI_TUNNEL = "crypto_multi_tunnel_teramark"
+TLS_1_TUNNEL = "tls_1_tunnel_teramark"
+TLS_32_TUNNEL = "tls_32_tunnel_teramark"
+TLS_64_TUNNEL = "tls_64_tunnel_teramark"
+
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -146,7 +150,6 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            build_properties="", lsf_job_id="",
                            sdk_version=version)
 
-
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -162,7 +165,7 @@ class MyScript(FunTestScript):
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL]
+                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -220,6 +223,23 @@ class PalladiumPerformanceTc(FunTestCase):
                 data = json.loads(fp.read())
                 self.lines.append(data)
         return True
+
+    def run(self):
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt)
+
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=self.model)
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
@@ -1428,22 +1448,6 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                               summary="TeraMark Lookup Engine Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class FlowTestPerformanceTC(PalladiumPerformanceTc):
     tag = FLOW_TEST_TAG
@@ -1543,23 +1547,6 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
         self.set_test_details(id=22,
                               summary="TeraMark DFA Performance Test on F1",
                               steps="Steps 1")
-
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
@@ -2082,23 +2069,6 @@ class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               summary="TeraMark Crypto single tunnel Performance Test on F1 for IMIX",
                               steps="Steps 1")
 
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO_MULTI_TUNNEL
@@ -2108,23 +2078,6 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
         self.set_test_details(id=40,
                               summary="TeraMark Crypto multi tunnel Performance Test on F1 for IMIX",
                               steps="Steps 1")
-
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
@@ -2166,6 +2119,34 @@ class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               summary="Rcnvme random write all Performance Test on F1",
                               steps="Steps 1")
 
+class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = TLS_1_TUNNEL
+    model = "JuniperTlsTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=45,
+                              summary="TeraMark TLS single tunnel Performance Test on F1",
+                              steps="Steps 1")
+
+
+class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+    tag = TLS_32_TUNNEL
+    model = "JuniperTlsTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=46,
+                              summary="TeraMark TLS single tunnel Performance Test on F1",
+                              steps="Steps 1")
+
+
+class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+    tag = TLS_64_TUNNEL
+    model = "JuniperTlsTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=47,
+                              summary="TeraMark TLS single tunnel Performance Test on F1",
+                              steps="Steps 1")
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -2231,6 +2212,9 @@ if __name__ == "__main__":
     myscript.add_test_case(RcnvmeRandomReadAllPerformanceTC())
     myscript.add_test_case(RcnvmeWriteAllPerformanceTC())
     myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTC())
+    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTC())
+    myscript.add_test_case(JuniperTls32TunnelPerformanceTC())
+    myscript.add_test_case(JuniperTls64TunnelPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
