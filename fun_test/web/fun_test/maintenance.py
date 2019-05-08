@@ -1522,38 +1522,42 @@ if __name__ == "__main__":
     model_name = "HuLatencyPerformance"
     chart_name = "Latency"
     positive = False
+    description = "TBD"
     y1_axis_title = "usecs"
     output_names = ["output_latency_min", "output_latency_P50", "output_latency_P90", "output_latency_P99"]
     for internal_chart_name in internal_chart_names:
-
-
         if "1TCP" in internal_chart_name:
             num_flows = 1
         else:
             num_flows = 8
 
-        if "HU_NU_NFCP" in internal_chart_name:
-            flow_type = "HU_NU_NFCP"
-            output_name = output_name + "_h2n"
-        else:
-            flow_type = "NU_HU_NFCP"
-            output_name = output_name + "_n2h"
-
-        description = "TBD"
         data_sets = []
-        name = str(frame_size) + "B"
-        # if chart_name == "Latency":
-        #     name = name + "-avg"
-        one_data_set = {}
-        one_data_set["name"] = name
-        one_data_set["inputs"] = {}
-        one_data_set["inputs"]["input_flow_type"] = flow_type
-        one_data_set["inputs"]["input_number_flows"] = num_flows
-        one_data_set["inputs"]["input_protocol"] = "TCP"
-        one_data_set["inputs"]["input_offloads"] = False
-        one_data_set["inputs"]["input_frame_size"] = frame_size
-        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
-        data_sets.append(one_data_set)
+        for output_name in output_names:
+            if "HU_NU_NFCP" in internal_chart_name:
+                flow_type = "HU_NU_NFCP"
+                output_name = output_name + "_h2n"
+            else:
+                flow_type = "NU_HU_NFCP"
+                output_name = output_name + "_n2h"
+            name = str(frame_size) + "B"
+            if "99" in output_name:
+                name += '-99%'
+            elif "90" in output_name:
+                name += '-90%'
+            elif "50" in output_name:
+                name += '-50%'
+            else:
+                name += '-min'
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_flow_type"] = flow_type
+            one_data_set["inputs"]["input_number_flows"] = num_flows
+            one_data_set["inputs"]["input_protocol"] = "TCP"
+            one_data_set["inputs"]["input_offloads"] = False
+            one_data_set["inputs"]["input_frame_size"] = frame_size
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
 
         metric_id = LastMetricId.get_next_id()
         MetricChart(chart_name=chart_name,
