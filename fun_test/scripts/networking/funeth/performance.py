@@ -90,6 +90,8 @@ mpstat_dict = {}
 
 def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0):
 
+    tc_id = fun_test.current_test_case_id
+
     # netstat
     fun_test.log("Capture netstat {} test".format(when))
     netstats_dict[when] = {}
@@ -112,7 +114,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
     # mpstat
     for linux_obj in linux_objs:
         h = linux_obj.host_ip
-        mpstat_temp_filename = '{}_{}_mpstat.txt'.format(str(version), str(h))
+        mpstat_temp_filename = '{}_{}_{}_mpstat.txt'.format(str(version), tc_id, str(h))
         mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
         if when == 'before':
             fun_test.log("Starting to run mpstat command")
@@ -130,7 +132,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         for h in netstats_dict['after']:
             diff_netstat = helper.get_diff_stats(old_stats=netstats_dict['before'][h],
                                                  new_stats=netstats_dict['after'][h])
-            netstat_temp_filename = '{}_{}_netstat.txt'.format(str(version), str(h))
+            netstat_temp_filename = '{}_{}_{}_netstat.txt'.format(str(version), tc_id, str(h))
             populate = helper.populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
             fun_test.test_assert(populate, "Populate netstat into txt file")
 
