@@ -53,6 +53,7 @@ TERAMARK_CRYPTO_MULTI_TUNNEL = "crypto_multi_tunnel_teramark"
 TLS_1_TUNNEL = "tls_1_tunnel_teramark"
 TLS_32_TUNNEL = "tls_32_tunnel_teramark"
 TLS_64_TUNNEL = "tls_64_tunnel_teramark"
+SOAK_DMA_MEMCPY_THRESHOLD = "soak_funos_memcpy_threshold"
 
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
@@ -165,7 +166,7 @@ class MyScript(FunTestScript):
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL]
+                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -2135,7 +2136,7 @@ class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
 
     def describe(self):
         self.set_test_details(id=46,
-                              summary="TeraMark TLS single tunnel Performance Test on F1",
+                              summary="TeraMark TLS 32 tunnel Performance Test on F1",
                               steps="Steps 1")
 
 
@@ -2145,8 +2146,19 @@ class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
 
     def describe(self):
         self.set_test_details(id=47,
-                              summary="TeraMark TLS single tunnel Performance Test on F1",
+                              summary="TeraMark TLS 64 tunnel Performance Test on F1",
                               steps="Steps 1")
+
+
+class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = SOAK_DMA_MEMCPY_THRESHOLD
+    model = "SoakDmaMemcpyThresholdPerformance"
+
+    def describe(self):
+        self.set_test_details(id=48,
+                              summary="Soak DMA memcpy vs VP memcpy threshold test",
+                              steps="Steps 1")
+
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
