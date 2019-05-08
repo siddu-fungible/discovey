@@ -351,24 +351,30 @@ class MetricParser():
             metrics[key + "_max_unit"] = value_json.get("unit", default)
             metrics[key + "_avg_unit"] = value_json.get("unit", default)
 
+    def set_value_metrics(self, value_json, key, default):
+        self.metrics[key] = value_json.get("value", default)
+        self.metrics[key + '_unit'] = value_json["unit"]
+
     def memcpy_threshold(self, logs, date_time):
-        metrics = collections.OrderedDict()
-        match_found = False
-        result = {}
-        result["data"] = []
-        self.status = RESULTS["FAILED"]
+        self.initialize()
         for line in logs:
             m = re.search(r'DMA\s+memcpy\s+threashold\s+VP\s+vs.\s+DMA:\s+(?P<threshold_json>{.*})\s+\[(?P<metric_name>.*)\]', line)
             if m:
-                match_found = True
+                self.match_found = True
                 threshold_json = json.loads(m.group("threshold_json"))
-                metrics["input_metric_name"] = m.group("metric_name")
-                metrics["output_threshold"] = threshold_json["value"]
-                metrics["output_threshold_unit"] = threshold_json["unit"]
+                self.metrics["input_metric_name"] = m.group("metric_name")
+                self.set_value_metrics(value_json=threshold_json, key="output_threshold", default=-1)
                 self.status = RESULTS["PASSED"]
-                d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
-                result["data"].append(d)
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
 
-        result["match_found"] = match_found
-        result["status"] = self.status == RESULTS["PASSED"]
-        return result
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def initialize(self):
+        self.metrics = collections.OrderedDict()
+        self.match_found = False
+        self.result = {}
+        self.result["data"] = []
+        self.status = RESULTS["FAILED"]
