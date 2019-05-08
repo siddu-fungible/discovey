@@ -98,16 +98,16 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             {linux_obj.host_ip: helper.get_netstat_output(linux_obj=linux_obj)}
         )
 
-    # flow list
-    checkpoint = "Get Flow list {} test".format(when)
-    network_controller_objs = fun_test.shared_variables['network_controller_objs']
-    for nc_obj in network_controller_objs:
-        output = nc_obj.get_flow_list()
-        flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
-                                                                   when)
-        fun_test.simple_assert(
-            helper.populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
-            checkpoint)
+    ## flow list
+    #checkpoint = "Get Flow list {} test".format(when)
+    #network_controller_objs = fun_test.shared_variables['network_controller_objs']
+    #for nc_obj in network_controller_objs:
+    #    output = nc_obj.get_flow_list()
+    #    flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
+    #                                                               when)
+    #    fun_test.simple_assert(
+    #        helper.populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
+    #        checkpoint)
 
     # mpstat
     for linux_obj in linux_objs:
