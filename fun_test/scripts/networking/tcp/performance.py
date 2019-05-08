@@ -290,5 +290,5 @@ if __name__ == '__main__':
     ts.add_test_case(TcpPerformance1Conn())
     # ts.add_test_case(TcpPerformance_2_Conn())
     ts.add_test_case(TcpPerformance4Conn())
-    # ts.add_test_case(TcpPerformance8Conn())
+    ts.add_test_case(TcpPerformance8Conn())
     ts.run()
