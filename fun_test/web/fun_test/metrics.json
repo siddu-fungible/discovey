@@ -1744,6 +1744,15 @@
                 "weight": 1
               },
               {
+                "info": "memcpy_threshold",
+                "metric_model_name": "SoakDmaMemcpyThresholdPerformance",
+                "leaf": true,
+                "name": "memcpy_threshold",
+                "label": "DMA memcpy vs. VP memcpy",
+                "children": [],
+                "weight": 1
+              },
+              {
                 "info": "memset_output_bandwidth_64B_256B",
                 "metric_model_name": "SoakDmaMemsetPerformance",
                 "leaf": true,
@@ -2874,6 +2883,32 @@
                             "label": "Packets per sec"
                           }
                         ]
+                      }
+                    ]
+                  },
+                  {
+                    "info": "juniper_tls",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_tls",
+                    "weight": 1,
+                    "label": "TLS",
+                    "children": [
+                      {
+                        "info": "juniper_tls_output_throughput",
+                        "metric_model_name": "JuniperTlsTunnelPerformance",
+                        "leaf": true,
+                        "name": "juniper_tls_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "juniper_tls_output_pps",
+                        "metric_model_name": "JuniperTlsTunnelPerformance",
+                        "leaf": true,
+                        "name": "juniper_tls_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
                       }
                     ]
                   }

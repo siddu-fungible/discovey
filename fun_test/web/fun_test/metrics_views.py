@@ -742,9 +742,12 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(metric_id, sort_by_name=True):
+def traverse_dag(metric_id, sort_by_name=True, metric_chart_entries={}):
     result = {}
-    chart = MetricChart.objects.get(metric_id=metric_id)
+    if metric_id not in metric_chart_entries:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+    else:
+        chart = metric_chart_entries[metric_id]
 
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
@@ -768,8 +771,12 @@ def traverse_dag(metric_id, sort_by_name=True):
     if not chart.leaf or chart.chart_name == "All metrics":
         children_info = result["children_info"]
         for child_id in result["children"]:
-            child_chart = MetricChart.objects.get(metric_id=child_id)
-            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
+            if child_id in metric_chart_entries:
+                child_chart = metric_chart_entries[child_id]
+            else:
+                child_chart = MetricChart.objects.get(metric_id=child_id)
+                metric_chart_entries[child_id] = child_chart
+            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id, metric_chart_entries=metric_chart_entries)
         if sort_by_name:
             result["children"] = map(lambda item: item[0],
                                      sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
@@ -784,7 +791,7 @@ def dag(request):
     metric_model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False)
+    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False, metric_chart_entries={chart.metric_id: chart})
     chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="All metrics")
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=True)
     return result
