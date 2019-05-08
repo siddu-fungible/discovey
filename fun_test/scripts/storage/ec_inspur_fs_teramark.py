@@ -368,7 +368,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        fun_test.shared_variables["fs"] = self.fs
+        self.fs = fun_test.shared_variables["fs"]
         self.end_host = fun_test.shared_variables["end_host"]
         self.test_network = fun_test.shared_variables["test_network"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
