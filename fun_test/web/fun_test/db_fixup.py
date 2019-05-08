@@ -235,7 +235,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     valid_dates = []
     current_date = get_rounded_time(from_date)
     model = app_config.get_metric_models()[chart.metric_model_name]
-    if model.objects.first().interpolation_allowed:
+    if model.objects.first() and model.objects.first().interpolation_allowed:
         interpolate(model=model, from_date=from_date, to_date=to_date, chart=chart)
 
     last_good_score = 0
