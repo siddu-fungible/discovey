@@ -41,6 +41,8 @@ class MetricParser():
             return self.crypto_tunnel(logs=logs, date_time=date_time)
         elif "LookupEngine" in model_name:
             return self.lookup_engine(logs=logs, date_time=date_time)
+        elif "JuniperTlsTunnel" in model_name:
+            return self.crypto_tunnel(logs=logs, date_time=date_time)
         else:
             return {}
 

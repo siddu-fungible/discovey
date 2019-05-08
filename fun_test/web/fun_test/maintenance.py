@@ -1362,7 +1362,7 @@ if __name__ == "__main_num_hosts__":
         ml.save_data_sets(data_sets=data_sets, chart=chart)
         print "added number of hosts field for {}".format(chart.chart_name)
 
-if __name__ == "__main__":
+if __name__ == "__main__durable_ec_comp__":
     internal_chart_names = ["read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
                             "read_4kb1vol12ssd_durable_volume_ec_output_iops",
                             "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
@@ -1438,3 +1438,48 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "created throughput, iops and latency charts for 12 ssd read and random read durable volume ec storage"
+
+if __name__ == "__main__":
+    internal_chart_names = ["juniper_tls_output_throughput", "juniper_tls_output_pps"]
+    chart_name = "Throughput"
+    model_name = "JuniperTlsTunnelPerformance"
+    num_tunnels = [1, 32, 64]
+    base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "throughput" in internal_chart_name:
+            chart_name = "Throughput"
+            output_name = "output_throughput"
+            y1_axis_title = "Gbps"
+        else:
+            chart_name = "Packets per sec"
+            output_name = "output_packets_per_sec"
+            y1_axis_title = "Mpps"
+
+        data_sets = []
+        for num_tunnel in num_tunnels:
+            name =  str(num_tunnel) + "tunnel(s)"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_num_tunnels"] = num_tunnel
+            one_data_set["inputs"]["input_algorithm"] = "AES_GCM"
+            one_data_set["inputs"]["input_pkt_size"] = 356
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Fabrice Ferino (fabrice.ferino@fungible.com)",
+                    source="https://github.com/fungible-inc/FunOS/blob/master/apps/tls_dp_tunnel_perf.c",
+                    positive=True,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created charts for the TLS juniper customer teramarks"
