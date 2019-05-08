@@ -411,9 +411,10 @@ class SuiteWorker(Thread):
                     pass
 
         suite_execution = models_helper.get_suite_execution(suite_execution_id=self.job_id)
-        suite_execution.completed_time = datetime.datetime.now()
-        suite_execution.save()
-        suite_execution.save()
+        if suite_execution:  # If we used the delete option from the UI, this will be None
+            suite_execution.completed_time = datetime.datetime.now()
+            suite_execution.save()
+            suite_execution.save()
         self.suite_complete()
 
     def prepare_job_directory(self):
