@@ -672,14 +672,14 @@ class FioPerfHelper(object):
 
     def clear_the_cache(self):
         # get free memory before clearing cache
-        free_memory_dictionary = self.handle.free_m()
+        free_memory_dictionary = self.handle.free(memory="m")
         free_memory = free_memory_dictionary['free']
         fun_test.log("Free memory before clearing cache {}".format(free_memory))
         # clear all the cache
         cmd = "echo 3 > /proc/sys/vm/drop_caches"
         self.handle.command(cmd)
         # get free memory after clearing cache
-        free_memory_dictionary = self.handle.free_m()
+        free_memory_dictionary = self.handle.free(memory="m")
         free_memory = free_memory_dictionary['free']
         fun_test.log("Free memory after clearing cache {}".format(free_memory))
 
