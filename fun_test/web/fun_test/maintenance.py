@@ -1483,3 +1483,12 @@ if __name__ == "__main__":
                     base_line_date=base_line_date,
                     work_in_progress=False).save()
     print "created charts for the TLS juniper customer teramarks"
+
+if __name__ == "__main__":
+    internal_chart_names = ["HU_NU_NFCP_8TCP_offloads_disabled_output_throughput", "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput,", "NU_HU_NFCP_8TCP_offloads_disabled_output_pps"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            index = chart.internal_chart_name.find('output')
+            internal_name = chart.internal_chart_name[:index] + '2hosts_' + chart.internal_chart_name[index:]
