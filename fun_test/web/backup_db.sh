@@ -1,4 +1,10 @@
 # This is intended to be run only on the main regression server
 NOW=$(date +"%m-%d-%Y-%H-%M")
-./manage.py dumpdata > /tmp/perf_db_backup.json
-tar -cvzf /tmp/perf_db_backup.json.$NOW.bkp.tgz -C /tmp/perf_db_backup.json
+TEMP_LOCATION=/tmp
+BACKUP_FILE=perf_db_backup.json
+BACKUP_LOCATION=/project/users/QA/regression/data_store/web_backup
+BACKUP_FILE_TGZ=$BACKUP_FILE.$NOW.bkp.tgz
+./manage.py dumpdata > $TEMP_LOCATION/$BACKUP_FILE
+tar -cvzf $TEMP_LOCATION/$BACKUP_FILE_TGZ $TEMP_LOCATION/$BACKUP_FILE
+mv $TEMP_LOCATION/$BACKUP_FILE_TGZ $BACKUP_LOCATION/
+echo "Backup moved to: $BACKUP_LOCATION/$BACKUP_FILE_TGZ"

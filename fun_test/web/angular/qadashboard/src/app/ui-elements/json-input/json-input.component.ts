@@ -56,7 +56,7 @@ export class JsonInputComponent implements OnInit, ControlValueAccessor, Validat
 
   }
 
-  private onChange(event) {
+  public onChange(event) {
 
     // get value from text area
     let newValue = event.target.value;
