@@ -148,6 +148,14 @@
             </tr>
             <tr>
               <td class="no-wrap">
+                <label>Inputs (JSON): </label>
+              </td>
+              <td>
+                <app-json-input (dataChanged)="jobInputsChanged($event)"></app-json-input>
+              </td>
+            </tr>
+            <tr>
+              <td class="no-wrap">
                 <label for="emails">Additional e-mails: </label>
               </td>
               <td>
