@@ -423,7 +423,7 @@ if __name__ == "__main__":
                                 sub_id_num_flows, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size)
                             )
                             sub_id_num_flows += 1
-                            if num_flows == 1:
+                            if num_flows == 1 or flow_type == 'HU_HU_NFCP':
                                 break
                     sub_id_frame_size += 10
                 sub_id_protocol += 100
