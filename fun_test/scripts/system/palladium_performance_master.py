@@ -2150,7 +2150,7 @@ class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
                               steps="Steps 1")
 
 
-class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class SoakDmaMemcpyThresholdPerformanceTC(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_THRESHOLD
     model = "SoakDmaMemcpyThresholdPerformance"
 
@@ -2227,6 +2227,7 @@ if __name__ == "__main__":
     myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTC())
     myscript.add_test_case(JuniperTls32TunnelPerformanceTC())
     myscript.add_test_case(JuniperTls64TunnelPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

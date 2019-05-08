@@ -1502,7 +1502,7 @@ if __name__ == "__main__":
                 internal_chart_name=internal_chart_name,
                 data_sets=json.dumps(data_sets),
                 leaf=True,
-                description="VP-based memcpy is faster for small sizes and DMA-based memcpy wins for large sizes.  This metric defines the threshold above which DMA memcpy always wins.",
+                description="VP-based memcpy is faster for small sizes and DMA-based memcpy wins for large sizes. This metric defines the threshold above which DMA memcpy always wins.",
                 owner_info="Bertrand Serlet (bertrand.serlet@fungible.com)",
                 source="https://github.com/fungible-inc/FunOS/blob/master/apps/misc_app.c",
                 positive=False,
