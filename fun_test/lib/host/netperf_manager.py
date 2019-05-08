@@ -94,6 +94,10 @@ class PerformanceTuning:
                 )
         self.linux_obj.sudo_command(';'.join(cmds))
 
+    def irq_affinity(self):
+        # TODO: Add
+        pass
+
 
 class NetperfManager:
     """Use netperf to measure throughput and latency between host pairs.
