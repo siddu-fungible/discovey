@@ -1704,6 +1704,24 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+
+class SoakDmaMemcpyThresholdPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    output_threshold_unit = models.TextField(default="KB")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_threshold = models.FloatField(verbose_name="Threshold", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
 class SoakDmaMemsetPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)

@@ -43,6 +43,8 @@ class MetricParser():
             return self.lookup_engine(logs=logs, date_time=date_time)
         elif "JuniperTlsTunnel" in model_name:
             return self.crypto_tunnel(logs=logs, date_time=date_time)
+        elif "MemcpyThreshold" in model_name:
+            return self.memcpy_threshold(logs=logs, date_time=date_time)
         else:
             return {}
 
@@ -348,3 +350,31 @@ class MetricParser():
             metrics[key + "_min_unit"] = value_json.get("unit", default)
             metrics[key + "_max_unit"] = value_json.get("unit", default)
             metrics[key + "_avg_unit"] = value_json.get("unit", default)
+
+    def set_value_metrics(self, value_json, key, default):
+        self.metrics[key] = value_json.get("value", default)
+        self.metrics[key + '_unit'] = value_json["unit"]
+
+    def memcpy_threshold(self, logs, date_time):
+        self.initialize()
+        for line in logs:
+            m = re.search(r'DMA\s+memcpy\s+threashold\s+VP\s+vs.\s+DMA:\s+(?P<threshold_json>{.*})\s+\[(?P<metric_name>.*)\]', line)
+            if m:
+                self.match_found = True
+                threshold_json = json.loads(m.group("threshold_json"))
+                self.metrics["input_metric_name"] = m.group("metric_name")
+                self.set_value_metrics(value_json=threshold_json, key="output_threshold", default=-1)
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def initialize(self):
+        self.metrics = collections.OrderedDict()
+        self.match_found = False
+        self.result = {}
+        self.result["data"] = []
+        self.status = RESULTS["FAILED"]

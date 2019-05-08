@@ -1439,7 +1439,7 @@ if __name__ == "__main__durable_ec_comp__":
         mmt.save()
     print "created throughput, iops and latency charts for 12 ssd read and random read durable volume ec storage"
 
-if __name__ == "__main__":
+if __name__ == "__main_juniper_tls__":
     internal_chart_names = ["juniper_tls_output_throughput", "juniper_tls_output_pps"]
     chart_name = "Throughput"
     model_name = "JuniperTlsTunnelPerformance"
@@ -1484,9 +1484,39 @@ if __name__ == "__main__":
                     work_in_progress=False).save()
     print "created charts for the TLS juniper customer teramarks"
 
+if __name__ == "__main_memcpy_threshold__":
+    internal_chart_name = "memcpy_threshold"
+    model_name = "SoakDmaMemcpyThresholdPerformance"
+    chart_name = "DMA memcpy vs. VP memcpy"
+    y1_axis_title = "KB"
+    base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+    data_sets = []
+    one_data_set = {}
+    one_data_set["name"] = "threshold"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_threshold", 'min': 0, "max": -1, "expected": 4, "reference": -1}
+    data_sets.append(one_data_set)
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description="VP-based memcpy is faster for small sizes and DMA-based memcpy wins for large sizes. This metric defines the threshold above which DMA memcpy always wins.",
+                owner_info="Bertrand Serlet (bertrand.serlet@fungible.com)",
+                source="https://github.com/fungible-inc/FunOS/blob/master/apps/misc_app.c",
+                positive=False,
+                y1_axis_title=y1_axis_title,
+                visualization_unit=y1_axis_title,
+                metric_model_name=model_name,
+                base_line_date=base_line_date,
+                work_in_progress=False).save()
+
 if __name__ == "__main__":
-    internal_chart_names = ["HU_NU_NFCP_8TCP_offloads_disabled_output_throughput", "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
-                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput,", "NU_HU_NFCP_8TCP_offloads_disabled_output_pps"]
+    internal_chart_names = ["HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput,",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_pps"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         if chart:
