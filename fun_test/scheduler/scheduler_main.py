@@ -315,7 +315,8 @@ class SuiteWorker(Thread):
 
         self.job_inputs = {}
         if hasattr(job_spec, "inputs"):
-            self.job_inputs = job_spec.inputs
+            if (job_spec.inputs):
+                self.job_inputs = json.loads(job_spec.inputs)
 
         self.job_dynamic_suite_spec = None
         if hasattr(job_spec, "dynamic_suite_spec"):
@@ -494,7 +495,7 @@ class SuiteWorker(Thread):
         job_inputs = self.job_inputs
         if not script_inputs and job_inputs:
             script_inputs = {}
-            script_inputs.update(job_inputs)
+        script_inputs.update(job_inputs)
         return script_inputs
 
     def poll_script(self, script_path):

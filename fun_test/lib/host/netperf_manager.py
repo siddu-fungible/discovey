@@ -94,6 +94,10 @@ class PerformanceTuning:
                 )
         self.linux_obj.sudo_command(';'.join(cmds))
 
+    def irq_affinity(self):
+        # TODO: Add
+        pass
+
 
 class NetperfManager:
     """Use netperf to measure throughput and latency between host pairs.
@@ -364,31 +368,34 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     if cpu:
         cmd = 'taskset -c {} {}'.format(cpu, cmd)
     # TODO: use numactl if necessary
-    output = linux_obj.command(cmd, timeout=duration+30)
-    match = re.search(pat, output, re.DOTALL)
-    if match:
-        if not measure_latency:
-            throughput = float(match.group(1))  # TCP/UDP throughput
-            result.update(
-                {'throughput': round(throughput, 3)}
-            )
-        else:
-            latency_min = float(match.group(1))
-            latency_avg = float(match.group(2))
-            latency_P50 = float(match.group(3))
-            latency_P90 = float(match.group(4))
-            latency_P99 = float(match.group(5))
-            latency_max = float(match.group(6))
+    try:
+        output = linux_obj.command(cmd, timeout=duration+30)
+        match = re.search(pat, output, re.DOTALL)
+        if match:
+            if not measure_latency:
+                throughput = float(match.group(1))  # TCP/UDP throughput
+                result.update(
+                    {'throughput': round(throughput, 3)}
+                )
+            else:
+                latency_min = float(match.group(1))
+                latency_avg = float(match.group(2))
+                latency_P50 = float(match.group(3))
+                latency_P90 = float(match.group(4))
+                latency_P99 = float(match.group(5))
+                latency_max = float(match.group(6))
 
-            result.update(
-                {'latency_min': round(latency_min, 1),
-                 'latency_avg': round(latency_avg, 1),
-                 'latency_max': round(latency_max, 1),
-                 'latency_P50': round(latency_P50, 1),
-                 'latency_P90': round(latency_P90, 1),
-                 'latency_P99': round(latency_P99, 1),
-                 }
-            )
+                result.update(
+                    {'latency_min': round(latency_min, 1),
+                     'latency_avg': round(latency_avg, 1),
+                     'latency_max': round(latency_max, 1),
+                     'latency_P50': round(latency_P50, 1),
+                     'latency_P90': round(latency_P90, 1),
+                     'latency_P99': round(latency_P99, 1),
+                     }
+                )
+    except:
+        pass
 
     fun_test.log('\n{}'.format(pprint.pformat(result)))
     return result

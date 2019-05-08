@@ -171,6 +171,10 @@ def submit_job(request):
         requested_minute = None
         repeat_in_minutes = -1
 
+        inputs = None
+        if "job_inputs" in request_json:
+            inputs = request_json["job_inputs"]
+
         if "requested_days" in request_json:
             requested_days = request_json["requested_days"]
             requested_days = [x.lower() for x in requested_days]
@@ -195,7 +199,7 @@ def submit_job(request):
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
                                 repeat_in_minutes=repeat_in_minutes,
-                                submitter_email=submitter_email)
+                                submitter_email=submitter_email, inputs=inputs)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -211,11 +215,12 @@ def submit_job(request):
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
                                 repeat_in_minutes=repeat_in_minutes,
-                                submitter_email=submitter_email)
+                                submitter_email=submitter_email, inputs=inputs)
         elif dynamic_suite_spec:
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                 emails=emails,
                                 environment=environment,
+                                inputs=inputs,
                                 test_bed_type=test_bed_type,
                                 original_suite_execution_id=original_suite_execution_id,
                                 build_url=build_url,
@@ -958,6 +963,7 @@ def job_spec(request, job_id):
     result["emails"] = json.loads(suite_execution.emails)
     result["test_bed_type"] = suite_execution.test_bed_type
     result["environment"] = json.loads(suite_execution.environment)
+    result["inputs"] = json.loads(suite_execution.inputs)
     return result
 
 
