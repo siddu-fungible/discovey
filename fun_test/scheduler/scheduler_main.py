@@ -495,8 +495,11 @@ class SuiteWorker(Thread):
         job_inputs = self.job_inputs
         if not script_inputs and job_inputs:
             script_inputs = {}
-        if job_inputs:
-            script_inputs.update(job_inputs)
+        try:
+            if job_inputs:
+                script_inputs.update(job_inputs)
+        except:
+            pass
         return script_inputs
 
     def poll_script(self, script_path):
