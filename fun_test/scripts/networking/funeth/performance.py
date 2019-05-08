@@ -114,14 +114,14 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
     # mpstat
     for linux_obj in linux_objs:
         h = linux_obj.host_ip
-        mpstat_temp_filename = '{}_{}_{}_mpstat.txt'.format(str(version), tc_id, str(h))
+        mpstat_temp_filename = '{}_{}_mpstat_{}.txt'.format(str(version), tc_id, str(h))
         mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
         if when == 'before':
             fun_test.log("Starting to run mpstat command")
             mp_out = helper.run_mpstat_command(linux_obj=linux_obj, interval=2,
                                                output_file=mpstat_output_file, bg=True, count=duration+5)
             fun_test.log('mpstat cmd process id: %s' % mp_out)
-            fun_test.add_checkpoint("Started mpstat command")
+            fun_test.add_checkpoint("Started mpstat command in {}".format(h))
         elif when == 'after':
             # Scp mpstat json to LOGS dir
             helper.populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=linux_obj,
@@ -132,9 +132,9 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         for h in netstats_dict['after']:
             diff_netstat = helper.get_diff_stats(old_stats=netstats_dict['before'][h],
                                                  new_stats=netstats_dict['after'][h])
-            netstat_temp_filename = '{}_{}_{}_netstat.txt'.format(str(version), tc_id, str(h))
+            netstat_temp_filename = '{}_{}_netstat_{}.txt'.format(str(version), tc_id, str(h))
             populate = helper.populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
-            fun_test.test_assert(populate, "Populate netstat into txt file")
+            fun_test.test_assert(populate, "Populate {} netstat into txt file".format(h))
 
     fpg_stats = {}
     for nc_obj in fun_test.shared_variables['network_controller_objs']:
@@ -419,6 +419,7 @@ if __name__ == "__main__":
                                 FLOW_TYPES_DICT.get(flow_type), tool, protocol, frame_size, num_flows, num_hosts
                             )
                             steps = summary
+                            #print sub_id_num_flows, summary
                             tcs.append(create_testcases(
                                 sub_id_num_flows, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size)
                             )
