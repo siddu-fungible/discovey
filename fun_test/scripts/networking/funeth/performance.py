@@ -295,18 +295,18 @@ class FunethPerformanceBase(FunTestCase):
 
         # Check test passed or failed
         fun_test.log('NetperfManager Results:\n{}'.format(pprint.pformat(result)))
-        if any(v == -1 for v in result.values()):
+        if any(v == nm.NA for v in result.values()):
             passed = False
         else:
             passed = True
 
-        # Set -1 for untested direction
+        # Set N/A for untested direction
         for suffix in suffixes:
             for k in PERF_RESULT_KEYS:
                 k_suffix = '{}_{}'.format(k, suffix)
                 if k_suffix not in result:
                     result.update(
-                        {k_suffix: -1}
+                        {k_suffix: nm.NA}
                     )
 
         # Update result dict

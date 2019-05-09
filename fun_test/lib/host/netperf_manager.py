@@ -4,6 +4,8 @@ import pprint
 import re
 
 
+NA = -1
+
 # Server has 2 socket, each CPU (Silver 4110) has 8 cores, NUMA 0: 0-7, NUMA 1: 8-15
 # scaling_governor is set to performance mode.
 # If locked, CPU frequency is 2.4GHz; if turbo boost, it can go up to 3.0GHz.
@@ -245,31 +247,24 @@ class NetperfManager:
                     rdict[direction].append(mp_task_obj.get_result('{}_{}'.format(direction, i)))
 
                 if measure_latency:
-                    lat_dict = rdict[direction][-1]
-                    latency_min = lat_dict.get('latency_min')
-                    latency_avg = lat_dict.get('latency_avg')
-                    latency_max = lat_dict.get('latency_max')
-                    latency_P50 = lat_dict.get('latency_P50')
-                    latency_P90 = lat_dict.get('latency_P90')
-                    latency_P99 = lat_dict.get('latency_P99')
-
-                    result[direction].update(
-                        {'latency_min': round(latency_min, 1),
-                         'latency_avg': round(latency_avg, 1),
-                         'latency_max': round(latency_max, 1),
-                         'latency_P50': round(latency_P50, 1),
-                         'latency_P90': round(latency_P90, 1),
-                         'latency_P99': round(latency_P99, 1),
-                        }
-                    )
+                    lat_dict = rdict[direction][-1]  # latency result is the last element
+                    for k, v in lat_dict:
+                        result[direction].update(
+                            {k: round(v, 1) if v != NA else v}
+                        )
                 else:
-                    throughput = sum(r.get('throughput', 0) for r in rdict[direction])
-
-                    result[direction].update(
-                        {'throughput': calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
-                         #'pps': calculate_pps(protocol, frame_size, throughput),
-                        }
-                    )
+                    throughput = 0
+                    throughput += sum(r.get('throughput') for r in rdict[direction] if r.get('throughput') != NA)
+                    if throughput == 0:
+                        result[direction].update(
+                            {'throughput': NA}
+                        )
+                    else:
+                        result[direction].update(
+                            {'throughput': calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
+                             #'pps': calculate_pps(protocol, frame_size, throughput),
+                            }
+                        )
 
         result_cooked = {}
         for direction in result:
@@ -333,16 +328,16 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
 
     if measure_latency:
         result = {
-            'latency_min': -1,
-            'latency_avg': -1,
-            'latency_max': -1,
-            'latency_P50': -1,
-            'latency_P90': -1,
-            'latency_P99': -1,
+            'latency_min': NA,
+            'latency_avg': NA,
+            'latency_max': NA,
+            'latency_P50': NA,
+            'latency_P90': NA,
+            'latency_P99': NA,
         }
     else:
         result = {
-            'throughput': -1,
+            'throughput': NA,
         }
 
     if protocol.lower() == 'udp':
@@ -357,10 +352,11 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
         #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
         cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT"'.format(t, dip, duration)
         pat = r'THROUGHPUT=(\d+)'
+        pat = r'THROUGHPUT=(\d+\.\d+|\d+)'
     else:
         #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
         cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1'.format(t, dip, duration)
-        pat = r'MIN_LATENCY=(\d+).*?MEAN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+)'
+        pat = r'MIN_LATENCY=(\d+\.\d+|\d+).*?MEAN_LATENCY=(\d+\.\d+|\d+).*?P50_LATENCY=(\d+\.\d+|\d+).*?P90_LATENCY=(\d+\.\d+|\d+).*?P99_LATENCY=(\d+\.\d+|\d+).*?MAX_LATENCY=(\d+\.\d+|\d+)'
     if sip:
         cmd = '{} -L {}'.format(cmd, sip)
     if ns:
