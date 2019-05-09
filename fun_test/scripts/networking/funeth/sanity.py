@@ -98,8 +98,9 @@ class FunethSanity(FunTestScript):
         # Boot up FS1600
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             # fs = Fs.get(disable_f1_index=1)
-            topology_helper = TopologyHelper(disable_f1_index=1)
+            topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,
+                                               disable_f1_index=1,
                                                custom_boot_args="app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g")
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
