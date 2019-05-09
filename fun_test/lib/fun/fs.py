@@ -142,6 +142,14 @@ class Bmc(Linux):
                 continue
             self.uart_log_threads[f1_index].close()
 
+    def _get_ipmi_details(self):
+        ipmi_details = {
+            "username": "admin",
+            "password": "admin",
+            "host_ip": self.host_ip
+        }
+        return ipmi_details
+
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
         fun_test.test_assert(self.ping(come.host_ip), "ComE reachable before reset")
@@ -150,41 +158,18 @@ class Bmc(Linux):
         # fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
 
         fun_test.log("Rebooting ComE")
-        reboot_result = come.reboot(retries=15, non_blocking=non_blocking)
-        fun_test.test_assert(reboot_result, "ComE reboot initiated")
-        if not non_blocking:
-            fun_test.test_assert(self.ensure_come_is_up(come=come, max_wait_time=max_wait_time, power_cycle=power_cycle), "Ensure ComE is up")
+        ipmi_details = self._get_ipmi_details()
+        reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
+        reboot_info_string = "initiated" if non_blocking else "complete"
+        fun_test.test_assert(reboot_result, "ComE reboot {}".format(reboot_info_string))
+        # if not non_blocking:
+        #    fun_test.test_assert(self.ensure_come_is_up(come=come, max_wait_time=max_wait_time, power_cycle=power_cycle), "Ensure ComE is up")
 
         return True
 
     def ensure_come_is_up(self, come, max_wait_time=240, power_cycle=True):
         come_up = False
-        come_restart_timer = FunTimer(max_time=max_wait_time)
-        # Ensure ComE restarted
-
-        while not come_restart_timer.is_expired() and not come_up:
-            ping_result = self.ping(come.host_ip, count=20)
-            if ping_result:
-                try:
-                    come._connect()
-                    come.command("pwd")
-                    come_up = True
-                    break
-                except Exception as ex:
-                    pass
-
-            fun_test.sleep("ComE power up")
-
-        if come_restart_timer.is_expired() and not come_up:
-            fun_test.critical("ComE did not power up. Trying to power-cycle")
-            if power_cycle:
-                try:
-                    fun_test.test_assert(self.host_power_cycle(), "Power-cycle ComE using ipmitool")
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                fun_test.sleep("Power-cycling ComE", seconds=10)
-                fun_test.test_assert(self.is_host_pingable(host_ip=come.host_ip, max_time=max_wait_time),
-                                     "ComE reachable after power-cycle")
+        come_up = come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=self._get_ipmi_details())
         return come_up
 
     def set_boot_phase(self, index, phase):
@@ -264,6 +249,7 @@ class Bmc(Linux):
             version = m.group(1)
             branch = m.group(2)
             fun_test.add_checkpoint("Version: {}, branch: {}".format(version, branch))
+            fun_test.set_version(version=version.replace("bld_", ""))
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_ELF)
 
         sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
@@ -377,6 +363,7 @@ class ComE(Linux):
     DEFAULT_DPC_PORT = [40220, 40221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     NUM_F1S = 2
+    NVME_CMD_TIMEOUT = 600000
 
     def initialize(self, reset=False, disable_f1_index=None):
         self.disable_f1_index = disable_f1_index
@@ -443,7 +430,7 @@ class ComE(Linux):
             nvme_device_index = f1_index
             if len(nvme_devices) == 1:  # if only one nvme device was detected
                 nvme_device_index = 0
-            command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --tcp_proxy={} &> {} &".format(nvme_device_index, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
+            command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index, self.NVME_CMD_TIMEOUT, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
             self.sudo_command(command)
             fun_test.sleep("dpc socket creation")
             # output = self.command("cat {}".format(self.get_dpc_log_path(f1_index=f1_index)))
@@ -543,7 +530,7 @@ class F1InFs:
 
 class Fs(object, ToDictMixin):
     #  sku=SKU_FS1600_{}
-    DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit"
+    DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
     TO_DICT_VARS = ["bmc_mgmt_ip",
                     "bmc_mgmt_ssh_username",
                     "bmc_mgmt_ssh_password",
@@ -658,6 +645,7 @@ class Fs(object, ToDictMixin):
             if f1_index == self.disable_f1_index:
                 continue
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
+            fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
 
@@ -690,8 +678,11 @@ class Fs(object, ToDictMixin):
             self.come_initialized = True
         return True
 
-    def come_reset(self, power_cycle=None, non_blocking=None):
-        return self.bmc.come_reset(come=self.get_come(), power_cycle=power_cycle, non_blocking=non_blocking)
+    def come_reset(self, power_cycle=None, non_blocking=None, max_wait_time=300):
+        return self.bmc.come_reset(come=self.get_come(),
+                                   power_cycle=power_cycle,
+                                   non_blocking=non_blocking,
+                                   max_wait_time=max_wait_time)
 
     def re_initialize(self):
         self.get_bmc(disable_f1_index=self.disable_f1_index)
