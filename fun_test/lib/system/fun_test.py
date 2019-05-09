@@ -241,7 +241,8 @@ class FunTest:
             stored_environment_string = suite_execution.environment
             if stored_environment_string is not None:
                 stored_environment = self.parse_string_to_json(stored_environment_string)
-                result = stored_environment[variable_name] if variable_name in stored_environment else None
+                if stored_environment:
+                    result = stored_environment[variable_name] if variable_name in stored_environment else None
         return result
 
     def _prepare_build_parameters(self):
