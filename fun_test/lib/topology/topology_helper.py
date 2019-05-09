@@ -153,25 +153,7 @@ class TopologyHelper:
                 if peer_info:
                     if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
                         host_instance = peer_info.get_host_instance()
-                        am = fun_test.get_asset_manager()
-                        host_spec = am.get_host_spec(name=REGRESSION_SERVICE_HOST)
-                        service_host = Linux.get(host_spec)
-                        ping_result = False
-                        instance_ready = False
-                        max_wait_time = 180 # TODO this is in the wrong place
-                        max_wait_timer = FunTimer(max_time=max_wait_time)
-                        while not ping_result and not instance_ready and not max_wait_timer.is_expired():
-                            ping_result = service_host.ping(dst=host_instance.host_ip)
-                            if ping_result:
-                                try:
-                                    host_instance._connect()
-                                    host_instance.command('pwd')
-                                    instance_ready = True
-                                    break
-                                except Exception as ex:
-                                    pass
-                                break
-                        fun_test.simple_assert(not max_wait_timer.is_expired(), "Instance reboot max-wait time: {} expired".format(max_wait_time))
+                        instance_ready = host_instance.ensure_host_is_up(max_wait_time=300)
                         fun_test.test_assert(instance_ready, "Instance: {} ready".format(str(host_instance)))
                         host_instance.lspci(grep_filter="1dad")
         return True

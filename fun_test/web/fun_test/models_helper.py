@@ -162,7 +162,8 @@ def update_suite_execution(suite_execution_id,
                            tags=None,
                            state=None,
                            suite_path=None,
-                           completed_time=None):
+                           completed_time=None,
+                           environment=None):
     logger.debug("Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version))
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
@@ -181,6 +182,8 @@ def update_suite_execution(suite_execution_id,
         te.state = state
     if completed_time:
         te.completed_time = completed_time
+    if environment is not None:
+        te.environment = json.dumps(environment)
     te.save()
     te.save()
     # transaction.commit()

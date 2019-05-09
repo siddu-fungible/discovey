@@ -160,4 +160,9 @@ class AssetManager:
         result = all_hosts_specs.get(name, None)
         return result
 
+    @fun_test.safe
+    def get_regression_service_host_spec(self):
+        host_spec = self.get_host_spec(name=REGRESSION_SERVICE_HOST)
+        return host_spec
+
 asset_manager = AssetManager()

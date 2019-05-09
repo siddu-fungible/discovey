@@ -1965,16 +1965,9 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             for file in self.lines:
                 for line in file:
                     if "flow_type" in line:
-                        metrics = collections.OrderedDict()
-                        metrics["input_flow_type"] = line["flow_type"]
-                        metrics["input_frame_size"] = line["frame_size"]
-                        metrics["input_number_flows"] = line.get("num_flows", 1)
-                        metrics["input_offloads"] = line.get("offloads", False)
-                        metrics["input_protocol"] = line.get("protocol", "TCP")
-                        metrics["input_version"] = line.get("version", "")
-                        metrics["input_num_hosts"] = line.get("num_hosts", 1)
                         date_time = get_time_from_timestamp(line["timestamp"])
                         if "throughput_h2n" in line:
+                            metrics = self.set_info(line=line)
                             self.model = "HuThroughputPerformance"
                             metrics["output_throughput_h2n"] = (float(
                                 line["throughput_h2n"]) / 1000) if line["throughput_h2n"] != -1 else -1
@@ -1984,7 +1977,16 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                                 line["pps_h2n"]) / 1000000) if line["pps_h2n"] != -1 else -1
                             metrics["output_pps_n2h"] = (float(
                                 line["pps_n2h"]) / 1000000) if line["pps_n2h"] != -1 else -1
-                        elif "latency_avg_h2n" in line:
+                            fun_test.log(
+                                "flow type: {}, frame size: {}, date time: {}".format(
+                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            d["input_date_time"] = date_time
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
+                        if "latency_avg_h2n" in line:
+                            metrics = self.set_info(line=line)
                             self.model = "HuLatencyPerformance"
                             metrics["output_latency_max_h2n"] = line.get("latency_max_h2n", -1)
                             metrics["output_latency_min_h2n"] = line.get("latency_min_h2n", -1)
@@ -1999,17 +2001,19 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_latency_P99_n2h"] = line.get("latency_P99_n2h", -1)
                             metrics["output_latency_P90_n2h"] = line.get("latency_P90_n2h", -1)
                             metrics["output_latency_P50_n2h"] = line.get("latency_P50_n2h", -1)
+                            fun_test.log(
+                                "flow type: {}, frame size: {}, date time: {}".format(
+                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            d["input_date_time"] = date_time
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
                         else:
+                            metrics = self.set_info(line=line)
                             self.add_entries_into_dual_table(default_metrics=metrics, line=line, date_time=date_time)
                             continue
-                        fun_test.log(
-                            "flow type: {}, frame size: {}, date time: {}".format(
-                                metrics["input_flow_type"], metrics["input_frame_size"], date_time))
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        d["input_date_time"] = date_time
-                        metric_model = app_config.get_metric_models()[self.model]
-                        MetricHelper(model=metric_model).add_entry(**d)
-                        add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
+
 
             self.result = fun_test.PASSED
         except Exception as ex:
@@ -2017,6 +2021,17 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
 
         set_networking_chart_status()
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+    def set_info(self, line):
+        metrics = collections.OrderedDict()
+        metrics["input_flow_type"] = line["flow_type"]
+        metrics["input_frame_size"] = line["frame_size"]
+        metrics["input_number_flows"] = line.get("num_flows", 1)
+        metrics["input_offloads"] = line.get("offloads", False)
+        metrics["input_protocol"] = line.get("protocol", "TCP")
+        metrics["input_version"] = line.get("version", "")
+        metrics["input_num_hosts"] = line.get("num_hosts", 1)
+        return metrics
 
     def add_entries_into_dual_table(self, default_metrics, line, date_time):
         if "throughput" in line and "pps" in line:
