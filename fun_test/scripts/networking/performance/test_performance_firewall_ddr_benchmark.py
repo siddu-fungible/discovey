@@ -38,7 +38,7 @@ class ScriptSetup(FunTestScript):
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
         mode = 3
-        num_flows = 16777216
+        num_flows = 134217728
         benchmark_ports = [8, 12]
 
         result = network_controller_obj.set_etp(pkt_adj_size=8)
@@ -50,12 +50,12 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
 
-        output_2 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10000-16144", protocol=17,
+        output_2 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-2058", dport="10000-42768", protocol=17,
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=0,
                                                              flow_inport=8, flow_outport=12)
 
-        output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10000-16144", protocol=17,
-                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=6291456,
+        output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-2058", dport="10000-42768", protocol=17,
+                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=67108864,
                                                              flow_inport=12, flow_outport=8)
 
         TIMESTAMP = get_current_time()
@@ -73,7 +73,7 @@ class TestFirewallPerformance(FunTestCase):
     half_load_latency = False
     num_flows = 128000000
     update_charts = True
-    update_json = False
+    update_json = True
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -221,7 +221,7 @@ class TestFirewallLatency(TestFirewallPerformance):
     half_load_latency = True
     num_flows = 128000000
     update_charts = True
-    update_json = False
+    update_json = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
@@ -242,7 +242,7 @@ class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
     spray = True
     half_load_latency = False
     num_flows = 1
-    update_charts = False
+    update_charts = True
     update_json = True
 
     def describe(self):
@@ -265,7 +265,7 @@ class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
     spray = True
     half_load_latency = True
     num_flows = 1
-    update_charts = False
+    update_charts = True
     update_json = True
 
     def describe(self):
