@@ -1680,7 +1680,7 @@ class NetworkController(DpcshClient):
             if show:
                 cmd_args['show'] = show
             cmd = ['benchmark', cmd_args]
-            result = self.json_execute(verb='nu', data=cmd, command_duration=60)
+            result = self.json_execute(verb='nu', data=cmd, command_duration=600)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

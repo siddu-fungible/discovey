@@ -359,6 +359,16 @@ class StorageController(DpcshClient):
 
         return True
 
+    def plex_rebuild(self, subcmd, command_duration=TIMEOUT, **kwargs):
+        volume_dict = {}
+        volume_dict["class"] = "volume"
+        volume_dict["opcode"] = "VOL_ADMIN_OPCODE_REBUILD"
+        volume_dict["params"] = {"subcmd": subcmd}
+        if kwargs:
+            for key in kwargs:
+                volume_dict["params"][key] = kwargs[key]
+        return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
+
 
 if __name__ == "__main__":
     sc = StorageController(target_ip="10.1.20.67", target_port=40220)
