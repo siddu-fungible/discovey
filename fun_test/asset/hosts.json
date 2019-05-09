@@ -2,7 +2,12 @@
   "poc-server-05": {
     "host_ip": "poc-server-05",
     "ssh_username": "localadmin",
-    "ssh_password": "Precious1*"
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "poc-server-05-ilo"
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "poc-server-03": {
     "host_ip": "poc-server-03",
@@ -33,7 +38,12 @@
   "poc-server-10": {
     "host_ip": "poc-server-10",
     "ssh_username": "localadmin",
-    "ssh_password": "Precious1*"
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "poc-server-10-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",

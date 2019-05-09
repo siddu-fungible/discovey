@@ -1905,13 +1905,14 @@ class Linux(object, ToDictMixin):
 
         if not host_is_up and max_reboot_timer.is_expired():
             result = False
-            fun_test.critical("Host: {} is not reachable after reboot. Trying IPMI power-cycle".format(self.host_ip))
+            fun_test.critical("Host: {} is not reachable after reboot".format(self.host_ip))
             if not result and ipmi_details:
+                fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
                 ipmi_password = ipmi_details["password"]
                 try:
-                    self.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=False)
+                    self.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     fun_test.log("IPMI power-cycle complete")
                 except:
                     pass

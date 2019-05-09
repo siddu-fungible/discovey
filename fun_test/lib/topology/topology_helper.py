@@ -153,7 +153,11 @@ class TopologyHelper:
                 if peer_info:
                     if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
                         host_instance = peer_info.get_host_instance()
-                        instance_ready = host_instance.ensure_host_is_up(max_wait_time=300)
+                        ipmi_details = None
+                        if host_instance.extra_attributes:
+                            if "ipmi_info" in host_instance.extra_attributes:
+                                ipmi_details = host_instance.extra_attributes["ipmi_info"]
+                        instance_ready = host_instance.ensure_host_is_up(max_wait_time=300, ipmi_details=ipmi_details)
                         fun_test.test_assert(instance_ready, "Instance: {} ready".format(str(host_instance)))
                         host_instance.lspci(grep_filter="1dad")
         return True
