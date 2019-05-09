@@ -6,6 +6,7 @@ from datetime import datetime
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
+import fun_global
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using Vdbench
@@ -146,11 +147,26 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
 
             this_uuid = utils.generate_uuid()
             ec_info["uuids"][num]["lsv"].append(this_uuid)
-            command_result = storage_controller.create_volume(
-                type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"][num]["lsv"],
-                block_size=ec_info["volume_block"]["lsv"], name="lsv_" + this_uuid[-4:], uuid=this_uuid,
-                group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"], pvol_id=ec_info["uuids"][num]["ec"],
-                command_duration=command_timeout)
+            if ec_info['compress']:
+                command_result = storage_controller.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                                  capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                                  block_size=ec_info["volume_block"]["lsv"],
+                                                                  name="lsv_" + this_uuid[-4:],
+                                                                  uuid=this_uuid,
+                                                                  group=ec_info["ndata"],
+                                                                  jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                                  pvol_id=ec_info["uuids"][num]["ec"],
+                                                                  zip_effort=ec_info['zip_eeffort'],
+                                                                  zip_filter=ec_info["zip_filter"],
+                                                                  compress=ec_info['compress'],
+                                                                  command_duration=command_timeout)
+            else:
+                command_result = storage_controller.create_volume(
+                    type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"][num]["lsv"],
+                    block_size=ec_info["volume_block"]["lsv"], name="lsv_" + this_uuid[-4:], uuid=this_uuid,
+                    group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"],
+                    pvol_id=ec_info["uuids"][num]["ec"],
+                    command_duration=command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT instance".
                                  format(num, ec_info["volume_capacity"][num]["lsv"]))
@@ -732,12 +748,117 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocksLatencyTest, self).cleanup()
 
 
+class RandReadWrite8kBlocksCompEffortAuto(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using vdbench
+        8. Run the Performance for 8k transfer size Random read/write IOPS
+        """)
+
+    def setup(self):
+        super(RandReadWrite8kBlocksCompEffortAuto, self).setup()
+
+    def run(self):
+        testcase = self.__class__.__name__
+        test_method = testcase[4:]
+
+        if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
+            self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
+            self.volume_name = fun_test.shared_variables["volume_name"]
+        else:
+            fun_test.simple_assert(False, "Setup Section Status")
+        self.end_host = fun_test.shared_variables["end_host"]
+        fun_test.sleep("Interval before starting traffic", self.iter_interval)
+        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
+                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
+                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
+                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
+        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
+                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "fio_job_name"]
+
+        for test in self.test_parameters:
+            warmup_profile = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
+            self.end_host.create_file(file_name=warmup_profile, contents=test['warmup_command'])
+            fun_test.test_assert(self.end_host.vdbench(path=self.vdbench_path,
+                                                       filename=warmup_profile,
+                                                       timeout=self.perf_run_timeout),
+                                 "Execute warmup write with Compression ratio {}".format(test['compress_percent']))
+
+            run_profile = "{}/{}".format(self.vdbench_path, test['perf_run_config_profile'])
+            self.end_host.create_file(file_name=run_profile, contents=test['perf_run_vdb_config'])
+            vdbench_result = self.end_host.vdbench(path=self.vdbench_path,
+                                                   filename=run_profile,
+                                                   timeout=self.perf_run_timeout)
+            fun_test.test_assert(vdbench_result,
+                                 "Run Vdbench randread+write with 70% read, compression percent: {}".format(
+                                     test['compress_percent']))
+            table_data_rows = []
+
+            row_data_dict = {}
+            vdbench_run_name = self.perf_run_config_file
+
+            # Vdbench gives cumulative output, Calculating Read/Write bandwidth and IOPS
+            if hasattr(self, "read_pct"):
+                read_bw = int(round(float(vdbench_result["throughput"]) * self.read_pct))
+                read_iops = int(round(float(vdbench_result["iops"]) * self.read_pct))
+                write_bw = int(round(float(vdbench_result["throughput"]) * (1 - self.read_pct)))
+                write_iops = int(round(float(vdbench_result["iops"]) * (1 - self.read_pct)))
+            else:
+                read_bw = int(round(float(vdbench_result["throughput"])))
+                read_iops = int(round(float(vdbench_result["iops"])))
+                write_bw = -1
+                write_iops = -1
+
+            row_data_dict["fio_job_name"] = test['perf_run_config_file']
+            row_data_dict["readiops"] = read_iops
+            row_data_dict["readbw"] = read_bw
+            row_data_dict["writeiops"] = write_iops
+            row_data_dict["writebw"] = write_bw
+            row_data_dict["mode"] = self.operation
+
+            # Converting response values from milliseconds to microseconds
+            row_data_dict["readclatency"] = int(round(float(vdbench_result["read_resp"]) * 1000))
+            row_data_dict["writelatency"] = int(round(float(vdbench_result["write_resp"]) * 1000))
+
+            # Building the table raw for this variation
+            row_data_list = []
+            for i in table_data_cols:
+                if i not in row_data_dict:
+                    row_data_list.append(-1)
+                else:
+                    row_data_list.append(row_data_dict[i])
+            table_data_rows.append(row_data_list)
+            if fun_global.is_production_mode():
+                post_results("Performance Table", test_method, *row_data_list)
+
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
+            fun_test.add_table(panel_header="8k data block random readn/write IOPS Performance Table",
+                               table_name=test['name'], table_data=table_data)
+
+    def cleanup(self):
+        super(RandReadWrite8kBlocksCompEffortAuto, self).cleanup()
+
+
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    ecscript.add_test_case(IntegratedModelReadWriteIOPS())
-    ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    #ecscript.add_test_case(RandReadWrite8kBlocks())
+    #ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    #ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    #ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    #ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    ecscript.add_test_case(RandReadWrite8kBlocksCompEffortAuto())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()
