@@ -359,11 +359,11 @@ class StorageController(DpcshClient):
 
         return True
 
-    def rebuild_volume(self, command_duration=TIMEOUT, **kwargs):
+    def plex_rebuild(self, subcmd, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
         volume_dict["class"] = "volume"
         volume_dict["opcode"] = "VOL_ADMIN_OPCODE_REBUILD"
-        volume_dict["params"] = {}
+        volume_dict["params"] = {"subcmd": subcmd}
         if kwargs:
             for key in kwargs:
                 volume_dict["params"][key] = kwargs[key]

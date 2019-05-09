@@ -230,20 +230,17 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
-        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
-        fun_test.shared_variables["test_network"] = self.test_network
-
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=self.f1_in_use, custom_boot_args=self.bootargs)
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
-        fun_test.shared_variables["topology"] = topology
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        fun_test.shared_variables["fs"] = self.fs
-
         self.db_log_time = datetime.now()
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
+
+        self.come = self.fs.get_come()
+        self.storage_controller = StorageController(target_ip=self.come.host_ip,
+                                                    target_port=self.come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use)
@@ -258,6 +255,13 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.test_assert(False, "Host found with Test Interface")
 
         fun_test.shared_variables["end_host"] = self.end_host
+        fun_test.shared_variables["topology"] = topology
+        fun_test.shared_variables["fs"] = self.fs
+        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
+        fun_test.shared_variables["test_network"] = self.test_network
+        fun_test.shared_variables["syslog_level"] = self.syslog_level
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Configuring Linux host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
@@ -372,13 +376,12 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.end_host = fun_test.shared_variables["end_host"]
         self.test_network = fun_test.shared_variables["test_network"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
+        self.syslog_level = fun_test.shared_variables["syslog_level"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
+
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
-
-        self.come = self.fs.get_come()
-        self.storage_controller = StorageController(target_ip=self.come.host_ip,
-                                                    target_port=self.come.get_dpc_port(self.f1_in_use))
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -465,8 +468,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
             fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
 
-            fun_test.shared_variables["ec"]["nvme_connect"] = True
-
             lsblk_output = self.end_host.lsblk("-b")
             fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
@@ -486,6 +487,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
             fun_test.shared_variables["volume_name"] = self.volume_name
+            fun_test.shared_variables["ec"]["nvme_connect"] = True
 
         # Executing the vdbench command to fill the volume to it's capacity
         if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
