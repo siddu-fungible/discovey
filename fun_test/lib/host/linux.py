@@ -2381,6 +2381,7 @@ class Linux(object, ToDictMixin):
             cmd += " -{}".format(memory)
         output = self.command(cmd)
         values_list = re.findall(r'[0-9]+', output)
+        values = {}
         if values_list:
             values_list_int = map(int, values_list)
             values = {
@@ -2394,7 +2395,7 @@ class Linux(object, ToDictMixin):
                 "swap_used": values_list_int[7],
                 "swap_free": values_list_int[8]
             }
-            return values
+        return values
 
     @fun_test.safe
     def lscpu(self, grep_filter=None):
