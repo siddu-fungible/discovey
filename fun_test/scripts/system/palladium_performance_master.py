@@ -50,6 +50,11 @@ RCNVME_WRITE_ALL = "qa_rcnvme_write_all"
 RCNVME_RANDOM_WRITE_ALL = "qa_rcnvme_random_write_all"
 TERAMARK_CRYPTO_SINGLE_TUNNEL = "crypto_single_tunnel_teramark"
 TERAMARK_CRYPTO_MULTI_TUNNEL = "crypto_multi_tunnel_teramark"
+TLS_1_TUNNEL = "tls_1_tunnel_teramark"
+TLS_32_TUNNEL = "tls_32_tunnel_teramark"
+TLS_64_TUNNEL = "tls_64_tunnel_teramark"
+SOAK_DMA_MEMCPY_THRESHOLD = "soak_funos_memcpy_threshold"
+
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -146,7 +151,6 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            build_properties="", lsf_job_id="",
                            sdk_version=version)
 
-
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -162,7 +166,7 @@ class MyScript(FunTestScript):
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL]
+                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -220,6 +224,23 @@ class PalladiumPerformanceTc(FunTestCase):
                 data = json.loads(fp.read())
                 self.lines.append(data)
         return True
+
+    def run(self):
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt)
+
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=self.model)
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
@@ -1428,22 +1449,6 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                               summary="TeraMark Lookup Engine Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class FlowTestPerformanceTC(PalladiumPerformanceTc):
     tag = FLOW_TEST_TAG
@@ -1543,23 +1548,6 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
         self.set_test_details(id=22,
                               summary="TeraMark DFA Performance Test on F1",
                               steps="Steps 1")
-
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
@@ -1977,15 +1965,9 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             for file in self.lines:
                 for line in file:
                     if "flow_type" in line:
-                        metrics = collections.OrderedDict()
-                        metrics["input_flow_type"] = line["flow_type"]
-                        metrics["input_frame_size"] = line["frame_size"]
-                        metrics["input_number_flows"] = line.get("num_flows", 1)
-                        metrics["input_offloads"] = line.get("offloads", False)
-                        metrics["input_protocol"] = line.get("protocol", "TCP")
-                        metrics["input_version"] = line.get("version", "")
                         date_time = get_time_from_timestamp(line["timestamp"])
                         if "throughput_h2n" in line:
+                            metrics = self.set_info(line=line)
                             self.model = "HuThroughputPerformance"
                             metrics["output_throughput_h2n"] = (float(
                                 line["throughput_h2n"]) / 1000) if line["throughput_h2n"] != -1 else -1
@@ -1995,7 +1977,16 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                                 line["pps_h2n"]) / 1000000) if line["pps_h2n"] != -1 else -1
                             metrics["output_pps_n2h"] = (float(
                                 line["pps_n2h"]) / 1000000) if line["pps_n2h"] != -1 else -1
-                        elif "latency_avg_h2n" in line:
+                            fun_test.log(
+                                "flow type: {}, frame size: {}, date time: {}".format(
+                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            d["input_date_time"] = date_time
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
+                        if "latency_avg_h2n" in line:
+                            metrics = self.set_info(line=line)
                             self.model = "HuLatencyPerformance"
                             metrics["output_latency_max_h2n"] = line.get("latency_max_h2n", -1)
                             metrics["output_latency_min_h2n"] = line.get("latency_min_h2n", -1)
@@ -2010,17 +2001,19 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_latency_P99_n2h"] = line.get("latency_P99_n2h", -1)
                             metrics["output_latency_P90_n2h"] = line.get("latency_P90_n2h", -1)
                             metrics["output_latency_P50_n2h"] = line.get("latency_P50_n2h", -1)
+                            fun_test.log(
+                                "flow type: {}, frame size: {}, date time: {}".format(
+                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            d["input_date_time"] = date_time
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
                         else:
+                            metrics = self.set_info(line=line)
                             self.add_entries_into_dual_table(default_metrics=metrics, line=line, date_time=date_time)
                             continue
-                        fun_test.log(
-                            "flow type: {}, frame size: {}, date time: {}".format(
-                                metrics["input_flow_type"], metrics["input_frame_size"], date_time))
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        d["input_date_time"] = date_time
-                        metric_model = app_config.get_metric_models()[self.model]
-                        MetricHelper(model=metric_model).add_entry(**d)
-                        add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
+
 
             self.result = fun_test.PASSED
         except Exception as ex:
@@ -2028,6 +2021,17 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
 
         set_networking_chart_status()
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+    def set_info(self, line):
+        metrics = collections.OrderedDict()
+        metrics["input_flow_type"] = line["flow_type"]
+        metrics["input_frame_size"] = line["frame_size"]
+        metrics["input_number_flows"] = line.get("num_flows", 1)
+        metrics["input_offloads"] = line.get("offloads", False)
+        metrics["input_protocol"] = line.get("protocol", "TCP")
+        metrics["input_version"] = line.get("version", "")
+        metrics["input_num_hosts"] = line.get("num_hosts", 1)
+        return metrics
 
     def add_entries_into_dual_table(self, default_metrics, line, date_time):
         if "throughput" in line and "pps" in line:
@@ -2081,23 +2085,6 @@ class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               summary="TeraMark Crypto single tunnel Performance Test on F1 for IMIX",
                               steps="Steps 1")
 
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO_MULTI_TUNNEL
@@ -2107,23 +2094,6 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
         self.set_test_details(id=40,
                               summary="TeraMark Crypto multi tunnel Performance Test on F1 for IMIX",
                               steps="Steps 1")
-
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
@@ -2163,6 +2133,45 @@ class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
     def describe(self):
         self.set_test_details(id=44,
                               summary="Rcnvme random write all Performance Test on F1",
+                              steps="Steps 1")
+
+class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = TLS_1_TUNNEL
+    model = "JuniperTlsTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=45,
+                              summary="TeraMark TLS single tunnel Performance Test on F1",
+                              steps="Steps 1")
+
+
+class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+    tag = TLS_32_TUNNEL
+    model = "JuniperTlsTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=46,
+                              summary="TeraMark TLS 32 tunnel Performance Test on F1",
+                              steps="Steps 1")
+
+
+class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+    tag = TLS_64_TUNNEL
+    model = "JuniperTlsTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=47,
+                              summary="TeraMark TLS 64 tunnel Performance Test on F1",
+                              steps="Steps 1")
+
+
+class SoakDmaMemcpyThresholdPerformanceTC(PalladiumPerformanceTc):
+    tag = SOAK_DMA_MEMCPY_THRESHOLD
+    model = "SoakDmaMemcpyThresholdPerformance"
+
+    def describe(self):
+        self.set_test_details(id=48,
+                              summary="Soak DMA memcpy vs VP memcpy threshold test",
                               steps="Steps 1")
 
 
@@ -2230,6 +2239,10 @@ if __name__ == "__main__":
     myscript.add_test_case(RcnvmeRandomReadAllPerformanceTC())
     myscript.add_test_case(RcnvmeWriteAllPerformanceTC())
     myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTC())
+    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTC())
+    myscript.add_test_case(JuniperTls32TunnelPerformanceTC())
+    myscript.add_test_case(JuniperTls64TunnelPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

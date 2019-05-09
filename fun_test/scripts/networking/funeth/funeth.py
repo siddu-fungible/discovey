@@ -129,7 +129,7 @@ class Funeth:
             self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
                                             timeout=300)
 
-            fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
+            #fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
             if cc:
                 pf_intf = 'fpg0'
@@ -140,7 +140,7 @@ class Funeth:
                 sriov_en = '/sys/class/net/{0}/device'.format(pf_intf)
                 self.linux_obj_dict[hu].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
                                                 timeout=300)
-                fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
+                #fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
                 self.linux_obj_dict[hu].command('ifconfig -a')
 
             output1 = self.linux_obj_dict[hu].command('lsmod | grep funeth')

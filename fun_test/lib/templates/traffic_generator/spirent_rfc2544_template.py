@@ -411,6 +411,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     frame_size = 9000.0
                 elif frame_size == 66.0:
                     frame_size = 64.0
+                elif frame_size == 354.94:
+                    frame_size = 362.94
                 if frame_size:
                     data_dict['flow_type'] = flow_direction
                     data_dict['frame_size'] = frame_size

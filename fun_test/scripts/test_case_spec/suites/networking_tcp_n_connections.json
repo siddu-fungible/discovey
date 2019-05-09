@@ -1,0 +1,4 @@
+[
+  {"path": "networking/tcp/test_tcp_using_netperf.py", "inputs": {"speed": "SPEED_100G", "disable_f1_index": 0}}
+
+]

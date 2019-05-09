@@ -9,7 +9,7 @@ from lib.fun.fs import *
 network_controller_obj = None
 spirent_config = None
 TIMESTAMP = None
-OUTPUT_JSON_FILE_NAME = "nu_rfc2544_le_performance.json"
+OUTPUT_JSON_FILE_NAME = "nu_rfc2544_le_ddr_performance.json"
 older_build = False
 
 
@@ -17,7 +17,7 @@ class ScriptSetup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="""
-        1. Connect to DPCSH and configure egress NU/HNU buffer_pool and enable global PFC
+        1. Connect to DPCSH and configure flows
         """)
 
     def setup(self):
@@ -38,24 +38,24 @@ class ScriptSetup(FunTestScript):
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
         mode = 3
-        num_flows = 16777216
+        num_flows = 134217728
         benchmark_ports = [8, 12]
 
         result = network_controller_obj.set_etp(pkt_adj_size=8)
         fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 8")
 
-        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=False,
-                                                             flow_state_ddr=False)
+        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=True,
+                                                             flow_state_ddr=True)
         for fpg in benchmark_ports:
             result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
 
-        output_2 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10000-16144", protocol=17,
+        output_2 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-2058", dport="10000-42768", protocol=17,
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=0,
                                                              flow_inport=8, flow_outport=12)
 
-        output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-1034", dport="10000-16144", protocol=17,
-                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=6291456,
+        output_3 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-2058", dport="10000-42768", protocol=17,
+                                                             ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=67108864,
                                                              flow_inport=12, flow_outport=8)
 
         TIMESTAMP = get_current_time()
@@ -68,12 +68,12 @@ class TestFirewallPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
     flow_direction = FLOW_TYPE_NU_LE_VP_NU_FW
-    tcc_file_name = "nu_le_benchmark_hbm_throughput.tcc"  # Uni-directional
+    tcc_file_name = "nu_le_benchmark_ddr_throughput.tcc"  # Uni-directional
     spray = True
     half_load_latency = False
     num_flows = 128000000
     update_charts = True
-    update_json = False
+    update_json = True
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -92,7 +92,7 @@ class TestFirewallPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput for HBM" % (
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput for ddr" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -201,7 +201,7 @@ class TestFirewallPerformance(FunTestCase):
                                                                       num_flows=self.num_flows,
                                                                       half_load_latency=self.half_load_latency,
                                                                       model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
-                                                                      memory=MEMORY_TYPE_HBM, update_charts=self.update_charts,
+                                                                      memory=MEMORY_TYPE_DDR, update_charts=self.update_charts,
                                                                       update_json=self.update_json)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
@@ -216,16 +216,16 @@ class TestFirewallPerformance(FunTestCase):
 
 class TestFirewallLatency(TestFirewallPerformance):
     tc_id = 2
-    tcc_file_name = "nu_le_benchmark_hbm_latency.tcc"  # Uni-directional
+    tcc_file_name = "nu_le_benchmark_ddr_latency.tcc"  # Uni-directional
     spray = True
     half_load_latency = True
     num_flows = 128000000
     update_charts = True
-    update_json = False
+    update_json = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get latency for HBM" % (
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get latency for ddr" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -236,19 +236,19 @@ class TestFirewallLatency(TestFirewallPerformance):
                               5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
                               """)
 
-class TestFirewallSingleFlow(TestFirewallPerformance):
+class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
     tc_id = 3
-    tcc_file_name = "nu_le_benchmark_hbm_single_flow.tcc"  # Uni-directional
+    tcc_file_name = "nu_le_benchmark_ddr_single_flow_full_load.tcc"  # Uni-directional
     spray = True
     half_load_latency = False
     num_flows = 1
-    update_charts = False
+    update_charts = True
     update_json = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
                               summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput and "
-                                      "full load latency for single flow using HBM" % (
+                                      "full load latency for single flow using ddr" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -261,17 +261,17 @@ class TestFirewallSingleFlow(TestFirewallPerformance):
 
 class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
     tc_id = 4
-    tcc_file_name = "nu_le_benchmark_hbm_single_flow_half_load.tcc"  # Uni-directional
+    tcc_file_name = "nu_le_benchmark_ddr_single_flow_half_load.tcc"  # Uni-directional
     spray = True
     half_load_latency = True
     num_flows = 1
-    update_charts = False
+    update_charts = True
     update_json = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
                               summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get half load latency "
-                                      "for single flow using HBM" % (
+                                      "for single flow using ddr" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -289,6 +289,6 @@ if __name__ == '__main__':
     # Multi flows
     ts.add_test_case(TestFirewallPerformance())
     ts.add_test_case(TestFirewallLatency())
-    #ts.add_test_case(TestFirewallSingleFlow())
-    #ts.add_test_case(TestFirewallSingleFlowHalfLoad())
+    ts.add_test_case(TestFirewallSingleFlowFullLoad())
+    ts.add_test_case(TestFirewallSingleFlowHalfLoad())
     ts.run()

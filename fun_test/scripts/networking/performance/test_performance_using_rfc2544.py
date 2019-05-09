@@ -66,9 +66,9 @@ class ScriptSetup(FunTestScript):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
         nu_config_obj = NuConfigManager()
-
+        f1_index = nu_config_obj.get_f1_index()
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get()
+            fs = Fs.get(disable_f1_index=f1_index)
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
             
         dut_type = nu_config_obj.DUT_TYPE
@@ -260,7 +260,10 @@ class TestTransitPerformance(FunTestCase):
             result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
                                                                       mode=mode,
-                                                                      flow_direction=self.flow_direction)
+                                                                      flow_direction=self.flow_direction,
+                                                                      model_name=HNU_PERFORMANCE_MODEL_NAME,
+                                                                      update_charts=False,
+                                                                      update_json=True)
             if not result:
                 fun_test.log("===================== Trying another trial for failed flow with extra debug logs %s "
                              "=====================" % self.flow_direction)

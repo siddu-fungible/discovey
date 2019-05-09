@@ -1307,7 +1307,7 @@ if __name__ == "__main_opeartion_lookups__":
             ml.save_data_sets(data_sets=data_sets, chart=chart)
             print "added lookups operation {}".format(chart.chart_name)
 
-if __name__ == "__main__":
+if __name__ == "__main_unit_fix__":
     model = "TeraMarkJuniperNetworkingPerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model]
@@ -1319,3 +1319,240 @@ if __name__ == "__main__":
             entry.output_throughput_unit = "Mbps"
             entry.output_pps_unit = "pps"
             entry.save()
+
+if __name__ == "__main_created_DDR_FW__":
+    model = "TeraMarkJuniperNetworkingPerformance"
+    ml = MetricLib()
+    entries = MetricChart.objects.filter(metric_model_name=model)
+    for entry in entries:
+        if "NU_LE_VP_NU_FW" in entry.internal_chart_name:
+            print entry
+            data_sets = json.loads(entry.data_sets)
+            input = {}
+            input["input_memory"] = "DDR"
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+            metric_id = LastMetricId.get_next_id()
+            index = entry.internal_chart_name.find('output')
+            internal_name = entry.internal_chart_name[:index] + 'DDR_' + entry.internal_chart_name[index:]
+            MetricChart(chart_name=entry.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=entry.description,
+                        owner_info=entry.owner_info,
+                        positive=entry.positive,
+                        y1_axis_title=entry.y1_axis_title,
+                        visualization_unit=entry.visualization_unit,
+                        source=entry.source,
+                        metric_model_name=entry.metric_model_name,
+                        base_line_date=base_line_date).save()
+    print "added charts for DDR flow based firewall"
+
+if __name__ == "__main_num_hosts__":
+    model_name = "HuThroughputPerformance"
+    charts = MetricChart.objects.filter(metric_model_name=model_name)
+    ml = MetricLib()
+    for chart in charts:
+        data_sets = json.loads(chart.data_sets)
+        input = {}
+        input["input_num_hosts"] = 1
+        data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+        ml.save_data_sets(data_sets=data_sets, chart=chart)
+        print "added number of hosts field for {}".format(chart.chart_name)
+
+if __name__ == "__main__durable_ec_comp__":
+    internal_chart_names = ["read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
+                            "read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                            "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                            "rand_read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
+                            "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                            "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency"]
+    model_name = "BltVolumePerformance"
+    fio_read_job_names = ["ec_fio_25G_read_1", "ec_fio_25G_read_50", "ec_fio_25G_read_80"]
+    fio_rand_read_job_names = ["ec_fio_25G_randread_1", "ec_fio_25G_randread_50", "ec_fio_25G_randread_80"]
+
+    for internal_chart_name in internal_chart_names:
+        fio_job_names = []
+        positive = True
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "MBps"
+        elif "iops" in internal_chart_name:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
+        else:
+            chart_name = "Latency"
+            y1_axis_title = "usecs"
+
+        if chart_name == "Throughput":
+            output_name = "output_read_throughput"
+        elif chart_name == "IOPS":
+            output_name = "output_read_iops"
+        else:
+            output_name = "output_read_avg_latency"
+            positive = False
+        if "rand_read" in internal_chart_name:
+            fio_job_names = fio_rand_read_job_names
+            operation = "randread"
+        else:
+            fio_job_names = fio_read_job_names
+            operation = "read"
+
+        data_sets = []
+        for job_name in fio_job_names:
+            if "80" in job_name:
+                name = "80%"
+            elif "50" in job_name:
+                name = "50%"
+            else:
+                name = "1%"
+            if chart_name == "Latency":
+                name += "-avg"
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Aamir Shaikh (aamir.shaikh@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/ec_volume_fs_comp_perf.py",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created throughput, iops and latency charts for 12 ssd read and random read durable volume ec storage"
+
+if __name__ == "__main_juniper_tls__":
+    internal_chart_names = ["juniper_tls_output_throughput", "juniper_tls_output_pps"]
+    chart_name = "Throughput"
+    model_name = "JuniperTlsTunnelPerformance"
+    num_tunnels = [1, 32, 64]
+    base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "throughput" in internal_chart_name:
+            chart_name = "Throughput"
+            output_name = "output_throughput"
+            y1_axis_title = "Gbps"
+        else:
+            chart_name = "Packets per sec"
+            output_name = "output_packets_per_sec"
+            y1_axis_title = "Mpps"
+
+        data_sets = []
+        for num_tunnel in num_tunnels:
+            name =  str(num_tunnel) + "tunnel(s)"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_num_tunnels"] = num_tunnel
+            one_data_set["inputs"]["input_algorithm"] = "AES_GCM"
+            one_data_set["inputs"]["input_pkt_size"] = 356
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Fabrice Ferino (fabrice.ferino@fungible.com)",
+                    source="https://github.com/fungible-inc/FunOS/blob/master/apps/tls_dp_tunnel_perf.c",
+                    positive=True,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created charts for the TLS juniper customer teramarks"
+
+if __name__ == "__main_memcpy_threshold__":
+    internal_chart_name = "memcpy_threshold"
+    model_name = "SoakDmaMemcpyThresholdPerformance"
+    chart_name = "DMA memcpy vs. VP memcpy"
+    y1_axis_title = "KB"
+    base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+    data_sets = []
+    one_data_set = {}
+    one_data_set["name"] = "threshold"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_threshold", 'min': 0, "max": -1, "expected": 4, "reference": -1}
+    data_sets.append(one_data_set)
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description="VP-based memcpy is faster for small sizes and DMA-based memcpy wins for large sizes. This metric defines the threshold above which DMA memcpy always wins.",
+                owner_info="Bertrand Serlet (bertrand.serlet@fungible.com)",
+                source="https://github.com/fungible-inc/FunOS/blob/master/apps/misc_app.c",
+                positive=False,
+                y1_axis_title=y1_axis_title,
+                visualization_unit=y1_axis_title,
+                metric_model_name=model_name,
+                base_line_date=base_line_date,
+                work_in_progress=False).save()
+
+if __name__ == "__main__":
+    internal_chart_names = ["HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_pps"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            index = chart.internal_chart_name.find('output')
+            internal_name = chart.internal_chart_name[:index] + '2hosts_' + chart.internal_chart_name[index:]
+            if "HU_NU" in internal_chart_name:
+                flow_type = "HU_NU_NFCP"
+                output_name = chart.internal_chart_name[index:] + '_h2n'
+            else:
+                flow_type = "NU_HU_NFCP"
+                output_name = chart.internal_chart_name[index:] + '_n2h'
+            data_sets = []
+            one_data_set = {}
+            one_data_set["name"] = "1500B"
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_number_flows"] = 8
+            one_data_set["inputs"]["input_flow_type"] = flow_type
+            one_data_set["inputs"]["input_frame_size"] = 1500
+            one_data_set["inputs"]["input_protocol"] = "TCP"
+            one_data_set["inputs"]["input_num_hosts"] = 2
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info=chart.owner_info,
+                        source=chart.source,
+                        positive=True,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.y1_axis_title,
+                        metric_model_name=chart.metric_model_name,
+                        base_line_date=chart.base_line_date,
+                        work_in_progress=False).save()
+    print "added 2hosts charts"
