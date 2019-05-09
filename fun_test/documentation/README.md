@@ -22,6 +22,7 @@ from fun_settings import DATA_STORE_DIR
 ### Suggestions for the data-store directories layout
 
 ```
-data-store/storage
-data-store/networking
+data_store/storage
+data_store/networking
+data_store/web_backup (Location of the regression/performance Db backup)
 ```

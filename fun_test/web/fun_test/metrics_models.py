@@ -62,7 +62,7 @@ class SchedulingStates:
 
 
 class MetricChartStatus(models.Model):
-    metric_id = models.IntegerField(default=-1)
+    metric_id = models.IntegerField(default=-1, db_index=True)
     chart_name = models.TextField(default="Unknown")
     data_sets = JSONField()
     date_time = models.DateTimeField(default=datetime.now)
@@ -86,6 +86,11 @@ class MetricChartStatus(models.Model):
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
         return s
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['metric_id'])
+        ]
 
 class Triage(models.Model):
     metric_id = models.IntegerField(default=-1)
@@ -618,13 +623,13 @@ class MetricChart(models.Model):
                 i = entries.count()
                 if i > (number_of_records - 1):
                     entries = model.objects.filter(**d).order_by(order_by)
-                    if model.objects.first().interpolation_allowed:
+                    if model.objects.first() and model.objects.first().interpolation_allowed:
                         self.remove_duplicates(model=model, from_date=earlier_day, to_date=today)
                         entries = model.objects.filter(**d).order_by(order_by)
                         i = entries.count()
                 if entries.count() < (number_of_records - 1):
                     # let's fix it up
-                    if model.objects.first().interpolation_allowed:
+                    if model.objects.first() and model.objects.first().interpolation_allowed:
                         self.fixup(metric=model, from_date=earlier_day, to_date=yesterday, data_set=data_set)
                     entries = model.objects.filter(**d).order_by(order_by)
                 entries = reversed(entries)
@@ -1699,6 +1704,24 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+
+class SoakDmaMemcpyThresholdPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    output_threshold_unit = models.TextField(default="KB")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_threshold = models.FloatField(verbose_name="Threshold", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
 class SoakDmaMemsetPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
@@ -1749,6 +1772,31 @@ class TeraMarkCryptoPerformance(models.Model):
         return s
 
 class JuniperCryptoTunnelPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.TextField(default="crypto_dp_tunnel")
+    input_num_tunnels = models.IntegerField(default=-1)
+    input_algorithm = models.TextField(default="")
+    input_operation = models.TextField(default="")
+    input_key_size = models.IntegerField(default=-1)
+    input_src_memory = models.TextField(default="BM")
+    input_dst_memory = models.TextField(default="BM")
+    input_pkt_size = models.FloatField(verbose_name="pkt size B", default=-1)
+    output_packets_per_sec = models.FloatField(verbose_name="packets per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
+    output_packets_per_sec_unit = models.TextField(default="Mpps")
+    output_throughput_unit = models.TextField(default="Gbps")
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class JuniperTlsTunnelPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])

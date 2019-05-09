@@ -4,6 +4,7 @@ import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {Sort} from "@angular/material";
+import {Validators} from "@angular/forms";
 
 @Component({
   selector: 'app-submit-job',
@@ -41,7 +42,7 @@ export class SubmitJobComponent implements OnInit {
   testBedNames: string[] = [];
   submitting: string = null;
   tftpImagePath: string = "funos-f1.stripped.gz";
-  bootArgs: string = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit";
+  bootArgs: string = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
   withJenkinsBuild: boolean = false;
 
   disableAssertions: boolean = true;
@@ -59,6 +60,11 @@ export class SubmitJobComponent implements OnInit {
   selectedUser: any = null;
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
+
+  jobInputs: string = null; // input dictionary to be sent to the scheduler
+
+
+
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title) {
@@ -267,6 +273,10 @@ export class SubmitJobComponent implements OnInit {
       }
     }
 
+    if (this.jobInputs) {
+      payload["job_inputs"] = this.jobInputs;
+    }
+
     if (this.privateFunosTgzUrl && this.privateFunosTgzUrl !== "") {
       payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
     }
@@ -304,6 +314,10 @@ export class SubmitJobComponent implements OnInit {
       result = this.selectedTestBedType.indexOf('fs') > -1;
     }
     return result;
+  }
+
+  jobInputsChanged(jobInputs) {
+    this.jobInputs = jobInputs;
   }
 
 

@@ -251,6 +251,7 @@ def queue_dynamic_suite(dynamic_suite_spec,
                         emails=None,
                         environment=None,
                         test_bed_type=None,
+                        inputs=None,
                         build_url=None):
 
     return queue_job3(dynamic_suite_spec=dynamic_suite_spec,
@@ -260,7 +261,8 @@ def queue_dynamic_suite(dynamic_suite_spec,
                       test_bed_type=test_bed_type,
                       environment=environment,
                       build_url=build_url,
-                      submitter_email=submitter_email)
+                      submitter_email=submitter_email,
+                      inputs=inputs)
 
 def is_auto_scheduled(scheduling_type, repeat_in_minutes):
     return (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type == SchedulingType.PERIODIC)
@@ -293,6 +295,8 @@ def queue_job3(suite_path=None,
         tags = []
     if not emails:
         emails = []
+    if not inputs:
+        inputs = {}
     if suite_type == SuiteType.DYNAMIC:
         original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
         suite_path = "Re({})".format(original_suite_execution.suite_path)
@@ -340,7 +344,7 @@ def queue_job3(suite_path=None,
         suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
 
         suite_execution.environment = json.dumps(environment)
-        suite_execution.inputs = inputs
+        suite_execution.inputs = json.dumps(inputs)
         suite_execution.build_url = build_url
         suite_execution.version = version
         suite_execution.requested_priority_category = requested_priority_category

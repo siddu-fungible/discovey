@@ -315,7 +315,8 @@ class SuiteWorker(Thread):
 
         self.job_inputs = {}
         if hasattr(job_spec, "inputs"):
-            self.job_inputs = job_spec.inputs
+            if (job_spec.inputs):
+                self.job_inputs = json.loads(job_spec.inputs)
 
         self.job_dynamic_suite_spec = None
         if hasattr(job_spec, "dynamic_suite_spec"):
@@ -410,9 +411,10 @@ class SuiteWorker(Thread):
                     pass
 
         suite_execution = models_helper.get_suite_execution(suite_execution_id=self.job_id)
-        suite_execution.completed_time = datetime.datetime.now()
-        suite_execution.save()
-        suite_execution.save()
+        if suite_execution:  # If we used the delete option from the UI, this will be None
+            suite_execution.completed_time = datetime.datetime.now()
+            suite_execution.save()
+            suite_execution.save()
         self.suite_complete()
 
     def prepare_job_directory(self):
@@ -494,7 +496,11 @@ class SuiteWorker(Thread):
         job_inputs = self.job_inputs
         if not script_inputs and job_inputs:
             script_inputs = {}
-            script_inputs.update(job_inputs)
+        try:
+            if job_inputs:
+                script_inputs.update(job_inputs)
+        except:
+            pass
         return script_inputs
 
     def poll_script(self, script_path):

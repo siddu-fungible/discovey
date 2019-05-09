@@ -394,7 +394,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 perf_stats['job_name'] = self.read_fio_cmd_args['name']
                 perf_stats['size'] = self.read_fio_cmd_args['size']
 
-                if 'compress' in self.volume_info['lsv'].keys() and fun_global.is_production_mode():
+                if fun_global.is_production_mode():
                     fun_test.log("Updating the following stats on database: {}".format(perf_stats))
                     self.post_results(test=testcase, test_stats=perf_stats)  # publish only compression stats on db
                 table_row1.insert(0, "<b>{}</b>".format(mode.capitalize()))

@@ -618,8 +618,13 @@ export class RegressionSummaryComponent implements OnInit {
         if (!historyElement.is_re_run) {
           let elementSuiteExecutionId = historyElement.suite_execution_id;
           let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
-          this.addHistoryToSoftwareVersion(index, historyElement, matchingSoftwareVersion);
-          this.addHistoryToDateTimeBuckets(index, historyElement);
+          try {
+            this.addHistoryToSoftwareVersion(index, historyElement, matchingSoftwareVersion);
+            this.addHistoryToDateTimeBuckets(index, historyElement);
+
+          } catch (e) {
+            let i = 0;  // TODO
+          }
         }
 
       });
