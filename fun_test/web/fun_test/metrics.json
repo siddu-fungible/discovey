@@ -2337,6 +2337,32 @@
                         "label": "Packets per sec"
                       }
                     ]
+                  },
+                  {
+                    "info": "HU_NU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts",
+                    "weight": 1,
+                    "label": "8 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
                   }
                 ]
               },
@@ -2369,6 +2395,32 @@
                         "metric_model_name": "HuThroughputPerformance",
                         "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "NU_HU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts",
+                    "weight": 1,
+                    "label": "8 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       }

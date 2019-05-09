@@ -1515,10 +1515,44 @@ if __name__ == "__main_memcpy_threshold__":
 if __name__ == "__main__":
     internal_chart_names = ["HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
                             "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
-                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput,",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
                             "NU_HU_NFCP_8TCP_offloads_disabled_output_pps"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         if chart:
             index = chart.internal_chart_name.find('output')
             internal_name = chart.internal_chart_name[:index] + '2hosts_' + chart.internal_chart_name[index:]
+            if "HU_NU" in internal_chart_name:
+                flow_type = "HU_NU_NFCP"
+                output_name = chart.internal_chart_name[index:] + '_h2n'
+            else:
+                flow_type = "NU_HU_NFCP"
+                output_name = chart.internal_chart_name[index:] + '_n2h'
+            data_sets = []
+            one_data_set = {}
+            one_data_set["name"] = "1500B"
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_number_flows"] = 8
+            one_data_set["inputs"]["input_flow_type"] = flow_type
+            one_data_set["inputs"]["input_frame_size"] = 1500
+            one_data_set["inputs"]["input_protocol"] = "TCP"
+            one_data_set["inputs"]["input_num_hosts"] = 2
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info=chart.owner_info,
+                        source=chart.source,
+                        positive=True,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.y1_axis_title,
+                        metric_model_name=chart.metric_model_name,
+                        base_line_date=chart.base_line_date,
+                        work_in_progress=False).save()
+    print "added 2hosts charts"
