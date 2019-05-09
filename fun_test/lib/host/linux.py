@@ -717,7 +717,7 @@ class Linux(object, ToDictMixin):
         lines = o.split('\n')
         files = []
         for line in lines:
-            if line:
+            if line and "No such" not in line :
                 reg = re.compile(r'(.*) (\S+)')
                 m = reg.search(line)
                 if m:
