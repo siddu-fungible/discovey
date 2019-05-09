@@ -234,15 +234,29 @@ class FunTest:
         self._prepare_build_parameters()
         self.closed = False
 
+    def get_stored_enviroment_variable(self, variable_name):
+        result = None
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            stored_environment_string = suite_execution.environment
+            if stored_environment_string is not None:
+                stored_environment = self.parse_string_to_json(stored_environment_string)
+                result = stored_environment[variable_name] if variable_name in stored_environment else None
+        return result
+
     def _prepare_build_parameters(self):
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
-
+        else:
+            # Check if it was stored by a previous script
+            tftp_image_path = self.get_stored_enviroment_variable(variable_name="tftp_image_path")
+            self.build_parameters["tftp_image_path"] = tftp_image_path
         user_supplied_build_parameters = self.get_job_environment_variable("build_parameters")
         if user_supplied_build_parameters:
             if "BOOTARGS" in user_supplied_build_parameters:
                 self.build_parameters["BOOTARGS"] = user_supplied_build_parameters["BOOTARGS"]
+                self.build_parameters["BOOTARGS"] = self.build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
             if "DISABLE_ASSERTIONS" in user_supplied_build_parameters:
                 self.build_parameters["DISABLE_ASSERTIONS"] = user_supplied_build_parameters["DISABLE_ASSERTIONS"]
             if "FUNOS_MAKEFLAGS" in user_supplied_build_parameters:
@@ -256,7 +270,6 @@ class FunTest:
             if "SKIP_DASM_C" in user_supplied_build_parameters:
                 self.build_parameters["SKIP_DASM_C"] = user_supplied_build_parameters["SKIP_DASM_C"]
 
-
     def get_build_parameters(self):
         return self.build_parameters
 
@@ -266,6 +279,7 @@ class FunTest:
         if parameter in build_parameters:
             result = build_parameters[parameter]
         return result
+
 
     def is_build_done(self):
         suite_execution_id = self.get_suite_execution_id()
@@ -290,6 +304,14 @@ class FunTest:
         if variable in job_environment:
             result = job_environment[variable]
         return result
+
+    def update_job_environment_variable(self, variable, value):
+        job_environment = self.get_job_environment()
+        if job_environment is not None:
+            job_environment[variable] = value
+        self.environment = json.dumps(job_environment)
+        if self.suite_execution_id:
+            models_helper.update_suite_execution(suite_execution_id=self.suite_execution_id, environment=job_environment)
 
     def is_with_jenkins_build(self):
         with_jenkins_build = self.get_job_environment_variable(variable="with_jenkins_build")
@@ -337,6 +359,8 @@ class FunTest:
 
     def set_version(self, version):
         self.version = version
+        if self.suite_execution_id:
+            models_helper.update_suite_execution(suite_execution_id=self.suite_execution_id, version=version)
 
     def get_version(self):
         version = None
@@ -439,8 +463,8 @@ class FunTest:
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
 
-        tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" is build_parameters else None
-        fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
+        tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" in build_parameters else None
+        # fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
 
         submitter_email = None
         if fun_test.suite_execution_id:
@@ -451,6 +475,7 @@ class FunTest:
         emulation_image = bh.build_emulation_image(submitter_email=submitter_email)
         fun_test.test_assert(emulation_image, "Build emulation image")
         self.build_parameters["tftp_image_path"] = emulation_image
+        self.update_job_environment_variable("tftp_image_path", emulation_image)
         result = True
         return result
 
@@ -1207,7 +1232,7 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
-            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
+            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and ("tftp_image_path" not in fun_test.build_parameters):
                 if not fun_test.is_build_done():
                     fun_test.test_assert(fun_test.build(), "Jenkins build")
                     suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)

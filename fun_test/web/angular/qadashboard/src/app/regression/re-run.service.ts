@@ -136,7 +136,12 @@ export class ReRunService {
       submitter_email: this.archivedJobSpec["submitter_email"],
       environment: this.archivedJobSpec["environment"]};
     if (this.archivedJobSpec.hasOwnProperty("inputs")) {
-      payload["job_inputs"] = JSON.parse(this.archivedJobSpec["inputs"]);
+      try {
+        payload["job_inputs"] = JSON.parse(this.archivedJobSpec["inputs"]);
+      } catch (e) {
+        payload["job_inputs"] =this.archivedJobSpec["inputs"];
+      }
+
     }
 
     if (this.archivedJobSpec.hasOwnProperty('test_bed_type')) {
