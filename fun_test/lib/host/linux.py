@@ -6,7 +6,7 @@ import collections
 import sys
 import os
 import time
-from lib.system.fun_test import fun_test
+from lib.system.fun_test import fun_test, FunTimer
 from lib.system.utils import ToDictMixin
 import json
 import copy
@@ -1838,66 +1838,93 @@ class Linux(object, ToDictMixin):
         return fio_dict
 
     @fun_test.safe
-    def reboot(self, timeout=5, retries=6, non_blocking=None):
-
+    def reboot(self, timeout=5, retries=6, max_wait_time=180, non_blocking=None, ipmi_details=None):
+        """
+        :param timeout: deprecated
+        :param retries: deprecated
+        :param max_wait_time: Total time to wait before declaring failure
+        :param non_blocking: if set to True, return immediately after issuing a reboot
+        :param ipmi_details: if ipmi_details are provided we will try power-cycling in case normal bootup did not work
+        :return:
+        """
         result = True
-        disconnect = True
 
         # Rebooting the host
         try:
             self.sudo_command(command="reboot", timeout=timeout)
-
+            self.ping(dst="127.0.0.1", count=40)
         except Exception as ex:
             self.disconnect()
             self._set_defaults()
-            disconnect = False
-
             fun_test.sleep("Waiting for the host to go down", seconds=10)
-            if disconnect:
-                try:
-                    self.disconnect()
-                    self._set_defaults()
-                except:
-                    pass
-
+            try:
+                self.disconnect()
+                self._set_defaults()
+            except:
+                pass
         if not non_blocking:
-            for i in range(retries):
-                try:
-                    self.ping(dst="127.0.0.1")
-                    command_output = self.command(command="pwd", timeout=timeout)
-                    if command_output:
-                        break
-                except Exception as ex:
-                    fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
-                    self.disconnect()
-                    self._set_defaults()
-                    continue
-            else:
-                fun_test.critical("Host didn't come up from reboot even after {} seconds".format(retries * timeout))
-                result = False
-            if result:
-                fun_test.sleep("Post-reboot", seconds=15)
-
+            result = self.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
         return result
 
     @fun_test.safe
-    def is_host_up(self, timeout=5, retries=6):
-        result = True
-        for i in range(retries):
-            try:
-                command_output = self.command(command="pwd", timeout=timeout)
-                if command_output:
-                    break
-            except Exception as ex:
-                fun_test.sleep("Waiting for the host to become reachable", timeout)
-                self.disconnect()
-                self._set_defaults()
-                continue
+    def ensure_host_is_up(self, max_wait_time=180, ipmi_details=None):
+        """
+        Waits until the host is reachable. Typically needed after a reboot
+        :param max_wait_time: total time to wait before giving
+        :return: True, if the host is pingable and ssh'able, else False
+        """
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
         else:
-            fun_test.critical("Host is not reachable even after trying it for {} seconds".format(retries * timeout))
-            result = False
+            fun_test.log("Regression service host could not be instantiated")
+        host_is_up = False
+        max_reboot_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        while not host_is_up and not max_reboot_timer.is_expired():
 
+            ping_result = False
+            if service_host:
+                ping_result = service_host.ping(dst=self.host_ip, count=20)
+            if ping_result or not service_host:
+                try:
+                    self.command("pwd")
+                    host_is_up = True
+                    result = host_is_up
+                    fun_test.log("Host: {} is up".format(str(self)))
+                    break
+                except Exception as ex:
+                    pass
+            fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
+
+        if not host_is_up and max_reboot_timer.is_expired():
+            result = False
+            fun_test.critical("Host: {} is not reachable after reboot. Trying IPMI power-cycle".format(self.host_ip))
+            if not result and ipmi_details:
+                ipmi_host_ip = ipmi_details["host_ip"]
+                ipmi_username = ipmi_details["username"]
+                ipmi_password = ipmi_details["password"]
+                try:
+                    self.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=False)
+                    fun_test.log("IPMI power-cycle complete")
+                except:
+                    pass
+                finally:
+                    return self.ensure_host_is_up(max_wait_time=max_wait_time)
         return result
+
+    @fun_test.safe
+    def is_host_up(self, timeout=5, retries=6, max_wait_time=180):
+        """
+        deprecated. use ensure_host_is_up
+        :param timeout: deprecated
+        :param retries: deprecated
+        :param max_wait_time: time to wait before giving up
+        :return:
+        """
+        return self.ensure_host_is_up(max_wait_time=max_wait_time)
+
 
     @fun_test.safe
     def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", chassis=True):
