@@ -4,7 +4,7 @@
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
-      "host_ip": "poc-server-05-ilo"
+      "host_ip": "poc-server-05-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }
