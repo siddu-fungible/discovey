@@ -91,6 +91,7 @@ mpstat_dict = {}
 def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0):
 
     tc_id = fun_test.current_test_case_id
+    network_controller_objs = fun_test.shared_variables['network_controller_objs']
 
     # netstat
     fun_test.log("Capture netstat {} test".format(when))
@@ -99,6 +100,18 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         netstats_dict[when].update(
             {linux_obj.host_ip: helper.get_netstat_output(linux_obj=linux_obj)}
         )
+
+    # peek resource/pc/[1], and peek resource/pc/[1]
+    for nc_obj in network_controller_objs:
+        for pc_id in (1, 2):
+            checkpoint = "Peek stats resource pc {} {} test".format(pc_id, when)
+            resource_pc_temp_filename = '{}_F1_{}_resource_pc_{}_{}.txt'.format(str(version),
+                                                                                network_controller_objs.index(nc_obj),
+                                                                                pc_id, when)
+            fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
+                                                                           filename=resource_pc_temp_filename,
+                                                                           pc_id=pc_id, count=1),
+                                   checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
@@ -142,7 +155,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             fun_test.test_assert(populate, "Populate {} netstat into txt file".format(h))
 
     fpg_stats = {}
-    for nc_obj in fun_test.shared_variables['network_controller_objs']:
+    for nc_obj in network_controller_objs:
         nc_obj.echo_hello()
         for i in fpg_interfaces:
             r = nc_obj.peek_fpg_port_stats(port_num=i)
@@ -155,6 +168,8 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         nc_obj.peek_psw_global_stats()
         #nc_obj.peek_fcp_global_stats()
         nc_obj.peek_vp_packets()
+        #nc_obj.peek_resource_pc_stats(pc_id=1)
+        #nc_obj.peek_resource_pc_stats(pc_id=2)
         #nc_obj.peek_per_vp_stats()
         #nc_obj.peek_resource_bam_stats()
         #nc_obj.peek_eqm_stats()
