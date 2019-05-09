@@ -1232,7 +1232,7 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
-            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and ("tftp_image_path" not in fun_test.build_parameters):
+            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
                 if not fun_test.is_build_done():
                     fun_test.test_assert(fun_test.build(), "Jenkins build")
                     suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
