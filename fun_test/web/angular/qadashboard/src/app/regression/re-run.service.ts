@@ -134,8 +134,16 @@ export class ReRunService {
       original_suite_execution_id: suiteExecutionId,
       emails: this.archivedJobSpec["emails"],
       submitter_email: this.archivedJobSpec["submitter_email"],
-      environment: this.archivedJobSpec["environment"],
-      job_inputs: this.archivedJobSpec["inputs"]};
+      environment: this.archivedJobSpec["environment"]};
+    if (this.archivedJobSpec.hasOwnProperty("inputs")) {
+      try {
+        payload["job_inputs"] = JSON.parse(this.archivedJobSpec["inputs"]);
+      } catch (e) {
+        payload["job_inputs"] =this.archivedJobSpec["inputs"];
+      }
+
+    }
+
     if (this.archivedJobSpec.hasOwnProperty('test_bed_type')) {
       payload["test_bed_type"] = this.archivedJobSpec["test_bed_type"];
     }

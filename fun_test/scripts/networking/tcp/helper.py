@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from lib.system.utils import MultiProcessingTasks
 from collections import OrderedDict
 from prettytable import PrettyTable
 from datetime import datetime
@@ -219,6 +220,12 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
         with open(mpstat_dump_filepath, 'w') as f:
             f.writelines(lines)
 
+        fun_test.log_disable_timestamps()
+        fun_test.log_section('Mpstats output')
+        for line in lines:
+            fun_test.log(line)
+        fun_test.log_enable_timestamps()
+
     except Exception as ex:
         fun_test.critical(str(ex))
     return mpstat_dump_filepath
@@ -338,6 +345,13 @@ def populate_netstat_output_file(diff_stats, filename):
         lines = ['<=======> Netstat output <=======>\n', netstat_table.get_string()]
         with open(file_path, 'w') as f:
             f.writelines(lines)
+
+        fun_test.log_disable_timestamps()
+        fun_test.log_section('Netstat diff output')
+        for line in lines:
+            fun_test.log(line)
+        fun_test.log_enable_timestamps()
+
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -391,6 +405,12 @@ def populate_flow_list_output_file(result, filename):
             lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
             with open(file_path, 'w') as f:
                 f.writelines(lines)
+
+            fun_test.log_disable_timestamps()
+            fun_test.log_section('Flow List output')
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -433,7 +453,7 @@ def dma_resource_table(result):
     return table_obj
 
 
-def populate_pc_resource_output_file(network_controller_obj, filename, pc_id):
+def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, count=4):
     output = False
     try:
         file_path = LOGS_DIR + "/%s" % filename
@@ -448,23 +468,29 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id):
         lines.append('<=======> Peek Stats Resource DMA %d output <=======>\n' % pc_id)
         lines.append(master_table_obj.get_string())
 
-        for index in range(0, 4):
-            fun_test.sleep(message="Peek stats resource pc/dma %d" % pc_id, seconds=1)
+        if count > 1:
+            for index in range(0, count):
+                fun_test.sleep(message="Peek stats resource pc/dma %d" % pc_id, seconds=1)
 
-            result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
-            master_table_obj = get_nested_dict_stats(result=result)
-            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
-            lines.append(master_table_obj.get_string())
-            lines.append('\n\n\n')
+                result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
+                master_table_obj = get_nested_dict_stats(result=result)
+                lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+                lines.append(master_table_obj.get_string())
+                lines.append('\n\n\n')
 
-            result = network_controller_obj.peek_resource_dma_stats(pc_id=pc_id)
-            master_table_obj = dma_resource_table(result=result)
-            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
-            lines.append(master_table_obj.get_string())
-            lines.append('\n\n\n')
+                result = network_controller_obj.peek_resource_dma_stats(pc_id=pc_id)
+                master_table_obj = dma_resource_table(result=result)
+                lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+                lines.append(master_table_obj.get_string())
+                lines.append('\n\n\n')
 
         with open(file_path, 'a') as f:
             f.writelines(lines)
+        fun_test.log_disable_timestamps()
+        fun_test.log_section("PC Resource result for id: %d" % pc_id)
+        for line in lines:
+            fun_test.log(line)
+        fun_test.log_enable_timestamps()
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -518,3 +544,89 @@ def trim_json_contents(filepath):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def run_netperf_concurrently(cmd_list, linux_obj):
+    result = {}
+    try:
+        multi_task_obj = MultiProcessingTasks()
+        index = 1
+        duration = len(cmd_list) * 60
+        for cmd in cmd_list:
+            multi_task_obj.add_task(func=run_netperf,
+                                    func_args=(linux_obj, cmd, duration),
+                                    task_key="conn_%d" % index)
+            index += 1
+
+        run_started = multi_task_obj.run(max_parallel_processes=len(cmd_list), parallel=True)
+        fun_test.test_assert(run_started, "Ensure netperf commands started")
+
+        for index in range(1, len(cmd_list) + 1):
+            task_key = 'conn_%d' % index
+            res = multi_task_obj.get_result(task_key=task_key)
+            result[task_key] = res
+
+        all_throughputs = []
+        print result['conn_1']['throughput']
+        for conn, val in result.iteritems():
+            all_throughputs.append(val['throughput'])
+        result['total_throughput'] = sum(all_throughputs)
+    except Exception as ex:
+        get_stale_socket_connections(linux_obj=linux_obj, port_value=4555)
+        fun_test.critical(str(ex))
+    return result
+
+
+def run_netperf(linux_obj, cmd, duration=60):
+    result = {"throughput": -1}
+    try:
+        pat = r'THROUGHPUT=(\d+)'
+        output = linux_obj.command(cmd, timeout=duration + 30)
+        match = re.search(pat, output, re.DOTALL)
+        if match:
+            throughput = float(match.group(1))
+            result.update({'throughput': round(throughput, 3)})
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_netperf_cmd_list(dip, protocol='tcp', duration=60, num_flows=1, send_size="128K",
+                         port1=1000, port2=4555):
+    cmd_list = []
+    try:
+        if protocol.lower() == 'udp':
+            t = 'UDP_STREAM'
+        else:
+            t = 'TCP_STREAM'
+
+        cpu = 8
+        for conn in range(0, num_flows):
+            cmd = "taskset -c %d netperf -t %s -H %s -l %s -f m -j -N -P 0 -- -k \"THROUGHPUT\" -s %s -P %d,%d " % (
+                cpu, t, dip, duration, send_size, port1, port2
+            )
+            fun_test.log("Netperf cmd formed: %s\n" % cmd)
+            cmd_list.append(cmd)
+            cpu += 1
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return cmd_list
+
+
+def create_performance_table(total_throughput, num_flows, total_pps):
+    table_created = False
+    try:
+        headers = ['# of connections', 'Total Throughput in Mbps', 'Total PPS']
+        rows = []
+        rows.append([num_flows, total_throughput, total_pps])
+        table_name = 'Aggregate throughput and pps for %d of connections' % num_flows
+        table_data = {'headers': headers, 'rows': rows}
+        fun_test.add_table(panel_header="FunTCP server throughput",
+                           table_name=table_name,
+                           table_data=table_data)
+        table_created = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return table_created
+
+
