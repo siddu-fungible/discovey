@@ -103,9 +103,7 @@ class PortCommands(object):
             if result:
                 table_obj = PrettyTable(['Port', 'Status'])
                 table_obj.align = 'l'
-                o = self._sort_key_by_int(result=result)
-                for key_int in self._sort_key_by_int(result=result):
-                    key = 'lport-%d'% key_int
+                for key in sorted(result):
                     table_obj.add_row([key, result[key]])
                 print table_obj
             else:

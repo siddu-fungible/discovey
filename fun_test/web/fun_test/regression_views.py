@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_global import is_production_mode, is_triaging_mode, get_current_time
-from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
+from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL, SCRIPTS_DIR
 from scheduler.scheduler_helper import queue_dynamic_suite, queue_job3, LOG_DIR_PREFIX
 from scheduler.scheduler_helper import move_to_higher_queue, move_to_queue_head, increase_decrease_priority, delete_queued_job
 import scheduler.scheduler_helper
@@ -804,6 +804,11 @@ def unallocated_script(request):
                                 unallocated_scripts.append(path)
         except Exception as ex:
             logging.error(str(ex))
+    bug_files = glob.glob(SCRIPTS_DIR + "/bugs_and_analyses/*.py")
+    bug_files = [x.replace(SCRIPTS_DIR, "") for x in bug_files]
+    bug_files = filter(lambda x: "__init__.py" not in x, bug_files)
+    bug_files = filter(lambda x: RegresssionScripts.objects.filter(script_path=x).count() == 0, bug_files)
+    map(unallocated_scripts.append, bug_files)
     return unallocated_scripts
 
 

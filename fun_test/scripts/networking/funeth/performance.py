@@ -30,14 +30,14 @@ FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
 NUM_FLOWS = (1, 8,)  # TODO: May add more
 NUM_HOSTS = (1, 2,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
-PERF_RESULT_KEYS = ('throughput',
-                    'pps',
-                    'latency_min',
-                    'latency_avg',
-                    'latency_max',
-                    'latency_P50',
-                    'latency_P90',
-                    'latency_P99',
+PERF_RESULT_KEYS = (nm.THROUGHPUT,
+                    nm.PPS,
+                    nm.LATENCY_MIN,
+                    nm.LATENCY_AVG,
+                    nm.LATENCY_MAX,
+                    nm.LATENCY_P50,
+                    nm.LATENCY_P90,
+                    nm.LATENCY_P99,
                     )
 FPG_INTERFACES = (0, 4,)
 
@@ -91,6 +91,7 @@ mpstat_dict = {}
 def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0):
 
     tc_id = fun_test.current_test_case_id
+    network_controller_objs = fun_test.shared_variables['network_controller_objs']
 
     # netstat
     fun_test.log("Capture netstat {} test".format(when))
@@ -99,6 +100,18 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         netstats_dict[when].update(
             {linux_obj.host_ip: helper.get_netstat_output(linux_obj=linux_obj)}
         )
+
+    # peek resource/pc/[1], and peek resource/pc/[1]
+    for nc_obj in network_controller_objs:
+        for pc_id in (1, 2):
+            checkpoint = "Peek stats resource pc {} {} test".format(pc_id, when)
+            resource_pc_temp_filename = '{}_F1_{}_resource_pc_{}_{}.txt'.format(str(version),
+                                                                                network_controller_objs.index(nc_obj),
+                                                                                pc_id, when)
+            fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
+                                                                           filename=resource_pc_temp_filename,
+                                                                           pc_id=pc_id, count=1),
+                                   checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
@@ -142,7 +155,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             fun_test.test_assert(populate, "Populate {} netstat into txt file".format(h))
 
     fpg_stats = {}
-    for nc_obj in fun_test.shared_variables['network_controller_objs']:
+    for nc_obj in network_controller_objs:
         nc_obj.echo_hello()
         for i in fpg_interfaces:
             r = nc_obj.peek_fpg_port_stats(port_num=i)
@@ -155,6 +168,8 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         nc_obj.peek_psw_global_stats()
         #nc_obj.peek_fcp_global_stats()
         nc_obj.peek_vp_packets()
+        #nc_obj.peek_resource_pc_stats(pc_id=1)
+        #nc_obj.peek_resource_pc_stats(pc_id=2)
         #nc_obj.peek_per_vp_stats()
         #nc_obj.peek_resource_bam_stats()
         #nc_obj.peek_eqm_stats()
@@ -258,40 +273,46 @@ class FunethPerformanceBase(FunTestCase):
                                                          funeth_obj.linux_obj_dict.values(),
                                                          version,
                                                          when='after')
-
-        if flow_type.startswith('NU_HU'):
-            result.update(
-                {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
-            )
-        elif flow_type.startswith('NU2HU'):
-            result.update(
-                {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration,
-                 'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
-            )
-        elif flow_type.startswith('HU_NU'):
-            result.update(
-                {'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
-            )
-        elif flow_type.startswith('HU_HU'):
-            # HU -> HU via local F1, no FPG stats
-            result.update(
-                {'pps_h2h': nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
-            )
+        if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
+            if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
+                result.update(
+                    {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+                )
+            elif flow_type.startswith('NU2HU'):
+                if result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
+                    result.update(
+                        {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+                    )
+                if result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
+                    result.update(
+                        {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+                    )
+            elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
+                result.update(
+                    {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+                )
+            elif flow_type.startswith('HU_HU'):
+                # HU -> HU via local F1, no FPG stats
+                result.update(
+                    {'{}_h2h'.format(nm.PPS): nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
+                )
 
         # Check test passed or failed
         fun_test.log('NetperfManager Results:\n{}'.format(pprint.pformat(result)))
-        if any(v == -1 for v in result.values()):
+        if not result:
+            passed = False
+        elif any(v == nm.NA for v in result.values()):
             passed = False
         else:
             passed = True
 
-        # Set -1 for untested direction
+        # Set N/A for untested direction
         for suffix in suffixes:
             for k in PERF_RESULT_KEYS:
                 k_suffix = '{}_{}'.format(k, suffix)
                 if k_suffix not in result:
                     result.update(
-                        {k_suffix: -1}
+                        {k_suffix: nm.NA}
                     )
 
         # Update result dict
