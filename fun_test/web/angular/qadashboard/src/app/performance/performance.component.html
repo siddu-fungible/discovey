@@ -58,7 +58,7 @@
                    (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
                 *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                             [type]="'warning'"></app-smart-label></span>
-                <span *ngIf="flatNode.node.tags!==null">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label
+                <span *ngIf="flatNode.node.tags">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label
                   [value]=tag
                   [type]="'primary'"></app-smart-label></span></span>
               </ng-container>
