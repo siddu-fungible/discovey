@@ -49,17 +49,18 @@
                         </span>
               <ng-container *ngIf="flatNode.node.leaf">
                 <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                 (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
+                   (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
                 *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
-                                                                         [type]="'warning'"></app-smart-label></span>
+                                                                            [type]="'warning'"></app-smart-label></span>
               </ng-container>
               <ng-container *ngIf="!flatNode.node.leaf">
                 <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                 (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
+                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
                 *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
-                                                                         [type]="'warning'"></app-smart-label></span>
-                <span *ngIf="flatNode.node.tag!==null">&nbsp;<app-smart-label [value]=flatNode.node.tag
-                                                                         [type]="'primary'"></app-smart-label></span>
+                                                                            [type]="'warning'"></app-smart-label></span>
+                <span *ngIf="flatNode.node.tags!==null">&nbsp;<span *ngFor="let tag of flatNode.node.tags"><app-smart-label
+                  [value]=tag
+                  [type]="'primary'"></app-smart-label></span></span>
               </ng-container>
               <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>

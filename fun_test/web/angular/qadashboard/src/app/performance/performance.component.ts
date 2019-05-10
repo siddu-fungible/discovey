@@ -44,7 +44,7 @@ class Node {
   bugs: any = {};
   positive: boolean = true;
   workInProgress: boolean = false;
-  tag: string = null;
+  tags: string = null;
 }
 
 class FlatNode {
@@ -134,10 +134,10 @@ export class PerformanceComponent implements OnInit {
 
   upgradeFlatNode: any = {};
   degradeFlatNode: any = {};
-  tags_for_id = {
-    395: "PCIe",
-    540: "PCIe", 380: "PCIe", 472: "NVMe/TCP",
-    493: "PCIe"
+  tagsForId = {
+    395: ["PCIe"],
+    540: ["PCIe"], 380: ["PCIe"], 472: ["NVMe/TCP"],
+    493: ["PCIe"]
   };
 
   jiraList: any = {};
@@ -306,8 +306,8 @@ export class PerformanceComponent implements OnInit {
     node.showAddJira = false;
     node.positive = dagEntry.positive;
     node.workInProgress = dagEntry.work_in_progress;
-    if (metricId in this.tags_for_id) {
-      node.tag = this.tags_for_id[metricId];
+    if (metricId in this.tagsForId) {
+      node.tags = this.tagsForId[metricId];
     }
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
