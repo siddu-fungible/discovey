@@ -103,7 +103,7 @@ export class PerformanceComponent implements OnInit {
 
   fetchDag(): void {
     // Fetch the DAG
-    let payload: { [i: string]: string } = {metric_model_name: "MetricContainer", chart_name: "Total"};
+    let payload: { [i: string]: string } = {metric_model_name: "MetricContainer", chart_name: "F1"};
     this.apiService.post("/metrics/dag", payload).subscribe(response => {
       this.dag = response.data;
       this.walkDag(this.dag);
