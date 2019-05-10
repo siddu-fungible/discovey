@@ -15,4 +15,4 @@ This is the location of
 ### Guidelines
 1. It is required to name the script after the bug say: em_753.py
 2. If the software bug ID is not known ahead of time, please file an 'IN' task against yourself, so that the file-name would be something like: in_741.py
-
+3. After checking in the script, go to http://integration.fungible.local/regression/admin and ensure your script is categorized to Storage/networking etc (not unallocated/unassigned) 

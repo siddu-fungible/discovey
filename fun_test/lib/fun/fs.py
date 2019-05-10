@@ -152,13 +152,11 @@ class Bmc(Linux):
 
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
-        fun_test.test_assert(self.ping(come.host_ip), "ComE reachable before reset")
-
-        # fun_test.sleep("ComE powering down", seconds=15)
-        # fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
+        ipmi_details = self._get_ipmi_details()
+        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details),
+                             "Ensure ComE is reachable before reboot")
 
         fun_test.log("Rebooting ComE")
-        ipmi_details = self._get_ipmi_details()
         reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
         reboot_info_string = "initiated" if non_blocking else "complete"
         fun_test.test_assert(reboot_result, "ComE reboot {}".format(reboot_info_string))
@@ -531,6 +529,7 @@ class F1InFs:
 class Fs(object, ToDictMixin):
     #  sku=SKU_FS1600_{}
     DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
+
     TO_DICT_VARS = ["bmc_mgmt_ip",
                     "bmc_mgmt_ssh_username",
                     "bmc_mgmt_ssh_password",

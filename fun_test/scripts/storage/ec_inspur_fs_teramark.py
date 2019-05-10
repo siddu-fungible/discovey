@@ -13,10 +13,6 @@ Script to track the Inspur Performance Cases of various read write combination o
 '''
 
 
-# TODO: vdbench config content variable: /dev/nvme0n1: change it dynamically according to controller assigned.
-# TODO: Increase Volumes and volume size once related bugs are fixed
-
-
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
@@ -225,8 +221,8 @@ def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
 class ECVolumeLevelScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. i.e Start 1 POSIXs and allocate a Linux instance 
-        2. Make the Linux instance available for the testcase
+        1. Deploy the topology. Bring up F1 with funos 
+        2. Configure Linux Host instance and make it available for test case
         """)
 
     def setup(self):
@@ -250,21 +246,19 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
-        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
-        fun_test.shared_variables["test_network"] = self.test_network
-
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=self.f1_in_use, custom_boot_args=self.bootargs)
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
-        fun_test.shared_variables["topology"] = topology
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        fun_test.shared_variables["fs"] = self.fs
-
         self.db_log_time = datetime.now()
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
 
+        self.come = self.fs.get_come()
+        self.storage_controller = StorageController(target_ip=self.come.host_ip,
+                                                    target_port=self.come.get_dpc_port(self.f1_in_use))
+
+        # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
@@ -277,7 +271,15 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.test_assert(False, "Host found with Test Interface")
 
         fun_test.shared_variables["end_host"] = self.end_host
+        fun_test.shared_variables["topology"] = topology
+        fun_test.shared_variables["fs"] = self.fs
+        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
+        fun_test.shared_variables["test_network"] = self.test_network
+        fun_test.shared_variables["syslog_level"] = self.syslog_level
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
 
+        # Configuring Linux host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
 
@@ -329,20 +331,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.simple_assert(command_result, "Loading nvme_tcp module")
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
                                       message="Loading nvme_tcp module")
-
-        self.come = self.fs.get_come()
-        self.storage_controller = StorageController(target_ip=self.come.host_ip, target_port=self.come.get_dpc_port(0))
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
-
-        # Setting the syslog level
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                      legacy=False, command_duration=self.command_timeout)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
-
-        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                      command_duration=self.command_timeout)
-        fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                      message="Checking syslog level")
 
     def cleanup(self):
         try:
@@ -403,22 +391,25 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
+        self.fs = fun_test.shared_variables["fs"]
         self.end_host = fun_test.shared_variables["end_host"]
-
         self.test_network = fun_test.shared_variables["test_network"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
+        self.syslog_level = fun_test.shared_variables["syslog_level"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
+
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
 
-        # self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
             fun_test.shared_variables["ec"]["setup_created"] = False
+            fun_test.shared_variables["ec"]["nvme_connect"] = False
+            fun_test.shared_variables["ec"]["warmup_io_completed"] = False
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
@@ -452,6 +443,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
 
+            fun_test.shared_variables["ec"]["setup_created"] = True
+
             # disabling the error_injection for the EC volume
             command_result = {}
             command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
@@ -468,6 +461,17 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                           message="Ensuring error_injection got disabled")
 
+            # Setting the syslog level
+            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
+                                                          legacy=False, command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
+
+            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                          command_duration=self.command_timeout)
+            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+                                          message="Checking syslog level")
+
+        if not fun_test.shared_variables["ec"]["nvme_connect"]:
             # Checking nvme-connect status
             if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
                 nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
@@ -500,22 +504,24 @@ class ECVolumeLevelTestcase(FunTestCase):
             else:
                 fun_test.test_assert(False, "{} device available".format(self.volume_name))
 
-            fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
             fun_test.shared_variables["volume_name"] = self.volume_name
+            fun_test.shared_variables["ec"]["nvme_connect"] = True
 
-            # Executing the FIO command to warm up the system
-            if self.warm_up_traffic:
-                fun_test.log("Building the volume pre-populte config file for Vdbench")
-                self.volume_fill_file = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
-                self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
+        # Executing the vdbench command to fill the volume to it's capacity
+        if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
+            fun_test.log("Building the volume pre-populte config file for Vdbench")
+            self.volume_fill_file = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
+            self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
 
-                fun_test.log("Starting Vdbench to pre-populate all the volumes")
-                vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
-                                                       timeout=self.warm_up_timeout)
-                fun_test.log("Vdbench output result: {}".format(vdbench_result))
-                fun_test.test_assert(vdbench_result,
-                                     "Vdbench run is completed for profile {}".format(self.warm_up_config_file))
+            fun_test.log("Starting Vdbench to pre-populate all the volumes")
+            vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
+                                                   timeout=self.warm_up_timeout)
+            fun_test.log("Vdbench output result: {}".format(vdbench_result))
+            fun_test.test_assert(vdbench_result,
+                                 "Vdbench run is completed for profile {}".format(self.warm_up_config_file))
+
+            fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
     def run(self):
 
@@ -532,6 +538,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.log("Starting Random Read/Write of 8k data block")
         self.end_host = fun_test.shared_variables["end_host"]
 
+        # Prepare vdbench run config file
         fun_test.log("Building the volume performance run config file")
         self.perf_run_profile = "{}/{}".format(self.vdbench_path, self.perf_run_config_file)
         self.end_host.create_file(file_name=self.perf_run_profile, contents=self.perf_run_vdb_config)

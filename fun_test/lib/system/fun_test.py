@@ -241,7 +241,8 @@ class FunTest:
             stored_environment_string = suite_execution.environment
             if stored_environment_string is not None:
                 stored_environment = self.parse_string_to_json(stored_environment_string)
-                result = stored_environment[variable_name] if variable_name in stored_environment else None
+                if stored_environment:
+                    result = stored_environment[variable_name] if variable_name in stored_environment else None
         return result
 
     def _prepare_build_parameters(self):
@@ -1232,7 +1233,8 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
-            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
+            tftp_image_path_provided = "tftp_image_path" in fun_test.build_parameters and fun_test.build_parameters["tftp_image_path"]
+            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id and not tftp_image_path_provided:
                 if not fun_test.is_build_done():
                     fun_test.test_assert(fun_test.build(), "Jenkins build")
                     suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
