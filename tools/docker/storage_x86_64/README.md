@@ -1,4 +1,4 @@
-# storage_x86_64
+# storage_x86_64 {For Ubuntu Yocto}
 # Base: integration_base_x86_64
 
 Purpose:
@@ -16,7 +16,7 @@ QEMU FS, Kernel, Kernel modules are documented in the base image
 Build:
 ```
 Typically:
-docker build . -t storage_x86_64 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99
+docker build . -t storage_x86_64:v05_10 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99
 
 Special cases:
 docker build . -t storage_x86_64 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99 --build-arg X86_64_FS_URL=http://10.1.20.99/doc/jenkins/cc-linux-yocto/latest/x86_64/fun-image-x86-64-qemux86-64.ext4
@@ -37,4 +37,4 @@ where sdk-url=http://dochub.fungible.local/doc/jenkins/funos/latest/Linux
 
 Changelog:
 storage_x86_64:v04_16: Support for downloading regex artifacts
-
+storage_x86_64:v05_10: qemu.tgz has been changed to FunQemu.tgz
