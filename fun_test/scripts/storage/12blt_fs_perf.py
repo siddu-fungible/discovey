@@ -355,6 +355,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
+        fun_test.sleep("Starting tests...", 10)
+
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
