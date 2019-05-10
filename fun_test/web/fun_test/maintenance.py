@@ -37,6 +37,7 @@ from web.fun_test.models_helper import add_jenkins_job_id_map
 from django.utils import timezone
 from fun_global import PerfUnit
 
+ml = MetricLib()
 
 class MetricHelper(object):
     def __init__(self, model):
@@ -1512,7 +1513,7 @@ if __name__ == "__main_memcpy_threshold__":
                 base_line_date=base_line_date,
                 work_in_progress=False).save()
 
-if __name__ == "__main__":
+if __name__ == "__main_2hosts__":
     internal_chart_names = ["HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
                             "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
                             "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
@@ -1556,3 +1557,42 @@ if __name__ == "__main__":
                         base_line_date=chart.base_line_date,
                         work_in_progress=False).save()
     print "added 2hosts charts"
+
+def set_internal_name(metrics):
+    chart = MetricChart.objects.get(internal_chart_name=metrics["name"])
+    metrics["name"] += "_S1"
+    if chart.leaf:
+        data_sets = json.loads(chart.data_sets)
+        input = {}
+        input["input_platform"] = FunPlatform.S1
+        data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+        ml.clone_chart(old_chart=chart, internal_chart_name=metrics["name"], data_sets=data_sets)
+    else:
+        ml.clone_chart(old_chart=chart, internal_chart_name=metrics["name"], data_sets=json.loads(chart.data_sets))
+        for child in metrics["children"]:
+            set_internal_name(child)
+    return metrics
+
+if __name__ == "__main__":
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if chart.leaf:
+            data_sets = json.loads(chart.data_sets)
+            input = {}
+            input["input_platform"] = FunPlatform.F1
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            ml.save_data_sets(data_sets=data_sets, chart=chart)
+            print "added platform for {}".format(chart.chart_name)
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "FunOS":
+                        funos_metrics = f1_metric
+                        break
+        result = set_internal_name(funos_metrics)
+        print json.dumps(result)
+
+

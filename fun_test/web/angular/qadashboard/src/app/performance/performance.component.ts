@@ -142,6 +142,10 @@ export class PerformanceComponent implements OnInit {
 
   slashReplacement: string = "_fsl"; //forward slash
 
+  f1Node: FlatNode = null;
+  s1Node: FlatNode = null;
+  allMetricsNode: FlatNode = null;
+
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService,
@@ -177,7 +181,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   getDefaultQueryPath() {
-    return "Total";
+    return "F1";
   }
 
   getQueryPath() {
@@ -222,13 +226,14 @@ export class PerformanceComponent implements OnInit {
 
   fetchDag(): void {
     // Fetch the DAG
-    let payload: { [i: string]: string } = {metric_model_name: "MetricContainer", chart_name: "Total"};
+    let payload: { [i: string]: string } = {metric_model_name: "MetricContainer", chart_name: "F1"};
     this.apiService.post("/metrics/dag", payload).subscribe(response => {
       this.dag = response.data;
       let lineage = [];
       this.walkDag(this.dag, lineage);
       //total container should always appear
-      this.flatNodes[0].hide = false;
+      this.f1Node = this.flatNodes[0];
+      this.f1Node.hide = false;
       this.getQueryPath().subscribe(queryPath => {
         let queryExists = false;
         if (!queryPath) {
@@ -500,11 +505,18 @@ export class PerformanceComponent implements OnInit {
       thisFlatNode = this.getNewFlatNode(newNode, indent);
       if (newNode.chartName === "All metrics") {
         thisFlatNode.hide = false;
+        lineage = [];
+        this.allMetricsNode = thisFlatNode;
         if (!this.queryPath) {
           this.updateUpDownSincePrevious(true);
           this.updateUpDownSincePrevious(false);
         }
 
+      }
+      if (newNode.chartName === "S1") {
+        thisFlatNode.hide = false;
+        this.s1Node = thisFlatNode;
+        lineage = [];
       }
       this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
       this.flatNodes.push(thisFlatNode);
@@ -964,7 +976,13 @@ export class PerformanceComponent implements OnInit {
     try {
       path = path.replace(this.gotoQueryBaseUrl, "");
       let parts = path.split("/");
-      result = this._doPathToGuid(this.flatNodes[0], parts);
+      result = this._doPathToGuid(this.f1Node, parts);
+      if (!result) {
+        result = this._doPathToGuid(this.s1Node, parts);
+      }
+      if (!result) {
+        result = this._doPathToGuid(this.allMetricsNode, parts);
+      }
       // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
     } catch (e) {
