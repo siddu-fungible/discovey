@@ -4,7 +4,6 @@ from lib.host.traffic_generator import TrafficGenerator
 from lib.host.linux import Linux
 from lib.fun.fs import Fs
 from datetime import datetime
-fun_test.update_job_environment_variable("test_bed_type", "fs-6")
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
