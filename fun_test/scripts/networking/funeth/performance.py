@@ -30,14 +30,14 @@ FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
 NUM_FLOWS = (1, 8,)  # TODO: May add more
 NUM_HOSTS = (1, 2,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
-PERF_RESULT_KEYS = ('throughput',
-                    'pps',
-                    'latency_min',
-                    'latency_avg',
-                    'latency_max',
-                    'latency_P50',
-                    'latency_P90',
-                    'latency_P99',
+PERF_RESULT_KEYS = (nm.THROUGHPUT,
+                    nm.PPS,
+                    nm.LATENCY_MIN,
+                    nm.LATENCY_AVG,
+                    nm.LATENCY_MAX,
+                    nm.LATENCY_P50,
+                    nm.LATENCY_P90,
+                    nm.LATENCY_P99,
                     )
 FPG_INTERFACES = (0, 4,)
 
