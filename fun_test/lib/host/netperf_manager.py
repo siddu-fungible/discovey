@@ -253,6 +253,7 @@ class NetperfManager:
                 )
                 for i in range(0, num_processes):
                     rdict[direction].append(mp_task_obj.get_result('{}_{}'.format(direction, i)))
+                fun_test.log('NetperfManager aggregated netperf result of {}\n{}'.format(direction, rdict[direction]))
 
                 if measure_latency:
                     lat_dict = rdict[direction][-1]  # latency result is the last element
