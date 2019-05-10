@@ -13,7 +13,7 @@
     "fio_modes": ["randread"],
     "fio_bs_iodepth": ["(4, 12)"],
     "fio_pass_threshold": 0.05,
-    "fio_job_name": {"read": "12blt"},
+    "fio_job_name": {"randread": "12blt"},
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
       "(4, 12)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
