@@ -1,13 +1,10 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
-from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper, BltVolumePerformanceHelper
 from lib.host.linux import Linux
-from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
-from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 from datetime import datetime
+fun_test.update_job_environment_variable("test_bed_type", "fs-6")
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
@@ -36,43 +33,6 @@ tb_config = {
 }
 
 
-def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
-
-    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
-              "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
-              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
-        if eval("type({}) is tuple".format(i)):
-            exec ("{0} = {0}[0]".format(i))
-
-    db_log_time = fun_test.shared_variables["db_log_time"]
-    num_ssd = fun_test.shared_variables["num_ssd"]
-    num_volume = fun_test.shared_variables["blt_count"]
-
-    blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
-                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
-                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
-                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
-                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
-                  read_99_99_latency_unit="usecs")
-
-    result = []
-    arg_list = post_results.func_code.co_varnames[:12]
-    for arg in arg_list:
-        result.append(str(eval(arg)))
-    result = ",".join(result)
-    fun_test.log("Result: {}".format(result))
-
-
 class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -81,8 +41,12 @@ class BLTVolumePerformanceScript(FunTestScript):
         """)
 
     def setup(self):
-        # topology_obj_helper = TopologyHelper(spec=topology_dict)
-        # topology = topology_obj_helper.deploy()
+        # Reboot host before starting tests.
+        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
+                              ssh_username=tb_config["tg_info"][0]["user"],
+                              ssh_password=tb_config["tg_info"][0]["passwd"])
+        fun_test.shared_variables["end_host_inst"] = self.end_host
+        self.end_host.reboot(non_blocking=True)
 
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
@@ -98,9 +62,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
-        # pass
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # Detach the volume
         try:
             self.blt_details = fun_test.shared_variables["blt_details"]
             self.end_host_inst = fun_test.shared_variables["end_host_inst"]
@@ -205,11 +166,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                       message="Checking syslog level")
 
         fs = fun_test.shared_variables["fs"]
-        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
-                              ssh_username=tb_config["tg_info"][0]["user"],
-                              ssh_password=tb_config["tg_info"][0]["passwd"])
-        fun_test.shared_variables["end_host_inst"] = self.end_host
-
+        self.end_host = fun_test.shared_variables["end_host_inst"]
         self.dpc_host = fs.get_come()
 
         f1 = fun_test.shared_variables["f1"]
@@ -451,7 +408,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                # post_results("BLT_Volume_Perf", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="BLT Volume Perf Table", table_name=self.summary, table_data=table_data)
@@ -467,28 +423,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
-        # self.storage_controller.disconnect()
         pass
-
-
-class BLTFioSeqRead(BLTVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Sequential Read performance on BLT volume",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Seq Read test(without verify) from the 
-         host and check the performance are inline with the expected threshold. 
-        ''')
 
 
 class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=1,
                               summary="Random Read performance on BLT volume",
                               steps='''
         1. Create a BLT on FS attached with SSD.
@@ -502,7 +443,6 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
 if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
-#    bltscript.add_test_case(BLTFioSeqRead())
     bltscript.add_test_case(BLTFioRandRead())
 
     bltscript.run()
