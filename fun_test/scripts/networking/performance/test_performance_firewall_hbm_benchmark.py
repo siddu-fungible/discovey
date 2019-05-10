@@ -73,7 +73,7 @@ class TestFirewallPerformance(FunTestCase):
     half_load_latency = False
     num_flows = 128000000
     update_charts = True
-    update_json = False
+    update_json = True
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -221,7 +221,7 @@ class TestFirewallLatency(TestFirewallPerformance):
     half_load_latency = True
     num_flows = 128000000
     update_charts = True
-    update_json = False
+    update_json = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
@@ -242,7 +242,7 @@ class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
     spray = True
     half_load_latency = False
     num_flows = 1
-    update_charts = False
+    update_charts = True
     update_json = True
 
     def describe(self):
@@ -265,7 +265,7 @@ class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
     spray = True
     half_load_latency = True
     num_flows = 1
-    update_charts = False
+    update_charts = True
     update_json = True
 
     def describe(self):

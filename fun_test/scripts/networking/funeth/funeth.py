@@ -295,8 +295,10 @@ class Funeth:
         """Unload driver."""
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].command('sudo rmmod funeth')
-            output = self.linux_obj_dict[hu].command('lsmod | grep funeth')
+            linux_obj = self.linux_obj_dict[hu]
+            fun_test.log('Unload funeth driver in {}'.format(linux_obj.host_ip))
+            linux_obj.command('sudo rmmod funeth')
+            output = linux_obj.command('lsmod | grep funeth')
             result &= re.search(r'funeth', output) is None
 
         return result

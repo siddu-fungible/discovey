@@ -3,7 +3,15 @@ from lib.system.utils import MultiProcessingTasks
 import pprint
 import re
 
-
+THROUGHPUT = 'throughput'
+LATENCY = 'latency'
+PPS = 'pps'
+LATENCY_MIN = 'latency_min'
+LATENCY_AVG = 'latency_avg'
+LATENCY_P50 = 'latency_P50'
+LATENCY_P90 = 'latency_P90'
+LATENCY_P99 = 'latency_P99'
+LATENCY_MAX = 'latency_max'
 NA = -1
 
 # Server has 2 socket, each CPU (Silver 4110) has 8 cores, NUMA 0: 0-7, NUMA 1: 8-15
@@ -245,26 +253,28 @@ class NetperfManager:
                 )
                 for i in range(0, num_processes):
                     rdict[direction].append(mp_task_obj.get_result('{}_{}'.format(direction, i)))
+                fun_test.log('NetperfManager aggregated netperf result of {}\n{}'.format(direction, rdict[direction]))
 
                 if measure_latency:
                     lat_dict = rdict[direction][-1]  # latency result is the last element
-                    for k, v in lat_dict:
+                    for k, v in lat_dict.items():
                         result[direction].update(
                             {k: round(v, 1) if v != NA else v}
                         )
+                    fun_test.log('NetperfManager latency result\n{}'.format(result))
                 else:
-                    throughput = 0
-                    throughput += sum(r.get('throughput') for r in rdict[direction] if r.get('throughput') != NA)
-                    if throughput == 0:
+                    throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT) != NA)
+                    if not throughput:
                         result[direction].update(
-                            {'throughput': NA}
+                            {THROUGHPUT: NA}
                         )
                     else:
                         result[direction].update(
-                            {'throughput': calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
+                            {THROUGHPUT: calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
                              #'pps': calculate_pps(protocol, frame_size, throughput),
                             }
                         )
+                    fun_test.log('NetperfManager throughput result\n{}'.format(result))
 
         result_cooked = {}
         for direction in result:
@@ -328,16 +338,16 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
 
     if measure_latency:
         result = {
-            'latency_min': NA,
-            'latency_avg': NA,
-            'latency_max': NA,
-            'latency_P50': NA,
-            'latency_P90': NA,
-            'latency_P99': NA,
+            LATENCY_MIN: NA,
+            LATENCY_AVG: NA,
+            LATENCY_MAX: NA,
+            LATENCY_P50: NA,
+            LATENCY_P90: NA,
+            LATENCY_P99: NA,
         }
     else:
         result = {
-            'throughput': NA,
+            THROUGHPUT: NA,
         }
 
     if protocol.lower() == 'udp':
@@ -371,7 +381,7 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
             if not measure_latency:
                 throughput = float(match.group(1))  # TCP/UDP throughput
                 result.update(
-                    {'throughput': round(throughput, 3)}
+                    {THROUGHPUT: round(throughput, 3)}
                 )
             else:
                 latency_min = float(match.group(1))
@@ -382,17 +392,17 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
                 latency_max = float(match.group(6))
 
                 result.update(
-                    {'latency_min': round(latency_min, 1),
-                     'latency_avg': round(latency_avg, 1),
-                     'latency_max': round(latency_max, 1),
-                     'latency_P50': round(latency_P50, 1),
-                     'latency_P90': round(latency_P90, 1),
-                     'latency_P99': round(latency_P99, 1),
+                    {LATENCY_MIN: round(latency_min, 1),
+                     LATENCY_AVG: round(latency_avg, 1),
+                     LATENCY_MAX: round(latency_max, 1),
+                     LATENCY_P50: round(latency_P50, 1),
+                     LATENCY_P90: round(latency_P90, 1),
+                     LATENCY_P99: round(latency_P99, 1),
                      }
                 )
     except:
         pass
 
-    fun_test.log('\n{}'.format(pprint.pformat(result)))
+    fun_test.log('netperf {} result\n{}'.format(LATENCY if measure_latency else THROUGHPUT, pprint.pformat(result)))
     return result
 

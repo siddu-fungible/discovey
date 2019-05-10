@@ -30,14 +30,14 @@ FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
 NUM_FLOWS = (1, 8,)  # TODO: May add more
 NUM_HOSTS = (1, 2,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
-PERF_RESULT_KEYS = ('throughput',
-                    'pps',
-                    'latency_min',
-                    'latency_avg',
-                    'latency_max',
-                    'latency_P50',
-                    'latency_P90',
-                    'latency_P99',
+PERF_RESULT_KEYS = (nm.THROUGHPUT,
+                    nm.PPS,
+                    nm.LATENCY_MIN,
+                    nm.LATENCY_AVG,
+                    nm.LATENCY_MAX,
+                    nm.LATENCY_P50,
+                    nm.LATENCY_P90,
+                    nm.LATENCY_P99,
                     )
 FPG_INTERFACES = (0, 4,)
 
@@ -273,29 +273,31 @@ class FunethPerformanceBase(FunTestCase):
                                                          funeth_obj.linux_obj_dict.values(),
                                                          version,
                                                          when='after')
-
-        if flow_type.startswith('NU_HU'):
-            result.update(
-                {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
-            )
-        elif flow_type.startswith('NU2HU'):
-            result.update(
-                {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration,
-                 'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
-            )
-        elif flow_type.startswith('HU_NU'):
-            result.update(
-                {'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
-            )
-        elif flow_type.startswith('HU_HU'):
-            # HU -> HU via local F1, no FPG stats
-            result.update(
-                {'pps_h2h': nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
-            )
+        if result:  # Only if perf_manager has result, we update pps; otherwise, it's meaningless
+            if flow_type.startswith('NU_HU'):
+                result.update(
+                    {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+                )
+            elif flow_type.startswith('NU2HU'):
+                result.update(
+                    {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration,
+                     'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+                )
+            elif flow_type.startswith('HU_NU'):
+                result.update(
+                    {'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+                )
+            elif flow_type.startswith('HU_HU'):
+                # HU -> HU via local F1, no FPG stats
+                result.update(
+                    {'pps_h2h': nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
+                )
 
         # Check test passed or failed
         fun_test.log('NetperfManager Results:\n{}'.format(pprint.pformat(result)))
-        if any(v == nm.NA for v in result.values()):
+        if not result:
+            passed = False
+        elif any(v == nm.NA for v in result.values()):
             passed = False
         else:
             passed = True
