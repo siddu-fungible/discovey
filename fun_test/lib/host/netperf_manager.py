@@ -257,11 +257,11 @@ class NetperfManager:
 
                 if measure_latency:
                     lat_dict = rdict[direction][-1]  # latency result is the last element
-                    for k, v in lat_dict:
+                    for k, v in lat_dict.items():
                         result[direction].update(
                             {k: round(v, 1) if v != NA else v}
                         )
-                    fun_test.log('NetperfManager {} latency result\n{}'.format(direction, result))
+                    fun_test.log('NetperfManager latency result\n{}'.format(result))
                 else:
                     throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT) != NA)
                     if not throughput:
@@ -274,7 +274,7 @@ class NetperfManager:
                              #'pps': calculate_pps(protocol, frame_size, throughput),
                             }
                         )
-                    fun_test.log('NetperfManager {} throughput result\n{}'.format(direction, result))
+                    fun_test.log('NetperfManager throughput result\n{}'.format(result))
 
         result_cooked = {}
         for direction in result:
