@@ -156,7 +156,7 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
                                                                   group=ec_info["ndata"],
                                                                   jvol_uuid=ec_info["uuids"][num]["jvol"],
                                                                   pvol_id=ec_info["uuids"][num]["ec"],
-                                                                  zip_effort=ec_info['zip_eeffort'],
+                                                                  zip_effort=ec_info['zip_effort'],
                                                                   zip_filter=ec_info["zip_filter"],
                                                                   compress=ec_info['compress'],
                                                                   command_duration=command_timeout)
@@ -345,26 +345,29 @@ class ECVolumeLevelScript(FunTestScript):
                                       message="Checking syslog level")
 
     def cleanup(self):
+        try:
+            self.ec_info = fun_test.shared_variables["ec_info"]
+            self.remote_ip = fun_test.shared_variables["remote_ip"]
+            self.attach_transport = fun_test.shared_variables["attach_transport"]
+            if fun_test.shared_variables["ec"]["setup_created"]:
+                # Detaching all the EC/LS volumes to the external server
+                for num in xrange(self.ec_info["num_volumes"]):
+                    command_result = self.storage_controller.volume_detach_remote(
+                        ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
+                        remote_ip=self.remote_ip, transport=self.attach_transport,
+                        command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
-        self.ec_info = fun_test.shared_variables["ec_info"]
-        self.remote_ip = fun_test.shared_variables["remote_ip"]
-        self.attach_transport = fun_test.shared_variables["attach_transport"]
-        if fun_test.shared_variables["ec"]["setup_created"]:
-            # Detaching all the EC/LS volumes to the external server
-            for num in xrange(self.ec_info["num_volumes"]):
-                command_result = self.storage_controller.volume_detach_remote(
-                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
-                    remote_ip=self.remote_ip, transport=self.attach_transport, command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+                # Unconfiguring all the LSV/EC and it's plex volumes
+                unconfigure_ec_volume(storage_controller=self.storage_controller, ec_info=self.ec_info,
+                                      command_timeout=self.command_timeout)
 
-            # Unconfiguring all the LSV/EC and it's plex volumes
-            unconfigure_ec_volume(storage_controller=self.storage_controller, ec_info=self.ec_info,
-                                  command_timeout=self.command_timeout)
-
-        self.storage_controller.disconnect()
-        fun_test.sleep("Allowing buffer time before clean-up", 30)
-        fun_test.shared_variables["topology"].cleanup()
+            self.storage_controller.disconnect()
+            fun_test.sleep("Allowing buffer time before clean-up", 30)
+            fun_test.shared_variables["topology"].cleanup()
+        except Exception as ex:
+            fun_test.critical(ex.message)
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -790,12 +793,13 @@ class RandReadWrite8kBlocksCompEffortAuto(ECVolumeLevelTestcase):
                            "fio_job_name"]
 
         for test in self.test_parameters:
-            warmup_profile = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
-            self.end_host.create_file(file_name=warmup_profile, contents=test['warmup_command'])
-            fun_test.test_assert(self.end_host.vdbench(path=self.vdbench_path,
-                                                       filename=warmup_profile,
-                                                       timeout=self.perf_run_timeout),
-                                 "Execute warmup write with Compression ratio {}".format(test['compress_percent']))
+            if test['compress_percent'] != 0:
+                warmup_profile = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
+                self.end_host.create_file(file_name=warmup_profile, contents=test['warmup_command'])
+                fun_test.test_assert(self.end_host.vdbench(path=self.vdbench_path,
+                                                           filename=warmup_profile,
+                                                           timeout=self.perf_run_timeout),
+                                     "Execute warmup write with Compression ratio {}".format(test['compress_percent']))
 
             run_profile = "{}/{}".format(self.vdbench_path, test['perf_run_config_profile'])
             self.end_host.create_file(file_name=run_profile, contents=test['perf_run_vdb_config'])
@@ -854,11 +858,11 @@ class RandReadWrite8kBlocksCompEffortAuto(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    #ecscript.add_test_case(RandReadWrite8kBlocks())
-    #ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    #ecscript.add_test_case(IntegratedModelReadWriteIOPS())
-    #ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    #ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    # ecscript.add_test_case(RandReadWrite8kBlocks())
+    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    # ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.add_test_case(RandReadWrite8kBlocksCompEffortAuto())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()
