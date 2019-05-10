@@ -1892,6 +1892,8 @@ class Linux(object, ToDictMixin):
             ping_result = False
             if service_host:
                 ping_result = service_host.ping(dst=self.host_ip, count=20)
+                if ping_result:
+                    max_reboot_timer = FunTimer(max_time=30)
             if ping_result or not service_host:
                 try:
                     self.command("pwd")
@@ -1903,7 +1905,7 @@ class Linux(object, ToDictMixin):
                     pass
             fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
 
-        if not host_is_up and max_reboot_timer.is_expired():
+        if not host_is_up:
             result = False
             fun_test.critical("Host: {} is not reachable after reboot".format(self.host_ip))
             if not result and ipmi_details:
@@ -1914,8 +1916,9 @@ class Linux(object, ToDictMixin):
                 try:
                     self.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     fun_test.log("IPMI power-cycle complete")
-                except:
-                    pass
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                    self.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                 finally:
                     return self.ensure_host_is_up(max_wait_time=max_wait_time)
         return result
