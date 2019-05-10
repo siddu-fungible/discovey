@@ -1,0 +1,57 @@
+{
+  "BLTFioSeqRead": {
+    "num_ssd": 1,
+    "blt_count": 1,
+    "blt_details": {"ns_id":1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 62914560, "block_size": 4096},
+    "nvme_io_q": 8,
+    "controllers": 1,
+    "syslog": 2,
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 4, "fill_device":1, "rw": "write", "direct": 1, "prio": 0, "timeout": 120},
+    "fio_cmd_args": {"ioengine": "libaio", "size": "60M", "direct": 1, "prio":  0, "runtime": 10, "group_reporting": 1, "timeout": 20},
+    "fio_modes": ["read"],
+    "iostat_details": { "interval": 2, "iterations": 10},
+    "fio_num_jobs": [1, 4],
+    "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)", "(4, 32)"],
+    "fio_job_name": {"read": "blt", "randread": "blt"},
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 1)": {"read": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(4, 4)": {"read": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "host_count": 1
+  },
+  "BLTFioRandRead": {
+    "num_ssd": 1,
+    "blt_count": 1,
+    "blt_details": {"ns_id":1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 134217728, "block_size": 4096},
+    "nvme_io_q": 8,
+    "controllers": 1,
+    "syslog": 2,
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 4, "fill_device":1, "rw": "write", "direct": 1, "prio": 0, "timeout": 120},
+    "fio_cmd_args": {"ioengine": "libaio", "size": "60M", "direct": 1, "prio":  0, "runtime": 120, "group_reporting": 1, "timeout": 180},
+    "fio_modes": ["randread"],
+    "iostat_details": { "interval": 2, "iterations": 10},
+    "fio_num_jobs": [1, 4],
+    "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)", "(4, 32)"],
+    "fio_job_name": {"read": "blt", "randread": "blt"},
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(4, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(4, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(4, 16)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(4, 32)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "host_count": 1
+  }
+}
