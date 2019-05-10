@@ -12,11 +12,14 @@ from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 import uuid
 from datetime import datetime
+from lib.templates.storage.fio_performance_helper import FioPerfHelper
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
 '''
+
 # As of now the dictionary variable containing the setup/testbed info used in this script
+
 tb_config = {
     "name": "Basic Storage",
     "dut_info": {
@@ -365,6 +368,18 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
 
+        obj = FioPerfHelper(handle=self.end_host,
+                            dpc_conntroller=self.storage_controller,
+                            fio_testfile_size=self.fio_cmd_args["size"],
+                            fio_rwmode=self.fio_modes[0],
+                            nvme_device_name=self.nvme_block_device,
+                            fio_test_runtime=self.perf_logic_params["fio_run_time"],
+                            ioengine=self.fio_cmd_args["ioengine"],
+                            cpu_usage_limit=self.perf_logic_params["max_cpu"],
+                            iowait_limit=self.perf_logic_params["max_iowait"],
+                            eqm_limit=self.perf_logic_params["eqm_difference"])
+        use_numjobs, use_num_cores = obj.get_num_jobs_num_cores()
+
         if hasattr(self, "create_file_system") and self.create_file_system:
             self.end_host.command("sudo mkfs.xfs -f /dev/nvme0n1")
             self.end_host.command("sudo mount /dev/nvme0n1 /mnt")
@@ -501,11 +516,15 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     test_filename = "/mnt/testfile.dat"
                 else:
                     test_filename = self.nvme_block_device
+                cpus_allowed_list = obj.form_cores_allowed_list()
+                cpus_allowed = obj.cores_allowed_comma_format(cpus_allowed_list, use_num_cores)
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=test_filename,
                                                                  rw=mode,
                                                                  bs=fio_block_size,
                                                                  iodepth=fio_iodepth,
                                                                  name=fio_job_name,
+                                                                 numjobs=use_numjobs,
+                                                                 cpus_allowed=cpus_allowed,
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
@@ -800,6 +819,6 @@ if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
     bltscript.add_test_case(BLTFioRandRead12XFS())
-#    bltscript.add_test_case(BLTFioRandRead12())
+    # bltscript.add_test_case(BLTFioRandRead12())
 
     bltscript.run()

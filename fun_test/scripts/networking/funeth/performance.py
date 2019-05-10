@@ -273,24 +273,28 @@ class FunethPerformanceBase(FunTestCase):
                                                          funeth_obj.linux_obj_dict.values(),
                                                          version,
                                                          when='after')
-        if result:  # Only if perf_manager has result, we update pps; otherwise, it's meaningless
-            if flow_type.startswith('NU_HU'):
+        if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
+            if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
                 result.update(
-                    {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+                    {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
                 )
             elif flow_type.startswith('NU2HU'):
+                if result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
+                    result.update(
+                        {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+                    )
+                if result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
+                    result.update(
+                        {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+                    )
+            elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
                 result.update(
-                    {'pps_n2h': (fpg_rx_pkts2 - fpg_rx_pkts1) / duration,
-                     'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
-                )
-            elif flow_type.startswith('HU_NU'):
-                result.update(
-                    {'pps_h2n': (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+                    {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
                 )
             elif flow_type.startswith('HU_HU'):
                 # HU -> HU via local F1, no FPG stats
                 result.update(
-                    {'pps_h2h': nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
+                    {'{}_h2h'.format(nm.PPS): nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
                 )
 
         # Check test passed or failed
