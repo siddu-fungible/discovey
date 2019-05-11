@@ -21,7 +21,7 @@ class ScriptSetup(FunTestScript):
         """)
 
     def setup(self):
-        global dut_config, network_controller_obj, spirent_config, TIMESTAMP
+        global dut_config, network_controller_obj, spirent_config, TIMESTAMP, publish_results, branch_name
 
         nu_config_obj = NuConfigManager()
         f1_index = nu_config_obj.get_f1_index()
@@ -36,6 +36,16 @@ class ScriptSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
+
+        inputs = fun_test.shared_variables['inputs']
+        publish_results = False
+        branch_name = 'master'
+        if inputs:
+            if 'publish_results' in inputs:
+                publish_results = inputs['publish_results']
+
+        if 'funos_branch' in fun_test.shared_variables:
+            branch_name = fun_test.shared_variables['funos_branch']
 
         mode = 3
         num_flows = 134217728
@@ -139,9 +149,6 @@ class TestFirewallPerformance(FunTestCase):
         fun_test.log("Fetching BAM stats before test")
         network_controller_obj.peek_bam_stats()
 
-        fun_test.log("Fetching flow output")
-        #network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
-
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
         fun_test.test_assert(result, checkpoint)
@@ -171,9 +178,6 @@ class TestFirewallPerformance(FunTestCase):
         fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
 
-        fun_test.log("Fetching flow output")
-        #network_controller_obj.show_nu_benchmark(flow_offset=1000000, num_flows=10, show="1")
-
         checkpoint = "Fetch summary result for latency and throughput for all frames and all iterations"
         result_dict = self.template_obj.get_throughput_summary_results_by_frame_size()
         fun_test.test_assert(result_dict['status'], checkpoint)
@@ -193,17 +197,20 @@ class TestFirewallPerformance(FunTestCase):
 
         if self.spray:
             mode = self.template_obj.get_interface_mode_input_speed()
-            result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
-                                                                      timestamp=TIMESTAMP,
-                                                                      mode=mode,
-                                                                      flow_direction=self.flow_direction,
-                                                                      file_name=OUTPUT_JSON_FILE_NAME,
-                                                                      num_flows=self.num_flows,
-                                                                      half_load_latency=self.half_load_latency,
-                                                                      model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
-                                                                      memory=MEMORY_TYPE_DDR, update_charts=self.update_charts,
-                                                                      update_json=self.update_json)
-            fun_test.simple_assert(result, "Ensure JSON file created")
+            if not branch_name:
+                if publish_results:
+                    result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
+                                                                              timestamp=TIMESTAMP,
+                                                                              mode=mode,
+                                                                              flow_direction=self.flow_direction,
+                                                                              file_name=OUTPUT_JSON_FILE_NAME,
+                                                                              num_flows=self.num_flows,
+                                                                              half_load_latency=self.half_load_latency,
+                                                                              model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
+                                                                              memory=MEMORY_TYPE_DDR,
+                                                                              update_charts=self.update_charts,
+                                                                              update_json=self.update_json)
+                    fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
