@@ -264,10 +264,7 @@ class FunethPerformanceBase(FunTestCase):
                                                          version,
                                                          when='before',
                                                          duration=duration)
-        try:
-            result = perf_manager_obj.run(*arg_dicts)
-        except:
-            result = {}
+        result = perf_manager_obj.run(*arg_dicts)
         fun_test.log('Collect stats after test')
         fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_stats(FPG_INTERFACES[:num_hosts],
                                                          funeth_obj.linux_obj_dict.values(),
