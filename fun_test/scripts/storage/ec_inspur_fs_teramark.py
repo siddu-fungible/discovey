@@ -871,5 +871,5 @@ if __name__ == "__main__":
     ecscript.add_test_case(OLTPModelReadWriteIOPS())
     ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.add_test_case(RandReadWrite8kBlocksCompEffortAuto())
-    ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
+    #ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()
