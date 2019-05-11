@@ -2,6 +2,7 @@ from lib.system.fun_test import fun_test
 from lib.fun.f1 import F1
 from lib.system.utils import ToDictMixin
 from lib.topology.end_points import BareMetalEndPoint, QemuColocatedHypervisorEndPoint, HypervisorEndPoint
+from lib.topology.end_points import DutEndPoint, EndPoint
 
 
 class DutInterface(ToDictMixin):
@@ -10,11 +11,12 @@ class DutInterface(ToDictMixin):
 
     TO_DICT_VARS = ["index", "type", "peer_info"]
 
-    def __init__(self, index, type):
+    def __init__(self, index, type, f1_index=0):
         self.index = index  # interface index
         self.peer_info = None
         self.type = type  # pcie, ethernet
         self.dual_interface_index = None
+        self.f1_index = 0
 
     def get_peer_instance(self):
         return self.peer_info
@@ -25,6 +27,9 @@ class DutInterface(ToDictMixin):
         if num_hosts:
             fun_test.debug("User intended baremetal for Interface: {}".format(self.index))
             self.peer_info = BareMetalEndPoint(host_info=host_info)
+
+    def add_peer_dut_interface(self, dut_index, peer_fpg_interface_info):  # Sometimes interfaces are just connected to another DUT
+        self.peer_info = DutEndPoint(dut_index=dut_index, fpg_interface_info=peer_fpg_interface_info)
 
     def add_qemu_colocated_hypervisor(self, num_vms=0, vm_start_mode=None, vm_host_os=None):
         if num_vms:
@@ -64,7 +69,7 @@ class Dut(ToDictMixin):
         self.type = type
         self.index = index
         self.interfaces = {}  # For PCIe interfaces
-        self.fpg_interfaces = {}
+        self.fpg_interfaces = {0: {}, 1: {}}  # for each F1
         self.spec = spec
         self.mode = mode
         self.instance = None
@@ -79,17 +84,17 @@ class Dut(ToDictMixin):
     def get_ssd_interfaces(self):
         return self.interfaces
 
-    def get_fpg_interfaces(self):
-        return self.fpg_interfaces
+    def get_fpg_interfaces(self, f1_index=0):
+        return self.fpg_interfaces[f1_index]
 
     def add_interface(self, index, type):
         dut_interface_obj = DutInterface(index=index, type=type)
         self.interfaces[index] = dut_interface_obj
         return dut_interface_obj
 
-    def add_fpg_interface(self, index, type):
-        dut_interface_obj = DutInterface(index=index, type=type)
-        self.fpg_interfaces[index] = dut_interface_obj
+    def add_fpg_interface(self, index, type, f1_index):
+        dut_interface_obj = DutInterface(index=index, type=type, f1_index=f1_index)
+        self.fpg_interfaces[f1_index][index] = dut_interface_obj
         return dut_interface_obj
 
     def set_start_mode(self, mode):
@@ -102,23 +107,51 @@ class Dut(ToDictMixin):
         return self.instance
 
     def get_interface(self, interface_index):
-        return self.interfaces[interface_index]
+        return self.interfaces.get(interface_index, None)
 
-    def get_fpg_interface(self, interface_index):
-        return self.fpg_interfaces[interface_index]
+    def get_fpg_interface(self, interface_index, f1_index=0):
+        return self.fpg_interfaces[f1_index].get(interface_index, None)
 
     def get_host_on_interface(self, interface_index, host_index):
-        interface_obj = self.interfaces[interface_index]
-        return self.get_host_on_interface_obj(interface_obj=interface_obj, host_index=host_index)
+        host_obj = None
+        if interface_index in self.interfaces:
+            interface_obj = self.interfaces[interface_index]
+            host_obj = self.get_host_on_interface_obj(interface_obj=interface_obj, host_index=host_index)
+        return host_obj
 
     def get_host_on_interface_obj(self, interface_obj, host_index=None):
+        host = None
         if interface_obj.dual_interface_index is None:
-            host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
+            peer_instance = interface_obj.get_peer_instance()
+            if peer_instance.type != EndPoint.END_POINT_TYPE_DUT:
+                host = peer_instance.get_host_instance(host_index=host_index)
         else:
             host = self.get_host_on_interface(interface_index=interface_obj.dual_interface_index, host_index=host_index)
         return host
 
-    def get_host_on_fpg_interface(self, interface_index, host_index):
-        interface_obj = self.fpg_interfaces[interface_index]
-        host = interface_obj.get_peer_instance().get_host_instance(host_index=host_index)
+    def get_dut_on_interface_obj(self, interface_obj, host_index=None):
+        dut_obj = None
+        peer_instance = interface_obj.get_peer_instance()
+        if peer_instance and peer_instance.type == EndPoint.END_POINT_TYPE_DUT:
+            dut_obj = peer_instance.get_instance()
+        return dut_obj
+
+    @fun_test.safe
+    def get_host_on_fpg_interface(self, interface_index, host_index, f1_index=0):
+        host = None
+        interface_obj = self.fpg_interfaces[f1_index].get(interface_index, None)
+        if interface_obj:
+            peer_instance = interface_obj.get_peer_instance()
+            if peer_instance:
+                host = peer_instance.get_host_instance(host_index=host_index)
         return host
+
+    @fun_test.safe
+    def get_dut_on_fpg_interface(self, interface_index, f1_index):
+        dut_obj = None
+        interface_obj = self.fpg_interfaces[f1_index].get(interface_index, None)
+        if interface_obj:
+            peer_instance = interface_obj.get_peer_instance()
+            if peer_instance:
+                dut_obj = peer_instance.get_host_instance()
+        return dut_obj

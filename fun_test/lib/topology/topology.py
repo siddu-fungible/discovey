@@ -31,7 +31,7 @@ class ExpandedTopology(ToDictMixin):
             result = dut.get_instance()
         return result
 
-    def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None):
+    def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
         dut = self.get_dut(index=dut_index)
         if ssd_interface_index is not None:  # Backward compatibility
             interface_index = ssd_interface_index
@@ -40,26 +40,39 @@ class ExpandedTopology(ToDictMixin):
         if interface_index is not None:
             host = dut.get_host_on_interface(interface_index=interface_index, host_index=host_index)
         elif fpg_interface_index is not None:
-            host = dut.get_host_on_fpg_interface(interface_index=fpg_interface_index, host_index=host_index)
+            host = dut.get_host_on_fpg_interface(interface_index=fpg_interface_index, host_index=host_index, f1_index=f1_index)
         return host
 
     def _get_host_instances_on_interfaces(self, dut, interfaces):
         hosts = {}
         for interface_index, interface_obj in interfaces.iteritems():
             host = dut.get_host_on_interface_obj(interface_obj=interface_obj, host_index=0)
-            if host.host_ip not in hosts:
-                hosts[host.host_ip] = {"interfaces": [interface_obj], "host_obj": host}
-            else:
-                hosts[host.host_ip]["interfaces"].append(interface_obj)
+            if host:
+                if host.host_ip not in hosts:
+                    hosts[host.host_ip] = {"interfaces": [interface_obj], "host_obj": host}
+                else:
+                    hosts[host.host_ip]["interfaces"].append(interface_obj)
         return hosts
+
+    def _get_dut_instances_on_interfaces(self, dut, interfaces):
+        duts = []
+        for interface_index, interface_obj in interfaces.iteritems():
+            dut_on_interface = dut.get_dut_on_interface_obj(interface_obj=interface_obj)
+            if dut_on_interface:
+                duts.append({"dut_obj": dut_on_interface, "interface_obj": interface_obj})
+        return duts
 
     def get_host_instances_on_ssd_interfaces(self, dut_index):
         dut = self.get_dut(index=dut_index)
         return self._get_host_instances_on_interfaces(dut=dut, interfaces=dut.get_ssd_interfaces())
 
-    def get_host_instances_on_fpg_interfaces(self, dut_index):
+    def get_host_instances_on_fpg_interfaces(self, dut_index, f1_index=0):
         dut = self.get_dut(index=dut_index)
-        return self._get_host_instances_on_interfaces(dut=dut, interfaces=dut.get_fpg_interfaces())
+        return self._get_host_instances_on_interfaces(dut=dut, interfaces=dut.get_fpg_interfaces(f1_index=f1_index))
+
+    def get_dut_instances_on_fpg_interfaces(self, dut_index, f1_index=0):
+        dut = self.get_dut(index=dut_index)
+        return self._get_dut_instances_on_interfaces(dut=dut, interfaces=dut.get_fpg_interfaces(f1_index=f1_index))
 
     def get_tg_instance(self, tg_index):
         tg = self.get_tg(index=tg_index)
