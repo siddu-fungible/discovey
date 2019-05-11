@@ -39,7 +39,8 @@ class FunTestCase1(FunTestCase):
         # fs = Fs.get(disable_f1_index=1)
         topology_helper = TopologyHelper()
         # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --retimer --all_100g")
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay retimer=0,1 --all_100g")
+        # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay retimer=0,1 --all_100g")
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g")
 
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
@@ -52,32 +53,47 @@ class FunTestCase1(FunTestCase):
         fun_test.log(json.dumps(lspci_output, indent=4))
 
         host_instance_0 = topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=0)
-        fun_test.test_assert(host_instance_0, "Host instance on ssd interface 1: {}".format(str(host_instance_0)))
-        lspci_output = host_instance_0.lspci(device="1dad:", verbose=True)
-        fun_test.log(json.dumps(lspci_output, indent=4))
+        if host_instance_0:
+            fun_test.test_assert(host_instance_0, "Host instance on ssd interface 1: {}".format(str(host_instance_0)))
+            lspci_output = host_instance_0.lspci(device="1dad:", verbose=True)
+            fun_test.log(json.dumps(lspci_output, indent=4))
 
         host_instance_4 = topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=4)
-        fun_test.test_assert(host_instance_4, "Host instance on ssd interface 4: {}".format(str(host_instance_4)))
-        lspci_output = host_instance_4.lspci(device="1dad:", verbose=True)
-        fun_test.log(json.dumps(lspci_output, indent=4))
+        if host_instance_4:
+            fun_test.test_assert(host_instance_4, "Host instance on ssd interface 4: {}".format(str(host_instance_4)))
+            lspci_output = host_instance_4.lspci(device="1dad:", verbose=True)
+            fun_test.log(json.dumps(lspci_output, indent=4))
 
-        host_intance_fpg_0 = topology.get_host_instance(dut_index=0, host_index=0, fpg_interface_index=0)
-        fun_test.test_assert(host_intance_fpg_0, "Host instance on fpg interface 0: {}".format(str(host_intance_fpg_0)))
+        host_intance_fpg_0 = topology.get_host_instance(dut_index=0, host_index=0, fpg_interface_index=0, f1_index=0)
 
-        dpcsh_client0 = DpcshClient(target_ip=come.host_ip, target_port=come.get_dpc_port(0))
-        dpcsh_client0.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+        # dpcsh_client0 = DpcshClient(target_ip=come.host_ip, target_port=come.get_dpc_port(0))
+        # dpcsh_client0.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
 
-        dpcsh_client1 = DpcshClient(target_ip=come.host_ip, target_port=come.get_dpc_port(1))
-        dpcsh_client1.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+        # dpcsh_client1 = DpcshClient(target_ip=come.host_ip, target_port=come.get_dpc_port(1))
+        # dpcsh_client1.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
 
         # Some more helpers
         ssd_connected_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
         for host_ip, host_info in ssd_connected_hosts.iteritems():
             fun_test.log("SSD: Host-IP: {}: host: {} Interfaces: {}".format(host_ip, str(host_info["host_obj"]), str(host_info["interfaces"])))
 
-        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0)
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=0)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             fun_test.log("FPG: Host-IP: {}: host: {} Interfaces: {}".format(host_ip, str(host_info["host_obj"]), str(host_info["interfaces"])))
+
+        fpg_connected_duts = topology.get_dut_instances_on_fpg_interfaces(dut_index=0, f1_index=0)
+        for fpg_connected_dut in fpg_connected_duts:
+            dut_obj = fpg_connected_dut["dut_obj"]
+            come = dut_obj.get_come()
+            try:
+                dpcsh_client = DpcshClient(target_ip=come.host_ip, target_port=come.get_dpc_port(0))
+                dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+            except:
+                pass
+            interface_obj = fpg_connected_dut["interface_obj"]
+            fun_test.log("F1: {} FPG Interface: {}".format(interface_obj.f1_index, interface_obj.index))
+
+
 
 
 
