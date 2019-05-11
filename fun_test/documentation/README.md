@@ -1,4 +1,5 @@
 ## fun_test
+This page is under construction. 
 fun_test has the following layout
 1. assets
 2. system
@@ -6,7 +7,10 @@ fun_test has the following layout
 4. scheduler
 5. web
 
-### web
+### Setup without the web-server
+TBD
+
+### Setup with the web-server and database
 Documentation: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/README.md
 
 ## Data-store
