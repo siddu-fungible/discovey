@@ -217,9 +217,6 @@ class TestFirewallPerformance(FunTestCase):
     def cleanup(self):
         self.template_obj.cleanup()
 
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            Fs.cleanup()
-
 
 class TestFirewallLatency(TestFirewallPerformance):
     tc_id = 2
