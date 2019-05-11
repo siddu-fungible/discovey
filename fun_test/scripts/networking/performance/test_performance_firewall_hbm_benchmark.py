@@ -25,10 +25,19 @@ class ScriptSetup(FunTestScript):
 
         nu_config_obj = NuConfigManager()
         f1_index = nu_config_obj.get_f1_index()
+        if not f1_index:
+            f1_index = 0
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fs = Fs.get(disable_f1_index=f1_index)
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+
+        private_branch_funos = fun_test.get_build_parameter(parameter='BRANCH_FunOS')
+        if private_branch_funos:
+            fun_test.shared_variables['funos_branch'] = private_branch_funos
+
+        job_inputs = fun_test.get_job_inputs()
+        fun_test.shared_variables['inputs'] = job_inputs
 
         dut_type = nu_config_obj.DUT_TYPE
         fun_test.shared_variables['dut_type'] = dut_type
@@ -71,7 +80,9 @@ class ScriptSetup(FunTestScript):
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
-        pass
+        if 'fs' in fun_test.shared_variables['fs']:
+            fs = fun_test.shared_variables['fs']
+            fs.cleanup()
 
 
 class TestFirewallPerformance(FunTestCase):
