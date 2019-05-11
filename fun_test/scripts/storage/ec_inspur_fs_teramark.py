@@ -808,7 +808,7 @@ class RandReadWrite8kBlocksCompEffortAuto(ECVolumeLevelTestcase):
                                                            timeout=self.perf_run_timeout),
                                      "Execute warmup write with Compression ratio {}".format(test['compress_percent']))
 
-            run_profile = "{}/{}".format(self.vdbench_path, test['perf_run_config_profile'])
+            run_profile = "{}/{}".format(self.vdbench_path, test['perf_run_config_file'])
             self.end_host.create_file(file_name=run_profile, contents=test['perf_run_vdb_config'])
             vdbench_result = self.end_host.vdbench(path=self.vdbench_path,
                                                    filename=run_profile,
@@ -865,11 +865,11 @@ class RandReadWrite8kBlocksCompEffortAuto(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    # ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(IntegratedModelReadWriteIOPS())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    ecscript.add_test_case(RandReadWrite8kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.add_test_case(RandReadWrite8kBlocksCompEffortAuto())
-    # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
+    ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()

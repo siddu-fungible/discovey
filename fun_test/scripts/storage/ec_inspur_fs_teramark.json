@@ -355,7 +355,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 549755813888,
+      "capacity": 68719476736,
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
@@ -389,21 +389,21 @@
         "perf_run_config_file": "inspur_8k_random_read_write_vdbench_0_compression",
         "compress_percent": 0,
         "warmup_command": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=6h,interval=30",
-        "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=512g,interval=10,warmup=10"
+        "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=64g,interval=10,warmup=10"
       },
       {
         "name": "Performance stats with 50% compressed data",
         "compress_percent": 50,
         "perf_run_config_file": "inspur_8k_random_read_write_vdbench_50_compression",
         "warmup_command": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k,compratio=2\nrd=rd1,wd=wd1,iorate=max,elapsed=6h,interval=30",
-        "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=512g,interval=10,warmup=10"
+        "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=64g,interval=10,warmup=10"
       },
       {
         "name": "Performance stats with 80% compressed data",
         "compress_percent": 80,
         "perf_run_config_file": "inspur_8k_random_read_write_vdbench_80_compression",
         "warmup_command": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k,compratio=5\nrd=rd1,wd=wd1,iorate=max,elapsed=6h,interval=30",
-        "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=512g,interval=10,warmup=10"
+        "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=64g,interval=10,warmup=10"
       }
     ]
   }
