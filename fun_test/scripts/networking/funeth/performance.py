@@ -271,20 +271,20 @@ class FunethPerformanceBase(FunTestCase):
                                                          version,
                                                          when='after')
         if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
-            if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
+            if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
                 result.update(
                     {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
                 )
             elif flow_type.startswith('NU2HU'):
-                if result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
+                if result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
                     result.update(
                         {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
                     )
-                if result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
+                if result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
                     result.update(
                         {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
                     )
-            elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
+            elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
                 result.update(
                     {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
                 )
