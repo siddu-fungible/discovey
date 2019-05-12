@@ -1,33 +1,8 @@
 {
-  "BLTFioRandRead12XFS": {
+  "BLTFioRandReadXFS": {
     "num_ssd": 6,
     "blt_count": 6,
-    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 35791396864, "block_size": 4096},
-    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "block_size": 4096, "stripe_unit": 2},
-    "controllers": 1,
-    "transport_type": "TCP",
-    "command_timeout": 30,
-    "iter_interval": 2,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "64k", "iodepth": 4, "size": "32G", "rw": "write", "direct": 1, "prio": 0,"timeout": 800},
-    "fio_cmd_args": {"ioengine": "libaio", "thread": 1, "numjobs": 1, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254, "runtime": 300, "group_reporting": 1, "timeout": 400},
-    "fio_modes": ["randread"],
-    "iostat_details": { "interval": 1, "iterations": 10},
-    "fio_bs_iodepth": ["(4, 8)"],
-    "fio_pass_threshold": 0.05,
-    "fio_job_name": {"read": "stripe12", "randread": "stripe12"},
-    "volume_pass_threshold": 0,
-    "nvme_device": "/dev/nvme0",
-    "create_file_system": true,
-    "expected_fio_result": {
-      "(4, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
-    },
-    "host_count": 2
-  },
-  "BLTFioRandRead12": {
-    "num_ssd": 12,
-    "blt_count": 12,
-    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 2147483648, "block_size": 4096},
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 11811160064, "block_size": 4096},
     "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "block_size": 4096, "stripe_unit": 2},
     "nvme_io_q": 8,
     "controllers": 1,
@@ -35,19 +10,50 @@
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 4, "fill_device": 1, "rw": "write", "direct": 1, "prio": 0,"timeout": 600},
-    "fio_cmd_args": {"ioengine": "libaio", "numjobs": 1, "size": "24G", "direct": 1, "prio":  0, "cpus_allowed": "8-15,24-31", "runtime": 300, "group_reporting": 1, "timeout": 400},
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "64G", "rw": "write", "direct": 1, "prio": 0,
+                             "cpus_allowed": "8,9,10", "timeout": 720},
+    "fio_cmd_args": {"ioengine": "mmap", "numjobs": 24, "size": "64G", "direct": 1, "prio":  0, "runtime": 300, "thread": 1,
+                     "cpumask": 254, "group_reporting": 1, "timeout": 320},
     "fio_modes": ["randread"],
-    "iostat_details": { "interval": 2, "iterations": 10},
-    "fio_bs_iodepth": ["(4, 8)"],
+    "iostat_details": { "interval": 2, "iterations": 80},
+    "fio_bs_iodepth": ["(4, 2)"],
     "fio_pass_threshold": 0.05,
-    "fio_job_name": {"read": "tcpstripe", "randread": "tcpstripe"},
+    "fio_job_name": {"read": "apple_single_tcp", "randread": "apple_single_tcp"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "create_file_system": true,
+    "expected_fio_result": {
+      "(4, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "reboot_host": true,
+    "host_count": 1
+  },
+  "BLTFioRandRead12": {
+    "num_ssd": 6,
+    "blt_count": 6,
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 11811160064, "block_size": 4096},
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "block_size": 4096, "stripe_unit": 2},
+    "nvme_io_q": 8,
+    "controllers": 1,
+    "transport_type": "tcp",
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "64G", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
+    "fio_cmd_args": {"ioengine": "mmap", "numjobs": 24, "size": "64G", "direct": 1, "prio":  0, "runtime": 300, "thread": 1,
+                     "cpumask": 254, "group_reporting": 1, "timeout": 320},
+    "fio_modes": ["randread"],
+    "iostat_details": { "interval": 2, "iterations": 80},
+    "fio_bs_iodepth": ["(4, 2)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "apple_single_tcp", "randread": "apple_single_tcp"},
     "volume_pass_threshold": 0,
     "nvme_device": "/dev/nvme0",
     "create_file_system": false,
     "expected_fio_result": {
-      "(4, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(4, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
+    "reboot_host": true,
     "host_count": 1
   }
 }
