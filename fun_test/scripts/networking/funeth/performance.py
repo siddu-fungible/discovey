@@ -9,6 +9,7 @@ from scripts.networking.funeth import funeth, sanity
 from collections import OrderedDict
 import json
 import pprint
+import re
 
 
 TB = sanity.TB
@@ -168,8 +169,18 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         nc_obj.peek_psw_global_stats()
         #nc_obj.peek_fcp_global_stats()
         nc_obj.peek_vp_packets()
-        #nc_obj.peek_resource_pc_stats(pc_id=1)
-        #nc_obj.peek_resource_pc_stats(pc_id=2)
+        is_vp_stuck = False
+        for pc_id in (1,2 ):
+            output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
+            for core_str, val_dict in output.items():
+                if any(val_dict.values()) != 0:  # VP stuck
+                    core, vp = [int(i) for i in re.match(r'CORE:(\d+) VP:(\d+)', core_str).groups()]
+                    vp_no = pc_id * 24 + core * 4 + vp
+                    nc_obj.debug_vp_state(vp_no=vp_no)
+                    nc_obj.debug_backtrace(vp_no=vp_no)
+                    is_vp_stuck = True
+        if is_vp_stuck:
+            fun_test.test_assert(False, 'VP is stuck')
         #nc_obj.peek_per_vp_stats()
         #nc_obj.peek_resource_bam_stats()
         #nc_obj.peek_eqm_stats()
