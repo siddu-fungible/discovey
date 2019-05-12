@@ -128,6 +128,7 @@ class Triage3(models.Model):
     current_trial_set_id = models.IntegerField(default=-1)
     current_trial_set_count = models.IntegerField(default=-1)
     submitter_email = models.EmailField(default="john.abraham@fungible.com")
+    base_tag = models.TextField(default="qa_triage")
 
 
 class Triage3Trial(models.Model):
@@ -135,6 +136,9 @@ class Triage3Trial(models.Model):
     fun_os_sha = models.TextField()
     trial_set_id = models.IntegerField(default=-1)
     status = models.IntegerField(default=TriagingStates.UNKNOWN)
+    jenkins_build_number = models.IntegerField(default=-1)
+    lsf_job_id = models.IntegerField(default=-1)
+    tag = models.TextField(default="")
 
     def __str__(self):
         return "Trial: Triage: {} Sha: {} Set: {} Status: {}".format(self.triage_id,

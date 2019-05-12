@@ -1,5 +1,6 @@
 import web.fun_test.django_interactive
-from web.fun_test.metrics_models import TriagingResult, TriagingStates
+from web.fun_test.triaging_global import TriagingStates, TriageTrialStates
+from web.fun_test.metrics_models import TriagingResult
 from web.fun_test.metrics_models import Triage3, Triage3Trial
 from fun_global import get_current_time
 import time
@@ -119,7 +120,20 @@ class TrialStateMachine:
         self.fun_os_sha = fun_os_sha
 
     def run(self):
-        trial = Triage3Trial(triage_id=self.triage_id, )
+        triage = Triage3.objects.get(triage_id=triage_id)
+        trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha)
+        status = trial.status
+
+        if status == TriageTrialStates.INIT:
+            pass
+        elif status == TriageTrialStates.BUILDING_ON_JENKINS:
+            pass
+        elif status == TriageTrialStates.JENKINS_BUILD_COMPLETE:
+            pass
+        elif status == TriageTrialStates.IN_LSF:
+            pass
+
+        return status
 
 if __name__ == "__main__":
 
