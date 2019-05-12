@@ -8,7 +8,13 @@ fun_test has the following layout
 5. web
 
 ### Setup without the web-server
-TBD
+~~~~
+cd /project/users/QA/regression/Integration/fun_test
+export PYTHONPATH=`pwd`
+pip install -r requirements.txt --user
+python scripts/examples/sanity.py
+~~~~
+
 
 ### Setup with the web-server and database
 Documentation: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/README.md
