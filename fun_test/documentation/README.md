@@ -7,6 +7,7 @@ fun_test has the following layout
 4. scheduler
 5. web
 
+## Setup
 ### Setup without the web-server
 ~~~~
 cd /project/users/QA/regression/Integration/fun_test
