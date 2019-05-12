@@ -20,7 +20,10 @@ tb_config = {
                        " --dis-stats --dpc-server --dpc-uart --csr-replay --nofreeze",
             "perf_multiplier": 1,
             "f1_ip": "29.1.1.1",
-            "tcp_port": 1099
+            "tcp_port": 1099,
+            "huid": 7,
+            "ctlid": 0,
+            "fnid": 5
         },
     },
     "tg_info": {
@@ -113,6 +116,19 @@ class BLTVolumePerformanceScript(FunTestScript):
         """)
 
     def setup(self):
+        # Reboot hosts first
+        self.end_host_list = []
+        for host_index in range(0, 2):
+            self.end_host_list.append(
+                Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
+                      ssh_username=tb_config['tg_info'][host_index]['user'],
+                      ssh_password=tb_config['tg_info'][host_index]['passwd']
+                      )
+            )
+        fun_test.shared_variables["end_host_list"] = self.end_host_list
+
+        for end_host in self.end_host_list:
+            end_host.reboot(non_blocking=True)
 
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
@@ -270,18 +286,6 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
         fs = fun_test.shared_variables["fs"]
         self.dpc_host = fs.get_come()
-
-        # Create linux objects for all end hosts
-        self.end_host_list = []
-        for host_index in range(0, self.host_count):
-            self.end_host_list.append(
-                Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
-                      ssh_username=tb_config['tg_info'][host_index]['user'],
-                      ssh_password=tb_config['tg_info'][host_index]['passwd']
-                      )
-                )
-        fun_test.shared_variables["end_host_list"] = self.end_host_list
-
         f1 = fun_test.shared_variables["f1"]
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
@@ -344,41 +348,56 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
                                  format(self.stripe_uuid))
-
-            # Create TCP controller for each host attached to FS
-            self.ctrlr_uuid = []
             fun_test.shared_variables["host_count"] = self.host_count
             nvme_transport = self.transport_type
-            for host_index in range(0, self.host_count):
-                cur_uuid = utils.generate_uuid()
-                self.ctrlr_uuid.append(cur_uuid)
-                self.nqn = "nqn" + str(host_index+1)
 
-                # Create NVMe-OF controller
-                command_result = self.storage_controller.create_controller(
-                    ctrlr_uuid=cur_uuid,
-                    transport=unicode.upper(nvme_transport),
-                    remote_ip=tb_config['tg_info'][host_index]['iface_ip'],
-                    nqn=self.nqn,
-                    port=tb_config['dut_info'][0]['tcp_port'], command_duration=5)
+            if hasattr(self, "new_attach") and self.new_attach:
+                # Create TCP controller for each host attached to FS
+                self.ctrlr_uuid = []
+                for host_index in range(0, self.host_count):
+                    cur_uuid = utils.generate_uuid()
+                    self.ctrlr_uuid.append(cur_uuid)
+                    self.nqn = "nqn" + str(host_index+1)
 
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create storage controller for TCP with uuid {} on DUT".
-                                     format(cur_uuid))
+                    # Create NVMe-OF controller
+                    command_result = self.storage_controller.create_controller(
+                        ctrlr_uuid=cur_uuid,
+                        transport=unicode.upper(nvme_transport),
+                        remote_ip=tb_config['tg_info'][host_index]['iface_ip'],
+                        nqn=self.nqn,
+                        port=tb_config['dut_info'][0]['tcp_port'], command_duration=5)
 
-                # Attach volume to NVMe-OF controller
-                self.ns_id = host_index + 1
-                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
-                                                                                     ns_id=self.ns_id,
-                                                                                     vol_uuid=self.stripe_uuid)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Create storage controller for TCP with "
+                                                                   "uuid {} on DUT".format(cur_uuid))
 
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Attach NVMeOF controller {} to stripe vol {} over {}".
-                                     format(cur_uuid, self.stripe_uuid, nvme_transport))
+                    # Attach volume to NVMe-OF controller
+                    self.ns_id = host_index + 1
+                    command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
+                                                                                         ns_id=self.ns_id,
+                                                                                         vol_uuid=self.stripe_uuid)
+
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Attach NVMeOF controller {} "
+                                                                   "to stripe vol {} over {}".
+                                         format(cur_uuid, self.stripe_uuid, nvme_transport))
+                fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+            else:
+                for host_index in range(0, self.host_count):
+                    self.ns_id = host_index + 1
+                    command_result = self.storage_controller.volume_attach_remote(
+                        ns_id=self.ns_id, uuid=self.stripe_uuid,
+                        remote_ip=tb_config['tg_info'][host_index]['iface_ip'],
+                        huid=tb_config['dut_info'][0]['huid'],
+                        ctlid=tb_config['dut_info'][0]['ctlid'],
+                        fnid=tb_config['dut_info'][0]['fnid']
+                        )
+                    fun_test.test_assert(command_result["status"], "Attach stripe vol {} to remote {}".
+                                         format(self.stripe_uuid, host_index))
 
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
-            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+            self.end_host_list = fun_test.shared_variables["end_host_list"]
 
             # Checking that the above created striped volume is visible to the end host
             for host_index in range(0, self.host_count):

@@ -22,7 +22,7 @@
     "expected_fio_result": {
       "(4, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
     },
-    "host_count": 1
+    "host_count": 2
   },
   "BLTFioRandRead12": {
     "num_ssd": 12,
