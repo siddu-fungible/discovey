@@ -378,7 +378,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             comp_pct = get_comp_percent(orig_size=test_corpuses[corpus]['orig_size'], comp_size=comp_size)
             self.compare_gzip(float(test_corpuses[corpus]['gzip_comp_pct']), float(comp_pct), self.margin, corpus)
             init_write_count = curr_write_count
-            table_rows.append([corpus, test_corpuses[corpus]['gzip_comp_pct'], comp_pct])
+            table_rows.append([corpus, "{0:04.2f}".format(comp_pct), test_corpuses[corpus]['gzip_comp_pct']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
                            table_name="Accelerator Effort: {0}, Gizp Effort: {1}".format(self.accelerator_effort,
                                                                                          self.gzip_effort),

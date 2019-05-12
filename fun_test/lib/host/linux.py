@@ -1020,9 +1020,12 @@ class Linux(object, ToDictMixin):
         return output
 
     @fun_test.safe
-    def copy(self, source_file_name, destination_file_name):
+    def copy(self, source_file_name, destination_file_name, recursive=False, sudo=False):
         command = "yes | cp %s %s" % (source_file_name, destination_file_name)
-        return self.command(command)
+        if recursive:
+            command = "yes | cp -r %s %s" % (source_file_name, destination_file_name)
+        response = self.sudo_command(command) if sudo else self.command(command)
+        return response
 
     @fun_test.safe
     def backup_file(self, source_file_name):
