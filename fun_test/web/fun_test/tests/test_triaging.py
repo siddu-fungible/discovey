@@ -33,7 +33,7 @@ logger.addHandler(hdlr=handler)
 #
 
 
-class StateMachine:
+class TriageStateMachine:
     STEP = 4
 
     def __init__(self, triage):
@@ -67,7 +67,11 @@ class StateMachine:
         # create trial sets for boundary shas and in-between shas
         # get potential list of shas to try
         logger.debug("Starting Trial set, from: {}, to: {}".format(from_fun_os_sha, to_fun_os_sha))
-        for commit_index in range(0, len(self.all_commits), self.STEP):
+        increment = len(self.all_commits)/self.STEP
+        if not increment:
+            increment = 1
+
+        for commit_index in range(0, len(self.all_commits), increment):
             this_commit = self.all_commits[commit_index]
             logger.debug("Candidate: {}".format(str(this_commit)))
             self.start_trial(fun_os_sha=this_commit.sha)
@@ -86,6 +90,7 @@ class StateMachine:
         trials = Triage3Trial.objects.filter(triage_id=triage_id, trial_set_id=t.current_trial_set_id)
         for trial in trials:
             logger.debug("Processing trial: {}".format(str(trial)))
+            TrialStateMachine(triage_id=t.triage_id, sha=trial.fun_os_sha)
 
 
     def process(self):
@@ -97,6 +102,8 @@ class StateMachine:
         if not trials_count:
             self.start_trial_set(from_fun_os_sha=t.from_fun_os_sha,
                                  to_fun_os_sha=t.to_fun_os_sha)
+            t.current_trial_set_id = t.current_trial_set_id + 1
+            t.save()
         else:
             self.process_trials()
 
@@ -104,6 +111,15 @@ class StateMachine:
         while True:
             self.process()
             time.sleep(60)
+
+
+class TrialStateMachine:
+    def __init__(self, triage_id, fun_os_sha):
+        self.triage_id = triage_id
+        self.fun_os_sha = fun_os_sha
+
+    def run(self):
+        trial = Triage3Trial(triage_id=self.triage_id, )
 
 if __name__ == "__main__":
 
@@ -126,5 +142,5 @@ if __name__ == "__main__":
         t.save()
     else:
         t = Triage3.objects.get(triage_id=triage_id)
-        s = StateMachine(triage=t)
+        s = TriageStateMachine(triage=t)
         s.run()

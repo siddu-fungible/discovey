@@ -127,6 +127,7 @@ class Triage3(models.Model):
     build_parameters = JSONField()
     current_trial_set_id = models.IntegerField(default=-1)
     current_trial_set_count = models.IntegerField(default=-1)
+    submitter_email = models.EmailField(default="john.abraham@fungible.com")
 
 
 class Triage3Trial(models.Model):
@@ -140,6 +141,9 @@ class Triage3Trial(models.Model):
                                                                      self.fun_os_sha,
                                                                      self.trial_set_id,
                                                                      TriagingStates().code_to_string(self.status))
+
+    def __repr__(self):
+        return self.__str__()
 
 class Triage(models.Model):
     metric_id = models.IntegerField(default=-1)
