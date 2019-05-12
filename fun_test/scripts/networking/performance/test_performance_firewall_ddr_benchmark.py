@@ -146,6 +146,7 @@ class TestFirewallPerformance(FunTestCase):
             fun_test.test_assert(result, checkpoint)
 
     def run(self):
+        display_negative_results = False
         fun_test.log("----------------> Start RFC-2544 test using %s <----------------" % self.tcc_file_name)
 
         fun_test.log("Fetching per VP stats before traffic")
@@ -158,7 +159,7 @@ class TestFirewallPerformance(FunTestCase):
         vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 
         fun_test.log("Fetching BAM stats before test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
@@ -177,14 +178,16 @@ class TestFirewallPerformance(FunTestCase):
         diff_vp_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats_after)
         fun_test.log("VP Diff stats: %s" % diff_vp_stats)
 
-        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_LE]) > 0,
-                             "Ensure packets are going through VP NU direct")
+        if not int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_LE]) > 0:
+            display_negative_results = True
+            fun_test.log("VP packets not going via NU LE")
 
-        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS]) == 0,
-                             "Ensure packets dont have lookup miss")
+        if not int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS]) == 0:
+            display_negative_results = display_negative_results or True
+            fun_test.log("VP packets shows nu le lookup miss for %s packets" % (int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS])))
 
         fun_test.log("Fetching BAM stats after test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
@@ -220,7 +223,8 @@ class TestFirewallPerformance(FunTestCase):
                                                                               model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
                                                                               memory=MEMORY_TYPE_DDR,
                                                                               update_charts=self.update_charts,
-                                                                              update_json=self.update_json)
+                                                                              update_json=self.update_json,
+                                                                              display_negative_results=display_negative_results)
                     fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
@@ -254,7 +258,7 @@ class TestFirewallLatency(TestFirewallPerformance):
 class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
     tc_id = 3
     tcc_file_name = "nu_le_benchmark_ddr_single_flow_full_load.tcc"  # Uni-directional
-    spray = True
+    spray = False
     half_load_latency = False
     num_flows = 1
     update_charts = True
@@ -262,7 +266,7 @@ class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput and "
+                              summary="%s RFC-2544: %s Frames: [64B, 1500B, IMIX] to get throughput and "
                                       "full load latency for single flow using ddr" % (
                                   self.flow_direction, self.spray),
                               steps="""
@@ -277,7 +281,7 @@ class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
 class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
     tc_id = 4
     tcc_file_name = "nu_le_benchmark_ddr_single_flow_half_load.tcc"  # Uni-directional
-    spray = True
+    spray = False
     half_load_latency = True
     num_flows = 1
     update_charts = True
@@ -285,7 +289,7 @@ class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get half load latency "
+                              summary="%s RFC-2544: %s Frames: [64B, 1500B, IMIX] to get half load latency "
                                       "for single flow using ddr" % (
                                   self.flow_direction, self.spray),
                               steps="""

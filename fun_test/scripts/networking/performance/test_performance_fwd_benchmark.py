@@ -195,6 +195,7 @@ class TestFwdPerformance(FunTestCase):
             fun_test.test_assert(result, checkpoint)
 
     def run(self):
+        display_negative_results = False
         fun_test.log("----------------> Start RFC-2544 test using %s <----------------" % self.tcc_file_name)
 
         fun_test.log("Fetching per VP stats before traffic")
@@ -207,7 +208,7 @@ class TestFwdPerformance(FunTestCase):
         vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 
         fun_test.log("Fetching BAM stats before test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
@@ -226,11 +227,11 @@ class TestFwdPerformance(FunTestCase):
         diff_vp_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats_after)
         fun_test.log("VP Diff stats: %s" % diff_vp_stats)
 
-        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_DIRECT]) > 0,
-                             "Ensure packets are going through VP NU direct")
+        if not int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_DIRECT]) > 0:
+            display_negative_results = True
 
         fun_test.log("Fetching BAM stats after test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
@@ -265,7 +266,8 @@ class TestFwdPerformance(FunTestCase):
                                                                               half_load_latency=self.half_load_latency,
                                                                               model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
                                                                               update_charts=self.update_charts,
-                                                                              update_json=self.update_json)
+                                                                              update_json=self.update_json,
+                                                                              display_negative_results=display_negative_results)
                     fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)

@@ -388,7 +388,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
 
     def populate_performance_json_file(self, result_dict, model_name, timestamp, flow_direction, mode=DUT_MODE_25G,
                                        file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None,
-                                       half_load_latency=False, memory=None, update_charts=True, update_json=False):
+                                       half_load_latency=False, memory=None, update_charts=True, update_json=False,
+                                       display_negative_results=False):
         results = []
         output = True
         any_result_failed = False
@@ -418,7 +419,19 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     data_dict['frame_size'] = frame_size
 
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
-                    if max_rate_record:
+                    if display_negative_results:
+                        data_dict['pps'] = -1
+                        data_dict['throughput'] = -1
+                        data_dict['latency_min'] = -1
+                        data_dict['latency_max'] = -1
+                        data_dict['latency_avg'] = -1
+
+                        data_dict['jitter_min'] = -1
+                        data_dict['jitter_max'] = -1
+                        data_dict['jitter_avg'] = -1
+                        failed_result_found = True
+                        any_result_failed = True
+                    elif max_rate_record:
                         data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
                         #throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
                         #                                                frame_size=frame_size)
@@ -453,7 +466,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     fun_test.debug(results)
 
                     if update_charts:
-                        if model_name == JUNIPER_PERFORMANCE_MODEL_NAME and not failed_result_found:
+                        if model_name == JUNIPER_PERFORMANCE_MODEL_NAME:
                             unit_dict = {}
                             unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
                             unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
