@@ -1,12 +1,12 @@
 from fun_settings import *
-from fun_global import *
+from fun_global import RESULTS
 import traceback, os
 from lib.utilities.jira_manager import JiraManager
 
 
 
 def fix(script_path, id):
-    result = {"status": RESULT_FAIL, "err_msg": "Not run"}
+    result = {"status": RESULTS["FAILED"], "err_msg": "Not run"}
     try:
         f = open(script_path, "r")
         content = f.read()
@@ -17,7 +17,7 @@ def fix(script_path, id):
         f.close()
 
 
-        result["status"] = RESULT_PASS
+        result["status"] = RESULTS["PASSED"]
         result["err_msg"] = ""
     except Exception as ex:
         result["err_msg"] = "{}\n{}".format(traceback.format_exc(), str(ex))

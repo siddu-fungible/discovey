@@ -2,6 +2,18 @@ import requests
 import dateutil.parser
 from datetime import timedelta
 
+class Commit():
+    def __init__(self, sha, date):
+        self.sha = sha
+        self.date = date
+
+    def __str__(self):
+        return "Commit: sha {} date: {}".format(self.long_to_short_sha(sha=self.sha), self.date)
+
+    def long_to_short_sha(self, sha):
+        return sha[:7]
+
+
 class GitManager:
     BASE_URL = "https://api.github.com"
     ORG = "fungible-inc"
@@ -30,11 +42,11 @@ class GitManager:
             page_url = url + "&page={}&per_page={}".format(page_index, 100)
             r = requests.get(url=page_url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
             if r.status_code == 200:
-                results = r.json()
+                response = r.json()
                 # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
                 # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
-
-                all_commits.extend(results)
+                response = [Commit(sha=x["sha"], date=x["commit"]["author"]["date"]) for x in response]
+                all_commits.extend(response)
         return all_commits
 
 
@@ -44,6 +56,7 @@ class GitManager:
         r = requests.get(url=url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
         if r.status_code == 200:
             result = r.json()
+            result = Commit(sha=result["sha"], date=result["commit"]["author"]["date"])
         return result
 
     def get_commit_date(self, commit):
@@ -52,9 +65,9 @@ class GitManager:
 
     def get_commits_between(self, from_sha, to_sha):
         from_commit = self.get_commit(sha=from_sha)
-        from_commit_iso_date_string = from_commit["commit"]["author"]["date"]
+        from_commit_iso_date_string = from_commit.date
         to_commit = self.get_commit(sha=to_sha)
-        to_commit_iso_date_string = to_commit["commit"]["author"]["date"]
+        to_commit_iso_date_string = to_commit.date
         commits = self.get_all_commits(since=from_commit_iso_date_string, until=to_commit_iso_date_string)
         return commits
 

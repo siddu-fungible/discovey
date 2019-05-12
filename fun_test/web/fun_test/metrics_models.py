@@ -16,6 +16,7 @@ import datetime
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
 from web.web_global import *
+from web.fun_test.triaging_global import TriagingStates, TriagingResult
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -91,6 +92,28 @@ class MetricChartStatus(models.Model):
         indexes = [
             models.Index(fields=['metric_id'])
         ]
+
+
+class Triage2(models.Model):
+    metric_id = models.IntegerField()
+    triage_id = models.IntegerField()
+    triage_type = models.CharField(max_length=15, default=TriageType.SCORES)
+    from_fun_os_sha = models.TextField()
+    to_fun_os_sha = models.TextField()
+    submission_date_time = models.DateTimeField(default=datetime.now)
+    status = models.TextField(default=TriagingStates.UNKNOWN)
+    result = models.TextField(default=TriagingResult.UNKNOWN)
+    build_parameters = JSONField()
+    current_trial_set_id = models.IntegerField(default=-1)
+    current_trial_set_count = models.IntegerField(default=-1)
+
+
+class Triage2Trial(models.Model):
+    triage_id = models.IntegerField()
+    fun_os_sha = models.TextField()
+    trial_set_id = models.IntegerField(default=-1)
+    status = models.IntegerField(default=TriagingStates.UNKNOWN)
+
 
 class Triage(models.Model):
     metric_id = models.IntegerField(default=-1)

@@ -6,8 +6,6 @@ import dateutil
 from lib.utilities.http import fetch_text_file
 
 BUILD_INFO_FILENAME = "build_info.txt"
-RESULT_PASS = "PASS"  #TODO merge it with RESULTS
-RESULT_FAIL = "FAIL"
 
 NUM_SECONDS_IN_DAY = 24 * 3600
 MICROSECONDS = 10 ** 6
