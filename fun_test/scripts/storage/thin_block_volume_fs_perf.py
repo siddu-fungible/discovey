@@ -124,22 +124,25 @@ class BLTVolumePerformanceScript(FunTestScript):
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
-        self.volume_details = fun_test.shared_variables["volume_details"]
-        command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
-                                                                    uuid=fun_test.shared_variables["thin_uuid"],
-                                                                    huid=tb_config['dut_info'][0]['huid'],
-                                                                    ctlid=tb_config['dut_info'][0]['ctlid'],
-                                                                    command_duration=30)
-        fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+        try:
+            self.volume_details = fun_test.shared_variables["volume_details"]
+            command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
+                                                                        uuid=fun_test.shared_variables["thin_uuid"],
+                                                                        huid=tb_config['dut_info'][0]['huid'],
+                                                                        ctlid=tb_config['dut_info'][0]['ctlid'],
+                                                                        command_duration=30)
+            fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
-        # Deleting the volume
-        command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
-                                                               block_size=self.volume_details["block_size"],
-                                                               type=self.volume_details["type"],
-                                                               name=self.volume_details["name"],
-                                                               uuid=fun_test.shared_variables["thin_uuid"],
-                                                               command_duration=10)
-        fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
+            # Deleting the volume
+            command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
+                                                                   block_size=self.volume_details["block_size"],
+                                                                   type=self.volume_details["type"],
+                                                                   name=self.volume_details["name"],
+                                                                   uuid=fun_test.shared_variables["thin_uuid"],
+                                                                   command_duration=10)
+            fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
+        except:
+            fun_test.log("Volume clean-up failed")
 
         fun_test.log("FS cleanup")
         fun_test.shared_variables["fs"].cleanup()
