@@ -4,7 +4,6 @@ from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
 from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper, BltVolumePerformanceHelper
 from lib.host.linux import Linux
-from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 from datetime import datetime
 
@@ -604,6 +603,8 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             # Uncomment later
             total_tps = 0
             total_kbs_read = 0
+            avg_tps = {}
+            avg_kbs_read = {}
             for count in range(1, self.host_count + 1, 1):
                 for x in self.iostat_output[count]:
                     dev_output = ' '.join(x.split())
@@ -617,11 +618,11 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                                           format(iostat_bs, plain_block_size))
                     total_tps += tps
                     total_kbs_read += kbs_read
-                avg_tps = total_tps / self.iostat_details["iterations"]
-                avg_kbs_read = total_kbs_read / self.iostat_details["iterations"]
-                fun_test.log("The avg TPS is : {}".format(avg_tps))
-                fun_test.log("The avg read rate is {} KB/s".format(avg_kbs_read))
-                fun_test.log("The IO size is {} kB".format(avg_kbs_read/avg_tps))
+                avg_tps[count] = total_tps / self.iostat_details["iterations"]
+                avg_kbs_read[count] = total_kbs_read / self.iostat_details["iterations"]
+                fun_test.log("The avg TPS is : {}".format(avg_tps[count]))
+                fun_test.log("The avg read rate is {} KB/s".format(avg_kbs_read[count]))
+                fun_test.log("The IO size is {} kB".format(avg_kbs_read[count]/avg_tps[count]))
 
             for x in range(1, self.host_count + 1, 1):
                 # Boosting the fio output with the testbed performance multiplier
@@ -675,9 +676,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
-            row_data_dict["fio_job_name"] = fio_job_name
-            # row_data_dict["readiops"] = int(round(avg_tps))
-            # row_data_dict["readbw"] = int(round(avg_kbs_read / 1000))
+                row_data_dict["fio_job_name"] = fio_job_name
+                row_data_dict["readiops"] = int(round(avg_tps[x]))
+                row_data_dict["readbw"] = int(round(avg_kbs_read[x] / 1000))
             # row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
 
             # Building the table row for this variation for both the script table and performance dashboard
