@@ -299,7 +299,7 @@ class FunethPerformanceBase(FunTestCase):
                 result.update(
                     {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
                 )
-            elif flow_type.startswith('HU_HU'):
+            elif flow_type.startswith('HU_HU') and result.get('{}_h2h'.format(nm.THROUGHPUT)) != nm.NA:
                 # HU -> HU via local F1, no FPG stats
                 result.update(
                     {'{}_h2h'.format(nm.PPS): nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
