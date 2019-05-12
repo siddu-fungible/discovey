@@ -101,7 +101,7 @@ class Triage2(models.Model):
     from_fun_os_sha = models.TextField()
     to_fun_os_sha = models.TextField()
     submission_date_time = models.DateTimeField(default=datetime.now)
-    status = models.TextField(default=TriagingStates.UNKNOWN)
+    status = models.IntegerField(default=TriagingStates.UNKNOWN)
     result = models.TextField(default=TriagingResult.UNKNOWN)
     build_parameters = JSONField()
     current_trial_set_id = models.IntegerField(default=-1)
@@ -114,6 +114,32 @@ class Triage2Trial(models.Model):
     trial_set_id = models.IntegerField(default=-1)
     status = models.IntegerField(default=TriagingStates.UNKNOWN)
 
+
+class Triage3(models.Model):
+    metric_id = models.IntegerField()
+    triage_id = models.IntegerField()
+    triage_type = models.CharField(max_length=15, default=TriageType.SCORES)
+    from_fun_os_sha = models.TextField()
+    to_fun_os_sha = models.TextField()
+    submission_date_time = models.DateTimeField(default=datetime.now)
+    status = models.IntegerField(default=TriagingStates.UNKNOWN)
+    result = models.TextField(default=TriagingResult.UNKNOWN)
+    build_parameters = JSONField()
+    current_trial_set_id = models.IntegerField(default=-1)
+    current_trial_set_count = models.IntegerField(default=-1)
+
+
+class Triage3Trial(models.Model):
+    triage_id = models.IntegerField()
+    fun_os_sha = models.TextField()
+    trial_set_id = models.IntegerField(default=-1)
+    status = models.IntegerField(default=TriagingStates.UNKNOWN)
+
+    def __str__(self):
+        return "Trial: Triage: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
+                                                                     self.fun_os_sha,
+                                                                     self.trial_set_id,
+                                                                     TriagingStates().code_to_string(self.status))
 
 class Triage(models.Model):
     metric_id = models.IntegerField(default=-1)
