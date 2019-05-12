@@ -135,8 +135,8 @@
     "nvme_device": "/dev/nvme",
     "mount_point": "/mnt/",
     "file_system": "ext3",
-    "gzip_effort": 6,
-    "accelerator_effort": "Auto",
+    "gzip_effort": 1,
+    "accelerator_effort": "64Gbps",
    "margin": 14,
     "test_corpus": {
       "artificl": {
@@ -221,7 +221,7 @@
     "mount_point": "/mnt/",
     "file_system": "ext3",
     "gzip_effort": 9,
-    "accelerator_effort": "Auto",
+    "accelerator_effort": "2Gbps",
    "margin": 14,
     "test_corpus": {
       "artificl": {
