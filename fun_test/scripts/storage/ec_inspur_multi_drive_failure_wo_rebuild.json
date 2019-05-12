@@ -8,12 +8,19 @@
     "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 1099, "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"},
     "command_timeout": 5,
     "retries": 60,
-    "test_network":
-    {
-      "test_interface_ip": "21.1.1.1/24",
-      "test_interface_mac": "fe:dc:ba:44:66:31",
-      "test_net_route": {"net": "29.1.1.0/24", "gw": "21.1.1.2", "arp": "00:de:ad:be:ef:00"},
-      "f1_loopback_ip": "29.1.1.1"
+    "csr_network": {
+      "1": {
+        "test_interface_ip": "20.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:30",
+        "test_net_route": {"net": "29.1.1.0/24", "gw": "20.1.1.2", "arp": "00:de:ad:be:ef:00"},
+        "f1_loopback_ip": "29.1.1.1"
+      },
+      "4": {
+        "test_interface_ip": "21.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:31",
+        "test_net_route": {"net": "29.1.1.0/24", "gw": "21.1.1.2", "arp": "00:de:ad:be:ef:00"},
+        "f1_loopback_ip": "29.1.1.1"
+      }
     }
   },
   "SingleClientSingleVolumeWithoutBP": {
