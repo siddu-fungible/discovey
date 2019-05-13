@@ -547,7 +547,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_cmd_args['numjobs'] = num_jobs
                 fio_cmd_args['iodepth'] = io_depth
                 fio_cmd_args['rw'] = mode
-                fio_job_name = "fio_ec_{0}_{1}_{2}".format(mode,num_jobs, io_depth)
+                fio_job_name = "ec_{0}_iodepth_{1}".format(mode, (num_jobs * io_depth))
                 fio_cmd_args['name'] = fio_job_name
 
                 fio_result[combo][mode] = True
