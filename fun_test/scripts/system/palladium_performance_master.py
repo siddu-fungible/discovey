@@ -121,7 +121,7 @@ def set_networking_chart_status():
         for chart in charts:
             data_sets = json.loads(chart.data_sets)
             for data_set in data_sets:
-                order_by = "input_date_time"
+                order_by = "-input_date_time"
                 inputs = data_set["inputs"]
                 output = data_set["output"]["name"]
                 d = {}
