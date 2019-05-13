@@ -579,7 +579,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC".
                              format(mode, fio_block_size, fio_iodepth))
-                fio_job_name = self.fio_job_name + "_" + str(fio_iodepth)
+                fio_job_name = self.fio_job_name + "_" + str(fio_iodepth * fio_num_jobs)
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
                                                                  numjobs=fio_num_jobs, iodepth=fio_iodepth,
