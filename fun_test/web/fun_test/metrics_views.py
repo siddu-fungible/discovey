@@ -662,7 +662,9 @@ def data(request):
         else:
             data_sets = chart.data_sets
             data_sets = json.loads(data_sets)
-        date_range = [chart.base_line_date, datetime.now()]
+        from_date = chart.base_line_date
+        to_date = get_rounded_time(datetime.now())
+        date_range = [from_date, to_date]
         for data_set in data_sets:
             inputs = data_set["inputs"]
             d = {}
