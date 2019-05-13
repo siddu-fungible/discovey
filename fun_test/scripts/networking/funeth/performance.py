@@ -111,7 +111,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
                                                                                 pc_id, when)
             fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
                                                                            filename=resource_pc_temp_filename,
-                                                                           pc_id=pc_id, count=1),
+                                                                           pc_id=pc_id, display_output=False),
                                    checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
