@@ -5,8 +5,6 @@ from lib.fun.f1 import F1
 from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
-from lib.host.storage_controller import StorageController
-from lib.host.linux import Linux
 import fun_global
 from lib.fun.fs import Fs
 from datetime import datetime
@@ -132,7 +130,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
-        # self.storage_controller = StorageController(target_ip="10.1.21.48", target_port=40220)
 
         # Setting the syslog level to 2
         command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False,
@@ -267,40 +264,22 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
                               "testcase is not available in the {} file".format(testcase, benchmark_file))
 
-        if len(self.fio_njobs_iodepth) != len(self.expected_fio_result.keys()):
-            benchmark_parsing = False
-            fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
-
         # Checking the availability of expected volume level internal stats at the end of every FIO run
-        if ('expected_volume_stats' not in benchmark_dict[testcase] or
-                not benchmark_dict[testcase]['expected_volume_stats']):
-            benchmark_parsing = False
-            fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
-                              "the {} file".format(testcase, benchmark_file))
-
         if 'fio_pass_threshold' not in benchmark_dict[testcase]:
             self.fio_pass_threshold = .05
             fun_test.log("Setting FIO passing threshold percentage to {} for this {} testcase, because its not set in "
                          "the {} file".format(self.fio_pass_threshold, testcase, benchmark_file))
-
-        if 'volume_pass_threshold' not in benchmark_dict[testcase]:
-            self.volume_pass_threshold = 20
-            fun_test.log("Setting volume passing threshold number to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.volume_pass_threshold, testcase, benchmark_file))
 
         if not hasattr(self, "num_ssd"):
             self.num_ssd = 1
         if not hasattr(self, "num_volume"):
             self.num_volume = 1
 
-        # fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         fun_test.log("Num jobs and IO depth combo going to be used for this {} testcase: {}".
                      format(testcase, self.fio_njobs_iodepth))
         fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
                      format(testcase, self.expected_fio_result))
-        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
-                     format(testcase, self.expected_volume_stats))
-
         # End of benchmarking json file parsing
 
         fun_test.shared_variables["num_ssd"] = self.num_ssd
@@ -311,7 +290,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
         
-        # f1 = fun_test.shared_variables["f1"]
+        f1 = fun_test.shared_variables["f1"]
 
         fun_test.shared_variables["ec_coding"] = self.ec_coding
         self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
@@ -562,18 +541,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             final_stats[combo] = {}
             diff_stats[combo] = {}
 
-            if combo in self.expected_volume_stats:
-                expected_volume_stats = self.expected_volume_stats[combo]
-            else:
-                expected_volume_stats = self.expected_volume_stats
-
-            if combo in self.expected_stats:
-                expected_stats = self.expected_stats[combo]
-            else:
-                expected_stats = self.expected_stats
-
             for mode in self.fio_modes:
-                num_jobs, io_depth = literal_eval(combo)
+                num_jobs, io_depth = eval(combo)
                 fio_cmd_args = self.fio_cmd_args
                 fio_cmd_args['numjobs'] = num_jobs
                 fio_cmd_args['iodepth'] = io_depth
@@ -597,11 +566,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
                 fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
-                                                              "io_depth: {2}, num_jobs: {3}".format(mode,
-                                                                                                    fio_cmd_args['bs'],
-                                                                                                    fio_cmd_args[
-                                                                                                        'iodepth'],
-                                                                                                    num_jobs))
+                                                              "io_depth: {2}, num_jobs: {3}".
+                                     format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
 
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
@@ -666,7 +632,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC with volume level failure domain", test_method, *row_data_list)
+                    post_results("EC Volume", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -675,7 +641,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.log(fio_result)
         fun_test.log(internal_result)
         test_result = True
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_njobs_iodepth:
             for mode in self.fio_modes:
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
