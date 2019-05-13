@@ -67,9 +67,10 @@
     //"fio_bs_iodepth": ["(4, 16)"],
     "fio_njobs_iodepth": [
       "(1, 1)",
-      "(8, 8)",
-      "(8, 16)",
-      "(8, 32)"
+      "(8, 1)",
+      "(8, 2)",
+      "(8, 4)",
+      "(8, 8)"
       //"(8, 64)"
     ],
     // Passing threshold for the FIO results from the expected benchmark values
@@ -153,9 +154,10 @@
     //"fio_bs_iodepth": ["(4, 16)"],
     "fio_njobs_iodepth": [
       "(1, 1)",
-      "(8, 8)",
-      "(8, 16)",
-      "(8, 32)"
+      "(8, 1)",
+      "(8, 2)",
+      "(8, 4)",
+      "(8, 8)"
       //"(8, 64)"
     ],
     "fio_pass_threshold": 0.05,
