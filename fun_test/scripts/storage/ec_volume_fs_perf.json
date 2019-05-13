@@ -71,7 +71,6 @@
       "(8, 2)",
       "(8, 4)",
       "(8, 8)"
-      //"(8, 64)"
     ],
     // Passing threshold for the FIO results from the expected benchmark values
     "fio_pass_threshold": 0.05,
@@ -157,8 +156,7 @@
       "(8, 1)",
       "(8, 2)",
       "(8, 4)",
-      "(8, 8)"
-      //"(8, 64)"
+      "(8, 8)
     ],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 33,
