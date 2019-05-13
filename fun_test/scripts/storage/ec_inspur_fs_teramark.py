@@ -515,7 +515,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         else:
             fun_test.simple_assert(False, "Setup Section Status")
 
-        fun_test.sleep("Interval before starting traffic", self.iter_interval)
+        """fun_test.sleep("Interval before starting traffic", self.iter_interval)
         fun_test.log("Starting Random Read/Write of 8k data block")
         self.end_host = fun_test.shared_variables["end_host"]
 
@@ -529,7 +529,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                timeout=self.perf_run_timeout)
         fun_test.log("Vdbench output result: {}".format(vdbench_result))
         fun_test.test_assert(vdbench_result,
-                             "Vdbench run is completed for profile {}".format(self.perf_run_config_file))
+                             "Vdbench run is completed for profile {}".format(self.perf_run_config_file))"""
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -545,7 +545,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         table_data_rows = []
 
         row_data_dict = {}
-        vdbench_run_name = self.perf_run_config_file
+        """vdbench_run_name = self.perf_run_config_file
 
         # Vdbench gives cumulative output, Calculating Read/Write bandwidth and IOPS
         if hasattr(self, "read_pct"):
@@ -582,7 +582,150 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="8k data block random readn/write IOPS Performance Table",
-                           table_name=self.summary, table_data=table_data)
+                           table_name=self.summary, table_data=table_data)"""
+
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
+        # & read only modes
+        fio_result = {}
+        fio_output = {}
+        internal_result = {}
+        initial_volume_status = {}
+        final_volume_status = {}
+        diff_volume_stats = {}
+        initial_stats = {}
+        final_stats = {}
+        diff_stats = {}
+
+        volumes = []
+        for vtype in sorted(self.ec_coding):
+            if self.volume_types[vtype] not in volumes:
+                volumes.append(self.volume_types[vtype])
+        volumes.append(self.volume_types["ec"])
+        if self.use_lsv and self.check_lsv_stats:
+            volumes.append(self.volume_types["lsv"])
+
+        for combo in self.fio_bs_iodepth:
+            fio_result[combo] = {}
+            fio_output[combo] = {}
+            internal_result[combo] = {}
+            initial_volume_status[combo] = {}
+            final_volume_status[combo] = {}
+            diff_volume_stats[combo] = {}
+            initial_stats[combo] = {}
+            final_stats[combo] = {}
+            diff_stats[combo] = {}
+
+            if combo in self.expected_volume_stats:
+                expected_volume_stats = self.expected_volume_stats[combo]
+            else:
+                expected_volume_stats = self.expected_volume_stats
+
+            if combo in self.expected_stats:
+                expected_stats = self.expected_stats[combo]
+            else:
+                expected_stats = self.expected_stats
+
+            for mode in self.fio_modes:
+
+                tmp = combo.split(',')
+                fio_block_size = tmp[0].strip('() ') + 'k'
+                fio_iodepth = tmp[1].strip('() ')
+                fio_result[combo][mode] = True
+                internal_result[combo][mode] = True
+                row_data_dict = {}
+                row_data_dict["mode"] = mode
+                row_data_dict["block_size"] = fio_block_size
+                row_data_dict["iodepth"] = fio_iodepth
+                row_data_dict["size"] = self.fio_cmd_args["size"]
+
+                # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
+                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
+                             "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
+                fio_job_name = "fio_ec_" + mode + "_" + self.fio_job_name[mode]
+                fio_output[combo][mode] = {}
+                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
+                                                                 bs=fio_block_size, iodepth=fio_iodepth,
+                                                                 name=fio_job_name, **self.fio_cmd_args)
+                fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
+                fun_test.test_assert(fio_output[combo][mode], "FIO {} only test with the block size and IO depth set "
+                                                              "to {} & {}".format(mode, fio_block_size, fio_iodepth))
+
+                for op, stats in fio_output[combo][mode].items():
+                    for field, value in stats.items():
+                        if field == "iops":
+                            fio_output[combo][mode][op][field] = int(round(value))
+                        if field == "bw":
+                            # Converting the KBps to MBps
+                            fio_output[combo][mode][op][field] = int(round(value / 1000))
+                        if field == "latency":
+                            fio_output[combo][mode][op][field] = int(round(value))
+                fun_test.log("FIO Command Output after multiplication:")
+                fun_test.log(fio_output[combo][mode])
+
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
+
+                if not fio_output[combo][mode]:
+                    fio_result[combo][mode] = False
+                    fun_test.critical("No output from FIO test, hence moving to the next variation")
+                    continue
+
+                """"# Comparing the FIO results with the expected value for the current block size and IO depth combo
+                for op, stats in self.expected_fio_result[combo][mode].items():
+                    for field, value in stats.items():
+                        actual = fio_output[combo][mode][op][field]
+                        row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
+                                                     int((value * (1 + self.fio_pass_threshold))))
+                        if "latency" in field:
+                            ifop = "greater"
+                            elseop = "lesser"
+                        else:
+                            ifop = "lesser"
+                            elseop = "greater"
+                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
+                        if compare(actual, value, self.fio_pass_threshold, ifop):
+                            fio_result[combo][mode] = False
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "FAILED", value, actual)
+                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
+                                              format(op, field, actual, row_data_dict[op + field][1:]))
+                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
+                        elif compare(actual, value, self.fio_pass_threshold, elseop):
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "PASSED", value, actual)
+                            fun_test.log("{} {} {} got {} than the expected range {}".
+                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
+                        else:
+                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
+                                                    .format(op, field, mode, combo), "PASSED", value, actual)
+                            fun_test.log("{} {} {} is within the expected range {}".
+                                         format(op, field, actual, row_data_dict[op + field][1:]))"""
+
+                row_data_dict["fio_job_name"] = fio_job_name
+
+                # Building the table raw for this variation
+                row_data_list = []
+                for i in table_data_cols:
+                    if i not in row_data_dict:
+                        row_data_list.append(-1)
+                    else:
+                        row_data_list.append(row_data_dict[i])
+                table_data_rows.append(row_data_list)
+                post_results("EC with volume level failure domain", test_method, *row_data_list)
+
+        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+
+        # Posting the final status of the test result
+        fun_test.log(fio_result)
+        fun_test.log(internal_result)
+        test_result = True
+        for combo in self.fio_bs_iodepth:
+            for mode in self.fio_modes:
+                if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                    test_result = False
+
+        fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
         pass
