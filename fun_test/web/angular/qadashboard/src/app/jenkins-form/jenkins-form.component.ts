@@ -32,7 +32,7 @@ export class JenkinsFormComponent implements OnInit {
       'DISABLE_ASSERTIONS': [true],
       'FUNOS_MAKEFLAGS': ['']
     });
-    this.data.emit(this.submissionForm);
+    this.data.emit(this.jenkinsParameters);
   }
 
 }

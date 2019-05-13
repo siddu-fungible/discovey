@@ -1,10 +1,10 @@
 <div class="component">
 
-  <form [formGroup]="submissionForm" (submit)="onSubmit()">
+  <form [formGroup]="submissionForm">
     <div class="form-group">
       <label class="control-label col-sm-2" for="submitter">Submitter: </label>
       <select class="form-control" id="submitter" formControlName="submitter">
-        <option *ngFor="let user of users">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+        <option *ngFor="let user of users" [value]="user.email">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
       </select>
     </div>
 
@@ -25,7 +25,7 @@
 
   </form>
   <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
-  <button class="btn btn-success" type="submit" [disabled]="!submissionForm.valid">Submit</button>
+  <button (click)="onSubmit()" class="btn btn-success" type="submit" [disabled]="!submissionForm.valid">Submit</button>
 
   <div class="card">
     <div class="card-header">

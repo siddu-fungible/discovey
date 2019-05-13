@@ -1,0 +1,54 @@
+<div class="component">
+  <table *ngIf="triage" class="table table-responsive">
+    <tr>
+      <th>Metric ID</th>
+      <th>Status</th>
+      <th>Result</th>
+      <th>Submitter</th>
+      <th>Type</th>
+      <th>From FunOS commit</th>
+      <th>To FunOS commit</th>
+      <th>Submission date</th>
+      <th>Build parameters</th>
+    </tr>
+    <tr>
+      <td>{{ triage.metric_id }}</td>
+      <td>{{ triagingStateMap[triage.status] }}</td>
+      <td>{{ triage.result }}</td>
+      <td>{{ triage.submitter_email }}</td>
+      <td>{{ triage.triage_type }}</td>
+      <td>{{ getShortSha(triage.from_fun_os_sha) }}</td>
+      <td>{{ getShortSha(triage.to_fun_os_sha) }}</td>
+      <td>{{ prettyTime(triage.submission_date_time) }}</td>
+      <td>{{ triage.build_parameters | json }}</td>
+    </tr>
+  </table>
+
+  <div class="card">
+    <div class="card-header">
+      Trials
+    </div>
+    <div class="card-body">
+      <table class="table table-responsive">
+        <tr>
+          <th></th>
+          <th>Sha</th>
+          <th>Set</th>
+          <th>Status</th>
+          <th>Jenkins</th>
+          <th>LSF</th>
+          <th>Tag</th>
+        </tr>
+        <tr *ngFor="let trial of trials">
+          <td></td>
+          <td>{{ getShortSha(trial.fun_os_sha) }}</td>
+          <td>{{ trial.trial_set_id }}</td>
+          <td>{{ triagingTrialStateMap[trial.status] }}</td>
+          <td><a *ngIf="trial.jenkins_build_number > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ trial.jenkins_build_number }}/"></a></td>
+          <td><a *ngIf="trial.lsf_job_id > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsf_job_id }}" target="_blank"></a></td>
+          <td>{{ trial.tag }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>

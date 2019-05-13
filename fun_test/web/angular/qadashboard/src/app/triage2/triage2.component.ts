@@ -81,6 +81,11 @@ export class Triage2Component implements OnInit {
     //alert(this.submissionForm.value.submitter);
     let payload = {};
     payload["metric_id"] = this.submissionForm.value.metric_id;
+    payload["from_fun_os_sha"] = this.submissionForm.value.from_fun_os_sha;
+    payload["to_fun_os_sha"] = this.submissionForm.value.to_fun_os_sha;
+    payload["submitter_email"] = this.submissionForm.value.submitter;
+    payload["build_parameters"] = this.jenkinsParameters;
+    console.log(payload);
   }
 
   jenkinsParametersChanged(value) {

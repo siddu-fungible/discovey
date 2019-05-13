@@ -1,0 +1,59 @@
+import {Component, Input, OnInit} from '@angular/core';
+import {ActivatedRoute} from "@angular/router";
+import {of} from "rxjs";
+import {switchMap} from "rxjs/operators";
+import {TriageService} from "../triage.service";
+import {CommonService} from "../../services/common/common.service";
+import {LoggerService} from "../../services/logger/logger.service";
+
+@Component({
+  selector: 'app-triage-detail',
+  templateUrl: './triage-detail.component.html',
+  styleUrls: ['./triage-detail.component.css']
+})
+export class TriageDetailComponent implements OnInit {
+  @Input() triageId: number;
+  triagingStateMap: any = null;
+  triagingTrialStateMap: any = null;
+  triage: any = null;
+  trials: any = [];
+
+  constructor(private route: ActivatedRoute,
+              private triageService: TriageService,
+              private commonService: CommonService,
+              private loggerService: LoggerService) { }
+
+  ngOnInit() {
+    this.route.params.pipe(switchMap((params) => {
+      this.triageId = params['id'];
+      return this.triageService.triagingStateToString();
+    })).pipe(switchMap((triagingStateMap) => {
+      this.triagingStateMap = triagingStateMap;
+      return this.triageService.triagingTrialStateToString();
+    })).pipe(switchMap((triagingTrialStateMap) => {
+      this.triagingTrialStateMap = triagingTrialStateMap;
+      return this.triageService.triages(this.triageId);
+    })).pipe(switchMap( (triage) => {
+      this.triage = triage;
+      return this.triageService.trials(this.triageId, null);
+    })).pipe(switchMap((trials) => {
+      this.trials = trials;
+      return of(true);
+    })).subscribe(() => {
+
+    }, error => {
+      this.loggerService.error(error);
+    });
+
+  }
+
+  getShortSha(sha) {
+    return sha.substring(0, 7);
+  }
+
+  prettyTime(t) {
+    return this.commonService.getPrettyLocalizeTime(t);
+  }
+
+
+}
