@@ -433,6 +433,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         failed_result_found = True
                         any_result_failed = True
                     elif max_rate_record:
+                        fun_test.log("Max result seen for frame %s" % frame_size)
                         data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
                         #throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
                         #                                                frame_size=frame_size)
@@ -446,6 +447,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         data_dict['jitter_max'] = round(float(max_rate_record['MaximumJitter(us)']), 2)
                         data_dict['jitter_avg'] = round(float(max_rate_record['AverageJitter(us)']), 2)
                     else:
+                        fun_test.log("No entry as PASSED seen for frame size %s" % frame_size)
                         data_dict['pps'] = -1
                         data_dict['throughput'] = -1
                         data_dict['latency_min'] = -1
