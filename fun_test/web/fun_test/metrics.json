@@ -3051,7 +3051,7 @@
                     "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_reader_pcie",
                     "weight": 1,
-                    "label": "Single-Writer/Single-Reader PCIe",
+                    "label": "Single-Reader PCIe",
                     "children": [
                       {
                         "info": "Random Read",
@@ -3095,7 +3095,7 @@
                     "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_reader_tcp",
                     "weight": 1,
-                    "label": "Single-Writer/Single-Reader TCP 4KB",
+                    "label": "Single-Reader TCP",
                     "children": [
                       {
                         "info": "Random Read",
@@ -3132,6 +3132,15 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "info": "single_writer_multiple_reader_tcp",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
+                    "weight": 1,
+                    "label": "Multiple-Reader TCP",
+                    "children": []
                   }
                 ]
               },
