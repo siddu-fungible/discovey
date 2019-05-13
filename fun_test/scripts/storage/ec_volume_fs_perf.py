@@ -5,9 +5,11 @@ from lib.fun.f1 import F1
 from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
+import fun_global
 from lib.fun.fs import Fs
 from datetime import datetime
 import re
+from ast import literal_eval
 
 '''
 Script to track the performance of various read write combination of Erasure Coded volume using FIO
@@ -65,7 +67,6 @@ tb_config = {
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
-
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -117,7 +118,8 @@ class ECVolumeLevelScript(FunTestScript):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
 
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=tb_config["dut_info"][0]["disable_f1_index"])
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"],
+                    disable_f1_index=tb_config["dut_info"][0]["disable_f1_index"])
         fun_test.shared_variables["fs"] = fs
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
@@ -191,7 +193,8 @@ class ECVolumeLevelScript(FunTestScript):
 
                 # Deleting the EC volume
                 command_result = self.storage_controller.delete_volume(
-                    type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
+                    type=self.volume_types["ec"], capacity=self.volume_capacity["ec"],
+                    block_size=self.volume_block["ec"],
                     name="ec1", uuid=self.uuids[self.volume_types["ec"]][0], ndata=self.ec_coding["ndata"],
                     nparity=self.ec_coding["nparity"], pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"],
                     command_duration=self.command_timeout)
@@ -205,10 +208,11 @@ class ECVolumeLevelScript(FunTestScript):
                             i += self.ec_coding["ndata"]
                         command_result = self.storage_controller.delete_volume(
                             type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                            block_size=self.volume_block[vtype], name=vtype+str(i),
+                            block_size=self.volume_block[vtype], name=vtype + str(i),
                             uuid=self.uuids[self.volume_types[vtype]][i], command_duration=self.command_timeout)
                         fun_test.log(command_result)
-                        fun_test.test_assert(command_result["status"], "Deleting {} {} BLT volume on DUT".format(i, vtype))
+                        fun_test.test_assert(command_result["status"],
+                                             "Deleting {} {} BLT volume on DUT".format(i, vtype))
 
             self.storage_controller.disconnect()
 
@@ -249,7 +253,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         # fio_bs_iodepth variable is a list of tuples in which the first element of the tuple refers the
         # block size & second one refers the iodepth going to used for that block size
         # Checking the block size and IO depth combo list availability
-        if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
+        if 'fio_njobs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_njobs_iodepth']:
             benchmark_parsing = False
             fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
                               "the {} file".format(testcase, benchmark_file))
@@ -260,26 +264,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
                               "testcase is not available in the {} file".format(testcase, benchmark_file))
 
-        if len(self.fio_bs_iodepth) != len(self.expected_fio_result.keys()):
-            benchmark_parsing = False
-            fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
-
         # Checking the availability of expected volume level internal stats at the end of every FIO run
-        if ('expected_volume_stats' not in benchmark_dict[testcase] or
-                not benchmark_dict[testcase]['expected_volume_stats']):
-            benchmark_parsing = False
-            fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
-                              "the {} file".format(testcase, benchmark_file))
-
         if 'fio_pass_threshold' not in benchmark_dict[testcase]:
             self.fio_pass_threshold = .05
             fun_test.log("Setting FIO passing threshold percentage to {} for this {} testcase, because its not set in "
                          "the {} file".format(self.fio_pass_threshold, testcase, benchmark_file))
-
-        if 'volume_pass_threshold' not in benchmark_dict[testcase]:
-            self.volume_pass_threshold = 20
-            fun_test.log("Setting volume passing threshold number to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.volume_pass_threshold, testcase, benchmark_file))
 
         if not hasattr(self, "num_ssd"):
             self.num_ssd = 1
@@ -287,13 +276,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_volume = 1
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
-                     format(testcase, self.fio_bs_iodepth))
+        fun_test.log("Num jobs and IO depth combo going to be used for this {} testcase: {}".
+                     format(testcase, self.fio_njobs_iodepth))
         fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
                      format(testcase, self.expected_fio_result))
-        fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
-                     format(testcase, self.expected_volume_stats))
-
         # End of benchmarking json file parsing
 
         fun_test.shared_variables["num_ssd"] = self.num_ssd
@@ -303,7 +289,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
-
+        
         f1 = fun_test.shared_variables["f1"]
 
         fun_test.shared_variables["ec_coding"] = self.ec_coding
@@ -318,7 +304,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
                          "rounding that to the nearest 8MB value")
             eight_mb = 1024 * 1024 * 8
-            for vtype in  sorted(self.ec_coding):
+            for vtype in sorted(self.ec_coding):
                 tmp = self.volume_capacity[vtype] * (1 + self.lsv_pct)
                 self.volume_capacity[vtype] = int(tmp + (eight_mb - (tmp % eight_mb)))
 
@@ -353,7 +339,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
 
             # Configuring ndata and nparity number of BLT volumes
-            for vtype in  sorted(self.ec_coding):
+            for vtype in sorted(self.ec_coding):
                 self.uuids[vtype] = []
                 if self.volume_types[vtype] not in self.uuids:
                     self.uuids[self.volume_types[vtype]] = []
@@ -361,10 +347,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                     this_uuid = utils.generate_uuid()
                     self.uuids[vtype].append(this_uuid)
                     self.uuids[self.volume_types[vtype]].append(this_uuid)
-                    command_result = self.storage_controller.create_volume(
-                        type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                        block_size=self.volume_block[vtype], name=vtype+str(i), uuid=this_uuid,
-                        command_duration=self.command_timeout)
+                    command_result = self.storage_controller.create_volume(type=self.volume_types[vtype],
+                                                                           capacity=self.volume_capacity[vtype],
+                                                                           block_size=self.volume_block[vtype],
+                                                                           name=vtype + str(i), uuid=this_uuid,
+                                                                           command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create {} {} BLT volume on DUT".format(i, vtype))
 
@@ -372,10 +359,15 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.uuids[self.volume_types["ec"]] = []
             this_uuid = utils.generate_uuid()
             self.uuids[self.volume_types["ec"]].append(this_uuid)
-            command_result = self.storage_controller.create_volume(
-                type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
-                name="ec1", uuid=this_uuid, ndata=self.ec_coding["ndata"], nparity=self.ec_coding["nparity"],
-                pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"], command_duration=self.command_timeout)
+            command_result = self.storage_controller.create_volume(type=self.volume_types["ec"],
+                                                                   capacity=self.volume_capacity["ec"],
+                                                                   block_size=self.volume_block["ec"],
+                                                                   name="ec1",
+                                                                   uuid=this_uuid,
+                                                                   ndata=self.ec_coding["ndata"],
+                                                                   nparity=self.ec_coding["nparity"],
+                                                                   pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"],
+                                                                   command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create EC volume on DUT")
             attach_uuid = this_uuid
@@ -385,37 +377,42 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.shared_variables[self.ec_ratio]["use_lsv"] = self.use_lsv
                 # Configuring the Journal volume which is a mandatory one for the LSV
                 self.uuids[self.volume_types["jvol"]] = utils.generate_uuid()
-                command_result = self.storage_controller.create_volume(
-                    type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
-                    block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
+                command_result = self.storage_controller.create_volume(type=self.volume_types["jvol"],
+                                                                       capacity=self.volume_capacity["jvol"],
+                                                                       block_size=self.volume_block["jvol"],
+                                                                       name="jvol1",
+                                                                       uuid=self.uuids[self.volume_types["jvol"]],
+                                                                       command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Create Journal volume on DUT")
 
                 # Configuring the LSV
                 self.uuids[self.volume_types["lsv"]] = utils.generate_uuid()
-                command_result = self.storage_controller.create_volume(
-                    type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                    block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
-                    group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
-                    pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
-                fun_test.log(command_result)
+                command_result = self.storage_controller.create_volume(type=self.volume_types["lsv"],
+                                                                       capacity=self.volume_capacity["lsv"],
+                                                                       block_size=self.volume_block["lsv"],
+                                                                       name="lsv1",
+                                                                       uuid=self.uuids[self.volume_types["lsv"]],
+                                                                       group=self.ec_coding["ndata"],
+                                                                       jvol_uuid=self.uuids[self.volume_types["jvol"]],
+                                                                       pvol_id=self.uuids[self.volume_types["ec"]],
+                                                                       command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Create LS volume on DUT")
                 attach_uuid = self.uuids[self.volume_types["lsv"]]
 
             # Attaching/Exporting the EC/LS volume to the external server
             command_result = {}
-            command_result = self.storage_controller.volume_attach_pcie(
-                ns_id=self.ns_id, uuid=attach_uuid, huid=tb_config['dut_info'][0]['huid'],
-                ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
-            fun_test.log(command_result)
+            command_result = self.storage_controller.volume_attach_pcie(ns_id=self.ns_id,
+                                                                        uuid=attach_uuid,
+                                                                        huid=tb_config['dut_info'][0]['huid'],
+                                                                        ctlid=tb_config['dut_info'][0]['ctlid'],
+                                                                        command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT")
 
             # disabling the error_injection for the EC volume
             command_result = {}
-            command_result = self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0], legacy=False,
+            command_result = self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0],
+                                                          legacy=False,
                                                           command_duration=self.command_timeout)
-            fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
 
             # Ensuring that the error_injection got disabled properly
@@ -423,9 +420,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             command_result = {}
             command_result = self.storage_controller.peek(props_tree="params/ecvol", legacy=False,
                                                           command_duration=self.command_timeout)
-            fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
+            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
+                                          expected=0,
                                           message="Ensuring error_injection got disabled")
 
             # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
@@ -511,14 +508,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                         index = index - self.ec_coding["ndata"]
                 command_result = self.storage_controller.fail_volume(uuid=self.uuids[vtype][index],
                                                                      command_duration=self.command_timeout)
-                fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Inject failure to the BLT volume having the UUID "
                                                                "{}".format(self.uuids[vtype][index]))
                 fun_test.sleep("Sleeping for a second to enable the fault_injection", 1)
                 props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, self.uuids[vtype][index], "stats")
                 command_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
                                                               command_duration=self.command_timeout)
-                fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
                                               message="Ensuring fault_injection got enabled")
 
@@ -535,7 +530,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_njobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
             internal_result[combo] = {}
@@ -546,40 +541,33 @@ class ECVolumeLevelTestcase(FunTestCase):
             final_stats[combo] = {}
             diff_stats[combo] = {}
 
-            if combo in self.expected_volume_stats:
-                expected_volume_stats = self.expected_volume_stats[combo]
-            else:
-                expected_volume_stats = self.expected_volume_stats
-
-            if combo in self.expected_stats:
-                expected_stats = self.expected_stats[combo]
-            else:
-                expected_stats = self.expected_stats
-
             for mode in self.fio_modes:
+                num_jobs, io_depth = eval(combo)
+                fio_cmd_args = self.fio_cmd_args
+                fio_cmd_args['numjobs'] = num_jobs
+                fio_cmd_args['iodepth'] = io_depth
+                fio_cmd_args['rw'] = mode
+                fio_job_name = "fio_ec_{0}_{1}_{2}".format(mode,num_jobs, io_depth)
+                fio_cmd_args['name'] = fio_job_name
 
-                tmp = combo.split(',')
-                fio_block_size = tmp[0].strip('() ') + 'k'
-                fio_iodepth = tmp[1].strip('() ')
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = fio_block_size
-                row_data_dict["iodepth"] = fio_iodepth
-                row_data_dict["size"] = self.fio_cmd_args["size"]
+                row_data_dict["block_size"] = fio_cmd_args['bs']
+                row_data_dict["iodepth"] = io_depth
+                row_data_dict["size"] = fio_cmd_args["size"]
+                row_data_dict["fio_job_name"] = fio_job_name
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
-                             "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
-                fio_job_name = "fio_ec_" + mode + "_" + self.fio_job_name[mode]
+                             "coding {}".format(mode, fio_cmd_args['bs'], io_depth, self.ec_ratio))
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
-                                                                 bs=fio_block_size, iodepth=fio_iodepth,
-                                                                 name=fio_job_name, **self.fio_cmd_args)
+                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
-                fun_test.test_assert(fio_output[combo][mode], "FIO {} only test with the block size and IO depth set "
-                                                              "to {} & {}".format(mode, fio_block_size, fio_iodepth))
+                fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
+                                                              "io_depth: {2}, num_jobs: {3}".
+                                     format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
 
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
@@ -604,7 +592,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     continue
 
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
-                for op, stats in self.expected_fio_result[combo][mode].items():
+                row_data_dict["fio_job_name"] = fio_job_name
+                for op, stats in self.expected_fio_result[mode].items():
                     for field, value in stats.items():
                         actual = fio_output[combo][mode][op][field]
                         row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
@@ -634,8 +623,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
-                row_data_dict["fio_job_name"] = fio_job_name
-
                 # Building the table raw for this variation
                 row_data_list = []
                 for i in table_data_cols:
@@ -644,7 +631,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results("EC with volume level failure domain", test_method, *row_data_list)
+                if fun_global.is_production_mode():
+                    post_results("EC Volume", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -653,7 +641,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.log(fio_result)
         fun_test.log(internal_result)
         test_result = True
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_njobs_iodepth:
             for mode in self.fio_modes:
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
@@ -672,15 +660,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                         index = index - self.ec_coding["ndata"]
                 command_result = self.storage_controller.fail_volume(uuid=self.uuids[vtype][index],
                                                                      command_duration=self.command_timeout)
-                fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Disable failure from the {} volume having the UUID "
                                                                "{}".format(vtype, self.uuids[vtype][index]))
                 fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
                 props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, self.uuids[vtype][index], "stats")
                 command_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
                                                               command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
+                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]),
+                                              expected=0,
                                               message="Ensuring fault_injection got disabled")
 
 
@@ -731,7 +718,6 @@ class EC42FioRandReadOnly(ECVolumeLevelTestcase):
 
 
 if __name__ == "__main__":
-
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(EC42FioSeqReadOnly())
     ecscript.add_test_case(EC42FioRandReadOnly())

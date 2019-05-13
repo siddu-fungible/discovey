@@ -98,11 +98,18 @@ class TopologyHelper:
                         dut_interface_obj.set_dual_interface(interface_index=interface_info["dual"])
                 self.expanded_topology.duts[dut_index] = dut_obj
 
-                for interface_index, interface_info in fpg_interfaces.items():
-                    interface_index = int(interface_index)
-                    dut_interface_obj = dut_obj.add_fpg_interface(index=interface_index, type=interface_info['type'])
-                    if "hosts" in interface_info:
-                        dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"], host_info=interface_info["host_info"])
+                for f1_index, interfaces_info in fpg_interfaces.items():
+                    for interface_index, interface_info in interfaces_info.items():
+                        interface_index = int(interface_index)
+                        dut_interface_obj = dut_obj.add_fpg_interface(index=interface_index, type=interface_info['type'], f1_index=int(f1_index))
+                        if "hosts" in interface_info:
+                            dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"], host_info=interface_info["host_info"])
+                        if "dut_info" in interface_info:
+                            this_dut_info = interface_info["dut_info"]
+                            dut_index = this_dut_info["dut_index"]
+                            fun_test.simple_assert("fpg_interface_info" in this_dut_info, "fpg_interface_info is expected")
+                            peer_fpg_interface_info = this_dut_info["fpg_interface_info"]
+                            dut_interface_obj.add_peer_dut_interface(dut_index=dut_index, peer_fpg_interface_info=peer_fpg_interface_info)
 
         if "tg_info" in spec:
             tgs = spec["tg_info"]
@@ -218,29 +225,35 @@ class TopologyHelper:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                      orchestrator_obj=orchestrator)
 
-                for interface_index, interface_info in dut_obj.fpg_interfaces.items():
-                    fun_test.debug("Setting up DUT FPG interface {}".format(interface_index))
-                    peer_info = interface_info.peer_info
-                    # fun_test.simple_assert(peer_info, "Peer info")
-                    if peer_info:
+            for dut_index, dut_obj in duts.items():
+                for f1_index, interface_info in dut_obj.fpg_interfaces.iteritems():
+                    for interface_index, interface_obj in interface_info.items():
+                        fun_test.debug("Setting up DUT F1: {} FPG interface {}".format(f1_index, interface_index))
+                        peer_info = interface_obj.peer_info
+                        # fun_test.simple_assert(peer_info, "Peer info")
+                        if peer_info:
 
-                        if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
-                            instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
-                                                                orchestrator_obj=orchestrator)
-                            fun_test.simple_assert(instance, "Bare-metal instance")
+                            if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
+                                instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
+                                                                    orchestrator_obj=orchestrator)
+                                fun_test.simple_assert(instance, "Bare-metal instance")
 
-                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
-                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=orchestrator)
-                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
-                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=orchestrator)
+                            elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
+                                self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                         orchestrator_obj=orchestrator)
+                            elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
+                                self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                         orchestrator_obj=orchestrator)
+                            elif peer_info.type == peer_info.END_POINT_TYPE_DUT:
+                                peer_dut_end_point = peer_info
+                                peer_dut_instance = self.expanded_topology.get_dut_instance(peer_dut_end_point.dut_index)
+                                peer_info.set_instance(peer_dut_instance)
 
             tgs = topology.tgs
 
             for tg_index, tg in tgs.items():
                 fun_test.debug("Setting up Tg {}".format(str(tg)))
-                if (tg.type == EndPoint.END_POINT_TYPE_FIO or tg.type == EndPoint.END_POINT_TYPE_LINUX_HOST):
+                if tg.type in [EndPoint.END_POINT_TYPE_FIO, EndPoint.END_POINT_TYPE_LINUX_HOST]:
                     self.allocate_traffic_generator(index=tg_index, end_point=tg)
         else:
             pass  # Networking style,

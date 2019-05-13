@@ -1,0 +1,59 @@
+{
+  "BLTFioRandReadXFS": {
+    "num_ssd": 6,
+    "blt_count": 6,
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 11811160064, "block_size": 4096},
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "block_size": 4096, "stripe_unit": 2},
+    "nvme_io_q": 8,
+    "controllers": 1,
+    "transport_type": "tcp",
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "64G", "rw": "write", "direct": 1, "prio": 0,
+                             "cpus_allowed": "8,9,10", "timeout": 720},
+    "fio_cmd_args": {"ioengine": "mmap", "numjobs": 24, "size": "64G", "direct": 1, "prio":  0, "runtime": 300, "thread": 1,
+                     "cpumask": 254, "group_reporting": 1, "timeout": 320},
+    "fio_modes": ["randread"],
+    "iostat_details": { "interval": 2, "iterations": 80},
+    "fio_bs_iodepth": ["(4, 2)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "apple_single_tcp", "randread": "apple_single_tcp"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "create_file_system": true,
+    "expected_fio_result": {
+      "(4, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "reboot_host": true,
+    "host_count": 1
+  },
+  "BLTFioRandRead12": {
+    "num_ssd": 6,
+    "blt_count": 6,
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 11811160064, "block_size": 4096},
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "block_size": 4096, "stripe_unit": 2},
+    "nvme_io_q": 8,
+    "controllers": 1,
+    "transport_type": "tcp",
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "64G", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
+    "fio_cmd_args": {"ioengine": "mmap", "numjobs": 24, "size": "64G", "direct": 1, "prio":  0, "runtime": 300, "thread": 1,
+                     "cpumask": 254, "group_reporting": 1, "timeout": 320},
+    "fio_modes": ["randread"],
+    "iostat_details": { "interval": 2, "iterations": 80},
+    "fio_bs_iodepth": ["(4, 2)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "apple_single_tcp", "randread": "apple_single_tcp"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "create_file_system": false,
+    "expected_fio_result": {
+      "(4, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "reboot_host": true,
+    "host_count": 1
+  }
+}
