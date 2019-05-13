@@ -596,10 +596,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
-                fun_test.test_assert(fio_output[combo][mode], "FIO {} only test with the block size and IO depth set "
-                                                              "to {} & {}".format(mode, fio_cmd_args['bs'],
-                                                                                  fio_cmd_args['iodepth'],
-                                                                                  num_jobs))
+                fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
+                                                              "io_depth: {2}, num_jobs: {3}".format(mode,
+                                                                                                    fio_cmd_args['bs'],
+                                                                                                    fio_cmd_args[
+                                                                                                        'iodepth'],
+                                                                                                    num_jobs))
 
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]

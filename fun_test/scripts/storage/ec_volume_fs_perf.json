@@ -50,8 +50,8 @@
       "direct": 1,
       "prio": 0,
       "cpus_allowed": "0-7",
-      "runtime": 60,
-      "timeout": 120,
+      "runtime": 120,
+      "timeout": 150,
       "bs": "4k",
       "numjobs": 1,
       "iodepth": 1,
@@ -66,11 +66,11 @@
     // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
     //"fio_bs_iodepth": ["(4, 16)"],
     "fio_njobs_iodepth": [
-      "(4, 16)",
+      "(8, 1)",
       "(8, 8)",
       "(8, 16)",
-      "(8, 32)",
-      "(8, 64)"
+      "(8, 32)"
+      //"(8, 64)"
     ],
     // Passing threshold for the FIO results from the expected benchmark values
     "fio_pass_threshold": 0.05,
@@ -203,8 +203,8 @@
       "direct": 1,
       "prio": 0,
       "cpus_allowed": "0-7",
-      "runtime": 60,
-      "timeout": 120,
+      "runtime": 120,
+      "timeout": 150,
       "bs": "4k",
       "numjobs": 1,
       "iodepth": 1,
@@ -219,15 +219,14 @@
       "(1, 1)",
       "(8, 8)",
       "(8, 16)",
-      "(8, 32)",
-      "(8, 64)"
+      "(8, 32)"
+      //"(8, 64)"
     ],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 33,
     "nvme_device": "/dev/nvme",
     "expected_fio_result": {
-      "(4, 16)": {
-        "randread": {
+        "read": {
           "read": {
             "bw": 429,
             "iops": 105,
@@ -238,8 +237,7 @@
             "latency9999": 416
           }
         }
-      }
-    },
+      },
     "expected_volume_stats": {
       "write": {
         "VOL_TYPE_BLK_LOCAL_THIN": {
