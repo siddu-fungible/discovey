@@ -1596,7 +1596,7 @@ if __name__ == "__main_S1__":
         print json.dumps(result)
 
 if __name__ == "__main__":
-    internal_chart_names = ["HU_HU_NFCP_8TCP_2H_offloads_disabled_output_throughput", "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_pps", "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_throughput", "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_pps"]
+    internal_chart_names = ["HU_HU_NFCP_8TCP_2H_offloads_disabled_output_throughput", "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_pps", "HU_HU_NFCP_1TCP_2H_offloads_disabled_output_throughput", "HU_HU_NFCP_1TCP_2H_offloads_disabled_output_pps"]
     copy_from = ["NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput", "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps"]
     flow_type = "HU_HU_NFCP"
     frame_size = 1500
@@ -1605,12 +1605,21 @@ if __name__ == "__main__":
         if "throughput" in internal_chart_name:
             output_name = "output_throughput"
             chart_name = "Throughput"
+            copy_from = "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput"
         else:
             output_name = "output_pps"
+            chart_name = "Packets per sec"
+            copy_from = "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps"
+        chart = MetricChart.objects.get(internal_chart_name=copy_from)
 
+        data_sets = json.loads(chart.data_sets)
+        input = {}
+        input["input_flow_type"] = "HU_HU_NFCP"
+        data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+        metric_id = LastMetricId.get_next_id()
         MetricChart(chart_name=chart.chart_name,
                     metric_id=metric_id,
-                    internal_chart_name=internal_name,
+                    internal_chart_name=internal_chart_name,
                     data_sets=json.dumps(data_sets),
                     leaf=True,
                     description=chart.description,

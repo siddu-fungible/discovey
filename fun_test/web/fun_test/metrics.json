@@ -2471,18 +2471,18 @@
                     "label": "1 TCP Flow(s), 2 Host(s)",
                     "children": [
                       {
-                        "info": "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_throughput",
+                        "info": "HU_HU_NFCP_1TCP_2H_offloads_disabled_output_throughput",
                         "metric_model_name": "HuThroughputPerformance",
                         "leaf": true,
-                        "name": "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_throughput",
+                        "name": "HU_HU_NFCP_1TCP_2H_offloads_disabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
-                        "info": "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_pps",
+                        "info": "HU_HU_NFCP_1TCP_2H_offloads_disabled_output_pps",
                         "metric_model_name": "HuThroughputPerformance",
                         "leaf": true,
-                        "name": "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_pps",
+                        "name": "HU_HU_NFCP_1TCP_2H_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       }
