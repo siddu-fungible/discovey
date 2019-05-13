@@ -2,12 +2,30 @@
   "EC42FioSeqReadOnly": {
     "num_ssd": 1,
     "num_volume": 1,
-    // Erasure coding ratio
-    "ec_coding": {"ndata": 4, "nparity": 2},
-    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-    "volume_capacity": {"ndata": 6442450944, "nparity": 6442450944, "ec": 6442450944, "jvol": 4194304},
-    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    "ec_coding": {
+      "ndata": 4,
+      "nparity": 2
+    },
+    "volume_types": {
+      "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+      "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "lsv": "VOL_TYPE_BLK_LSV",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+    },
+    "volume_capacity": {
+      "ndata": 6442450944,
+      "nparity": 6442450944,
+      "ec": 6442450944,
+      "jvol": 4194304
+    },
+    "volume_block": {
+      "ndata": 4096,
+      "nparity": 4096,
+      "ec": 4096,
+      "lsv": 4096,
+      "jvol": 512
+    },
     // timeout used for the storage controller
     "command_timeout": 30,
     "iter_interval": 5,
@@ -17,52 +35,89 @@
     "check_lsv_stats": 0,
     "ns_id": 1,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "20G", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
+    "warm_up_fio_cmd_args": {
+      "bs": "4k",
+      "iodepth": 1,
+      "size": "20G",
+      "rw": "write",
+      "direct": 1,
+      "prio": 0,
+      "timeout": 720
+    },
     // FIO commandline arguments
-    "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "cpumask": 2, "runtime": 60, "timeout": 120},
-    "fio_modes": ["read"],
+    "fio_cmd_args": {
+      "size": "20G",
+      "direct": 1,
+      "prio": 0,
+      "cpus_allowed": "0-7",
+      "runtime": 120,
+      "timeout": 150,
+      "bs": "4k",
+      "numjobs": 1,
+      "iodepth": 1,
+      "rw": "read",
+      "name": "fio_ec_default"
+    },
+    "fio_modes": [
+      "read"
+    ],
     // The below is the list of tuples in which the first element of the tuple represents the FIO block size in kB and
     // the second element represents the IO depth
     // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
-    "fio_bs_iodepth": ["(4, 16)"],
+    //"fio_bs_iodepth": ["(4, 16)"],
+    "fio_njobs_iodepth": [
+      "(1, 1)",
+      "(8, 1)",
+      "(8, 2)",
+      "(8, 4)",
+      "(8, 8)"
+    ],
     // Passing threshold for the FIO results from the expected benchmark values
     "fio_pass_threshold": 0.05,
-    "fio_job_name": {"read": "4gbps"},
     // Passing threshold of the internal volume stats from the expected benchmark values
     "volume_pass_threshold": 33,
     "nvme_device": "/dev/nvme",
     "expected_fio_result": {
-      "(4, 16)": {"read": {"read": {"bw": 429, "iops": 105, "clatency": 149, "latency90": 180, "latency95": 206, "latency99": 269, "latency9999": 416}}}
-    },
-    "expected_volume_stats": {
-      "write": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 32, "num_writes": 288},
-                "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 64, "num_writes": 288}},
-      "read": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 171, "num_writes": 0},
-               "VOL_TYPE_BLK_EC":{"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
-    },
-    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
-    // The first element is the expected value and the second element is the maximum threshold in absolute value
-    "expected_stats": {
-      "write": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      },
-      "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
+        "read": {
+          "read": {
+            "bw": 429,
+            "iops": 105,
+            "clatency": 149,
+            "latency90": 180,
+            "latency95": 206,
+            "latency99": 269,
+            "latency9999": 416
+          }
+        }
       }
-    }
   },
   "EC42FioRandReadOnly": {
     "num_ssd": 1,
     "num_volume": 1,
-    "ec_coding": {"ndata": 4, "nparity": 2},
-    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-    "volume_capacity": {"ndata": 6442450944, "nparity": 6442450944, "ec": 6442450944, "jvol": 4194304},
-    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    "ec_coding": {
+      "ndata": 4,
+      "nparity": 2
+    },
+    "volume_types": {
+      "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+      "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "lsv": "VOL_TYPE_BLK_LSV",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+    },
+    "volume_capacity": {
+      "ndata": 6442450944,
+      "nparity": 6442450944,
+      "ec": 6442450944,
+      "jvol": 4194304
+    },
+    "volume_block": {
+      "ndata": 4096,
+      "nparity": 4096,
+      "ec": 4096,
+      "lsv": 4096,
+      "jvol": 512
+    },
     "command_timeout": 30,
     "iter_interval": 5,
     "use_lsv": 1,
@@ -70,35 +125,54 @@
     "check_lsv_stats": 0,
     "ns_id": 1,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "20G", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
-    "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "cpumask": 2, "runtime": 60, "timeout": 120},
-    "fio_modes": ["randread"],
-    "fio_bs_iodepth": ["(4, 16)"],
+    "warm_up_fio_cmd_args": {
+      "bs": "4k",
+      "iodepth": 1,
+      "size": "20G",
+      "rw": "write",
+      "direct": 1,
+      "prio": 0,
+      "timeout": 720
+    },
+    "fio_cmd_args": {
+      "size": "20G",
+      "direct": 1,
+      "prio": 0,
+      "cpus_allowed": "0-7",
+      "runtime": 120,
+      "timeout": 150,
+      "bs": "4k",
+      "numjobs": 1,
+      "iodepth": 1,
+      "rw": "read",
+      "name": "fio_ec_default"
+    },
+    "fio_modes": [
+      "randread"
+    ],
+    //"fio_bs_iodepth": ["(4, 16)"],
+    "fio_njobs_iodepth": [
+      "(1, 1)",
+      "(8, 1)",
+      "(8, 2)",
+      "(8, 4)",
+      "(8, 8)
+    ],
     "fio_pass_threshold": 0.05,
-    "fio_job_name": {"randread": "4gbps"},
     "volume_pass_threshold": 33,
     "nvme_device": "/dev/nvme",
     "expected_fio_result": {
-      "(4, 16)": {"randread": {"read": {"bw": 429, "iops": 105, "clatency": 149, "latency90": 180, "latency95": 206, "latency99": 269, "latency9999": 416}}}
-    },
-    "expected_volume_stats": {
-      "write": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 32, "num_writes": 288},
-                "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 64, "num_writes": 288}},
-      "read": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 171, "num_writes": 0},
-               "VOL_TYPE_BLK_EC":{"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
-    },
-    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
-    "expected_stats": {
-      "write": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      },
-      "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
+        "randread": {
+          "read": {
+            "bw": 429,
+            "iops": 105,
+            "clatency": 149,
+            "latency90": 180,
+            "latency95": 206,
+            "latency99": 269,
+            "latency9999": 416
+          }
+        }
       }
-    }
   }
 }
