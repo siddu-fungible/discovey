@@ -7,7 +7,7 @@
     "syslog_level": "default",
     "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 1099, "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"},
     "command_timeout": 5,
-    "retries": 60,
+    "reboot_timeout": 300,
     "csr_network": {
       "1": {
         "test_interface_ip": "20.1.1.1/24",
@@ -23,7 +23,7 @@
       }
     }
   },
-  "SingleClientSingleVolumeWithoutBP": {
+  "SingleVolumeMultiDriveFailureWithoutBP": {
     "ec_info": {
       "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
                        "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
@@ -49,7 +49,7 @@
     "nvme_device": "/dev/nvme",
     "mount_path": "/mnt/ssd",
     "trigger_drive_failure": true,
-    // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
+    // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_indicies
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
     "fs_type": "ext3",
