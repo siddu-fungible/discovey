@@ -147,7 +147,6 @@ class TriageStateMachine:
         l.append(to_fun_os_sha)
         pass
 
-
     def is_current_trial_set_complete(self):
         trial_count = Triage3Trial.objects.filter(triage_id=triage_id, trial_set_id=t.current_trial_set_id, status__gt=TriageTrialStates.COMPLETED)
         return trial_count == 0

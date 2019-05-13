@@ -1,0 +1,14 @@
+<div class="component">
+
+<form class="form-group" [formGroup]="submissionForm" (submit)="onSubmit()">
+  <label for="submitter">Submitter </label>
+  <select class="form-control" id="submitter" formControlName="submitter">
+    <option *ngFor="let user of users">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+  </select>
+  <button class="btn btn-success" type="submit" [disabled]="!submissionForm.valid">Submit</button>
+</form>
+
+
+</div>
+
+

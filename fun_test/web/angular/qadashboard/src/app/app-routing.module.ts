@@ -21,6 +21,8 @@ import {UserComponent} from "./user/user.component";
 import {TestBedComponent} from "./regression/test-bed/test-bed.component";
 import {JirasComponent} from "./regression/jiras/jiras.component";
 import {JobSpecComponent} from "./regression/job-spec/job-spec.component";
+import {Triage2Component} from "./triage2/triage2.component";
+import {JenkinsFormComponent} from "./jenkins-form/jenkins-form.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -53,7 +55,7 @@ const routes: Routes = [
   {path: '*', component: NotFoundComponent},
   { path: 'performance/atomic/:id/triage', component: TriageComponent},
   { path: 'triaging/:id', component: TriageComponent},
-  { path: 'triaging', component: TriageComponent}
+  { path: 'triaging', component: Triage2Component}
 ];
 
 @NgModule({
