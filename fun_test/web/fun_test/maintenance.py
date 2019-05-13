@@ -1726,7 +1726,7 @@ if __name__ == "__main_apple__":
                 base_line_date=base_line_date,
                 work_in_progress=False).save()
 
-if __name__ == "__main_tls32435__":
+if __name__ == "__main__":
     internal_chart_names = ["juniper_tls_32_output_throughput", "juniper_tls_32_output_pps", "juniper_tls_64_output_throughput", "juniper_tls_64_output_pps"]
     model_name = "JuniperTlsTunnelPerformance"
     base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
@@ -1751,6 +1751,7 @@ if __name__ == "__main_tls32435__":
         one_data_set["inputs"] = {}
         one_data_set["inputs"]["input_num_tunnels"] = num_tunnel
         one_data_set["inputs"]["input_algorithm"] = "AES_GCM"
+        one_data_set["inputs"]["input_platform"] = "F1"
         one_data_set["inputs"]["input_pkt_size"] = 354
         one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
         data_sets.append(one_data_set)
