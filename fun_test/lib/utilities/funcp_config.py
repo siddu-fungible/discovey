@@ -73,36 +73,31 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.come.setup_dpc(), "Setup DPC")
         fun_test.test_assert(fs_0.come.is_dpc_ready(), "DPC ready")
 
-    def bringup_funcp(self):
+    def bringup_funcp(self, prepare_docker=True):
         linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                                ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
         ssh_test_come = linux_obj_come.check_ssh()
-        if not ssh_test_come:
-            fun_test.test_assert(fs.from_bmc_reset_come(), "BMC Reset COMe")
-            ssh_test_count = 0
-            while True:
-                fun_test.sleep(message="Power cycling COMe", seconds=120)
-                if (ssh_test_count > 1) or ssh_test_come:
-                    fun_test.test_assert_expected(expected=ssh_test_come, actual=True, message="")
-                    break
-                ssh_test_count += 1
+        fun_test.test_assert(expression=ssh_test_come, message="Make sure ssh can be done to COMe")
         come_lspci = linux_obj_come.lspci(grep_filter="1dad:")
-        linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
-        git_pull = linux_obj_come.command("git pull")
-        prepare_docker_outout = linux_obj_come.command("./integration_test/emulation/test_system.py --prepare --docker",
-                                                       timeout=1200)
-        sections = ['Cloning into \'FunSDK\'', 'Cloning into \'fungible-host-drivers\'',
-                    'Cloning into \'FunControlPlane\'', 'Prepare End']
-        for section in sections:
-            fun_test.test_assert(section in prepare_docker_outout, "{} seen".format(section))
+        if prepare_docker:
 
-        setup_docker_outout = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
+            linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
+            git_pull = linux_obj_come.command("git pull")
+
+            prepare_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --prepare "
+                                                           "--docker", timeout=1200)
+            sections = ['Cloning into \'FunSDK\'', 'Cloning into \'fungible-host-drivers\'',
+                        'Cloning into \'FunControlPlane\'', 'Prepare End']
+            for section in sections:
+                fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
+
+        setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
                                                      timeout=900)
         sections = ['Bring up Control Plane', 'Device 1dad:', 'move fpg interface to f0 docker',
                     'libfunq bind  End', 'move fpg interface to f1 docker', 'Bring up Control Plane dockers']
         for section in sections:
-            fun_test.test_assert(section in setup_docker_outout, "{} seen".format(section))
+            fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
 
     def funcp_abstract_config(self, abstract_config_file=None, workspace="/tmp",host_ip="qa-ubuntu-02",
                               ssh_username="qa-admin", ssh_password="Precious1*"):
