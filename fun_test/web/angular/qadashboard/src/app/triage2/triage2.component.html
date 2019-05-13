@@ -1,12 +1,26 @@
 <div class="component">
 
-<form class="form-group" [formGroup]="submissionForm" (submit)="onSubmit()">
-  <label for="submitter">Submitter </label>
-  <select class="form-control" id="submitter" formControlName="submitter">
-    <option *ngFor="let user of users">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
-  </select>
+  <form [formGroup]="submissionForm" (submit)="onSubmit()">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="submitter">Submitter: </label>
+      <select class="form-control" id="submitter" formControlName="submitter">
+        <option *ngFor="let user of users">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit: </label>
+      <input style="width: 300px" formControlName="from_fun_os_sha" id="from_fun_os_sha">
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit: </label>
+      <input style="width: 300px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
+    </div>
+
+  </form>
+  <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
   <button class="btn btn-success" type="submit" [disabled]="!submissionForm.valid">Submit</button>
-</form>
 
 
 </div>

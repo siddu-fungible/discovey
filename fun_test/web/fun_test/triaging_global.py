@@ -1,7 +1,23 @@
 from fun_global import RESULTS
 
+class States:
+    def __init__(self):
+        self.non_callable_attributes = [f for f in dir(self) if not callable(getattr(self, f))]
+        self.non_callable_attributes = [x for x in self.non_callable_attributes if not x.startswith("__")]
+        self.code_to_string_map = {}
+        for non_callable_attribute in self.non_callable_attributes:
+            value = getattr(self, non_callable_attribute)
+            self.code_to_string_map[value] = non_callable_attribute
 
-class TriagingStates:
+
+    def code_to_string(self, code):
+        return self.code_to_string_map.get(code, "Unknown")
+
+    def all_codes_to_string(self):
+        return self.code_to_string_map
+
+
+class TriagingStates(States):
     UNKNOWN = -100
     ERROR = -99
     KILLED = -30
@@ -11,17 +27,10 @@ class TriagingStates:
     IN_PROGRESS = 60
     SUSPENDED = 70
 
-    def code_to_string(self, code):
-        result = "UNKNOWN"
-        non_callable_attributes = [f for f in dir(self) if not callable(getattr(self, f))]
-        for non_callable_attribute in non_callable_attributes:
-            if getattr(self, non_callable_attribute) == code:
-                result = non_callable_attribute
-                break
-        return result
 
 
-class TriageTrialStates:
+
+class TriageTrialStates(States):
     UNKNOWN = -100
     ERROR = -99
     KILLED = -20
@@ -34,14 +43,6 @@ class TriageTrialStates:
     QUEUED_ON_LSF = 60
     RUNNING_ON_LSF = 70
 
-    def code_to_string(self, code):
-        result = "UNKNOWN"
-        non_callable_attributes = [f for f in dir(self) if not callable(getattr(self, f))]
-        for non_callable_attribute in non_callable_attributes:
-            if getattr(self, non_callable_attribute) == code:
-                result = non_callable_attribute
-                break
-        return result
 
 
 

@@ -224,7 +224,7 @@ if __name__ == "__main__":
                 status=TriagingStates.INIT,
                 current_trial_set_id=1)
     if metric_id:
-        t.base_tag = t.base_tag + "_{}".format(metric_id)
+        t.base_tag = t.base_tag + "_{}_{}".format(triage_id, metric_id)
     t.save()
 
 if __name__ == "__main__":

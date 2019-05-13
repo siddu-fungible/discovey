@@ -22,9 +22,9 @@ from . import metrics_views
 from . import tests_views
 from . import upgrade_views
 from . import demo_views
-from . import triaging
+# from . import triaging
 from web.fun_test.api import users
-from web.fun_test.api import regression
+from web.fun_test.api import regression, triaging
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -177,6 +177,7 @@ upgrade_urls = [
     url(r'^.*$', upgrade_views.home)
 ]
 
+'''
 triage_urls = [
     url(r'^insert_db$', triaging.insert_triage_db),
     url(r'^fetch_flows$', triaging.fetch_triage_flow),
@@ -187,6 +188,8 @@ triage_urls = [
     url(r'^check_db$', triaging.check_triage),
     url(r'^triages$', triaging.triages)
 ]
+
+'''
 
 demo_urls = [
     url(r'^demo1/.*$', demo_views.home),
@@ -206,7 +209,10 @@ api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
     url(r'^regression/test_beds/?(\d+)?$', regression.test_beds),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
-    url(r'^regression/script_infos/?(.*)?$', regression.script_infos)
+    url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
+    url(r'^triages/?(.*)$', triaging.triagings),
+    url(r'^triage_states$', triaging.triaging_states),
+    url(r'^triaging_trial_states$', triaging.triaging_trial_states)
 ]
 
 
@@ -219,7 +225,7 @@ urlpatterns = [
     url(r'^regression/', include(regression_urls)),
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
-    url(r'^triage/', include(triage_urls)),
+    # url(r'^triage/', include(triage_urls)),
     url(r'^triaging/', views.angular_home),
     url(r'^common/', include(common_urls)),
     url(r'^$', views.angular_home),

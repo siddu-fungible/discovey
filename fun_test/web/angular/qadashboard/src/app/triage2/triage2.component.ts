@@ -16,6 +16,11 @@ export class Triage2Component implements OnInit {
   submissionForm: any = null;
   users: any = null;
   selectedUser: any = null;
+  jenkinsParameters: any = null;
+  triagingStateMap: any = null;
+  triagingTrialStateMap: any = null;
+  triages: any = null;
+
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
               private triageService: TriageService,
@@ -27,7 +32,9 @@ export class Triage2Component implements OnInit {
 
   createFormBuilder() {
     this.submissionForm = this.formBuilder.group({
-      'submitter': [null, Validators.required]
+      'submitter': [null, Validators.required],
+      'from_fun_os_sha': [null, Validators.required],
+      'to_fun_os_sha': [null, Validators.required]
     });
   }
 
@@ -43,22 +50,38 @@ export class Triage2Component implements OnInit {
     new Observable(observer => {
       observer.next(true);
       return () => {
-      }
-    }).pipe(switchMap(() => {
-      return this.userService.users();
-    })).pipe(switchMap( (users) => {
+      }}).pipe(switchMap(() => {
+        return this.userService.users();
+      })).pipe(switchMap((users) => {
         this.users = users;
         return of(true);
-      }
-    )).subscribe(() => {
+      })).pipe(switchMap(() => {
+        return this.triageService.triagingStateToString();
+      })).pipe(switchMap((triagingStateMap) => {
+        this.triagingStateMap = triagingStateMap;
+        return this.triageService.triagingTrialStateToString();
+      })).pipe(switchMap((triagingTrialStateMap) => {
+        this.triagingTrialStateMap = triagingTrialStateMap;
+        return of(true);
+      })).pipe(switchMap(() => {
+        return this.triageService.triages(null);
+      })).pipe(switchMap((triages) => {
+        this.triages = triages;
+        return of(true);
+      }))
+      .subscribe(() => {
 
-    }, error => {
-      this.loggerService.error(error);
-    })
+      }, error => {
+        this.loggerService.error(error);
+      })
   }
 
   onSubmit() {
     alert(this.submissionForm.value.submitter);
+  }
+
+  jenkinsParametersChanged(value) {
+    this.jenkinsParameters = value;
   }
 
 

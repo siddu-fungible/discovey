@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {FormBuilder, Validators} from "@angular/forms";
 
 @Component({
@@ -7,6 +7,7 @@ import {FormBuilder, Validators} from "@angular/forms";
   styleUrls: ['./jenkins-form.component.css']
 })
 export class JenkinsFormComponent implements OnInit {
+  @Output() data: EventEmitter<number> = new EventEmitter();
   submissionForm: any = null;
   jenkinsParameters: any = {};
   constructor(private formBuilder: FormBuilder) { }
@@ -31,6 +32,7 @@ export class JenkinsFormComponent implements OnInit {
       'DISABLE_ASSERTIONS': [true],
       'FUNOS_MAKEFLAGS': ['']
     });
+    this.data.emit(this.submissionForm);
   }
 
 }
