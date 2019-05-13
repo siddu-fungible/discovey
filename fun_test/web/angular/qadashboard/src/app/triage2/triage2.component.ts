@@ -85,6 +85,16 @@ export class Triage2Component implements OnInit {
     payload["to_fun_os_sha"] = this.submissionForm.value.to_fun_os_sha;
     payload["submitter_email"] = this.submissionForm.value.submitter;
     payload["build_parameters"] = this.jenkinsParameters;
+    if (!this.jenkinsParameters) {
+      return this.loggerService.error("Jenkins parameters are invalid");
+    }
+    let url = "/api/v1/triages";
+    this.apiService.post(url, payload).subscribe((response) => {
+      this.loggerService.success("Triage submitted");
+      window.open("/api/v1/triages/" + response.data, '_blank');
+    },error => {
+      this.loggerService.error("Submitting triage failed");
+    });
     console.log(payload);
   }
 

@@ -19,7 +19,13 @@ export class JenkinsFormComponent implements OnInit {
       this.jenkinsParameters['SKIP_DASM_C'] = value.SKIP_DASM_C;
       this.jenkinsParameters['MAX_DURATION'] = value.MAX_DURATION;
       this.jenkinsParameters['FUNOS_MAKEFLAGS'] = value.FUNOS_MAKEFLAGS;
-      console.log(this.jenkinsParameters);
+      this.jenkinsParameters['DISABLE_ASSERTIONS'] = value.DISABLE_ASSERTIONS;
+      //console.log(this.jenkinsParameters);
+      if (this.submissionForm.valid) {
+        this.data.emit(this.jenkinsParameters);
+      } else {
+        this.data.emit(null);
+      }
     })
 
   }
@@ -32,7 +38,11 @@ export class JenkinsFormComponent implements OnInit {
       'DISABLE_ASSERTIONS': [true],
       'FUNOS_MAKEFLAGS': ['']
     });
-    this.data.emit(this.jenkinsParameters);
+    if (this.submissionForm.valid) {
+      this.data.emit(this.jenkinsParameters);
+    } else {
+      this.data.emit(null);
+    }
   }
 
 }

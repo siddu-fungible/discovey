@@ -1,9 +1,9 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.metrics_models import Triage3, Triage3Trial
+from web.fun_test.metrics_models import Triage3, Triage3Trial, LastTriageId
 from web.fun_test.triaging_global import TriageTrialStates, TriagingStates
 from django.db.models import Q
-
+import json
 
 @csrf_exempt
 @api_safe_json_response
@@ -30,12 +30,28 @@ def trials(request, triage_id, fun_os_sha):
             result.append(one_record)
     return result
 
+
 @csrf_exempt
 @api_safe_json_response
 def triagings(request, triage_id):
     result = None
     if request.method == "POST":
-        pass
+        request_json = json.loads(request.body)
+        metric_id = int(request_json["metric_id"])
+        triage_type = request_json.get("triage_type", "REGEX_SEARCH")
+        from_fun_os_sha = request_json["from_fun_os_sha"]
+        to_fun_os_sha = request_json["to_fun_os_sha"]
+        submitter_email = request_json["submitter_email"]
+        build_parameters = request_json["build_parameters"]
+
+        triage_id = LastTriageId.get_next_id()
+
+        t = Triage3(triage_id=triage_id, metric_id=metric_id,
+                triage_type=triage_type,
+                from_fun_os_sha=from_fun_os_sha,
+                to_fun_os_sha=to_fun_os_sha, submitter_email=submitter_email, build_parameters=build_parameters)
+        t.save()
+        result = t.triage_id
 
     elif request.method == "GET":
         q = Q()
