@@ -65,7 +65,7 @@ nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
-                     "NuTransitPerformance"]
+                     "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance"]
 
 
 def get_rounded_time():
