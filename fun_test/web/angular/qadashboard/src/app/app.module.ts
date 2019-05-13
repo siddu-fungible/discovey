@@ -60,6 +60,7 @@ import { JobSpecComponent } from './regression/job-spec/job-spec.component';
 import { JsonInputComponent } from './ui-elements/json-input/json-input.component';
 import { Triage2Component } from './triage2/triage2.component';
 import { JenkinsFormComponent } from './jenkins-form/jenkins-form.component';
+import { TriageDetailComponent } from './triage2/triage-detail/triage-detail.component';
 
 @NgModule({
   declarations: [
@@ -104,7 +105,8 @@ import { JenkinsFormComponent } from './jenkins-form/jenkins-form.component';
     JobSpecComponent,
     JsonInputComponent,
     Triage2Component,
-    JenkinsFormComponent
+    JenkinsFormComponent,
+    TriageDetailComponent
   ],
   imports: [
     BsDropdownModule,

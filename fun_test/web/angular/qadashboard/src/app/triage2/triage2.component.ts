@@ -34,7 +34,8 @@ export class Triage2Component implements OnInit {
     this.submissionForm = this.formBuilder.group({
       'submitter': [null, Validators.required],
       'from_fun_os_sha': [null, Validators.required],
-      'to_fun_os_sha': [null, Validators.required]
+      'to_fun_os_sha': [null, Validators.required],
+      'metric_id': [null, Validators.required]
     });
   }
 
@@ -77,12 +78,17 @@ export class Triage2Component implements OnInit {
   }
 
   onSubmit() {
-    alert(this.submissionForm.value.submitter);
+    //alert(this.submissionForm.value.submitter);
+    let payload = {};
+    payload["metric_id"] = this.submissionForm.value.metric_id;
   }
 
   jenkinsParametersChanged(value) {
     this.jenkinsParameters = value;
   }
 
+  getShortSha(sha) {
+    return sha.substring(0, 7);
+  }
 
 }

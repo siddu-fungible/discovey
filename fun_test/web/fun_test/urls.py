@@ -210,7 +210,8 @@ api_v1_urls = [
     url(r'^regression/test_beds/?(\d+)?$', regression.test_beds),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
-    url(r'^triages/?(.*)$', triaging.triagings),
+    url(r'^triages/?(\d+)$', triaging.triagings),
+    url(r'^triages/(\d+)/trials/?(\S+)?$', triaging.trials),
     url(r'^triage_states$', triaging.triaging_states),
     url(r'^triaging_trial_states$', triaging.triaging_trial_states)
 ]

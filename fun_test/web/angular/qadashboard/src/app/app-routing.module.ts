@@ -23,6 +23,7 @@ import {JirasComponent} from "./regression/jiras/jiras.component";
 import {JobSpecComponent} from "./regression/job-spec/job-spec.component";
 import {Triage2Component} from "./triage2/triage2.component";
 import {JenkinsFormComponent} from "./jenkins-form/jenkins-form.component";
+import {TriageDetailComponent} from "./triage2/triage-detail/triage-detail.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -54,7 +55,7 @@ const routes: Routes = [
   /*{path: 'upgrade/demo1', component: Demo1Component},*/
   {path: '*', component: NotFoundComponent},
   { path: 'performance/atomic/:id/triage', component: TriageComponent},
-  { path: 'triaging/:id', component: TriageComponent},
+  { path: 'triaging/:id', component: TriageDetailComponent},
   { path: 'triaging', component: Triage2Component}
 ];
 

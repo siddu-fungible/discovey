@@ -42,4 +42,12 @@ export class TriageService {
       return of(response.data);
     }))
   }
+
+  trials(triageId, funOsSha) {
+    let url = "/api/v1/triages/" + triageId + "/trials";
+    return this.apiService.get(url).pipe(switchMap((response) => {
+      return of(response.data);
+    }));
+  }
+
 }
