@@ -16,7 +16,7 @@ import datetime
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
 from web.web_global import *
-from web.fun_test.triaging_global import TriagingStates, TriagingResult
+from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -117,18 +117,26 @@ class Triage2Trial(models.Model):
 
 class Triage3(models.Model):
     metric_id = models.IntegerField()
-    triage_id = models.IntegerField()
+    triage_id = models.IntegerField(unique=True)
     triage_type = models.CharField(max_length=15, default=TriageType.SCORES)
-    from_fun_os_sha = models.TextField()
-    to_fun_os_sha = models.TextField()
+    from_fun_os_sha = models.TextField()  # The initial lower bound
+    to_fun_os_sha = models.TextField()    # The initial upper bound
     submission_date_time = models.DateTimeField(default=datetime.now)
     status = models.IntegerField(default=TriagingStates.UNKNOWN)
     result = models.TextField(default=TriagingResult.UNKNOWN)
     build_parameters = JSONField()
+
     current_trial_set_id = models.IntegerField(default=-1)
     current_trial_set_count = models.IntegerField(default=-1)
+    current_trial_from_sha = models.TextField(default="")
+    current_trial_to_sha = models.TextField(default="")
+
     submitter_email = models.EmailField(default="john.abraham@fungible.com")
     base_tag = models.TextField(default="qa_triage")
+
+    @staticmethod
+    def get_tag(base_tag, other_tag):
+        return "{}_{}".format(base_tag, other_tag)
 
 
 class Triage3Trial(models.Model):
@@ -141,10 +149,11 @@ class Triage3Trial(models.Model):
     tag = models.TextField(default="")
 
     def __str__(self):
-        return "Trial: Triage: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
-                                                                     self.fun_os_sha,
-                                                                     self.trial_set_id,
-                                                                     TriagingStates().code_to_string(self.status))
+        return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
+                                                                             self.tag,
+                                                                             self.fun_os_sha,
+                                                                             self.trial_set_id,
+                                                                             TriageTrialStates().code_to_string(self.status))
 
     def __repr__(self):
         return self.__str__()

@@ -27,6 +27,7 @@ class TriageTrialStates:
     KILLED = -20
     COMPLETED = 10
     INIT = 20
+    SUBMITTED_TO_JENKINS = 29
     BUILDING_ON_JENKINS = 30
     JENKINS_BUILD_COMPLETE = 40
     IN_LSF = 50
