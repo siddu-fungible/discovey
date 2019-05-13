@@ -1595,7 +1595,7 @@ if __name__ == "__main_S1__":
         result = set_internal_name(funos_metrics)
         print json.dumps(result)
 
-if __name__ == "__main__":
+if __name__ == "__main_delete__":
     model = "HuThroughputPerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model]
@@ -1610,7 +1610,7 @@ if __name__ == "__main__":
     entries.delete()
     print "got entries"
 
-if __name__ == "__main__":
+if __name__ == "__main_HU_HU__":
     internal_chart_names = ["HU_HU_NFCP_8TCP_offloads_disabled_output_throughput", "HU_HU_NFCP_8TCP_offloads_disabled_output_pps", "HU_HU_NFCP_1TCP_offloads_disabled_output_throughput", "HU_HU_NFCP_1TCP_offloads_disabled_output_pps"]
     copy_from = ["NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput", "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps"]
     flow_type = "HU_HU_NFCP"
@@ -1655,6 +1655,76 @@ if __name__ == "__main__":
                     base_line_date=chart.base_line_date,
                     work_in_progress=False).save()
     print "Added new HU HU NFCP charts"
+
+if __name__ == "__main__":
+    internal_chart_names = ["apple_rand_read_srsw_tcp_output_bandwidth",
+                            "apple_rand_read_srsw_tcp_output_iops"]
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=5, day=10, minute=0, hour=0, second=0)
+
+    for internal_chart_name in internal_chart_names:
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "MBps"
+            output_name = "output_read_throughput"
+            name = "throughput"
+        else:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
+            output_name = "output_read_iops"
+            name = "iops"
+        operation = "randread"
+
+        data_sets = []
+        one_data_set = {}
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_fio_job_name"] = "fio_randread_apple_single_tcp"
+        one_data_set["inputs"]["input_platform"] = "F1"
+        one_data_set["inputs"]["input_operation"] = operation
+        one_data_set["name"] = name
+        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Manu KS (manu.ks@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/apple_tcp_fs_perf.py",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "added apple charts"
+    internal_name = "apple_rand_read_4kb6vol6ssd_output_latency"
+    chart = MetricChart.objects.get(internal_chart_name=internal_name)
+    data_sets = json.loads(chart.data_sets)
+    for data_set in data_sets:
+        data_set["inputs"]["input_fio_job_name"] = "fio_randread_apple_single_tcp"
+        data_set["output"]["min"] = 0
+        data_set["output"]["max"] = -1
+        data_set["output"]["expected"] = -1
+        data_set["output"]["reference"] = -1
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart.chart_name,
+                metric_id=metric_id,
+                internal_chart_name="apple_rand_read_srsw_tcp_output_latency",
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description="TBD",
+                owner_info="Manu KS (manu.ks@fungible.com)",
+                source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/apple_tcp_fs_perf.py",
+                positive=False,
+                y1_axis_title=chart.y1_axis_title,
+                visualization_unit=chart.y1_axis_title,
+                metric_model_name=model_name,
+                base_line_date=base_line_date,
+                work_in_progress=False).save()
 
 
 
