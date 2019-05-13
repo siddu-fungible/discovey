@@ -29,7 +29,7 @@ tb_config = {
             "model": "StorageNetwork2",
             "run_mode": "build_only",
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay --useddr",
             "huid": 3,
             "ctlid": 2,
             "interface_info": {
@@ -547,7 +547,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_cmd_args['numjobs'] = num_jobs
                 fio_cmd_args['iodepth'] = io_depth
                 fio_cmd_args['rw'] = mode
-                fio_job_name = "fio_ec_{0}_{1}_{2}".format(mode,num_jobs, io_depth)
+                fio_job_name = "ec_{0}_iodepth_{1}".format(mode, (num_jobs * io_depth))
                 fio_cmd_args['name'] = fio_job_name
 
                 fio_result[combo][mode] = True

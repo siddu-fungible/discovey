@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 7,
@@ -38,7 +38,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 17179869184,
+      "capacity": 4294967296,
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,

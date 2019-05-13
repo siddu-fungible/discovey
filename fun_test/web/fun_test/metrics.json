@@ -262,6 +262,15 @@
                     ]
                   }
                 ]
+              },
+              {
+                "info": "HU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP_teramark",
+                "weight": 1,
+                "label": "Host->Host",
+                "reference": true
               }
             ]
           },
@@ -2427,6 +2436,68 @@
                     ]
                   }
                 ]
+              },
+              {
+                "info": "HU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP_teramark",
+                "weight": 1,
+                "label": "Host->Host",
+                "children": [
+                  {
+                    "info": "HU_HU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_NFCP_8TCP_2H_offloads_disabled",
+                    "weight": 1,
+                    "label": "8 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_NFCP_8TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "HU_HU_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_NFCP_1TCP_2H_offloads_disabled",
+                    "weight": 1,
+                    "label": "1 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
@@ -3042,7 +3113,7 @@
                     "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_reader_pcie",
                     "weight": 1,
-                    "label": "Single-Writer/Single-Reader PCIe",
+                    "label": "Single-Reader PCIe",
                     "children": [
                       {
                         "info": "Random Read",
@@ -3079,6 +3150,59 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "info": "single_writer_reader_tcp",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "teramarks_customer_apple_single_writer_reader_tcp",
+                    "weight": 1,
+                    "label": "Single-Reader TCP",
+                    "children": [
+                      {
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "apple_rand_read_srsw_tcp",
+                        "weight": 1,
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "apple_rand_read_srsw_tcp_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "apple_rand_read_srsw_tcp_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "apple_rand_read_srsw_tcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "apple_rand_read_srsw_tcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "apple_rand_read_srsw_tcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "apple_rand_read_srsw_tcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "info": "single_writer_multiple_reader_tcp",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
+                    "weight": 1,
+                    "label": "Multiple-Reader TCP",
+                    "children": []
                   }
                 ]
               },

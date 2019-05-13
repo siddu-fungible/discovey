@@ -899,12 +899,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               output = oneRecord[outputName];
               let unit = outputName + '_unit';
               let outputUnit = oneRecord[unit];
-              if (outputUnit && outputUnit !== "" && outputUnit !== this.visualizationUnit) {
+              if (output > 0) {
+                if (outputUnit && outputUnit !== "" && outputUnit !== this.visualizationUnit) {
                 output = this.convertToBaseUnit(outputUnit, output);
                 output = this.convertToVisualizationUnit(this.visualizationUnit, output);
               }
               total += output;
               count++;
+              }
             }
             startIndex--;
           }

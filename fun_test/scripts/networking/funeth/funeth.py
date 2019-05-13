@@ -214,11 +214,12 @@ class Funeth:
 
         return result
 
-    def enable_namespace_interfaces_tso(self, nu_or_hu, ns=None):
+    def enable_namespace_interfaces_tso(self, nu_or_hu, ns=None, disable=False):
         """Enable interfaces TSO in a namespace."""
         result = True
+        op = 'off' if disable else 'on'
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-            cmd = 'ethtool -K {} tso on'.format(intf)
+            cmd = 'ethtool -K {} tso {}'.format(intf, op)
             cmd_chk = 'ethtool -k {}'.format(intf)
             if ns is None or 'netns' in cmd:
                 cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
@@ -226,16 +227,16 @@ class Funeth:
                 cmds = ['sudo ip netns exec {} {}; sudo ip netns exec {}'.format(ns, cmd, cmd_chk)]
             output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
 
-            match = re.search(r'tcp-segmentation-offload: on', output)
+            match = re.search(r'tcp-segmentation-offload: {}'.format(op), output)
             result &= match is not None
 
         return result
 
-    def enable_tso(self, nu_or_hu):
+    def enable_tso(self, nu_or_hu, disable=False):
         """Enable TSO to the interfaces."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            result &= self.enable_namespace_interfaces_tso(nu_or_hu, ns)
+            result &= self.enable_namespace_interfaces_tso(nu_or_hu, ns, disable=disable)
 
         return result
 
