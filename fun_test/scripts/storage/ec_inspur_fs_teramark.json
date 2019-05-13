@@ -59,7 +59,7 @@
     "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
     "fio_cmd_args": {"bs": "8k", "size": "100%", "direct": 1, "prio":  0, "rwmixread": 70, "runtime": 120, "timeout": 180},
     "fio_modes": ["randrw"],
-    "fio_numjobs_iodepth": ["(1, 1)", "(8, 8)", "(16, 16)", "(16, 32)", "(16, 64)"],
+    "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
     "fio_job_name": "inspur_8k_random_read_write"
   },
   "SequentialReadWrite1024kBlocks": {
