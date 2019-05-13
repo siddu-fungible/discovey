@@ -73,7 +73,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
-        fun_test.test_assert(funeth_obj.enable_tso(hu), 'Enable HU host {} funeth interfaces TSO.'.format(
+        fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True), 'Disable HU host {} funeth interfaces TSO.'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
@@ -97,7 +97,8 @@ class FunethSanity(FunTestScript):
 
         # Boot up FS1600
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
-            boot_args = "app=hw_hsu_test retimer=0,1 --disable_dispatch_loop_switch --dpc-uart --dpc-server --csr-replay --all_100g"
+            #boot_args = "app=hw_hsu_test retimer=0,1 --disable_dispatch_loop_switch --dpc-uart --dpc-server --csr-replay --all_100g"
+            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
             # fs = Fs.get(disable_f1_index=1)
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,
