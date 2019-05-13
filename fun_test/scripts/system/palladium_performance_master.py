@@ -2009,6 +2009,39 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                             metric_model = app_config.get_metric_models()[self.model]
                             MetricHelper(model=metric_model).add_entry(**d)
                             add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
+                        if "throughput_h2h" in line:
+                            metrics = self.set_info(line=line)
+                            self.model = "HuThroughputPerformance"
+                            metrics["output_throughput_h2h"] = (float(
+                                line["throughput_h2h"]) / 1000) if line["throughput_h2h"] != -1 else -1
+                            metrics["output_pps_h2h"] = (float(
+                                line["pps_h2h"]) / 1000000) if line["pps_h2h"] != -1 else -1
+                            fun_test.log(
+                                "flow type: {}, frame size: {}, date time: {}".format(
+                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            d["input_date_time"] = date_time
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
+                        if "latency_avg_h2h" in line:
+                            metrics = self.set_info(line=line)
+                            self.model = "HuLatencyPerformance"
+                            metrics["output_latency_max_h2h"] = line.get("latency_max_h2h", -1)
+                            metrics["output_latency_min_h2h"] = line.get("latency_min_h2h", -1)
+                            metrics["output_latency_avg_h2h"] = line.get("latency_avg_h2h", -1)
+                            metrics["output_latency_P99_h2h"] = line.get("latency_P99_h2h", -1)
+                            metrics["output_latency_P90_h2h"] = line.get("latency_P90_h2h", -1)
+                            metrics["output_latency_P50_h2h"] = line.get("latency_P50_h2h", -1)
+
+                            fun_test.log(
+                                "flow type: {}, frame size: {}, date time: {}".format(
+                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            d["input_date_time"] = date_time
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
                         else:
                             metrics = self.set_info(line=line)
                             self.add_entries_into_dual_table(default_metrics=metrics, line=line, date_time=date_time)
