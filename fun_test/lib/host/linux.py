@@ -1887,15 +1887,15 @@ class Linux(object, ToDictMixin):
         host_is_up = False
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
+        ping_result = False
         while not host_is_up and not max_reboot_timer.is_expired():
-
-            ping_result = False
-            if service_host:
+            if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=20)
                 if ping_result:
                     max_reboot_timer = FunTimer(max_time=30)
             if ping_result or not service_host:
                 try:
+                    fun_test.log("Attempting SSH")
                     self.command("pwd")
                     host_is_up = True
                     result = host_is_up
@@ -1904,21 +1904,23 @@ class Linux(object, ToDictMixin):
                 except Exception as ex:
                     pass
             fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
-
         if not host_is_up:
             result = False
             fun_test.critical("Host: {} is not reachable after reboot".format(self.host_ip))
+
+        if not host_is_up and service_host:
+            result = False
             if not result and ipmi_details:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
                 ipmi_password = ipmi_details["password"]
                 try:
-                    self.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                    service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     fun_test.log("IPMI power-cycle complete")
                 except Exception as ex:
                     fun_test.critical(str(ex))
-                    self.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                    service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                 finally:
                     return self.ensure_host_is_up(max_wait_time=max_wait_time)
         return result

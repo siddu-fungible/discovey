@@ -1,6 +1,6 @@
 from fun_settings import *
 import logging
-from fun_global import *
+from fun_global import RESULTS
 from jira import JIRA
 import jira
 import os, traceback
@@ -25,12 +25,12 @@ class JiraManager:
         return '{}-{}'.format(self.project_name, id)
 
     def generate_issue(self):
-        result = {"status": RESULT_FAIL, "err_msg": "Not run", "issue": None, "issue_id": None}
+        result = {"status": RESULTS["PASSED"], "err_msg": "Not run", "issue": None, "issue_id": None}
         try:
             new_issue = self.jira.create_issue(project=self.project_name,
                                                summary='Generated Issue',
                                                description='', issuetype={'name': 'Test-case'})
-            result["status"] = RESULT_PASS
+            result["status"] = RESULTS["PASSED"]
             result["issue"] = new_issue
             result["issue_id"] = new_issue.key.replace(TCMS_PROJECT + "-", "")
         except Exception as ex:

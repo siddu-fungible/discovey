@@ -742,7 +742,7 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(metric_id, sort_by_name=True, metric_chart_entries={}):
+def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
     result = {}
     if metric_id not in metric_chart_entries:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -761,6 +761,7 @@ def traverse_dag(metric_id, sort_by_name=True, metric_chart_entries={}):
     result["positive"] = chart.positive
     result["work_in_progress"] = chart.work_in_progress
     result["jira_ids"] = json.loads(chart.jira_ids)
+    result["metric_id"] = chart.metric_id
 
     result["copied_score"] = chart.copied_score
     result["copied_score_disposition"] = chart.copied_score_disposition
@@ -786,14 +787,18 @@ def traverse_dag(metric_id, sort_by_name=True, metric_chart_entries={}):
 @csrf_exempt
 @api_safe_json_response
 def dag(request):
-    result = {}
-    request_json = json.loads(request.body)
-    metric_model_name = request_json["metric_model_name"]
-    chart_name = request_json["chart_name"]
-    chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False, metric_chart_entries={chart.metric_id: chart})
-    chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="All metrics")
-    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=True)
+    result = []
+    chart_names = ["F1", "S1", "All metrics"]
+    metric_model_name = "MetricContainer"
+    metric_chart_entries = {}
+    for chart_name in chart_names:
+        if chart_name == "All metrics":
+            sort_by_name = True
+        else:
+            sort_by_name = False
+        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+        metric_chart_entries[chart.metric_id] = chart
+        result.append(traverse_dag(metric_id=chart.metric_id, sort_by_name=sort_by_name, metric_chart_entries=metric_chart_entries))
     return result
 
 

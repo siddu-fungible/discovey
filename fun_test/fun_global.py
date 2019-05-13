@@ -6,8 +6,6 @@ import dateutil
 from lib.utilities.http import fetch_text_file
 
 BUILD_INFO_FILENAME = "build_info.txt"
-RESULT_PASS = "PASS"  #TODO merge it with RESULTS
-RESULT_FAIL = "FAIL"
 
 NUM_SECONDS_IN_DAY = 24 * 3600
 MICROSECONDS = 10 ** 6
@@ -124,3 +122,8 @@ class PerfUnit:
     UNIT_MPPS = "Mpps"
     UNIT_KPPS = "Kpps"
     UNIT_GPPS = "Gpps"
+
+class FunPlatform:
+    F1 = "F1"
+    S1 = "S1"
+    F11 = "F1.1"

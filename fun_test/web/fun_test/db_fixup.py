@@ -429,7 +429,7 @@ def calculate_container_scores(chart, purge_old_status, cache_valid, result):
             if child_metric.leaf:
                 result["num_leaves"] += 1
             else:
-                if chart.chart_name == "Total":
+                if chart.chart_name == "F1" or chart.chart_name == "S1":
                     print "XXXX Child: chart Name: {}, num_leaves: {}".format(child_metric.chart_name,
                                                                               child_result["num_leaves"])
                 result["num_leaves"] += child_result["num_leaves"]
@@ -557,7 +557,7 @@ if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
     # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="rcnvme")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
-    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
+    chart_names = ["F1", "S1", "All metrics"]
+    for chart_name in chart_names:
+        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
+        prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)

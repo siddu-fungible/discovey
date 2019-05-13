@@ -358,7 +358,7 @@ class MetricParser():
     def memcpy_threshold(self, logs, date_time):
         self.initialize()
         for line in logs:
-            m = re.search(r'DMA\s+memcpy\s+threashold\s+VP\s+vs.\s+DMA:\s+(?P<threshold_json>{.*})\s+\[(?P<metric_name>.*)\]', line)
+            m = re.search(r'DMA\s+memcpy\s+threshold\s+VP\s+vs.\s+DMA:\s+(?P<threshold_json>{.*})\s+\[(?P<metric_name>.*)\]', line)
             if m:
                 self.match_found = True
                 threshold_json = json.loads(m.group("threshold_json"))
