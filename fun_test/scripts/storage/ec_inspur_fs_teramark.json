@@ -7,7 +7,8 @@
     "ctlid": 0,
     "syslog_level": 2,
     "command_timeout": 5,
-    "retries": 60,
+    "reboot_timeout": 300,
+    "ethernet_adapter": "Mellanox",
     "test_network": {
       "test_interface_ip": "21.1.1.1/24",
       "test_interface_mac": "fe:dc:ba:44:66:31",
@@ -44,10 +45,8 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    // timeout used for the storage controller
     "command_timeout": 30,
     "iter_interval": 60,
-    // Head room needed for the LS volume in percentage
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
@@ -57,12 +56,11 @@
     "nvme_device": "/dev/nvme",
     "io_queues": 0,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "20G", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
-    // FIO commandline arguments
-    "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "cpumask": 2, "runtime": 60, "timeout": 120},
-    "fio_modes": ["read"],
-    "fio_bs_iodepth": ["(4, 16)"],
-    "fio_job_name": {"read": "4gbps"},
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
+    "fio_cmd_args": {"bs": "8k", "size": "100%", "direct": 1, "prio":  0, "rwmixread": 70, "runtime": 300, "timeout": 360},
+    "fio_modes": ["randrw"],
+    "fio_numjobs_iodepth": ["(1, 1)", "(8, 8)", "(16, 16)", "(16, 32)", "(16, 64)"],
+    "fio_job_name": "inspur_8k_random_read_write"
   },
   "SequentialReadWrite1024kBlocks": {
     "ec_info": {

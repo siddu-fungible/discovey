@@ -8,7 +8,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 
 '''
-Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using Vdbench
+Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
 '''
 
 
@@ -223,7 +223,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.f1_in_use = 0
             self.syslog_level = 2
             self.command_timeout = 5
-            self.retries = 24
+            self.reboot_timeout = 300
         else:
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
@@ -231,7 +231,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Global Config: {}".format(self.__dict__))
 
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=self.f1_in_use, custom_boot_args=self.bootargs)
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs)
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -243,7 +243,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                     target_port=self.come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
-        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use)
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
                 self.end_host = host_info["host_obj"]
@@ -263,8 +263,28 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
+        # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
+        lspci_output = self.end_host.lspci(grep_filter=self.ethernet_adapter)
+        fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
+        adapter_id = lspci_output[0]['id']
+        fun_test.simple_assert(adapter_id, "Ethernet Adapter Bus ID Retrieved")
+        lspci_verbose_output = self.end_host.lspci(slot=adapter_id, verbose=True)
+        numa_node = lspci_verbose_output[0]['numa_node']
+        fun_test.test_assert(numa_node, "Ethernet Adapter NUMA Node Retrieved")
+
+        # Fetching NUMA CPUs for above fetched NUMA Node
+        lscpu_output = self.end_host.lscpu(grep_filter="node{}".format(numa_node))
+        fun_test.simple_assert(lscpu_output, "CPU associated to Ethernet Adapter NUMA")
+
+        self.numa_cpus = lscpu_output.values()[0]
+        fun_test.test_assert(self.numa_cpus, "CPU associated to Ethernet Adapter NUMA")
+        fun_test.log("Ethernet Adapter: {}, NUMA Node: {}, NUMA CPU: {}".format(self.ethernet_adapter, numa_node,
+                                                                                self.numa_cpus))
+
+        fun_test.shared_variables["numa_cpus"] = self.numa_cpus
+
         # Configuring Linux host
-        host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
+        host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
@@ -321,18 +341,22 @@ class ECVolumeLevelScript(FunTestScript):
         self.ec_info = fun_test.shared_variables["ec_info"]
         self.remote_ip = fun_test.shared_variables["remote_ip"]
         self.attach_transport = fun_test.shared_variables["attach_transport"]
-        if fun_test.shared_variables["ec"]["setup_created"]:
-            # Detaching all the EC/LS volumes to the external server
-            for num in xrange(self.ec_info["num_volumes"]):
-                command_result = self.storage_controller.volume_detach_remote(
-                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
-                    remote_ip=self.remote_ip, transport=self.attach_transport, command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
-            # Unconfiguring all the LSV/EC and it's plex volumes
-            unconfigure_ec_volume(storage_controller=self.storage_controller, ec_info=self.ec_info,
-                                  command_timeout=self.command_timeout)
+        try:
+            if fun_test.shared_variables["ec"]["setup_created"]:
+                # Detaching all the EC/LS volumes to the external server
+                for num in xrange(self.ec_info["num_volumes"]):
+                    command_result = self.storage_controller.volume_detach_remote(
+                        ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
+                        remote_ip=self.remote_ip, transport=self.attach_transport, command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+
+                # Unconfiguring all the LSV/EC and it's plex volumes
+                unconfigure_ec_volume(storage_controller=self.storage_controller, ec_info=self.ec_info,
+                                      command_timeout=self.command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
         self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
@@ -378,6 +402,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
+        self.numa_cpus = fun_test.shared_variables["numa_cpus"]
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         num_ssd = self.num_ssd
@@ -489,18 +514,14 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["volume_name"] = self.volume_name
             fun_test.shared_variables["ec"]["nvme_connect"] = True
 
-        # Executing the vdbench command to fill the volume to it's capacity
+        # Executing the FIO command to fill the volume to it's capacity
         if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
-            fun_test.log("Building the volume pre-populte config file for Vdbench")
-            self.volume_fill_file = "{}/{}".format(self.vdbench_path, self.warm_up_config_file)
-            self.end_host.create_file(file_name=self.volume_fill_file, contents=self.warm_up_vdb_config)
 
-            fun_test.log("Starting Vdbench to pre-populate all the volumes")
-            vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.volume_fill_file,
-                                                   timeout=self.warm_up_timeout)
-            fun_test.log("Vdbench output result: {}".format(vdbench_result))
-            fun_test.test_assert(vdbench_result,
-                                 "Vdbench run is completed for profile {}".format(self.warm_up_config_file))
+            fun_test.log("Executing the FIO command to perform sequential write to volume")
+            fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, cpus_allowed=self.numa_cpus,
+                                                **self.warm_up_fio_cmd_args)
+            fun_test.log("FIO Command Output:\n{}".format(fio_output))
+            fun_test.test_assert(fio_output, "Pre-populating the volume")
 
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
@@ -509,27 +530,14 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
+        self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
+        self.volume_name = fun_test.shared_variables["volume_name"]
+
         if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
             self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
             self.volume_name = fun_test.shared_variables["volume_name"]
         else:
             fun_test.simple_assert(False, "Setup Section Status")
-
-        """fun_test.sleep("Interval before starting traffic", self.iter_interval)
-        fun_test.log("Starting Random Read/Write of 8k data block")
-        self.end_host = fun_test.shared_variables["end_host"]
-
-        # Prepare vdbench run config file
-        fun_test.log("Building the volume performance run config file")
-        self.perf_run_profile = "{}/{}".format(self.vdbench_path, self.perf_run_config_file)
-        self.end_host.create_file(file_name=self.perf_run_profile, contents=self.perf_run_vdb_config)
-
-        fun_test.log("Starting Vdbench performance run all the volumes")
-        vdbench_result = self.end_host.vdbench(path=self.vdbench_path, filename=self.perf_run_profile,
-                                               timeout=self.perf_run_timeout)
-        fun_test.log("Vdbench output result: {}".format(vdbench_result))
-        fun_test.test_assert(vdbench_result,
-                             "Vdbench run is completed for profile {}".format(self.perf_run_config_file))"""
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -543,109 +551,41 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
+        # row_data_dict = {}
 
-        row_data_dict = {}
-        """vdbench_run_name = self.perf_run_config_file
+        fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
-        # Vdbench gives cumulative output, Calculating Read/Write bandwidth and IOPS
-        if hasattr(self, "read_pct"):
-            read_bw = int(round(float(vdbench_result["throughput"]) * self.read_pct))
-            read_iops = int(round(float(vdbench_result["iops"]) * self.read_pct))
-            write_bw = int(round(float(vdbench_result["throughput"]) * (1 - self.read_pct)))
-            write_iops = int(round(float(vdbench_result["iops"]) * (1 - self.read_pct)))
-        else:
-            read_bw = int(round(float(vdbench_result["throughput"])))
-            read_iops = int(round(float(vdbench_result["iops"])))
-            write_bw = -1
-            write_iops = -1
-
-        row_data_dict["fio_job_name"] = vdbench_run_name
-        row_data_dict["readiops"] = read_iops
-        row_data_dict["readbw"] = read_bw
-        row_data_dict["writeiops"] = write_iops
-        row_data_dict["writebw"] = write_bw
-        row_data_dict["mode"] = self.operation
-
-        # Converting response values from milliseconds to microseconds
-        row_data_dict["readclatency"] = int(round(float(vdbench_result["read_resp"]) * 1000))
-        row_data_dict["writelatency"] = int(round(float(vdbench_result["write_resp"]) * 1000))
-
-        # Building the table raw for this variation
-        row_data_list = []
-        for i in table_data_cols:
-            if i not in row_data_dict:
-                row_data_list.append(-1)
-            else:
-                row_data_list.append(row_data_dict[i])
-        table_data_rows.append(row_data_list)
-        post_results("Performance Table", test_method, *row_data_list)
-
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="8k data block random readn/write IOPS Performance Table",
-                           table_name=self.summary, table_data=table_data)"""
-
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
-        # & read only modes
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_numjobs_iodepth
         fio_result = {}
         fio_output = {}
-        internal_result = {}
-        initial_volume_status = {}
-        final_volume_status = {}
-        diff_volume_stats = {}
-        initial_stats = {}
-        final_stats = {}
-        diff_stats = {}
 
-        volumes = []
-        for vtype in sorted(self.ec_coding):
-            if self.volume_types[vtype] not in volumes:
-                volumes.append(self.volume_types[vtype])
-        volumes.append(self.volume_types["ec"])
-        if self.use_lsv and self.check_lsv_stats:
-            volumes.append(self.volume_types["lsv"])
-
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_numjobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
-            internal_result[combo] = {}
-            initial_volume_status[combo] = {}
-            final_volume_status[combo] = {}
-            diff_volume_stats[combo] = {}
-            initial_stats[combo] = {}
-            final_stats[combo] = {}
-            diff_stats[combo] = {}
 
-            if combo in self.expected_volume_stats:
-                expected_volume_stats = self.expected_volume_stats[combo]
-            else:
-                expected_volume_stats = self.expected_volume_stats
-
-            if combo in self.expected_stats:
-                expected_stats = self.expected_stats[combo]
-            else:
-                expected_stats = self.expected_stats
+            fio_num_jobs = combo.split(',')[0].strip('() ')
+            fio_iodepth = combo.split(',')[1].strip('() ')
 
             for mode in self.fio_modes:
 
-                tmp = combo.split(',')
-                fio_block_size = tmp[0].strip('() ') + 'k'
-                fio_iodepth = tmp[1].strip('() ')
+                fio_block_size = self.fio_cmd_args["bs"]
                 fio_result[combo][mode] = True
-                internal_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
                 row_data_dict["block_size"] = fio_block_size
                 row_data_dict["iodepth"] = fio_iodepth
-                row_data_dict["size"] = self.fio_cmd_args["size"]
+                size = self.ec_info["capacity"] / (1024 * 3)
+                row_data_dict["size"] = str(size) + "G"
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
-                             "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
-                fio_job_name = "fio_ec_" + mode + "_" + self.fio_job_name[mode]
+                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC".
+                             format(mode, fio_block_size, fio_iodepth))
+                fio_job_name = self.fio_job_name + "_" + str(fio_iodepth)
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
-                                                                 bs=fio_block_size, iodepth=fio_iodepth,
-                                                                 name=fio_job_name, **self.fio_cmd_args)
+                                                                 numjobs=fio_num_jobs, iodepth=fio_iodepth,
+                                                                 name=fio_job_name, cpus_allowed=self.numa_cpus,
+                                                                 **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
                 fun_test.test_assert(fio_output[combo][mode], "FIO {} only test with the block size and IO depth set "
                                                               "to {} & {}".format(mode, fio_block_size, fio_iodepth))
@@ -659,8 +599,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fio_output[combo][mode][op][field] = int(round(value / 1000))
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value))
-                fun_test.log("FIO Command Output after multiplication:")
-                fun_test.log(fio_output[combo][mode])
 
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
@@ -669,37 +607,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fio_result[combo][mode] = False
                     fun_test.critical("No output from FIO test, hence moving to the next variation")
                     continue
-
-                """"# Comparing the FIO results with the expected value for the current block size and IO depth combo
-                for op, stats in self.expected_fio_result[combo][mode].items():
-                    for field, value in stats.items():
-                        actual = fio_output[combo][mode][op][field]
-                        row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
-                                                     int((value * (1 + self.fio_pass_threshold))))
-                        if "latency" in field:
-                            ifop = "greater"
-                            elseop = "lesser"
-                        else:
-                            ifop = "lesser"
-                            elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
-                        if compare(actual, value, self.fio_pass_threshold, ifop):
-                            fio_result[combo][mode] = False
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
-                        elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got {} than the expected range {}".
-                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
-                        else:
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} is within the expected range {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))"""
 
                 row_data_dict["fio_job_name"] = fio_job_name
 
@@ -711,18 +618,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results("EC with volume level failure domain", test_method, *row_data_list)
+                post_results("Inspur Performance Test", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         fun_test.log(fio_result)
-        fun_test.log(internal_result)
         test_result = True
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_numjobs_iodepth:
             for mode in self.fio_modes:
-                if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                if not fio_result[combo][mode]:
                     test_result = False
 
         fun_test.test_assert(test_result, self.summary)
@@ -742,7 +648,7 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         4. Create a 4:2 EC volume on top of the 6 BLT volumes.
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using vdbench
+        7. Run warm-up traffic using FIO
         8. Run the Performance for 8k transfer size Random read/write IOPS
         """)
 
@@ -768,7 +674,7 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
         4. Create a 4:2 EC volume on top of the 6 BLT volumes.
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using vdbench
+        7. Run warm-up traffic using FIO
         8. Run the Performance for 1024k transfer size Sequential read/write IOPS
         """)
 
@@ -793,7 +699,7 @@ class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
         4. Create a 4:2 EC volume on top of the 6 BLT volumes.
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using vdbench
+        7. Run warm-up traffic using FIO
         8. Run the Performance for Integrated Model read/write IOPS
         """)
 
@@ -818,7 +724,7 @@ class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
         4. Create a 4:2 EC volume on top of the 6 BLT volumes.
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using vdbench
+        7. Run warm-up traffic using FIO
         8. Run the Performance for OLTP model read/write IOPS
         """)
 
@@ -843,7 +749,7 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
         4. Create a 4:2 EC volume on top of the 6 BLT volumes.
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using vdbench
+        7. Run warm-up traffic using FIO
         8. Run the Performance for OLAP model Random read/write IOPS
         """)
 
@@ -868,7 +774,7 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
         4. Create a 4:2 EC volume on top of the 6 BLT volumes.
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using vdbench
+        7. Run warm-up traffic using FIO
         8. Run the Performance for 8k transfer size Random read/write latency
         """)
 
@@ -885,9 +791,9 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    ecscript.add_test_case(IntegratedModelReadWriteIOPS())
-    ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    # ecscript.add_test_case(Sequ   entialReadWrite1024kBlocks())
+    # ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()
