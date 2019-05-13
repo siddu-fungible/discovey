@@ -420,6 +420,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
 
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     if display_negative_results:
+                        fun_test.log("Display of negative results flag set to True")
                         data_dict['pps'] = -1
                         data_dict['throughput'] = -1
                         data_dict['latency_min'] = -1

@@ -95,6 +95,7 @@ class TestFirewallPerformance(FunTestCase):
     num_flows = 128000000
     update_charts = True
     update_json = True
+    single_flow = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -113,8 +114,9 @@ class TestFirewallPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput for HBM" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                                      "To get throughput and full load latency for HBM" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -215,7 +217,7 @@ class TestFirewallPerformance(FunTestCase):
                                                             table_name=table_name)
         fun_test.simple_assert(result, checkpoint)
 
-        if self.spray:
+        if self.spray or self.single_flow:
             mode = self.template_obj.get_interface_mode_input_speed()
             if not branch_name:
                 if publish_results:
@@ -246,11 +248,13 @@ class TestFirewallLatency(TestFirewallPerformance):
     num_flows = 128000000
     update_charts = True
     update_json = True
+    single_flow = False
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get latency for HBM" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                                      "To get half load latency for HBM" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -263,17 +267,18 @@ class TestFirewallLatency(TestFirewallPerformance):
 class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
     tc_id = 3
     tcc_file_name = "nu_le_benchmark_hbm_single_flow_full_load.tcc"  # Uni-directional
-    spray = True
+    spray = False
     half_load_latency = False
     num_flows = 1
     update_charts = True
     update_json = True
+    single_flow = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput and "
-                                      "full load latency for single flow using HBM" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                                      "To get throughput and full load latency for single flow in HBM" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -286,17 +291,18 @@ class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
 class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
     tc_id = 4
     tcc_file_name = "nu_le_benchmark_hbm_single_flow_half_load.tcc"  # Uni-directional
-    spray = True
+    spray = False
     half_load_latency = True
     num_flows = 1
     update_charts = True
     update_json = True
+    single_flow = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get half load latency "
-                                      "for single flow using HBM" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                                      "To get half load latency for single flow in hbm" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
