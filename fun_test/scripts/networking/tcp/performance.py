@@ -176,21 +176,17 @@ class TcpPerformance1Conn(FunTestCase):
         output = execute_shell_file(linux_obj=nu_lab_obj2, target_file=target_file_path, output_file=output_file)
         fun_test.simple_assert(output['result'], "Ensure file %s is executed" % target_file_path)
 
-        checkpoint = "Get Flow list during test"
-        output = network_controller_obj.get_flow_list()
+        checkpoint = "Get Flow list, resource pc and resource bam stats"
         flowlist_temp_filename = str(version) + "_" + str(self.num_flows) + '_flowlist.txt'
-        fun_test.simple_assert(populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
-                               checkpoint)
-
-        checkpoint = "Peek stats resource pc 1"
         resource_pc_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_pc.txt'
-        fun_test.simple_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                                                filename=resource_pc_temp_filename,
-                                                                pc_id=1), checkpoint)
-        fun_test.simple_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                                                filename=resource_pc_temp_filename,
-                                                                pc_id=2), checkpoint)
-        fun_test.sleep("Letting traffic be run", seconds=60)
+        resource_bam_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_bam.txt'
+        dpc_result = run_dpcsh_commands(network_controller_obj=network_controller_obj,
+                                        flow_list_file=flowlist_temp_filename,
+                                        resource_pc_file=resource_pc_temp_filename,
+                                        resource_bam_file=resource_bam_temp_filename)
+        fun_test.test_assert(dpc_result, checkpoint)
+
+        fun_test.sleep("Wait after traffic", seconds=10)
 
         netperf_output = nu_lab_obj.command("cat %s" % output_file)
         fun_test.test_assert(netperf_output, "Ensure throughput value is seen")

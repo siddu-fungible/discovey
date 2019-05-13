@@ -25,7 +25,7 @@ kernel_url=
 host_os_tgz=host_os.tgz    
 regex_tgz_url=
 
-QEMU_TGZ_NAME=qemu.tgz
+QEMU_TGZ_NAME=FunQemu.tgz
 DPCSH_TGZ_NAME=dpcsh.tgz
 FUNOS_TGZ_NAME=funos.posix-base.tgz
 DPCSH_NAME=dpcsh
@@ -104,7 +104,7 @@ if [ ! -z "$qemu_tgz_url" ]; then
     echo "---------------------"
     curl_fetch $qemu_tgz_url
     tar -xvzf $QEMU_TGZ_NAME -C $QEMU_DIRECTORY
-    qemu_linux_directory=$QEMU_DIRECTORY/qemu-Linux
+    qemu_linux_directory=$QEMU_DIRECTORY/FunQemu-Linux
     qemu_bin_directory=$qemu_linux_directory/bin
     QEMU_NAME=qemu-system-x86_64
     chmod 777 $qemu_bin_directory/$QEMU_NAME

@@ -73,7 +73,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
-        fun_test.test_assert(funeth_obj.enable_tso(hu), 'Enable HU host {} funeth interfaces TSO.'.format(
+        fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True), 'Disable HU host {} funeth interfaces TSO.'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
@@ -97,10 +97,13 @@ class FunethSanity(FunTestScript):
 
         # Boot up FS1600
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+            #boot_args = "app=hw_hsu_test retimer=0,1 --disable_dispatch_loop_switch --dpc-uart --dpc-server --csr-replay --all_100g"
+            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
             # fs = Fs.get(disable_f1_index=1)
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,
-                                               custom_boot_args="app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g")
+                                               disable_f1_index=1,
+                                               custom_boot_args=boot_args)
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
@@ -120,6 +123,7 @@ class FunethSanity(FunTestScript):
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
         setup_nu_host(funeth_obj)
@@ -127,7 +131,6 @@ class FunethSanity(FunTestScript):
         # HU host
         setup_hu_host(funeth_obj, update_driver=True)
 
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
@@ -137,7 +140,7 @@ class FunethSanity(FunTestScript):
             fun_test.shared_variables["fs"].cleanup()
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             fun_test.shared_variables["topology"].cleanup()
-        fun_test.shared_variables['funeth_obj'].unload()
+        fun_test.test_assert(fun_test.shared_variables['funeth_obj'].unload(), 'Unload funeth driver')
         fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 
 

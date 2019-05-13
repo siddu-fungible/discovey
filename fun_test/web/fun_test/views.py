@@ -22,7 +22,7 @@ def publish(request):
         setup_steps = request_json["setup_steps"]
         full_script_path = request_json["full_script_path"]
         if str(test_case_id) in [str(0), str(999)]:  #TODO: hardcoded 999
-            response["status"] = RESULT_PASS
+            response["status"] = RESULTS["PASSED"]
         else:
             jira_manager = JiraManager()
             jira_summary = test_case_summary
@@ -34,11 +34,11 @@ def publish(request):
             if test_case_id == "$tc":  #TODO: make this global
                 result = jira_manager.generate_issue()
 
-                if not result["status"]  == RESULT_PASS:
-                    response["status"] = RESULT_FAIL
+                if not result["status"] == RESULTS["PASSED"]:
+                    response["status"] = RESULTS["FAILED"]
                     logs.append(result["err_msg"])
                 else:
-                    response["status"] = RESULT_PASS
+                    response["status"] = RESULTS["PASSED"]
                     test_case_id = result["issue_id"]
                     logs.append("Fetched JIRA {}-{}".format(TCMS_PROJECT, test_case_id))
                     fix(script_path=full_script_path, id=test_case_id)

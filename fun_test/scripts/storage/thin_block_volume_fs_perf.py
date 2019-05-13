@@ -7,7 +7,7 @@ from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 from datetime import datetime
-import re
+from lib.templates.storage.fio_performance_helper import FioPerfHelper
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
@@ -86,446 +86,6 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
-fio_run_time = 20
-nvme_device_name = None
-max_cpu_usage = 0
-result_list = []
-prev_result = None
-fail_happened = False
-first = 0
-last = 0
-number_of_cores_present = 8
-use_num_jobs = 0
-use_iodepth = 0
-use_number_of_cores = 0
-present_result_obtained = {}
-previous_result_obtained = {}
-fio_rwmode = None
-fio_testfile_size = None
-
-
-def kill_process(arg1, name):
-    cmd = "pgrep %s" % name
-    pid_of = arg1.command(cmd)
-    fun_test.debug("Pid list : %s" % pid_of)
-    try:
-        split_into_list = pid_of.split('\n')
-        fun_test.debug("%s pid list : %s" % (name, split_into_list))
-        for pid in split_into_list:
-            if pid:
-                try:
-                    pid = int(re.match(r'[0-9]+', pid).group())
-                    fun_test.debug("killed pid : %s" % pid)
-                    cmd = "kill -9 %s" % pid
-                    arg1.command(cmd)
-                    time.sleep(1)
-                except:
-                    fun_test.debug("This process has already been killed")
-    except:
-        fun_test.debug("Unable to kill the process : %s" % split_into_list)
-
-
-def convert_to_comma_format(number):
-    str_data = ''
-    if number == 0:
-        return str(1)
-    for i in range(number):
-        str_data = str_data + str(i + 1) + ','
-    cpu_cores = str_data[:-1]
-    return cpu_cores
-
-
-def run_fio_command(arg1, num_jobs, iodepth, number_of_cores):
-    cores_str_format = convert_to_comma_format(number_of_cores)
-    fun_test.debug("Cpus allowed : %s" % cores_str_format)
-    fun_test.debug(cores_str_format)
-    fun_test.log_section("\n\n\nStarting traffic")
-    fun_test.log("\nStarting Fio with \nNumber of jobs  : %s \nIodepth         : %s "
-                 "\nNumber of cores : %s\nFio mode        : %s" %
-                 (num_jobs, iodepth, number_of_cores, fio_rwmode))
-
-    arg1.pcie_fio(filename=nvme_device_name,
-                  size=fio_testfile_size,
-                  bs="4k",
-                  rw=fio_rwmode,
-                  iodepth=iodepth,
-                  numjobs=num_jobs,
-                  name="pci_fio_test",
-                  group_reporting=1,
-                  prio=0,
-                  direct=1,
-                  ioengine="libaio",
-                  runtime=fio_run_time,
-                  time_based=1,
-                  cpus_allowed=cores_str_format,
-                  timeout=fio_run_time * 2
-                  )
-
-
-def start_iostat_in_background(arg1):
-    fun_test.debug("Starting the iostat in background")
-    iostat_device = nvme_device_name[5:]
-    cmd = "iostat -d %s 1" % (iostat_device)
-    arg1.start_bg_process(cmd, output_file="iostat.txt", timeout=fio_run_time + 50)
-    return
-
-
-def start_mpstat_in_background(arg1, number_of_cores):
-    fun_test.debug("Starting the mpstat in background")
-    cores_str_format = convert_to_comma_format(number_of_cores)
-    cmd = "mpstat -P %s 1" % (cores_str_format)
-    arg1.start_bg_process(cmd, output_file="mpstat.txt", timeout=fio_run_time + 50)
-    return
-
-
-def parse_iostat_file(arg1):
-    fun_test.debug("Parsing Iostat.txt")
-    cmd = "cat iostat.txt"
-    output = arg1.command(cmd)
-    fun_test.debug("IOstat has finished\nIOSTAT output")
-    iostat_device = nvme_device_name[5:]
-    lines = output.split('\n')
-    lines = lines[12:(len(lines)) - 6]
-    tps_list = []
-    kb_read_list = []
-    ignore_first = True
-    for line in lines:
-        match_disk = re.search(iostat_device, line)
-        if match_disk:
-            if ignore_first:
-                ignore_first = False
-                continue
-            values_list = re.findall(r'(?<= )[0-9.]+', line)
-            tps = float(values_list[0])
-            kb_read = float(values_list[1])
-            if tps > 0:
-                tps_list.append(tps)
-            if kb_read > 0:
-                kb_read_list.append(kb_read)
-    try:
-        average_tps = round(sum(tps_list) / float(len(tps_list)), 2)
-        average_kbps_read = round(sum(kb_read_list) / len(kb_read_list), 2)
-        max_tps = max(tps_list)
-        max_kbread = max(kb_read_list)
-        fun_test.debug("IOstat result")
-        fun_test.debug("Maximum \ntps : %s    Kb_read/s : %s " % (max_tps, max_kbread))
-        fun_test.debug("Average \ntps : %s    Kb_read/s : %s " % (average_tps, average_kbps_read))
-        dictionary = {}
-        dictionary['average_tps'] = average_tps
-        dictionary['average_kbr'] = average_kbps_read
-        dictionary['max_tps'] = max_tps
-        dictionary['max_kbr'] = max_kbread
-        fun_test.debug(dictionary)
-        return dictionary
-    except:
-        fun_test.critical("Error in Parsing the iostat.txt file")
-
-
-def parse_mpstat_file(arg1, number_of_cores):
-    fun_test.debug("Parsing Mpstat.txt")
-    global max_cpu_usage
-    cmd = "cat mpstat.txt"
-    error_msg = ''
-    iowait_flag = True
-    cpu_flag = True
-    output = arg1.command(cmd)
-    fun_test.debug("MPSTAT output")
-
-    if output:
-        lines = output.split("CPU")
-        try:
-            for line in lines:
-                spl = line.split("\n")
-                for i in range(number_of_cores):
-                    try:
-                        data = spl[i + 1]
-                        data = re.sub(r' +', ' ', data)
-                        spl_space = data.split(" ")
-                        tmp_dict = {}
-                        core = spl_space[2]
-                        cpu_usage_usr = float(spl_space[3])
-                        cpu_usage_system = float(spl_space[5])
-                        total_cpu_usage = round(cpu_usage_usr + cpu_usage_system, 2)
-                        iowait = float(spl_space[6])
-
-                        if (iowait > 2):
-                            error_msg = error_msg + '\n' + "IO wait for core %s : %s [greater than 0]" % (core, iowait)
-                            iowait_flag = False
-                        elif (total_cpu_usage > 80):
-                            error_msg = error_msg + '\n' + "Cpu usage for core %s: %s [greater than 99 percent]" \
-                                        % (core, total_cpu_usage)
-                            cpu_flag = False
-
-                        if total_cpu_usage > max_cpu_usage:
-                            max_cpu_usage = total_cpu_usage
-
-                        tmp_dict["iowait"] = iowait
-                        tmp_dict["total_cpu_usage"] = total_cpu_usage
-                        tmp_dict["core"] = core
-                        fun_test.debug(tmp_dict)
-                    except:
-                        fun_test.debug("Junk data")
-
-            if iowait_flag and cpu_flag:
-                fun_test.debug("NO errors its running")
-            else:
-                fun_test.debug(error_msg)
-
-            return iowait_flag, cpu_flag
-        except:
-            fun_test.critical("Unable to parse the mpstat.txt file")
-
-
-def save_the_results(num_jobs, iodepth, number_of_cores, result_iostat, iowait_flag, cpu_flag, eqm_flag, difference_eqm,
-                     final_working):
-    fun_test.debug("Saving results")
-    global max_cpu_usage
-    dictionary = {}
-    iowait_flag = not iowait_flag
-    cpu_flag = not cpu_flag
-    eqm_flag = not eqm_flag
-    dictionary["num_jobs"] = num_jobs
-    dictionary["iodepth"] = iodepth
-    dictionary["number_of_cores"] = number_of_cores
-    dictionary["iowait_flag"] = iowait_flag
-    dictionary["cpu_flag"] = cpu_flag
-    dictionary["eqm_flag"] = eqm_flag
-    dictionary["difference_eqm"] = difference_eqm
-    dictionary.update(result_iostat.copy())
-    if final_working:
-        result = "Passed"
-    else:
-        result = "Failed"
-    dictionary["Result"] = result
-    dictionary["max_cpu_usage"] = max_cpu_usage
-    result_list.append(dictionary)
-
-    iops = result_iostat['max_tps']
-    bw = result_iostat['max_kbr']
-    a_iops = result_iostat["average_tps"]
-    a_bw = result_iostat['average_kbr']
-
-    fun_test.log_section("\n\nFio result")
-    fun_test.log("Number of jobs     : %s" % num_jobs)
-    fun_test.log("Iodepth           : %s" % iodepth)
-    fun_test.log("Number of cores   : %s" % number_of_cores)
-    fun_test.log("Max IOPS          : %s" % iops)
-    fun_test.log("Max Bandwidth     : %s" % bw)
-    fun_test.log("Average IOPS      : %s" % a_iops)
-    fun_test.log("Average Bandwidth : %s" % a_bw)
-    fun_test.log("Cpu usage error   : %s" % cpu_flag)
-    fun_test.log("Iowait error      : %s" % iowait_flag)
-    fun_test.log("EQM error         : %s" % eqm_flag)
-    fun_test.log("EQM difference    : %s" % difference_eqm)
-    fun_test.log("Max Cpu usage     : %s" % max_cpu_usage)
-    fun_test.log("Overall result    : %s" % result)
-    max_cpu_usage = 0
-
-
-def find(key1, value1, key2, value2):
-    for i, dic in enumerate(result_list):
-        if dic[key1] == value1 and dic[key2] == value2:
-            return i
-    return -1
-
-
-def print_final_result(result_iostat):
-    fun_test.log_section("\n\nOverall summary")
-    for index, i in enumerate(result_list):
-        fun_test.log("\nResult %s" % (index + 1))
-        iops = i['max_tps']
-        bw = i['max_kbr']
-        a_iops = i["average_tps"]
-        a_bw = i['average_kbr']
-        num_jobs = i['num_jobs']
-        iodepth = i['iodepth']
-        number_of_cores = i['number_of_cores']
-        iowait_flag = i['iowait_flag']
-        cpu_flag = i['cpu_flag']
-        eqm_flag = i['eqm_flag']
-        difference_eqm = i['difference_eqm']
-        result = i["Result"]
-        max_cpu_usage = i["max_cpu_usage"]
-
-        fun_test.log("Number of jobs     : %s" % num_jobs)
-        fun_test.log("Iodepth           : %s" % iodepth)
-        fun_test.log("Number of cores   : %s" % number_of_cores)
-        fun_test.log("Max IOPS          : %s" % iops)
-        fun_test.log("Max Bandwidth     : %s" % bw)
-        fun_test.log("Average IOPS      : %s" % a_iops)
-        fun_test.log("Average Bandwidth : %s" % a_bw)
-        fun_test.log("Cpu usage error   : %s" % cpu_flag)
-        fun_test.log("Iowait error      : %s" % iowait_flag)
-        fun_test.log("EQM error         : %s" % eqm_flag)
-        fun_test.log("EQM difference    : %s" % difference_eqm)
-        fun_test.log("Max Cpu usage     : %s" % max_cpu_usage)
-        fun_test.log("Overall result    : %s" % result)
-    try:
-        num_jobs = result_iostat['num_jobs']
-        iodepth = result_iostat['iodepth']
-
-        fun_test.log_section("\n\nThe final results for this loop are")
-
-        index_of_the_result = find(key1='iodepth', value1=iodepth, key2='num_jobs', value2=num_jobs)
-        i = result_list[index_of_the_result]
-        iops = i['max_tps']
-        bw = i['max_kbr']
-        a_iops = i["average_tps"]
-        a_bw = i['average_kbr']
-        num_jobs = i['num_jobs']
-        iodepth = i['iodepth']
-        number_of_cores = i['number_of_cores']
-        iowait_flag = i['iowait_flag']
-        cpu_flag = i['cpu_flag']
-        eqm_flag = i['eqm_flag']
-        difference_eqm = i['difference_eqm']
-        result = i["Result"]
-        max_cpu_usage = i["max_cpu_usage"]
-
-        fun_test.log("Number of jobs     : %s" % num_jobs)
-        fun_test.log("Iodepth           : %s" % iodepth)
-        fun_test.log("Number of cores   : %s" % number_of_cores)
-        fun_test.log("Max IOPS          : %s" % iops)
-        fun_test.log("Max Bandwidth     : %s" % bw)
-        fun_test.log("Average IOPS      : %s" % a_iops)
-        fun_test.log("Average Bandwidth : %s" % a_bw)
-        fun_test.log("Cpu usage error   : %s" % cpu_flag)
-        fun_test.log("Iowait error      : %s" % iowait_flag)
-        fun_test.log("EQM error         : %s" % eqm_flag)
-        fun_test.log("EQM difference    : %s" % difference_eqm)
-        fun_test.log("Max Cpu usage     : %s" % max_cpu_usage)
-        fun_test.log("Overall result    : %s" % result)
-    except:
-        fun_test.critical("Error in final results calculation")
-
-
-def logic_design(working, num_jobs, iodepth, number_of_cores, result_iostat):
-    fun_test.debug("Running logic")
-    global prev_result, fail_happened, first, last, present_result_obtained
-    fun_test.debug("Starting the logic")
-
-    if working:
-        if prev_result:
-            o_m_tps = prev_result['max_tps']
-            o_m_kbr = prev_result['max_kbr']
-            n_m_tps = result_iostat['max_tps']
-            n_m_kbr = result_iostat['max_kbr']
-            fun_test.debug("\n\n\n\n Previous result : %s \n Present result : %s" % (prev_result, result_iostat))
-            if (o_m_tps > n_m_tps) and (o_m_kbr > n_m_kbr):
-                present_result_obtained = prev_result.copy()
-                print_final_result(prev_result)
-                iodepth = prev_result["iodepth"]
-                num_jobs = prev_result["num_jobs"]
-                number_of_cores = prev_result["number_of_cores"]
-                return (num_jobs, iodepth, number_of_cores, False)
-
-        fun_test.debug("Copying the values")
-        prev_result = result_iostat.copy()
-        prev_result["num_jobs"] = num_jobs
-        prev_result["iodepth"] = iodepth
-        prev_result["number_of_cores"] = number_of_cores
-        first = iodepth
-        fun_test.debug("Previous result : %s" % prev_result)
-        fun_test.debug("Present result  : %s" % result_iostat)
-        if fail_happened:
-            iodepth = int((first + last) / 2)
-        else:
-            iodepth = iodepth * 2
-    else:
-        last = iodepth
-        iodepth = int((first + last) / 2)
-        fail_happened = True
-
-    if first == iodepth:
-        if prev_result:
-            print_final_result(prev_result)
-            iodepth = prev_result["iodepth"]
-            num_jobs = prev_result["num_jobs"]
-            number_of_cores = prev_result["number_of_cores"]
-            present_result_obtained = prev_result.copy()
-            return (num_jobs, iodepth, number_of_cores, False)
-        else:
-            return 0, 0, 0, False
-    else:
-        return (num_jobs, iodepth, number_of_cores, True)
-
-
-def function_flow(handle, num_jobs, iodepth, number_of_cores):
-    global use_iodepth, use_num_jobs, use_number_of_cores, first, last, fail_happened, prev_result, result_list, \
-        previous_result_obtained, present_result_obtained
-    fun_test.log("\n\n\n\n\nStarting the process with \nNumber of jobs   : %s"
-                 "\nIodepth          : %s\nNumber of cores : %s\n"
-                 % (num_jobs, iodepth, number_of_cores))
-    kill_process(handle, "iostat")
-    kill_process(handle, "mpstat")
-    start_iostat_in_background(handle)
-    start_mpstat_in_background(handle, number_of_cores)
-    fun_test.log("\nEqm stats before fio run")
-    eqm_stats_before = fun_test.shared_variables["storage_controller"].peek(props_tree="stats/eqm")
-    run_fio_command(handle, num_jobs=num_jobs, iodepth=iodepth, number_of_cores=number_of_cores)
-    fun_test.log("\nEqm stats after fio run")
-    eqm_stats_after = fun_test.shared_variables["storage_controller"].peek(props_tree="stats/eqm")
-    kill_process(handle, "iostat")
-    kill_process(handle, "mpstat")
-    result_iostat = parse_iostat_file(handle)
-    iowait_flag, cpu_flag = parse_mpstat_file(handle, number_of_cores)
-    try:
-        eqm_parameter_before = int(eqm_stats_before["data"]["EFI->EQC Enqueue Interface valid"])
-        eqm_parameter_after = int(eqm_stats_after["data"]["EFI->EQC Enqueue Interface valid"])
-        fun_test.debug("Eqm stats before fio : %s" % eqm_stats_before)
-        fun_test.debug("Eqm stats after fio  : %s" % eqm_stats_after)
-        difference_eqm = abs(eqm_parameter_after - eqm_parameter_before)
-        eqm_flag = False
-        if difference_eqm >= 0 and difference_eqm <= 5:
-            eqm_flag = True
-    except:
-        fun_test.critical("Error in feching eqm stats")
-        difference_eqm=0
-        eqm_flag = True
-
-    special_condition = False
-    if (not cpu_flag and iowait_flag and eqm_flag):
-        special_condition = True
-        final_working = False
-        first = 0
-    elif iowait_flag and cpu_flag and eqm_flag:
-        final_working = True
-    else:
-        final_working = False
-
-    save_the_results(num_jobs, iodepth, number_of_cores, result_iostat, iowait_flag, cpu_flag, eqm_flag,
-                     difference_eqm, final_working)
-
-    if special_condition:
-        run_again = True
-        num_jobs = 2 * num_jobs
-        number_of_cores = 2 * number_of_cores
-    else:
-        num_jobs, iodepth, number_of_cores, run_again = logic_design(working=final_working,
-                                                                     num_jobs=num_jobs,
-                                                                     iodepth=iodepth,
-                                                                     number_of_cores=number_of_cores,
-                                                                     result_iostat=result_iostat)
-
-    if run_again:
-        fun_test.debug("Running the logic again")
-        return function_flow(handle, num_jobs, iodepth, number_of_cores)
-
-    use_iodepth = present_result_obtained["iodepth"]
-    use_num_jobs = present_result_obtained["num_jobs"]
-    use_number_of_cores = present_result_obtained["number_of_cores"]
-
-    prev_result = None
-    present_result_obtained = None
-    fail_happened = False
-    first = 0
-    last = 0
-    result_list = []
-    previous_result_obtained = None
-
-    return
-
-
 class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -537,7 +97,8 @@ class BLTVolumePerformanceScript(FunTestScript):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
 
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=tb_config["dut_info"][0]["disable_f1_index"])
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"],
+                    disable_f1_index=tb_config["dut_info"][0]["disable_f1_index"])
         fun_test.shared_variables["fs"] = fs
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
@@ -563,22 +124,25 @@ class BLTVolumePerformanceScript(FunTestScript):
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
-        self.volume_details = fun_test.shared_variables["volume_details"]
-        command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
-                                                                    uuid=fun_test.shared_variables["thin_uuid"],
-                                                                    huid=tb_config['dut_info'][0]['huid'],
-                                                                    ctlid=tb_config['dut_info'][0]['ctlid'],
-                                                                    command_duration=30)
-        fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+        try:
+            self.volume_details = fun_test.shared_variables["volume_details"]
+            command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
+                                                                        uuid=fun_test.shared_variables["thin_uuid"],
+                                                                        huid=tb_config['dut_info'][0]['huid'],
+                                                                        ctlid=tb_config['dut_info'][0]['ctlid'],
+                                                                        command_duration=30)
+            fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
-        # Deleting the volume
-        command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
-                                                               block_size=self.volume_details["block_size"],
-                                                               type=self.volume_details["type"],
-                                                               name=self.volume_details["name"],
-                                                               uuid=fun_test.shared_variables["thin_uuid"],
-                                                               command_duration=10)
-        fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
+            # Deleting the volume
+            command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
+                                                                   block_size=self.volume_details["block_size"],
+                                                                   type=self.volume_details["type"],
+                                                                   name=self.volume_details["name"],
+                                                                   uuid=fun_test.shared_variables["thin_uuid"],
+                                                                   command_duration=10)
+            fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
+        except:
+            fun_test.log("Volume clean-up failed")
 
         fun_test.log("FS cleanup")
         fun_test.shared_variables["fs"].cleanup()
@@ -755,27 +319,24 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
-        global fio_rwmode, nvme_device_name, fio_testfile_size
-        fio_rwmode = self.fio_modes[0]
-        nvme_device_name = self.nvme_block_device
-        fio_testfile_size = self.fio_cmd_args["size"]
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
+        obj = FioPerfHelper(handle=self.end_host,
+                            dpc_conntroller=self.storage_controller,
+                            fio_testfile_size=self.fio_cmd_args["size"],
+                            fio_rwmode=self.fio_modes[0],
+                            nvme_device_name=self.nvme_block_device,
+                            fio_test_runtime=self.perf_logic_params["fio_run_time"],
+                            cpu_usage_limit=self.perf_logic_params["max_cpu"],
+                            iowait_limit=self.perf_logic_params["max_iowait"],
+                            eqm_limit=self.perf_logic_params["eqm_difference"])
 
-        try:
-            # Logic to find best iodepth & numjobs
-            function_flow(self.end_host, 1, 1, 1)
-
-            fun_test.log_section("Comparing all the values the final results to be used are")
-            fun_test.log("The Final values are  \nJobs     : %s\nIodepth  : %s\nNumber of cores : %s" %
-                         (use_num_jobs, use_iodepth, use_number_of_cores))
-        except:
-            fun_test.critical("Logic not working")
-
+        use_numjobs, use_iodepth, use_num_cores = obj.get_fio_iodepth_num_jobs_num_cores()
         # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         # self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-        # storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid,
+        # storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"],
+        # self.thin_uuid,
         #                                             "stats")
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
@@ -825,7 +386,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 expected_stats = self.expected_stats
 
             for mode in self.fio_modes:
-
                 tmp = combo.split(',')
                 fio_block_size = tmp[0].strip('() ') + 'k'
                 fio_iodepth = tmp[1].strip('() ')
@@ -871,29 +431,34 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         initial_stats[combo][mode][key] = command_result["data"]
                     fun_test.log("{} stats at the beginning of the test:".format(key))
                     fun_test.log(initial_stats[combo][mode][key])'''
-
-                start_iostat_in_background(self.end_host)
+                cores_allowed_list = obj.form_cores_allowed_list()
+                cpus_allowed = obj.cores_allowed_comma_format(cores_allowed_list=cores_allowed_list,
+                                                              num_cores=use_num_cores)
+                obj.start_fio_analysis(num_jobs=use_numjobs,
+                                       iodepth=use_iodepth,
+                                       num_cores=use_num_cores,
+                                       fio_rwmode=mode,
+                                       cpus_allowed=cpus_allowed,
+                                       fio_test_runtime=self.fio_cmd_args["runtime"])
 
                 fun_test.log("Running FIO...")
                 fio_job_name = "fio_" + mode + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
 
-                cpus_allowed_str_format = convert_to_comma_format(use_number_of_cores)
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
                                                                  bs=fio_block_size, iodepth=use_iodepth,
-                                                                 numjobs=use_num_jobs,
-                                                                 cpus_allowed=cpus_allowed_str_format,
+                                                                 numjobs=use_numjobs,
+                                                                 cpus_allowed=cpus_allowed,
                                                                  name=fio_job_name, **self.fio_cmd_args)
 
-                kill_process(self.end_host, "iostat")
-                iostat_results = parse_iostat_file(self.end_host)
+                iostat_results = obj.get_fio_analysis_results()
                 fun_test.debug(iostat_results)
                 fun_test.log_section("Iostat results")
                 fun_test.log("Average IOPS  : {}".format(iostat_results["average_tps"]))
                 fun_test.log("Average BW    : {} Kb/s".format(iostat_results["average_kbr"]))
-                fun_test.log("Maximum IOPS  : {} ".format(iostat_results["max_tps"]))
-                fun_test.log("Maximum BW    : {} Kb/s".format(iostat_results["max_kbr"]))
+                fun_test.log("Maximum IOPS  : {} ".format(iostat_results["maximum_tps"]))
+                fun_test.log("Maximum BW    : {} Kb/s".format(iostat_results["maximum_kbr"]))
 
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
@@ -1010,8 +575,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
-                row_data_dict["readiops"] = int(round(iostat_results["average_tps"]))
-                row_data_dict["readbw"] = int(round(iostat_results["average_kbr"] / 1000))
 
                 # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 # Comparing the internal volume stats with the expected value

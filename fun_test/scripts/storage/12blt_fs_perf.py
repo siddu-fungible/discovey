@@ -1,11 +1,8 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper, BltVolumePerformanceHelper
 from lib.host.linux import Linux
-from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
-from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 from datetime import datetime
 
@@ -17,27 +14,11 @@ tb_config = {
     "name": "Basic Storage",
     "dut_info": {
         0: {
-            "mode": Dut.MODE_EMULATION,
-            "type": Dut.DUT_TYPE_FSU,
-            "ip": "server26",
-            "user": REGRESSION_USER,
-            "passwd": REGRESSION_USER_PASSWORD,
-            "emu_target": "palladium",
-            "model": "StorageNetwork2",
-            "run_mode": "build_only",
-            "pci_mode": "all",
             "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test --serial sku=SKU_FS1600_0 --all_100g"
                        " --dis-stats --dpc-server --dpc-uart --csr-replay --nofreeze",
             "huid": 7,
             "fnid": 5,
             "ctlid": 0,
-            "interface_info": {
-                0: {
-                    "vms": 0,
-                    "type": DutInterface.INTERFACE_TYPE_PCIE
-                }
-            },
-            "start_mode": F1.START_MODE_DPCSH_ONLY,
             "perf_multiplier": 1
         },
     },
@@ -109,8 +90,12 @@ class BLTVolumePerformanceScript(FunTestScript):
         """)
 
     def setup(self):
-        # topology_obj_helper = TopologyHelper(spec=topology_dict)
-        # topology = topology_obj_helper.deploy()
+        # Reboot host
+        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
+                              ssh_username=tb_config["tg_info"][0]["user"],
+                              ssh_password=tb_config["tg_info"][0]["passwd"])
+        fun_test.shared_variables["end_host_inst"] = self.end_host
+        self.end_host.reboot(non_blocking=True)
 
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
@@ -239,10 +224,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         fs = fun_test.shared_variables["fs"]
-        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
-                              ssh_username=tb_config["tg_info"][0]["user"],
-                              ssh_password=tb_config["tg_info"][0]["passwd"])
-        fun_test.shared_variables["end_host_inst"] = self.end_host
+        self.end_host = fun_test.shared_variables["end_host_inst"]
         self.dpc_host = fs.get_come()
 
         f1 = fun_test.shared_variables["f1"]
@@ -372,6 +354,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
+
+        fun_test.sleep("Starting tests...", 10)
 
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
@@ -518,10 +502,24 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         pass
 
 
-class BLTFioSeqRead(BLTVolumePerformanceTestcase):
+class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
+                              summary="Random Read performance on BLT volume",
+                              steps='''
+        1. Create a BLT on FS attached with SSD.
+        2. Export (Attach) this BLT to the external host connected via the network interface. 
+        3. Pre-condition the volume with write test using fio.
+        4. Run the FIO Random Read test(without verify) from the 
+         host and check the performance are inline with the expected threshold. 
+        ''')
+
+
+class BLTFioSeqRead(BLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=2,
                               summary="Sequential Read performance on BLT volume",
                               steps='''
         1. Create a BLT on FS attached with SSD.
@@ -532,24 +530,10 @@ class BLTFioSeqRead(BLTVolumePerformanceTestcase):
         ''')
 
 
-class BLTFioRandRead(BLTVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Random Read performance on BLT volume",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Rand Read test(without verify) from the 
-         host and check the performance are inline with the expected threshold. 
-        ''')
-
-
 if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
-    bltscript.add_test_case(BLTFioSeqRead())
     bltscript.add_test_case(BLTFioRandRead())
+    bltscript.add_test_case(BLTFioSeqRead())
 
     bltscript.run()

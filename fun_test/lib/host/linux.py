@@ -6,7 +6,7 @@ import collections
 import sys
 import os
 import time
-from lib.system.fun_test import fun_test
+from lib.system.fun_test import fun_test, FunTimer
 from lib.system.utils import ToDictMixin
 import json
 import copy
@@ -717,7 +717,7 @@ class Linux(object, ToDictMixin):
         lines = o.split('\n')
         files = []
         for line in lines:
-            if line:
+            if line and "No such" not in line :
                 reg = re.compile(r'(.*) (\S+)')
                 m = reg.search(line)
                 if m:
@@ -1268,13 +1268,15 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def lspci(self, grep_filter=None, verbose=False, device=None):
+    def lspci(self, grep_filter=None, verbose=False, device=None, slot=None):
         result = []
         command = "lspci"
         if verbose:
             command += " -vvv"
         if device:
             command += " -d {}".format(device)
+        if slot:
+            command += " -s {}".format(slot)
         if grep_filter:
             command += " | grep {}".format(grep_filter)
         output = self.sudo_command(command)
@@ -1302,6 +1304,9 @@ class Linux(object, ToDictMixin):
                 result.append(record)
 
             if verbose:
+                match_numa_node = re.search(r'(?<=NUMA node: )[0-9]+', line)
+                if match_numa_node:
+                    current_record['numa_node'] = int(match_numa_node.group())
                 m2 = re.search(r'\s+Capabilities: \[(\d+)\]', line)  # Capabilities: [80] Express (v2) Endpoint, MSI 00
                 if m2:
                     current_record["capabilities"][m2.group(1)] = {}
@@ -1838,66 +1843,99 @@ class Linux(object, ToDictMixin):
         return fio_dict
 
     @fun_test.safe
-    def reboot(self, timeout=5, retries=6, non_blocking=None):
-
+    def reboot(self, timeout=5, retries=6, max_wait_time=180, non_blocking=None, ipmi_details=None):
+        """
+        :param timeout: deprecated
+        :param retries: deprecated
+        :param max_wait_time: Total time to wait before declaring failure
+        :param non_blocking: if set to True, return immediately after issuing a reboot
+        :param ipmi_details: if ipmi_details are provided we will try power-cycling in case normal bootup did not work
+        :return:
+        """
         result = True
-        disconnect = True
 
         # Rebooting the host
         try:
             self.sudo_command(command="reboot", timeout=timeout)
-
+            self.ping(dst="127.0.0.1", count=40)
         except Exception as ex:
             self.disconnect()
             self._set_defaults()
-            disconnect = False
-
             fun_test.sleep("Waiting for the host to go down", seconds=10)
-            if disconnect:
-                try:
-                    self.disconnect()
-                    self._set_defaults()
-                except:
-                    pass
-
+            try:
+                self.disconnect()
+                self._set_defaults()
+            except:
+                pass
         if not non_blocking:
-            for i in range(retries):
-                try:
-                    self.ping(dst="127.0.0.1")
-                    command_output = self.command(command="pwd", timeout=timeout)
-                    if command_output:
-                        break
-                except Exception as ex:
-                    fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
-                    self.disconnect()
-                    self._set_defaults()
-                    continue
-            else:
-                fun_test.critical("Host didn't come up from reboot even after {} seconds".format(retries * timeout))
-                result = False
-            if result:
-                fun_test.sleep("Post-reboot", seconds=15)
-
+            result = self.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
         return result
 
     @fun_test.safe
-    def is_host_up(self, timeout=5, retries=6):
-        result = True
-        for i in range(retries):
-            try:
-                command_output = self.command(command="pwd", timeout=timeout)
-                if command_output:
-                    break
-            except Exception as ex:
-                fun_test.sleep("Waiting for the host to become reachable", timeout)
-                self.disconnect()
-                self._set_defaults()
-                continue
+    def ensure_host_is_up(self, max_wait_time=180, ipmi_details=None):
+        """
+        Waits until the host is reachable. Typically needed after a reboot
+        :param max_wait_time: total time to wait before giving
+        :return: True, if the host is pingable and ssh'able, else False
+        """
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
         else:
-            fun_test.critical("Host is not reachable even after trying it for {} seconds".format(retries * timeout))
+            fun_test.log("Regression service host could not be instantiated")
+        host_is_up = False
+        max_reboot_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        ping_result = False
+        while not host_is_up and not max_reboot_timer.is_expired():
+            if service_host and not ping_result:
+                ping_result = service_host.ping(dst=self.host_ip, count=20)
+                if ping_result:
+                    max_reboot_timer = FunTimer(max_time=30)
+            if ping_result or not service_host:
+                try:
+                    fun_test.log("Attempting SSH")
+                    self.command("pwd")
+                    host_is_up = True
+                    result = host_is_up
+                    fun_test.log("Host: {} is up".format(str(self)))
+                    break
+                except Exception as ex:
+                    pass
+            fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
+        if not host_is_up:
             result = False
+            fun_test.critical("Host: {} is not reachable after reboot".format(self.host_ip))
 
+        if not host_is_up and service_host:
+            result = False
+            if not result and ipmi_details:
+                fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
+                ipmi_host_ip = ipmi_details["host_ip"]
+                ipmi_username = ipmi_details["username"]
+                ipmi_password = ipmi_details["password"]
+                try:
+                    service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                    fun_test.log("IPMI power-cycle complete")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                    service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                finally:
+                    return self.ensure_host_is_up(max_wait_time=max_wait_time)
         return result
+
+    @fun_test.safe
+    def is_host_up(self, timeout=5, retries=6, max_wait_time=180):
+        """
+        deprecated. use ensure_host_is_up
+        :param timeout: deprecated
+        :param retries: deprecated
+        :param max_wait_time: time to wait before giving up
+        :return:
+        """
+        return self.ensure_host_is_up(max_wait_time=max_wait_time)
+
 
     @fun_test.safe
     def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", chassis=True):
@@ -2343,6 +2381,44 @@ class Linux(object, ToDictMixin):
             return int(match.group(1))
 
     @fun_test.safe
+    def free(self, memory=None):
+        cmd = "free"
+        if memory:
+            cmd += " -{}".format(memory)
+        output = self.command(cmd)
+        values_list = re.findall(r'[0-9]+', output)
+        values = {}
+        if values_list:
+            values_list_int = map(int, values_list)
+            values = {
+                "total": values_list_int[0],
+                "used": values_list_int[1],
+                "free": values_list_int[2],
+                "shared": values_list_int[3],
+                "cache": values_list_int[4],
+                "available": values_list_int[5],
+                "swap_total": values_list_int[6],
+                "swap_used": values_list_int[7],
+                "swap_free": values_list_int[8]
+            }
+        return values
+
+    @fun_test.safe
+    def lscpu(self, grep_filter=None):
+        cmd = "lscpu"
+        if grep_filter:
+            cmd = cmd + ' | grep {}'.format(grep_filter)
+        output = self.command(cmd)
+        lines = output.split('\n')
+        lscpu_dictionary = {}
+        for line in lines:
+            match_key_value = re.search(r'(.*):(.*)', line)
+            if match_key_value:
+                key = match_key_value.group(1)
+                value = match_key_value.group(2).strip()
+                lscpu_dictionary[key] = value
+        return lscpu_dictionary
+
     def ls(self, file, sudo=False, timeout=10):
         file_info = {}
         header_list = ["permissions", "links", "owner", "group", "size", "month", "day", "time", "name"]
@@ -2360,6 +2436,7 @@ class Linux(object, ToDictMixin):
                 file_info[header] = output[index]
 
         return file_info
+
 
 
 class LinuxBackup:

@@ -20,7 +20,7 @@ class Metric:
         return json.dumps(self, default=lambda o: o.__dict__, indent=4)
 
 if __name__ == "__main__":
-    total = Metric(name="Total")
+    total = Metric(name="F1")
     networking = Metric(name="Networking")
     storage = Metric(name="Storage")
     accelerators = Metric(name="Accelerators")

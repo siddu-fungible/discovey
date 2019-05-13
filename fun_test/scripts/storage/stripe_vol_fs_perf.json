@@ -9,6 +9,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "64k", "iodepth": 4, "size": "32G", "rw": "write", "direct": 1, "prio": 0,"timeout": 800},
+    "perf_logic_params": {"max_cpu": 80, "max_iowait": 0,"eqm_difference": 5,"fio_run_time": 20},
     "fio_cmd_args": {"ioengine": "mmap", "thread": 1, "numjobs": 12, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254, "runtime": 300, "group_reporting": 1, "timeout": 400},
     "fio_modes": ["randread"],
     "iostat_details": { "interval": 2, "iterations": 70},
@@ -20,18 +21,6 @@
     "create_file_system": true,
     "expected_fio_result": {
       "(4, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
-    },
-    "expected_volume_stats": {
-      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
-    },
-    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
-    // The first element is the expected value and the second element is the maximum threshold in absolute value
-    "expected_stats": {
-      "read": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472384)"},
-        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
-        "wustacks": {"in_use": "(0, 1)"}
-      }
     }
   },
   "BLTFioRandRead12": {
@@ -44,6 +33,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "64k", "iodepth": 1, "fill_device": "1", "rw": "write", "direct": 1, "prio": 0,"timeout": 800},
+    "perf_logic_params": {"max_cpu": 80, "max_iowait": 0,"eqm_difference": 5,"fio_run_time": 20},
     "fio_cmd_args": {"ioengine": "mmap", "thread": 1, "numjobs": 12, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254, "runtime": 300, "group_reporting": 1, "timeout": 400},
     "fio_modes": ["randread"],
     "iostat_details": { "interval": 2, "iterations": 70},

@@ -17,18 +17,28 @@ class ScriptSetup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="""
-        1. Connect to DPCSH and configure egress NU/HNU buffer_pool and enable global PFC
+        1. Connect to DPCSH and configure etp pkt size
         """)
 
     def setup(self):
-        global dut_config, network_controller_obj, spirent_config, TIMESTAMP
+        global dut_config, network_controller_obj, spirent_config, TIMESTAMP, publish_results, \
+            branch_name
 
         nu_config_obj = NuConfigManager()
         f1_index = nu_config_obj.get_f1_index()
+        if not f1_index:
+            f1_index = 0
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fs = Fs.get(disable_f1_index=f1_index)
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+
+        private_branch_funos = fun_test.get_build_parameter(parameter='BRANCH_FunOS')
+        if private_branch_funos:
+            fun_test.shared_variables['funos_branch'] = private_branch_funos
+
+        job_inputs = fun_test.get_job_inputs()
+        fun_test.shared_variables['inputs'] = job_inputs
 
         dut_type = nu_config_obj.DUT_TYPE
         fun_test.shared_variables['dut_type'] = dut_type
@@ -80,6 +90,16 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
         '''
+        inputs = fun_test.shared_variables['inputs']
+        publish_results = False
+        branch_name = None
+        publish_results = True
+        if inputs:
+            if 'publish_results' in inputs:
+                publish_results = inputs['publish_results']
+
+        if 'funos_branch' in fun_test.shared_variables:
+            branch_name = fun_test.shared_variables['funos_branch']
 
         if not older_build:
             fwd_benchmark_ports = [8, 12]
@@ -124,7 +144,8 @@ class TestFwdPerformance(FunTestCase):
     spray = True
     half_load_latency = False
     update_charts = True
-    update_json = False
+    update_json = True
+    single_flow = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -143,8 +164,9 @@ class TestFwdPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get throughput and full load latency for FWD" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -176,6 +198,7 @@ class TestFwdPerformance(FunTestCase):
             fun_test.test_assert(result, checkpoint)
 
     def run(self):
+        display_negative_results = False
         fun_test.log("----------------> Start RFC-2544 test using %s <----------------" % self.tcc_file_name)
 
         fun_test.log("Fetching per VP stats before traffic")
@@ -188,7 +211,7 @@ class TestFwdPerformance(FunTestCase):
         vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 
         fun_test.log("Fetching BAM stats before test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
@@ -207,11 +230,11 @@ class TestFwdPerformance(FunTestCase):
         diff_vp_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats_after)
         fun_test.log("VP Diff stats: %s" % diff_vp_stats)
 
-        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_DIRECT]) > 0,
-                             "Ensure packets are going through VP NU direct")
+        if not int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_DIRECT]) > 0:
+            display_negative_results = True
 
         fun_test.log("Fetching BAM stats after test")
-        network_controller_obj.peek_bam_stats()
+        network_controller_obj.peek_resource_bam_stats()
 
         fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
@@ -233,19 +256,21 @@ class TestFwdPerformance(FunTestCase):
                                                             table_name=table_name)
         fun_test.simple_assert(result, checkpoint)
 
-        if self.spray:
+        if self.spray or self.single_flow:
             mode = self.template_obj.get_interface_mode_input_speed()
-            result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
-                                                                      timestamp=TIMESTAMP,
-                                                                      mode=mode,
-                                                                      flow_direction=self.flow_direction,
-                                                                      file_name=OUTPUT_JSON_FILE_NAME,
-                                                                      num_flows=128000000,
-                                                                      half_load_latency=self.half_load_latency,
-                                                                      model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
-                                                                      update_charts=self.update_charts,
-                                                                      update_json=self.update_json)
-            fun_test.simple_assert(result, "Ensure JSON file created")
+            if not branch_name:
+                if publish_results:
+                    result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
+                                                                              timestamp=TIMESTAMP,
+                                                                              mode=mode,
+                                                                              flow_direction=self.flow_direction,
+                                                                              file_name=OUTPUT_JSON_FILE_NAME,
+                                                                              num_flows=128000000,
+                                                                              half_load_latency=self.half_load_latency,
+                                                                              model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
+                                                                              update_charts=self.update_charts,
+                                                                              update_json=self.update_json,
+                                                                              display_negative_results=display_negative_results)
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
@@ -261,12 +286,63 @@ class TestFwdLatency(TestFwdPerformance):
     spray = True
     half_load_latency = True
     update_charts = True
-    update_json = False
+    update_json = True
+    single_flow = False
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get latency" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get half load latency for FWD" % (
+                                          self.flow_direction, self.spray),
+                              steps="""
+                              1. Dump PSW, BAM and vppkts stats before tests 
+                              2. Initialize RFC-2544 and load existing tcc configuration 
+                              3. Start Sequencer
+                              4. Wait for sequencer to complete
+                              5. Dump PSW, BAM and vppkts stats after tests
+                              5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
+                              """)
+
+
+class TestFwdSingleFlowFullLoad(TestFwdPerformance):
+    tc_id = 3
+    tcc_file_name = "nu_fwd_benchmark_single_flow_full_load.tcc"
+    spray = False
+    half_load_latency = False
+    num_flows = 1
+    update_charts = True
+    update_json = True
+    single_flow = True
+
+    def describe(self):
+        self.set_test_details(id=self.tc_id,
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get throughput and full load latency for single flow in FWD" % (
+                                          self.flow_direction, self.spray),
+                              steps="""
+                              1. Dump PSW, BAM and vppkts stats before tests 
+                              2. Initialize RFC-2544 and load existing tcc configuration 
+                              3. Start Sequencer
+                              4. Wait for sequencer to complete
+                              5. Dump PSW, BAM and vppkts stats after tests
+                              5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
+                              """)
+
+class TestFwdSingleFlowHalfLoad(TestFwdPerformance):
+    tc_id = 4
+    tcc_file_name = "nu_fwd_benchmark_single_flow_half_load.tcc"
+    spray = False
+    half_load_latency = True
+    num_flows = 1
+    update_charts = True
+    update_json = True
+    single_flow = True
+
+    def describe(self):
+        self.set_test_details(id=self.tc_id,
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get half load latency for single flow in FWD" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -282,4 +358,6 @@ if __name__ == '__main__':
     # Multi flows
     ts.add_test_case(TestFwdPerformance())
     ts.add_test_case(TestFwdLatency())
+    ts.add_test_case(TestFwdSingleFlowFullLoad())
+    ts.add_test_case(TestFwdSingleFlowHalfLoad())
     ts.run()

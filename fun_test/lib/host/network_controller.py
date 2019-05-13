@@ -1680,7 +1680,7 @@ class NetworkController(DpcshClient):
             if show:
                 cmd_args['show'] = show
             cmd = ['benchmark', cmd_args]
-            result = self.json_execute(verb='nu', data=cmd, command_duration=60)
+            result = self.json_execute(verb='nu', data=cmd, command_duration=600)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -1722,11 +1722,29 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def get_flow_list(self):
+    def get_flow_list(self, timeout=120):
         result = None
         try:
             cmd = ['list']
-            result = self.json_execute(verb='flow', data=cmd, command_duration=120)
+            result = self.json_execute(verb='flow', data=cmd, command_duration=timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def debug_vp_state(self, vp_no):
+        result = None
+        try:
+            cmd = ['vp_state', vp_no]
+            result = self.json_execute(verb='debug', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def debug_backtrace(self, vp_no):
+        result = None
+        try:
+            cmd = ['backtrace', vp_no]
+            result = self.json_execute(verb='debug', data=cmd)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

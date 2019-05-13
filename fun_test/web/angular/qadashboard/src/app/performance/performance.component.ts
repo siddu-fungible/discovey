@@ -44,6 +44,7 @@ class Node {
   bugs: any = {};
   positive: boolean = true;
   workInProgress: boolean = false;
+  tags: string = null;
 }
 
 class FlatNode {
@@ -133,6 +134,11 @@ export class PerformanceComponent implements OnInit {
 
   upgradeFlatNode: any = {};
   degradeFlatNode: any = {};
+  tagsForId = {
+    395: ["PCIe"],
+    540: ["PCIe"], 380: ["PCIe"], 472: ["NVMe/TCP"],
+    493: ["PCIe"]
+  };
 
   jiraList: any = {};
   showBugPanel: boolean = false;
@@ -141,6 +147,10 @@ export class PerformanceComponent implements OnInit {
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
 
   slashReplacement: string = "_fsl"; //forward slash
+
+  f1Node: FlatNode = null;
+  s1Node: FlatNode = null;
+  allMetricsNode: FlatNode = null;
 
   constructor(
     private apiService: ApiService,
@@ -177,7 +187,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   getDefaultQueryPath() {
-    return "Total";
+    return "F1";
   }
 
   getQueryPath() {
@@ -222,13 +232,15 @@ export class PerformanceComponent implements OnInit {
 
   fetchDag(): void {
     // Fetch the DAG
-    let payload: { [i: string]: string } = {metric_model_name: "MetricContainer", chart_name: "Total"};
-    this.apiService.post("/metrics/dag", payload).subscribe(response => {
+    this.apiService.get("/metrics/dag").subscribe(response => {
       this.dag = response.data;
       let lineage = [];
-      this.walkDag(this.dag, lineage);
+      for (let dag of this.dag) {
+        this.walkDag(dag, lineage);
+      }
       //total container should always appear
-      this.flatNodes[0].hide = false;
+      this.f1Node = this.flatNodes[0];
+      this.f1Node.hide = false;
       this.getQueryPath().subscribe(queryPath => {
         let queryExists = false;
         if (!queryPath) {
@@ -300,6 +312,9 @@ export class PerformanceComponent implements OnInit {
     node.showAddJira = false;
     node.positive = dagEntry.positive;
     node.workInProgress = dagEntry.work_in_progress;
+    if (metricId in this.tagsForId) {
+      node.tags = this.tagsForId[metricId];
+    }
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -489,45 +504,50 @@ export class PerformanceComponent implements OnInit {
     return newFlatNode;
   }
 
-  walkDag(dagEntry: object, lineage: any, indent: number = 0): void {
+  walkDag(dagEntry: any, lineage: any, indent: number = 0): void {
     let thisFlatNode = null;
     //this.loggerService.log(dagEntry);
-    for (let metricId in dagEntry) {
-      let numMetricId: number = Number(metricId); // TODO, why do we need this conversion
-      let nodeInfo = dagEntry[numMetricId];
-      let newNode = this.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
-      this.addNodeToMap(numMetricId, newNode);
-      thisFlatNode = this.getNewFlatNode(newNode, indent);
-      if (newNode.chartName === "All metrics") {
-        thisFlatNode.hide = false;
-        if (!this.queryPath) {
-          this.updateUpDownSincePrevious(true);
-          this.updateUpDownSincePrevious(false);
-        }
-
+    let numMetricId: number = dagEntry["metric_id"]; // TODO, why do we need this conversion
+    let nodeInfo = dagEntry;
+    let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
+    this.addNodeToMap(numMetricId, newNode);
+    thisFlatNode = this.getNewFlatNode(newNode, indent);
+    if (newNode.chartName === "All metrics") {
+      thisFlatNode.hide = false;
+      lineage = [];
+      this.allMetricsNode = thisFlatNode;
+      if (!this.queryPath) {
+        this.updateUpDownSincePrevious(true);
+        this.updateUpDownSincePrevious(false);
       }
-      this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
-      this.flatNodes.push(thisFlatNode);
-      //this.loggerService.log('Node:' + nodeInfo.chart_name);
-      let parentsGuid = {};
-      parentsGuid["guid"] = thisFlatNode.gUid;
-      parentsGuid["chartName"] = newNode.chartName;
-      lineage.push(parentsGuid);
-      thisFlatNode.lineage = [lineage.slice()];
-      if (!nodeInfo.leaf) {
-        let children = nodeInfo.children;
 
-        children.forEach((cId) => {
-          //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
-          let childEntry = {[cId]: nodeInfo.children_info[Number(cId)]};
-          let childFlatNode = this.walkDag(childEntry, lineage.slice(), indent + 1);
-          this.addUpDownStatusNumbers(childFlatNode, thisFlatNode);
+    }
+    if (newNode.chartName === "S1") {
+      thisFlatNode.hide = false;
+      this.s1Node = thisFlatNode;
+      lineage = [];
+    }
+    this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
+    this.flatNodes.push(thisFlatNode);
+    //this.loggerService.log('Node:' + nodeInfo.chart_name);
+    let parentsGuid = {};
+    parentsGuid["guid"] = thisFlatNode.gUid;
+    parentsGuid["chartName"] = newNode.chartName;
+    lineage.push(parentsGuid);
+    thisFlatNode.lineage = [lineage.slice()];
+    if (!nodeInfo.leaf) {
+      let children = nodeInfo.children;
 
-          thisFlatNode.addChild(childFlatNode);
-        });
-      } else {
-        this.addUpgradeDegradeNodes(thisFlatNode, dagEntry);
-      }
+      children.forEach((cId) => {
+        //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
+        let childEntry = nodeInfo.children_info[Number(cId)];
+        let childFlatNode = this.walkDag(childEntry, lineage.slice(), indent + 1);
+        this.addUpDownStatusNumbers(childFlatNode, thisFlatNode);
+
+        thisFlatNode.addChild(childFlatNode);
+      });
+    } else {
+      this.addUpgradeDegradeNodes(thisFlatNode, dagEntry);
     }
     return thisFlatNode;
   }
@@ -614,8 +634,8 @@ export class PerformanceComponent implements OnInit {
     }
   }
 
-  addLineagesForUpgradesDegrades(upgrade: boolean, leafNode: Node, dagEntry: object, thisFlatNode: any): void {
-    let newLeafNode = this.getNodeFromEntry(leafNode.metricId, dagEntry[leafNode.metricId]);
+  addLineagesForUpgradesDegrades(upgrade: boolean, leafNode: Node, dagEntry: any, thisFlatNode: any): void {
+    let newLeafNode = this.getNodeFromEntry(leafNode.metricId, dagEntry);
     let flatNode = this.getNewFlatNode(newLeafNode, 1);
     let statusNode = null;
     for (let p of thisFlatNode.lineage) {
@@ -934,8 +954,8 @@ export class PerformanceComponent implements OnInit {
         this.currentFlatNode.showJiraInfo = false;
       }
       if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
-      this.currentFlatNode.showGitInfo = false;
-    }
+        this.currentFlatNode.showGitInfo = false;
+      }
       this.showBugPanel = false;
       this.currentNode = flatNode.node;
       this.currentFlatNode = flatNode;
@@ -964,7 +984,13 @@ export class PerformanceComponent implements OnInit {
     try {
       path = path.replace(this.gotoQueryBaseUrl, "");
       let parts = path.split("/");
-      result = this._doPathToGuid(this.flatNodes[0], parts);
+      result = this._doPathToGuid(this.f1Node, parts);
+      if (!result) {
+        result = this._doPathToGuid(this.s1Node, parts);
+      }
+      if (!result) {
+        result = this._doPathToGuid(this.allMetricsNode, parts);
+      }
       // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
     } catch (e) {
@@ -977,6 +1003,9 @@ export class PerformanceComponent implements OnInit {
     let result = null;
     if (remainingParts.length > 0) {
       let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");
+      if (remainingPart === "Total") {
+        remainingPart = "F1";
+      }
       if (flatNode.node.chartName === decodeURIComponent(remainingPart)) {
         // match found
 

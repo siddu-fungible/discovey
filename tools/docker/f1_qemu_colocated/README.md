@@ -1,4 +1,4 @@
-# f1_qemu_colocated
+# f1_qemu_colocated  {For Ubuntu on qemu}
 
 Purpose:
 ```
@@ -34,3 +34,4 @@ Changelog:
 
 f1_qemu_colocated:v04_01 ubuntu kernel 5.x
 f1_qemu_colocated:v04_16 support for downloading regex
+f1_qemu_colocated:v05_10 qemu.tgz is replaced by FunQemu.tgz

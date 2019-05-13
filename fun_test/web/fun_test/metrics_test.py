@@ -68,7 +68,7 @@ if __name__ == "__main__":
             "expected": 55
         }
     }
-    old_charts = ["Total", "Software", "Hardware", "Nucleus"]
+    old_charts = ["F1", "Software", "Hardware", "Nucleus"]
     for old_chart in old_charts:
         try:
             c = MetricChart.objects.filter(chart_name=old_chart)
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         except Exception as ex:
             pass
     metric_model_name = "Total"
-    chart_name = "Total"
+    chart_name = "F1"
     description = "Total"
     root_metric = add_metric(metric_model_name=metric_model_name,
                              chart_name=chart_name,

@@ -14,7 +14,7 @@ class DockerContainerOrchestrator(Linux, Orchestrator):
     # An orchestrator (which happens to be a container) that is capable of spinning an F1 and multiple Qemu instances, all within one container
 
     QEMU_BASE_DIRECTORY = "/qemu"
-    QEMU_DIRECTORY = "/qemu/qemu-Linux/bin"
+    QEMU_DIRECTORY = "/qemu/FunQemu-Linux/bin"
     QEMU_PROCESS = "qemu-system-x86_64"
     docker_host = None
     QEMU_INTERNAL_PORTS = [50001, 50002, 50003, 50004]
@@ -153,13 +153,13 @@ class DockerContainerOrchestrator(Linux, Orchestrator):
                           '-drive file={},format=raw,if=none,id=rootfs ' \
                           '-device ioh3420,id=root_port1,addr=1c.0,port=1,chassis=1 ' \
                           '-device nvme-rem-fe,hu=0,controller=0,sim_id=0,bus=root_port1 -device virtio-rng-pci ' \
-                          '-device virtio-blk-pci,drive=rootfs -redir tcp:{}::22 -redir tcp:40220::40220'.\
+                          '-device virtio-blk-pci,drive=rootfs -net user,hostfwd=tcp::{}-:22 -net user,hostfwd=tcp::40220-:40220 -net nic,model=virtio'.\
                     format(self.QEMU_PROCESS, qemu_num_cpus, qemu_memory, self.QEMU_BIOS, self.QEMU_KERNEL, qemu_memory,
                            self.QEMU_FS, internal_ssh_port)
             elif vm_host_os == self.HOST_OS_FUNGIBLE_UBUNTU["name"]:
                 command = './{} {} -daemonize -vnc :1 -smp {} -m {} ' \
                           '-device nvme-rem-fe -machine q35 ' \
-                          '-redir tcp:{}::22 -enable-kvm'.format(self.QEMU_PROCESS, self.HOST_IMAGE_PATH,
+                          '-net user,hostfwd=tcp::{}-:22 -net nic,model=virtio -enable-kvm'.format(self.QEMU_PROCESS, self.HOST_IMAGE_PATH,
                                                                  qemu_num_cpus, 2048,  # TODO
                                                                  internal_ssh_port)
 
