@@ -522,6 +522,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                 **self.warm_up_fio_cmd_args)
             fun_test.log("FIO Command Output:\n{}".format(fio_output))
             fun_test.test_assert(fio_output, "Pre-populating the volume")
+            fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
@@ -552,8 +553,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
         # row_data_dict = {}
-
-        fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_numjobs_iodepth
         fio_result = {}
