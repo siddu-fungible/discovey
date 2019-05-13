@@ -1656,7 +1656,7 @@ if __name__ == "__main_HU_HU__":
                     work_in_progress=False).save()
     print "Added new HU HU NFCP charts"
 
-if __name__ == "__main__":
+if __name__ == "__main_apple__":
     internal_chart_names = ["apple_rand_read_srsw_tcp_output_bandwidth",
                             "apple_rand_read_srsw_tcp_output_iops"]
     model_name = "BltVolumePerformance"
@@ -1726,5 +1726,48 @@ if __name__ == "__main__":
                 base_line_date=base_line_date,
                 work_in_progress=False).save()
 
+if __name__ == "__main_tls32435__":
+    internal_chart_names = ["juniper_tls_32_output_throughput", "juniper_tls_32_output_pps", "juniper_tls_64_output_throughput", "juniper_tls_64_output_pps"]
+    model_name = "JuniperTlsTunnelPerformance"
+    base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "throughput" in internal_chart_name:
+            chart_name = "Throughput"
+            output_name = "output_throughput"
+            y1_axis_title = "Gbps"
+        else:
+            chart_name = "Packets per sec"
+            output_name = "output_packets_per_sec"
+            y1_axis_title = "Mpps"
+        if "32" in internal_chart_name:
+            num_tunnel = 32
+        else:
+            num_tunnel = 64
 
+        data_sets = []
+        name =  str(num_tunnel) + "tunnel(s)"
+        one_data_set = {}
+        one_data_set["name"] = name
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_num_tunnels"] = num_tunnel
+        one_data_set["inputs"]["input_algorithm"] = "AES_GCM"
+        one_data_set["inputs"]["input_pkt_size"] = 354
+        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
 
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Fabrice Ferino (fabrice.ferino@fungible.com)",
+                    source="https://github.com/fungible-inc/FunOS/blob/master/apps/tls_dp_tunnel_perf.c",
+                    positive=True,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
+    print "created charts for the TLS 32 nad 64 tunnel juniper customer teramarks"
