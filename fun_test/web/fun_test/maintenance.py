@@ -1573,7 +1573,7 @@ def set_internal_name(metrics):
             set_internal_name(child)
     return metrics
 
-if __name__ == "__main_added_S1__":
+if __name__ == "__main_S1__":
     charts = MetricChart.objects.all()
     for chart in charts:
         if chart.leaf:
@@ -1595,7 +1595,7 @@ if __name__ == "__main_added_S1__":
         result = set_internal_name(funos_metrics)
         print json.dumps(result)
 
-if __name__ == "__main__":
+if __name__ == "__main_tls32435__":
     internal_chart_names = ["juniper_tls_32_output_throughput", "juniper_tls_32_output_pps", "juniper_tls_64_output_throughput", "juniper_tls_64_output_pps"]
     model_name = "JuniperTlsTunnelPerformance"
     base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
