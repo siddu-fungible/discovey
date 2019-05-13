@@ -1573,7 +1573,7 @@ def set_internal_name(metrics):
             set_internal_name(child)
     return metrics
 
-if __name__ == "__main__":
+if __name__ == "__main_S1__":
     charts = MetricChart.objects.all()
     for chart in charts:
         if chart.leaf:
@@ -1594,5 +1594,35 @@ if __name__ == "__main__":
                         break
         result = set_internal_name(funos_metrics)
         print json.dumps(result)
+
+if __name__ == "__main__":
+    internal_chart_names = ["HU_HU_NFCP_8TCP_2H_offloads_disabled_output_throughput", "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_pps", "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_throughput", "HU_HU_NFCP_8TCP_2H_offloads_disabled_output_pps"]
+    copy_from = ["NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput", "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps"]
+    flow_type = "HU_HU_NFCP"
+    frame_size = 1500
+
+    for internal_chart_name in internal_chart_names:
+        if "throughput" in internal_chart_name:
+            output_name = "output_throughput"
+            chart_name = "Throughput"
+        else:
+            output_name = "output_pps"
+
+        MetricChart(chart_name=chart.chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=chart.description,
+                    owner_info=chart.owner_info,
+                    source=chart.source,
+                    positive=True,
+                    y1_axis_title=chart.y1_axis_title,
+                    visualization_unit=chart.y1_axis_title,
+                    metric_model_name=chart.metric_model_name,
+                    base_line_date=chart.base_line_date,
+                    work_in_progress=False,
+                    input_platform="F1").save()
+
 
 
