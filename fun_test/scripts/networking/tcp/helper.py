@@ -390,22 +390,30 @@ def inner_table_obj(result):
     return table_obj
 
 
-def populate_flow_list_output_file(result, filename):
+def populate_flow_list_output_file(network_controller_obj, filename, max_time=20, display_output=False):
     output = False
     try:
         file_path = LOGS_DIR + "/%s" % filename
         master_table_obj = PrettyTable()
         master_table_obj.align = 'l'
         master_table_obj.header = False
-        if result:
-            for key in sorted(result):
-                table_obj = inner_table_obj(result=result[key])
-                master_table_obj.add_row([key, table_obj])
+        timer = FunTimer(max_time=max_time)
+        lines = list()
+        while not timer.is_expired():
+            fun_test.sleep('Get flow list', seconds=5)
+            result = network_controller_obj.get_flow_list()['data']
+            if result:
+                for key in sorted(result):
+                    table_obj = inner_table_obj(result=result[key])
+                    master_table_obj.add_row([key, table_obj])
 
-            lines = ['<=======> Flowlist output <=======>\n', master_table_obj.get_string()]
-            with open(file_path, 'w') as f:
-                f.writelines(lines)
+                lines.append(master_table_obj.get_string())
+                lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
 
+        with open(file_path, 'w') as f:
+            f.writelines(lines)
+
+        if display_output:
             fun_test.log_disable_timestamps()
             fun_test.log_section('Flow List output')
             for line in lines:
@@ -453,44 +461,93 @@ def dma_resource_table(result):
     return table_obj
 
 
-def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, count=4):
+def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=20, display_output=False):
     output = False
     try:
         file_path = LOGS_DIR + "/%s" % filename
+        lines = list()
+        timer = FunTimer(max_time=max_time)
+        while not timer.is_expired():
+            fun_test.sleep(message="Peek stats resource pc/dma %d" % pc_id, seconds=5)
 
-        result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
-        master_table_obj = get_nested_dict_stats(result=result)
-        lines = ['<=======> Peek Stats Resource PC %d output <=======>\n' % pc_id, master_table_obj.get_string(),
-                 '\n\n\n']
-
-        result = network_controller_obj.peek_resource_dma_stats(pc_id=pc_id)
-        master_table_obj = dma_resource_table(result=result)
-        lines.append('<=======> Peek Stats Resource DMA %d output <=======>\n' % pc_id)
-        lines.append(master_table_obj.get_string())
-
-        if count > 1:
-            for index in range(0, count):
-                fun_test.sleep(message="Peek stats resource pc/dma %d" % pc_id, seconds=1)
-
-                result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
-                master_table_obj = get_nested_dict_stats(result=result)
-                lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
-                lines.append(master_table_obj.get_string())
-                lines.append('\n\n\n')
-
-                result = network_controller_obj.peek_resource_dma_stats(pc_id=pc_id)
-                master_table_obj = dma_resource_table(result=result)
-                lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
-                lines.append(master_table_obj.get_string())
-                lines.append('\n\n\n')
+            result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
+            master_table_obj = get_nested_dict_stats(result=result)
+            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append(master_table_obj.get_string())
+            lines.append('\n\n\n')
 
         with open(file_path, 'a') as f:
             f.writelines(lines)
-        fun_test.log_disable_timestamps()
-        fun_test.log_section("PC Resource result for id: %d" % pc_id)
-        for line in lines:
-            fun_test.log(line)
-        fun_test.log_enable_timestamps()
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("PC Resource result for id: %d" % pc_id)
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def get_resource_bam_table(result):
+    table_obj = None
+    bam_pool_decode_dict = {
+        'pool0': 'BM_POOL_FUNOS',
+        'pool1': 'BM_POOL_NU_ETP_CMDLIST',
+        'pool2': 'BM_POOL_HU_REQ',
+        'pool3': 'BM_POOL_SW_PREFETCH',
+        'pool4': 'BM_POOL_NU_ERP_FCP',
+        'pool19': 'BM_POOL_NU_ERP_CC',
+        'pool20': 'BM_POOL_NU_ERP_SAMPLING',
+        'pool34': 'BM_POOL_REGEX',
+        'pool35': 'BM_POOL_REFBUF',
+        'pool49': 'BM_POOL_NU_ERP_NONFCP',
+        'pool50': 'BM_POOL_HNU_NONFCP',
+        'pool62': 'BM_POOL_HNU_PREFETCH',
+        'pool63': 'BM_POOL_NU_PREFETCH', }
+
+    try:
+        table_obj = PrettyTable(['Field Name', 'Counters'])
+        table_obj.align = 'l'
+        for key in result:
+            decode_value = ''
+            pool_value = key.split(' ')[0]
+            if 'usage' in key:
+                pool_value = key.split(' ')[1]
+            if pool_value in bam_pool_decode_dict:
+                decode_value = bam_pool_decode_dict[pool_value]
+            table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return table_obj
+
+
+def populate_resource_bam_output_file(network_controller_obj, filename, max_time=20, display_output=False):
+    output = False
+    try:
+        file_path = LOGS_DIR + "/%s" % filename
+        lines = list()
+        timer = FunTimer(max_time=max_time)
+        while not timer.is_expired():
+            fun_test.sleep(message="Peek stats resource BAM", seconds=5)
+
+            result = network_controller_obj.peek_resource_bam_stats()
+            master_table_obj = get_resource_bam_table(result=result)
+            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append(master_table_obj.get_string())
+            lines.append('\n\n\n')
+
+        with open(file_path, 'a') as f:
+            f.writelines(lines)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("BAM Resource result")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -546,9 +603,11 @@ def trim_json_contents(filepath):
     return result
 
 
-def run_netperf_concurrently(cmd_list, linux_obj):
+def run_netperf_concurrently(cmd_list, linux_obj, network_controller_obj, display_output=False):
     result = {}
     try:
+        version = fun_test.get_version()
+        num_flows = len(cmd_list)
         multi_task_obj = MultiProcessingTasks()
         index = 1
         duration = len(cmd_list) * 60
@@ -558,7 +617,16 @@ def run_netperf_concurrently(cmd_list, linux_obj):
                                     task_key="conn_%d" % index)
             index += 1
 
-        run_started = multi_task_obj.run(max_parallel_processes=len(cmd_list), parallel=True)
+        flow_list_file = str(version) + "_" + str(num_flows) + '_flowlist.txt'
+        resource_pc_file = str(version) + "_" + str(num_flows) + '_resource_pc.txt'
+        resource_bam_file = str(version) + "_" + str(num_flows) + '_resource_bam.txt'
+
+        multi_task_obj.add_task(func=run_dpcsh_commands,
+                                func_args=(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file,
+                                           display_output),
+                                task_key='')
+
+        run_started = multi_task_obj.run(max_parallel_processes=len(cmd_list) + 1, parallel=True)
         fun_test.test_assert(run_started, "Ensure netperf commands started")
 
         for index in range(1, len(cmd_list) + 1):
@@ -567,7 +635,6 @@ def run_netperf_concurrently(cmd_list, linux_obj):
             result[task_key] = res
 
         all_throughputs = []
-        print result['conn_1']['throughput']
         for conn, val in result.iteritems():
             all_throughputs.append(val['throughput'])
         result['total_throughput'] = sum(all_throughputs)
@@ -575,6 +642,29 @@ def run_netperf_concurrently(cmd_list, linux_obj):
         get_stale_socket_connections(linux_obj=linux_obj, port_value=4555)
         fun_test.critical(str(ex))
     return result
+
+
+def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file,
+                       display_output=False):
+    try:
+        fun_test.add_checkpoint('Get flow list')
+        populate_flow_list_output_file(network_controller_obj=network_controller_obj, filename=flow_list_file,
+                                       display_output=display_output)
+
+        fun_test.add_checkpoint('Get Resource pc id 1')
+        populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                         filename=resource_pc_file, pc_id=1, display_output=display_output)
+
+        fun_test.add_checkpoint('Get Resource pc id 2')
+        populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                         filename=resource_pc_file, pc_id=2, display_output=display_output)
+
+        fun_test.add_checkpoint('Get Resource BAM')
+        populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=resource_bam_file,
+                                          display_output=display_output)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return True
 
 
 def run_netperf(linux_obj, cmd, duration=60):
