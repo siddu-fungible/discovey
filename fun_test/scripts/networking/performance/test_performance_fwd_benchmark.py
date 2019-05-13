@@ -92,7 +92,8 @@ class ScriptSetup(FunTestScript):
         '''
         inputs = fun_test.shared_variables['inputs']
         publish_results = False
-        branch_name = 'master'
+        branch_name = None
+        publish_results = True
         if inputs:
             if 'publish_results' in inputs:
                 publish_results = inputs['publish_results']
@@ -163,7 +164,7 @@ class TestFwdPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
                                       "To get throughput and full load latency for FWD" % (
                                           self.flow_direction, self.spray),
                               steps="""
@@ -270,7 +271,6 @@ class TestFwdPerformance(FunTestCase):
                                                                               update_charts=self.update_charts,
                                                                               update_json=self.update_json,
                                                                               display_negative_results=display_negative_results)
-                    fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
@@ -291,7 +291,7 @@ class TestFwdLatency(TestFwdPerformance):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
                                       "To get half load latency for FWD" % (
                                           self.flow_direction, self.spray),
                               steps="""
@@ -316,7 +316,7 @@ class TestFwdSingleFlowFullLoad(TestFwdPerformance):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
                                       "To get throughput and full load latency for single flow in FWD" % (
                                           self.flow_direction, self.spray),
                               steps="""
@@ -340,7 +340,7 @@ class TestFwdSingleFlowHalfLoad(TestFwdPerformance):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="RFC-2544 Flow: %s\n Spray: %s\n Frames: [64B, 1500B, IMIX]\n"
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
                                       "To get half load latency for single flow in FWD" % (
                                           self.flow_direction, self.spray),
                               steps="""
