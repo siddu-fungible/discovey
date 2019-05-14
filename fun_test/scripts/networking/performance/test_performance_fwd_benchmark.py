@@ -132,8 +132,9 @@ class ScriptSetup(FunTestScript):
                 result = network_controller_obj.set_nu_benchmark(fpg=fpg, main=0, erp=1, nh_id=4097, clbp_idx=20)
                 fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            Fs.cleanup()
+        if 'fs' in fun_test.shared_variables:
+            fs = fun_test.shared_variables['fs']
+            fs.cleanup()
 
 
 class TestFwdPerformance(FunTestCase):

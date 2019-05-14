@@ -80,7 +80,7 @@ class ScriptSetup(FunTestScript):
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
-        if 'fs' in fun_test.shared_variables['fs']:
+        if 'fs' in fun_test.shared_variables:
             fs = fun_test.shared_variables['fs']
             fs.cleanup()
 
