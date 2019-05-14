@@ -219,6 +219,14 @@
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -258,6 +266,14 @@
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -2344,6 +2360,14 @@
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   },
@@ -2370,6 +2394,14 @@
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -2406,6 +2438,14 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   },
@@ -2432,6 +2472,14 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -2468,6 +2516,14 @@
                         "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   },
@@ -2494,6 +2550,14 @@
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -3075,7 +3139,7 @@
                         "leaf": false,
                         "name": "juniper_tls_64tunnel",
                         "weight": 1,
-                        "label": "64 Tunnel(S)",
+                        "label": "64 Tunnel(s)",
                         "children": [
                           {
                             "info": "juniper_tls_64_output_throughput",
