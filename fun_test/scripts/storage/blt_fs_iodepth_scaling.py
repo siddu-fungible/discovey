@@ -347,7 +347,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         row_data_dict = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",

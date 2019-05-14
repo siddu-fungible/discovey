@@ -293,7 +293,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         internal_result = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
@@ -326,6 +326,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                              format(mode, fio_block_size, fio_iodepth))
 
                 fun_test.log("Running FIO...")
+                # Job name will be fio_pcie_read_blt_X_iod_scaling
                 fio_job_name = "fio_pcie" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
