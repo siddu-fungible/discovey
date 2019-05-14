@@ -43,7 +43,7 @@ class FunTestCase1(FunTestCase):
         boot_args = "app=patmat_rt_test_two param-file=apps/nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --test-exit-fast"
         funos_makeflags = "XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
-        tags = "qa-rgx-nfa-runtime-sanity"
+        tags = "qa_rgx_nfa_runtime_sanity"
         params = {"BOOTARGS": boot_args,
                   "FUNOS_MAKEFLAGS": funos_makeflags,
                   "MAX_DURATION": max_duration,
@@ -79,7 +79,7 @@ class FunTestCase2(FunTestCase):
         boot_args = "app=patmat_rt_test_two param-file=apps/nightly_dfa_B_dflt_b_dflt_dfa.json rbm-size=1m --test-exit-fast"
         funos_makeflags = "XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
-        tags = "qa-rgx-dfa-runtime-sanity"
+        tags = "qa_rgx_dfa_runtime_sanity"
         params = {"BOOTARGS": boot_args,
                   "FUNOS_MAKEFLAGS": funos_makeflags,
                   "MAX_DURATION": max_duration,
@@ -115,7 +115,7 @@ class FunTestCase3(FunTestCase):
         boot_args = "app=patmat_rt_test_two param-file=apps/nightly_combined_H_dflt_h_dflt_combined.json rbm-size=1m --test-exit-fast"
         funos_makeflags = "XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
-        tags = "qa-rgx-software-runtime-sanity"
+        tags = "qa_rgx_software_runtime_sanity"
         params = {"BOOTARGS": boot_args,
                   "FUNOS_MAKEFLAGS": funos_makeflags,
                   "MAX_DURATION": max_duration,
