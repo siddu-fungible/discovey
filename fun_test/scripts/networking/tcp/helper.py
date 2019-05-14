@@ -692,6 +692,8 @@ def get_netperf_cmd_list(dip, protocol='tcp', duration=60, num_flows=1, send_siz
 
         cpu = 8
         for conn in range(0, num_flows):
+            if cpu > 15:
+                cpu = 8
             cmd = "taskset -c %d netperf -t %s -H %s -l %s -f m -j -N -P 0 -- -k \"THROUGHPUT\" -s %s -P %d,%d " % (
                 cpu, t, dip, duration, send_size, port1, port2
             )
