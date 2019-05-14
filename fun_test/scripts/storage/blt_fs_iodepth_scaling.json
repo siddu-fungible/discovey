@@ -16,7 +16,7 @@
     "iostat_details": { "interval": 2, "iterations": 10},
     "fio_num_jobs": 8,
     "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)"],
-    "fio_job_name": {"read": "blt_iod_scaling", "randread": "blt_iod_scaling"},
+    "fio_job_name": {"read": "iod_scaling", "randread": "iod_scaling"},
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
       "(4, 1)": {"read": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
@@ -43,7 +43,7 @@
     "iostat_details": { "interval": 2, "iterations": 10},
     "fio_num_jobs": 8,
     "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)"],
-    "fio_job_name": {"read": "blt_iod_scaling", "randread": "blt_iod_scaling"},
+    "fio_job_name": {"read": "iod_scaling", "randread": "iod_scaling"},
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
       "(4, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},

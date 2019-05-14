@@ -399,7 +399,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 eqm_result = False
 
                 fun_test.log("Running FIO...")
-                fio_job_name = "fio_" + mode + "_" + self.fio_job_name[mode]
+                fio_job_name = "fio_" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
@@ -460,7 +460,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            # post_results("BLT_IO_Scaling", test_method, *row_data_list)
+            post_results("BLT_IO_Scaling", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="BLT IO Scaling ", table_name=self.summary, table_data=table_data)
