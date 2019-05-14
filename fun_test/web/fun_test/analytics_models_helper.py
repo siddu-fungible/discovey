@@ -251,7 +251,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs", version=-1):
         try:
             if version == -1:
-                version = fun_test.get_version()
+                version = str(fun_test.get_version())
 
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
