@@ -327,7 +327,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
                 fun_test.log("Running FIO...")
                 # Job name will be fio_pcie_read_blt_X_iod_scaling
-                fio_job_name = "fio_pcie" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                fio_job_name = "fio_pcie" + "_" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
 
