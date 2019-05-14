@@ -39,6 +39,7 @@ from fun_global import PerfUnit
 
 ml = MetricLib()
 
+
 class MetricHelper(object):
     def __init__(self, model):
         self.model = model
@@ -1279,9 +1280,11 @@ if __name__ == "__main_inspur_charts__":
 
 if __name__ == "__main_HBM__":
     internal_chart_names = ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps",
-                            "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg", "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
+                            "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                            "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
                             "juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps",
-                            "juniper_NU_LE_VP_NU_FW_output_latency_avg", "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg"]
+                            "juniper_NU_LE_VP_NU_FW_output_latency_avg",
+                            "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg"]
     ml = MetricLib()
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
@@ -1458,7 +1461,7 @@ if __name__ == "__main_juniper_tls__":
 
         data_sets = []
         for num_tunnel in num_tunnels:
-            name =  str(num_tunnel) + "tunnel(s)"
+            name = str(num_tunnel) + "tunnel(s)"
             one_data_set = {}
             one_data_set["name"] = name
             one_data_set["inputs"] = {}
@@ -1558,6 +1561,7 @@ if __name__ == "__main_2hosts__":
                         work_in_progress=False).save()
     print "added 2hosts charts"
 
+
 def set_internal_name(metrics):
     chart = MetricChart.objects.get(internal_chart_name=metrics["name"])
     metrics["name"] += "_S1"
@@ -1572,6 +1576,7 @@ def set_internal_name(metrics):
         for child in metrics["children"]:
             set_internal_name(child)
     return metrics
+
 
 if __name__ == "__main_S1__":
     charts = MetricChart.objects.all()
@@ -1611,8 +1616,12 @@ if __name__ == "__main_delete__":
     print "got entries"
 
 if __name__ == "__main_HU_HU__":
-    internal_chart_names = ["HU_HU_NFCP_8TCP_offloads_disabled_output_throughput", "HU_HU_NFCP_8TCP_offloads_disabled_output_pps", "HU_HU_NFCP_1TCP_offloads_disabled_output_throughput", "HU_HU_NFCP_1TCP_offloads_disabled_output_pps"]
-    copy_from = ["NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput", "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps"]
+    internal_chart_names = ["HU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
+                            "HU_HU_NFCP_8TCP_offloads_disabled_output_pps",
+                            "HU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                            "HU_HU_NFCP_1TCP_offloads_disabled_output_pps"]
+    copy_from = ["NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput",
+                 "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps"]
     flow_type = "HU_HU_NFCP"
     frame_size = 1500
 
@@ -1727,7 +1736,8 @@ if __name__ == "__main_apple__":
                 work_in_progress=False).save()
 
 if __name__ == "__main_tls_3264__":
-    internal_chart_names = ["juniper_tls_32_output_throughput", "juniper_tls_32_output_pps", "juniper_tls_64_output_throughput", "juniper_tls_64_output_pps"]
+    internal_chart_names = ["juniper_tls_32_output_throughput", "juniper_tls_32_output_pps",
+                            "juniper_tls_64_output_throughput", "juniper_tls_64_output_pps"]
     model_name = "JuniperTlsTunnelPerformance"
     base_line_date = datetime(year=2019, month=5, day=5, minute=0, hour=0, second=0)
     for internal_chart_name in internal_chart_names:
@@ -1745,7 +1755,7 @@ if __name__ == "__main_tls_3264__":
             num_tunnel = 64
 
         data_sets = []
-        name =  str(num_tunnel) + "tunnel(s)"
+        name = str(num_tunnel) + "tunnel(s)"
         one_data_set = {}
         one_data_set["name"] = name
         one_data_set["inputs"] = {}
@@ -1777,7 +1787,11 @@ if __name__ == "__main__":
     internal_chart_names = ["NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
                             "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
                             "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
-                            "NU_HU_NFCP_1TCP_offloads_disabled_output_latency"]
+                            "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                            "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                            "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                            "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                            "HU_HU_NFCP_8TCP_offloads_disabled_output_latency"]
     frame_size = 1500
     flow_types = ["HU_NU_NFCP", "NU_HU_NFCP"]
     base_line_date = datetime(year=2019, month=1, day=26, minute=0, hour=0, second=0)
@@ -1793,14 +1807,22 @@ if __name__ == "__main__":
         else:
             num_flows = 8
 
+        if "2hosts" in internal_chart_name:
+            num_hosts = 2
+        else:
+            num_hosts = 1
+
         data_sets = []
         for output_name in output_names:
             if "HU_NU_NFCP" in internal_chart_name:
                 flow_type = "HU_NU_NFCP"
                 output_name = output_name + "_h2n"
-            else:
+            elif "NU_HU_NFCP" in internal_chart_name:
                 flow_type = "NU_HU_NFCP"
                 output_name = output_name + "_n2h"
+            else:
+                flow_type = "HU_HU_NFCP"
+                output_name = output_name + "_h2h"
             name = str(frame_size) + "B"
             if "99" in output_name:
                 name += '-99%'
@@ -1815,8 +1837,9 @@ if __name__ == "__main__":
             one_data_set["inputs"] = {}
             one_data_set["inputs"]["input_flow_type"] = flow_type
             one_data_set["inputs"]["input_number_flows"] = num_flows
+            one_data_set["inputs"]["input_num_hosts"] = num_hosts
             one_data_set["inputs"]["input_protocol"] = "TCP"
-            one_data_set["inputs"]["input_offloads"] = False
+            one_data_set["inputs"]["input_platform"] = "F1"
             one_data_set["inputs"]["input_frame_size"] = frame_size
             one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
             data_sets.append(one_data_set)
@@ -1836,4 +1859,4 @@ if __name__ == "__main__":
                     metric_model_name=model_name,
                     base_line_date=base_line_date,
                     work_in_progress=False).save()
-    print "created charts for the new networking teramarks"
+    print "created latency charts for the networking teramarks"
