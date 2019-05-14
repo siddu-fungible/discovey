@@ -69,7 +69,18 @@
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-6"
+        "dut": "fs-6",
+        "fpg_interface_info": {
+          "0": {
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "hosts": 1,
+              "host_info": {
+                "name": "poc-server-02"
+              }
+            }
+          }
+        }
       }
     }
   },
