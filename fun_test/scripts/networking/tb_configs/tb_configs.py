@@ -41,6 +41,9 @@ class TBConfigs:
             if interfaces:
                 return interfaces[0].keys()[0]
 
+    def get_hu_pcie_width(self, hu='hu'):
+        return self.configs[hu]['pcie_width']
+
     def get_hu_pf_interface(self, hu='hu'):
         return self.configs[hu]['pf_interface']
 
