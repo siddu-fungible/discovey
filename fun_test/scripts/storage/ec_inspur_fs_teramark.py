@@ -230,6 +230,7 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
+        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
@@ -246,6 +247,8 @@ class ECVolumeLevelScript(FunTestScript):
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
+            if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
+                continue
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
                 self.end_host = host_info["host_obj"]
                 self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
@@ -255,6 +258,7 @@ class ECVolumeLevelScript(FunTestScript):
         else:
             fun_test.test_assert(False, "Host found with Test Interface")
 
+        self.test_network = self.csr_network[str(self.fpg_inteface_index)]
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["topology"] = topology
         fun_test.shared_variables["fs"] = self.fs
