@@ -21,6 +21,7 @@ export class JenkinsFormComponent implements OnInit {
       this.jenkinsParameters['FUNOS_MAKEFLAGS'] = value.FUNOS_MAKEFLAGS;
       this.jenkinsParameters['DISABLE_ASSERTIONS'] = value.DISABLE_ASSERTIONS;
       this.jenkinsParameters['HW_MODEL'] = value.HW_MODEL;
+      this.jenkinsParameters['PCI_MODE'] = value.PCI_MODE;
 
       //console.log(this.jenkinsParameters);
       if (this.submissionForm.valid) {

@@ -1,7 +1,7 @@
 <form class="form-horizontal" [formGroup]="submissionForm">
   <div class="form-group">
     <label class="control-label col-sm-2" for="boot_args">BOOTARGS: </label>
-    <input style="width: 500px" formControlName="BOOTARGS" id="boot_args"/>
+    <input style="width: 600px" formControlName="BOOTARGS" id="boot_args"/>
   </div>
   <div class="form-group">
     <label class="control-label col-sm-2" for="disable_assertions">DISABLE_ASSERTIONS: </label>
@@ -10,7 +10,7 @@
 
   <div class="form-group">
     <label class="control-label col-sm-2" for="max_duration">MAX_DURATION: </label>
-    <input formControlName="MAX_DURATION" id="max_duration">
+    <input style="width: 50px" formControlName="MAX_DURATION" id="max_duration">
   </div>
 
   <div class="form-group">
@@ -27,5 +27,11 @@
     <label class="control-label col-sm-2" for="funos_makeflags">FUNOS_MAKEFLAGS: </label>
     <input style="width: 500px" formControlName="FUNOS_MAKEFLAGS" id="funos_makeflags"/>
   </div>
+
+  <div class="form-group">
+    <label class="control-label col-sm-2" for="pci_mode">PCI_MODE: </label>
+    <input style="width: 200px" formControlName="PCI_MODE" id="pci_mode"/>
+  </div>
+
 </form>
 
