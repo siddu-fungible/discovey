@@ -36,7 +36,7 @@ class Funeth:
             result &= re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output) is not None
 
             output = self.linux_obj_dict[hu].sudo_command('lspci -d 1dad: -vv | grep LnkSta')
-            result &= re.findall(r'Width x(\d+)', output) == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]
+            result &= re.findall(r'Width x(\d+)', output) == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]*4
 
         return result
 
