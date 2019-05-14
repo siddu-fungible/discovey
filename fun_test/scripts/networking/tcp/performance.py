@@ -56,6 +56,10 @@ class TcpPerformance(FunTestScript):
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 
+        private_funos_branch = fun_test.get_build_parameter(parameter='BRANCH_FunOS')
+        if private_funos_branch:
+            fun_test.shared_variables['funos_branch'] = private_funos_branch
+
         speed = nu_config_obj.get_speed()
         mode = str(speed/1000) + "G"
         dut_type = nu_config_obj.DUT_TYPE
@@ -81,6 +85,7 @@ class TcpPerformance(FunTestScript):
         fun_test.simple_assert(syslog, "Set syslog level to 2")
 
         exec_app = network_controller_obj.execute_app(name=app)
+        fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
 
         # Setup fpg1
         host_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name)
@@ -103,12 +108,10 @@ class TcpPerformance(FunTestScript):
 
 class TcpPerformance1Conn(FunTestCase):
     default_frame_size = 1500
-    perf_filename = "perf_1_tcp_connection.sh"
-    perf_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + perf_filename
     test_run_time = 10
+    duration = 60
     num_flows = 1
-    output_file = None
-    netperf_remote_port = None
+    netperf_remote_port = 4555
 
     def describe(self):
         self.set_test_details(id=1,
@@ -120,7 +123,6 @@ class TcpPerformance1Conn(FunTestCase):
                               """ % host_name)
 
     def setup(self):
-        self.netperf_remote_port = get_port_from_file(self.perf_filepath)
         fun_test.simple_assert(self.netperf_remote_port, "Value of server port is %s" % self.netperf_remote_port)
 
         # Check stale socket connections
@@ -144,15 +146,12 @@ class TcpPerformance1Conn(FunTestCase):
         nu_lab_obj.get_ip_route()
 
     def run(self):
-        fun_test.log("SCP file %s to %s" % (self.perf_filename, nu_lab_obj.host_ip))
+        test_parameters = {'dest_ip': '29.1.1.2', 'protocol': 'tcp', 'num_flows': self.num_flows,
+                           'duration': self.duration, 'port1': 1000, 'port2': 4555, 'send_size': '128K'}
 
-        target_file_path = "/tmp/" + self.perf_filename
-        file_transfer = fun_test.scp(source_file_path=self.perf_filepath, target_file_path=target_file_path,
-                                     target_ip=nu_lab_ip, target_username=nu_lab_username,
-                                     target_password=nu_lab_password)
-        fun_test.simple_assert(file_transfer, "Ensure %s is scp to %s" % (setup_fpg1_file, nu_lab_ip))
-
-        fun_test.sleep("Letting file be copied", seconds=1)
+        branch_name = None
+        if 'funos_branch' in fun_test.shared_variables:
+            branch_name = fun_test.shared_variables['funos_branch']
 
         fun_test.log("Capture netstat before traffic")
         netstat_1 = get_netstat_output(linux_obj=nu_lab_obj)
@@ -168,14 +167,18 @@ class TcpPerformance1Conn(FunTestCase):
             fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command")
         
-        # Execute sh file
-        temp_filename = fun_test.get_temp_file_name() + '.txt'
-        output_file = fun_test.get_temp_file_path(file_name=temp_filename)
-        
         fun_test.log("Starting netperf test")
-        output = execute_shell_file(linux_obj=nu_lab_obj2, target_file=target_file_path, output_file=output_file)
-        fun_test.simple_assert(output['result'], "Ensure file %s is executed" % target_file_path)
+        cmd_list = get_netperf_cmd_list(dip=test_parameters['dest_ip'],
+                                        duration=test_parameters['duration'],
+                                        num_flows=test_parameters['num_flows'],
+                                        send_size=test_parameters['send_size'])
+        fun_test.simple_assert(cmd_list, 'Ensure netperf command formed')
 
+        network_controller_obj.disconnect()
+        netperf_result = run_netperf_concurrently(cmd_list=cmd_list, linux_obj=nu_lab_obj,
+                                                  network_controller_obj=network_controller_obj, display_output=False)
+        fun_test.test_assert(netperf_result, 'Ensure result found')
+        '''
         checkpoint = "Get Flow list, resource pc and resource bam stats"
         flowlist_temp_filename = str(version) + "_" + str(self.num_flows) + '_flowlist.txt'
         resource_pc_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_pc.txt'
@@ -185,19 +188,18 @@ class TcpPerformance1Conn(FunTestCase):
                                         resource_pc_file=resource_pc_temp_filename,
                                         resource_bam_file=resource_bam_temp_filename)
         fun_test.test_assert(dpc_result, checkpoint)
+        '''
 
-        fun_test.sleep("Wait after traffic", seconds=10)
+        fun_test.sleep("Wait after traffic", seconds=self.test_run_time)
 
-        netperf_output = nu_lab_obj.command("cat %s" % output_file)
-        fun_test.test_assert(netperf_output, "Ensure throughput value is seen")
-
-        output = get_total_throughput(output=netperf_output, num_conns=self.num_flows)
-        total_throughput = output['throughput']
+        total_throughput = netperf_result['total_throughput']
         fun_test.log("Total throughput seen is %s" % total_throughput)
         fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" % total_throughput)
 
         pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
-        fun_test.log("PPS value is %s" % pps)
+        fun_test.log("Total PPS value is %s" % round(pps, 2))
+
+        create_performance_table(total_throughput=total_throughput, total_pps=round(pps, 2), num_flows=self.num_flows)
 
         # Scp mpstat json to LOGS dir
         if use_mpstat:
@@ -216,46 +218,27 @@ class TcpPerformance1Conn(FunTestCase):
         fun_test.test_assert(populate, "Populate netstat into txt file")
 
         # Parse output to get json
-        output = populate_performance_json_file(mode=mode, flow_type="FunTCP_Server_Throughput",
-                                                frame_size=self.default_frame_size,
-                                                num_flows=self.num_flows,
-                                                throughput_n2t=total_throughput, pps_n2t=pps, timestamp=TIMESTAMP,
-                                                filename=filename, model_name=TCP_PERFORMANCE_MODEL_NAME)
-        fun_test.test_assert(output, "JSON file populated")
+        if not branch_name:
+            output = populate_performance_json_file(mode=mode, flow_type="FunTCP_Server_Throughput",
+                                                    frame_size=self.default_frame_size,
+                                                    num_flows=self.num_flows,
+                                                    throughput_n2t=total_throughput, pps_n2t=pps, timestamp=TIMESTAMP,
+                                                    filename=filename, model_name=TCP_PERFORMANCE_MODEL_NAME)
+            fun_test.test_assert(output, "JSON file populated")
 
     def cleanup(self):
-        if self.output_file:
-            nu_lab_obj.remove_file(self.output_file)
-
         # Check stale socket connections
         stale_connections = get_stale_socket_connections(linux_obj=nu_lab_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen are %s" % stale_connections)
-
-
-class TcpPerformance2Conn(TcpPerformance1Conn):
-    num_flows = 2
-    perf_filename = "perf_2_tcp_connection.sh"
-    perf_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + perf_filename
-    netperf_remote_port = None
-
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Test Tcp performance for 2 connections 1500B stream",
-                              steps="""
-                              1. Setup fpg1 on %s
-                              2. Run netperf file with 2 connection
-                              3. Update tcp_performance.json file with throughput and pps
-                              """ % host_name)
 
 
 class TcpPerformance4Conn(TcpPerformance1Conn):
     num_flows = 4
     perf_filename = "perf_4_tcp_connection.sh"
     perf_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + perf_filename
-    netperf_remote_port = None
 
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=2,
                               summary="Test Tcp performance for 4 connections 1500B stream",
                               steps="""
                               1. Setup fpg1 on %s
@@ -266,12 +249,9 @@ class TcpPerformance4Conn(TcpPerformance1Conn):
 
 class TcpPerformance8Conn(TcpPerformance1Conn):
     num_flows = 8
-    perf_filename = "perf_8_tcp_connection.sh"
-    perf_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + perf_filename
-    netperf_remote_port = None
 
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=3,
                               summary="Test Tcp performance for 8 connections 1500B stream",
                               steps="""
                               1. Setup fpg1 on %s
@@ -284,7 +264,7 @@ if __name__ == '__main__':
     ts = TcpPerformance()
 
     ts.add_test_case(TcpPerformance1Conn())
-    # ts.add_test_case(TcpPerformance_2_Conn())
     ts.add_test_case(TcpPerformance4Conn())
     ts.add_test_case(TcpPerformance8Conn())
+
     ts.run()
