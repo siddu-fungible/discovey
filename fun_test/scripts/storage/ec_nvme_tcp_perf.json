@@ -21,12 +21,6 @@
     }
   },
   "EC42FioSeqReadOnly": {
-    "num_ssd": 1,
-    "num_volume": 1,
-    "ec_coding": {
-      "ndata": 4,
-      "nparity": 2
-    },
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -52,65 +46,47 @@
       "num_volumes": 1
     },
     "command_timeout": 30,
-    "iter_interval": 5,
+    "iter_interval": 60,
     "ns_id": 1,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_device": "/dev/nvme",
+    "io_queues": 0,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "bs": "4k",
+      "bs": "8k",
       "iodepth": 1,
-      "size": "20G",
+      "size": "100%",
       "rw": "write",
       "direct": 1,
       "prio": 0,
       "timeout": 720
     },
     "fio_cmd_args": {
-      "size": "20G",
+      "bs": "4k",
+      "size": "100%",
       "direct": 1,
       "prio": 0,
-      "cpus_allowed": "0-7",
+      "rwmixread": 70,
       "runtime": 120,
-      "timeout": 150,
-      "bs": "4k",
-      "numjobs": 1,
-      "iodepth": 1,
-      "rw": "read",
-      "name": "fio_ec_default"
+      "timeout": 180
     },
     "fio_modes": [
       "read"
     ],
-    "fio_njobs_iodepth": [
+    "fio_numjobs_iodepth": [
       "(1, 1)",
       "(8, 1)",
-      "(8, 2)",
-      "(8, 4)",
-      "(8, 8)"
+      "(16, 1)",
+      "(16, 2)",
+      "(16, 4)"
     ],
-    "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme",
-    "expected_fio_result": {
-      "read": {
-        "read": {
-          "bw": 429,
-          "iops": 105,
-          "clatency": 149,
-          "latency90": 180,
-          "latency95": 206,
-          "latency99": 269,
-          "latency9999": 416
-        }
-      }
-    }
+    "fio_job_name": "ec_nvme_tcp"
   },
   "EC42FioRandReadOnly": {
-    "num_ssd": 1,
-    "num_volume": 1,
-    "ec_coding": {
-      "ndata": 4,
-      "nparity": 2
-    },
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -136,57 +112,44 @@
       "num_volumes": 1
     },
     "command_timeout": 30,
-    "iter_interval": 5,
-    "check_lsv_stats": 0,
+    "iter_interval": 60,
     "ns_id": 1,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_device": "/dev/nvme",
+    "io_queues": 0,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "bs": "4k",
+      "bs": "8k",
       "iodepth": 1,
-      "size": "20G",
+      "size": "100%",
       "rw": "write",
       "direct": 1,
       "prio": 0,
       "timeout": 720
     },
     "fio_cmd_args": {
-      "size": "20G",
+      "bs": "8k",
+      "size": "100%",
       "direct": 1,
       "prio": 0,
-      "cpus_allowed": "0-7",
+      "rwmixread": 70,
       "runtime": 120,
-      "timeout": 150,
-      "bs": "4k",
-      "numjobs": 1,
-      "iodepth": 1,
-      "rw": "read",
-      "name": "fio_ec_default"
+      "timeout": 180
     },
     "fio_modes": [
-      "randread"
+      "read"
     ],
-    "fio_njobs_iodepth": [
+    "fio_numjobs_iodepth": [
       "(1, 1)",
       "(8, 1)",
-      "(8, 2)",
-      "(8, 4)",
-      "(8, 8)"
+      "(16, 1)",
+      "(16, 2)",
+      "(16, 4)"
     ],
-    "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme",
-    "expected_fio_result": {
-      "randread": {
-        "read": {
-          "bw": 429,
-          "iops": 105,
-          "clatency": 149,
-          "latency90": 180,
-          "latency95": 206,
-          "latency99": 269,
-          "latency9999": 416
-        }
-      }
-    }
+    "fio_job_name": "inspur_8k_random_read_write"
   }
 }
