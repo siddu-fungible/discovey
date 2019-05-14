@@ -1861,7 +1861,7 @@ if __name__ == "__main_HU_latency__":
                     work_in_progress=False).save()
     print "created latency charts for the networking teramarks"
 
-if __name__ == "__main__":
+if __name__ == "__main_raw_block_iod__":
     # fio_pcie_read_blt_1_iod_scaling,
     # fio_pcie_read_blt_4_iod_scaling,
     # fio_pcie_read_blt_8_iod_scaling,
@@ -1998,3 +1998,93 @@ if __name__ == "__main__":
                                     base_line_date=base_line_date,
                                     work_in_progress=False).save()
     print "added charts for raw block different io depths"
+
+if __name__ == "__main__":
+    copy_rand_read = "rand_read_4kb1vol1ssd_durable_volume_ec_4_output_latency"
+    copy_read = "read_4kb1vol1ssd_durable_volume_ec_4_output_latency"
+    output_names = ["output_latency", "output_iops"]
+    operations = ["read", "rand_read"]
+    iodepths = [1, 8, 16, 32, 64]
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=5, day=10, minute=0, hour=0, second=0)
+    for operation in operations:
+        for output_name in output_names:
+            source = ""
+            if operation == "rand_read":
+                job_names = "ec_randread_iodepth_"
+                copy = copy_rand_read
+            else:
+                job_names = "ec_read_iodepth_"
+                copy = copy_read
+
+            if "iops" in output_name:
+                internal_chart_name = operation + "_iod_durable_volume_ec_" + output_name
+                chart_name = "IOPS"
+                positive = True
+                y1_axis_title = "ops"
+                data_sets = []
+                for iodepth in iodepths:
+                    fio_job_name = job_names + str(iodepth)
+                    if operation == "rand_read":
+                        data_set_operation = "randread"
+                    else:
+                        data_set_operation = "read"
+
+                    one_data_set = {}
+                    one_data_set["name"] = iodepth
+                    one_data_set["inputs"] = {}
+                    one_data_set["inputs"]["input_platform"] = "F1"
+                    one_data_set["inputs"]["input_operation"] = data_set_operation
+                    one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                    one_data_set["output"] = {"name": "output_read_iops", 'min': 0, "max": -1, "expected": -1,
+                                              "reference": -1}
+                    data_sets.append(one_data_set)
+
+                metric_id = LastMetricId.get_next_id()
+                MetricChart(chart_name=chart_name,
+                            metric_id=metric_id,
+                            internal_chart_name=internal_chart_name,
+                            data_sets=json.dumps(data_sets),
+                            leaf=True,
+                            description="TBD",
+                            owner_info="Aamir Shaikh (aamir.shaikh@fungible.com)",
+                            source=source,
+                            positive=positive,
+                            y1_axis_title=y1_axis_title,
+                            visualization_unit=y1_axis_title,
+                            metric_model_name=model_name,
+                            base_line_date=base_line_date,
+                            work_in_progress=False).save()
+            else:
+                for iodepth in iodepths:
+                    fio_job_name = job_names + str(iodepth)
+                    chart_name = "Latency"
+                    internal_chart_name = operation + "_iod" + str(iodepth) + "_durable_volume_ec_" +  output_name
+                    positive = False
+                    y1_axis_title = "usecs"
+
+                    chart = MetricChart.objects.get(internal_chart_name=copy)
+                    data_sets = json.loads(chart.data_sets)
+                    for data_set in data_sets:
+                        data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        data_set["output"]["expected"] = -1
+                        data_set["output"]["min"] = 0
+                        data_set["output"]["max"] = -1
+                        data_set["output"]["reference"] = -1
+
+                    metric_id = LastMetricId.get_next_id()
+                    MetricChart(chart_name=chart_name,
+                                metric_id=metric_id,
+                                internal_chart_name=internal_chart_name,
+                                data_sets=json.dumps(data_sets),
+                                leaf=True,
+                                description="TBD",
+                                owner_info="Manu KS (manu.ks@fungible.com)",
+                                source=source,
+                                positive=positive,
+                                y1_axis_title=y1_axis_title,
+                                visualization_unit=y1_axis_title,
+                                metric_model_name=model_name,
+                                base_line_date=base_line_date,
+                                work_in_progress=False).save()
+    print "added charts for durable volume different io depths"
