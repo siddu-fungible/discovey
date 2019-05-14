@@ -48,7 +48,8 @@ class ScriptSetup(FunTestScript):
 
         inputs = fun_test.shared_variables['inputs']
         publish_results = False
-        branch_name = 'master'
+        branch_name = None
+        publish_results = True
         if inputs:
             if 'publish_results' in inputs:
                 publish_results = inputs['publish_results']
@@ -80,7 +81,7 @@ class ScriptSetup(FunTestScript):
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
-        if 'fs' in fun_test.shared_variables['fs']:
+        if 'fs' in fun_test.shared_variables:
             fs = fun_test.shared_variables['fs']
             fs.cleanup()
 
@@ -95,6 +96,7 @@ class TestFirewallPerformance(FunTestCase):
     num_flows = 128000000
     update_charts = True
     update_json = True
+    single_flow = False
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -113,7 +115,8 @@ class TestFirewallPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get throughput for ddr" % (
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get throughput and full load latency for ddr" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -207,9 +210,9 @@ class TestFirewallPerformance(FunTestCase):
             table_name += " Spray Enable"
         result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
                                                             table_name=table_name)
-        fun_test.simple_assert(result, checkpoint)
+        fun_test.add_checkpoint(checkpoint)
 
-        if self.spray:
+        if self.spray or self.single_flow:
             mode = self.template_obj.get_interface_mode_input_speed()
             if not branch_name:
                 if publish_results:
@@ -225,7 +228,6 @@ class TestFirewallPerformance(FunTestCase):
                                                                               update_charts=self.update_charts,
                                                                               update_json=self.update_json,
                                                                               display_negative_results=display_negative_results)
-                    fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
@@ -241,11 +243,13 @@ class TestFirewallLatency(TestFirewallPerformance):
     num_flows = 128000000
     update_charts = True
     update_json = True
+    single_flow = False
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX] to get latency for ddr" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get half load latency for ddr" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -263,12 +267,13 @@ class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
     num_flows = 1
     update_charts = True
     update_json = True
+    single_flow = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544: %s Frames: [64B, 1500B, IMIX] to get throughput and "
-                                      "full load latency for single flow using ddr" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get throughput and full load latency for single flow in ddr" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -286,12 +291,13 @@ class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
     num_flows = 1
     update_charts = True
     update_json = True
+    single_flow = True
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544: %s Frames: [64B, 1500B, IMIX] to get half load latency "
-                                      "for single flow using ddr" % (
-                                  self.flow_direction, self.spray),
+                              summary="RFC-2544 Flow: %s, Spray: %s, Frames: [64B, 1500B, IMIX],"
+                                      "To get half load latency for single flow in ddr" % (
+                                          self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 

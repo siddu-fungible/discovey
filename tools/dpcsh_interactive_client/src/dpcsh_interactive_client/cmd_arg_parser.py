@@ -924,8 +924,10 @@ peek_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=No
 
 # FCP Stats
 peek_fcp_stats_parser = peek_stats_parsers.add_parser('fcp', help="NU Peek FCP Stats")
-peek_fcp_stats_parser.add_argument('tunnel', type=int, help="Tunnel ID")
-peek_fcp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_fcp_stats_parsers = peek_fcp_stats_parser.add_subparsers(title='subcommands', help="")
+peek_fcp_nu_stats_parser = peek_fcp_stats_parsers.add_parser('nu', help="NU Peek FCP stats (Global)")
+peek_fcp_nu_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
+peek_fcp_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 
 # WRO Stats

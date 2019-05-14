@@ -48,7 +48,7 @@
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.20.154",
+      "mgmt_ip": "10.1.21.10",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
