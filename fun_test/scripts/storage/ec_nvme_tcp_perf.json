@@ -132,7 +132,7 @@
       "timeout": 720
     },
     "fio_cmd_args": {
-      "bs": "8k",
+      "bs": "4k",
       "size": "100%",
       "direct": 1,
       "prio": 0,
@@ -141,7 +141,7 @@
       "timeout": 180
     },
     "fio_modes": [
-      "read"
+      "randread"
     ],
     "fio_numjobs_iodepth": [
       "(1, 1)",
@@ -150,6 +150,6 @@
       "(16, 2)",
       "(16, 4)"
     ],
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_job_name": "ec_nvme_tcp"
   }
 }
