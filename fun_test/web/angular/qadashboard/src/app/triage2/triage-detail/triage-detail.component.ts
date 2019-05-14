@@ -20,6 +20,7 @@ export class TriageDetailComponent implements OnInit {
   trials: any = [];
   commits: any = [];
   commitMap: any = {};
+  commitFetchStatus: string = null;
 
   constructor(private route: ActivatedRoute,
               private triageService: TriageService,
@@ -42,6 +43,7 @@ export class TriageDetailComponent implements OnInit {
       return this.triageService.trials(this.triageId, null);
     })).pipe(switchMap((trials) => {
       this.trials = trials;
+      this.commitFetchStatus = "Fetching commit info";
       return this.getCommitsInBetween();
     })).pipe(switchMap(() => {
       return of(true);
@@ -59,6 +61,7 @@ export class TriageDetailComponent implements OnInit {
       this.commits.forEach((commit) => {
         this.commitMap[commit.sha] = {date: commit.date};
       });
+      this.commitFetchStatus = null;
       return of(true);
     }));
   }

@@ -117,7 +117,8 @@ class TriageStateMachine:
             trial = Triage3Trial(fun_os_sha=fun_os_sha,
                                  triage_id=self.triage_id,
                                  trial_set_id=t.current_trial_set_id,
-                                 status=TriagingStates.INIT)
+                                 status=TriagingStates.INIT,
+                                 submission_date_time=get_current_time())
             base_tag = t.base_tag
             trial_tag = "{}_{}_{}".format("qa_triage", t.triage_id, long_to_short_sha(fun_os_sha))
             trial.tag = trial_tag
@@ -292,8 +293,20 @@ if __name__ == "__main2__":
         t.base_tag = t.base_tag + "_{}_{}".format(triage_id, metric_id)
     t.save()
 
+new_triage_id = 404
+
+if __name__ == "__main2__":
+    original_triage_id = 304
+    original_t = Triage3.objects.get(triage_id=original_triage_id)
+    original_t.pk = None
+    original_t.triage_id = new_triage_id
+    original_t.status = TriagingStates.INIT
+    original_t.save()
+
 if __name__ == "__main__":
-    triage_id = 304
+
+    triage_id = new_triage_id
+
     if True:
         t = Triage3.objects.get(triage_id=triage_id)
         while True:

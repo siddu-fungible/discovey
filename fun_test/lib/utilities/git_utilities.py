@@ -49,7 +49,7 @@ class GitManager:
                 response = r.json()
                 # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
                 # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
-                response = [Commit(sha=x["sha"], date=x["commit"]["author"]["date"]) for x in response]
+                response = [Commit(sha=x["sha"], date=x["commit"]["committer"]["date"]) for x in response]
                 all_commits.extend(response)
         return all_commits
 

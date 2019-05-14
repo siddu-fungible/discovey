@@ -18,7 +18,7 @@ def trials(request, triage_id, fun_os_sha):
         q = Q(triage_id=triage_id)
         if fun_os_sha:
             q = q & Q(fun_os_sha=fun_os_sha)
-        trials = Triage3Trial.objects.filter(q).order_by('-pk')
+        trials = Triage3Trial.objects.filter(q).order_by('-submission_date_time')
         for trial in trials:
             if result is None:
                 result = []
