@@ -3139,7 +3139,7 @@
                         "leaf": false,
                         "name": "juniper_tls_64tunnel",
                         "weight": 1,
-                        "label": "64 Tunnel(S)",
+                        "label": "64 Tunnel(s)",
                         "children": [
                           {
                             "info": "juniper_tls_64_output_throughput",
