@@ -40,7 +40,8 @@ export class JenkinsFormComponent implements OnInit {
       'SKIP_DASM_C': [true],
       'DISABLE_ASSERTIONS': [true],
       'FUNOS_MAKEFLAGS': [''],
-      'HW_MODEL': ['']
+      'HW_MODEL': [''],
+      'PCI_MODE': ['']
     });
     if (this.submissionForm.valid) {
       this.data.emit(this.jenkinsParameters);

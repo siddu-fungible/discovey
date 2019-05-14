@@ -4,21 +4,32 @@
     <div class="form-group">
       <label class="control-label col-sm-2" for="submitter">Submitter: </label>
       <select class="form-control" id="submitter" formControlName="submitter">
-        <option *ngFor="let user of users" [value]="user.email">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+        <option *ngFor="let user of users" [value]="user.email">{{ user.first_name }} {{ user.last_name }}
+          ({{ user.email }})
+        </option>
       </select>
     </div>
 
     <div class="form-group">
       <label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit: </label>
-      <input style="width: 300px" formControlName="from_fun_os_sha" id="from_fun_os_sha">
+      <input style="width: 400px" formControlName="from_fun_os_sha" id="from_fun_os_sha">
     </div>
 
     <div class="form-group">
-      <label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit: </label>
-      <input style="width: 300px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
+      <div class="flex-container">
+        <label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit: </label>
+        <input style="width: 400px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
+        <ng-container *ngIf="!gitShasValid">
+          <div style="margin-left: 20px">
+            <button *ngIf="!validateShasStatus" class="btn btn-primary btn-sm" (click)="validateShas()">Validate commits</button>
+            <fun-spinner [status]="validateShasStatus"></fun-spinner>
+          </div>
+        </ng-container>
+        <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span>
+      </div>
     </div>
 
-    <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span>
+
 
     <div class="form-group">
       <label class="control-label col-sm-2" for="metric_id">Metric ID: </label>
@@ -28,11 +39,11 @@
   </form>
   <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
 
-  <ng-container *ngIf="!gitShasValid">
-    <button class="btn btn-primary" (click)="validateShas()">Validate commits</button>
-  </ng-container>
-  <ng-container  *ngIf="gitShasValid">
-    <button (click)="onSubmit()" class="btn btn-success" type="submit" [disabled]="!submissionForm.valid || !gitShasValid">Submit</button>
+
+  <ng-container *ngIf="gitShasValid">
+    <button (click)="onSubmit()" class="btn btn-success" type="submit"
+            [disabled]="!submissionForm.valid || !gitShasValid">Submit
+    </button>
   </ng-container>
 
   <div class="card">

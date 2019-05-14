@@ -2,3 +2,7 @@
   width:auto;
   display: inline-block;
 }
+
+.flex-container {
+  display: flex;
+}

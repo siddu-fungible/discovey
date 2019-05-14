@@ -22,6 +22,7 @@ export class Triage2Component implements OnInit {
   triages: any = null;
   gitShasValid: boolean = false;
   commitsInBetween: any = null;
+  validateShasStatus: string = null;
 
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
@@ -39,6 +40,13 @@ export class Triage2Component implements OnInit {
       'to_fun_os_sha': [null, Validators.required],
       'metric_id': [null, Validators.required]
     });
+    this.submissionForm.get('from_fun_os_sha').valueChanges.subscribe(value => {
+      this.gitShasValid = false;
+    })
+    this.submissionForm.get('to_fun_os_sha').valueChanges.subscribe(value => {
+      this.gitShasValid = false;
+    })
+
   }
 
   validateShas() {
@@ -49,13 +57,18 @@ export class Triage2Component implements OnInit {
       return this.loggerService.error("Git commits are invalid");
     }
     let url = "/api/v1/git_commits_fun_os/" + this.submissionForm.value.from_fun_os_sha + "/" + this.submissionForm.value.to_fun_os_sha;
+    this.validateShasStatus = "Validating commits";
     this.apiService.get(url).subscribe((response) => {
       this.commitsInBetween = response.data;
       if (this.commitsInBetween && this.commitsInBetween.length) {
         this.gitShasValid = true;
+        this.validateShasStatus = null;
+
       }
     }, error => {
       this.loggerService.error("Git commits are invalid");
+      this.validateShasStatus = null;
+
     })
   }
 
