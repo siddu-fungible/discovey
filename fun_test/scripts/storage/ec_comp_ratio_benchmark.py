@@ -366,8 +366,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                               recursive=True,
                                               timeout=300),
                                  message="scp dir {} to end host".format(abs_path), ignore_on_success=True)
-            self.end_host.copy(source_file_name="{}{}".format(end_host_tmp_dir, corpus),
-                               destination_file_name=mount_dir, recursive=True, sudo=True),
+            self.end_host.cp(source_file_name="{}{}".format(end_host_tmp_dir, corpus),
+                             destination_file_name=mount_dir, recursive=True, sudo=True),
 
             self.flush_cache_mem()
             resp = self.storage_controller.peek(props_tree="storage/volumes/{0}".format(

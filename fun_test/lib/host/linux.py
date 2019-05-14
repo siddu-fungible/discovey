@@ -1020,17 +1020,15 @@ class Linux(object, ToDictMixin):
         return output
 
     @fun_test.safe
-    def copy(self, source_file_name, destination_file_name, recursive=False, sudo=False):
-        command = "yes | cp %s %s" % (source_file_name, destination_file_name)
-        if recursive:
-            command = "yes | cp -r %s %s" % (source_file_name, destination_file_name)
+    def cp(self, source_file_name, destination_file_name, recursive=False, sudo=False):
+        command = "yes | cp {0} {1} {2}".format("-r" if recursive else "", source_file_name, destination_file_name)
         response = self.sudo_command(command) if sudo else self.command(command)
         return response
 
     @fun_test.safe
     def backup_file(self, source_file_name):
         destination_file_name = self.tmp_dir + "/" + os.path.basename(source_file_name) + ".backup"
-        self.copy(source_file_name=source_file_name, destination_file_name=destination_file_name)
+        self.cp(source_file_name=source_file_name, destination_file_name=destination_file_name)
         backup_obj = LinuxBackup(linux_obj=self,
                                  source_file_name=source_file_name,
                                  backedup_file_name=destination_file_name)
@@ -2455,4 +2453,4 @@ class LinuxBackup:
                           ssh_password=self.linux_obj.ssh_password,
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
-        linux_obj.copy(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
+        linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
