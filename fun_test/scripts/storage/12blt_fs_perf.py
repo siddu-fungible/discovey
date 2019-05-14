@@ -355,6 +355,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
+        fun_test.sleep("Starting tests...", 10)
+
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
@@ -500,10 +502,24 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         pass
 
 
-class BLTFioSeqRead(BLTVolumePerformanceTestcase):
+class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
+                              summary="Random Read performance on BLT volume",
+                              steps='''
+        1. Create a BLT on FS attached with SSD.
+        2. Export (Attach) this BLT to the external host connected via the network interface. 
+        3. Pre-condition the volume with write test using fio.
+        4. Run the FIO Random Read test(without verify) from the 
+         host and check the performance are inline with the expected threshold. 
+        ''')
+
+
+class BLTFioSeqRead(BLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=2,
                               summary="Sequential Read performance on BLT volume",
                               steps='''
         1. Create a BLT on FS attached with SSD.
@@ -514,24 +530,10 @@ class BLTFioSeqRead(BLTVolumePerformanceTestcase):
         ''')
 
 
-class BLTFioRandRead(BLTVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Random Read performance on BLT volume",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Rand Read test(without verify) from the 
-         host and check the performance are inline with the expected threshold. 
-        ''')
-
-
 if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
-    bltscript.add_test_case(BLTFioSeqRead())
     bltscript.add_test_case(BLTFioRandRead())
+    bltscript.add_test_case(BLTFioSeqRead())
 
     bltscript.run()

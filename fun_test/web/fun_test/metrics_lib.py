@@ -183,3 +183,28 @@ class MetricLib():
             data_set["inputs"].pop(key, None)
         self.save_data_sets(data_sets=data_sets, chart=chart)
 
+    def clone_chart(self, old_chart, internal_chart_name, data_sets):
+        try:
+            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        except ObjectDoesNotExist:
+            metric_id = LastMetricId.get_next_id()
+            peer_id = []
+            peer_id.append(old_chart.metric_id)
+            MetricChart(chart_name=old_chart.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=old_chart.leaf,
+                        description=old_chart.description,
+                        owner_info=old_chart.owner_info,
+                        source=old_chart.source,
+                        positive=old_chart.positive,
+                        y1_axis_title=old_chart.y1_axis_title,
+                        visualization_unit=old_chart.visualization_unit,
+                        metric_model_name=old_chart.metric_model_name,
+                        base_line_date=old_chart.base_line_date,
+                        work_in_progress=False,
+                        peer_ids=json.dumps(peer_id)).save()
+            old_chart.peer_ids = json.dumps([metric_id])
+            old_chart.save()
+

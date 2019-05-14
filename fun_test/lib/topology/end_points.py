@@ -8,6 +8,7 @@ class EndPoint(object, ToDictMixin):
     END_POINT_TYPE_SSD = "END_POINT_TYPE_SSD"
     END_POINT_TYPE_FIO = "END_POINT_TYPE_FIO"
     END_POINT_TYPE_LINUX_HOST = "END_POINT_TYPE_LINUX_HOST"
+    END_POINT_TYPE_DUT = "END_POINT_TYPE_DUT"   # DUT is connected to DUT
 
     # Hypervisor Endpoint types indicate Containers capable of carrying multiple hosts
     END_POINT_TYPE_HYPERVISOR = "END_POINT_TYPE_HYPERVISOR"
@@ -54,6 +55,21 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
 
     def get_host_instance(self, host_index=None):
         return self.instance
+
+class DutEndPoint(EndPoint, ToDictMixin):
+    end_point_type = EndPoint.END_POINT_TYPE_DUT
+
+    def __init__(self, dut_index, fpg_interface_info=None):
+        super(DutEndPoint, self).__init__()
+        self.dut_index = dut_index
+        self.fpg_interface_info = fpg_interface_info
+        self.instance = None
+
+    def get_instance(self):
+        return self.instance
+
+    def set_instance(self, instance):
+        self.instance = instance
 
 class HypervisorEndPoint(EndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_HYPERVISOR

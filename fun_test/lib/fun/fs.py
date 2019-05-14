@@ -555,7 +555,8 @@ class Fs(object, ToDictMixin):
                  boot_args=DEFAULT_BOOT_ARGS,
                  power_cycle_come=False,
                  disable_f1_index=None,
-                 disable_uart_logger=None):
+                 disable_uart_logger=None,
+                 f1_parameters=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -575,6 +576,7 @@ class Fs(object, ToDictMixin):
         self.power_cycle_come = power_cycle_come
         self.disable_uart_logger = disable_uart_logger
         self.come_initialized = False
+        self.f1_parameters = f1_parameters
 
     def reachability_check(self):
         # TODO
@@ -594,7 +596,7 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None, disable_uart_logger=None):
+    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None, disable_uart_logger=None, f1_parameters=None):
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -629,7 +631,8 @@ class Fs(object, ToDictMixin):
                   tftp_image_path=tftp_image_path,
                   boot_args=boot_args,
                   disable_f1_index=disable_f1_index,
-                  disable_uart_logger=disable_uart_logger)
+                  disable_uart_logger=disable_uart_logger,
+                  f1_parameters=f1_parameters)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
 
@@ -643,7 +646,12 @@ class Fs(object, ToDictMixin):
         for f1_index, f1 in self.f1s.iteritems():
             if f1_index == self.disable_f1_index:
                 continue
-            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
+            boot_args = self.boot_args
+            if self.f1_parameters:
+                if f1_index in self.f1_parameters:
+                    if "boot_args" in self.f1_parameters[f1_index]:
+                        boot_args = self.f1_parameters[f1_index]["boot_args"]
+            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args), "U-Bootup f1: {} complete".format(f1_index))
             fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 

@@ -9,6 +9,7 @@ from scripts.networking.funeth import funeth, sanity
 from collections import OrderedDict
 import json
 import pprint
+import re
 
 
 TB = sanity.TB
@@ -110,7 +111,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
                                                                                 pc_id, when)
             fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
                                                                            filename=resource_pc_temp_filename,
-                                                                           pc_id=pc_id, count=1),
+                                                                           pc_id=pc_id, display_output=False),
                                    checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
@@ -168,8 +169,18 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         nc_obj.peek_psw_global_stats()
         #nc_obj.peek_fcp_global_stats()
         nc_obj.peek_vp_packets()
-        #nc_obj.peek_resource_pc_stats(pc_id=1)
-        #nc_obj.peek_resource_pc_stats(pc_id=2)
+        is_vp_stuck = False
+        for pc_id in (1,2 ):
+            output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
+            for core_str, val_dict in output.items():
+                if any(val_dict.values()) != 0:  # VP stuck
+                    core, vp = [int(i) for i in re.match(r'CORE:(\d+) VP:(\d+)', core_str).groups()]
+                    vp_no = pc_id * 24 + core * 4 + vp
+                    nc_obj.debug_vp_state(vp_no=vp_no)
+                    nc_obj.debug_backtrace(vp_no=vp_no)
+                    is_vp_stuck = True
+        if is_vp_stuck:
+            fun_test.test_assert(False, 'VP is stuck')
         #nc_obj.peek_per_vp_stats()
         #nc_obj.peek_resource_bam_stats()
         #nc_obj.peek_eqm_stats()
@@ -264,34 +275,31 @@ class FunethPerformanceBase(FunTestCase):
                                                          version,
                                                          when='before',
                                                          duration=duration)
-        try:
-            result = perf_manager_obj.run(*arg_dicts)
-        except:
-            result = {}
+        result = perf_manager_obj.run(*arg_dicts)
         fun_test.log('Collect stats after test')
         fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_stats(FPG_INTERFACES[:num_hosts],
                                                          funeth_obj.linux_obj_dict.values(),
                                                          version,
                                                          when='after')
         if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
-            if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
+            if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
                 result.update(
                     {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
                 )
             elif flow_type.startswith('NU2HU'):
-                if result.get('{}_n2h'.format(nm.THROUGHPUT) != nm.NA):
+                if result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
                     result.update(
                         {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
                     )
-                if result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
+                if result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
                     result.update(
                         {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
                     )
-            elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT) != nm.NA):
+            elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
                 result.update(
                     {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
                 )
-            elif flow_type.startswith('HU_HU'):
+            elif flow_type.startswith('HU_HU') and result.get('{}_h2h'.format(nm.THROUGHPUT)) != nm.NA:
                 # HU -> HU via local F1, no FPG stats
                 result.update(
                     {'{}_h2h'.format(nm.PPS): nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
