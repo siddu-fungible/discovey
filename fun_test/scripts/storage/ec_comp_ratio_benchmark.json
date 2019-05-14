@@ -1,4 +1,25 @@
 {
+  "GlobalSetup": {
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "huid": 7,
+    "ctlid": 0,
+    "syslog_level": 2,
+    "command_timeout": 5,
+    "reboot_timeout": 300,
+    "ethernet_adapter": "Mellanox",
+    "test_network": {
+      "test_interface_ip": "21.1.1.1/24",
+      "test_interface_mac": "fe:dc:ba:44:66:31",
+      "test_net_route": {
+        "net": "29.1.1.0/24",
+        "gw": "21.1.1.2",
+        "arp": "00:de:ad:be:ef:00"
+      },
+      "f1_loopback_ip": "29.1.1.1"
+    }
+  },
   "EcCompBenchmarkEffortAuto": {
     "num_ssd": 12,
     "num_volume": 1,
@@ -39,9 +60,9 @@
         "type": "VOL_TYPE_BLK_EC"
       },
       "ctrlr": {
-        "transport": "PCI",
-        "huid": 3,
-        "ctlid": 2,
+        "transport": "TCP",
+        "huid": 7,
+        "ctlid": 0,
         "fnid": 2,
         "nsid": 1
       }

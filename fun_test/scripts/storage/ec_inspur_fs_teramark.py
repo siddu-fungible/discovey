@@ -917,11 +917,10 @@ class RandReadWrite8kBlocksCompEffortAuto(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(IntegratedModelReadWriteIOPS())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
     # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
-    ecscript.add_test_case(RandReadWrite8kBlocksCompEffortAuto())
+    # ecscript.add_test_case(RandReadWrite8kBlocksCompEffortAuto())
     ecscript.run()
