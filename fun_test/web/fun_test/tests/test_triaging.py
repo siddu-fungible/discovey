@@ -253,10 +253,11 @@ class TrialStateMachine:
                 trial.status = TriageTrialStates.IN_LSF
                 trial.save()
             job_info = lsf_server.get_last_job(tag=trial.tag)
-            if job_info and "return_code" in job_info:
-                if not job_info["return_code"]:
+            if job_info and "state" in job_info:
+                if job_info["state"] == "completed":
                     trial.status = TriageTrialStates.PREPARING_RESULTS
                     trial.save()
+
         elif status == TriageTrialStates.PREPARING_RESULTS:
             lsf_server = LsfStatusServer()  # TODO
             job_info = lsf_server.get_last_job(tag=trial.tag)

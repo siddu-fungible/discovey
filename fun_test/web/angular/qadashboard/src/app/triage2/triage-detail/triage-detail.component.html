@@ -51,7 +51,7 @@
         </tr>
         <tr *ngFor="let trial of trials">
           <td></td>
-          <td></td>
+          <td>{{ prettyTime(commitMap[trial.fun_os_sha]?.date) }}</td>
           <td>{{ getShortSha(trial.fun_os_sha) }}</td>
           <td>{{ trial.trial_set_id }}</td>
           <td>{{ triagingTrialStateMap[trial.status] }}</td>

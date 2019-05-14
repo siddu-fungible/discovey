@@ -28,7 +28,8 @@ def trials(request, triage_id, fun_os_sha):
                           "status": trial.status,
                           "jenkins_build_number": trial.jenkins_build_number,
                           "lsf_job_id": trial.lsf_job_id,
-                          "tag": trial.tag}
+                          "tag": trial.tag,
+                          "regex_match": trial.regex_match}
             result.append(one_record)
     return result
 
@@ -109,4 +110,5 @@ def triaging_trial_states(request):
 def git_commits_fun_os(request, from_sha, to_sha):
     gm = GitManager()
     commits_between = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
+    commits_between = [x.to_dict() for x in commits_between]
     return commits_between

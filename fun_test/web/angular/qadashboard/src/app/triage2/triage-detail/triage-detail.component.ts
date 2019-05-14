@@ -19,6 +19,7 @@ export class TriageDetailComponent implements OnInit {
   triage: any = null;
   trials: any = [];
   commits: any = [];
+  commitMap: any = {};
 
   constructor(private route: ActivatedRoute,
               private triageService: TriageService,
@@ -55,6 +56,9 @@ export class TriageDetailComponent implements OnInit {
   getCommitsInBetween() {
     return this.triageService.funOsCommits(this.triage.from_fun_os_sha, this.triage.to_fun_os_sha).pipe(switchMap((commits) => {
       this.commits = commits;
+      this.commits.forEach((commit) => {
+        this.commitMap[commit.sha] = {date: commit.date};
+      });
       return of(true);
     }));
   }
@@ -64,7 +68,11 @@ export class TriageDetailComponent implements OnInit {
   }
 
   prettyTime(t) {
-    return this.commonService.getPrettyLocalizeTime(t);
+    let s = "";
+    if (t) {
+      s = this.commonService.getPrettyLocalizeTime(t);
+    }
+    return s;
   }
 
   startTriage() {

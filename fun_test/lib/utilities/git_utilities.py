@@ -13,6 +13,10 @@ class Commit():
     def long_to_short_sha(self, sha):
         return sha[:7]
 
+    def to_dict(self):
+        r = {"sha": self.sha, "date": self.date}
+        return r
+
 
 class GitManager:
     BASE_URL = "https://api.github.com"
