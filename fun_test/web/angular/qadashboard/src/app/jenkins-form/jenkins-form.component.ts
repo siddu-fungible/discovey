@@ -20,6 +20,8 @@ export class JenkinsFormComponent implements OnInit {
       this.jenkinsParameters['MAX_DURATION'] = value.MAX_DURATION;
       this.jenkinsParameters['FUNOS_MAKEFLAGS'] = value.FUNOS_MAKEFLAGS;
       this.jenkinsParameters['DISABLE_ASSERTIONS'] = value.DISABLE_ASSERTIONS;
+      this.jenkinsParameters['HW_MODEL'] = value.HW_MODEL;
+
       //console.log(this.jenkinsParameters);
       if (this.submissionForm.valid) {
         this.data.emit(this.jenkinsParameters);
@@ -36,7 +38,8 @@ export class JenkinsFormComponent implements OnInit {
       'MAX_DURATION': [5],
       'SKIP_DASM_C': [true],
       'DISABLE_ASSERTIONS': [true],
-      'FUNOS_MAKEFLAGS': ['']
+      'FUNOS_MAKEFLAGS': [''],
+      'HW_MODEL': ['']
     });
     if (this.submissionForm.valid) {
       this.data.emit(this.jenkinsParameters);

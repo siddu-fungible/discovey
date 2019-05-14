@@ -18,6 +18,8 @@
       <input style="width: 300px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
     </div>
 
+    <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span>
+
     <div class="form-group">
       <label class="control-label col-sm-2" for="metric_id">Metric ID: </label>
       <input style="width: 300px" formControlName="metric_id" id="metric_id">
@@ -27,9 +29,11 @@
   <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
 
   <ng-container *ngIf="!gitShasValid">
-    <button (click)="validateShas()">Validate commits</button>
+    <button class="btn btn-primary" (click)="validateShas()">Validate commits</button>
   </ng-container>
-  <button (click)="onSubmit()" class="btn btn-success" type="submit" [disabled]="!submissionForm.valid || !gitShasValid">Submit</button>
+  <ng-container  *ngIf="gitShasValid">
+    <button (click)="onSubmit()" class="btn btn-success" type="submit" [disabled]="!submissionForm.valid || !gitShasValid">Submit</button>
+  </ng-container>
 
   <div class="card">
     <div class="card-header">

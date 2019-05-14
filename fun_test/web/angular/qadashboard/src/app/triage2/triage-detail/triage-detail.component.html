@@ -10,10 +10,17 @@
       <th>To FunOS commit</th>
       <th>Submission date</th>
       <th>Build parameters</th>
+      <th>Num commits</th>
     </tr>
     <tr>
       <td>{{ triage.metric_id }}</td>
-      <td>{{ triagingStateMap[triage.status] }}</td>
+      <td>
+        <button *ngIf="triage.status < 10; else completedStatus" class="btn btn-success" (click)="startTriage()">Start</button>
+        <ng-template #completedStatus>
+          {{ triagingStateMap[triage.status] }}
+        </ng-template>
+
+      </td>
       <td>{{ triage.result }}</td>
       <td>{{ triage.submitter_email }}</td>
       <td>{{ triage.triage_type }}</td>
@@ -21,6 +28,7 @@
       <td>{{ getShortSha(triage.to_fun_os_sha) }}</td>
       <td>{{ prettyTime(triage.submission_date_time) }}</td>
       <td>{{ triage.build_parameters | json }}</td>
+      <td>{{ commits.length }}</td>
     </tr>
   </table>
 
@@ -32,21 +40,25 @@
       <table class="table table-responsive">
         <tr>
           <th></th>
+          <th>Commit date</th>
           <th>Sha</th>
           <th>Set</th>
           <th>Status</th>
           <th>Jenkins</th>
           <th>LSF</th>
           <th>Tag</th>
+          <th>Result</th>
         </tr>
         <tr *ngFor="let trial of trials">
+          <td></td>
           <td></td>
           <td>{{ getShortSha(trial.fun_os_sha) }}</td>
           <td>{{ trial.trial_set_id }}</td>
           <td>{{ triagingTrialStateMap[trial.status] }}</td>
-          <td><a *ngIf="trial.jenkins_build_number > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ trial.jenkins_build_number }}/"></a></td>
-          <td><a *ngIf="trial.lsf_job_id > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsf_job_id }}" target="_blank"></a></td>
+          <td><a target="_blank" *ngIf="trial.jenkins_build_number > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ trial.jenkins_build_number }}/">link</a></td>
+          <td><a *ngIf="trial.lsf_job_id > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsf_job_id }}" target="_blank">link</a></td>
           <td>{{ trial.tag }}</td>
+          <td>{{ trial.regex_match }}</td>
         </tr>
       </table>
     </div>

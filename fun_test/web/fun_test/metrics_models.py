@@ -147,6 +147,7 @@ class Triage3Trial(models.Model):
     jenkins_build_number = models.IntegerField(default=-1)
     lsf_job_id = models.IntegerField(default=-1)
     tag = models.TextField(default="")
+    regex_match = models.TextField(default="")
 
     def __str__(self):
         return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,

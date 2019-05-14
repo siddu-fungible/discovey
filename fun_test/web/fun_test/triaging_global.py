@@ -42,6 +42,7 @@ class TriageTrialStates(States):
     IN_LSF = 50
     QUEUED_ON_LSF = 60
     RUNNING_ON_LSF = 70
+    PREPARING_RESULTS = 80
 
 
 

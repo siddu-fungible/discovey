@@ -2,13 +2,17 @@ import web.fun_test.django_interactive
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates
 from web.fun_test.metrics_models import TriagingResult
 from web.fun_test.metrics_models import Triage3, Triage3Trial
+from lib.host.lsf_status_server import LsfStatusServer
+
 from fun_global import get_current_time
 import time
 import sys
 from lib.utilities.git_utilities import GitManager
+from lib.utilities.jenkins_manager import JenkinsManager
 import logging
 import logging.handlers
 from threading import Thread
+import re
 
 logger = logging.getLogger("triaging_logger")
 logger.setLevel(logging.DEBUG)
@@ -97,6 +101,9 @@ class TriageStateMachine:
         to_fun_os_sha = t.to_fun_os_sha
         all_commits = GitManager().get_commits_between(from_sha=from_fun_os_sha, to_sha=to_fun_os_sha)
         all_commits.reverse()
+        t.from_fun_os_sha = all_commits[0].sha  #TODO
+        t.to_fun_os_sha = all_commits[-1].sha
+        t.save()
 
         self.all_commits = all_commits
         logger.debug("This triage has {} commits".format(len(all_commits)))
@@ -112,7 +119,7 @@ class TriageStateMachine:
                                  trial_set_id=t.current_trial_set_id,
                                  status=TriagingStates.INIT)
             base_tag = t.base_tag
-            trial_tag = "{}_{}".format(base_tag, long_to_short_sha(fun_os_sha))
+            trial_tag = "{}_{}_{}".format("qa_triage", t.triage_id, long_to_short_sha(fun_os_sha))
             trial.tag = trial_tag
             trial.save()
             logger.debug("Started trial for {}".format(fun_os_sha))
@@ -129,6 +136,8 @@ class TriageStateMachine:
 
         all_shas = [x.sha for x in self.all_commits]
 
+        for sha in all_shas:
+            print sha
         commits_subset = all_shas[all_shas.index(from_fun_os_sha): all_shas.index(to_fun_os_sha) + 1]
         first_commit = commits_subset[0]
         last_commit = commits_subset[-1]
@@ -138,10 +147,16 @@ class TriageStateMachine:
         t.current_trial_to_sha = last_commit
         t.save()
 
+        num_trials = 0
+        max_trials = 8
         for commit_index in range(0, len(commits_subset), increment):
             this_commit = commits_subset[commit_index]
             logger.debug("Candidate: {}".format(str(this_commit)))
             self.start_trial(fun_os_sha=this_commit)
+            num_trials += 1
+            if num_trials > max_trials:
+                raise Exception("Too many trials")
+
         l = []
         l.append(from_fun_os_sha)
         l.append(to_fun_os_sha)
@@ -158,7 +173,9 @@ class TriageStateMachine:
         if trials:
             for trial in trials:
                 logger.debug("Processing trial: {}".format(str(trial)))
-                TrialStateMachine(triage_id=t.triage_id, fun_os_sha=trial.fun_os_sha)
+                sm = TrialStateMachine(triage_id=t.triage_id, fun_os_sha=trial.fun_os_sha)
+                sm.run()
+                time.sleep(1)
         else:
             logger.debug("No trials to process")
 
@@ -198,16 +215,63 @@ class TrialStateMachine:
         trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha)
         status = trial.status
         if status == TriageTrialStates.INIT:
-            pass
+            jm = JenkinsManager()
+            params = triage.build_parameters
+            params["TAGS"] = "qa_triage," + trial.tag
+            params["RUN_MODE"] = "Batch"
+            params["PRIORITY"] = "low_priority"
+            params["BRANCH_FunOS"] = self.fun_os_sha
+            params["PCI_MODE"] = "root_complex"
+            try:
+                queue_item = jm.build(params=params)
+                build_number = jm.get_build_number(queue_item=queue_item)
+                trial.jenkins_build_number = build_number
+            except Exception as ex:  #TODO
+                pass
+            finally:
+                trial.status = TriageTrialStates.BUILDING_ON_JENKINS
+            trial.save()
         elif status == TriageTrialStates.BUILDING_ON_JENKINS:
+            jm = JenkinsManager()
+            job_info = jm.get_job_info(build_number=trial.jenkins_build_number)
+            if not job_info["building"]:
+                job_result = job_info["result"]
+                if job_result.lower() == "success":
+                    trial.status = TriageTrialStates.JENKINS_BUILD_COMPLETE
+                    trial.save()
             pass
         elif status == TriageTrialStates.JENKINS_BUILD_COMPLETE:
-            pass
+            lsf_server = LsfStatusServer()  #TODO
+            past_jobs = lsf_server.get_past_jobs_by_tag(add_info_to_db=False, tag=trial.tag)
+            if past_jobs:
+                trial.status = TriageTrialStates.IN_LSF
+                trial.save()
         elif status == TriageTrialStates.IN_LSF:
-            pass
+            lsf_server = LsfStatusServer()  #TODO
+            past_jobs = lsf_server.get_past_jobs_by_tag(add_info_to_db=False, tag=trial.tag)
+            if past_jobs:
+                trial.status = TriageTrialStates.IN_LSF
+                trial.save()
+            job_info = lsf_server.get_last_job(tag=trial.tag)
+            if job_info and "return_code" in job_info:
+                if not job_info["return_code"]:
+                    trial.status = TriageTrialStates.PREPARING_RESULTS
+                    trial.save()
+        elif status == TriageTrialStates.PREPARING_RESULTS:
+            lsf_server = LsfStatusServer()  # TODO
+            job_info = lsf_server.get_last_job(tag=trial.tag)
+            lines = job_info["output_text"].split("\n")
+            trial.regex_match = ""
+            for line in lines:
+                m = re.search(r'cnvme_total_read IOPS: { "value": \d+', line)
+                if m:
+                    trial.regex_match = m.group(0)
+            trial.status = TriageTrialStates.COMPLETED
+            trial.save()
+
         return status
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     triage_id = 123
     metric_id = 143
     Triage3.objects.filter(triage_id=triage_id).delete()
@@ -228,15 +292,13 @@ if __name__ == "__main__":
     t.save()
 
 if __name__ == "__main__":
-    triage_id = 123
-    test_thread = Test1(triage_id=triage_id)
-    test_started = False
+    triage_id = 304
     if True:
         t = Triage3.objects.get(triage_id=triage_id)
         while True:
             s = TriageStateMachine(triage=t)
             s.run()
-            if not test_started:
-                test_thread.start()
-                test_started = True
+            #if not test_started:
+            #    # test_thread.start()
+            #    #test_started = True
             time.sleep(5)

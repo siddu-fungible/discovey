@@ -21,6 +21,7 @@ export class Triage2Component implements OnInit {
   triagingTrialStateMap: any = null;
   triages: any = null;
   gitShasValid: boolean = false;
+  commitsInBetween: any = null;
 
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
@@ -41,8 +42,21 @@ export class Triage2Component implements OnInit {
   }
 
   validateShas() {
-    let url = "/api/v1/git_commits_fun_"
-    this.apiService.get
+    if ((!this.submissionForm.value.from_fun_os_sha)
+      || (!this.submissionForm.value.to_fun_os_sha)
+      || (this.submissionForm.value.from_fun_os_sha === "")
+      || (this.submissionForm.value.to_fun_os_sha === "")) {
+      return this.loggerService.error("Git commits are invalid");
+    }
+    let url = "/api/v1/git_commits_fun_os/" + this.submissionForm.value.from_fun_os_sha + "/" + this.submissionForm.value.to_fun_os_sha;
+    this.apiService.get(url).subscribe((response) => {
+      this.commitsInBetween = response.data;
+      if (this.commitsInBetween && this.commitsInBetween.length) {
+        this.gitShasValid = true;
+      }
+    }, error => {
+      this.loggerService.error("Git commits are invalid");
+    })
   }
 
   createFormGroup() {
