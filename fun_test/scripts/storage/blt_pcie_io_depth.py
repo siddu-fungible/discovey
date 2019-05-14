@@ -450,6 +450,6 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
 if __name__ == "__main__":
     bltscript = BLTVolumePerformanceScript()
-#    bltscript.add_test_case(BLTFioSeqRead())
+    bltscript.add_test_case(BLTFioSeqRead())
     bltscript.add_test_case(BLTFioRandRead())
     bltscript.run()
