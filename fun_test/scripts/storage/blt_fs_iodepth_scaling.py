@@ -346,12 +346,17 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         row_data_dict = {}
 
-        table_data_headers = ["Num Jobs", "IO Depth", "Operation", "Read IOPS",
-                              "Read Throughput in MB/s",
-                              "Read Latency in uSecs", "Read Latency 99 Percentile in uSecs",
+        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
+                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
+                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["num_jobs", "iodepth", "mode", "readiops", "readbw",
-                           "readclatency", "readlatency99", "readlatency9999", "fio_job_name"]
+        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
+                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "fio_job_name"]
         table_data_rows = []
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -373,8 +378,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
                 row_data_dict["mode"] = mode
-                row_data_dict["num_jobs"] = self.fio_num_jobs
                 row_data_dict["iodepth"] = fio_iodepth
+                row_data_dict["block_size"] = fio_block_size
+                row_data_dict["size"] = self.fio_cmd_args["size"]
 
                 fun_test.log("Running FIO {} only test with num_jobs {}, "
                              "the block size and IO depth set to {} & {}".
