@@ -219,6 +219,14 @@
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -258,6 +266,14 @@
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -2344,6 +2360,14 @@
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   },
@@ -2370,6 +2394,14 @@
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -2406,6 +2438,14 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   },
@@ -2432,6 +2472,14 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -2468,6 +2516,14 @@
                         "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   },
@@ -2494,6 +2550,14 @@
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }
@@ -2720,80 +2784,54 @@
                 "label": "Durable Volume - EC",
                 "children": [
                   {
-                    "info": "4kb_one_volume_one_ssd_durable_volume_ec",
+                    "info": "Read",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "4kb_one_volume_one_ssd_durable_volume_ec",
+                    "name": "read_4kb_one_volume_one_ssd_durable_volume_ec",
                     "weight": 1,
-                    "label": "SSD(s)=1, Vol(s)=1, Block-size=4KB",
+                    "label": "Sequential Read",
                     "children": [
                       {
-                        "info": "Read",
-                        "metric_model_name": "MetricContainer",
-                        "leaf": false,
-                        "name": "read_4kb_one_volume_one_ssd_durable_volume_ec",
+                        "info": "read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
                         "weight": 1,
-                        "label": "Sequential Read",
-                        "children": [
-                          {
-                            "info": "read_4kb1vol1ssd_durable_volume_ec_output_bandwidth",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_4kb1vol1ssd_durable_volume_ec_output_bandwidth",
-                            "weight": 1,
-                            "label": "Throughput"
-                          },
-                          {
-                            "info": "read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
-                            "weight": 1,
-                            "label": "Latency"
-                          },
-                          {
-                            "info": "read_4kb1vol1ssd_durable_volume_ec_output_iops",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_4kb1vol1ssd_durable_volume_ec_output_iops",
-                            "weight": 1,
-                            "label": "IOPS"
-                          }
-                        ]
+                        "label": "Latency"
                       },
                       {
-                        "info": "Random Read",
-                        "metric_model_name": "MetricContainer",
-                        "leaf": false,
-                        "name": "rand_read_4kb_one_volume_one_ssd_durable_volume_ec",
+                        "info": "read_4kb1vol1ssd_durable_volume_ec_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "read_4kb1vol1ssd_durable_volume_ec_output_iops",
                         "weight": 1,
-                        "label": "Random Read",
-                        "children": [
-                          {
-                            "info": "rand_read_4kb1vol1ssd_durable_volume_ec_output_bandwidth",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_4kb1vol1ssd_durable_volume_ec_output_bandwidth",
-                            "weight": 1,
-                            "label": "Throughput"
-                          },
-                          {
-                            "info": "rand_read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
-                            "weight": 1,
-                            "label": "Latency"
-                          },
-                          {
-                            "info": "rand_read_4kb1vol1ssd_durable_volume_ec_output_iops",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_4kb1vol1ssd_durable_volume_ec_output_iops",
-                            "weight": 1,
-                            "label": "IOPS"
-                          }
-                        ]
+                        "label": "IOPS"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "Random Read",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rand_read_4kb_one_volume_one_ssd_durable_volume_ec",
+                    "weight": 1,
+                    "label": "Random Read",
+                    "children": [
+                      {
+                        "info": "rand_read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "rand_read_4kb1vol1ssd_durable_volume_ec_4_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      },
+                      {
+                        "info": "rand_read_4kb1vol1ssd_durable_volume_ec_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "rand_read_4kb1vol1ssd_durable_volume_ec_output_iops",
+                        "weight": 1,
+                        "label": "IOPS"
                       }
                     ]
                   }
@@ -2808,80 +2846,54 @@
                 "label": "Durable Volume - EC + Compression",
                 "children": [
                   {
-                    "info": "4kb_one_volume_12_ssd_durable_volume_ec",
+                    "info": "Read",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "4kb_one_volume_12_ssd_durable_volume_ec",
+                    "name": "read_4kb_one_volume_12_ssd_durable_volume_ec",
                     "weight": 1,
-                    "label": "SSD(s)=12, Vol(s)=1, Block-size=4KB",
+                    "label": "Sequential Read",
                     "children": [
                       {
-                        "info": "Read",
-                        "metric_model_name": "MetricContainer",
-                        "leaf": false,
-                        "name": "read_4kb_one_volume_12_ssd_durable_volume_ec",
+                        "info": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
                         "weight": 1,
-                        "label": "Sequential Read",
-                        "children": [
-                          {
-                            "info": "read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
-                            "weight": 1,
-                            "label": "Throughput"
-                          },
-                          {
-                            "info": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
-                            "weight": 1,
-                            "label": "Latency"
-                          },
-                          {
-                            "info": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
-                            "weight": 1,
-                            "label": "IOPS"
-                          }
-                        ]
+                        "label": "Latency"
                       },
                       {
-                        "info": "Random Read",
-                        "metric_model_name": "MetricContainer",
-                        "leaf": false,
-                        "name": "rand_read_4kb_one_volume_12_ssd_durable_volume_ec",
+                        "info": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
                         "weight": 1,
-                        "label": "Random Read",
-                        "children": [
-                          {
-                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_output_bandwidth",
-                            "weight": 1,
-                            "label": "Throughput"
-                          },
-                          {
-                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
-                            "weight": 1,
-                            "label": "Latency"
-                          },
-                          {
-                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
-                            "weight": 1,
-                            "label": "IOPS"
-                          }
-                        ]
+                        "label": "IOPS"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "Random Read",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "rand_read_4kb_one_volume_12_ssd_durable_volume_ec",
+                    "weight": 1,
+                    "label": "Random Read",
+                    "children": [
+                      {
+                        "info": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      },
+                      {
+                        "info": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                        "weight": 1,
+                        "label": "IOPS"
                       }
                     ]
                   }
@@ -3075,7 +3087,7 @@
                         "leaf": false,
                         "name": "juniper_tls_64tunnel",
                         "weight": 1,
-                        "label": "64 Tunnel(S)",
+                        "label": "64 Tunnel(s)",
                         "children": [
                           {
                             "info": "juniper_tls_64_output_throughput",

@@ -138,7 +138,8 @@ def submit_job(request):
         if "build_url" in request_json:
             build_url = request_json["build_url"]
         if not build_url and ("version" in request_json and request_json["version"]):
-            build_url = DEFAULT_BUILD_URL.replace("latest", request_json["version"])
+            clean_version = re.sub("\D+", "", request_json["version"])
+            build_url = DEFAULT_BUILD_URL.replace("latest", clean_version)
 
         test_bed_type = None
         if "test_bed_type" in request_json:
