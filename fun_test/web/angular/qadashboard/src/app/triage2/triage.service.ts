@@ -50,4 +50,11 @@ export class TriageService {
     }));
   }
 
+  funOsCommits(fromSha, toSha) {
+    let url = "/api/v1/git_commits_fun_os/" + fromSha + '/' + toSha;
+    return this.apiService.get(url).pipe(switchMap((response) => {
+      return of(response.data);
+    }))
+  }
+
 }

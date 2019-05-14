@@ -4,6 +4,7 @@ from web.fun_test.metrics_models import Triage3, Triage3Trial, LastTriageId
 from web.fun_test.triaging_global import TriageTrialStates, TriagingStates
 from django.db.models import Q
 import json
+from lib.utilities.git_utilities import GitManager
 
 @csrf_exempt
 @api_safe_json_response
@@ -89,3 +90,11 @@ def triaging_states(request):
 @api_safe_json_response
 def triaging_trial_states(request):
     return TriageTrialStates().all_codes_to_string()
+
+
+@csrf_exempt
+@api_safe_json_response
+def git_commits_fun_os(request, from_sha, to_sha):
+    gm = GitManager()
+    commits_between = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
+    return commits_between

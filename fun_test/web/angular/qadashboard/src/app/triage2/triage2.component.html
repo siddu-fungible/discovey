@@ -25,7 +25,11 @@
 
   </form>
   <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
-  <button (click)="onSubmit()" class="btn btn-success" type="submit" [disabled]="!submissionForm.valid">Submit</button>
+
+  <ng-container *ngIf="!gitShasValid">
+    <button (click)="validateShas()">Validate commits</button>
+  </ng-container>
+  <button (click)="onSubmit()" class="btn btn-success" type="submit" [disabled]="!submissionForm.valid || !gitShasValid">Submit</button>
 
   <div class="card">
     <div class="card-header">

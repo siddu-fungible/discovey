@@ -20,6 +20,7 @@ export class Triage2Component implements OnInit {
   triagingStateMap: any = null;
   triagingTrialStateMap: any = null;
   triages: any = null;
+  gitShasValid: boolean = false;
 
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
@@ -39,6 +40,10 @@ export class Triage2Component implements OnInit {
     });
   }
 
+  validateShas() {
+    let url = "/api/v1/git_commits_fun_"
+    this.apiService.get
+  }
 
   createFormGroup() {
     return new FormGroup({
