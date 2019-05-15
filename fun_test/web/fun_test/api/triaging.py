@@ -9,6 +9,18 @@ from lib.utilities.git_utilities import GitManager
 
 @csrf_exempt
 @api_safe_json_response
+def trial_set(request, triage_id):
+    request_json = json.loads(request.body)
+    from_fun_os_sha = request_json.get("from_fun_os_sha")
+    to_fun_os_sha = request_json.get("to_fun_os_sha")
+    t = Triage3.objects.get(triage_id=triage_id)
+    t.current_trial_set_id += 1
+    t.current_trial_from_sha = from_fun_os_sha
+    t.current_trial_to_sha = to_fun_os_sha
+    t.save()
+
+@csrf_exempt
+@api_safe_json_response
 def trials(request, triage_id, fun_os_sha):
     triage_id = int(triage_id)
     result = None

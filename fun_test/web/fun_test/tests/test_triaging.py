@@ -110,6 +110,10 @@ class TriageStateMachine:
         logger.debug("First commit: {}".format(str(self.all_commits[0])))
         logger.debug("Second commit: {}".format(str(self.all_commits[-1])))
 
+    def get_trial_tag(self, base_tag, fun_os_sha):
+        t = self.get_triage()
+        return "{}_{}_{}".format(base_tag, t.triage_id, long_to_short_sha(fun_os_sha))
+
     def start_trial(self, fun_os_sha):
         t = self.get_triage()
 
@@ -120,7 +124,7 @@ class TriageStateMachine:
                                  status=TriagingStates.INIT,
                                  submission_date_time=get_current_time())
             base_tag = t.base_tag
-            trial_tag = "{}_{}_{}".format("qa_triage", t.triage_id, long_to_short_sha(fun_os_sha))
+            trial_tag = self.get_trial_tag(base_tag="qa_triage", fun_os_sha=fun_os_sha)
             trial.tag = trial_tag
             trial.save()
             logger.debug("Started trial for {}".format(fun_os_sha))
@@ -131,9 +135,7 @@ class TriageStateMachine:
         # create trial sets for boundary shas and in-between shas
         # get potential list of shas to try
         logger.debug("Starting Trial set, from: {}, to: {}".format(from_fun_os_sha, to_fun_os_sha))
-        increment = len(self.all_commits)/self.STEP
-        if not increment:
-            increment = 1
+
 
         all_shas = [x.sha for x in self.all_commits]
 
@@ -150,6 +152,9 @@ class TriageStateMachine:
 
         num_trials = 0
         max_trials = 8
+        increment = len(commits_subset)/self.STEP
+        if not increment:
+            increment = 1
         for commit_index in range(0, len(commits_subset), increment):
             this_commit = commits_subset[commit_index]
             logger.debug("Candidate: {}".format(str(this_commit)))
@@ -173,6 +178,7 @@ class TriageStateMachine:
         trials = Triage3Trial.objects.filter(triage_id=triage_id, trial_set_id=t.current_trial_set_id, status__gt=TriageTrialStates.COMPLETED)
         if trials:
             for trial in trials:
+
                 logger.debug("Processing trial: {}".format(str(trial)))
                 sm = TrialStateMachine(triage_id=t.triage_id, fun_os_sha=trial.fun_os_sha)
                 sm.run()
@@ -197,8 +203,8 @@ class TriageStateMachine:
                                                        trial_set_id=t.current_trial_set_id).count()
             logger.debug("Active trials: {}".format(trials_count))
             if not trials_count:
-                self.start_trial_set(from_fun_os_sha=t.from_fun_os_sha,
-                                     to_fun_os_sha=t.to_fun_os_sha)
+                self.start_trial_set(from_fun_os_sha=t.current_trial_from_sha,
+                                     to_fun_os_sha=t.current_trial_to_sha)
             else:
                 self.process_trials()
 
@@ -222,7 +228,7 @@ class TrialStateMachine:
             params["RUN_MODE"] = "Batch"
             params["PRIORITY"] = "low_priority"
             params["BRANCH_FunOS"] = self.fun_os_sha
-            params["PCI_MODE"] = "root_complex"
+            # params["PCI_MODE"] = "root_complex"
             try:
                 queue_item = jm.build(params=params)
                 build_number = jm.get_build_number(queue_item=queue_item)

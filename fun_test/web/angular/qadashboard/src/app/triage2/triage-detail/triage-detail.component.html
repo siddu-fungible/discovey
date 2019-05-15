@@ -34,6 +34,8 @@
   </table>
 
   <fun-spinner [status]="commitFetchStatus"></fun-spinner>
+  <button *ngIf="commits && commits.length > 0" class="btn btn-outline-primary" (click)="trySubset()">Try a subset</button>
+
   <div class="card">
     <div class="card-header">
       Trials
@@ -42,6 +44,7 @@
       <table class="table table-responsive">
         <tr>
           <th></th>
+          <th>Index</th>
           <th>Commit date</th>
           <th>Sha</th>
           <th>Set</th>
@@ -52,7 +55,11 @@
           <th>Result</th>
         </tr>
         <tr *ngFor="let commit of commits; let index = index">
-          <ng-container *ngIf="commit.selectedForTrial">
+
+          <ng-container *ngIf="commit.selectedForTrial || true">
+            <td>
+              <input type="checkbox" [checked]="commit.selected" [(ngModel)]="commit.selected">
+            </td>
             <td>{{ index + 1 }} &nbsp;
               <ng-container *ngIf="commit.status <= 10 && commit.selectedForTrial">
                 <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit.trial)">Re-start</button>

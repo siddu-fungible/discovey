@@ -19,6 +19,7 @@ class CommitNode {
   trialSetId: number;
   triageId: number;
   trial: any;
+  selected: boolean = false;
 };
 
 
@@ -148,4 +149,37 @@ export class TriageDetailComponent implements OnInit {
     })
   }
 
+  getNumberOfSelections () {
+    let numSelections = 0;
+    this.commits.forEach((commit) => {
+      if (commit.selected) {
+        numSelections += 1;
+      }
+    });
+    return numSelections;
+  }
+
+  trySubset() {
+    let numSelections = this.getNumberOfSelections();
+    if (numSelections != 2) {
+      return this.loggerService.error(`Please select two and only two commits`);
+    }
+    let commitsSelected = [];
+    this.commits.forEach((commit) => {
+      if (commit.selected) {
+        commitsSelected.push(commit);
+      }
+    });
+
+    let from_fun_os_sha = commitsSelected[1].funOsSha;
+    let to_fun_os_sha = commitsSelected[0].funOsSha;
+    let url = "/api/v1/triage_trial_set/" + this.triageId;
+    let payload = {"from_fun_os_sha": from_fun_os_sha, "to_fun_os_sha": to_fun_os_sha};
+    this.apiService.post(url, payload).subscribe((response) => {
+      this.loggerService.success("New trial subset submitted");
+    }, error => {
+      this.loggerService.error("Error submitting new trial subset");
+    })
+
+  }
 }
