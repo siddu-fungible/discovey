@@ -63,7 +63,9 @@ export class TriageDetailComponent implements OnInit {
       return this.triageService.trials(this.triageId, null);
     })).pipe(switchMap((trials) => {
       this.trials = trials;
-      this.parseTrials(trials);
+      if (this.trials && this.trials.length) {
+        this.parseTrials(trials);
+      }
       return of(true);
     })).subscribe(() => {
 
@@ -127,6 +129,7 @@ export class TriageDetailComponent implements OnInit {
     let payload = {"status": 20}; // INIT
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("Successully submitted start option");
+      window.location.reload();
     }, error => {
       this.loggerService.error("Error starting the triage");
     })

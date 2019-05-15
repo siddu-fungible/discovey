@@ -262,14 +262,15 @@ class TrialStateMachine:
         elif status == TriageTrialStates.PREPARING_RESULTS:
             lsf_server = LsfStatusServer()  # TODO
             job_info = lsf_server.get_last_job(tag=trial.tag)
-            lines = job_info["output_text"].split("\n")
-            trial.regex_match = ""
-            for line in lines:
-                m = re.search(r'cnvme_total_read IOPS: { "value": \d+', line)
-                if m:
-                    trial.regex_match = m.group(0)
-            trial.status = TriageTrialStates.COMPLETED
-            trial.save()
+            if "output_text" in job_info:
+                lines = job_info["output_text"].split("\n")
+                trial.regex_match = ""
+                for line in lines:
+                    m = re.search(r'Average WU send ungated { "value": \d+', line)
+                    if m:
+                        trial.regex_match = m.group(0)
+                trial.status = TriageTrialStates.COMPLETED
+                trial.save()
 
         return status
 
@@ -293,7 +294,7 @@ if __name__ == "__main2__":
         t.base_tag = t.base_tag + "_{}_{}".format(triage_id, metric_id)
     t.save()
 
-new_triage_id = 404
+new_triage_id = 107
 
 if __name__ == "__main2__":
     original_triage_id = 304

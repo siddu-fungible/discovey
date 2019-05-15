@@ -108,6 +108,7 @@ class Triage3(models.Model):
 
     submitter_email = models.EmailField(default="john.abraham@fungible.com")
     base_tag = models.TextField(default="qa_triage")
+    regex_match_string = models.TextField(default="")
 
     @staticmethod
     def get_tag(base_tag, other_tag):

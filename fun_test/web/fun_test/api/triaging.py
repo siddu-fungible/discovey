@@ -67,10 +67,16 @@ def triagings(request, triage_id):
 
             triage_id = LastTriageId.get_next_id()
 
+            regex_match_string = request_json.get("regex_match_string", None)
+
             t = Triage3(triage_id=triage_id, metric_id=metric_id,
                         triage_type=triage_type,
                         from_fun_os_sha=from_fun_os_sha,
-                        to_fun_os_sha=to_fun_os_sha, submitter_email=submitter_email, build_parameters=build_parameters)
+                        to_fun_os_sha=to_fun_os_sha,
+                        submitter_email=submitter_email,
+                        build_parameters=build_parameters)
+            if regex_match_string is not None:
+                t.regex_match_string = regex_match_string
             t.save()
             result = t.triage_id
         else:
