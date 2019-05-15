@@ -2647,7 +2647,7 @@
                             "leaf": true,
                             "name": "read_qd1_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=1"
+                            "label": "Latency, QDepth=1"
                           },
                           {
                             "info": "read_qd4_pcie_output_latency",
@@ -2655,7 +2655,7 @@
                             "leaf": true,
                             "name": "read_qd4_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=4"
+                            "label": "Latency, QDepth=4"
                           },
                           {
                             "info": "read_qd8_pcie_output_latency",
@@ -2663,7 +2663,7 @@
                             "leaf": true,
                             "name": "read_qd8_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=8"
+                            "label": "Latency, QDepth=8"
                           },
                           {
                             "info": "read_qd16_pcie_output_latency",
@@ -2671,7 +2671,7 @@
                             "leaf": true,
                             "name": "read_qd16_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=16"
+                            "label": "Latency, QDepth=16"
                           }
                         ]
                       },
@@ -2697,7 +2697,7 @@
                             "leaf": true,
                             "name": "rand_read_qd1_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=1"
+                            "label": "Latency, QDepth=1"
                           },
                           {
                             "info": "rand_read_qd4_pcie_output_latency",
@@ -2705,7 +2705,7 @@
                             "leaf": true,
                             "name": "rand_read_qd4_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=4"
+                            "label": "Latency, QDepth=4"
                           },
                           {
                             "info": "rand_read_qd8_pcie_output_latency",
@@ -2713,7 +2713,7 @@
                             "leaf": true,
                             "name": "rand_read_qd8_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=8"
+                            "label": "Latency, QDepth=8"
                           },
                           {
                             "info": "rand_read_qd16_pcie_output_latency",
@@ -2721,7 +2721,7 @@
                             "leaf": true,
                             "name": "rand_read_qd16_pcie_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=16"
+                            "label": "Latency, QDepth=16"
                           }
                         ]
                       }
@@ -2757,7 +2757,7 @@
                             "leaf": true,
                             "name": "read_qd1_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=1"
+                            "label": "Latency, QDepth=1"
                           },
                           {
                             "info": "read_qd4_nvmetcp_output_latency",
@@ -2765,7 +2765,7 @@
                             "leaf": true,
                             "name": "read_qd4_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=4"
+                            "label": "Latency, QDepth=4"
                           },
                           {
                             "info": "read_qd8_nvmetcp_output_latency",
@@ -2773,7 +2773,7 @@
                             "leaf": true,
                             "name": "read_qd8_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=8"
+                            "label": "Latency, QDepth=8"
                           },
                           {
                             "info": "read_qd16_nvmetcp_output_latency",
@@ -2781,7 +2781,7 @@
                             "leaf": true,
                             "name": "read_qd16_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=16"
+                            "label": "Latency, QDepth=16"
                           }
                         ]
                       },
@@ -2807,7 +2807,7 @@
                             "leaf": true,
                             "name": "rand_read_qd1_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=1"
+                            "label": "Latency, QDepth=1"
                           },
                           {
                             "info": "rand_read_qd4_nvmetcp_output_latency",
@@ -2815,7 +2815,7 @@
                             "leaf": true,
                             "name": "rand_read_qd4_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=4"
+                            "label": "Latency, QDepth=4"
                           },
                           {
                             "info": "rand_read_qd8_nvmetcp_output_latency",
@@ -2823,7 +2823,7 @@
                             "leaf": true,
                             "name": "rand_read_qd8_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=8"
+                            "label": "Latency, QDepth=8"
                           },
                           {
                             "info": "rand_read_qd16_nvmetcp_output_latency",
@@ -2831,7 +2831,7 @@
                             "leaf": true,
                             "name": "rand_read_qd16_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QD=16"
+                            "label": "Latency, QDepth=16"
                           }
                         ]
                       }
@@ -2861,7 +2861,7 @@
                         "leaf": true,
                         "name": "read_iod1_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=1"
+                        "label": "Latency, QDepth=1"
                       },
                       {
                         "info": "read_iod8_durable_volume_ec_output_latency",
@@ -2869,7 +2869,7 @@
                         "leaf": true,
                         "name": "read_iod8_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=8"
+                        "label": "Latency, QDepth=8"
                       },
                       {
                         "info": "read_iod16_durable_volume_ec_output_latency",
@@ -2877,7 +2877,7 @@
                         "leaf": true,
                         "name": "read_iod16_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=16"
+                        "label": "Latency, QDepth=16"
                       },
                       {
                         "info": "read_iod32_durable_volume_ec_output_latency",
@@ -2885,7 +2885,7 @@
                         "leaf": true,
                         "name": "read_iod32_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=32"
+                        "label": "Latency, QDepth=32"
                       },
                       {
                         "info": "read_iod64_durable_volume_ec_output_latency",
@@ -2893,7 +2893,7 @@
                         "leaf": true,
                         "name": "read_iod64_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=64"
+                        "label": "Latency, QDepth=64"
                       },
                       {
                         "info": "read_iod_durable_volume_ec_output_iops",
@@ -2919,7 +2919,7 @@
                         "leaf": true,
                         "name": "rand_read_iod1_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=1"
+                        "label": "Latency, QDepth=1"
                       },
                       {
                         "info": "rand_read_iod8_durable_volume_ec_output_latency",
@@ -2927,7 +2927,7 @@
                         "leaf": true,
                         "name": "rand_read_iod8_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=8"
+                        "label": "Latency, QDepth=8"
                       },
                       {
                         "info": "rand_read_iod16_durable_volume_ec_output_latency",
@@ -2935,7 +2935,7 @@
                         "leaf": true,
                         "name": "rand_read_iod16_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=16"
+                        "label": "Latency, QDepth=16"
                       },
                       {
                         "info": "rand_read_iod32_durable_volume_ec_output_latency",
@@ -2943,7 +2943,7 @@
                         "leaf": true,
                         "name": "rand_read_iod32_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=32"
+                        "label": "Latency, QDepth=32"
                       },
                       {
                         "info": "rand_read_iod64_durable_volume_ec_output_latency",
@@ -2951,7 +2951,7 @@
                         "leaf": true,
                         "name": "rand_read_iod64_durable_volume_ec_output_latency",
                         "weight": 1,
-                        "label": "Latency, IODepth=64"
+                        "label": "Latency, QDepth=64"
                       },
                       {
                         "info": "rand_read_iod_durable_volume_ec_output_iops",
@@ -3363,12 +3363,44 @@
                     "label": "8_11_1:8K_RAND_RW, F1(s)=1",
                     "children": [
                       {
-                        "info": "inspur_rand_read_write_8k_block_output_iops",
+                        "info": "inspur_rand_read_write_qd1_8k_block_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_rand_read_write_8k_block_output_iops",
+                        "name": "inspur_rand_read_write_qd1_8k_block_output_iops",
                         "weight": 1,
-                        "label": "IOPS"
+                        "label": "IOPS, QDepth=1"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd8_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd8_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=8"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd16_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd16_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=16"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd32_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd32_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=32"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd64_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd64_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=64"
                       }
                     ]
                   },
@@ -3381,12 +3413,44 @@
                     "label": "8_11_6:8K_RAND_RW, F1(s)=1",
                     "children": [
                       {
-                        "info": "inspur_rand_read_write_8k_block_output_latency",
+                        "info": "inspur_rand_read_write_qd1_8k_block_output_latency",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_rand_read_write_8k_block_output_latency",
+                        "name": "inspur_rand_read_write_qd1_8k_block_output_latency",
                         "weight": 1,
-                        "label": "Latency"
+                        "label": "Latency, QDepth=1"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd8_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd8_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=8"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd16_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd16_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=16"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd32_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd32_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=32"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd64_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd64_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=64"
                       }
                     ]
                   }
