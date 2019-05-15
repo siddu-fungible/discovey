@@ -1,7 +1,7 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.metrics_models import Triage3, Triage3Trial, LastTriageId
-from web.fun_test.triaging_global import TriageTrialStates, TriagingStates
+from web.fun_test.triaging_global import TriageTrialStates, TriagingStates, TriagingTypes
 from django.db.models import Q
 import json
 from lib.utilities.git_utilities import GitManager
@@ -112,3 +112,9 @@ def git_commits_fun_os(request, from_sha, to_sha):
     commits_between = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     commits_between = [x.to_dict() for x in commits_between]
     return commits_between
+
+
+@csrf_exempt
+@api_safe_json_response
+def triaging_types(request):
+    return TriagingTypes().to_json()

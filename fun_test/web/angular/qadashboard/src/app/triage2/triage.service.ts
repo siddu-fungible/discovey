@@ -57,4 +57,12 @@ export class TriageService {
     }))
   }
 
+  getTriageTypes() {
+    let url = "/api/v1/triage_types";
+    return this.apiService.get(url).pipe(switchMap((response) => {
+      return of(response.data);
+    }))
+  }
+
+
 }

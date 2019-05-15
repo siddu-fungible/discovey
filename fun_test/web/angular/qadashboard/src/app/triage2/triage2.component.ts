@@ -23,6 +23,7 @@ export class Triage2Component implements OnInit {
   gitShasValid: boolean = false;
   commitsInBetween: any = null;
   validateShasStatus: string = null;
+  triageTypes: any = null;
 
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
@@ -42,10 +43,10 @@ export class Triage2Component implements OnInit {
     });
     this.submissionForm.get('from_fun_os_sha').valueChanges.subscribe(value => {
       this.gitShasValid = false;
-    })
+    });
     this.submissionForm.get('to_fun_os_sha').valueChanges.subscribe(value => {
       this.gitShasValid = false;
-    })
+    });
 
   }
 
@@ -95,6 +96,9 @@ export class Triage2Component implements OnInit {
         return this.triageService.triagingTrialStateToString();
       })).pipe(switchMap((triagingTrialStateMap) => {
         this.triagingTrialStateMap = triagingTrialStateMap;
+        return this.triageService.getTriageTypes();
+      })).pipe(switchMap((triageTypes) => {
+        this.triageTypes = triageTypes;
         return of(true);
       })).pipe(switchMap(() => {
         return this.triageService.triages(null);

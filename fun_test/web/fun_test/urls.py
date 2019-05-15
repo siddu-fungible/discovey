@@ -214,6 +214,7 @@ api_v1_urls = [
     url(r'^triages/(\d+)/trials/?(\S+)?$', triaging.trials),
     url(r'^triage_states$', triaging.triaging_states),
     url(r'^triaging_trial_states$', triaging.triaging_trial_states),
+    url(r'^triage_types$', triaging.triaging_types),
     url(r'^git_commits_fun_os/(\S+)/(\S+)$', triaging.git_commits_fun_os)
 ]
 

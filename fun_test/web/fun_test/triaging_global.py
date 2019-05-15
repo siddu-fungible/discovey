@@ -1,14 +1,14 @@
 from fun_global import RESULTS
 
-class States:
+class Codes:
     def __init__(self):
         self.non_callable_attributes = [f for f in dir(self) if not callable(getattr(self, f))]
         self.non_callable_attributes = [x for x in self.non_callable_attributes if not x.startswith("__")]
         self.code_to_string_map = {}
         for non_callable_attribute in self.non_callable_attributes:
             value = getattr(self, non_callable_attribute)
-            self.code_to_string_map[value] = non_callable_attribute
-
+            if type(value) is int:
+                self.code_to_string_map[value] = non_callable_attribute
 
     def code_to_string(self, code):
         return self.code_to_string_map.get(code, "Unknown")
@@ -16,8 +16,15 @@ class States:
     def all_codes_to_string(self):
         return self.code_to_string_map
 
+    def to_json(self):
+        result = []
+        for non_callable_attribute in self.non_callable_attributes:
+            value = getattr(self, non_callable_attribute)
+            result.append(value)
+        return result
 
-class TriagingStates(States):
+
+class TriagingStates(Codes):
     UNKNOWN = -100
     ERROR = -99
     KILLED = -30
@@ -30,7 +37,7 @@ class TriagingStates(States):
 
 
 
-class TriageTrialStates(States):
+class TriageTrialStates(Codes):
     UNKNOWN = -100
     ERROR = -99
     KILLED = -20
@@ -52,3 +59,14 @@ class TriagingResult:
     IN_PROGRESS = RESULTS["IN_PROGRESS"]
     FAILED = RESULTS["FAILED"]
     PASSED = RESULTS["PASSED"]
+
+
+class TriagingTypes(Codes):
+    PASS_OR_FAIL = {"code": 0, "description": "Pass/Fail"}
+    SCORE = {"code": 1, "description": "Score"}
+    REGEX_MATCH = {"code": 2, "description": "Regex match"}
+
+
+
+if __name__ == "__main__":
+    print TriagingTypes().to_json()
