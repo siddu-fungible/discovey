@@ -164,7 +164,7 @@ class TopologyHelper:
                         if host_instance.extra_attributes:
                             if "ipmi_info" in host_instance.extra_attributes:
                                 ipmi_details = host_instance.extra_attributes["ipmi_info"]
-                        instance_ready = host_instance.ensure_host_is_up(max_wait_time=180, ipmi_details=ipmi_details)
+                        instance_ready = host_instance.ensure_host_is_up(max_wait_time=240, ipmi_details=ipmi_details)
                         fun_test.test_assert(instance_ready, "Instance: {} ready".format(str(host_instance)))
                         host_instance.lspci(grep_filter="1dad")
         return True
