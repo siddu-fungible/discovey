@@ -61,6 +61,7 @@ export class TriageDetailComponent implements OnInit {
       return this.triageService.trials(this.triageId, null);
     })).pipe(switchMap((trials) => {
       this.trials = trials;
+      this.parseTrials(trials);
       return of(true);
     })).subscribe(() => {
 
@@ -70,6 +71,17 @@ export class TriageDetailComponent implements OnInit {
 
   }
 
+  parseTrials(trials) {
+    trials.forEach((trial) => {
+      let commitNode = this.commitMap[trial.fun_os_sha];
+      commitNode.status = trial.status;
+      commitNode.tag = trial.tag;
+      commitNode.jenkinsBuildNumber = trial.jenkins_build_number;
+      commitNode.lsfJobId = trial.lsf_job_id;
+      commitNode.trialSetId = trial.trial_set_id;
+      commitNode.regexMatch = trial.regex_match;
+    })
+  }
   getCommitsInBetween() {
     return this.triageService.funOsCommits(this.triage.from_fun_os_sha, this.triage.to_fun_os_sha).pipe(switchMap((commits) => {
 
