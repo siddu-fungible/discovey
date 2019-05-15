@@ -906,6 +906,20 @@ class BltVolumePerformance(models.Model):
                                                 self.output_write_avg_latency,
                                                 self.output_read_avg_latency)
 
+class InspurZipCompressionRatiosPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_effort_name = models.TextField(default="")
+    input_corpus_name = models.TextField(default="")
+    output_f1_compression_ratio = models.FloatField(verbose_name="F1 Compression Ratio", default=-1)
+    output_f1_compression_ratio_unit = models.TextField(default="number")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
 class AllocSpeedPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
