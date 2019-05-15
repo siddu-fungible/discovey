@@ -2089,7 +2089,7 @@ if __name__ == "__main_durable_volume__":
                                 work_in_progress=False).save()
     print "added charts for durable volume different io depths"
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur__":
     iops_chart = MetricChart.objects.get(internal_chart_name="inspur_rand_read_write_8k_block_output_iops")
     latency_chart = MetricChart.objects.get(internal_chart_name="inspur_rand_read_write_8k_block_output_latency")
     iodepths = [1, 8, 16, 32, 64]
@@ -2126,3 +2126,30 @@ if __name__ == "__main__":
                         base_line_date=base_line_date,
                         work_in_progress=False).save()
     print "added charts for Inspur different io depths"
+
+if __name__ == "__main__":
+    chart = MetricChart.objects.get(internal_chart_name="funtcp_server_throughput_4tcp")
+    data_sets = json.loads(chart.data_sets)
+    internal_chart_name = "funtcp_server_throughput_8tcp"
+    for data_set in data_sets:
+        data_set["inputs"]["input_num_flows"] = 8
+        data_set["output"]["expected"] = -1
+        data_set["output"]["reference"] = -1
+    chart_name = "8 TCP Flow(s)"
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description=chart.description,
+                owner_info=chart.owner_info,
+                source=chart.source,
+                positive=chart.positive,
+                y1_axis_title=chart.y1_axis_title,
+                visualization_unit=chart.visualization_unit,
+                metric_model_name=chart.metric_model_name,
+                base_line_date=chart.base_line_date,
+                work_in_progress=False).save()
+    print "added chart for 8 TCP Flow"
+
