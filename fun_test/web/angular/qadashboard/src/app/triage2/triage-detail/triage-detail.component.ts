@@ -159,6 +159,12 @@ export class TriageDetailComponent implements OnInit {
     return numSelections;
   }
 
+  clearSelections() {
+    this.commits.forEach((commit) => {
+      commit.selected = false;
+    })
+  }
+
   trySubset() {
     let numSelections = this.getNumberOfSelections();
     if (numSelections != 2) {
@@ -177,6 +183,7 @@ export class TriageDetailComponent implements OnInit {
     let payload = {"from_fun_os_sha": from_fun_os_sha, "to_fun_os_sha": to_fun_os_sha};
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("New trial subset submitted");
+      this.clearSelections();
     }, error => {
       this.loggerService.error("Error submitting new trial subset");
     })
