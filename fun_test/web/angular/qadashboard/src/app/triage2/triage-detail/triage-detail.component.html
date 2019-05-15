@@ -50,7 +50,11 @@
           <th>Result</th>
         </tr>
         <tr *ngFor="let trial of trials">
-          <td></td>
+          <td>
+            <ng-container *ngIf="trial.status <= 10">
+              <button class="btn btn-sm" (click)="restartTrial(trial)">Re-start</button>
+            </ng-container>
+          </td>
           <td>
             <fun-spinner [status]="commitFetchStatus"></fun-spinner>
             {{ prettyTime(commitMap[trial.fun_os_sha]?.date) }}

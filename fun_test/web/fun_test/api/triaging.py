@@ -13,7 +13,23 @@ def trials(request, triage_id, fun_os_sha):
     triage_id = int(triage_id)
     result = None
     if request.method == "POST":
-        pass
+        if fun_os_sha:
+            q = Q(triage_id=triage_id, fun_os_sha=fun_os_sha)
+            trials = Triage3Trial.objects.filter(q).order_by('submission_date_time')
+            if trials.count():
+                first_trial = trials[0]
+                request_json = json.loads(request.body)
+                status = request_json.get("status", None)
+                if status is not None:
+                    first_trial.status = int(status)
+                tag = request_json.get("tag", None)
+                if tag is not None:
+                    first_trial.tag = tag
+
+                tags = request_json.get("tags", None)
+                if tags is not None:
+                    first_trial.tags = tags
+                first_trial.save()
     elif request.method == "GET":
         q = Q(triage_id=triage_id)
         if fun_os_sha:
@@ -29,7 +45,8 @@ def trials(request, triage_id, fun_os_sha):
                           "jenkins_build_number": trial.jenkins_build_number,
                           "lsf_job_id": trial.lsf_job_id,
                           "tag": trial.tag,
-                          "regex_match": trial.regex_match}
+                          "regex_match": trial.regex_match,
+                          "tags": trial.tags}
             result.append(one_record)
     return result
 
