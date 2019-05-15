@@ -30,7 +30,6 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
-from web.fun_test.metrics_models import Triage, TriageFlow
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
 from web.fun_test.db_fixup import get_rounded_time
 

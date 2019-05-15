@@ -39,7 +39,8 @@ export class Triage2Component implements OnInit {
       'submitter': [null, Validators.required],
       'from_fun_os_sha': [null, Validators.required],
       'to_fun_os_sha': [null, Validators.required],
-      'metric_id': [null, Validators.required]
+      'metric_id': [null, Validators.required],
+      'triage_type': [null, Validators.required]
     });
     this.submissionForm.get('from_fun_os_sha').valueChanges.subscribe(value => {
       this.gitShasValid = false;
@@ -120,6 +121,7 @@ export class Triage2Component implements OnInit {
     payload["from_fun_os_sha"] = this.submissionForm.value.from_fun_os_sha;
     payload["to_fun_os_sha"] = this.submissionForm.value.to_fun_os_sha;
     payload["submitter_email"] = this.submissionForm.value.submitter;
+    payload["triage_type"] = this.submissionForm.value.triage_type;
     payload["build_parameters"] = this.jenkinsParameters;
     if (!this.jenkinsParameters) {
       return this.loggerService.error("Jenkins parameters are invalid");
@@ -127,7 +129,7 @@ export class Triage2Component implements OnInit {
     let url = "/api/v1/triages";
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("Triage submitted");
-      window.open("/api/v1/triages/" + response.data, '_blank');
+      window.open("/triaging/" + response.data, '_blank');
     },error => {
       this.loggerService.error("Submitting triage failed");
     });
