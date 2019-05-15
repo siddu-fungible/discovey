@@ -28,31 +28,20 @@ def align_8mb(size):
     return size + int(align_sz - (size % align_sz))
 
 
-def get_bytes_int(str_size):
-    resp = re.search(r'(\d*)([a-zA-Z])', str_size, re.M)
-    final_sz = None
-    if resp:
-        ordinal = int(resp.group(1))
-        if resp.group(2) == 'K':
-            final_sz = ordinal << 10
-        if resp.group(2) == 'M':
-            final_sz = ordinal << 20
-        if resp.group(2) == 'G':
-            final_sz = ordinal << 30
-    return final_sz
+def compare_gzip(gzip_percent, accel_percent, margin):
+    # get difference,
+    diff = accel_percent - gzip_percent
+    result = True
+    if diff > 0:
+        result = True
+    elif diff < 0:
+        if abs(diff) > margin:
+            result = False
+    return result, diff
 
 
 def get_comp_percent(orig_size, comp_size):
     return ((orig_size - comp_size) / float(orig_size)) * 100
-
-
-def parse_perf_stats(perf_dict):
-    for k in perf_dict:
-        if k == "iops" or k == "latency":
-            perf_dict[k] = int(round(perf_dict[k]))
-        if k == "bw":
-            perf_dict[k] = int(round(perf_dict[k] / 1000))
-    return perf_dict
 
 
 VOL_TYPE = "EC_COMP_FS_VOL"
@@ -87,11 +76,12 @@ class ECVolumeLevelScript(FunTestScript):
                 setattr(self, k, v)
 
         fun_test.log("Global Config: {}".format(self.__dict__))
-
+        testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs)
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
+                                           disable_f1_index=self.disable_f1_index)
         topology = topology_helper.deploy()
-        fun_test.test_assert(topology, "Topology deployed")
+        fun_test.test_assert(topology, "FS Topology deployed")
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
         self.db_log_time = datetime.now()
@@ -103,6 +93,8 @@ class ECVolumeLevelScript(FunTestScript):
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
+            if self.testbed_type == "fs-6" and host_ip != "poc-server-01":  # TODO temp check for FS6 should be removed
+                continue
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
                 self.end_host = host_info["host_obj"]
                 self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
@@ -112,6 +104,7 @@ class ECVolumeLevelScript(FunTestScript):
         else:
             fun_test.test_assert(False, "Host found with Test Interface")
 
+        self.test_network = self.csr_network[str(self.fpg_inteface_index)]
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["topology"] = topology
         fun_test.shared_variables["fs"] = self.fs
@@ -400,8 +393,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Mount File System on Device
 
     def flush_cache_mem(self):
-        flush_cmd = """sync; echo 1 > /proc/sys/vm/drop_caches; sync; echo 2 > /proc/sys/vm/drop_caches;
-        sync; echo 3 > /proc/sys/vm/drop_caches"""
+        flush_cmd = """sync; echo 1 > /proc/sys/vm/drop_caches; 
+        sync; echo 2 > /proc/sys/vm/drop_caches; sync; echo 3 > /proc/sys/vm/drop_caches"""
         self.end_host.sudo_command(flush_cmd)
 
     def run(self):
@@ -417,6 +410,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         table_rows = []
         table_header = ["CorpusName", "F1CompressPrecent", "GzipCompressPercent"]
+        test_result = True
         for corpus in test_corpuses:
             # TOdo check if dir exists
             self.end_host.cp(source_file_name="{}{}".format(end_host_tmp_dir, corpus),
@@ -429,31 +423,34 @@ class ECVolumeLevelTestcase(FunTestCase):
             curr_write_count = resp['data'][lsv_uuid]['stats']['write_bytes']
             comp_size = curr_write_count - init_write_count
             comp_pct = get_comp_percent(orig_size=test_corpuses[corpus]['orig_size'], comp_size=comp_size)
-            self.compare_gzip(float(test_corpuses[corpus]['gzip_comp_pct']), float(comp_pct), self.margin, corpus)
+            gzip_float_pct = float(test_corpuses[corpus]['gzip_comp_pct'])
+            compare_result, diff = compare_gzip(gzip_float_pct,
+                                                comp_pct,
+                                                self.margin)
+            fun_test.add_checkpoint("FunOS accelerator spacesaving percentage {0:04.2f}% {1} than gzip space"
+                                    "saving percentage: {2:04.2f}% for corpus: {3}".format(comp_pct,
+                                                                                           "GREATER" if compare_result
+                                                                                           else "LESSER",
+                                                                                           gzip_float_pct,
+                                                                                           corpus))
+            if not compare_result:
+                test_result = False
             init_write_count = curr_write_count
             table_rows.append([corpus, "{0:04.2f}".format(comp_pct), test_corpuses[corpus]['gzip_comp_pct']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
                            table_name="Accelerator Effort: {0}, Gizp Effort: {1}".format(self.accelerator_effort,
                                                                                          self.gzip_effort),
                            table_data={"headers": table_header, "rows": table_rows})
-
-    def compare_gzip(self, gzip_percent, accel_percent, margin, file_name):
-        diff = accel_percent - gzip_percent
-        if diff > 0:
-            fun_test.test_assert(diff,
-                                 message="FunOS accelerator spacesaving percent {0:04.2f}% higher than gzip space saving percent: {1:04.2f}% for corpus: {2}".format(
-                                     accel_percent, gzip_percent, file_name))
-        elif (diff < 0):
-            fun_test.test_assert(abs(diff) < margin,
-                                 message="FunOS accelerator spacesaving percent {0:04.2f}% lesser than gzip space saving percent: {1:04.2f}% within error margin: {2}% for corpus: {3}".format(
-                                     accel_percent, gzip_percent, margin, file_name))
+        fun_test.test_assert(test_result,
+                             message="F1 Compression benchmarking with Accelerator Effort: {0} and Gzip Effort: {1}".format(
+                                 self.volume_info['lsv']['zip_effort'], self.gip_effort))
 
     def cleanup(self):
         try:
             # Do nvme disconnect
             cmd = "sudo nvme disconnect -n {0} -d {1}".format(self.nvme_subsystem, self.volume_name)
             self.end_host.sudo_command(cmd)
-            
+
             # Detach LSV from Controller
             lsv_uuid = self.vols_created['lsv'][0]['uuid']
             lsv_name = self.vols_created['lsv'][0]['name']
