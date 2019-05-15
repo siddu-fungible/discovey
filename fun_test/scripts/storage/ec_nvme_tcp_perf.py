@@ -40,7 +40,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Global Config: {}".format(self.__dict__))
 
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs)
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
+                                           disable_f1_index=self.disable_f1_index)
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -55,6 +56,8 @@ class ECVolumeLevelScript(FunTestScript):
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
+                if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
+                    continue
                 self.end_host = host_info["host_obj"]
                 self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
                 self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
@@ -63,6 +66,7 @@ class ECVolumeLevelScript(FunTestScript):
         else:
             fun_test.test_assert(False, "Host found with Test Interface")
 
+        self.test_network = self.csr_network[str(self.fpg_inteface_index)]
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["topology"] = topology
         fun_test.shared_variables["fs"] = self.fs
@@ -93,8 +97,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["numa_cpus"] = self.numa_cpus
 
         # Configuring Linux host
-        host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
-        fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
+        fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
+                             "End Host {} is up".format(self.end_host.host_ip))
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
                                                              self.test_interface_name)
@@ -158,18 +162,18 @@ class ECVolumeLevelScript(FunTestScript):
                                       message="Loading nvme_tcp module")
 
     def cleanup(self):
-
-        self.ec_info = fun_test.shared_variables["ec_info"]
-        self.remote_ip = fun_test.shared_variables["remote_ip"]
-        self.attach_transport = fun_test.shared_variables["attach_transport"]
-
         try:
+            self.ec_info = fun_test.shared_variables["ec_info"]
+            self.remote_ip = fun_test.shared_variables["remote_ip"]
+            self.attach_transport = fun_test.shared_variables["attach_transport"]
+
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.volume_detach_remote(ns_id=num + 1,
                                                                                   uuid=self.ec_info["attach_uuid"][num],
-                                                                                  huid=self.huid, ctlid=self.ctlid,
+                                                                                  huid=self.huid,
+                                                                                  ctlid=self.ctlid,
                                                                                   remote_ip=self.remote_ip,
                                                                                   transport=self.attach_transport,
                                                                                   command_duration=self.command_timeout)
@@ -245,14 +249,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Configuring the controller
-            command_result = {}
             command_result = self.storage_controller.command(command="enable_counters", legacy=True,
                                                              command_duration=self.command_timeout)
-            fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
 
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
             (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller, self.ec_info,
@@ -313,8 +314,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                  self.nvme_subsystem)
             else:
                 nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
-                    self.attach_transport.lower(), self.test_network["f1_loopback_ip"], str(self.transport_port),
-                    self.nvme_subsystem, str(self.io_queues))
+                    self.attach_transport.lower(),
+                    self.test_network["f1_loopback_ip"],
+                    self.transport_port,
+                    self.nvme_subsystem,
+                    self.io_queues)
 
             nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
             fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
@@ -324,18 +328,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
             # Checking that the above created BLT volume is visible to the end host
-            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
-            for volume_name in lsblk_output:
-                match = re.search(volume_pattern, volume_name)
-                if match:
-                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
-                    self.volume_name = self.nvme_block_device.replace("/dev/", "")
-                    fun_test.test_assert_expected(expected=self.volume_name,
-                                                  actual=lsblk_output[volume_name]["name"],
-                                                  message="{} device available".format(self.volume_name))
-                    break
-            else:
-                fun_test.test_assert(False, "{} device available".format(self.volume_name))
+            fetch_nvme = fetch_nvme_device(self.end_host, self.ns_id)
+            fun_test.test_assert(fetch_nvme['status'], message="Check nvme device visible on end host")
+            self.volume_name = fetch_nvme['volume_name']
+            self.nvme_block_device = fetch_nvme['nvme_device']
 
             fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
             fun_test.shared_variables["volume_name"] = self.volume_name
@@ -379,7 +375,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
-        # row_data_dict = {}
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_numjobs_iodepth
         fio_result = {}
