@@ -468,7 +468,7 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, ma
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
-            fun_test.sleep(message="Peek stats resource pc/dma %d" % pc_id, seconds=5)
+            fun_test.sleep(message="Peek stats resource pc %d" % pc_id, seconds=5)
 
             result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
             master_table_obj = get_nested_dict_stats(result=result)

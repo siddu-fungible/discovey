@@ -1235,7 +1235,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
           if (count !== 0) {
             let average = total / count;
-            let result = this.getValidatedData(average, 0, 105);
+            let result = this.getValidatedData(average, 0, 200);
             values.push(result);
           } else {
             values.push(null);

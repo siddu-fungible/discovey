@@ -679,7 +679,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 row_data_dict["fio_job_name"] = fio_job_name
                 row_data_dict["readiops"] = int(round(avg_tps[x]))
                 row_data_dict["readbw"] = int(round(avg_kbs_read[x] / 1000))
-            # row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
+                row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
 
             # Building the table row for this variation for both the script table and performance dashboard
             row_data_list = []

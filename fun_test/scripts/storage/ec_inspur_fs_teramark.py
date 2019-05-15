@@ -230,8 +230,10 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
+        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs)
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
+                                           disable_f1_index=self.disable_f1_index)
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -245,6 +247,8 @@ class ECVolumeLevelScript(FunTestScript):
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
+            if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
+                continue
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
                 self.end_host = host_info["host_obj"]
                 self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
@@ -254,6 +258,7 @@ class ECVolumeLevelScript(FunTestScript):
         else:
             fun_test.test_assert(False, "Host found with Test Interface")
 
+        self.test_network = self.csr_network[str(self.fpg_inteface_index)]
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["topology"] = topology
         fun_test.shared_variables["fs"] = self.fs
@@ -338,11 +343,10 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
 
-        self.ec_info = fun_test.shared_variables["ec_info"]
-        self.remote_ip = fun_test.shared_variables["remote_ip"]
-        self.attach_transport = fun_test.shared_variables["attach_transport"]
-
         try:
+            self.ec_info = fun_test.shared_variables["ec_info"]
+            self.remote_ip = fun_test.shared_variables["remote_ip"]
+            self.attach_transport = fun_test.shared_variables["attach_transport"]
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
@@ -522,7 +526,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                 **self.warm_up_fio_cmd_args)
             fun_test.log("FIO Command Output:\n{}".format(fio_output))
             fun_test.test_assert(fio_output, "Pre-populating the volume")
-            fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
@@ -548,11 +551,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
-        # row_data_dict = {}
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_numjobs_iodepth
         fio_result = {}
@@ -566,19 +568,19 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_iodepth = combo.split(',')[1].strip('() ')
 
             for mode in self.fio_modes:
-
                 fio_block_size = self.fio_cmd_args["bs"]
                 fio_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
                 row_data_dict["block_size"] = fio_block_size
                 row_data_dict["iodepth"] = fio_iodepth
-                size = self.ec_info["capacity"] / (1024 * 3)
+                size = self.ec_info["capacity"] / (1024 ** 3)
                 row_data_dict["size"] = str(size) + "G"
 
+                fun_test.sleep("Waiting in between iterations", self.iter_interval)
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC".
-                             format(mode, fio_block_size, fio_iodepth))
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
+                             format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
                 fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
@@ -586,8 +588,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                  name=fio_job_name, cpus_allowed=self.numa_cpus,
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
-                fun_test.test_assert(fio_output[combo][mode], "FIO {} only test with the block size and IO depth set "
-                                                              "to {} & {}".format(mode, fio_block_size, fio_iodepth))
+                fun_test.test_assert(fio_output[combo][mode],
+                                     "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
+                                     .format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
 
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
@@ -598,9 +601,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fio_output[combo][mode][op][field] = int(round(value / 1000))
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value))
-
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
+                        row_data_dict[op + field] = fio_output[combo][mode][op][field]
 
                 if not fio_output[combo][mode]:
                     fio_result[combo][mode] = False
@@ -772,7 +773,7 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
         3. Create 6 BLT volumes on dut instance.
         4. Create a 4:2 EC volume on top of the 6 BLT volumes.
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host
         7. Run warm-up traffic using FIO
         8. Run the Performance for 8k transfer size Random read/write latency
         """)
