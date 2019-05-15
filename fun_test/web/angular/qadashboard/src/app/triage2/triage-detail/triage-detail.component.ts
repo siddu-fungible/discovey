@@ -37,6 +37,7 @@ export class TriageDetailComponent implements OnInit {
   commits: CommitNode [] = [];
   commitMap: any = {};
   commitFetchStatus: string = null;
+  showAll: boolean = false;
 
   constructor(private route: ActivatedRoute,
               private triageService: TriageService,

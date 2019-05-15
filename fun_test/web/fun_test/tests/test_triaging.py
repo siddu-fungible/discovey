@@ -174,8 +174,8 @@ class TriageStateMachine:
 
     def process_trials(self):
         t = self.get_triage()
-        logger.debug("Processing trials for trial set: {}".format(t.current_trial_set_id))
-        trials = Triage3Trial.objects.filter(triage_id=triage_id, trial_set_id=t.current_trial_set_id, status__gt=TriageTrialStates.COMPLETED)
+        logger.debug("Processing trials") # for trial set: {}".format(t.current_trial_set_id))
+        trials = Triage3Trial.objects.filter(triage_id=triage_id, status__gt=TriageTrialStates.COMPLETED)
         if trials:
             for trial in trials:
 

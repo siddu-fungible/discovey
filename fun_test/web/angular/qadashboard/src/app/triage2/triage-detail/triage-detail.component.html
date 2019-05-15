@@ -56,7 +56,7 @@
         </tr>
         <tr *ngFor="let commit of commits; let index = index">
 
-          <ng-container *ngIf="commit.selectedForTrial || true">
+          <ng-container *ngIf="commit.selectedForTrial || showAll">
             <td>
               <input type="checkbox" [checked]="commit.selected" [(ngModel)]="commit.selected">
             </td>
