@@ -12,7 +12,17 @@ export class SmartLabelComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    this.type = this.type.toLowerCase();
+    if (this.type) {
+      this.type = this.type.toLowerCase();
+    } else {
+      if (this.value === "IN_PROGRESS") {
+        this.type = "info";
+      } else if (this.value === "COMPLETED" || this.value.toLowerCase() === "passed") {
+        this.type = "passed";
+      } else if (this.value.toLowerCase() === "failed") {
+        this.type = "failed";
+      }
+    }
   }
 
 }

@@ -80,6 +80,7 @@ export class TriageDetailComponent implements OnInit {
       commitNode.lsfJobId = trial.lsf_job_id;
       commitNode.trialSetId = trial.trial_set_id;
       commitNode.regexMatch = trial.regex_match;
+      commitNode.selectedForTrial = true;
     })
   }
   getCommitsInBetween() {

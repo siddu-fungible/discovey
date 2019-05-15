@@ -17,11 +17,12 @@
       <td>
         <button *ngIf="triage.status < 10; else completedStatus" class="btn btn-success" (click)="startTriage()">Start</button>
         <ng-template #completedStatus>
-          {{ triagingStateMap[triage.status] }}
+          <app-smart-label [value]="triagingStateMap[triage.status]">
+          </app-smart-label>
         </ng-template>
 
       </td>
-      <td>{{ triage.result }}</td>
+      <td><app-smart-label [value]="triage.result"></app-smart-label></td>
       <td>{{ triage.submitter_email }}</td>
       <td>{{ triage.triage_type }}</td>
       <td>{{ getShortSha(triage.from_fun_os_sha) }}</td>
@@ -51,22 +52,25 @@
           <th>Result</th>
         </tr>
         <tr *ngFor="let commit of commits; let index = index">
-          <td>{{ index + 1 }} &nbsp;
-            <ng-container *ngIf="commit.status <= 10">
-              <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit)">Re-start</button>
-            </ng-container>
-          </td>
-          <td>
+          <ng-container *ngIf="commit.selectedForTrial">
+            <td>{{ index + 1 }} &nbsp;
+              <ng-container *ngIf="commit.status <= 10 && commit.selectedForTrial">
+                <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit)">Re-start</button>
+              </ng-container>
+            </td>
+            <td>
 
-            {{ prettyTime(commit.date) }}
-          </td>
-          <td>{{ getShortSha(commit.funOsSha) }}</td>
-          <td>{{ commit.trialSetId }}</td>
-          <td>{{ triagingTrialStateMap[commit.status] }}</td>
-          <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
-          <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsfJobId }}" target="_blank">link</a></td>
-          <td>{{ commit.tag }}</td>
-          <td>{{ commit.regexMatch }}</td>
+              {{ prettyTime(commit.date) }}
+            </td>
+            <td>{{ getShortSha(commit.funOsSha) }}</td>
+            <td>{{ commit.trialSetId }}</td>
+            <td><app-smart-label [value]="triagingTrialStateMap[commit.status]"></app-smart-label></td>
+            <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
+            <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsfJobId }}" target="_blank">link</a></td>
+            <td>{{ commit.tag }}</td>
+            <td>{{ commit.regexMatch }}</td>
+          </ng-container>
+
         </tr>
       </table>
     </div>
