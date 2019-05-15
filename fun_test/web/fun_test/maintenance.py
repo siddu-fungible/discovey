@@ -1999,7 +1999,7 @@ if __name__ == "__main_raw_block_iod__":
                                     work_in_progress=False).save()
     print "added charts for raw block different io depths"
 
-if __name__ == "__main__":
+if __name__ == "__main_durable_volume__":
     copy_rand_read = "rand_read_4kb1vol1ssd_durable_volume_ec_4_output_latency"
     copy_read = "read_4kb1vol1ssd_durable_volume_ec_4_output_latency"
     output_names = ["output_latency", "output_iops"]
@@ -2059,7 +2059,7 @@ if __name__ == "__main__":
                 for iodepth in iodepths:
                     fio_job_name = job_names + str(iodepth)
                     chart_name = "Latency"
-                    internal_chart_name = operation + "_iod" + str(iodepth) + "_durable_volume_ec_" +  output_name
+                    internal_chart_name = operation + "_iod" + str(iodepth) + "_durable_volume_ec_" + output_name
                     positive = False
                     y1_axis_title = "usecs"
 
@@ -2088,3 +2088,41 @@ if __name__ == "__main__":
                                 base_line_date=base_line_date,
                                 work_in_progress=False).save()
     print "added charts for durable volume different io depths"
+
+if __name__ == "__main__":
+    iops_chart = MetricChart.objects.get(internal_chart_name="inspur_rand_read_write_8k_block_output_iops")
+    latency_chart = MetricChart.objects.get(internal_chart_name="inspur_rand_read_write_8k_block_output_latency")
+    iodepths = [1, 8, 16, 32, 64]
+    model_name = "BltVolumePerformance"
+    job_name = "inspur_8k_random_read_write_"
+    internal_names = ["inspur_rand_read_write_qd", "_8k_block_output_"]
+    base_line_date = datetime(year=2019, month=5, day=10, minute=0, hour=0, second=0)
+    names = ["iops", "latency"]
+    for name in names:
+        if name == "iops":
+            chart = iops_chart
+            chart_name = "IOPS"
+        else:
+            chart = latency_chart
+            chart_name = "Latency"
+        for iodepth in iodepths:
+            internal_chart_name = internal_names[0] + str(iodepth) + internal_names[1] + name
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_fio_job_name"] = job_name + str(iodepth)
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info=chart.owner_info,
+                        source=chart.source,
+                        positive=chart.positive,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.visualization_unit,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date,
+                        work_in_progress=False).save()
+    print "added charts for Inspur different io depths"
