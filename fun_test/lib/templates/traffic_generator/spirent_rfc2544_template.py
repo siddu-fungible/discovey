@@ -349,12 +349,11 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 if float(record['AvgFrameSize']) == frame_size:
                     if record['Result'] == self.PASSED:
                         forwarding_rates.append(float(record['ForwardingRate(fps)']))
-            try:
+            if not forwarding_rates:
+                fun_test.log("All results failed for %s frame size" % (frame_size))
+                return max_rate_record
+            else:
                 max_rate = max(forwarding_rates)
-            except ValueError as ex:
-                fun_test.critical(str(ex))
-                max_rate = -1
-            if max_rate != -1:
                 for record in records:
                     if max_rate == float(record['ForwardingRate(fps)']):
                         max_rate_record = record
