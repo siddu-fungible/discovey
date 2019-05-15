@@ -99,6 +99,8 @@ class PerfUnit:
 
     UNIT_CYCLES = "cycles"
 
+    UNIT_NUMBER = "number"
+
     UNIT_BITS = "b"
     UNIT_BYTES = "B"
     UNIT_KB = "KB"
