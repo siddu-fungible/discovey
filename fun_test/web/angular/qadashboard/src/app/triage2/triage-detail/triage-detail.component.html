@@ -55,7 +55,7 @@
           <ng-container *ngIf="commit.selectedForTrial">
             <td>{{ index + 1 }} &nbsp;
               <ng-container *ngIf="commit.status <= 10 && commit.selectedForTrial">
-                <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit)">Re-start</button>
+                <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit.trial)">Re-start</button>
               </ng-container>
             </td>
             <td>

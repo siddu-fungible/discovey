@@ -17,6 +17,8 @@ class CommitNode {
   tag: string;
   regexMatch: string;
   trialSetId: number;
+  triageId: number;
+  trial: any;
 };
 
 
@@ -81,6 +83,8 @@ export class TriageDetailComponent implements OnInit {
       commitNode.trialSetId = trial.trial_set_id;
       commitNode.regexMatch = trial.regex_match;
       commitNode.selectedForTrial = true;
+      commitNode.triageId = trial.triage_id;
+      commitNode.trial = trial; // to store the whole trial object
     })
   }
   getCommitsInBetween() {
@@ -96,6 +100,8 @@ export class TriageDetailComponent implements OnInit {
         commitNode.selectedForTrial = false;
         commitNode.tag = null;
         commitNode.regexMatch = null;
+        commitNode.triageId = null;
+        commitNode.trial = null;
         this.commitMap[commitNode.funOsSha] = commitNode;
         this.commits.push(commitNode);
       });
@@ -135,6 +141,7 @@ export class TriageDetailComponent implements OnInit {
     payload["tags"] = tempArray;
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("Trial re-start submitted");
+      window.location.reload();
     })
   }
 
