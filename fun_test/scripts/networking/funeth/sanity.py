@@ -73,7 +73,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
-        fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False), 'Enable HU host {} funeth interfaces TSO.'.format(
+        fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True), 'Disable HU host {} funeth interfaces TSO.'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
                              'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
