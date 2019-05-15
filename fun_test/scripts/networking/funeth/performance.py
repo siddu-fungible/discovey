@@ -168,8 +168,8 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             )
 
         # Check parser stuck
-        output = nc_obj.peek_parser_stats()
-        for blk in output.get('global'):
+        output = nc_obj.peek_parser_stats().get('global')
+        for blk in output:
             eop_cnt = output[blk].get('eop_cnt')
             prv_sent = output[blk].get('prv_sent')
             if eop_cnt != prv_sent:
