@@ -173,7 +173,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             eop_cnt = output[blk].get('eop_cnt')
             prv_sent = output[blk].get('prv_sent')
             if eop_cnt != prv_sent:
-                fun_test.test_assert(False, 'Parser {} is stuck'.format(blk))
+                fun_test.test_assert(False, '{} parser is stuck'.format(blk))
 
         nc_obj.peek_psw_global_stats()
         #nc_obj.peek_fcp_global_stats()
