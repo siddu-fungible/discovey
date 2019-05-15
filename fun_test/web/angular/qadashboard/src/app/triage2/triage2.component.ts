@@ -7,6 +7,7 @@ import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 
+
 @Component({
   selector: 'app-triage2',
   templateUrl: './triage2.component.html',

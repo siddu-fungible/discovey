@@ -7,6 +7,19 @@ import {CommonService} from "../../services/common/common.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ApiService} from "../../services/api/api.service";
 
+class CommitNode {
+  funOsSha: string;
+  date: string;
+  jenkinsBuildNumber: number;
+  lsfJobId: number;
+  status: number;
+  selectedForTrial: boolean = false;
+  tag: string;
+  regexMatch: string;
+  trialSetId: number;
+};
+
+
 @Component({
   selector: 'app-triage-detail',
   templateUrl: './triage-detail.component.html',
@@ -18,7 +31,7 @@ export class TriageDetailComponent implements OnInit {
   triagingTrialStateMap: any = null;
   triage: any = null;
   trials: any = [];
-  commits: any = [];
+  commits: CommitNode [] = [];
   commitMap: any = {};
   commitFetchStatus: string = null;
 
@@ -37,15 +50,17 @@ export class TriageDetailComponent implements OnInit {
       return this.triageService.triagingTrialStateToString();
     })).pipe(switchMap((triagingTrialStateMap) => {
       this.triagingTrialStateMap = triagingTrialStateMap;
+      return of(this.triageId);
+    })).pipe(switchMap(() => {
       return this.triageService.triages(this.triageId);
     })).pipe(switchMap( (triage) => {
       this.triage = triage;
+      this.commitFetchStatus = "Fetching Git commit info";
+      return this.getCommitsInBetween();
+    })).pipe(switchMap(() => {
       return this.triageService.trials(this.triageId, null);
     })).pipe(switchMap((trials) => {
       this.trials = trials;
-      this.commitFetchStatus = "Fetching commit info";
-      return this.getCommitsInBetween();
-    })).pipe(switchMap(() => {
       return of(true);
     })).subscribe(() => {
 
@@ -57,9 +72,19 @@ export class TriageDetailComponent implements OnInit {
 
   getCommitsInBetween() {
     return this.triageService.funOsCommits(this.triage.from_fun_os_sha, this.triage.to_fun_os_sha).pipe(switchMap((commits) => {
-      this.commits = commits;
-      this.commits.forEach((commit) => {
-        this.commitMap[commit.sha] = {date: commit.date};
+
+      commits.forEach((commit) => {
+        let commitNode = new CommitNode();
+        commitNode.date = commit.date;
+        commitNode.funOsSha = commit.sha;
+        commitNode.jenkinsBuildNumber = null;
+        commitNode.lsfJobId = null;
+        commitNode.status = -100; // TODO
+        commitNode.selectedForTrial = false;
+        commitNode.tag = null;
+        commitNode.regexMatch = null;
+        this.commitMap[commitNode.funOsSha] = commitNode;
+        this.commits.push(commitNode);
       });
       this.commitFetchStatus = null;
       return of(true);

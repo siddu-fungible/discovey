@@ -32,6 +32,7 @@
     </tr>
   </table>
 
+  <fun-spinner [status]="commitFetchStatus"></fun-spinner>
   <div class="card">
     <div class="card-header">
       Trials
@@ -49,23 +50,23 @@
           <th>Tag</th>
           <th>Result</th>
         </tr>
-        <tr *ngFor="let trial of trials">
-          <td>
-            <ng-container *ngIf="trial.status <= 10">
-              <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(trial)">Re-start</button>
+        <tr *ngFor="let commit of commits; let index = index">
+          <td>{{ index + 1 }} &nbsp;
+            <ng-container *ngIf="commit.status <= 10">
+              <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit)">Re-start</button>
             </ng-container>
           </td>
           <td>
-            <fun-spinner [status]="commitFetchStatus"></fun-spinner>
-            {{ prettyTime(commitMap[trial.fun_os_sha]?.date) }}
+
+            {{ prettyTime(commit.date) }}
           </td>
-          <td>{{ getShortSha(trial.fun_os_sha) }}</td>
-          <td>{{ trial.trial_set_id }}</td>
-          <td>{{ triagingTrialStateMap[trial.status] }}</td>
-          <td><a target="_blank" *ngIf="trial.jenkins_build_number > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ trial.jenkins_build_number }}/">link</a></td>
-          <td><a *ngIf="trial.lsf_job_id > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsf_job_id }}" target="_blank">link</a></td>
-          <td>{{ trial.tag }}</td>
-          <td>{{ trial.regex_match }}</td>
+          <td>{{ getShortSha(commit.funOsSha) }}</td>
+          <td>{{ commit.trialSetId }}</td>
+          <td>{{ triagingTrialStateMap[commit.status] }}</td>
+          <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
+          <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsfJobId }}" target="_blank">link</a></td>
+          <td>{{ commit.tag }}</td>
+          <td>{{ commit.regexMatch }}</td>
         </tr>
       </table>
     </div>
