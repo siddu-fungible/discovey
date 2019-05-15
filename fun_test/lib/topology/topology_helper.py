@@ -205,7 +205,7 @@ class TopologyHelper:
                             fun_test.simple_assert(instance, "Bare-metal instance")
 
                             if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
-                                fun_test.test_assert(instance.reboot(non_blocking=True), "Host instance: {} rebooted".format(str(instance)))
+                                fun_test.test_assert(instance.reboot(non_blocking=True), "Host instance: {} rebooted issued".format(str(instance)))
                                 # instance.lspci(grep_filter="1dad")
                                 pass
                                 '''
