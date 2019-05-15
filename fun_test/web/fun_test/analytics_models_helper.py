@@ -252,7 +252,20 @@ class BltVolumePerformanceHelper(MetricHelper):
         try:
             if version == -1:
                 version = str(fun_test.get_version())
-
+            try:
+                completion_date = timezone.localtime(date_time)
+                completion_date = str(completion_date).split(":")
+                completion_date = completion_date[0] + ":" + completion_date[1]
+                add_jenkins_job_id_map(jenkins_job_id=0,
+                                       fun_sdk_branch="",
+                                       git_commit="",
+                                       software_date=0,
+                                       hardware_version="",
+                                       completion_date=completion_date,
+                                       build_properties="", lsf_job_id="",
+                                       sdk_version=version)
+            except:
+                pass
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
