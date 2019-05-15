@@ -1,7 +1,5 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.topology.dut import Dut, DutInterface
-from lib.fun.f1 import F1
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 
@@ -123,6 +121,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables['ip_configured'] = False
+        fun_test.shared_variables['artifacts_shared'] = False
 
         # Configure Linux Host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
@@ -324,16 +323,18 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # Checking nvme-connect status
         if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
-                                                                             self.test_network["f1_loopback_ip"],
-                                                                             str(self.transport_port),
-                                                                             self.nvme_subsystem)
+            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(
+                self.volume_info["ctrlr"]["transport"].lower(),
+                self.test_network["f1_loopback_ip"],
+                str(self.transport_port),
+                self.nvme_subsystem)
         else:
-            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(self.attach_transport.lower(),
-                                                                                   self.test_network["f1_loopback_ip"],
-                                                                                   str(self.transport_port),
-                                                                                   self.nvme_subsystem,
-                                                                                   str(self.io_queues))
+            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
+                self.volume_info["ctrlr"]["transport"].lower(),
+                self.test_network["f1_loopback_ip"],
+                str(self.transport_port),
+                self.nvme_subsystem,
+                str(self.io_queues))
 
         nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
@@ -351,7 +352,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.volume_name = self.nvme_block_device.replace("/dev/", "")
                 fun_test.test_assert_expected(expected=self.volume_name,
                                               actual=lsblk_output[volume_name]["name"],
-                                              message="{} device available".format(self.volume_name));
+                                              message="{} device available".format(self.volume_name))
                 break
         fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
         fun_test.test_assert_expected(expected="disk",
@@ -379,6 +380,23 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(self.end_host.mount_volume(volume=self.nvme_block_device, directory=mount_dir),
                              message="Mount {0} volume on {1} directory".format(self.nvme_block_device, mount_dir))
 
+        if not fun_test.shared_variables['artifacts_shared']:
+            end_host_tmp_dir = "/tmp/"
+            for corpus in self.test_corpuses:
+                abs_path = "{0}/{1}".format(DATA_STORE_DIR, corpus)
+                fun_test.test_assert(os.path.exists(abs_path), message="Check if Dir {} exists".format(abs_path),
+                                     ignore_on_success=True)
+                fun_test.test_assert(fun_test.scp(source_file_path=abs_path,
+                                                  target_file_path=end_host_tmp_dir,
+                                                  target_ip=self.end_host.host_ip,
+                                                  target_username=self.end_host.ssh_username,
+                                                  target_password=self.end_host.ssh_password,
+                                                  target_port=self.end_host.ssh_port,
+                                                  recursive=True,
+                                                  timeout=300),
+                                     message="scp dir {} to end host".format(abs_path), ignore_on_success=True)
+            fun_test.shared_variables['artifacts_shared'] = True
+
         # Mount File System on Device
 
     def flush_cache_mem(self):
@@ -400,18 +418,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         table_rows = []
         table_header = ["CorpusName", "F1CompressPrecent", "GzipCompressPercent"]
         for corpus in test_corpuses:
-            abs_path = "{0}/{1}".format(DATA_STORE_DIR, corpus)
-            fun_test.test_assert(os.path.exists(abs_path), message="Check if Dir {} exists".format(abs_path),
-                                 ignore_on_success=True)
-            fun_test.test_assert(fun_test.scp(source_file_path=abs_path,
-                                              target_file_path=end_host_tmp_dir,
-                                              target_ip=self.end_host.host_ip,
-                                              target_username=self.end_host.ssh_username,
-                                              target_password=self.end_host.ssh_password,
-                                              target_port=self.end_host.ssh_port,
-                                              recursive=True,
-                                              timeout=300),
-                                 message="scp dir {} to end host".format(abs_path), ignore_on_success=True)
+            # TOdo check if dir exists
             self.end_host.cp(source_file_name="{}{}".format(end_host_tmp_dir, corpus),
                              destination_file_name=mount_dir, recursive=True, sudo=True),
 
@@ -443,6 +450,10 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def cleanup(self):
         try:
+            # Do nvme disconnect
+            cmd = "sudo nvme disconnect -n {0} -d {1}".format(self.nvme_subsystem, self.volume_name)
+            self.end_host.sudo_command(cmd)
+            
             # Detach LSV from Controller
             lsv_uuid = self.vols_created['lsv'][0]['uuid']
             lsv_name = self.vols_created['lsv'][0]['name']
@@ -455,8 +466,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Todo Delete the controller when implementation is done
             self.storage_controller.volume_detach_pcie(ns_id=self.volume_info['ctrlr']['nsid'],
                                                        uuid=lsv_uuid,
-                                                       huid=tb_config['dut_info'][0]['huid'],
-                                                       ctlid=tb_config['dut_info'][0]['ctlid'],
+                                                       huid=self.volume_info["ctrlr"]["huid"],
+                                                       ctlid=self.volume_info["ctrlr"]["ctlid"],
                                                        command_duration=self.command_timeout)
 
             # Delete LSV Volume

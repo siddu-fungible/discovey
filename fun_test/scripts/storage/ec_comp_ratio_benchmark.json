@@ -10,11 +10,11 @@
     "reboot_timeout": 300,
     "ethernet_adapter": "Mellanox",
     "test_network": {
-      "test_interface_ip": "21.1.1.1/24",
-      "test_interface_mac": "fe:dc:ba:44:66:31",
+      "test_interface_ip": "20.1.1.1/24",
+      "test_interface_mac": "fe:dc:ba:44:66:30",
       "test_net_route": {
         "net": "29.1.1.0/24",
-        "gw": "21.1.1.2",
+        "gw": "20.1.1.2",
         "arp": "00:de:ad:be:ef:00"
       },
       "f1_loopback_ip": "29.1.1.1"
@@ -68,12 +68,14 @@
       }
     },
     "command_timeout": 30,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "transport_port": 1099,
     "nvme_device": "/dev/nvme",
     "mount_point": "/mnt/",
     "file_system": "ext3",
     "gzip_effort": 6,
     "accelerator_effort": "Auto",
-   "margin": 14,
+    "margin": 14,
     "test_corpus": {
       "artificl": {
         "orig_size": 311296,
@@ -145,20 +147,22 @@
         "type": "VOL_TYPE_BLK_EC"
       },
       "ctrlr": {
-        "transport": "PCI",
-        "huid": 3,
-        "ctlid": 2,
+        "transport": "TCP",
+        "huid": 7,
+        "ctlid": 0,
         "fnid": 2,
         "nsid": 2
       }
     },
     "command_timeout": 30,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "transport_port": 1099,
     "nvme_device": "/dev/nvme",
     "mount_point": "/mnt/",
     "file_system": "ext3",
     "gzip_effort": 1,
     "accelerator_effort": "64Gbps",
-   "margin": 14,
+    "margin": 14,
     "test_corpus": {
       "artificl": {
         "orig_size": 311296,
@@ -231,19 +235,21 @@
       },
       "ctrlr": {
         "transport": "PCI",
-        "huid": 3,
-        "ctlid": 2,
+        "huid": 7,
+        "ctlid": 0,
         "fnid": 2,
         "nsid": 3
       }
     },
     "command_timeout": 30,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "transport_port": 1099,
     "nvme_device": "/dev/nvme",
     "mount_point": "/mnt/",
     "file_system": "ext3",
     "gzip_effort": 9,
     "accelerator_effort": "2Gbps",
-   "margin": 14,
+    "margin": 14,
     "test_corpus": {
       "artificl": {
         "orig_size": 311296,
