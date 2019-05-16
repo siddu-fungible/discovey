@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 7,
@@ -33,52 +33,35 @@
     }
   },
   "EcCompBenchmarkEffortAuto": {
-    "num_ssd": 12,
-    "num_volume": 1,
-    "ec_coding": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
       "ndata": 4,
-      "nparity": 2
+      "nparity": 2,
+      "capacity": 5368709120,
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_AUTO",
+      "zip_filter": "FILTER_TYPE_DEFLATE"
     },
-    "volume_types": [
-      "lsv",
-      "ec",
-      "raw",
-      "jvol",
-      "ctrlr"
-    ],
-    "volume_info": {
-      "lsv": {
-        "block_size": 4096,
-        "zip_effort": "ZIP_EFFORT_AUTO",
-        "zip_filter": "FILTER_TYPE_DEFLATE",
-        "compress": true,
-        "capacity": 5368709120,
-        "type": "VOL_TYPE_BLK_LSV"
-      },
-      "jvol": {
-        "type": "VOL_TYPE_BLK_NV_MEMORY",
-        "capacity": 4194304,
-        "block_size": 512,
-        "name": "nvvol"
-      },
-      "raw": {
-        "type": "VOL_TYPE_BLK_LOCAL_THIN",
-        "block_size": 4096,
-        "capacity": 0
-      },
-      "ec": {
-        "capacity": 0,
-        "block_size": 4096,
-        "type": "VOL_TYPE_BLK_EC"
-      },
-      "ctrlr": {
-        "transport": "TCP",
-        "huid": 7,
-        "ctlid": 0,
-        "fnid": 2,
-        "nsid": 1
-      }
-    },
+    "ns_id": 1,
+    "attach_transport": "TCP",
     "command_timeout": 30,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "transport_port": 1099,
@@ -86,8 +69,9 @@
     "mount_point": "/mnt/",
     "file_system": "ext3",
     "gzip_effort": 6,
-    "accelerator_effort": "Auto",
-    "margin": 14,
+    "accelerator_effort": "ZIP_EFFORT_AUTO",
+    "margin": 5,
+    "artifact_dir": "compression",
     "test_corpus": {
       "artificl": {
         "orig_size": 311296,
@@ -120,52 +104,35 @@
     }
   },
   "EcCompBenchmarkEffort64Gbps": {
-    "num_ssd": 12,
-    "num_volume": 1,
-    "ec_coding": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
       "ndata": 4,
-      "nparity": 2
+      "nparity": 2,
+      "capacity": 5368709120,
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_64Gbps",
+      "zip_filter": "FILTER_TYPE_DEFLATE"
     },
-    "volume_types": [
-      "lsv",
-      "ec",
-      "raw",
-      "jvol",
-      "ctrlr"
-    ],
-    "volume_info": {
-      "lsv": {
-        "block_size": 4096,
-        "zip_effort": "ZIP_EFFORT_64Gbps",
-        "zip_filter": "FILTER_TYPE_DEFLATE",
-        "compress": true,
-        "capacity": 5368709120,
-        "type": "VOL_TYPE_BLK_LSV"
-      },
-      "jvol": {
-        "type": "VOL_TYPE_BLK_NV_MEMORY",
-        "capacity": 4194304,
-        "block_size": 512,
-        "name": "nvvol"
-      },
-      "raw": {
-        "type": "VOL_TYPE_BLK_LOCAL_THIN",
-        "block_size": 4096,
-        "capacity": 0
-      },
-      "ec": {
-        "capacity": 0,
-        "block_size": 4096,
-        "type": "VOL_TYPE_BLK_EC"
-      },
-      "ctrlr": {
-        "transport": "TCP",
-        "huid": 7,
-        "ctlid": 0,
-        "fnid": 2,
-        "nsid": 2
-      }
-    },
+    "ns_id": 2,
+    "attach_transport": "TCP",
     "command_timeout": 30,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "transport_port": 1099,
@@ -173,8 +140,9 @@
     "mount_point": "/mnt/",
     "file_system": "ext3",
     "gzip_effort": 1,
-    "accelerator_effort": "64Gbps",
-    "margin": 14,
+    "accelerator_effort": "ZIP_EFFORT_64Gbps",
+    "margin": 5,
+    "artifact_dir": "compression",
     "test_corpus": {
       "artificl": {
         "orig_size": 311296,
@@ -207,52 +175,35 @@
     }
   },
   "EcCompBenchmarkEffort2Gbps": {
-    "num_ssd": 12,
-    "num_volume": 1,
-    "ec_coding": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
       "ndata": 4,
-      "nparity": 2
+      "nparity": 2,
+      "capacity": 5368709120,
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_2Gbps",
+      "zip_filter": "FILTER_TYPE_DEFLATE"
     },
-    "volume_types": [
-      "lsv",
-      "ec",
-      "raw",
-      "jvol",
-      "ctrlr"
-    ],
-    "volume_info": {
-      "lsv": {
-        "block_size": 4096,
-        "zip_effort": "ZIP_EFFORT_2Gbps",
-        "zip_filter": "FILTER_TYPE_DEFLATE",
-        "compress": true,
-        "capacity": 5368709120,
-        "type": "VOL_TYPE_BLK_LSV"
-      },
-      "jvol": {
-        "type": "VOL_TYPE_BLK_NV_MEMORY",
-        "capacity": 4194304,
-        "block_size": 512,
-        "name": "nvvol"
-      },
-      "raw": {
-        "type": "VOL_TYPE_BLK_LOCAL_THIN",
-        "block_size": 4096,
-        "capacity": 0
-      },
-      "ec": {
-        "capacity": 0,
-        "block_size": 4096,
-        "type": "VOL_TYPE_BLK_EC"
-      },
-      "ctrlr": {
-        "transport": "PCI",
-        "huid": 7,
-        "ctlid": 0,
-        "fnid": 2,
-        "nsid": 3
-      }
-    },
+    "ns_id": 3,
+    "attach_transport": "TCP",
     "command_timeout": 30,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "transport_port": 1099,
@@ -260,8 +211,9 @@
     "mount_point": "/mnt/",
     "file_system": "ext3",
     "gzip_effort": 9,
-    "accelerator_effort": "2Gbps",
-    "margin": 14,
+    "accelerator_effort": "ZIP_EFFORT_2Gbps",
+    "margin": 5,
+    "artifact_dir": "compression",
     "test_corpus": {
       "artificl": {
         "orig_size": 311296,

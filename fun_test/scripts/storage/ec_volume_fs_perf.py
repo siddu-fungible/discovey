@@ -3,6 +3,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 import fun_global
 from lib.fun.fs import Fs
+from lib.system import utils
 from datetime import datetime
 from ec_perf_helper import *
 
@@ -85,9 +86,8 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
-                unconfigure_ec_volume(storage_controller=self.storage_controller,
-                                      ec_info=self.ec_info,
-                                      command_timeout=self.command_timeout)
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -180,8 +180,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                              command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
 
-            (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller, self.ec_info,
-                                                                   self.command_timeout)
+            (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                           self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
             fun_test.log("EC details after configuring EC Volume:")
