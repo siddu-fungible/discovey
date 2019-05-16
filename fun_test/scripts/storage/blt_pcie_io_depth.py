@@ -210,7 +210,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["volume_details"] = self.volume_details
 
-            # self.end_host.enter_sudo()
+            self.end_host.sudo_command("dmesg -c > /dev/null")
+            self.end_host.sudo_command("iptables -F")
+            self.end_host.sudo_command("ip6tables -F")
+
             self.end_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
             command_result = self.end_host.lsmod(module="nvme")
@@ -325,6 +328,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
                              format(mode, fio_block_size, fio_iodepth))
 
+                self.end_host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 fun_test.log("Running FIO...")
                 # Job name will be fio_pcie_read_blt_X_iod_scaling
                 fio_job_name = "fio_pcie" + "_" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]

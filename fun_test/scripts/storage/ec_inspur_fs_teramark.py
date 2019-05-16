@@ -573,7 +573,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
                 row_data_dict["block_size"] = fio_block_size
-                row_data_dict["iodepth"] = fio_iodepth
+                row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_num_jobs)
                 size = self.ec_info["capacity"] / (1024 ** 3)
                 row_data_dict["size"] = str(size) + "G"
 

@@ -16,6 +16,8 @@ class MyScript(FunTestScript):
 
     def setup(self):
         fun_test.log("Script-level setup")
+        self.lsf_status_server = LsfStatusServer()
+        fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
         fun_test.log("Script-level cleanup")

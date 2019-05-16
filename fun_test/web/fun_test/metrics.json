@@ -108,6 +108,14 @@
                         "name": "funtcp_server_throughput_4tcp",
                         "weight": 1,
                         "label": "4 TCP Flow(s)"
+                      },
+                      {
+                        "info": "funtcp_server_throughput_8tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_8tcp",
+                        "weight": 1,
+                        "label": "8 TCP Flow(s)"
                       }
                     ]
                   },
@@ -2672,6 +2680,22 @@
                             "name": "read_qd16_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "read_qd32_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd32_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "read_qd64_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd64_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
                           }
                         ]
                       },
@@ -2722,6 +2746,90 @@
                             "name": "rand_read_qd16_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "rand_read_qd32_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd32_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "rand_read_qd64_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd64_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
+                          }
+                        ]
+                      },
+                      {
+                        "info": "PCIe Write",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "raw_block_teramarks_pcie_write",
+                        "weight": 1,
+                        "label": "Sequential Write",
+                        "children": [
+                          {
+                            "info": "write_qd_pcie_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "write_qd_pcie_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          },
+                          {
+                            "info": "write_qd1_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "write_qd1_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "info": "write_qd8_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "write_qd8_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=8"
+                          }
+                        ]
+                      },
+                      {
+                        "info": "PCIe Random Write",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "raw_block_teramarks_pcie_rand_write",
+                        "weight": 1,
+                        "label": "Random Write",
+                        "children": [
+                          {
+                            "info": "rand_write_qd_pcie_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_write_qd_pcie_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          },
+                          {
+                            "info": "rand_write_qd1_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_write_qd1_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "info": "rand_write_qd8_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_write_qd8_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=8"
                           }
                         ]
                       }
@@ -3340,7 +3448,7 @@
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
-                    "weight": 1,
+                    "weight": 0,
                     "label": "Multiple-Reader TCP",
                     "children": []
                   }
@@ -3453,6 +3561,42 @@
                         "label": "Latency, QDepth=64"
                       }
                     ]
+                  },
+                  {
+                    "info": "inspur_8112_1024k_seq_w",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8112_1024k_seq_w",
+                    "weight": 0,
+                    "label": "8_11_2:1024K_SEQ_W, F1(s)=1",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8113_mixed_rw",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8113_mixed_rw",
+                    "weight": 0,
+                    "label": "8_11_3:MIXED_RW, F1(s)=1",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8114_oltp_rw",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8114_oltp_rw",
+                    "weight": 0,
+                    "label": "8_11_4:OLTP_RW, F1(s)=1",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8115_olap_rw",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8115_olap_rw",
+                    "weight": 0,
+                    "label": "8_11_5:OLAP_RW, F1(s)=1",
+                    "children": []
                   }
                 ]
               },
