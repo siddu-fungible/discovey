@@ -93,7 +93,7 @@ class TriageStateMachine:
         self.set_all_commits()
 
     def get_triage(self):
-        return Triage3.objects.get(triage_id=triage_id)
+        return Triage3.objects.get(triage_id=self.triage_id)
 
     def set_all_commits(self):
         t = self.get_triage()
@@ -117,7 +117,7 @@ class TriageStateMachine:
     def start_trial(self, fun_os_sha):
         t = self.get_triage()
 
-        if not Triage3Trial.objects.filter(triage_id=triage_id, fun_os_sha=fun_os_sha).exists():
+        if not Triage3Trial.objects.filter(triage_id=t.triage_id, fun_os_sha=fun_os_sha).exists():
             trial = Triage3Trial(fun_os_sha=fun_os_sha,
                                  triage_id=self.triage_id,
                                  trial_set_id=t.current_trial_set_id,
@@ -175,7 +175,7 @@ class TriageStateMachine:
     def process_trials(self):
         t = self.get_triage()
         logger.debug("Processing trials") # for trial set: {}".format(t.current_trial_set_id))
-        trials = Triage3Trial.objects.filter(triage_id=triage_id, status__gt=TriageTrialStates.COMPLETED)
+        trials = Triage3Trial.objects.filter(triage_id=t.triage_id, status__gt=TriageTrialStates.COMPLETED)
         if trials:
             for trial in trials:
 
@@ -199,7 +199,7 @@ class TriageStateMachine:
             t.save()
 
         elif status == TriagingStates.IN_PROGRESS:
-            trials_count = Triage3Trial.objects.filter(triage_id=triage_id,
+            trials_count = Triage3Trial.objects.filter(triage_id=t.triage_id,
                                                        trial_set_id=t.current_trial_set_id).count()
             logger.debug("Active trials: {}".format(trials_count))
             if not trials_count:
@@ -218,7 +218,7 @@ class TrialStateMachine:
         self.fun_os_sha = fun_os_sha
 
     def run(self):
-        triage = Triage3.objects.get(triage_id=triage_id)
+        triage = Triage3.objects.get(triage_id=self.triage_id)
         trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha)
         status = trial.status
         if status == TriageTrialStates.INIT:
@@ -311,15 +311,9 @@ if __name__ == "__main2__":
     original_t.save()
 
 if __name__ == "__main__":
-
-    triage_id = new_triage_id
-
-    if True:
-        t = Triage3.objects.get(triage_id=triage_id)
-        while True:
-            s = TriageStateMachine(triage=t)
+    while True:
+        triages = Triage3.objects.filter(status__gt=TriagingStates.COMPLETED)
+        for triage in triages:
+            s = TriageStateMachine(triage=triage)
             s.run()
-            #if not test_started:
-            #    # test_thread.start()
-            #    #test_started = True
             time.sleep(5)

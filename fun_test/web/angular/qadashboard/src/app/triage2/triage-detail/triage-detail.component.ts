@@ -37,7 +37,7 @@ export class TriageDetailComponent implements OnInit {
   commits: CommitNode [] = [];
   commitMap: any = {};
   commitFetchStatus: string = null;
-  showAll: boolean = false;
+  showAll: boolean = true;
 
   FUN_OS_GITHUB_BASE_URL = "https://github.com/fungible-inc/FunOS/commit/";
 
