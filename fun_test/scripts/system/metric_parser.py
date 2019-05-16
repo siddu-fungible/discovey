@@ -454,6 +454,8 @@ class MetricParser():
     def fun_magent(self, logs, date_time, platform):
         self.initialize()
         for line in logs:
+            with open("/tmp/a.txt", "a+") as f:
+                f.write(line)
             m = re.search(
                 r'fun_magent.*=>\s+(?P<latency_json>{.*})\s+\[(?P<metric_name>fun_magent_rate_malloc_free_per_sec)\]',
                 line)
@@ -721,7 +723,7 @@ class MetricParser():
                 self.metrics["input_latency_perf_name"] = m.group("latency_perf_name")
                 self.metrics["output_average_bandwith"] = average_bandwidth
                 self.metrics["output_average_bandwith_unit"] = bandwidth_json["unit"]
-                self.metrics["input_average_bandwith_perf_name"] = m.group("average_bandwidth_perf_name")
+                self.metrics["input_average_bandwith_perf_name"] = n.group("average_bandwidth_perf_name")
                 self.metrics["input_platform"] = platform
                 self.status = RESULTS["PASSED"]
                 d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
@@ -745,9 +747,11 @@ class MetricParser():
                 latency_json = json.loads(latency_json_raw)
                 bandwidth_json = json.loads(m.group("bandwidth_json"))
                 average_bandwidth = int(bandwidth_json["value"])
+                size = m.group("size")
+                size = int(size.replace("KB", ""))
 
                 self.metrics["input_n"] = m.group("N")
-                self.metrics["input_size"] = m.group("size")
+                self.metrics["input_size"] = size
                 self.metrics["output_latency_units"] = m.group("latency_units")
                 self.metrics["output_latency_min"] = latency_json["min"]
                 self.metrics["output_latency_max"] = latency_json["max"]

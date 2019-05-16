@@ -597,29 +597,37 @@ def update_expected(chart, expected_key):
             data_sets = json.loads(peer_chart.data_sets)
             for data_set in data_sets:
                 if data_set["output"]["expected"] != -1:
-                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"], expected_key)
+                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"], data_set["output"]["unit"], expected_key)
                 else:
                     model_name = chart.metric_model_name
                     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
                     metric_model = app_config.get_metric_models()[model_name]
-                    entries = metric_model.objects.filter(**data_set["inputs"]).orderby("-input_date_time")
+                    entries = metric_model.objects.filter(**data_set["inputs"]).order_by("-input_date_time")
                     if len(entries):
                         output_name = data_set["output"]["name"]
+                        output_unit_name = output_name + "_unit"
                         latest_entry = entries.first()
-                        set_expected(current_data_sets, data_set["name"], latest_entry[output_name], expected_key)
+                        if hasattr(latest_entry, output_name):
+                            output_value = getattr(latest_entry, output_name)
+                        if hasattr(latest_entry, output_unit_name):
+                            output_unit = getattr(latest_entry, output_unit_name)
+
+                        set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_key)
                     else:
-                        set_expected(current_data_sets, data_set["name"], -1, expected_key)
+                        set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit, expected_key)
         return current_data_sets
     else:
         return json.loads(chart.data_sets)
 
-def set_expected(current_data_sets, name, value, expected_key):
+def set_expected(current_data_sets, name, value, unit, expected_key):
     for current_data_set in current_data_sets:
         if current_data_set["name"] == name:
             if expected_key == "Same as F1":
                 current_data_set["output"]["expected"] = value
+                current_data_set["output"]["unit"] = unit
             else:
                 current_data_set["output"]["expected"] = value / 4
+                current_data_set["output"]["unit"] = unit
 
 @csrf_exempt
 @api_safe_json_response

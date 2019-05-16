@@ -311,7 +311,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                     reference_value = expected_value
                                 if output_unit:
                                     reference_value = convert_to_base_unit(output_value=reference_value,
-                                                                           output_unit=chart.visualization_unit)
+                                                                           output_unit=data_set["output"]["unit"])
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
                                         output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
