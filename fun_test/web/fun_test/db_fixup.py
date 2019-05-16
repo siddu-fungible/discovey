@@ -256,7 +256,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                 for entry in entries:
                     valid_dates.append(entry.date_time)
                     scores[entry.date_time] = entry.score
-                current_date = last_date + timedelta(days=1)
+                current_date = last_date
                 current_date = timezone.localtime(current_date)
                 current_date = adjust_timezone_for_day_light_savings(current_date)
         data_set_mofified = False

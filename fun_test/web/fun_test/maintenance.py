@@ -7,4 +7,3 @@ if __name__ == "__main__":
             chart.platform = "S1"
             chart.save()
             print "chart name is: {}".format(chart.chart_name)
-            

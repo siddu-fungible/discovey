@@ -193,13 +193,26 @@
           <table class="table table-nonfluid table-borderless">
             <tr>
               <td>
-                BaseLine Date:&nbsp;<input type="text" [(ngModel)]="baseLineDate" [value]=""
+                BaseLine Date:&nbsp;
+              </td>
+              <td><input type="text" [(ngModel)]="baseLineDate" [value]=""
                                            style="width: 300px">
+              </td>
+            </tr>
+            <tr *ngIf="internalChartName.endsWith('_S1')">
+              <td>
+                Set Expected Values:
+              </td>
+              <td>
+                <select [(ngModel)]="expectedKey" style="width: 100px">
+                  <option [ngValue]="key" *ngFor="let key of expectedKeyCategory">{{ key }}</option>
+                </select>
               </td>
             </tr>
             <tr>
               <td>
-                Visualization Unit:&nbsp;
+                Visualization Unit:&nbsp;</td>
+              <td>
                 <select [(ngModel)]="changingVizUnit" style="width: 100px">
                   <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
                 </select>

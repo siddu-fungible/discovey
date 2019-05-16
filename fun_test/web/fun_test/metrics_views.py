@@ -547,6 +547,10 @@ def update_chart(request):
         base_line_date = get_time_from_timestamp(base_line_date)
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
+        if "set_expected" in request_json:
+            expected_key = request_json["set_expected"]
+            if expected_key:
+                data_sets = update_expected(chart=c, expected_key=expected_key)
         if data_sets:
             c.data_sets = json.dumps(data_sets)
         if description:
@@ -584,6 +588,38 @@ def update_chart(request):
         invalidate_goodness_cache()
     return "Ok"
 
+def update_expected(chart, expected_key):
+    if expected_key:
+        current_data_sets = json.loads(chart.data_sets)
+        peer_ids = json.loads(chart.peer_ids)
+        for peer_id in peer_ids:
+            peer_chart = MetricChart.objects.get(metric_id=peer_id)
+            data_sets = json.loads(peer_chart.data_sets)
+            for data_set in data_sets:
+                if data_set["output"]["expected"] != -1:
+                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"], expected_key)
+                else:
+                    model_name = chart.metric_model_name
+                    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+                    metric_model = app_config.get_metric_models()[model_name]
+                    entries = metric_model.objects.filter(**data_set["inputs"]).orderby("-input_date_time")
+                    if len(entries):
+                        output_name = data_set["output"]["name"]
+                        latest_entry = entries.first()
+                        set_expected(current_data_sets, data_set["name"], latest_entry[output_name], expected_key)
+                    else:
+                        set_expected(current_data_sets, data_set["name"], -1, expected_key)
+        return current_data_sets
+    else:
+        return json.loads(chart.data_sets)
+
+def set_expected(current_data_sets, name, value, expected_key):
+    for current_data_set in current_data_sets:
+        if current_data_set["name"] == name:
+            if expected_key == "Same as F1":
+                current_data_set["output"]["expected"] = value
+            else:
+                current_data_set["output"]["expected"] = value / 4
 
 @csrf_exempt
 @api_safe_json_response

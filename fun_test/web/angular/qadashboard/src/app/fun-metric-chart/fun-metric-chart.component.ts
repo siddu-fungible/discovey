@@ -81,6 +81,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   baseLineDate: string = null;
   visualizationUnit: string = null;
   changingVizUnit: string = null;
+  expectedKey: String = null;
   selectedUnit: string = null;
   category: string[] = [];
   nwInfoFiles: string[] = [];
@@ -94,6 +95,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
   packets_per_second_category: string[] = ["Mpps", "pps"];
 
+  expectedKeyCategory: string[] = ["Same as F1", "F1/4"];
 
   triageInfo: any = null;
   successCommit: string = null;
@@ -478,6 +480,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["leaf"] = this.inner.leaf;
     payload["base_line_date"] = this.baseLineDate;
     payload["visualization_unit"] = this.changingVizUnit;
+    payload["set_expected"] = this.expectedKey;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
         this.editingDescription = false;
