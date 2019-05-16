@@ -81,16 +81,19 @@ export class TriageDetailComponent implements OnInit {
 
   parseTrials(trials) {
     trials.forEach((trial) => {
-      let commitNode = this.commitMap[trial.fun_os_sha];
-      commitNode.status = trial.status;
-      commitNode.tag = trial.tag;
-      commitNode.jenkinsBuildNumber = trial.jenkins_build_number;
-      commitNode.lsfJobId = trial.lsf_job_id;
-      commitNode.trialSetId = trial.trial_set_id;
-      commitNode.regexMatch = trial.regex_match;
-      commitNode.selectedForTrial = true;
-      commitNode.triageId = trial.triage_id;
-      commitNode.trial = trial; // to store the whole trial object
+      if (this.commitMap.hasOwnProperty(trial.fun_os_sha)) {
+        let commitNode = this.commitMap[trial.fun_os_sha];
+        commitNode.status = trial.status;
+        commitNode.tag = trial.tag;
+        commitNode.jenkinsBuildNumber = trial.jenkins_build_number;
+        commitNode.lsfJobId = trial.lsf_job_id;
+        commitNode.trialSetId = trial.trial_set_id;
+        commitNode.regexMatch = trial.regex_match;
+        commitNode.selectedForTrial = true;
+        commitNode.triageId = trial.triage_id;
+        commitNode.trial = trial; // to store the whole trial object
+      }
+
     })
   }
   getCommitsInBetween() {
