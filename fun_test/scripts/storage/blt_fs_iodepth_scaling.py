@@ -221,7 +221,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt_details"] = self.blt_details
 
-            # self.end_host.enter_sudo()
+            self.dpc_host.sudo_command("iptables -F")
+            self.dpc_host.sudo_command("ip6tables -F")
+
             self.dpc_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
             command_result = self.dpc_host.lsmod(module="nvme")
@@ -272,6 +274,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Attaching BLT {} with uuid {} to controller".
                                      format(x, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
+
+            self.end_host.sudo_command("iptables -F")
+            self.end_host.sudo_command("ip6tables -F")
+            self.end_host.sudo_command("dmesg -c > /dev/null")
 
             command_result = self.end_host.command("lsmod | grep -w nvme")
             if "nvme" in command_result:

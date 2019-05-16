@@ -102,8 +102,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["sysstat_install"] = False
 
     def cleanup(self):
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # Detach the volume
         try:
             self.volume_details = fun_test.shared_variables["volume_details"]
             command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
@@ -274,14 +272,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                           message="{} device type check".format(self.volume_name))
 
-            # Writing 20GB data on volume (one time task)
-            if self.warm_up_traffic:
-                fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
-                fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
-                fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                fun_test.test_assert(fio_output, "Pre-populating the volume")
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
             fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
@@ -295,7 +285,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fio_output = {}
         internal_result = {}
 
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+        table_data_headers = ["Block Size", "IO Depth", "Size GB", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
@@ -303,7 +293,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
@@ -323,12 +313,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 row_data_dict["mode"] = mode
                 row_data_dict["block_size"] = fio_block_size
                 row_data_dict["iodepth"] = fio_iodepth
-                row_data_dict["size"] = self.fio_cmd_args["size"]
+                row_data_dict["size"] = self.volume_details["capacity"] / 1073741824
 
-                fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
-                             format(mode, fio_block_size, fio_iodepth))
+                fun_test.log("Running FIO {} only test with num_jobs {} block size {} and IO depth {}".
+                             format(mode, self.fio_num_jobs, fio_block_size, fio_iodepth))
 
-                self.end_host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 fun_test.log("Running FIO...")
                 # Job name will be fio_pcie_read_blt_X_iod_scaling
                 fio_job_name = "fio_pcie" + "_" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
@@ -366,36 +355,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
+                        print field
                         fun_test.log("op is: {} and field is: {} ".format(op, field))
                         actual = fio_output[combo][mode][op][field]
                         row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
                                                      int((value * (1 + self.fio_pass_threshold))))
-                        fun_test.log("raw_data[op + field] is: {}".format(row_data_dict[op + field]))
-                        if field == "latency":
-                            ifop = "greater"
-                            elseop = "lesser"
-                        else:
-                            ifop = "lesser"
-                            elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
-                        if compare(actual, value, self.fio_pass_threshold, ifop):
-                            fio_result[combo][mode] = False
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))'''
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
-                        elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
-                            fun_test.log("{} {} {} got {} than the expected value {}".
-                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
-                        else:
-                            '''fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
-                            fun_test.log("{} {} {} is within the expected range {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
-
                 row_data_dict["fio_job_name"] = fio_job_name
 
                 # Building the table row for this variation for both the script table and performance dashboard
@@ -407,10 +371,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                post_results("BLT_PCIE_IO_Scaling", test_method, *row_data_list)
+                post_results("BLT_PCIE_Write_IO_Scaling", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="BLT PCIe IO Scaling", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="BLT PCIe Write IO Scaling", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -427,34 +391,34 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         pass
 
 
-class BLTFioSeqRead(BLTVolumePerformanceTestcase):
+class BLTFioSeqWrite(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sequential Read performance of BLT volume over PCIe wih different IO Depth",
+                              summary="Sequential Write performance of BLT volume over PCIe wih different IO Depth",
                               steps='''
         1. Create a BLT volume on FS attached with SSD.
         2. Export (Attach) this BLT volume to the Internal COMe host connected via the PCIe interface. 
-        3. Run FIO sequential read test(without verify) for various block size and IO depth from the 
+        3. Run FIO sequential Write test(without verify) for various block size and IO depth from the 
         COMe host and check the performance are inline with the expected threshold. 
         ''')
 
 
-class BLTFioRandRead(BLTVolumePerformanceTestcase):
+class BLTFioRandWrite(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Random Read performance of BLT volume over PCIe wih different IO Depth",
+                              summary="Random Write performance of BLT volume over PCIe wih different IO Depth",
                               steps='''
         1. Create a BLT volume on FS attached with SSD.
         2. Export (Attach) this BLT volume to the Internal COMe host connected via the PCIe interface. 
-        3. Run FIO random Read test(without verify) for various block size and IO depth from the 
+        3. Run FIO random Write test(without verify) for various block size and IO depth from the 
         COMe host and check the performance are inline with the expected threshold. 
         ''')
 
 
 if __name__ == "__main__":
     bltscript = BLTVolumePerformanceScript()
-    bltscript.add_test_case(BLTFioSeqRead())
-    bltscript.add_test_case(BLTFioRandRead())
+    bltscript.add_test_case(BLTFioSeqWrite())
+#    bltscript.add_test_case(BLTFioRandWrite())
     bltscript.run()
