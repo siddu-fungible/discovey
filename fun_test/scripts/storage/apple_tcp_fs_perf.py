@@ -302,7 +302,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt_details"] = self.blt_details
             fun_test.shared_variables["stripe_details"] = self.stripe_details
 
-            # self.end_host.enter_sudo()
+            self.dpc_host.sudo_command("iptables -F")
+            self.dpc_host.sudo_command("ip6tables -F")
+
             self.dpc_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
             command_result = self.dpc_host.lsmod(module="nvme")
@@ -394,6 +396,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             # Checking that the above created striped volume is visible to the end host
             for host_index in range(0, self.host_count):
                 end_host = self.end_host_list[host_index]
+                end_host.sudo_command("iptables -F")
+                end_host.sudo_command("ip6tables -F")
+                end_host.sudo_command("dmesg -c > /dev/null")
                 # Load nvme and nvme_tcp modules
                 command_result = end_host.command("lsmod | grep -w nvme")
                 if "nvme" in command_result:

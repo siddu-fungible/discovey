@@ -21,7 +21,7 @@ class ScriptSetup(FunTestScript):
 class BringupBgp(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Bringup BGP on FS-15",
+                              summary="Bringup BGP on FS-45",
                               steps="""
                               1. BringUP both F1s
                               2. Bringup FunCP
@@ -35,8 +35,9 @@ class BringupBgp(FunTestCase):
         pass
 
     def run(self):
-        funcp_obj = FunControlPlaneBringup(fs_name="fs-15", boot_image_f1_0="funos-f1.stripped_7may_funcp.gz",
-                                           boot_image_f1_1="funos-f1.stripped_7may_funcp.gz")
+
+        funcp_obj = FunControlPlaneBringup(fs_name="fs-7", boot_image_f1_0="funos-f1.stripped_15may_chhandak.gz",
+                                           boot_image_f1_1="funos-f1.stripped_15may_chhandak.gz")
         funcp_obj.boot_both_f1(power_cycle_come=True)
         funcp_obj.bringup_funcp()
         funcp_obj.assign_mpg_ips()

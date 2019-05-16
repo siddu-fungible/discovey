@@ -52,6 +52,7 @@ hu:
   username: localadmin
   password: Precious1*
   mgmt_interface: enp96s0f0
+  pcie_width: 16
   pf_interface: hu0-f0
   vf_interface: hu0-f8
   pf_interface_fcp: "hu0-f0:1"
