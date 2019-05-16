@@ -420,5 +420,5 @@ class BLTFioRandWrite(BLTVolumePerformanceTestcase):
 if __name__ == "__main__":
     bltscript = BLTVolumePerformanceScript()
     bltscript.add_test_case(BLTFioSeqWrite())
-#    bltscript.add_test_case(BLTFioRandWrite())
+    bltscript.add_test_case(BLTFioRandWrite())
     bltscript.run()
