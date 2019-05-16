@@ -89,20 +89,7 @@
     ],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme",
-    "expected_fio_result": {
-      "read": {
-        "read": {
-          "bw": 429,
-          "iops": 105,
-          "clatency": 149,
-          "latency90": 180,
-          "latency95": 206,
-          "latency99": 269,
-          "latency9999": 416
-        }
-      }
-    }
+    "nvme_device": "/dev/nvme"
   },
   "EC42FioRandReadOnly": {
     "num_ssd": 1,
@@ -174,19 +161,6 @@
     ],
     "fio_pass_threshold": 0.05,
     "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme",
-    "expected_fio_result": {
-      "randread": {
-        "read": {
-          "bw": 429,
-          "iops": 105,
-          "clatency": 149,
-          "latency90": 180,
-          "latency95": 206,
-          "latency99": 269,
-          "latency9999": 416
-        }
-      }
-    }
+    "nvme_device": "/dev/nvme"
   }
 }

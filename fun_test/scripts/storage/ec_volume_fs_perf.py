@@ -132,11 +132,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                               "the {} file".format(testcase, benchmark_file))
 
         # Checking the availability of expected FIO results
-        if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
-            benchmark_parsing = False
-            fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
-                              "testcase is not available in the {} file".format(testcase, benchmark_file))
-
         # Checking the availability of expected volume level internal stats at the end of every FIO run
         if 'fio_pass_threshold' not in benchmark_dict[testcase]:
             self.fio_pass_threshold = .05
@@ -151,8 +146,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         fun_test.log("Num jobs and IO depth combo going to be used for this {} testcase: {}".
                      format(testcase, self.fio_njobs_iodepth))
-        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
-                     format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
 
         fun_test.shared_variables["num_ssd"] = self.num_ssd
@@ -288,13 +281,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         # & read only modes
         fio_result = {}
         fio_output = {}
-        internal_result = {}
-        initial_volume_status = {}
-        final_volume_status = {}
-        diff_volume_stats = {}
-        initial_stats = {}
-        final_stats = {}
-        diff_stats = {}
 
         volumes = []
         for vtype in sorted(self.ec_coding):
@@ -340,13 +326,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         for combo in self.fio_njobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
-            internal_result[combo] = {}
-            initial_volume_status[combo] = {}
-            final_volume_status[combo] = {}
-            diff_volume_stats[combo] = {}
-            initial_stats[combo] = {}
-            final_stats[combo] = {}
-            diff_stats[combo] = {}
 
             for mode in self.fio_modes:
                 num_jobs, io_depth = eval(combo)
@@ -358,7 +337,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_cmd_args['name'] = fio_job_name
 
                 fio_result[combo][mode] = True
-                internal_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
                 row_data_dict["block_size"] = fio_cmd_args['bs']
@@ -399,35 +377,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 row_data_dict["fio_job_name"] = fio_job_name
-                for op, stats in self.expected_fio_result[mode].items():
-                    for field, value in stats.items():
-                        actual = fio_output[combo][mode][op][field]
-                        row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
-                                                     int((value * (1 + self.fio_pass_threshold))))
-                        if "latency" in field:
-                            ifop = "greater"
-                            elseop = "lesser"
-                        else:
-                            ifop = "lesser"
-                            elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
-                        if compare(actual, value, self.fio_pass_threshold, ifop):
-                            fio_result[combo][mode] = False
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
-                        elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} got {} than the expected range {}".
-                                         format(op, field, actual, elseop, row_data_dict[op + field][1:]))
-                        else:
-                            fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)
-                            fun_test.log("{} {} {} is within the expected range {}".
-                                         format(op, field, actual, row_data_dict[op + field][1:]))
 
                 # Building the table raw for this variation
                 row_data_list = []
@@ -445,11 +394,10 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # Posting the final status of the test result
         fun_test.log(fio_result)
-        fun_test.log(internal_result)
         test_result = True
         for combo in self.fio_njobs_iodepth:
             for mode in self.fio_modes:
-                if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                if not fio_result[combo][mode]:
                     test_result = False
 
         fun_test.test_assert(test_result, self.summary)
