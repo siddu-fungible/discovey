@@ -2,13 +2,11 @@ from lib.system.fun_test import *
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
-
 from lib.fun.fs import Fs
 from datetime import datetime
 from ec_perf_helper import *
 from fun_settings import DATA_STORE_DIR
-import fun_global
-from fun_global import PerfUnit
+from fun_global import PerfUnit, is_production_mode
 from web.fun_test.analytics_models_helper import ModelHelper
 
 '''
@@ -340,7 +338,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                            table_name="Accelerator Effort: {0}, Gizp Effort: {1}".format(self.accelerator_effort,
                                                                                          self.gzip_effort),
                            table_data={"headers": table_header, "rows": table_rows})
-        if fun_global.is_production_mode():
+        if is_production_mode():
             self.publish_result(post_result_lst)
 
         fun_test.test_assert(test_result,
