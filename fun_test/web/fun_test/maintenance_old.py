@@ -3636,3 +3636,198 @@ if __name__ == "__main_8TCP__":
                 base_line_date=chart.base_line_date,
                 work_in_progress=False).save()
     print "added chart for 8 TCP Flow"
+
+if __name__ == "__main_3264raw__":
+    # fio_pcie_read_blt_32_iod_scaling
+    # fio_pcie_read_blt_64_iod_scaling
+    # fio_pcie_randread_blt_32_iod_scaling
+    # fio_pcie_randread_blt_64_iod_scaling
+    copy_from_pcie_read = ["read_4kb1vol1ssd_4_output_latency", "read_4kb1vol1ssd_output_iops"]
+    copy_from_pcie_randread = ["rand_read_4kb1vol1ssd_4_output_latency", "rand_read_4kb1vol1ssd_output_iops"]
+    output_names = ["output_latency", "output_iops"]
+    operations = ["read", "rand_read"]
+    names = ["pcie"]
+    qdepths = ["qd32", "qd64"]
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=5, day=10, minute=0, hour=0, second=0)
+    for name in names:
+        for operation in operations:
+            for output_name in output_names:
+                source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/blt_pcie_io_depth.py"
+                if operation == "rand_read":
+                    job_names = ["fio_pcie_randread_blt_", "_iod_scaling"]
+                    copy = copy_from_pcie_randread
+                else:
+                    job_names = ["fio_pcie_read_blt_", "_iod_scaling"]
+                    copy = copy_from_pcie_read
+
+                if "iops" in output_name:
+                    internal_chart_name = operation + "_" + "qd" + "_" + name + "_" + output_name
+                    chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+                    data_sets = json.loads(chart.data_sets)
+                    for qdepth in qdepths:
+                        if "32" in qdepth:
+                            fio_job_name = job_names[0] + "32" + job_names[1]
+                        else:
+                            fio_job_name = job_names[0] + "64" + job_names[1]
+
+                        if operation == "rand_read":
+                            data_set_operation = "randread"
+                        else:
+                            data_set_operation = "read"
+
+                        one_data_set = {}
+                        one_data_set["name"] = qdepth
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_platform"] = "F1"
+                        one_data_set["inputs"]["input_operation"] = data_set_operation
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"] = {"name": "output_read_iops", 'min': 0, "max": -1, "expected": -1,
+                                                  "reference": -1}
+                        data_sets.append(one_data_set)
+
+                    ml.save_data_sets(data_sets=data_sets, chart=chart)
+                else:
+                    for qdepth in qdepths:
+                        if "32" in qdepth:
+                            fio_job_name = job_names[0] + "32" + job_names[1]
+                        else:
+                            fio_job_name = job_names[0] + "64" + job_names[1]
+                        chart_name = "Latency"
+                        internal_chart_name = operation + "_" + qdepth + "_" + name + "_" + output_name
+                        positive = False
+                        y1_axis_title = "usecs"
+                        for c in copy:
+                            if "latency" in c:
+                                copy_from = c
+
+                        chart = MetricChart.objects.get(internal_chart_name=copy_from)
+                        data_sets = json.loads(chart.data_sets)
+                        for data_set in data_sets:
+                            data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                            data_set["output"]["expected"] = -1
+                            data_set["output"]["min"] = 0
+                            data_set["output"]["max"] = -1
+                            data_set["output"]["reference"] = -1
+
+                        metric_id = LastMetricId.get_next_id()
+                        MetricChart(chart_name=chart_name,
+                                    metric_id=metric_id,
+                                    internal_chart_name=internal_chart_name,
+                                    data_sets=json.dumps(data_sets),
+                                    leaf=True,
+                                    description="TBD",
+                                    owner_info="Manu KS (manu.ks@fungible.com)",
+                                    source=source,
+                                    positive=positive,
+                                    y1_axis_title=y1_axis_title,
+                                    visualization_unit=y1_axis_title,
+                                    metric_model_name=model_name,
+                                    base_line_date=base_line_date,
+                                    work_in_progress=False).save()
+    print "added charts for raw block read and random read different io depths"
+
+if __name__ == "__main_write_raw__":
+    # fio_pcie_write_blt_1_iod_scaling
+    # fio_pcie_write_blt_8_iod_scaling
+    # fio_pcie_randwrite_blt_1_iod_scaling
+    # fio_pcie_randwrite_blt_8_iod_scaling
+    copy_from_pcie_read = ["read_4kb1vol1ssd_4_output_latency", "read_4kb1vol1ssd_output_iops"]
+    copy_from_pcie_randread = ["rand_read_4kb1vol1ssd_4_output_latency", "rand_read_4kb1vol1ssd_output_iops"]
+    output_names = ["output_latency", "output_iops"]
+    operations = ["write", "rand_write"]
+    names = ["pcie"]
+    qdepths = ["qd1", "qd8"]
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=5, day=10, minute=0, hour=0, second=0)
+    for name in names:
+        for operation in operations:
+            for output_name in output_names:
+                source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/blt_pcie_io_depth.py"
+                if operation == "rand_write":
+                    job_names = ["fio_pcie_randwrite_blt_", "_iod_scaling"]
+                    copy = copy_from_pcie_randread
+                    data_set_operation = "randwrite"
+                else:
+                    job_names = ["fio_pcie_write_blt_", "_iod_scaling"]
+                    copy = copy_from_pcie_read
+                    data_set_operation = "write"
+
+                if "iops" in output_name:
+                    internal_chart_name = operation + "_" + "qd" + "_" + name + "_" + output_name
+                    chart_name = "IOPS"
+                    positive = True
+                    y1_axis_title = "ops"
+                    data_sets = []
+                    for qdepth in qdepths:
+                        if "8" in qdepth:
+                            fio_job_name = job_names[0] + "8" + job_names[1]
+                        else:
+                            fio_job_name = job_names[0] + "1" + job_names[1]
+
+                        one_data_set = {}
+                        one_data_set["name"] = qdepth
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_platform"] = "F1"
+                        one_data_set["inputs"]["input_operation"] = data_set_operation
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"] = {"name": "output_write_iops", 'min': 0, "max": -1, "expected": -1,
+                                                  "reference": -1}
+                        data_sets.append(one_data_set)
+
+                    metric_id = LastMetricId.get_next_id()
+                    MetricChart(chart_name=chart_name,
+                                metric_id=metric_id,
+                                internal_chart_name=internal_chart_name,
+                                data_sets=json.dumps(data_sets),
+                                leaf=True,
+                                description="TBD",
+                                owner_info="Manu KS (manu.ks@fungible.com)",
+                                source=source,
+                                positive=positive,
+                                y1_axis_title=y1_axis_title,
+                                visualization_unit=y1_axis_title,
+                                metric_model_name=model_name,
+                                base_line_date=base_line_date,
+                                work_in_progress=False).save()
+                else:
+                    for qdepth in qdepths:
+                        if "8" in qdepth:
+                            fio_job_name = job_names[0] + "8" + job_names[1]
+                        else:
+                            fio_job_name = job_names[0] + "1" + job_names[1]
+                        chart_name = "Latency"
+                        internal_chart_name = operation + "_" + qdepth + "_" + name + "_" + output_name
+                        positive = False
+                        y1_axis_title = "usecs"
+                        for c in copy:
+                            if "latency" in c:
+                                copy_from = c
+
+                        chart = MetricChart.objects.get(internal_chart_name=copy_from)
+                        data_sets = json.loads(chart.data_sets)
+                        for data_set in data_sets:
+                            data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                            data_set["inputs"]["input_operation"] = data_set_operation
+                            data_set["output"]["name"] = data_set["output"]["name"].replace("read", "write")
+                            data_set["output"]["expected"] = -1
+                            data_set["output"]["min"] = 0
+                            data_set["output"]["max"] = -1
+                            data_set["output"]["reference"] = -1
+
+                        metric_id = LastMetricId.get_next_id()
+                        MetricChart(chart_name=chart_name,
+                                    metric_id=metric_id,
+                                    internal_chart_name=internal_chart_name,
+                                    data_sets=json.dumps(data_sets),
+                                    leaf=True,
+                                    description="TBD",
+                                    owner_info="Manu KS (manu.ks@fungible.com)",
+                                    source=source,
+                                    positive=positive,
+                                    y1_axis_title=y1_axis_title,
+                                    visualization_unit=y1_axis_title,
+                                    metric_model_name=model_name,
+                                    base_line_date=base_line_date,
+                                    work_in_progress=False).save()
+    print "added charts for raw block write and random write different io depths"

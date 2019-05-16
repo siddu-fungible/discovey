@@ -18,11 +18,13 @@ class FunControlPlaneBringup:
         self.boot_args_f1_0 = boot_args_f1_0
         self.boot_args_f1_1 = boot_args_f1_1
         if not boot_args_f1_0:
-            self.boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-server --dpc-uart " \
-                                  "--mgmt"
+            self.boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart " \
+                                  "--dis-stats --mgmt"
+
         if not boot_args_f1_1:
             self.boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 --all_100g --dis-stats --dpc-server " \
-                                  "--dpc-server --dpc-uart --mgmt"
+                                  "--dpc-uart --mgmt"
+
         self.fs_spec = fun_test.get_asset_manager().get_fs_by_name(fs_name)
         self.fs_boot_number = None
         self.abstract_configs = None
@@ -248,6 +250,6 @@ class FunControlPlaneBringup:
             linux_containers[docker_name].command(command="ls")
             mpg_ip = ifconfig_output.split()[1]
             fun_test.test_assert(expression=mpg_ip, message="Make sure MPG IP is got through DHCP on %s" % docker_name)
-            self.mpg_ips[str(docker_name.rstrip)] = mpg_ip
+            self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
             linux_containers[docker_name].disconnect()
             fun_test.log(self.mpg_ips)
