@@ -3,6 +3,17 @@ import {ApiService} from "../services/api/api.service";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 
+enum TriagingStates {
+  UNKNOWN = -100,
+  ERROR = -99,
+  KILLED = -30,
+  ABORTED = -20,
+  COMPLETED = 10,
+  INIT = 20,
+  IN_PROGRESS = 60,
+  SUSPENDED = 70
+
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -62,6 +73,13 @@ export class TriageService {
     return this.apiService.get(url).pipe(switchMap((response) => {
       return of(response.data);
     }))
+  }
+
+
+  stopTriage(triageId) {
+    let url = "/api/v1/triages/" + triageId;
+    let payload = {"status": TriagingStates.COMPLETED};
+    return this.apiService.post(url, payload);
   }
 
 

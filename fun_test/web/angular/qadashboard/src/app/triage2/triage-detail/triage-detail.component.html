@@ -1,6 +1,7 @@
 <div class="component">
   <table *ngIf="triage" class="table table-responsive">
     <tr>
+      <th></th>
       <th>Metric ID</th>
       <th>Status</th>
       <th>Result</th>
@@ -13,6 +14,11 @@
       <th>Num commits</th>
     </tr>
     <tr>
+      <td>
+        <ng-container *ngIf="triage.status > 10">
+          <button class="btn btn-sm btn-danger" (click)="stopTriage()">Stop</button>
+        </ng-container>
+      </td>
       <td>{{ triage.metric_id }}</td>
       <td>
         <button *ngIf="triage.status < 10; else completedStatus" class="btn btn-success" (click)="startTriage()">Start</button>
@@ -69,7 +75,7 @@
 
               {{ prettyTime(commit.date) }}
             </td>
-            <td>{{ getShortSha(commit.funOsSha) }}</td>
+            <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ commit.funOsSha }}">{{ getShortSha(commit.funOsSha) }}</a></td>
             <td>{{ commit.trialSetId }}</td>
             <td><app-smart-label [value]="triagingTrialStateMap[commit.status]"></app-smart-label></td>
             <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>

@@ -39,6 +39,8 @@ export class TriageDetailComponent implements OnInit {
   commitFetchStatus: string = null;
   showAll: boolean = false;
 
+  FUN_OS_GITHUB_BASE_URL = "https://github.com/fungible-inc/FunOS/commit/";
+
   constructor(private route: ActivatedRoute,
               private triageService: TriageService,
               private commonService: CommonService,
@@ -188,6 +190,16 @@ export class TriageDetailComponent implements OnInit {
     }, error => {
       this.loggerService.error("Error submitting new trial subset");
     })
-
   }
+
+  stopTriage() {
+    this.triageService.stopTriage(this.triageId).subscribe((response) => {
+      this.loggerService.success("Stop triage request sent");
+      window.location.reload();
+    }, error => {
+      this.loggerService.error("Stop triage request failed");
+    })
+  }
+
+
 }
