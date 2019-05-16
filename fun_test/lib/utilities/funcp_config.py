@@ -11,18 +11,18 @@ from scripts.networking.lib_nw import funcp
 
 class FunControlPlaneBringup:
 
-    def __init__(self, fs_name, boot_image_f1_0, boot_image_f1_1, boot_args_f1_0=None, boot_args_f1_1=None):
+    def __init__(self, fs_name, boot_image_f1_0=None, boot_image_f1_1=None, boot_args_f1_0=None, boot_args_f1_1=None):
         self.fs_name = fs_name
         self.boot_image_f1_0 = boot_image_f1_0
         self.boot_image_f1_1 = boot_image_f1_1
         self.boot_args_f1_0 = boot_args_f1_0
         self.boot_args_f1_1 = boot_args_f1_1
         if not boot_args_f1_0:
-            self.boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats --dpc-server " \
-                                  "--dpc-uart --mgmt --serdesinit"
+            self.boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-server --dpc-uart " \
+                                  "--mgmt"
         if not boot_args_f1_1:
-            self.boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 --all_100g --dis-stats --dpc-server " \
-                                  "--dpc-uart --mgmt  --serdesinit"
+            self.boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 --all_100g --dis-stats --dpc-server " \
+                                  "--dpc-server --dpc-uart --mgmt"
         self.fs_spec = fun_test.get_asset_manager().get_fs_by_name(fs_name)
         self.fs_boot_number = None
         self.abstract_configs = None
@@ -73,6 +73,84 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.come.setup_dpc(), "Setup DPC")
         fun_test.test_assert(fs_0.come.is_dpc_ready(), "DPC ready")
 
+    def boot_f1_0(self, power_cycle_come=True):
+        fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
+                      boot_args=self.boot_args_f1_0, disable_f1_index=1)
+
+        fun_test.simple_assert(fs_0, "Succesfully fetched image, credentials and bootargs")
+        fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
+        fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
+        fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
+                                                        boot_args=fs_0.boot_args),
+                             "U-Bootup f1: {} complete".format(0))
+        fs_0.bmc.start_uart_log_listener(f1_index=0)
+        fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
+                             "ComE rebooted successfully")
+        fun_test.sleep(message="waiting for COMe", seconds=120)
+        if power_cycle_come:
+            come_ping_test = False
+
+            come_ping_test_count = 0
+            while not come_ping_test:
+                response = os.system("ping -c 1 " + self.fs_spec['come']['mgmt_ip'])
+                if response == 0:
+                    come_ping_test = True
+                else:
+                    fun_test.sleep(message="Waiting for COMe to be pingable", seconds=15)
+                    come_ping_test_count += 0
+                    if come_ping_test_count > 10:
+                        fun_test.test_assert_expected(expected=True, actual=come_ping_test, message="Come ping test")
+                        break
+            ssh_test_come = fs_0.come.check_ssh()
+            if not ssh_test_come:
+                fun_test.test_assert(fs_0.from_bmc_reset_come(), "BMC Reset COMe")
+                fun_test.sleep(message="Power cycling COMe", seconds=150)
+
+        fun_test.test_assert(fs_0.come_initialize(), "ComE initialized")
+        fun_test.test_assert(fs_0.come.detect_pfs(), "Fungible PFs detected")
+        fun_test.test_assert(fs_0.come.setup_dpc(), "Setup DPC")
+        fun_test.test_assert(fs_0.come.is_dpc_ready(), "DPC ready")
+
+    def boot_f1_1(self, power_cycle_come=True):
+        fs = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_1,
+                      boot_args=self.boot_args_f1_1, disable_f1_index=0)
+
+        fun_test.simple_assert(fs, "Succesfully fetched image, credentials and bootargs")
+        fun_test.test_assert(fs.bmc_initialize(), "BMC initialize")
+        fun_test.test_assert(fs.set_f1s(), "Set F1s")
+        fun_test.test_assert(fs.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs.tftp_image_path,
+                                                        boot_args=fs.boot_args),
+                             "U-Bootup f1: {} complete".format(1))
+        fs.bmc.start_uart_log_listener(f1_index=1)
+        fun_test.test_assert(fs.come_reset(power_cycle=True, non_blocking=True),
+                             "ComE rebooted successfully")
+        fun_test.sleep(message="waiting for COMe", seconds=120)
+        if power_cycle_come:
+            come_ping_test = False
+
+            come_ping_test_count = 0
+            while not come_ping_test:
+                response = os.system("ping -c 1 " + self.fs_spec['come']['mgmt_ip'])
+                if response == 0:
+                    come_ping_test = True
+                else:
+                    fun_test.sleep(message="Waiting for COMe to be pingable", seconds=15)
+                    come_ping_test_count += 0
+                    if come_ping_test_count > 10:
+                        fun_test.test_assert_expected(expected=True, actual=come_ping_test, message="Come ping test")
+                        break
+            ssh_test_come = fs.come.check_ssh()
+            if not ssh_test_come:
+                fun_test.test_assert(fs.from_bmc_reset_come(), "BMC Reset COMe")
+                fun_test.sleep(message="Power cycling COMe", seconds=150)
+
+        fun_test.test_assert(fs.come_initialize(), "ComE initialized")
+        fun_test.test_assert(fs.come.detect_pfs(), "Fungible PFs detected")
+        fun_test.test_assert(fs.come.setup_dpc(), "Setup DPC")
+        fun_test.test_assert(fs.come.is_dpc_ready(), "DPC ready")
+
     def bringup_funcp(self, prepare_docker=True):
         linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                                ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
@@ -104,7 +182,6 @@ class FunControlPlaneBringup:
         if not abstract_config_file:
             abstract_config_file = fun_test.get_script_parent_directory() + '/abstract_configs.json'
         self.abstract_configs = fun_test.parse_file_to_json(abstract_config_file)
-
         linux_obj = Linux(host_ip=host_ip, ssh_username=ssh_username, ssh_password=ssh_password)
         linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
         funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
@@ -112,14 +189,15 @@ class FunControlPlaneBringup:
         # Get FunControlPlane
         fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
         fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
-        linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
+
         for f1 in self.mpg_ips:
             file_name = f1 + "_abstract.json"
             file_contents = self.abstract_configs[f1]
+            linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
             linux_obj.create_file(file_name=file_name, contents=json.dumps(file_contents))
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/")
-            fun_test.test_assert(expression=linux_obj.command("./apply_abstract_config.py --server " + mpg_ips[f1] +
-                                                              " --json ./abstract_cfg/" + file_name),
+            fun_test.test_assert(expression=linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1]
+                                                              + " --json ./abstract_cfg/" + file_name),
                                  message="Execute abstract config on %s" % f1)
 
     def assign_mpg_ips(self):

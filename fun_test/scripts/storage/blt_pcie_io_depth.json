@@ -12,7 +12,7 @@
     "warm_up_fio_cmd_args": {"bs": "64k", "iodepth": 8, "fill_device": 1, "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
     "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "runtime": 300, "timeout": 320},
     "fio_modes": ["read"],
-    "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)"],
+    "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)", "(4, 32)", "(4, 64)"],
     "fio_pass_threshold": 0.05,
     "fio_job_name": {"read": "iod_scaling", "randread": "iod_scaling"},
     "volume_pass_threshold": 0,
@@ -21,8 +21,9 @@
       "(4, 1)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
       "(4, 4)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
       "(4, 8)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
-      "(4, 16)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
-
+      "(4, 16)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 32)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 64)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
     }
   },
   "BLTFioRandRead": {
@@ -38,7 +39,7 @@
     "warm_up_fio_cmd_args": {"bs": "64k", "iodepth": 8, "fill_device": 1, "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
     "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "runtime": 300, "timeout": 320},
     "fio_modes": ["randread"],
-    "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)"],
+    "fio_bs_iodepth": ["(4, 1)", "(4, 4)", "(4, 8)", "(4, 16)", "(4, 32)", "(4, 64)"],
     "fio_pass_threshold": 0.05,
     "fio_job_name": {"read": "iod_scaling", "randread": "iod_scaling"},
     "volume_pass_threshold": 0,
@@ -47,7 +48,9 @@
       "(4, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
       "(4, 4)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
       "(4, 8)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
-      "(4, 16)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
+      "(4, 16)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 32)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 64)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
     }
   }
 }
