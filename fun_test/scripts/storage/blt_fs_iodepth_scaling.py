@@ -240,20 +240,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg on COMe")
 
-            # Create a NVMe TCP controller
-            nvme_transport = self.transport_type
-            self.ctrlr_uuid = utils.generate_uuid()
-            command_result = self.storage_controller.create_controller(
-                ctrlr_uuid=self.ctrlr_uuid,
-                transport=unicode.upper(nvme_transport),
-                remote_ip=tb_config['tg_info'][0]['iface_ip'],
-                nqn=self.nqn,
-                port=tb_config['dut_info'][0]['tcp_port'], command_duration=5)
-
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create storage controller for TCP with uuid {} on DUT".
-                                 format(self.ctrlr_uuid))
-
             # Create BLT's
             self.thin_uuid = []
             for x in range(1, self.blt_count + 1, 1):
@@ -268,6 +254,21 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(x, cur_uuid))
 
+            # Create a NVMe TCP controller
+            nvme_transport = self.transport_type
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(
+                ctrlr_uuid=self.ctrlr_uuid,
+                transport=unicode.upper(nvme_transport),
+                remote_ip=tb_config['tg_info'][0]['iface_ip'],
+                nqn=self.nqn,
+                port=tb_config['dut_info'][0]['tcp_port'], command_duration=5)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Create storage controller for TCP with uuid {} on DUT".
+                                 format(self.ctrlr_uuid))
+
+            for x in range(1, self.blt_count + 1, 1):
+                cur_uuid = self.thin_uuid[x-1]
                 command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                      ns_id=x,
                                                                                      vol_uuid=cur_uuid)
