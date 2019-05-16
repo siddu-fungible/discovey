@@ -31,8 +31,8 @@
       <td><app-smart-label [value]="triage.result"></app-smart-label></td>
       <td>{{ triage.submitter_email }}</td>
       <td>{{ triage.triage_type }}</td>
-      <td>{{ getShortSha(triage.from_fun_os_sha) }}</td>
-      <td>{{ getShortSha(triage.to_fun_os_sha) }}</td>
+      <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.from_fun_os_sha }}">{{ getShortSha(triage.from_fun_os_sha) }}</a></td>
+      <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.to_fun_os_sha }}">{{ getShortSha(triage.to_fun_os_sha) }}</a></td>
       <td>{{ prettyTime(triage.submission_date_time) }}</td>
       <td>{{ triage.build_parameters | json }}</td>
       <td>{{ commits.length }}</td>

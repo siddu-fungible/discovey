@@ -148,7 +148,10 @@ export class TriageDetailComponent implements OnInit {
     payload["tags"] = tempArray;
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("Trial re-start submitted");
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
     })
   }
 
