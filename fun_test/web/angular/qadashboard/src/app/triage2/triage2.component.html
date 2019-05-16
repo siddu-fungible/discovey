@@ -67,6 +67,8 @@
       <table class="table table-responsive">
         <tr>
           <th></th>
+          <th></th>
+          <th>Status</th>
           <th>Metric ID</th>
           <th>Submitter</th>
           <th>From FunOS sha</th>
@@ -76,6 +78,15 @@
         <tr *ngFor="let triage of triages">
           <td>
             <a href="/triaging/{{ triage.triage_id }}" target="_blank">Details</a>
+          </td>
+          <td>
+            <ng-container *ngIf="triage.status > triagingStringToCodeMap['COMPLETED']">
+              <button class="btn btn-sm btn-danger" (click)="stopTriage(triage.triage_id)">Stop</button>
+            </ng-container>
+          </td>
+          <td>
+
+            <app-smart-label [value]="triagingStateMap[triage.status]"></app-smart-label>
           </td>
           <td>
             {{ triage.metric_id }}

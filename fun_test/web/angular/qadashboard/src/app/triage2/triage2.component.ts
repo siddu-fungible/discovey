@@ -19,6 +19,7 @@ export class Triage2Component implements OnInit {
   selectedUser: any = null;
   jenkinsParameters: any = null;
   triagingStateMap: any = null;
+  triagingStringToCodeMap = {};
   triagingTrialStateMap: any = null;
   triages: any = null;
   gitShasValid: boolean = false;
@@ -96,6 +97,11 @@ export class Triage2Component implements OnInit {
         return this.triageService.triagingStateToString();
       })).pipe(switchMap((triagingStateMap) => {
         this.triagingStateMap = triagingStateMap;
+        for(let key of Object.keys(this.triagingStateMap)) {
+          this.triagingStringToCodeMap[this.triagingStateMap[key]] = key;
+        }
+
+
         return this.triageService.triagingTrialStateToString();
       })).pipe(switchMap((triagingTrialStateMap) => {
         this.triagingTrialStateMap = triagingTrialStateMap;
@@ -145,6 +151,15 @@ export class Triage2Component implements OnInit {
 
   getShortSha(sha) {
     return sha.substring(0, 7);
+  }
+
+  stopTriage(triageId) {
+    this.triageService.stopTriage(triageId).subscribe((response) => {
+      this.loggerService.success("Stop triage request sent");
+      window.location.reload();
+    }, error => {
+      this.loggerService.error("Stop triage request failed");
+    })
   }
 
 }
