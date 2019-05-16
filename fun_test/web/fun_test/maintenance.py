@@ -2153,7 +2153,7 @@ if __name__ == "__main_8TCP__":
                 work_in_progress=False).save()
     print "added chart for 8 TCP Flow"
 
-if __name__ == "__main__":
+if __name__ == "__main_3264raw__":
     # fio_pcie_read_blt_32_iod_scaling
     # fio_pcie_read_blt_64_iod_scaling
     # fio_pcie_randread_blt_32_iod_scaling
@@ -2243,7 +2243,7 @@ if __name__ == "__main__":
                                     work_in_progress=False).save()
     print "added charts for raw block read and random read different io depths"
 
-if __name__ == "__main__":
+if __name__ == "__main_write_raw__":
     # fio_pcie_write_blt_1_iod_scaling
     # fio_pcie_write_blt_8_iod_scaling
     # fio_pcie_randwrite_blt_1_iod_scaling
@@ -2348,3 +2348,24 @@ if __name__ == "__main__":
                                     work_in_progress=False).save()
     print "added charts for raw block write and random write different io depths"
 
+if __name__ == "__main__":
+    model_name = "BltVolumePerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model_name]
+    entries = metric_model.objects.all()
+    for entry in entries:
+        if entry.input_version != "":
+            completion_date = timezone.localtime(entry.input_date_time)
+            # completion_date = timezone.localtime(date_time)
+            completion_date = str(completion_date).split(":")
+            completion_date = completion_date[0] + ":" + completion_date[1]
+            print completion_date
+            print entry.input_version
+            add_jenkins_job_id_map(jenkins_job_id=0,
+                                   fun_sdk_branch="",
+                                   git_commit="",
+                                   software_date=0,
+                                   hardware_version="",
+                                   completion_date=completion_date,
+                                   build_properties="", lsf_job_id="",
+                                   sdk_version=entry.input_version)
