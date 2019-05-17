@@ -21,7 +21,7 @@
       </td>
       <td>{{ triage.metric_id }}</td>
       <td>
-        <button *ngIf="triage.status < 10; else completedStatus" class="btn btn-success" (click)="startTriage()">Start</button>
+        <button *ngIf="triage.status < triagingStringToCodeMap['COMPLETED']; else completedStatus" class="btn btn-success" (click)="startTriage()">Start</button>
         <ng-template #completedStatus>
           <app-smart-label [value]="triagingStateMap[triage.status]">
           </app-smart-label>

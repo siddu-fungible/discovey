@@ -217,9 +217,23 @@ class TrialStateMachine:
         self.triage_id = triage_id
         self.fun_os_sha = fun_os_sha
 
+    def error(self, message):
+        s = "{}: {}".format(self._get_trial_string(), str(message))
+        logger.exception(s)
+        trial = self.get_trial()
+        trial.status = TriageTrialStates.ERROR
+        trial.save()
+
+    def _get_trial_string(self):
+        return "T: {} S: {}".format(self.triage_id, self.fun_os_sha)
+
+    def get_trial(self):
+        trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha)
+        return trial
+
     def run(self):
         triage = Triage3.objects.get(triage_id=self.triage_id)
-        trial = Triage3Trial.objects.get(triage_id=self.triage_id, fun_os_sha=self.fun_os_sha)
+        trial = self.get_trial()
         status = trial.status
         if status == TriageTrialStates.INIT:
             jm = JenkinsManager()
@@ -232,21 +246,24 @@ class TrialStateMachine:
             try:
                 queue_item = jm.build(params=params)
                 build_number = jm.get_build_number(queue_item=queue_item)
-                trial.jenkins_build_number = build_number
+                trial.jenkins_build_number = build_number  #TODO: Failure here
             except Exception as ex:  #TODO
                 pass
             finally:
                 trial.status = TriageTrialStates.BUILDING_ON_JENKINS
             trial.save()
         elif status == TriageTrialStates.BUILDING_ON_JENKINS:
-            jm = JenkinsManager()
-            job_info = jm.get_job_info(build_number=trial.jenkins_build_number)
-            if not job_info["building"]:
-                job_result = job_info["result"]
-                if job_result.lower() == "success":
-                    trial.status = TriageTrialStates.JENKINS_BUILD_COMPLETE
-                    trial.save()
-            pass
+            try:
+                jm = JenkinsManager()
+                job_info = jm.get_job_info(build_number=trial.jenkins_build_number)
+                if not job_info["building"]:
+                    job_result = job_info["result"]
+                    if job_result.lower() == "success":
+                        trial.status = TriageTrialStates.JENKINS_BUILD_COMPLETE
+                        trial.save()
+                pass
+            except Exception as ex:
+                self.error(str(ex))
         elif status == TriageTrialStates.JENKINS_BUILD_COMPLETE:
             lsf_server = LsfStatusServer()  #TODO
             past_jobs = lsf_server.get_past_jobs_by_tag(add_info_to_db=False, tag=trial.tag)

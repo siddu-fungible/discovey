@@ -32,6 +32,7 @@ export class TriageDetailComponent implements OnInit {
   @Input() triageId: number;
   triagingStateMap: any = null;
   triagingTrialStateMap: any = null;
+  triagingStringToCodeMap = {};
   triage: any = null;
   trials: any = [];
   commits: CommitNode [] = [];
@@ -56,6 +57,9 @@ export class TriageDetailComponent implements OnInit {
       return this.triageService.triagingTrialStateToString();
     })).pipe(switchMap((triagingTrialStateMap) => {
       this.triagingTrialStateMap = triagingTrialStateMap;
+      for(let key of Object.keys(this.triagingStateMap)) {
+        this.triagingStringToCodeMap[this.triagingStateMap[key]] = key;
+      }
       return of(this.triageId);
     })).pipe(switchMap(() => {
       return this.triageService.triages(this.triageId);
