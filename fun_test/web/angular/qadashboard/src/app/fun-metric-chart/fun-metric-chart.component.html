@@ -201,13 +201,13 @@
                                            style="width: 300px">
               </td>
             </tr>
-            <tr *ngIf="internalChartName.endsWith('_S1')">
+            <tr *ngIf="platform == Platform.S1">
               <td>
                 Set Expected Values:
               </td>
               <td>
-                <select [(ngModel)]="expectedKey" style="width: 100px">
-                  <option [ngValue]="key" *ngFor="let key of expectedKeyCategory">{{ key }}</option>
+                <select [(ngModel)]="expectedOperation" style="width: 100px">
+                  <option [ngValue]="key" *ngFor="let key of expectedOperationCategory">{{ key }}</option>
                 </select>
               </td>
             </tr>
