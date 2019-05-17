@@ -197,6 +197,7 @@ export class TriageDetailComponent implements OnInit {
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("New trial subset submitted");
       this.clearSelections();
+      window.location.reload();
     }, error => {
       this.loggerService.error("Error submitting new trial subset");
     })
