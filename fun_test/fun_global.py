@@ -125,6 +125,8 @@ class PerfUnit:
     UNIT_KPPS = "Kpps"
     UNIT_GPPS = "Gpps"
 
+    UNIT_CPS = "cps"
+
 class FunPlatform:
     F1 = "F1"
     S1 = "S1"

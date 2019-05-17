@@ -7,6 +7,7 @@ import pickle
 import json
 import re
 from web.fun_test.analytics_models_helper import ModelHelper
+from fun_global import PerfUnit
 
 
 TCP_PERFORMANCE_MODEL_NAME = "TeraMarkFunTcpThroughputPerformance"
@@ -62,7 +63,7 @@ def use_model_helper(model_name, data_dict, unit_dict):
 
 
 def populate_performance_json_file(flow_type, model_name, frame_size, num_flows, throughput_n2t, pps_n2t,
-                                   timestamp, filename, protocol="TCP", mode="100G"):
+                                   timestamp, filename, mode="100G"):
     results = []
     output = False
     try:
@@ -90,10 +91,53 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
             fun_test.simple_assert(file_created, "Create Performance JSON file")
 
         unit_dict = {}
-        unit_dict["pps_unit"] = "pps"
-        unit_dict["throughput_unit"] = "Mbps"
+        unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
+        unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
         add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
         fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+        fun_test.add_checkpoint("Entry added to model %s" % model_name)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_cps_performance_json_file(flow_type, model_name, frame_size, cps_type, max_cps, max_latency, avg_latency,
+                                       timestamp, filename, mode="100G"):
+    results = []
+    output = False
+    try:
+        output_dict = {"mode": mode,
+                       "flow_type": flow_type,
+                       "frame_size": frame_size,
+                       "cps_type": cps_type,
+                       "max_cps": max_cps,
+                       "max_latency": max_latency,
+                       "avg_latency": avg_latency,
+                       "timestamp": str(timestamp),
+                       "version": fun_test.get_version()
+                       }
+        fun_test.log("FunOS version is %s" % output_dict['version'])
+        results.append(output_dict)
+        file_path = LOGS_DIR + "/%s" % filename
+        contents = _parse_file_to_json_in_order(file_name=file_path)
+        if contents:
+            append_new_results = contents + results
+            file_created = create_counters_file(json_file_name=file_path,
+                                                counter_dict=append_new_results)
+            fun_test.simple_assert(file_created, "Create Performance JSON file")
+        else:
+            file_created = create_counters_file(json_file_name=file_path,
+                                                counter_dict=results)
+            fun_test.simple_assert(file_created, "Create Performance JSON file")
+
+        unit_dict = {}
+        unit_dict["max_cps_unit"] = PerfUnit.UNIT_CPS
+        unit_dict["max_latency_unit"] = PerfUnit.UNIT_USECS
+        unit_dict["avg_latency_unit"] = PerfUnit.UNIT_USECS
+        # TODO: Enable after getting model name from Ashwin for CPS TeraMarks
+        # add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
+        # fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
         fun_test.add_checkpoint("Entry added to model %s" % model_name)
         output = True
     except Exception as ex:
@@ -768,163 +812,115 @@ def create_performance_table(total_throughput, num_flows, total_pps):
     return table_created
 
 
-def parse_trex_summary_stats(summary_contents):
-    summary_dict = {'client': {}, 'server': {}}
+def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, cpu=1, duration=60):
+    result = {'max_cps': None, 'max_latency': None, 'avg_latency': None, 'status': False, 'summary_dict': None}
+    output_file_path = fun_test.get_temp_file_path(file_name=fun_test.get_temp_file_name()) + ".txt"
     try:
-        total_pkt_drop = re.search(r'Total-pkt-drop\s+:\s+(\d+)', summary_contents, re.IGNORECASE)
-        total_tx_bytes = re.search(r'Total-tx-bytes\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_tx_sw_bytes = re.search(r'Total-tx-sw-bytes\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_rx_bytes = re.search(r'Total-rx-bytes\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_tx_pkt = re.search(r'Total-tx-pkt\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_rx_pkt = re.search(r'Total-rx-pkt\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_sw_tx_pkt = re.search(r'Total-sw-tx-pkt\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_sw_err = re.search(r'Total-sw-err\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_arp_sent = re.search(r'Total\sarp\ssent\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
-        total_arp_recv = re.search(r'Total\sarp\sreceived\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        count = 1
+        max_cps_found = False
+        version = fun_test.get_version()
+        profile_name = astf_profile.split('/')[1].split('.')[0]
+        flow_list_file = str(version) + "_" + profile_name + '_flowlist.txt'
+        resource_pc_file = str(version) + "_" + profile_name + '_resource_pc.txt'
+        resource_bam_file = str(version) + "_" + profile_name + '_resource_bam.txt'
+        cps = base_cps
+        while True:
+            if max_cps_found:
+                break
+            if count == 1:
+                cps = base_cps
+            else:
+                if cps in range(0, 800):
+                    cps = cps + 100
+                elif cps >= 800:
+                    cps = cps + 50
 
-        # Client/Server stats
-        m_active_flows = re.search(r'm_active_flows\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        m_est_flows = re.search(r'm_est_flows\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        m_tx_bw_l7_r = re.search(r'm_tx_bw_l7_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
-        m_rx_bw_l7_r = re.search(r'm_rx_bw_l7_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
-        m_tx_bw_l7_total_r = re.search(r'm_tx_bw_l7_total_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
-        m_tx_pps_r = re.search(r'm_tx_pps_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
-        m_rx_pps_r = re.search(r'm_rx_pps_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
-        m_avg_size = re.search(r'm_avg_size.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
-        m_tx_ratio = re.search(r'm_tx_ratio.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
-        tcps_conn_attempt = re.search(r'tcps_connattempt\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_connects = re.search(r'tcps_connects\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_closed = re.search(r'tcps_closed\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_segstimed = re.search(r'tcps_segstimed\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_rtt_updated = re.search(r'tcps_rttupdated\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_total_sent = re.search(r'tcps_sndtotal\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_ctrl_sent = re.search(r'tcps_sndctrl\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_acks_sent = re.search(r'tcps_sndacks\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_drops = re.search(r'tcps_drops\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        embryonic_tcp_conn_drops = re.search(r'tcps_conndrops\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_retransmit_syn_timeouts = re.search(r'tcps_rexmttimeo_syn\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_keepalive_timeouts = re.search(r'tcps_keeptimeo\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
-        tcps_conn_keepalive_drops = re.search(r'tcps_keepdrops\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+            fun_test.log_section("Find Max CPS and latency for %s. Base CPS Given: %d "
+                                 "Current iteration count: %d Current CPS value: %d" % (profile_name,
+                                                                                        base_cps, count, cps))
+            cmd = trex_obj.get_trex_cmd(astf_profile=astf_profile, astf=True, duration=duration, latency=True,
+                                        warmup_time=5, latency_packet_rate=100, cps_rate=cps, cpu=cpu,
+                                        output_file=output_file_path, bg=True)
+            fun_test.simple_assert(cmd, "Get TRex cps command")
 
-        if total_pkt_drop:
-            summary_dict['total_pkt_drop'] = int(total_pkt_drop.group(1))
+            checkpoint = "Execute TRex command"
+            output = trex_obj.execute_trex_command(cmd=cmd, timeout=duration)
+            fun_test.test_assert(output, checkpoint)
 
-        if total_tx_bytes:
-            summary_dict['total_tx_bytes'] = int(total_tx_bytes.group(1))
+            checkpoint = "Running dpcsh commands to capture stats during run"
+            output = run_dpcsh_commands(network_controller_obj=network_controller_obj,
+                                        flow_list_file=flow_list_file,
+                                        resource_bam_file=resource_bam_file, resource_pc_file=resource_pc_file)
+            fun_test.simple_assert(output, checkpoint)
 
-        if total_tx_sw_bytes:
-            summary_dict['total_tx_sw_bytes'] = int(total_tx_sw_bytes.group(1))
+            fun_test.simple_assert(trex_obj.poll_for_trex_process(max_time=duration), "Ensure TRex process finish")
 
-        if total_rx_bytes:
-            summary_dict['total_rx_bytes'] = int(total_rx_bytes.group(1))
+            checkpoint = "Parse TRex output file"
+            summary = trex_obj.read_trex_output_summary(file_path=output_file_path)
+            fun_test.simple_assert(summary, checkpoint)
 
-        if total_tx_pkt:
-            summary_dict['total_tx_pkt'] = int(total_tx_pkt.group(1))
+            checkpoint = "Collect summary stats for %d iteration" % count
+            summary_dict = trex_obj.get_trex_summary_stats(summary_contents=summary)
+            fun_test.simple_assert(summary_dict, checkpoint)
 
-        if total_rx_pkt:
-            summary_dict['total_rx_pkt'] = int(total_rx_pkt.group(1))
+            checkpoint = "Summary Table for Iteration: %d CPS: %d Profile: %s" % (count, cps, profile_name)
+            trex_obj.pretty_print_summary_dict(summary_dict=summary_dict, table_header=checkpoint)
+            fun_test.add_checkpoint(checkpoint)
 
-        if total_sw_tx_pkt:
-            summary_dict['total_sw_tx_pkt'] = int(total_sw_tx_pkt.group(1))
-
-        if total_sw_err:
-            summary_dict['total_sw_err'] = int(total_sw_err.group(1))
-
-        if total_arp_sent:
-            summary_dict['total_arp_sent'] = int(total_arp_sent.group(1))
-
-        if total_arp_recv:
-            summary_dict['total_arp_recv'] = int(total_arp_recv.group(1))
-
-        # Client/Server stats
-        if m_active_flows:
-            summary_dict['client']['m_active_flows'] = int(m_active_flows.group(1))
-            summary_dict['server']['m_active_flows'] = int(m_active_flows.group(2))
-
-        if m_est_flows:
-            summary_dict['client']['m_est_flows'] = int(m_est_flows.group(1))
-            summary_dict['server']['m_est_flows'] = int(m_est_flows.group(2))
-
-        if m_tx_bw_l7_r:
-            summary_dict['client']['m_tx_bw_l7_r'] = float(m_tx_bw_l7_r.group(1))
-            summary_dict['server']['m_tx_bw_l7_r'] = float(m_tx_bw_l7_r.group(2))
-
-        if m_rx_bw_l7_r:
-            summary_dict['client']['m_rx_bw_l7_r'] = float(m_rx_bw_l7_r.group(1))
-            summary_dict['server']['m_rx_bw_l7_r'] = float(m_rx_bw_l7_r.group(2))
-
-        if m_tx_bw_l7_total_r:
-            summary_dict['client']['m_tx_bw_l7_total_r'] = float(m_tx_bw_l7_total_r.group(1))
-            summary_dict['server']['m_tx_bw_l7_total_r'] = float(m_tx_bw_l7_total_r.group(2))
-
-        if m_tx_pps_r:
-            summary_dict['client']['m_tx_pps_r'] = float(m_tx_pps_r.group(1))
-            summary_dict['server']['m_tx_pps_r'] = float(m_tx_pps_r.group(2))
-
-        if m_rx_pps_r:
-            summary_dict['client']['m_rx_pps_r'] = float(m_rx_pps_r.group(1))
-            summary_dict['server']['m_rx_pps_r'] = float(m_rx_pps_r.group(2))
-
-        if m_avg_size:
-            summary_dict['client']['m_avg_size'] = float(m_avg_size.group(1))
-            summary_dict['server']['m_avg_size'] = float(m_avg_size.group(2))
-
-        if m_tx_ratio:
-            summary_dict['client']['m_tx_ratio'] = float(m_tx_ratio.group(1))
-            summary_dict['server']['m_tx_ratio'] = float(m_tx_ratio.group(2))
-
-        if tcps_conn_attempt:
-            summary_dict['client']['tcps_conn_attempt'] = int(tcps_conn_attempt.group(1))
-            summary_dict['server']['tcps_conn_attempt'] = int(tcps_conn_attempt.group(2))
-
-        if tcps_connects:
-            summary_dict['client']['tcps_connects'] = int(tcps_connects.group(1))
-            summary_dict['server']['tcps_connects'] = int(tcps_connects.group(2))
-
-        if tcps_segstimed:
-            summary_dict['client']['tcps_segstimed'] = int(tcps_segstimed.group(1))
-            summary_dict['server']['tcps_segstimed'] = int(tcps_segstimed.group(2))
-
-        if tcps_rtt_updated:
-            summary_dict['client']['tcps_rtt_updated'] = int(tcps_rtt_updated.group(1))
-            summary_dict['server']['tcps_rtt_updated'] = int(tcps_rtt_updated.group(2))
-
-        if tcps_total_sent:
-            summary_dict['client']['tcps_total_sent'] = int(tcps_total_sent.group(1))
-            summary_dict['server']['tcps_total_sent'] = int(tcps_total_sent.group(2))
-
-        if tcps_ctrl_sent:
-            summary_dict['client']['tcps_ctrl_sent'] = int(tcps_ctrl_sent.group(1))
-            summary_dict['server']['tcps_ctrl_sent'] = int(tcps_ctrl_sent.group(2))
-
-        if tcps_acks_sent:
-            summary_dict['client']['tcps_acks_sent'] = int(tcps_acks_sent.group(1))
-            summary_dict['server']['tcps_acks_sent'] = int(tcps_acks_sent.group(2))
-
-        if tcps_drops:
-            summary_dict['client']['tcps_drops'] = int(tcps_drops.group(1))
-            summary_dict['server']['tcps_drops'] = int(tcps_drops.group(2))
-
-        if tcps_closed:
-            summary_dict['client']['tcps_closed'] = int(tcps_closed.group(1))
-            summary_dict['server']['tcps_closed'] = int(tcps_closed.group(2))
-
-        if embryonic_tcp_conn_drops:
-            summary_dict['client']['embryonic_tcp_conn_drops'] = int(embryonic_tcp_conn_drops.group(1))
-            summary_dict['server']['embryonic_tcp_conn_drops'] = int(embryonic_tcp_conn_drops.group(2))
-
-        if tcps_retransmit_syn_timeouts:
-            summary_dict['client']['tcps_retransmit_syn_timeouts'] = int(tcps_retransmit_syn_timeouts.group(1))
-            summary_dict['server']['tcps_retransmit_syn_timeouts'] = int(tcps_retransmit_syn_timeouts.group(2))
-
-        if tcps_keepalive_timeouts:
-            summary_dict['client']['tcps_keepalive_timeouts'] = int(tcps_keepalive_timeouts.group(1))
-            summary_dict['server']['tcps_keepalive_timeouts'] = int(tcps_keepalive_timeouts.group(2))
-
-        if tcps_conn_keepalive_drops:
-            summary_dict['client']['tcps_conn_keepalive_drops'] = int(tcps_conn_keepalive_drops.group(1))
-            summary_dict['server']['tcps_conn_keepalive_drops'] = int(tcps_conn_keepalive_drops.group(2))
+            checkpoint = "Validate summary stats"
+            validate_stats = validate_summary_stats(summary_dict=summary_dict)
+            if validate_stats:
+                result['max_cps'] = cps
+                result['max_latency'] = summary_dict['max_latency']
+                result['avg_latency'] = summary_dict['avg_latency']
+                result['status'] = True
+                result['summary_dict'] = summary_dict
+            else:
+                if cps != base_cps and 'max_cps' in result:
+                    fun_test.log(
+                        "<=======> FAILED Iteration: %d CPS: %d Profile: %s <=======>" % (count, cps, profile_name),
+                        fun_test.LOG_LEVEL_CRITICAL)
+                    fun_test.log("<=======> Last Successful CPS was %d in iteration %d <=======>" % (result['max_cps'],
+                                                                                                     count - 1))
+                    max_cps_found = True
+                else:
+                    fun_test.log(
+                        "<=======> FAILED Iteration: %d Base CPS: %d Profile: %s <=======>" % (count, cps,
+                                                                                               profile_name),
+                        fun_test.LOG_LEVEL_CRITICAL)
+                    break
+            fun_test.add_checkpoint(checkpoint)
+            count += 1
     except Exception as ex:
         fun_test.critical(str(ex))
-    return summary_dict
+    finally:
+        trex_obj.remove_file(file_name=output_file_path)
+    return result
+
+
+def validate_summary_stats(summary_dict):
+    result = False
+    try:
+        if 'tcps_conn_attempt' in summary_dict['client'] and 'tcps_connects' in summary_dict['client']:
+            fun_test.test_assert_expected(expected=summary_dict['client']['tcps_conn_attempt'],
+                                          actual=summary_dict['client']['tcps_connects'],
+                                          message='Ensure TCP connections attempted equal to connections established.',
+                                          ignore_on_success=True)
+
+        fun_test.simple_assert('embryonic_tcp_conn_drops' not in summary_dict['client'],
+                               "check for embryonic connections dropped")
+        fun_test.simple_assert('tcps_retransmit_syn_timeouts' not in summary_dict['client'],
+                               "check for retransmit SYN timeouts")
+        fun_test.simple_assert('tcps_keepalive_timeouts' not in summary_dict['client'], "check for keepalive timeouts")
+        fun_test.simple_assert('tcps_conn_keepalive_drops' not in summary_dict['client'],
+                               "check for connections dropped in keepalive")
+        fun_test.simple_assert('max_latency' in summary_dict, "check for max latency")
+        fun_test.simple_assert('avg_latency' in summary_dict, "check for avg latency")
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+
 
