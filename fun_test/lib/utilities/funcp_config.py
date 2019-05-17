@@ -11,7 +11,9 @@ from scripts.networking.lib_nw import funcp
 
 class FunControlPlaneBringup:
 
-    def __init__(self, fs_name, boot_image_f1_0=None, boot_image_f1_1=None, boot_args_f1_0=None, boot_args_f1_1=None):
+    def __init__(self, fs_name, boot_image_f1_0="funos-f1.stripped_retimer_test_vdd_delay.gz",
+                 boot_image_f1_1="funos-f1.stripped_retimer_test_vdd_delay.gz", boot_args_f1_0=None,
+                 boot_args_f1_1=None):
         self.fs_name = fs_name
         self.boot_image_f1_0 = boot_image_f1_0
         self.boot_image_f1_1 = boot_image_f1_1
@@ -179,6 +181,8 @@ class FunControlPlaneBringup:
         for section in sections:
             fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
 
+        linux_obj_come.disconnect()
+
     def funcp_abstract_config(self, abstract_config_file=None, workspace="/tmp",host_ip="qa-ubuntu-02",
                               ssh_username="qa-admin", ssh_password="Precious1*"):
         if not abstract_config_file:
@@ -201,6 +205,7 @@ class FunControlPlaneBringup:
             fun_test.test_assert(expression=linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1]
                                                               + " --json ./abstract_cfg/" + file_name),
                                  message="Execute abstract config on %s" % f1)
+        linux_obj.disconnect()
 
     def assign_mpg_ips(self):
 
@@ -253,3 +258,19 @@ class FunControlPlaneBringup:
             self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
             linux_containers[docker_name].disconnect()
             fun_test.log(self.mpg_ips)
+
+    def prepare_come_for_control_plane(self):
+        linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                          ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                          ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        ws = "/mnt/keep"
+        if not linux_obj.check_file_directory_exists(path=ws):
+            linux_obj.create_directory(dir_name=ws, sudo=True)
+        funsdk_obj = funcp.FunSDK(linux_obj, ws=ws)
+        fun_test.test_assert(funsdk_obj.clone(), 'git clone FunSDK repo')
+        linux_obj.sudo_command(command="apt-get upgrade")
+        linux_obj.sudo_command(command="apt-get install python build-essential gcc-8 libelf-dev python-parse "
+                                       "python-yaml python-jinja2 python-pip")
+        linux_obj.sudo_command(command="pip install pexpect")
+        linux_obj.sudo_command(command="apt-get install docker.io")
+        linux_obj.disconnect()
