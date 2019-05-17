@@ -105,7 +105,7 @@ def get_pps_from_mbps(mbps, byte_frame_size):
     return (float(mbps) * 1000000) / (byte_frame_size * 8)
 
 
-def execute_shell_file(linux_obj, target_file, output_file=None):
+def execute_shell_file(linux_obj, target_file, output_file=None, sudo=False):
     output = {}
     output['result'] = False
     try:
@@ -114,7 +114,10 @@ def execute_shell_file(linux_obj, target_file, output_file=None):
         cmd = "sh %s" % target_file
         if output_file:
             cmd = "sh %s > %s" % (target_file, output_file)
-        out = linux_obj.command(command=cmd)
+        if sudo:
+            out = linux_obj.sudo_command(command=cmd)
+        else:
+            out = linux_obj.command(command=cmd)
         output['output'] = out
         output['result'] = True
     except Exception as ex:
@@ -226,6 +229,20 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
             fun_test.log(line)
         fun_test.log_enable_timestamps()
 
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return mpstat_dump_filepath
+
+
+def populate_tcpdump_redirect_file(dump_filename):
+    mpstat_dump_filepath = None
+    try:
+        contents = "To access the pcap file for this run. Log in to poc-server-06 (username: localadmin) and " \
+                   "cd to /home/localadmin/netperf_teramark_capture. " \
+                   "File name is <funos_version>_<no_of_conn>_tcpdump.pcap\n For e.g 6459_1_tcpdump.pcap"
+        tcpdump_dump_filepath = LOGS_DIR + "/%s" % dump_filename
+        with open(tcpdump_dump_filepath, 'w') as f:
+            f.writelines(contents)
     except Exception as ex:
         fun_test.critical(str(ex))
     return mpstat_dump_filepath
@@ -667,6 +684,35 @@ def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file
     return True
 
 
+def run_tcpdump_command(linux_obj, tcp_dump_file, interface, snaplen=80, filecount=1, count=2000000):
+    result = None
+    try:
+        cmd = "sudo tcpdump -leni %s tcp -w %s -s %d -W %d -c %d" % (interface, tcp_dump_file, snaplen,
+                                                                     filecount, count)
+        fun_test.log("tcpdump command formed: %s" % cmd)
+        process_id = linux_obj.start_bg_process(command=cmd)
+        fun_test.log("tcpdump started process id: %s" % process_id)
+        if process_id:
+            result = process_id
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_interface_name(file_path):
+    interface_name = None
+    try:
+        with open(file_path, 'r') as f:
+            contents = f.read()
+            m = re.search(r'sudo\s+ifconfig\s+(\w+).*', contents, re.IGNORECASE)
+            if m:
+                interface_name = m.group(1)
+        fun_test.log("Interface used: %s" % interface_name)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return interface_name
+
+
 def run_netperf(linux_obj, cmd, duration=60):
     result = {"throughput": -1}
     try:
@@ -721,4 +767,164 @@ def create_performance_table(total_throughput, num_flows, total_pps):
         fun_test.critical(str(ex))
     return table_created
 
+
+def parse_trex_summary_stats(summary_contents):
+    summary_dict = {'client': {}, 'server': {}}
+    try:
+        total_pkt_drop = re.search(r'Total-pkt-drop\s+:\s+(\d+)', summary_contents, re.IGNORECASE)
+        total_tx_bytes = re.search(r'Total-tx-bytes\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_tx_sw_bytes = re.search(r'Total-tx-sw-bytes\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_rx_bytes = re.search(r'Total-rx-bytes\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_tx_pkt = re.search(r'Total-tx-pkt\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_rx_pkt = re.search(r'Total-rx-pkt\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_sw_tx_pkt = re.search(r'Total-sw-tx-pkt\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_sw_err = re.search(r'Total-sw-err\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_arp_sent = re.search(r'Total\sarp\ssent\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+        total_arp_recv = re.search(r'Total\sarp\sreceived\s+:\s+(\d+)', summary_contents, re.DOTALL | re.IGNORECASE)
+
+        # Client/Server stats
+        m_active_flows = re.search(r'm_active_flows\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        m_est_flows = re.search(r'm_est_flows\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        m_tx_bw_l7_r = re.search(r'm_tx_bw_l7_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
+        m_rx_bw_l7_r = re.search(r'm_rx_bw_l7_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
+        m_tx_bw_l7_total_r = re.search(r'm_tx_bw_l7_total_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
+        m_tx_pps_r = re.search(r'm_tx_pps_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
+        m_rx_pps_r = re.search(r'm_rx_pps_r.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
+        m_avg_size = re.search(r'm_avg_size.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
+        m_tx_ratio = re.search(r'm_tx_ratio.*.(\d+.\d+).*.(\d+.\d)', summary_contents)
+        tcps_conn_attempt = re.search(r'tcps_connattempt\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_connects = re.search(r'tcps_connects\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_closed = re.search(r'tcps_closed\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_segstimed = re.search(r'tcps_segstimed\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_rtt_updated = re.search(r'tcps_rttupdated\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_total_sent = re.search(r'tcps_sndtotal\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_ctrl_sent = re.search(r'tcps_sndctrl\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_acks_sent = re.search(r'tcps_sndacks\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_drops = re.search(r'tcps_drops\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        embryonic_tcp_conn_drops = re.search(r'tcps_conndrops\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_retransmit_syn_timeouts = re.search(r'tcps_rexmttimeo_syn\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_keepalive_timeouts = re.search(r'tcps_keeptimeo\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+        tcps_conn_keepalive_drops = re.search(r'tcps_keepdrops\s+\|\s+(\d+)\s+\|\s+(\d+)', summary_contents)
+
+        if total_pkt_drop:
+            summary_dict['total_pkt_drop'] = int(total_pkt_drop.group(1))
+
+        if total_tx_bytes:
+            summary_dict['total_tx_bytes'] = int(total_tx_bytes.group(1))
+
+        if total_tx_sw_bytes:
+            summary_dict['total_tx_sw_bytes'] = int(total_tx_sw_bytes.group(1))
+
+        if total_rx_bytes:
+            summary_dict['total_rx_bytes'] = int(total_rx_bytes.group(1))
+
+        if total_tx_pkt:
+            summary_dict['total_tx_pkt'] = int(total_tx_pkt.group(1))
+
+        if total_rx_pkt:
+            summary_dict['total_rx_pkt'] = int(total_rx_pkt.group(1))
+
+        if total_sw_tx_pkt:
+            summary_dict['total_sw_tx_pkt'] = int(total_sw_tx_pkt.group(1))
+
+        if total_sw_err:
+            summary_dict['total_sw_err'] = int(total_sw_err.group(1))
+
+        if total_arp_sent:
+            summary_dict['total_arp_sent'] = int(total_arp_sent.group(1))
+
+        if total_arp_recv:
+            summary_dict['total_arp_recv'] = int(total_arp_recv.group(1))
+
+        # Client/Server stats
+        if m_active_flows:
+            summary_dict['client']['m_active_flows'] = int(m_active_flows.group(1))
+            summary_dict['server']['m_active_flows'] = int(m_active_flows.group(2))
+
+        if m_est_flows:
+            summary_dict['client']['m_est_flows'] = int(m_est_flows.group(1))
+            summary_dict['server']['m_est_flows'] = int(m_est_flows.group(2))
+
+        if m_tx_bw_l7_r:
+            summary_dict['client']['m_tx_bw_l7_r'] = float(m_tx_bw_l7_r.group(1))
+            summary_dict['server']['m_tx_bw_l7_r'] = float(m_tx_bw_l7_r.group(2))
+
+        if m_rx_bw_l7_r:
+            summary_dict['client']['m_rx_bw_l7_r'] = float(m_rx_bw_l7_r.group(1))
+            summary_dict['server']['m_rx_bw_l7_r'] = float(m_rx_bw_l7_r.group(2))
+
+        if m_tx_bw_l7_total_r:
+            summary_dict['client']['m_tx_bw_l7_total_r'] = float(m_tx_bw_l7_total_r.group(1))
+            summary_dict['server']['m_tx_bw_l7_total_r'] = float(m_tx_bw_l7_total_r.group(2))
+
+        if m_tx_pps_r:
+            summary_dict['client']['m_tx_pps_r'] = float(m_tx_pps_r.group(1))
+            summary_dict['server']['m_tx_pps_r'] = float(m_tx_pps_r.group(2))
+
+        if m_rx_pps_r:
+            summary_dict['client']['m_rx_pps_r'] = float(m_rx_pps_r.group(1))
+            summary_dict['server']['m_rx_pps_r'] = float(m_rx_pps_r.group(2))
+
+        if m_avg_size:
+            summary_dict['client']['m_avg_size'] = float(m_avg_size.group(1))
+            summary_dict['server']['m_avg_size'] = float(m_avg_size.group(2))
+
+        if m_tx_ratio:
+            summary_dict['client']['m_tx_ratio'] = float(m_tx_ratio.group(1))
+            summary_dict['server']['m_tx_ratio'] = float(m_tx_ratio.group(2))
+
+        if tcps_conn_attempt:
+            summary_dict['client']['tcps_conn_attempt'] = int(tcps_conn_attempt.group(1))
+            summary_dict['server']['tcps_conn_attempt'] = int(tcps_conn_attempt.group(2))
+
+        if tcps_connects:
+            summary_dict['client']['tcps_connects'] = int(tcps_connects.group(1))
+            summary_dict['server']['tcps_connects'] = int(tcps_connects.group(2))
+
+        if tcps_segstimed:
+            summary_dict['client']['tcps_segstimed'] = int(tcps_segstimed.group(1))
+            summary_dict['server']['tcps_segstimed'] = int(tcps_segstimed.group(2))
+
+        if tcps_rtt_updated:
+            summary_dict['client']['tcps_rtt_updated'] = int(tcps_rtt_updated.group(1))
+            summary_dict['server']['tcps_rtt_updated'] = int(tcps_rtt_updated.group(2))
+
+        if tcps_total_sent:
+            summary_dict['client']['tcps_total_sent'] = int(tcps_total_sent.group(1))
+            summary_dict['server']['tcps_total_sent'] = int(tcps_total_sent.group(2))
+
+        if tcps_ctrl_sent:
+            summary_dict['client']['tcps_ctrl_sent'] = int(tcps_ctrl_sent.group(1))
+            summary_dict['server']['tcps_ctrl_sent'] = int(tcps_ctrl_sent.group(2))
+
+        if tcps_acks_sent:
+            summary_dict['client']['tcps_acks_sent'] = int(tcps_acks_sent.group(1))
+            summary_dict['server']['tcps_acks_sent'] = int(tcps_acks_sent.group(2))
+
+        if tcps_drops:
+            summary_dict['client']['tcps_drops'] = int(tcps_drops.group(1))
+            summary_dict['server']['tcps_drops'] = int(tcps_drops.group(2))
+
+        if tcps_closed:
+            summary_dict['client']['tcps_closed'] = int(tcps_closed.group(1))
+            summary_dict['server']['tcps_closed'] = int(tcps_closed.group(2))
+
+        if embryonic_tcp_conn_drops:
+            summary_dict['client']['embryonic_tcp_conn_drops'] = int(embryonic_tcp_conn_drops.group(1))
+            summary_dict['server']['embryonic_tcp_conn_drops'] = int(embryonic_tcp_conn_drops.group(2))
+
+        if tcps_retransmit_syn_timeouts:
+            summary_dict['client']['tcps_retransmit_syn_timeouts'] = int(tcps_retransmit_syn_timeouts.group(1))
+            summary_dict['server']['tcps_retransmit_syn_timeouts'] = int(tcps_retransmit_syn_timeouts.group(2))
+
+        if tcps_keepalive_timeouts:
+            summary_dict['client']['tcps_keepalive_timeouts'] = int(tcps_keepalive_timeouts.group(1))
+            summary_dict['server']['tcps_keepalive_timeouts'] = int(tcps_keepalive_timeouts.group(2))
+
+        if tcps_conn_keepalive_drops:
+            summary_dict['client']['tcps_conn_keepalive_drops'] = int(tcps_conn_keepalive_drops.group(1))
+            summary_dict['server']['tcps_conn_keepalive_drops'] = int(tcps_conn_keepalive_drops.group(2))
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return summary_dict
 
