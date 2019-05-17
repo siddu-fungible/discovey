@@ -33,6 +33,17 @@ except (KeyError, ValueError):
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
+
+try:
+    inputs = fun_test.get_job_inputs()
+    if inputs and inputs.get('lso', 0):
+        enable_tso = True
+    else:
+        enable_tso = False
+except:
+    enable_tso = False
+
+
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
@@ -73,8 +84,14 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
-        fun_test.test_assert(funeth_obj.enable_tso(hu), 'Enable HU host {} funeth interfaces TSO.'.format(
-            linux_obj.host_ip))
+        if enable_tso:
+            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False),
+                                 'Enable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        else:
+            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
+                                 'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
+                             'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
@@ -97,7 +114,8 @@ class FunethSanity(FunTestScript):
 
         # Boot up FS1600
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
-            boot_args = "app=hw_hsu_test retimer=0,1 --disable_dispatch_loop_switch --dpc-uart --dpc-server --csr-replay --all_100g"
+            #boot_args = "app=hw_hsu_test retimer=0,1 --disable_dispatch_loop_switch --dpc-uart --dpc-server --csr-replay --all_100g"
+            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --rxlog"
             # fs = Fs.get(disable_f1_index=1)
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(dut_index=0,

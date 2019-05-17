@@ -349,12 +349,11 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 if float(record['AvgFrameSize']) == frame_size:
                     if record['Result'] == self.PASSED:
                         forwarding_rates.append(float(record['ForwardingRate(fps)']))
-            try:
+            if not forwarding_rates:
+                fun_test.log("All results failed for %s frame size" % (frame_size))
+                return max_rate_record
+            else:
                 max_rate = max(forwarding_rates)
-            except ValueError as ex:
-                fun_test.critical(str(ex))
-                max_rate = -1
-            if max_rate != -1:
                 for record in records:
                     if max_rate == float(record['ForwardingRate(fps)']):
                         max_rate_record = record
@@ -420,6 +419,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
 
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     if display_negative_results:
+                        fun_test.log("Display of negative results flag set to True")
                         data_dict['pps'] = -1
                         data_dict['throughput'] = -1
                         data_dict['latency_min'] = -1
@@ -432,6 +432,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         failed_result_found = True
                         any_result_failed = True
                     elif max_rate_record:
+                        fun_test.log("Max result seen for frame %s" % frame_size)
                         data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
                         #throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
                         #                                                frame_size=frame_size)
@@ -445,6 +446,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         data_dict['jitter_max'] = round(float(max_rate_record['MaximumJitter(us)']), 2)
                         data_dict['jitter_avg'] = round(float(max_rate_record['AverageJitter(us)']), 2)
                     else:
+                        fun_test.log("No entry as PASSED seen for frame size %s" % frame_size)
                         data_dict['pps'] = -1
                         data_dict['throughput'] = -1
                         data_dict['latency_min'] = -1

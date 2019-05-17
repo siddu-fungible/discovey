@@ -187,16 +187,6 @@ class TestTcpPerformance(FunTestCase):
             fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command")
 
-        checkpoint = "Peek stats resource pc 1 before"
-        resource_pc_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_pc.txt'
-        fun_test.simple_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                                                filename=resource_pc_temp_filename,
-                                                                pc_id=1, count=1), checkpoint)
-        checkpoint = "Peek stats resource pc 2 before"
-        fun_test.simple_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                                                filename=resource_pc_temp_filename,
-                                                                pc_id=2, count=1), checkpoint)
-
         fun_test.log_section("Starting netperf test")
         cmd_list = get_netperf_cmd_list(dip=test_parameters['dest_ip'],
                                         duration=test_parameters['duration'],
@@ -204,24 +194,12 @@ class TestTcpPerformance(FunTestCase):
                                         send_size=test_parameters['send_size'])
         fun_test.simple_assert(cmd_list, 'Ensure netperf command formed')
 
-        netperf_result = run_netperf_concurrently(cmd_list=cmd_list, linux_obj=nu_lab_obj)
+        network_controller_obj.disconnect()
+        netperf_result = run_netperf_concurrently(cmd_list=cmd_list, linux_obj=nu_lab_obj,
+                                                  network_controller_obj=network_controller_obj, display_output=True)
         fun_test.test_assert(netperf_result, 'Ensure result found')
 
-        checkpoint = "Get Flow list during test"
-        output = network_controller_obj.get_flow_list()
-        flowlist_temp_filename = str(version) + "_" + str(self.num_flows) + '_flowlist.txt'
-        fun_test.test_assert(populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
-                             checkpoint)
-
-        checkpoint = "Peek stats resource pc 1 after"
-        resource_pc_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_pc.txt'
-        fun_test.test_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                                              filename=resource_pc_temp_filename,
-                                                              pc_id=1, count=1), checkpoint)
-        checkpoint = "Peek stats resource pc 2 after"
-        fun_test.test_assert(populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                                              filename=resource_pc_temp_filename,
-                                                              pc_id=2, count=1), checkpoint)
+        fun_test.sleep('Wait after traffic', seconds=5)
 
         total_throughput = netperf_result['total_throughput']
         fun_test.log("Total throughput seen is %s" % total_throughput)

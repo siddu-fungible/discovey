@@ -19,19 +19,8 @@ tb_config = {
             "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
+            "fnid": 2,
             "perf_multiplier": 1
-        },
-    },
-    "tg_info": {
-        0: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.20.154",
-            "user": "fun",
-            "passwd": "123",
-            "ipmi_name": "10.1.20.153",
-            "ipmi_iface": "lanplus",
-            "ipmi_user": "admin",
-            "ipmi_passwd": "admin",
         }
     }
 }
@@ -40,8 +29,15 @@ tb_config = {
 def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
     host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
                              format(sleep_time, iostat_interval, iostat_iter), timeout=400)
-    fun_test.shared_variables["iostat_output"] = \
-        host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d")
+    host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d > /tmp/iostat_final.log")
+
+    fun_test.shared_variables["avg_tps"] = host_thread.sudo_command(
+        "awk '{ total += $2 } END { print total/NR }' /tmp/iostat_final.log")
+
+    fun_test.shared_variables["avg_kbr"] = host_thread.sudo_command(
+        "awk '{ total += $3 } END { print total/NR }' /tmp/iostat_final.log")
+
+    host_thread.disconnect()
 
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
@@ -96,13 +92,10 @@ class BLTVolumePerformanceScript(FunTestScript):
         """)
 
     def setup(self):
-        # topology_obj_helper = TopologyHelper(spec=topology_dict)
-        # topology = topology_obj_helper.deploy()
-
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
 
-        fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
+        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
@@ -122,9 +115,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
-        # pass
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # Detach the volume
         try:
             self.blt_details = fun_test.shared_variables["blt_details"]
             self.stripe_details = fun_test.shared_variables["stripe_details"]
@@ -243,8 +233,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt_details"] = self.blt_details
             fun_test.shared_variables["stripe_details"] = self.stripe_details
 
-            # self.end_host.enter_sudo()
             self.end_host.modprobe(module="nvme")
+            self.end_host.sudo_command("iptables -F")
+            self.end_host.sudo_command("ip6tables -F")
             fun_test.sleep("Loading nvme module", 2)
             command_result = self.end_host.lsmod(module="nvme")
             fun_test.simple_assert(command_result, "Loading nvme module")
@@ -297,14 +288,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching Stripe volume on DUT")
 
-            # fun_test.shared_variables["blt"]["setup_created"] = True # Moved after warm up traffic
-            # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
-
-            # ns-rescan is only required if volumes are created through dpcsh commands
-            # command_result = self.end_host.sudo_command("nvme ns-rescan /dev/nvme0")
-            # fun_test.log("ns-rescan output is: {}".format(command_result))
 
             # Checking that the above created BLT volume is visible to the end host
             fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
@@ -332,37 +317,20 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         test_method = testcase[3:]
 
         if hasattr(self, "create_file_system") and self.create_file_system:
-            self.end_host.command("sudo mkfs.xfs -f /dev/nvme0n1")
-            self.end_host.command("sudo mount /dev/nvme0n1 /mnt")
+            self.end_host.sudo_command("mkfs.xfs -f /dev/nvme0n1")
+            self.end_host.sudo_command("mount /dev/nvme0n1 /mnt")
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             fio_output = self.end_host.pcie_fio(filename="/mnt/testfile.dat",
                                                 **self.warm_up_fio_cmd_args)
             fun_test.test_assert(fio_output, "Pre-populating the testfile")
-            self.end_host.command("sudo umount /mnt")
-            self.end_host.command("sudo mount -o ro /dev/nvme0n1 /mnt")
+            self.end_host.sudo_command("umount /mnt")
+            self.end_host.sudo_command("mount -o ro /dev/nvme0n1 /mnt")
 
         if hasattr(self, "create_file_system") and self.create_file_system:
             test_filename = "/mnt/testfile.dat"
         else:
             test_filename = self.nvme_block_device
-
-        # obj = FioPerfHelper(handle=self.end_host,
-        #                     dpc_conntroller=self.storage_controller,
-        #                     fio_testfile_size=self.fio_cmd_args["size"],
-        #                     fio_rwmode=self.fio_modes[0],
-        #                     nvme_device_name=test_filename,
-        #                     fio_test_runtime=self.perf_logic_params["fio_run_time"],
-        #                     ioengine=self.fio_cmd_args["ioengine"],
-        #                     cpu_usage_limit=self.perf_logic_params["max_cpu"],
-        #                     iowait_limit=self.perf_logic_params["max_iowait"],
-        #                     eqm_limit=self.perf_logic_params["eqm_difference"])
-        # use_numjobs, use_num_cores = obj.get_num_jobs_num_cores()
-
-        # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
-        # self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-        # storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.blt_details["type"], self.thin_uuid,
-        #                                             "stats")
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -377,7 +345,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         diff_stats = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
@@ -418,8 +386,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                              format(mode, fio_block_size, fio_iodepth))
 
                 # Flush cache before read test
-                self.end_host.command("sudo sh -c \"sync\"")
-                self.end_host.command("sudo sh -c \"echo 3 > /proc/sys/vm/drop_caches\"")
+                self.end_host.sudo_command("sync")
+                self.end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
 
                 # Check EQM stats before test
                 self.eqm_stats_before = {}
@@ -432,14 +400,12 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                               host_thread=self.iostat_host_thread,
                                                               sleep_time=self.fio_cmd_args["runtime"] / 4,
                                                               iostat_interval=self.iostat_details["interval"],
-                                                              iostat_iter=self.iostat_details["iterations"] + 1)
+                                                              iostat_iter=(self.fio_cmd_args["runtime"] / 4) + 1)
 
                 fun_test.log("Running FIO...")
                 fio_job_name = "fio_" + mode + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                # cpus_allowed_list = obj.form_cores_allowed_list()
-                # cpus_allowed = obj.cores_allowed_comma_format(cpus_allowed_list, use_num_cores)
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=test_filename,
                                                                  rw=mode,
                                                                  bs=fio_block_size,
@@ -447,51 +413,24 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  name=fio_job_name,
                                                                  **self.fio_cmd_args)
 
-                # iostat_results = obj.get_fio_analysis_results()
-                # fun_test.debug(iostat_results)
-                # fun_test.log_section("Iostat results")
-                # fun_test.log("Average IOPS  : {}".format(iostat_results["average_tps"]))
-                # fun_test.log("Average BW    : {} Kb/s".format(iostat_results["average_kbr"]))
-                # fun_test.log("Maximum IOPS  : {} ".format(iostat_results["maximum_tps"]))
-                # fun_test.log("Maximum BW    : {} Kb/s".format(iostat_results["maximum_kbr"]))
-                # avg_bw_mbps = iostat_results["average_kbr"] / 1000
-                # avg_tps = iostat_results["average_tps"]
-
-
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 fun_test.test_assert(fio_output[combo][mode], "Fio {} test for bs {} & iodepth {}".
                                      format(mode, fio_block_size, fio_iodepth))
 
                 fun_test.join_thread(fun_test_thread_id=iostat_thread)
-                self.iostat_output = fun_test.shared_variables["iostat_output"].split("\n")
-
+                avg_tps = float(fun_test.shared_variables["avg_tps"])
+                avg_kbr = float(fun_test.shared_variables["avg_kbr"])
 
                 self.eqm_stats_after = {}
                 self.eqm_stats_after = self.storage_controller.peek(props_tree="stats/eqm")
 
                 if hasattr(self, "create_file_system") and self.create_file_system:
-                    self.end_host.command("sudo umount /mnt")
+                    self.end_host.sudo_command("umount /mnt")
 
-                total_tps = 0
-                total_kbs_read = 0
-                for x in self.iostat_output:
-                    dev_output = ' '.join(x.split())
-                    device_name = dev_output.split(" ")[0]
-                    tps = float(dev_output.split(" ")[1])
-                    kbs_read = float(dev_output.split(" ")[2])
-                    iostat_bs = kbs_read / tps
-                    # Here we are rounding as some stats reportedly show 3.999 & 4.00032 etc
-                    if round(iostat_bs) != round(plain_block_size):
-                        fun_test.critical("Block size reported by iostat {} is different than {}".
-                                          format(iostat_bs, plain_block_size))
-                    total_tps += tps
-                    total_kbs_read += kbs_read
-                avg_tps = total_tps / self.iostat_details["iterations"]
-                avg_kbs_read = total_kbs_read / self.iostat_details["iterations"]
                 fun_test.log("The avg TPS is : {}".format(avg_tps))
-                fun_test.log("The avg read rate is {} KB/s".format(avg_kbs_read))
-                fun_test.log("The IO size is {} kB".format(avg_kbs_read / avg_tps))
+                fun_test.log("The avg read rate is {} KB/s".format(avg_kbr))
+                fun_test.log("The IO size is {} kB".format(avg_kbr / avg_tps))
 
                 for field, value in self.eqm_stats_before["data"].items():
                     current_value = self.eqm_stats_after["data"][field]
@@ -532,29 +471,18 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         else:
                             ifop = "lesser"
                             elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
                         if compare(actual, value, self.fio_pass_threshold, ifop):
                             fio_result[combo][mode] = False
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))'''
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} got {} than the expected value {}".
                                          format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
-                            '''fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
                 row_data_dict["readiops"] = int(round(avg_tps))
-                row_data_dict["readbw"] = int(round(avg_kbs_read/1000))
-                row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
+                row_data_dict["readbw"] = int(round(avg_kbr/1000))
 
                 # Building the table row for this variation for both the script table and performance dashboard
                 row_data_list = []
@@ -579,11 +507,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
 
-        # fun_test.test_assert(test_result, self.summary)
         fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
-        # self.storage_controller.disconnect()
         pass
 
 
@@ -592,7 +518,7 @@ class BLTFioRandRead12XFS(BLTVolumePerformanceTestcase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Random Read performance on a file in XFS partition created on stripe volume "
-                                      "with 12 threads ",
+                                      "with numjob=20 & IODepth=2",
                               steps='''
         1. Create a stripe_vol with 2 BLT volume on FS attached with SSD.
         2. Export (Attach) this stripe_vol to the Internal COMe host connected via the PCIe interface. 

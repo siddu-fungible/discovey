@@ -190,6 +190,7 @@ class MetricChart(models.Model):
     visualization_unit = models.CharField(max_length=20, default="")
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
+    platform = models.TextField(default=FunPlatform.F1)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
@@ -880,6 +881,20 @@ class BltVolumePerformance(models.Model):
                                                 self.output_write_avg_latency,
                                                 self.output_read_avg_latency)
 
+class InspurZipCompressionRatiosPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_effort_name = models.TextField(default="")
+    input_corpus_name = models.TextField(default="")
+    output_f1_compression_ratio = models.FloatField(verbose_name="F1 Compression Ratio", default=-1)
+    output_f1_compression_ratio_unit = models.TextField(default="number")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
 class AllocSpeedPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
@@ -1195,12 +1210,16 @@ class HuThroughputPerformance(models.Model):
     input_frame_size = models.IntegerField(verbose_name="Frame Size")
     output_throughput_h2n = models.FloatField(verbose_name="Throughput in Gbps", default=-1)
     output_throughput_n2h = models.FloatField(verbose_name="Throughput in Gbps", default=-1)
+    output_throughput_h2h = models.FloatField(verbose_name="Throughput in Gbps", default=-1)
     output_pps_h2n = models.FloatField(verbose_name="Packets per sec", default=-1)
     output_pps_n2h = models.FloatField(verbose_name="Packets per sec", default=-1)
+    output_pps_h2h = models.FloatField(verbose_name="Packets per sec", default=-1)
     output_throughput_h2n_unit = models.TextField(default="Gbps")
     output_throughput_n2h_unit = models.TextField(default="Gbps")
+    output_throughput_h2h_unit = models.TextField(default="Gbps")
     output_pps_h2n_unit = models.TextField(default="Mpps")
     output_pps_n2h_unit = models.TextField(default="Mpps")
+    output_pps_h2h_unit = models.TextField(default="Mpps")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)
@@ -1240,6 +1259,15 @@ class HuLatencyPerformance(models.Model):
     output_jitter_min_n2h = models.FloatField(verbose_name="Jitter min in us", default=-1)
     output_jitter_max_n2h = models.FloatField(verbose_name="Jitter max in us", default=-1)
     output_jitter_avg_n2h = models.FloatField(verbose_name="Jitter avg in us", default=-1)
+    output_latency_avg_h2h = models.FloatField(verbose_name="Latency Avg in us", default=-1)
+    output_latency_max_h2h = models.FloatField(verbose_name="Latency Max in us", default=-1)
+    output_latency_min_h2h = models.FloatField(verbose_name="Latency Min in us", default=-1)
+    output_latency_P99_h2h = models.FloatField(verbose_name="Tail Latency in us", default=-1)
+    output_latency_P90_h2h = models.FloatField(verbose_name="P90 Latency in us", default=-1)
+    output_latency_P50_h2h = models.FloatField(verbose_name="P50 Latency in us", default=-1)
+    output_jitter_min_h2h = models.FloatField(verbose_name="Jitter min in us", default=-1)
+    output_jitter_max_h2h = models.FloatField(verbose_name="Jitter max in us", default=-1)
+    output_jitter_avg_h2h = models.FloatField(verbose_name="Jitter avg in us", default=-1)
     output_latency_avg_h2n_unit = models.TextField(default="usecs")
     output_latency_max_h2n_unit = models.TextField(default="usecs")
     output_latency_min_h2n_unit = models.TextField(default="usecs")
@@ -1258,6 +1286,15 @@ class HuLatencyPerformance(models.Model):
     output_jitter_min_n2h_unit = models.TextField(default="usecs")
     output_jitter_max_n2h_unit = models.TextField(default="usecs")
     output_jitter_avg_n2h_unit = models.TextField(default="usecs")
+    output_latency_avg_h2h_unit = models.TextField(default="usecs")
+    output_latency_max_h2h_unit = models.TextField(default="usecs")
+    output_latency_min_h2h_unit = models.TextField(default="usecs")
+    output_latency_P99_h2h_unit = models.TextField(default="usecs")
+    output_latency_P90_h2h_unit = models.TextField(default="usecs")
+    output_latency_P50_h2h_unit = models.TextField(default="usecs")
+    output_jitter_min_h2h_unit = models.TextField(default="usecs")
+    output_jitter_max_h2h_unit = models.TextField(default="usecs")
+    output_jitter_avg_h2h_unit = models.TextField(default="usecs")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
     input_number_flows = models.IntegerField(verbose_name="Number of flows", default=1)

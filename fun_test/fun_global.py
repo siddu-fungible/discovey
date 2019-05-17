@@ -99,6 +99,8 @@ class PerfUnit:
 
     UNIT_CYCLES = "cycles"
 
+    UNIT_NUMBER = "number"
+
     UNIT_BITS = "b"
     UNIT_BYTES = "B"
     UNIT_KB = "KB"
@@ -122,6 +124,8 @@ class PerfUnit:
     UNIT_MPPS = "Mpps"
     UNIT_KPPS = "Kpps"
     UNIT_GPPS = "Gpps"
+
+    UNIT_CPS = "cps"
 
 class FunPlatform:
     F1 = "F1"

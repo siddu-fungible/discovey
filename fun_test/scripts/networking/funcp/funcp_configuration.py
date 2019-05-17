@@ -1,5 +1,4 @@
 from lib.system.fun_test import *
-from lib.templates.traffic_generator.spirent_rfc2544_template import *
 from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
 from scripts.networking.helper import *

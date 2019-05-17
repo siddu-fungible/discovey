@@ -111,7 +111,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
                                                                                 pc_id, when)
             fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
                                                                            filename=resource_pc_temp_filename,
-                                                                           pc_id=pc_id, count=1),
+                                                                           pc_id=pc_id, display_output=False),
                                    checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
@@ -166,9 +166,20 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             fpg_stats.update(
                 {i: r}
             )
+
+        # Check parser stuck
+        output = nc_obj.peek_parser_stats().get('global')
+        for blk in output:
+            eop_cnt = output[blk].get('eop_cnt')
+            prv_sent = output[blk].get('prv_sent')
+            if eop_cnt != prv_sent:
+                fun_test.test_assert(False, '{} parser is stuck'.format(blk))
+
         nc_obj.peek_psw_global_stats()
         #nc_obj.peek_fcp_global_stats()
         nc_obj.peek_vp_packets()
+
+        # Check VP stuck
         is_vp_stuck = False
         for pc_id in (1,2 ):
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
@@ -328,7 +339,7 @@ class FunethPerformanceBase(FunTestCase):
             {'flow_type': flow_type,
              'frame_size': frame_size,
              'protocol': protocol.upper(),
-             'offloads': True,  # TODO: pass in parameter
+             'offloads': sanity.enable_tso,
              'num_flows': num_flows,
              'num_hosts': num_hosts,
              'timestamp': '%s' % TIMESTAMP,  # Use same timestamp for all the results of same run, per John/Ashwin

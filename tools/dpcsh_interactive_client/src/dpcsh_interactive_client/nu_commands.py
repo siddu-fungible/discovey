@@ -1434,12 +1434,53 @@ class PeekCommands(object):
         else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_fcp_tunnel_stats(self, tunnel_id, grep_regex=None, get_result_only=False):
-        cmd = "stats/fcp/tunnel[%d]" % tunnel_id
-        if get_result_only:
-            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+    def peek_fcp_tunnel_stats(self, tunnel_id, mode='nu', grep_regex=None, get_result_only=False):
+        if tunnel_id:
+            cmd = "stats/fcp/tunnel[%d]" % tunnel_id
+            if get_result_only:
+                return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+            else:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
-            self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+            cmd = "stats/fcp/%s" % mode
+            prev_result = None
+            while True:
+                try:
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result['global'],
+                                                               prev_result=prev_result['global'])
+                            table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
+                            table_obj.align = 'l'
+                            for key in sorted(result['global']):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result['global'][key], diff_result[key]])
+                                else:
+                                    table_obj.add_row([key, result['global'][key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counters'])
+                            table_obj.align = 'l'
+                            for key in sorted(result['global']):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result['global'][key]])
+                                else:
+                                    table_obj.add_row([key, result['global'][key]])
+                        if get_result_only:
+                            return cmd, table_obj
+                        prev_result = result
+                        print table_obj
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+                except Exception as ex:
+                    print "ERROR: %s" % str(ex)
+                    self.dpc_client.disconnect()
+                    break
 
     def peek_wro_stats(self, mode='nu', tunnel_id=None, grep_regex=None, get_result_only=False):
         if tunnel_id:
@@ -2747,8 +2788,7 @@ class ShowCommands(PeekCommands):
             command_dict['nhp stats'] = self.peek_nhp_stats(get_result_only=True)
             command_dict['sse stats'] = self.peek_sse_stats(get_result_only=True)
             command_dict['resource bam stats'] = self.peek_bam_resource_stats(get_result_only=True)
-            if fcp_tunnel_id:
-                command_dict['fcp stats'] = self.peek_fcp_tunnel_stats(get_result_only=True, tunnel_id=fcp_tunnel_id)
+            command_dict['fcp stats'] = self.peek_fcp_tunnel_stats(get_result_only=True, tunnel_id=fcp_tunnel_id)
             if mode == 'nu' or mode == 'hnu':
                 command_dict = self.append_mode_specific_commands(command_dict=command_dict, port_list=port_list,
                                                                   mode=mode)
