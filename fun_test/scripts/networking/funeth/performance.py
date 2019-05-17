@@ -197,6 +197,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         #nc_obj.peek_per_vp_stats()
         nc_obj.peek_resource_bam_stats()
         nc_obj.peek_eqm_stats()
+        nc_obj.peek_resource_nux()
     fpg_rx_bytes = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
     )
