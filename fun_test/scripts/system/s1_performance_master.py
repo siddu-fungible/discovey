@@ -153,7 +153,7 @@ if __name__ == "__main__":
 
     myscript.add_test_case(WuDispatchTestPerformanceS1Tc())
     myscript.add_test_case(WuSendSpeedTestPerformanceS1Tc())
-    # myscript.add_test_case(FunMagentPerformanceTestS1Tc())
+    myscript.add_test_case(FunMagentPerformanceTestS1Tc())
     myscript.add_test_case(WuStackSpeedTestPerformanceS1Tc())
     myscript.add_test_case(SoakFunMallocPerformanceS1Tc())
     myscript.add_test_case(SoakClassicMallocPerformanceS1Tc())
