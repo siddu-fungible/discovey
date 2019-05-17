@@ -73,6 +73,13 @@ class MetricLib():
         except:
             return []
 
+    def get_peer_ids(self, metric_id):
+        try:
+            chart = MetricChart.objects.get(metric_id=metric_id)
+            return json.loads(chart.peer_ids)
+        except:
+            return []
+
     def get_data_set(self, metric_id, **kwargs):
         try:
             chart = MetricChart.objects.get(metric_id=metric_id)

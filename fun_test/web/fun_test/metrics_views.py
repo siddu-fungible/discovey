@@ -33,10 +33,11 @@ from lib.utilities.git_manager import GitManager
 from web.fun_test.metrics_models import Triage, TriageFlow
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
 from web.fun_test.db_fixup import get_rounded_time
+from web.fun_test.metrics_lib import MetricLib
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
-
+ml = MetricLib()
 
 def index(request):
     return render(request, 'qa_dashboard/metrics.html', locals())
@@ -590,8 +591,8 @@ def update_chart(request):
 
 def update_expected(chart, expected_key):
     if expected_key:
-        current_data_sets = json.loads(chart.data_sets)
-        peer_ids = json.loads(chart.peer_ids)
+        current_data_sets = ml.get_data_sets(metric_id=chart.metric_id)
+        peer_ids = ml.get_peer_ids(metric_id=chart.metric_id)
         for peer_id in peer_ids:
             peer_chart = MetricChart.objects.get(metric_id=peer_id)
             data_sets = json.loads(peer_chart.data_sets)
@@ -617,7 +618,7 @@ def update_expected(chart, expected_key):
                         set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit, expected_key)
         return current_data_sets
     else:
-        return json.loads(chart.data_sets)
+        return ml.get_data_sets(metric_id=chart.metric_id)
 
 def set_expected(current_data_sets, name, value, unit, expected_key):
     for current_data_set in current_data_sets:
