@@ -1782,6 +1782,42 @@ class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
                               summary="Wu Latency Alloc Stack Test on F1",
                               steps="Steps 1")
 
+class JuniperIpsecEncryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_CRYPTO_MULTI_TUNNEL
+    model = "JuniperCryptoTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=40,
+                              summary="TeraMark Crypto multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_CRYPTO_MULTI_TUNNEL
+    model = "JuniperCryptoTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=40,
+                              summary="TeraMark Crypto multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_CRYPTO_MULTI_TUNNEL
+    model = "JuniperCryptoTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=40,
+                              summary="TeraMark Crypto multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_CRYPTO_MULTI_TUNNEL
+    model = "JuniperCryptoTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=40,
+                              summary="TeraMark Crypto multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,

@@ -1893,6 +1893,32 @@ class JuniperCryptoTunnelPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class JuniperIpsecTunnelPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.TextField(default="ipsec_tunnel_throughput")
+    input_num_tunnels = models.IntegerField(default=-1)
+    input_algorithm = models.TextField(default="")
+    input_operation = models.TextField(default="")
+    input_key_size = models.IntegerField(default=-1)
+    input_src_memory = models.TextField(default="BM")
+    input_dst_memory = models.TextField(default="BM")
+    input_pkt_size = models.FloatField(verbose_name="pkt size B", default=-1)
+    output_packets_per_sec = models.FloatField(verbose_name="packets per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
+    output_packets_per_sec_unit = models.TextField(default="Mpps")
+    output_throughput_unit = models.TextField(default="Gbps")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class JuniperTlsTunnelPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
