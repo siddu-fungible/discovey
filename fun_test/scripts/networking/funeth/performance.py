@@ -20,10 +20,11 @@ else:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 TIMESTAMP = get_current_time()
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
-    ('HU_NU_NFCP', 'HU -> NU non-FCP'),
-    ('NU_HU_NFCP', 'NU -> HU non-FCP'),
-    ('HU_HU_NFCP', 'HU -> HU non-FCP'),
-#    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
+    ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
+    ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
+    ('HU_HU_NFCP', 'HU -> HU non-FCP'), # test case id: 3xxxx
+    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
+    #    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 ])
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
@@ -66,7 +67,8 @@ class FunethPerformance(sanity.FunethSanity):
         network_controller_objs = []
         network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                          dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True))
-        # TODO: create network_controller_obj2 for F1_1
+        network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
+                                                         dpc_server_port=sanity.DPC_PROXY_PORT2, verbose=True))
         # Configure small DF/Non-FCP thr to workaround SWOS-4771
         for nc_obj in network_controller_objs:
             buffer_pool_set = nc_obj.set_qos_egress_buffer_pool(df_thr=256,
@@ -176,7 +178,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
                 fun_test.test_assert(False, '{} parser is stuck'.format(blk))
 
         nc_obj.peek_psw_global_stats()
-        #nc_obj.peek_fcp_global_stats()
+        nc_obj.peek_fcp_global_stats()
         nc_obj.peek_vp_packets()
 
         # Check VP stuck
@@ -193,8 +195,9 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         if is_vp_stuck:
             fun_test.test_assert(False, 'VP is stuck')
         #nc_obj.peek_per_vp_stats()
-        #nc_obj.peek_resource_bam_stats()
-        #nc_obj.peek_eqm_stats()
+        nc_obj.peek_resource_bam_stats()
+        nc_obj.peek_eqm_stats()
+        nc_obj.peek_resource_nux_stats()
     fpg_rx_bytes = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
     )
@@ -236,8 +239,17 @@ class FunethPerformanceBase(FunTestCase):
         bi_dir = False
         if flow_type.startswith('HU_HU'):  # HU --> HU
             # TODO: handle exception if hu_hosts len is 1
-            for i in range(0, len(funeth_obj.hu_hosts), 2):
-                host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1]])
+            num_hu_hosts = len(funeth_obj.hu_hosts)
+            if flow_type == 'HU_HU_NFCP':
+                for i in range(0, num_hu_hosts, 2):
+                    host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1]])
+            elif flow_type == 'HU_HU_FCP':
+                for i in range(0, num_hu_hosts/2):
+                    host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i + 2]])
+                    if num_flows == 1:
+                        break
+                    elif len(host_pairs) == num_hosts:
+                        break
         else:
             for nu, hu in zip(funeth_obj.nu_hosts, funeth_obj.hu_hosts):
                 if flow_type.startswith('NU_HU'):  # NU --> HU
@@ -312,6 +324,7 @@ class FunethPerformanceBase(FunTestCase):
                 )
             elif flow_type.startswith('HU_HU') and result.get('{}_h2h'.format(nm.THROUGHPUT)) != nm.NA:
                 # HU -> HU via local F1, no FPG stats
+                # HU -> HU via FCP, don't check FPG stats as it includes FCP request/grant pkts
                 result.update(
                     {'{}_h2h'.format(nm.PPS): nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
                 )
@@ -357,75 +370,6 @@ class FunethPerformanceBase(FunTestCase):
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
-
-
-class FunethPerformanceFcpBase(FunethPerformanceBase):
-    def _configure_fpg_mtu(self, mtu):
-        network_controller_obj = fun_test.shared_variables['network_controller_obj']
-        funeth_obj = fun_test.shared_variables['funeth_obj']
-        linux_obj = funeth_obj.linux_obj_dict['nu']
-
-        for intf in funeth_obj.tb_config_obj.get_all_interfaces('nu'):
-            fun_test.test_assert(linux_obj.set_mtu(intf, mtu-18), 'Configure NU host interface {} mtu {}'.format(intf, mtu))
-            i = int(intf.lstrip('fpg')[0])
-            fun_test.test_assert(network_controller_obj.set_port_mtu(i, mtu),
-                                 'Configure NU interface {} mtu {}'.format(intf, mtu))
-
-    def setup(self):
-        self._configure_fpg_mtu(FPG_MTU_DEFAULT+38)  # 20(IP) + 8(UDP) + 10(FCP) = 38
-
-    def cleanup(self):
-        self._configure_fpg_mtu(FPG_MTU_DEFAULT)
-
-    def _run(self, flow_type='HU_HU_FCP', tool='netperf', protocol='tcp', num_flows=1, frame_size=800, duration=30):
-        super(FunethPerformanceFcpBase, self)._run(flow_type=flow_type, tool=tool, protocol=protocol, num_flows=num_flows,
-                                                   frame_size=frame_size, duration=duration)
-
-
-class FunethPerformanceFcpSecureBase(FunethPerformanceFcpBase):
-    def _configure_fcp_tunnel(self, secure=1):
-        network_controller_obj = fun_test.shared_variables['network_controller_obj']
-        # TODO: Get FCP tunnel_id from configs instead of hardcoded here
-        src_queues = [216, 224]
-        dst_queues = [224, 216]
-        dst_fteps = [0xB4000301, 0xB4000401]
-        if secure:
-            remote_key_indexes = [0, 2]
-            local_key_indexes = [2, 0]
-        else:
-            remote_key_indexes = local_key_indexes = [0, 0]
-
-        # Delete FCP tunnel
-        for src_queue in src_queues:
-            result = network_controller_obj.delete_fcp_tunnel(src_queue=src_queue)
-            fun_test.test_assert(result, 'Delete FCP tunnel src_queue {}'.format(src_queue))
-
-        # Create FCP tunnel
-        for src_queue, dst_queue, dst_ftep, remote_key_index, local_key_index in zip(src_queues,
-                                                                                     dst_queues,
-                                                                                     dst_fteps,
-                                                                                     remote_key_indexes,
-                                                                                     local_key_indexes):
-            result = network_controller_obj.create_fcp_tunnel(src_queue=src_queue,
-                                                              dst_queue=dst_queue,
-                                                              dst_ftep=dst_ftep,
-                                                              secure_tunnel=secure,
-                                                              remote_key_index=remote_key_index,
-                                                              local_key_index=local_key_index)
-            fun_test.test_assert(result, 'Configure FCP tunnel src_queue {} dst_queue {} to {}'.format(
-                src_queue, dst_queue, 'secure' if secure else 'non-secure'))
-
-    def setup(self):
-        super(FunethPerformanceFcpSecureBase, self)._configure_fpg_mtu(FPG_MTU_DEFAULT+66)  # 20(IP) + 8(UDP) + 38(FCP) = 66
-        self._configure_fcp_tunnel(secure=1)
-
-    def cleanup(self):
-        super(FunethPerformanceFcpSecureBase, self).cleanup()
-        self._configure_fcp_tunnel(secure=0)
-
-    def _run(self, flow_type='HU_HU_FCP_SEC', tool='netperf', protocol='tcp', num_flows=1, frame_size=800, duration=30):
-        super(FunethPerformanceFcpSecureBase, self)._run(flow_type=flow_type, tool=tool, protocol=protocol,
-                                                         num_flows=num_flows, frame_size=frame_size, duration=duration)
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):
