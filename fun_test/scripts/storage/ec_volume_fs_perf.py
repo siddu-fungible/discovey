@@ -102,7 +102,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         benchmark_dict = {}
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
 
-        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+        if testcase not in benchmark_dict:
             benchmark_parsing = False
             fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
                               format(testcase, benchmark_file))
@@ -114,7 +114,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         # fio_bs_iodepth variable is a list of tuples in which the first element of the tuple refers the
         # block size & second one refers the iodepth going to used for that block size
         # Checking the block size and IO depth combo list availability
-        if 'fio_njobs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_njobs_iodepth']:
+        if 'fio_njobs_iodepth' not in benchmark_dict[testcase]:
             benchmark_parsing = False
             fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
                               "the {} file".format(testcase, benchmark_file))
@@ -141,7 +141,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         self.syslog_level = fun_test.shared_variables['syslog_level']
 
-        if fun_test.shared_variables["setup_created"]:
+        if not fun_test.shared_variables["setup_created"]:
             fun_test.shared_variables["ec"] = {}
             fun_test.shared_variables["ec"]["setup_created"] = False
             fun_test.shared_variables["ec"]["nvme_connect"] = False
@@ -175,8 +175,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
             command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
-                                          # Todo Check if int() is req
+            fun_test.test_assert_expected(actual=command_result["data"]["error_inject"],
+
                                           expected=0,
                                           message="Ensuring error_injection got disabled")
 
@@ -187,7 +187,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                             ctlid=self.ctlid,
                                                                             command_duration=self.command_timeout)[
                                      "status"], "Attaching EC/LS volume on DUT")
-            fun_test.shared_variables["ec"]["setup_created"] = True
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
                                                           legacy=False,
@@ -201,29 +200,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                                           actual=command_result["data"],
                                           message="Checking syslog level")
 
-            # disabling the error_injection for the EC volume
-
-            fun_test.test_assert(self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0],
-                                                              legacy=False,
-                                                              command_duration=self.command_timeout)["status"],
-                                 "Disabling error_injection for EC volume on DUT")
-
-            # Ensuring that the error_injection got disabled properly
-            fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-
-            command_result = self.storage_controller.peek(props_tree="params/ecvol", legacy=False,
-                                                                               command_duration=self.command_timeout)
-            fun_test.test_assert(command_result['status'], message="peek error inject status", ignore_on_success=True)
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
-                                          expected=0,
-                                          message="Ensuring error_injection got disabled")
-
-            # Checking that the above created BLT volume is visible to the end host # TOdo move to helper
+            # Checking that the above created volume is visible to the end host
             fetch_response = fetch_nvme_device(end_host=self.end_host, nsid=self.ns_id)
             fun_test.test_assert(fetch_response['status'], message="Check nvme device is visible")
             self.nvme_block_device = fetch_response['nvme_device']
-
-            fun_test.shared_variables[self.ec_ratio]["setup_created"] = True
             fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
 
             # Disable the udev daemon which will skew the read stats of the volume during the test
@@ -240,6 +220,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(fio_output, "Pre-populating the volume")
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
+            fun_test.shared_variables['setup_created'] = True
+        fun_test.test_assert(fun_test.shared_variables['setup_created'], message="Check Setup got created successfully",
+                             ignore_on_success=True)
 
     def run(self):
 
