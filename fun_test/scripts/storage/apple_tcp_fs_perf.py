@@ -662,29 +662,18 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         else:
                             ifop = "lesser"
                             elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
                         if compare(actual, value, self.fio_pass_threshold, ifop):
                             fio_result[combo][mode] = False
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))'''
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} got {} than the expected value {}".
                                          format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
-                            '''fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
                 row_data_dict["readiops"] = int(round(avg_tps[x]))
                 row_data_dict["readbw"] = int(round(avg_kbs_read[x] / 1000))
-                row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
 
             # Building the table row for this variation for both the script table and performance dashboard
             row_data_list = []
