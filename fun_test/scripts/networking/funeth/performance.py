@@ -339,7 +339,7 @@ class FunethPerformanceBase(FunTestCase):
             {'flow_type': flow_type,
              'frame_size': frame_size,
              'protocol': protocol.upper(),
-             'offloads': True,  # TODO: pass in parameter
+             'offloads': sanity.enable_tso,
              'num_flows': num_flows,
              'num_hosts': num_hosts,
              'timestamp': '%s' % TIMESTAMP,  # Use same timestamp for all the results of same run, per John/Ashwin
