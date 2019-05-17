@@ -71,11 +71,13 @@ def triagings(request, triage_id):
         if not triage_id:
             request_json = json.loads(request.body)
             metric_id = int(request_json["metric_id"])
-            triage_type = request_json.get("triage_type", "REGEX_SEARCH")
+            triage_type = request_json.get("triage_type", TriagingTypes.REGEX_MATCH)
             from_fun_os_sha = request_json["from_fun_os_sha"]
             to_fun_os_sha = request_json["to_fun_os_sha"]
             submitter_email = request_json["submitter_email"]
             build_parameters = request_json["build_parameters"]
+            if triage_type == TriagingTypes.REGEX_MATCH:
+                regex_match_string = request_json["regex_match_string"]
 
             triage_id = LastTriageId.get_next_id()
 
@@ -152,4 +154,4 @@ def git_commits_fun_os(request, from_sha, to_sha):
 @csrf_exempt
 @api_safe_json_response
 def triaging_types(request):
-    return TriagingTypes().to_json()
+    return TriagingTypes().all_strings_to_code()

@@ -1,5 +1,5 @@
 import web.fun_test.django_interactive
-from web.fun_test.triaging_global import TriagingStates, TriageTrialStates
+from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingTypes
 from web.fun_test.metrics_models import TriagingResult
 from web.fun_test.metrics_models import Triage3, Triage3Trial
 from lib.host.lsf_status_server import LsfStatusServer
@@ -287,13 +287,14 @@ class TrialStateMachine:
             job_info = lsf_server.get_last_job(tag=trial.tag)
             if "output_text" in job_info:
                 lines = job_info["output_text"].split("\n")
-                trial.regex_match = ""
-                for line in lines:
-                    m = re.search(r'Average WU send ungated { "value": \d+', line)
-                    if m:
-                        trial.regex_match = m.group(0)
-                trial.status = TriageTrialStates.COMPLETED
-                trial.save()
+                if triage.triage_type == TriagingTypes.REGEX_MATCH:
+                    trial.regex_match = ""
+                    for line in lines:
+                        m = re.search(triage.regex_match_string, line)
+                        if m:
+                            trial.regex_match = m.group(0)
+                    trial.status = TriageTrialStates.COMPLETED
+                    trial.save()
 
         return status
 

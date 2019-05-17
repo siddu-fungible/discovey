@@ -18,7 +18,7 @@ export class Triage2Component implements OnInit {
   users: any = null;
   selectedUser: any = null;
   jenkinsParameters: any = null;
-  triagingStateMap: any = null;
+  triagingStateMap: {[key: string]: number} = {};
   triagingStringToCodeMap = {};
   triagingTrialStateMap: any = null;
   triages: any = null;
@@ -52,6 +52,12 @@ export class Triage2Component implements OnInit {
       this.gitShasValid = false;
     });
 
+    /*
+    setInterval(() => {
+      console.log(this.submissionForm.value.triage_type);
+      console.log(this.triageTypes);
+      console.log(this.triageTypes.REGEX_MATCH);
+    }, 2000)*/
   }
 
   validateShas() {
@@ -98,7 +104,7 @@ export class Triage2Component implements OnInit {
       })).pipe(switchMap((triagingStateMap) => {
         this.triagingStateMap = triagingStateMap;
         for(let key of Object.keys(this.triagingStateMap)) {
-          this.triagingStringToCodeMap[this.triagingStateMap[key]] = key;
+          this.triagingStringToCodeMap[this.triagingStateMap[key]] = parseInt(key);
         }
 
 

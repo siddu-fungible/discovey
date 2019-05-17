@@ -93,7 +93,7 @@ class MetricChartStatus(models.Model):
 class Triage3(models.Model):
     metric_id = models.IntegerField()
     triage_id = models.IntegerField(unique=True)
-    triage_type = models.CharField(max_length=15, default=TriagingTypes.REGEX_MATCH)
+    triage_type = models.IntegerField(default=TriagingTypes.REGEX_MATCH)
     from_fun_os_sha = models.TextField()  # The initial lower bound
     to_fun_os_sha = models.TextField()    # The initial upper bound
     submission_date_time = models.DateTimeField(default=datetime.now)

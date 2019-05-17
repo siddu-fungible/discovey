@@ -9,12 +9,20 @@ class Codes:
             value = getattr(self, non_callable_attribute)
             if type(value) is int:
                 self.code_to_string_map[value] = non_callable_attribute
+        self.string_to_code_map = {}
+        for non_callable_attribute in self.non_callable_attributes:
+            value = getattr(self, non_callable_attribute)
+            self.string_to_code_map[non_callable_attribute] = value
+
 
     def code_to_string(self, code):
         return self.code_to_string_map.get(code, "Unknown")
 
     def all_codes_to_string(self):
         return self.code_to_string_map
+
+    def all_strings_to_code(self):
+        return self.string_to_code_map
 
     def to_json(self):
         result = []
@@ -62,9 +70,9 @@ class TriagingResult:
 
 
 class TriagingTypes(Codes):
-    PASS_OR_FAIL = {"code": 0, "description": "Pass/Fail"}
-    SCORE = {"code": 1, "description": "Score"}
-    REGEX_MATCH = {"code": 2, "description": "Regex match"}
+    PASS_OR_FAIL = 1
+    SCORE = 2
+    REGEX_MATCH = 3
 
 
 
