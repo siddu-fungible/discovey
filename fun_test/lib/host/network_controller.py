@@ -1312,7 +1312,7 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_resource_nux(self):
+    def peek_resource_nux_stats(self):
         stats = None
         try:
             cmd = "stats/resource/nux"
