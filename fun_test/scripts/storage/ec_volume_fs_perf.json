@@ -3,8 +3,8 @@
     "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze  --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
-    "huid": 7,
-    "ctlid": 0,
+    "huid": 3,
+    "ctlid": 2,
     "syslog_level": 2,
     "command_timeout": 5,
     "reboot_timeout": 300,
@@ -52,6 +52,8 @@
       "num_volumes": 1
     },
     "command_timeout": 30,
+    "huid": 3,
+    "ctlid": 2,
     "iter_interval": 5,
     "ns_id": 1,
     "warm_up_traffic": 1,
@@ -87,8 +89,6 @@
       "(8, 4)",
       "(8, 8)"
     ],
-    "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 33,
     "nvme_device": "/dev/nvme"
   },
   "EC42FioRandReadOnly": {
@@ -123,6 +123,8 @@
       "num_volumes": 1
     },
     "command_timeout": 30,
+    "huid": 3,
+    "ctlid": 2,
     "iter_interval": 5,
     "check_lsv_stats": 0,
     "ns_id": 1,
@@ -159,8 +161,6 @@
       "(8, 4)",
       "(8, 8)"
     ],
-    "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 33,
     "nvme_device": "/dev/nvme"
   }
 }

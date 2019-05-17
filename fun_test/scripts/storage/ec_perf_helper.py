@@ -2,6 +2,18 @@ from lib.system.fun_test import fun_test
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 import re
 
+fio_perf_table_header = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+                         "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                         "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+                         "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
+                         "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
+                         "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
+                         "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
+fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
+                       "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                       "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                       "fio_job_name"]
+
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,

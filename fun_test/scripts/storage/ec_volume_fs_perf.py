@@ -36,7 +36,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Global Config: {}".format(self.__dict__))
 
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs)
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
+                                           disable_f1_index=self.disable_f1_index)
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -44,8 +45,8 @@ class ECVolumeLevelScript(FunTestScript):
         self.db_log_time = datetime.now()
 
         self.end_host = self.fs.get_come()
-        self.storage_controller = StorageController(target_ip=self.come.host_ip,
-                                                    target_port=self.come.get_dpc_port(self.f1_in_use))
+        self.storage_controller = StorageController(target_ip=self.end_host.host_ip,
+                                                    target_port=self.end_host.get_dpc_port(self.f1_in_use))
 
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["topology"] = topology
@@ -55,15 +56,11 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-
-        # Setting the syslog level to 2
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["setup_created"] = False
 
     def cleanup(self):
         try:
             self.ec_info = fun_test.shared_variables["ec_info"]
-            self.remote_ip = fun_test.shared_variables["remote_ip"]
-            self.attach_transport = fun_test.shared_variables["attach_transport"]
 
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
@@ -72,7 +69,6 @@ class ECVolumeLevelScript(FunTestScript):
                                                                                   uuid=self.ec_info["attach_uuid"][num],
                                                                                   huid=self.huid,
                                                                                   ctlid=self.ctlid,
-                                                                                  transport=self.attach_transport,
                                                                                   command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
@@ -123,15 +119,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
                               "the {} file".format(testcase, benchmark_file))
 
-        # Checking the availability of expected FIO results
-        # Checking the availability of expected volume level internal stats at the end of every FIO run
-        if 'fio_pass_threshold' not in benchmark_dict[testcase]:
-            self.fio_pass_threshold = .05
-            fun_test.log("Setting FIO passing threshold percentage to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.fio_pass_threshold, testcase, benchmark_file))
-
         if not hasattr(self, "num_ssd"):
-            self.num_ssd = 1
+            self.num_ssd = 6
         if not hasattr(self, "num_volume"):
             self.num_volume = 1
 
@@ -150,8 +139,9 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
+        self.syslog_level = fun_test.shared_variables['syslog_level']
 
-        if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
+        if fun_test.shared_variables["setup_created"]:
             fun_test.shared_variables["ec"] = {}
             fun_test.shared_variables["ec"]["setup_created"] = False
             fun_test.shared_variables["ec"]["nvme_connect"] = False
@@ -185,10 +175,19 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
             command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),  # Todo Check if int() is req
+            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
+                                          # Todo Check if int() is req
                                           expected=0,
                                           message="Ensuring error_injection got disabled")
 
+            # Attaching/Exporting the EC/LS volume to the external server
+            fun_test.test_assert(self.storage_controller.volume_attach_pcie(ns_id=self.ns_id,
+                                                                            uuid=self.ec_info["attach_uuid"][0],
+                                                                            huid=self.huid,
+                                                                            ctlid=self.ctlid,
+                                                                            command_duration=self.command_timeout)[
+                                     "status"], "Attaching EC/LS volume on DUT")
+            fun_test.shared_variables["ec"]["setup_created"] = True
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
                                                           legacy=False,
@@ -202,14 +201,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                           actual=command_result["data"],
                                           message="Checking syslog level")
 
-            # Attaching/Exporting the EC/LS volume to the external server
-            fun_test.test_assert(self.storage_controller.volume_attach_pcie(ns_id=self.ns_id,
-                                                                            uuid=self.ec_info["attach_uuid"][0],
-                                                                            huid=self.huid,
-                                                                            ctlid=self.ctlid,
-                                                                            command_duration=self.command_timeout)[
-                                     "status"], "Attaching EC/LS volume on DUT")
-
             # disabling the error_injection for the EC volume
 
             fun_test.test_assert(self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0],
@@ -220,17 +211,12 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Ensuring that the error_injection got disabled properly
             fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
 
-            fun_test.test_assert(self.storage_controller.peek(props_tree="params/ecvol", legacy=False,
-                                                              command_duration=self.command_timeout)["status"],
-                                 "Retrieving error_injection status on DUT")
+            command_result = self.storage_controller.peek(props_tree="params/ecvol", legacy=False,
+                                                                               command_duration=self.command_timeout)
+            fun_test.test_assert(command_result['status'], message="peek error inject status", ignore_on_success=True)
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
                                           expected=0,
                                           message="Ensuring error_injection got disabled")
-
-            fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
-
-            lsblk_output = self.end_host.lsblk("-b")
-            fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
             # Checking that the above created BLT volume is visible to the end host # TOdo move to helper
             fetch_response = fetch_nvme_device(end_host=self.end_host, nsid=self.ns_id)
@@ -246,16 +232,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 service_status = self.end_host.systemctl(service_name=service, action="stop")
                 fun_test.test_assert(service_status, "Stopping {} service".format(service))
 
-
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level], legacy=False,
-                                                      command_duration=5)
-            fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
-
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                          command_duration=5)
-            fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
-
-
             # Executing the FIO command to warm up the system
             if self.warm_up_traffic:
                 fun_test.log("Executing the FIO command to warm up the system")
@@ -270,56 +246,14 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        if self.ec_ratio in fun_test.shared_variables or fun_test.shared_variables[self.ec_ratio]["setup_created"]:
-            self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
-            self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
-        else:
-            fun_test.simple_assert(False, "Setup Section Status")
+        fun_test.test_assert(fun_test.shared_variables['setup_created'], message="Check Setup got created successfully",
+                             ignore_on_success=True)
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
         fio_result = {}
         fio_output = {}
 
-        volumes = []
-        for vtype in sorted(self.ec_coding):
-            if self.volume_types[vtype] not in volumes:
-                volumes.append(self.volume_types[vtype])
-        volumes.append(self.volume_types["ec"])
-        if self.use_lsv and self.check_lsv_stats:
-            volumes.append(self.volume_types["lsv"])
-
-        # Check any plex needs to be induced to fail and if so do the same
-        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-            for index in self.failure_plex_indices:
-                if index < self.ec_coding["ndata"]:
-                    vtype = self.volume_types["ndata"]
-                else:
-                    vtype = self.volume_types["nparity"]
-                    if self.volume_types["ndata"] != self.volume_types["nparity"]:
-                        index = index - self.ec_coding["ndata"]
-                command_result = self.storage_controller.fail_volume(uuid=self.uuids[vtype][index],
-                                                                     command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Inject failure to the BLT volume having the UUID "
-                                                               "{}".format(self.uuids[vtype][index]))
-                fun_test.sleep("Sleeping for a second to enable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, self.uuids[vtype][index], "stats")
-                command_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
-                                                              command_duration=self.command_timeout)
-                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
-                                              message="Ensuring fault_injection got enabled")
-
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
-                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
-                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
-                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
-                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           "fio_job_name"]
         table_data_rows = []
 
         for combo in self.fio_njobs_iodepth:
@@ -347,7 +281,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
                              "coding {}".format(mode, fio_cmd_args['bs'], io_depth, self.ec_ratio))
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,  **self.fio_cmd_args)
+                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
                 fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
                                                               "io_depth: {2}, num_jobs: {3}".
@@ -363,6 +297,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fio_output[combo][mode][op][field] = int(round(value / 1000))
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value))
+                        row_data_dict[op + field] = fio_output[combo][mode][op][field]
+
                 fun_test.log("FIO Command Output after multiplication:")
                 fun_test.log(fio_output[combo][mode])
 
@@ -379,7 +315,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 # Building the table raw for this variation
                 row_data_list = []
-                for i in table_data_cols:
+                for i in fio_perf_table_cols:
                     if i not in row_data_dict:
                         row_data_list.append(-1)
                     else:
@@ -388,7 +324,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if fun_global.is_production_mode():
                     post_results("EC Volume", test_method, *row_data_list)
 
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
+        table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
@@ -402,26 +338,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
-
-        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
-            for index in self.failure_plex_indices:
-                if index < self.ec_coding["ndata"]:
-                    vtype = self.volume_types["ndata"]
-                else:
-                    vtype = self.volume_types["nparity"]
-                    if self.volume_types["ndata"] != self.volume_types["nparity"]:
-                        index = index - self.ec_coding["ndata"]
-                command_result = self.storage_controller.fail_volume(uuid=self.uuids[vtype][index],
-                                                                     command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Disable failure from the {} volume having the UUID "
-                                                               "{}".format(vtype, self.uuids[vtype][index]))
-                fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", vtype, self.uuids[vtype][index], "stats")
-                command_result = self.storage_controller.peek(props_tree=props_tree, legacy=False,
-                                                              command_duration=self.command_timeout)
-                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]),
-                                              expected=0,
-                                              message="Ensuring fault_injection got disabled")
+        pass
 
 
 class EC42FioSeqReadOnly(ECVolumeLevelTestcase):
