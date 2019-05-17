@@ -67,5 +67,10 @@
     "host_ip": "qa-ubuntu-02",
     "ssh_username": "auto_admin",
     "ssh_password": "fun123"
+  },
+  "nu-lab-04": {
+    "host_ip": "nu-lab-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
   }
 }

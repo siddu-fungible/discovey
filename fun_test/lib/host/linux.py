@@ -2438,6 +2438,13 @@ class Linux(object, ToDictMixin):
 
         return file_info
 
+    @fun_test.safe
+    def flush_cache_mem(self):
+        flush_cmd = """
+        sync; echo 1 > /proc/sys/vm/drop_caches; 
+        sync; echo 2 > /proc/sys/vm/drop_caches; 
+        sync; echo 3 > /proc/sys/vm/drop_caches"""
+        self.sudo_command(flush_cmd)
 
 
 class LinuxBackup:

@@ -479,7 +479,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         else:
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
-                    row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
 
                 row_data_dict["fio_job_name"] = fio_job_name
                 row_data_dict["readiops"] = int(round(avg_tps))
