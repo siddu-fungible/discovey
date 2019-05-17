@@ -41,7 +41,7 @@ class ECVolumeLevelScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
-        self.fs = topology.get_dut_instance(index=self.f1_in_use)
+        self.fs = topology.get_dut_instance(index=0)
         self.db_log_time = datetime.now()
 
         self.end_host = self.fs.get_come()
@@ -52,26 +52,26 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
-        fun_test.shared_variables["test_network"] = self.test_network
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
+        fun_test.shared_variables['nsid'] = 0
 
     def cleanup(self):
         try:
             self.ec_info = fun_test.shared_variables["ec_info"]
+            ns_id = fun_test.shared_variables['nsid']
 
-            if fun_test.shared_variables["ec"]["setup_created"]:
+            if fun_test.shared_variables["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
-                for num in xrange(self.ec_info["num_volumes"]):
-                    command_result = self.storage_controller.volume_detach_remote(ns_id=num + 1,
-                                                                                  uuid=self.ec_info["attach_uuid"][num],
-                                                                                  huid=self.huid,
-                                                                                  ctlid=self.ctlid,
-                                                                                  command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+                command_result = self.storage_controller.volume_detach_remote(ns_id=ns_id,
+                                                                              uuid=self.ec_info["attach_uuid"][0],
+                                                                              huid=self.huid,
+                                                                              ctlid=self.ctlid,
+                                                                              command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(0))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
@@ -142,10 +142,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.syslog_level = fun_test.shared_variables['syslog_level']
 
         if not fun_test.shared_variables["setup_created"]:
-            fun_test.shared_variables["ec"] = {}
-            fun_test.shared_variables["ec"]["setup_created"] = False
-            fun_test.shared_variables["ec"]["nvme_connect"] = False
-            fun_test.shared_variables["ec"]["warmup_io_completed"] = False
+            fun_test.shared_variables['nsid'] += 1
+            self.ns_id = fun_test.shared_variables['nsid']
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
@@ -221,8 +219,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
             fun_test.shared_variables['setup_created'] = True
-        fun_test.test_assert(fun_test.shared_variables['setup_created'], message="Check Setup got created successfully",
-                             ignore_on_success=True)
+        fun_test.simple_assert(fun_test.shared_variables['setup_created'], message="Check Setup got created successfully")
 
     def run(self):
 
@@ -270,7 +267,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                               "io_depth: {2}, num_jobs: {3}".
                                      format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
 
-                # Boosting the fio output with the testbed performance multiplier
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
                         if field == "iops":
@@ -281,9 +277,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value))
                         row_data_dict[op + field] = fio_output[combo][mode][op][field]
-
-                fun_test.log("FIO Command Output after multiplication:")
-                fun_test.log(fio_output[combo][mode])
 
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)

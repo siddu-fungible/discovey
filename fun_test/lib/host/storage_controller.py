@@ -214,16 +214,14 @@ class StorageController(DpcshClient):
             ec_info["num_volumes"] = 1
 
         # Check if Compression has to be enabled on the Device
-        if "compress" in ec_info.keys():
-            if ec_info['compress']:
-                compression_enabled = True
-                ec_info['use_lsv'] = True
-                # check if compression params are not passed assign default values
-                ec_info["zip_effort"] = ec_info['zip_effort'] if 'zip_effort' in ec_info.keys() else "ZIP_EFFORT_AUTO"
-                ec_info['zip_filter'] = ec_info[
-                    'zip_filter'] if 'zip_filter' in ec_info.keys() else "FILTER_TYPE_DEFLATE"
-                fun_test.log("Configuring Compression enabled EC volume with effort: {}, filter: {}".format(
-                    ec_info['zip_effort'], ec_info['zip_filter']))
+        if "compress" in ec_info.keys() and ec_info['compress']:
+            compression_enabled = True
+            ec_info['use_lsv'] = True
+            # check if compression params are not passed assign default values
+            ec_info["zip_effort"] = ec_info['zip_effort'] if 'zip_effort' in ec_info.keys() else "ZIP_EFFORT_AUTO"
+            ec_info['zip_filter'] = ec_info['zip_filter'] if 'zip_filter' in ec_info.keys() else "FILTER_TYPE_DEFLATE"
+            fun_test.log("Configuring Compression enabled EC volume with effort: {}, filter: {}".format(
+                ec_info['zip_effort'], ec_info['zip_filter']))
 
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
