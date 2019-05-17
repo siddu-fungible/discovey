@@ -121,6 +121,7 @@ def set_networking_chart_status(platform="F1"):
         metric_model = app_config.get_metric_models()[model]
         charts = MetricChart.objects.filter(metric_model_name=model, platform=platform)
         for chart in charts:
+            status = True
             data_sets = json.loads(chart.data_sets)
             for data_set in data_sets:
                 order_by = "-input_date_time"
@@ -134,10 +135,15 @@ def set_networking_chart_status(platform="F1"):
                     entry = entries.first()
                     value = getattr(entry, output)
                     if value == -1:
+                        status = False
                         chart.last_build_status = fun_test.FAILED
                         chart.last_build_date = get_current_time()
                         chart.save()
                         break
+            if status:
+                chart.last_build_status = fun_test.PASSED
+                chart.last_build_date = get_current_time()
+                chart.save()
 
 
 def add_version_to_jenkins_job_id_map(date_time, version):
