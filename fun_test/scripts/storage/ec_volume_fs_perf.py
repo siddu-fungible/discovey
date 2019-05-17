@@ -57,14 +57,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Setting the syslog level to 2
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False,
-                                                      command_duration=5)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
-
-        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                      command_duration=5)
-        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
-
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
@@ -235,7 +227,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                           expected=0,
                                           message="Ensuring error_injection got disabled")
 
-            # fun_test.shared_variables[self.ec_ratio]["storage_controller"] = self.storage_controller
             fun_test.shared_variables[self.ec_ratio]["uuids"] = self.uuids
 
             lsblk_output = self.end_host.lsblk("-b")
@@ -254,6 +245,16 @@ class ECVolumeLevelTestcase(FunTestCase):
             for service in udev_services:
                 service_status = self.end_host.systemctl(service_name=service, action="stop")
                 fun_test.test_assert(service_status, "Stopping {} service".format(service))
+
+
+            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level], legacy=False,
+                                                      command_duration=5)
+            fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
+
+            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                          command_duration=5)
+            fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
+
 
             # Executing the FIO command to warm up the system
             if self.warm_up_traffic:
@@ -274,8 +275,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
         else:
             fun_test.simple_assert(False, "Setup Section Status")
-
-        # self.storage_controller = fun_test.shared_variables[self.ec_ratio]["storage_controller"]
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
