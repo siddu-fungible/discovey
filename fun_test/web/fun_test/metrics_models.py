@@ -216,7 +216,7 @@ class MetricChart(models.Model):
     visualization_unit = models.CharField(max_length=20, default="")
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
-    platform = models.TextField(default="F1")
+    platform = models.TextField(default=FunPlatform.F1)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)

@@ -549,9 +549,9 @@ def update_chart(request):
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
         if "set_expected" in request_json:
-            expected_key = request_json["set_expected"]
-            if expected_key:
-                data_sets = update_expected(chart=c, expected_key=expected_key)
+            expected_operation = request_json["set_expected"]
+            if expected_operation:
+                data_sets = update_expected(chart=c, expected_operation=expected_operation)
         if data_sets:
             c.data_sets = json.dumps(data_sets)
         if description:
@@ -589,8 +589,8 @@ def update_chart(request):
         invalidate_goodness_cache()
     return "Ok"
 
-def update_expected(chart, expected_key):
-    if expected_key:
+def update_expected(chart, expected_operation):
+    if expected_operation:
         current_data_sets = ml.get_data_sets(metric_id=chart.metric_id)
         peer_ids = ml.get_peer_ids(metric_id=chart.metric_id)
         for peer_id in peer_ids:
@@ -598,7 +598,7 @@ def update_expected(chart, expected_key):
             data_sets = json.loads(peer_chart.data_sets)
             for data_set in data_sets:
                 if data_set["output"]["expected"] != -1:
-                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"], data_set["output"]["unit"], expected_key)
+                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"], data_set["output"]["unit"], expected_operation)
                 else:
                     model_name = chart.metric_model_name
                     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -613,17 +613,17 @@ def update_expected(chart, expected_key):
                         if hasattr(latest_entry, output_unit_name):
                             output_unit = getattr(latest_entry, output_unit_name)
 
-                        set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_key)
+                        set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_operation)
                     else:
-                        set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit, expected_key)
+                        set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit, expected_operation)
         return current_data_sets
     else:
         return ml.get_data_sets(metric_id=chart.metric_id)
 
-def set_expected(current_data_sets, name, value, unit, expected_key):
+def set_expected(current_data_sets, name, value, unit, expected_operation):
     for current_data_set in current_data_sets:
         if current_data_set["name"] == name:
-            if expected_key == "Same as F1":
+            if expected_operation == "Same as F1":
                 current_data_set["output"]["expected"] = value
                 current_data_set["output"]["unit"] = unit
             else:

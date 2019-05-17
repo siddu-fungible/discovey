@@ -23,8 +23,9 @@ from dateutil.parser import parse
 from scripts.system.metric_parser import MetricParser
 from django.utils import timezone
 from web.fun_test.models_helper import add_jenkins_job_id_map
+from fun_global import FunPlatform
 
-F1 = "F1"
+F1 = FunPlatform.F1
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
@@ -1791,7 +1792,7 @@ class PrepareDbTc(FunTestCase):
         pass
 
     def run(self):
-        chart_names = ["F1", "All metrics"]
+        chart_names = [FunPlatform.F1, "All metrics"]
         prepare_status_db(chart_names=chart_names)
         TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
 

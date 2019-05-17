@@ -17,7 +17,7 @@ enum Platform {
 
 enum ExpectedOperation {
   SAME_AS_F1 = "Same as F1",
-  F1_4 = "F1/4"
+  F1_BY_4 = "F1/4"
 }
 
 @Component({
@@ -108,7 +108,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
   packets_per_second_category: string[] = ["Mpps", "pps"];
 
-  expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_4];
+  expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_BY_4];
 
   triageInfo: any = null;
   successCommit: string = null;
