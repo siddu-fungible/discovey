@@ -33,8 +33,18 @@ except (KeyError, ValueError):
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
+
+try:
+    inputs = fun_test.get_job_inputs()
+    if inputs and inputs.get('lso', 1):
+        enable_tso = True
+    else:
+        enable_tso = False
+except:
+    enable_tso = False
+
+
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
-enable_tso = False
 
 
 def setup_nu_host(funeth_obj):
