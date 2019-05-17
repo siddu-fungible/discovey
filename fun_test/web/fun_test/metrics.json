@@ -425,6 +425,9 @@
                 "name": "non_teramarks_customer_juniper",
                 "weight": 1,
                 "label": "Juniper",
+                "extensible_references": [
+                  "teramarks_customer_juniper"
+                ],
                 "children": [
                   {
                     "info": "juniper_NU_VP_NU_FWD_NFCP",
@@ -511,6 +514,18 @@
                     ]
                   }
                 ]
+              },
+              {
+                "info": "Alibaba",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "non_teramarks_customer_alibaba",
+                "weight": 0,
+                "label": "Alibaba",
+                "extensible_references": [
+                  "teramarks_customer_alibaba"
+                ],
+                "children": []
               }
             ]
           }
