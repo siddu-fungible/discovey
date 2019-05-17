@@ -172,7 +172,8 @@ class TcpPerformance1Conn(FunTestCase):
         tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.pcap'
         tcpdump_output_file = "/home/%s/%s/%s" % (nu_lab_obj.ssh_username, "netperf_teramark_capture",
                                                   tcpdump_temp_filename)
-        result = run_tcpdump_command(linux_obj=nu_lab_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file)
+        result = run_tcpdump_command(linux_obj=nu_lab_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
+                                     count=100000, filecount=1)
         fun_test.simple_assert(result, checkpoint)
         fun_test.shared_variables['tcpdump_pid'] = result
         
