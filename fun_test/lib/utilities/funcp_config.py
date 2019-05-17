@@ -173,6 +173,7 @@ class FunControlPlaneBringup:
                         'Cloning into \'FunControlPlane\'', 'Prepare End']
             for section in sections:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
+        linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
 
         setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
                                                      timeout=900)
