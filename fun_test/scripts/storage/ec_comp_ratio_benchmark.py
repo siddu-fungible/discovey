@@ -35,7 +35,7 @@ def get_lsv_write_count(storage_controller, lsv_uuid):
     lsv_keyword = "VOL_TYPE_BLK_LSV"
     resp = storage_controller.peek(props_tree="storage/volumes/{0}/{1}".format(lsv_keyword, lsv_uuid))
     fun_test.test_assert(resp['status'], message="Get LSV stats before compression", ignore_on_success=True)
-    return resp['stats']['write_bytes']
+    return resp['data']['stats']['write_bytes']
 
 
 class ECVolumeLevelScript(FunTestScript):
@@ -59,7 +59,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_f1_index = None
             self.f1_in_use = 0
             self.command_timeout = 5
-            self.reboot_timeout = 300
+            self.reboot_timeout = 480
         else:
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
@@ -67,7 +67,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Global Config: {}".format(self.__dict__))
         testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0,
+        topology_helper.set_dut_parameters(dut_index=self.f1_in_use,
                                            custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
         topology = topology_helper.deploy()
@@ -81,7 +81,8 @@ class ECVolumeLevelScript(FunTestScript):
                                                     target_port=self.come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
-        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use,
+                                                                            f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if testbed_type == "fs-6" and host_ip != "poc-server-01":  # TODO temp check for FS6 should be removed
                 continue
@@ -105,6 +106,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables['ip_configured'] = False
         fun_test.shared_variables['artifacts_shared'] = False
+        fun_test.shared_variables['huid'] = self.huid
+        fun_test.shared_variables['ctlid'] = self.ctlid
 
         # Configure Linux Host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
@@ -171,6 +174,9 @@ class ECVolumeLevelScript(FunTestScript):
 class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
         testcase = self.__class__.__name__
+        fun_test.shared_variables['setup_complete'] = False
+        huid = fun_test.shared_variables['huid']
+        ctlid = fun_test.shared_variables['ctlid']
         # parse benchmark dictionary
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
@@ -209,8 +215,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Create Controller
         fun_test.test_assert(self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
                                                                           uuid=self.ec_info["attach_uuid"][0],
-                                                                          huid=self.huid,
-                                                                          ctlid=self.ctlid,
+                                                                          huid=huid,
+                                                                          ctlid=ctlid,
                                                                           remote_ip=self.remote_ip,
                                                                           transport=self.attach_transport,
                                                                           command_duration=self.command_timeout)[
@@ -253,6 +259,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(fetch_nvme['status'], message="Check nvme device visible on end host")
         self.volume_name = fetch_nvme['volume_name']
         self.nvme_block_device = fetch_nvme['nvme_device']
+        fun_test.shared_variables['setup_complete'] = True
 
         # Disable the udev daemon which will skew the read stats of the volume during the test
         udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
@@ -296,7 +303,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         mount_dir = fun_test.shared_variables['mount_dir']
         test_corpuses = self.test_corpus
         end_host_tmp_dir = "/tmp/"
-        lsv_uuid = self.vols_created['lsv'][0]['uuid']
+        lsv_uuid = self.ec_info["attach_uuid"][0]
         self.end_host.flush_cache_mem()
 
         init_write_count = get_lsv_write_count(self.storage_controller, lsv_uuid)
@@ -362,7 +369,23 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Do nvme disconnect
             cmd = "sudo nvme disconnect -n {0} -d {1}".format(self.nvme_subsystem, self.volume_name)
             self.end_host.sudo_command(cmd)
+
+            huid = fun_test.shared_variables['huid']
+            ctlid = fun_test.shared_variables['ctlid']
+            if fun_test.shared_variables["setup_complete"]:
+                # Detaching all the EC/LS volumes to the external server
+                for num in xrange(self.ec_info["num_volumes"]):
+                    command_result = self.storage_controller.volume_detach_remote(ns_id=num + 1,
+                                                                                  uuid=self.ec_info["attach_uuid"][num],
+                                                                                  huid=huid,
+                                                                                  ctlid=ctlid,
+                                                                                  transport=self.attach_transport,
+                                                                                  command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+
             self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)
+            fun_test.shared_variables["setup_complete"] = False
         except Exception as ex:
             fun_test.critical(ex.message)
 
