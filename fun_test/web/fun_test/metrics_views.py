@@ -33,10 +33,11 @@ from lib.utilities.git_manager import GitManager
 from web.fun_test.metrics_models import Triage, TriageFlow
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
 from web.fun_test.db_fixup import get_rounded_time
+from web.fun_test.metrics_lib import MetricLib
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
-
+ml = MetricLib()
 
 def index(request):
     return render(request, 'qa_dashboard/metrics.html', locals())
@@ -547,6 +548,10 @@ def update_chart(request):
         base_line_date = get_time_from_timestamp(base_line_date)
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
+        if "set_expected" in request_json:
+            expected_operation = request_json["set_expected"]
+            if expected_operation:
+                data_sets = update_expected(chart=c, expected_operation=expected_operation)
         if data_sets:
             c.data_sets = json.dumps(data_sets)
         if description:
@@ -584,6 +589,46 @@ def update_chart(request):
         invalidate_goodness_cache()
     return "Ok"
 
+def update_expected(chart, expected_operation):
+    if expected_operation:
+        current_data_sets = ml.get_data_sets(metric_id=chart.metric_id)
+        peer_ids = ml.get_peer_ids(metric_id=chart.metric_id)
+        for peer_id in peer_ids:
+            peer_chart = MetricChart.objects.get(metric_id=peer_id)
+            data_sets = json.loads(peer_chart.data_sets)
+            for data_set in data_sets:
+                if data_set["output"]["expected"] != -1:
+                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"], data_set["output"]["unit"], expected_operation)
+                else:
+                    model_name = chart.metric_model_name
+                    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+                    metric_model = app_config.get_metric_models()[model_name]
+                    entries = metric_model.objects.filter(**data_set["inputs"]).order_by("-input_date_time")
+                    if len(entries):
+                        output_name = data_set["output"]["name"]
+                        output_unit_name = output_name + "_unit"
+                        latest_entry = entries.first()
+                        if hasattr(latest_entry, output_name):
+                            output_value = getattr(latest_entry, output_name)
+                        if hasattr(latest_entry, output_unit_name):
+                            output_unit = getattr(latest_entry, output_unit_name)
+
+                        set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_operation)
+                    else:
+                        set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit, expected_operation)
+        return current_data_sets
+    else:
+        return ml.get_data_sets(metric_id=chart.metric_id)
+
+def set_expected(current_data_sets, name, value, unit, expected_operation):
+    for current_data_set in current_data_sets:
+        if current_data_set["name"] == name:
+            if expected_operation == "Same as F1":
+                current_data_set["output"]["expected"] = value
+                current_data_set["output"]["unit"] = unit
+            else:
+                current_data_set["output"]["expected"] = value / 4
+                current_data_set["output"]["unit"] = unit
 
 @csrf_exempt
 @api_safe_json_response
@@ -634,6 +679,7 @@ def metric_by_id(request):
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
     result["internal_chart_name"] = chart.internal_chart_name
+    result["platform"] = chart.platform
     return result
 
 
