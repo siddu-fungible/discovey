@@ -73,15 +73,14 @@ class ECVolumeLevelScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "FS Topology deployed")
 
-        self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        self.db_log_time = datetime.now()
+        self.fs = topology.get_dut_instance(index=0)
 
         self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip,
                                                     target_port=self.come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
-        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use,
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0,
                                                                             f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if testbed_type == "fs-6" and host_ip != "poc-server-01":  # TODO temp check for FS6 should be removed
@@ -97,15 +96,11 @@ class ECVolumeLevelScript(FunTestScript):
 
         self.test_network = self.csr_network[str(self.fpg_inteface_index)]
         fun_test.shared_variables["end_host"] = self.end_host
-        fun_test.shared_variables["topology"] = topology
-        fun_test.shared_variables["fs"] = self.fs
-        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["test_network"] = self.test_network
-        fun_test.shared_variables["syslog_level"] = self.syslog_level
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables['ip_configured'] = False
         fun_test.shared_variables['artifacts_shared'] = False
+        fun_test.shared_variables['nvme_device_connected'] = False
         fun_test.shared_variables['huid'] = self.huid
         fun_test.shared_variables['ctlid'] = self.ctlid
 
@@ -165,8 +160,7 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
         try:
             self.storage_controller.disconnect()
-            fs = fun_test.shared_variables["fs"]
-            fs.cleanup()
+            self.fs.cleanup()
         except Exception as ex:
             fun_test.critical(ex.message)
 
@@ -189,11 +183,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             setattr(self, k, v)
 
         # compute BLT, EC vol size
-        self.fs = fun_test.shared_variables["fs"]
         self.end_host = fun_test.shared_variables["end_host"]
         self.test_network = fun_test.shared_variables["test_network"]
-        self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         fun_test.shared_variables["attach_transport"] = self.attach_transport
 
@@ -268,6 +259,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                          action="stop"),
                                  "Stopping {} service".format(service))
 
+        # Create file system on attached device
         fun_test.test_assert(self.end_host.create_filesystem(fs_type=self.file_system,
                                                              device=self.nvme_block_device,
                                                              timeout=self.command_timeout),
@@ -324,6 +316,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             curr_write_count = get_lsv_write_count(self.storage_controller, lsv_uuid)
             comp_size = curr_write_count - init_write_count
+            fun_test.simple_assert(comp_size, "Check compressed size is non-zero value")
             comp_pct = get_comp_percent(orig_size=test_corpuses[corpus]['orig_size'], comp_size=comp_size)
             gzip_float_pct = float(test_corpuses[corpus]['gzip_comp_pct'])
             compare_result, diff = compare_gzip(gzip_float_pct, comp_pct, self.margin)
@@ -355,6 +348,7 @@ class ECVolumeLevelTestcase(FunTestCase):
     def publish_result(self, result_lst):
         unit_dict = {"f1_compression_ratio_unit": PerfUnit.UNIT_NUMBER}
         generic_helper = ModelHelper(model_name="InspurZipCompressionRatiosPerformance")
+        fun_test.log(result_lst)
         try:
             generic_helper.set_units(**unit_dict)
             for d in result_lst:
@@ -393,8 +387,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 class EcCompBenchmarkEffortAuto(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test Compression ratio's for different corpus's of data with F1's compression"
-                                      " engine and compare it with Gzip. F1 Effort: Auto, Gzip Effort: 6",
+                              summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with "
+                                      "F1's compression engine and compare it with Gzip. F1 Effort: Auto, Gzip Effort: 6",
                               steps="""
                               1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
                                  a Journal Volume and an LSV volume with compression enabled effort Auto.
@@ -417,8 +411,8 @@ class EcCompBenchmarkEffortAuto(ECVolumeLevelTestcase):
 class EcCompBenchmarkEffort64Gbps(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test Compression ratio's for different corpus's of data with F1's compression"
-                                      " engine and compare it with Gzip. F1 Effort: 64Gbps, Gzip Effort: 1",
+                              summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with "
+                                      "F1's compression engine and compare it with Gzip. F1 Effort: 64Gbps, Gzip Effort: 1",
                               steps="""
                               1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
                                  a Journal Volume and an LSV volume with compression enabled effort Auto.
@@ -441,8 +435,8 @@ class EcCompBenchmarkEffort64Gbps(ECVolumeLevelTestcase):
 class EcCompBenchmarkEffort2Gbps(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Test Compression ratio's for different corpus's of data with F1's compression"
-                                      " engine and compare it with Gzip. F1 Effort: 2Gbps, Gzip Effort: 9",
+                              summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with"
+                                      " F1's compression engine and compare it with Gzip. F1 Effort: 2Gbps, Gzip Effort: 9",
                               steps="""
                               1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
                                  a Journal Volume and an LSV volume with compression enabled effort Auto.
