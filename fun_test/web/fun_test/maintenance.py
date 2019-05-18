@@ -26,9 +26,11 @@ if __name__ == "__main_s1_platform__":
             chart.data_sets = json.dumps(data_sets)
             chart.save()
 
-if __name__ == "__main__":
-    internal_chart_names = ["juniper_ipsec_enc_single_tunnel_output_throughput", "juniper_ipsec_enc_single_tunnel_output_pps",
-                            "juniper_ipsec_enc_multi_tunnel_output_throughput", "juniper_ipsec_enc_multi_tunnel_output_pps",
+if __name__ == "__main_ipsec__":
+    internal_chart_names = ["juniper_ipsec_enc_single_tunnel_output_throughput",
+                            "juniper_ipsec_enc_single_tunnel_output_pps",
+                            "juniper_ipsec_enc_multi_tunnel_output_throughput",
+                            "juniper_ipsec_enc_multi_tunnel_output_pps",
                             "juniper_ipsec_dec_single_tunnel_output_throughput",
                             "juniper_ipsec_dec_single_tunnel_output_pps",
                             "juniper_ipsec_dec_multi_tunnel_output_throughput",
@@ -90,3 +92,100 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "created charts for the IPSEC juniper customer teramarks"
+
+if __name__ == "__main__":
+    internal_iops_chart_names = ["rand_read_qd_nvmetcp_output_iops", "read_qd_nvmetcp_output_iops"]
+    # internal_latency_chart_names = ["read_qd1_nvmetcp_output_latency", "read_qd8_nvmetcp_output_latency",
+    #                              "read_qd16_nvmetcp_output_latency", "read_qd32_nvmetcp_output_latency", "read_qd64_nvmetcp_output_latency",
+    #                         "rand_read_qd1_nvmetcp_output_latency", "rand_read_qd8_nvmetcp_output_latency", "rand_read_qd16_nvmetcp_output_latency",
+    #                         "rand_read_qd32_nvmetcp_output_latency", "rand_read_qd64_nvmetcp_output_latency"]
+    copy_read = "read_qd1_nvmetcp_output_latency"
+    copy_rand_read = "rand_read_qd1_nvmetcp_output_latency"
+    fio_rand_read_job_names = [
+        "fio_tcp_randread_blt_1_1_scaling", "fio_tcp_randread_blt_8_1_scaling", "fio_tcp_randread_blt_16_1_scaling",
+        "fio_tcp_randread_blt_16_2_scaling", "fio_tcp_randread_blt_16_4_scaling"]
+    fio_read_job_names = ["fio_tcp_read_blt_1_1_scaling",
+                          "fio_tcp_read_blt_8_1_scaling", "fio_tcp_read_blt_16_1_scaling",
+                          "fio_tcp_read_blt_16_2_scaling",
+                          "fio_tcp_read_blt_16_4_scaling"]
+    for internal_iops_chart_name in internal_iops_chart_names:
+        output_name = "output_read_iops"
+        iops_chart = MetricChart.objects.get(internal_chart_name=internal_iops_chart_name)
+        data_sets = []
+        if "rand_read" in internal_iops_chart_name:
+            fio_job_names = fio_rand_read_job_names
+            operation = "randread"
+        else:
+            fio_job_names = fio_read_job_names
+            operation = "read"
+        for  fio_job_name in fio_job_names:
+            if "1_1" in fio_job_name:
+                name = "qd1"
+            elif "8_1" in fio_job_name:
+                name = "qd8"
+            elif "16_1" in fio_job_name:
+                name = "qd16"
+            elif "16_2" in fio_job_name:
+                name = "qd32"
+            else:
+                name = "qd64"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1, "unit": iops_chart.visualization_unit}
+            data_sets.append(one_data_set)
+        iops_chart.data_sets = json.dumps(data_sets)
+        iops_chart.save()
+
+    chart_name = "Latency"
+    fio_job_names = fio_read_job_names + fio_rand_read_job_names
+    for fio_job_name in fio_job_names:
+        if "1_1" in fio_job_name:
+            name = "qd1"
+        elif "8_1" in fio_job_name:
+            name = "qd8"
+        elif "16_1" in fio_job_name:
+            name = "qd16"
+        elif "16_2" in fio_job_name:
+            name = "qd32"
+        else:
+            name = "qd64"
+        if "randread" in fio_job_name:
+            internal_chart_name = "rand_read_" + name + "_nvmetcp_output_latency"
+            copy = copy_rand_read
+        else:
+            internal_chart_name = "read_" + name + "_nvmetcp_output_latency"
+            copy = copy_read
+        try:
+            latency_chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+            data_sets = json.loads(latency_chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            latency_chart.data_sets = json.dumps(data_sets)
+            latency_chart.save()
+        except:
+            chart = MetricChart.objects.get(internal_chart_name=copy)
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info=chart.owner_info,
+                        source=chart.source,
+                        positive=chart.positive,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.y1_axis_title,
+                        metric_model_name=chart.metric_model_name,
+                        base_line_date=chart.base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added new qdepth charts for raw block nvmetcp"
+
