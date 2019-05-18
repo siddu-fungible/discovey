@@ -2883,14 +2883,6 @@
                             "label": "Latency, QDepth=1"
                           },
                           {
-                            "info": "read_qd4_nvmetcp_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_qd4_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
                             "info": "read_qd8_nvmetcp_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
@@ -2905,6 +2897,22 @@
                             "name": "read_qd16_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "read_qd32_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd32_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "read_qd64_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd64_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
                           }
                         ]
                       },
@@ -2933,14 +2941,6 @@
                             "label": "Latency, QDepth=1"
                           },
                           {
-                            "info": "rand_read_qd4_nvmetcp_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd4_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
                             "info": "rand_read_qd8_nvmetcp_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
@@ -2955,6 +2955,22 @@
                             "name": "rand_read_qd16_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "rand_read_qd32_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd32_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "rand_read_qd64_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd64_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
                           }
                         ]
                       }

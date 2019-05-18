@@ -426,9 +426,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 self.end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
 
                 # Check EQM stats before test
-                self.eqm_stats_before = {}
-                self.eqm_stats_before = self.storage_controller.peek(props_tree="stats/eqm")
-                eqm_result = False
+                # self.eqm_stats_before = {}
+                # self.eqm_stats_before = self.storage_controller.peek(props_tree="stats/eqm")
+                # eqm_result = False
 
                 fun_test.log("Running FIO...")
                 fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
@@ -447,6 +447,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert(fio_output[combo][mode], "Fio {} test for numjobs {} & iodepth {}".
                                      format(mode, fio_numjobs, fio_iodepth))
 
+                '''
                 self.eqm_stats_after = {}
                 self.eqm_stats_after = self.storage_controller.peek(props_tree="stats/eqm")
 
@@ -458,7 +459,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         stat_delta = current_value - value
                         fun_test.critical("There is a mismatch in {} stat, delta {}".
                                           format(field, stat_delta))
-
+                '''
+                
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 for op, stats in fio_output[combo][mode].items():
