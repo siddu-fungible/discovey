@@ -61,29 +61,29 @@ class VerifySetup(FunTestCase):
 
         while time.time() < t_end:
 
-            # fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False), message="Boot F1s")
-            s05 = self.verify_host_pcie_link(hostname="cab03-qa-05")
+            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False), message="Boot F1s")
+            s05 = self.verify_host_pcie_link(hostname="cab02-qa-05")
             if s05 == "1":
                 server05 += 1
             elif s05 == "0":
                 server05_fails += 1
             elif s05 == "2":
                 server05_incorrect += 1
-            s06 = self.verify_host_pcie_link(hostname="cab03-qa-06")
+            s06 = self.verify_host_pcie_link(hostname="cab02-qa-06")
             if s06 == "1":
                 server06 += 1
             elif s06 == "0":
                 server06_fails += 1
             elif s06 == "2":
                 server06_incorrect += 1
-            s07 = self.verify_host_pcie_link(hostname="cab03-qa-07", username="localadmin", password="Precious1*", mode="x8")
+            s07 = self.verify_host_pcie_link(hostname="cab02-qa-07", username="localadmin", password="Precious1*", mode="x8")
             if s07 == "1":
                 server07 += 1
             elif s07 == "0":
                 server07_fails += 1
             elif s07 == "2":
                 server07_incorrect += 1
-            s08 = self.verify_host_pcie_link(hostname="cab03-qa-08")
+            s08 = self.verify_host_pcie_link(hostname="cab02-qa-08")
             if s08 == "1":
                 server08 += 1
             elif s07 == "0":
