@@ -115,7 +115,7 @@ class VerifySetup(FunTestCase):
                 count += 1
                 if count == 5:
                     fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
-        lspci_out = linux_obj.lspci(grep_filter="LnkSta", verbose=True, device="1dad:")
+        lspci_out = linux_obj.sudo_command(command="sudo lspci -d 1dad: -vv | grep LnkSta")
         result = "1"
         if mode not in lspci_out:
             if "LnkSta" not in lspci_out:
