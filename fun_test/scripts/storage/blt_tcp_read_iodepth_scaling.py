@@ -492,7 +492,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            # post_results("BLT_IO_Scaling", test_method, *row_data_list)
+            post_results("BLT_IO_Scaling", test_method, *row_data_list)
 
         table_name = "BLT " + unicode.upper(mode) + " Results Summary"
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
