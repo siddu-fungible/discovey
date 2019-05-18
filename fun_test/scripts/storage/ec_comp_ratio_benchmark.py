@@ -340,7 +340,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         fun_test.test_assert(test_result,
                              message="F1 Compression benchmarking with Accelerator Effort: {0} and Gzip Effort: {1}".format(
-                                 self.accelerator_effort, self.gip_effort))
+                                 self.accelerator_effort, self.giz_effort))
 
     def publish_result(self, result_lst):
         unit_dict = {"f1_compression_ratio_unit": PerfUnit.UNIT_NUMBER}
@@ -372,7 +372,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                               remote_ip=self.remote_ip,
                                                                               transport=self.attach_transport,
                                                                               command_duration=self.command_timeout)
-                fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Detaching EC/LS volume on DUT")
 
             self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)
