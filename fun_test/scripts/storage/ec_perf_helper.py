@@ -69,3 +69,22 @@ def fetch_nvme_device(end_host, nsid):
             result['nvme_device'] = "/dev/{}".format(result['volume_name'])
             result['status'] = True
     return result
+
+
+def fetch_numa_cpus(end_host, ethernet_adapter):
+    lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
+    fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
+    adapter_id = lspci_output[0]['id']
+    fun_test.simple_assert(adapter_id, "Retrieve Ethernet Adapter Bus ID")
+    lspci_verbose_output = end_host.lspci(slot=adapter_id, verbose=True)
+    numa_node = lspci_verbose_output[0]['numa_node']
+    fun_test.test_assert(numa_node, "Ethernet Adapter NUMA Node Retrieved")
+
+    # Fetching NUMA CPUs for above fetched NUMA Node
+    lscpu_output = end_host.lscpu(grep_filter="node{}".format(numa_node))
+    fun_test.simple_assert(lscpu_output, "CPU associated to Ethernet Adapter NUMA")
+
+    numa_cpus = lscpu_output.values()[0]
+    fun_test.test_assert(numa_cpus, "CPU associated to Ethernet Adapter NUMA")
+    fun_test.log("Ethernet Adapter: {}, NUMA Node: {}, NUMA CPU: {}".format(ethernet_adapter, numa_node, numa_cpus))
+    return numa_cpus

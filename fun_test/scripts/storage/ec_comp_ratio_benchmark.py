@@ -336,11 +336,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                            table_data={"headers": table_header, "rows": table_rows})
         if is_production_mode():
             pass
-            #self.publish_result(post_result_lst)
+            self.publish_result(post_result_lst)
 
         fun_test.test_assert(test_result,
                              message="F1 Compression benchmarking with Accelerator Effort: {0} and Gzip Effort: {1}".format(
-                                 self.accelerator_effort, self.giz_effort))
+                                 self.accelerator_effort, self.gzip_effort))
 
     def publish_result(self, result_lst):
         unit_dict = {"f1_compression_ratio_unit": PerfUnit.UNIT_NUMBER}
