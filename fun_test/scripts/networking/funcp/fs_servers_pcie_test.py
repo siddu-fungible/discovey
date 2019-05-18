@@ -54,8 +54,8 @@ class VerifySetup(FunTestCase):
         for server in servers_mode:
             final_result[server] = {"success": 0, "incomplete": 0, "failure": 0}
         while time.time() < t_end:
-            # fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False),
-            #                      message="Boot F1s")
+            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False),
+                                 message="Boot F1s")
             for server in servers_mode:
                 print server
                 result = self.verify_host_pcie_link(hostname=server, mode=servers_mode[server])
