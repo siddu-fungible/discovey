@@ -5,7 +5,9 @@ from scripts.networking.helper import *
 from lib.utilities.funcp_config import *
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
+from lib.topology.topology_helper import TopologyHelper
 import pprint
+
 
 class ScriptSetup(FunTestScript):
 
@@ -39,13 +41,28 @@ class VerifySetup(FunTestCase):
     def run(self):
         #funos-f1.stripped_vdd_en2.gz
         #cmukherjee/funos-f1.stripped.gz
-        fs_name="fs-45"
+        fs_name=""
+        if fun_test.get_job_environment_variable('test_bed_type'):
+            fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        else:
+            fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_image_f1_0="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_image_f1_1="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_args_f1_0="app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=0 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=3 --mgmt")
+        f1_0_boot_args = "app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server --serial --dpc-uart --dis-stats " \
+                         "retimer=0 --mgmt"
+        f1_1_boot_args = "app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server --serial --dpc-uart --dis-stats " \
+                         "retimer=0 --mgmt"
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(dut_index=0,
+                                           f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                          1: {"boot_args": f1_1_boot_args}}
+                                           )
+
         t_end = time.time() + 60 * 120
 
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
@@ -54,8 +71,11 @@ class VerifySetup(FunTestCase):
         for server in servers_mode:
             final_result[server] = {"success": 0, "incomplete": 0, "failure": 0}
         while time.time() < t_end:
-            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False),
-                                 message="Boot F1s")
+            # fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False),
+            #                      message="Boot F1s")
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology deployed")
+
             for server in servers_mode:
                 print server
                 result = self.verify_host_pcie_link(hostname=server, mode=servers_mode[server])
