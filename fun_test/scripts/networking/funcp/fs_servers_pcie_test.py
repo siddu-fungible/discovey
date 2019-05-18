@@ -43,9 +43,9 @@ class VerifySetup(FunTestCase):
         funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_image_f1_0="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_image_f1_1="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_args_f1_0="app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server "
-                                                          "--serial --dpc-uart --dis-stats retimer=0,1,2 --mgmt",
+                                                          "--serial --dpc-uart --dis-stats retimer=0 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
-                                                          "--serial --dpc-uart --dis-stats retimer=0 --mgmt")
+                                                          "--serial --dpc-uart --dis-stats retimer=3 --mgmt")
         t_end = time.time() + 60 * 120
 
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
