@@ -126,19 +126,19 @@
     }
   },
   {
-    "name": "fs-47",
+    "name": "fs-45",
     "bmc": {
-      "mgmt_ip": "10.1.104.133",
+      "mgmt_ip": "10.1.104.163",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.104.140",
+      "mgmt_ip": "10.1.104.164",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.104.127",
+      "mgmt_ip": "10.1.104.165",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
