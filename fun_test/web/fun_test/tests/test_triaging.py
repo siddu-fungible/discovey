@@ -387,6 +387,7 @@ class TrialStateMachine:
                     trial.result = RESULTS["UNKNOWN"]
                     trial.status = TriageTrialStates.ERROR
                     trial.save()
+
         return status
 
     def validate_lsf_job(self, trial):

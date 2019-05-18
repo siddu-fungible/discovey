@@ -58,6 +58,10 @@ TLS_32_TUNNEL = "tls_32_tunnel_teramark"
 TLS_64_TUNNEL = "tls_64_tunnel_teramark"
 SOAK_DMA_MEMCPY_THRESHOLD = "soak_funos_memcpy_threshold"
 
+IPSEC_ENC_SINGLE_TUNNEL = "ipsec_enc_single_tunnel_teramark"
+IPSEC_ENC_MULTI_TUNNEL = "ipsec_enc_multi_tunnel_teramark"
+IPSEC_DEC_SINGLE_TUNNEL = "ipsec_dec_single_tunnel_teramark"
+IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -160,6 +164,7 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            build_properties="", lsf_job_id="",
                            sdk_version=version)
 
+
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -175,7 +180,8 @@ class MyScript(FunTestScript):
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD]
+                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
+                IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1602,7 +1608,6 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                             self.add_entries_into_dual_table(default_metrics=metrics, line=line, date_time=date_time)
                             continue
 
-
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1723,6 +1728,7 @@ class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               summary="Rcnvme random write all Performance Test on F1",
                               steps="Steps 1")
 
+
 class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
     tag = TLS_1_TUNNEL
     model = "JuniperTlsTunnelPerformance"
@@ -1762,6 +1768,7 @@ class SoakDmaMemcpyThresholdPerformanceTC(PalladiumPerformanceTc):
                               summary="Soak DMA memcpy vs VP memcpy threshold test",
                               steps="Steps 1")
 
+
 class WuLatencyUngatedPerformanceTc(PalladiumPerformanceTc):
     tags = ALLOC_SPEED_TEST_TAG
     model = "WuLatencyUngated"
@@ -1772,6 +1779,7 @@ class WuLatencyUngatedPerformanceTc(PalladiumPerformanceTc):
                               summary="Wu Latency Ungated Performance Test on F1",
                               steps="Steps 1")
 
+
 class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
     tags = ALLOC_SPEED_TEST_TAG
     model = "WuLatencyAllocStack"
@@ -1781,6 +1789,47 @@ class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
         self.set_test_details(id=50,
                               summary="Wu Latency Alloc Stack Test on F1",
                               steps="Steps 1")
+
+
+class JuniperIpsecEncryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_ENC_SINGLE_TUNNEL
+    model = "JuniperIpsecEncryptionSingleTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=51,
+                              summary="TeraMark IPSEC encryption single tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+
+class JuniperIpsecEncryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_ENC_MULTI_TUNNEL
+    model = "JuniperIpsecEncryptionMultiTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=52,
+                              summary="TeraMark IPSEC encryption multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+
+class JuniperIpsecDecryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_DEC_SINGLE_TUNNEL
+    model = "JuniperIpsecDecryptionSingleTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=53,
+                              summary="TeraMark IPSEC decryption single tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+
+class JuniperIpsecDecryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_DEC_MULTI_TUNNEL
+    model = "JuniperIpsecDecryptionMultiTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=54,
+                              summary="TeraMark IPSEC decryption multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1853,6 +1902,10 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTC())
     myscript.add_test_case(WuLatencyUngatedPerformanceTc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
+    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTC())
+    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTC())
+    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTC())
+    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

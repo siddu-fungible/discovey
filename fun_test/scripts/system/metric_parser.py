@@ -6,12 +6,13 @@ import json
 import collections
 from fun_global import RESULTS
 from dateutil.parser import parse
+from fun_global import FunPlatform
 
 app_config = apps.get_app_config(app_label='fun_test')
 
 
 class MetricParser():
-    def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None, platform="F1"):
+    def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None, platform=FunPlatform.F1):
         result = {}
         if model_name:
             result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform)
@@ -37,7 +38,7 @@ class MetricParser():
             return self.rcnvme(logs=logs, date_time=date_time, model_name=model_name)
         elif "HuLatency" in model_name or "HuThroughput" in model_name:
             return self.hu_networking(logs=logs, date_time=date_time)
-        elif "JuniperCrypto" in model_name:
+        elif "JuniperCryptoTunnel" in model_name or "JuniperIpsec" in model_name:
             return self.crypto_tunnel(logs=logs, date_time=date_time)
         elif "LookupEngine" in model_name:
             return self.lookup_engine(logs=logs, date_time=date_time)

@@ -1,10 +1,8 @@
 from lib.system.fun_test import *
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
-import fun_global
 from lib.fun.fs import Fs
 from lib.system import utils
-from datetime import datetime
 from ec_perf_helper import *
 
 
@@ -42,7 +40,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         self.fs = topology.get_dut_instance(index=0)
-        self.db_log_time = datetime.now()
 
         self.end_host = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.end_host.host_ip,
@@ -53,7 +50,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["syslog_level"] = self.syslog_level
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
         fun_test.shared_variables['nsid'] = 0
@@ -161,9 +157,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
 
-            # Attaching/Exporting all the EC/LS volumes to the external server
-            fun_test.shared_variables["ec"]["setup_created"] = True
-
             # disabling the error_injection for the EC volume
             command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
                                                           command_duration=self.command_timeout)
@@ -219,7 +212,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
             fun_test.shared_variables['setup_created'] = True
-        fun_test.simple_assert(fun_test.shared_variables['setup_created'], message="Check Setup got created successfully")
+        fun_test.simple_assert(fun_test.shared_variables['setup_created'],
+                               message="Check Setup got created successfully")
 
     def run(self):
 
@@ -250,12 +244,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_cmd_args['name'] = fio_job_name
 
                 fio_result[combo][mode] = True
-                row_data_dict = {}
-                row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = fio_cmd_args['bs']
-                row_data_dict["iodepth"] = io_depth
-                row_data_dict["size"] = fio_cmd_args["size"]
-                row_data_dict["fio_job_name"] = fio_job_name
+                row_data_dict = {"mode": mode,
+                                 "block_size": fio_cmd_args['bs'],
+                                 "iodepth": io_depth * num_jobs,
+                                 "size": fio_cmd_args["size"],
+                                 "fio_job_name": fio_job_name}
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
@@ -298,7 +291,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC Volume", test_method, *row_data_list)
+                    post_results("EC Volume", test_method, fun_test.shared_variables['num_ssd'],
+                                 fun_test.shared_variables['num_volumes'], *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

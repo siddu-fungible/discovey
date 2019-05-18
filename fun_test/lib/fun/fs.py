@@ -209,7 +209,13 @@ class Bmc(Linux):
 
                             f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
-
+        tempip = self.host_ip.split('.')
+        tempip[3] = "1"
+        gatewayip = ".".join(tempip)
+        self.u_boot_command(command="setenv gatewayip %s" % gatewayip, timeout=10, expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
+        self.u_boot_command(command="setenv serverip 10.1.21.48", timeout=10, expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
         self.u_boot_command(
             command="setenv bootargs {}".format(
                 self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
