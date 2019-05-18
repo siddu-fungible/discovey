@@ -7,6 +7,7 @@ from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funcp.helper import *
 
+
 class ScriptSetup(FunTestScript):
 
     def describe(self):
@@ -90,6 +91,7 @@ class VerifySetup(FunTestCase):
                 server08_fails += 1
             elif s07 == "2":
                 server08_incorrect += 1
+            print("#####################################################################################")
             fun_test.log("Server 05 success : %s | Incomplete : %s | Failures : %s"
                          % (server05, server05_incorrect, server05_fails))
             fun_test.log("Server 06 success : %s | Incomplete : %s | Failures : %s"
@@ -98,6 +100,7 @@ class VerifySetup(FunTestCase):
                          % (server07, server07_incorrect, server07_fails))
             fun_test.log("Server 08 success : %s | Incomplete : %s | Failures : %s"
                          % (server08, server08_incorrect, server08_fails))
+            print("#####################################################################################")
 
     def cleanup(self):
 
