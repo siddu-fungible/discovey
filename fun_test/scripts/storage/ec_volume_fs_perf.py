@@ -248,12 +248,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_cmd_args['name'] = fio_job_name
 
                 fio_result[combo][mode] = True
-                row_data_dict = {}
-                row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = fio_cmd_args['bs']
-                row_data_dict["iodepth"] = io_depth
-                row_data_dict["size"] = fio_cmd_args["size"]
-                row_data_dict["fio_job_name"] = fio_job_name
+                row_data_dict = {"mode": mode,
+                                 "block_size": fio_cmd_args['bs'],
+                                 "iodepth": io_depth * num_jobs,
+                                 "size": fio_cmd_args["size"],
+                                 "fio_job_name": fio_job_name}
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
