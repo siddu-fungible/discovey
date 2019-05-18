@@ -24,6 +24,7 @@ class ECVolumeLevelScript(FunTestScript):
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
         config_dict = utils.parse_file_to_json(config_file)
+        testbed_type = fun_test.get_job_environment_variable("test_bed_type")
 
         if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
             fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
@@ -57,7 +58,7 @@ class ECVolumeLevelScript(FunTestScript):
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
+                if testbed_type == "fs-6" and host_ip != "poc-server-01":
                     continue
                 self.end_host = host_info["host_obj"]
                 self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
