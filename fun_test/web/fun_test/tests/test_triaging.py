@@ -293,8 +293,9 @@ class TrialStateMachine:
                         m = re.search(triage.regex_match_string, line)
                         if m:
                             trial.regex_match = m.group(0)
-                    trial.status = TriageTrialStates.COMPLETED
-                    trial.save()
+                            break
+                trial.status = TriageTrialStates.COMPLETED
+                trial.save()
 
         return status
 
