@@ -524,9 +524,6 @@ class BLTFioSeqRead(BLTVolumePerformanceTestcase):
          host with numjobs & IOdepth : (1,1),(8,1),(16,1),(16,2),(16,4) and check the performance. 
         ''')
 
-    def run(self):
-        pass
-
 
 class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
