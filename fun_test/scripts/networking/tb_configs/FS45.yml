@@ -16,10 +16,10 @@ hu:
         - hu1-f0:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 18.1.1.1
-            ipv4_netmask: 255.255.255.254
+            ipv4_netmask: 255.255.255.0
       routes:
 
-        - prefix: 18.1.1.2/32
+        - prefix: 18.1.1.0/24
           nexthop: 18.1.1.0
 hu2:
   hostname: cab03-qa-01
@@ -35,8 +35,8 @@ hu2:
         - hu2-f0:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 19.1.1.1
-            ipv4_netmask: 255.255.255.254
+            ipv4_netmask: 255.255.255.0
       routes:
 
-        - prefix: 19.1.1.1/32
+        - prefix: 19.1.1.0/24
           nexthop: 19.1.1.0
