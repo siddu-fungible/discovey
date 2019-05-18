@@ -117,14 +117,13 @@ class VerifySetup(FunTestCase):
                     fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
         lspci_out = linux_obj.lspci(grep_filter="LnkSta", verbose=True, device="1dad:")
         result = "1"
-        sections = ['LnkSta', 'Speed', 'Width', 'EqualizationComplete']
-        for section in sections:
-            if section not in lspci_out:
+        if mode not in lspci_out:
+            if "LnkSta" not in lspci_out:
                 fun_test.critical("PCIE link did not come up")
                 result = "0"
-        if mode not in sections:
-            fun_test.critical("PCIE link did not come up in %s mode" % mode)
-            result = "2"
+            else:
+                fun_test.critical("PCIE link did not come up in %s mode" % mode)
+                result = "2"
         return result
 
 if __name__ == '__main__':
