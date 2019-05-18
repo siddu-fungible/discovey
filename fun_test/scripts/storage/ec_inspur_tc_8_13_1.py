@@ -73,28 +73,11 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["test_network"] = self.test_network
         fun_test.shared_variables["syslog_level"] = self.syslog_level
-        fun_test.shared_variables["db_log_time"] = datetime.now()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["topology"] = topology
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
-        lspci_output = self.end_host.lspci(grep_filter=self.ethernet_adapter)
-        fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
-        adapter_id = lspci_output[0]['id']
-        fun_test.simple_assert(adapter_id, "Ethernet Adapter Bus ID Retrieved")
-        lspci_verbose_output = self.end_host.lspci(slot=adapter_id, verbose=True)
-        numa_node = lspci_verbose_output[0]['numa_node']
-        fun_test.test_assert(numa_node, "Ethernet Adapter NUMA Node Retrieved")
-
-        # Fetching NUMA CPUs for above fetched NUMA Node
-        lscpu_output = self.end_host.lscpu(grep_filter="node{}".format(numa_node))
-        fun_test.simple_assert(lscpu_output, "CPU associated to Ethernet Adapter NUMA")
-
-        self.numa_cpus = lscpu_output.values()[0]
-        fun_test.test_assert(self.numa_cpus, "CPU associated to Ethernet Adapter NUMA")
-        fun_test.log("Ethernet Adapter: {}, NUMA Node: {}, NUMA CPU: {}".format(self.ethernet_adapter, numa_node,
-                                                                                self.numa_cpus))
-
-        fun_test.shared_variables["numa_cpus"] = self.numa_cpus
+        fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
 
         # Configuring Linux host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
@@ -164,14 +147,13 @@ class ECVolumeLevelScript(FunTestScript):
                                                                                   remote_ip=remote_ip,
                                                                                   transport=attach_transport,
                                                                                   command_duration=self.command_timeout)
-                    fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
                 self.storage_controller.unconfigure_ec_volume(ec_info=ec_info,
                                                               command_timeout=self.command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
         self.storage_controller.disconnect()
-        fun_test.sleep("Allowing buffer time before clean-up", 30)
+        fun_test.sleep("Allowing buffer time before clean-up", 5)
         fun_test.shared_variables["topology"].cleanup()
 
 
@@ -211,6 +193,10 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         fun_test.shared_variables["num_ssd"] = self.num_ssd
+        fun_test.shared_variables["num_volumes"] = self.num_ssd
+
+        self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
+        fun_test.shared_variables["remote_ip"] = self.remote_ip
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -239,19 +225,16 @@ class ECVolumeLevelTestcase(FunTestCase):
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
 
-            # Attaching/Exporting all the EC/LS volumes to the external server
-            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
-
-            for num in xrange(self.ec_info["num_volumes"]):
-                command_result = self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
-                                                                              uuid=self.ec_info["attach_uuid"][num],
-                                                                              huid=self.huid,
-                                                                              ctlid=self.ctlid,
-                                                                              remote_ip=self.remote_ip,
-                                                                              transport=self.attach_transport,
-                                                                              command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
+            command_result = self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
+                                                                          uuid=self.ec_info["attach_uuid"][0],
+                                                                          huid=self.huid,
+                                                                          ctlid=self.ctlid,
+                                                                          remote_ip=self.remote_ip,
+                                                                          transport=self.attach_transport,
+                                                                          command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"],
+                                 "Attaching {} EC/LS volume on DUT".format(self.ec_info["attach_uuid"][0]))
+            fun_test.shared_variables["ns_id"] = self.ns_id
 
             fun_test.shared_variables["ec"]["setup_created"] = True
 
@@ -382,8 +365,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                             row_data_list.append(row_data_dict[i])
                     table_data_rows.append(row_data_list)
                     if fun_global.is_production_mode():
-                        pass
-                        #post_results("Inspur Performance Test", testcase, *row_data_list)
+                        post_results("EC42_CompressionVol", testcase, fun_test.shared_variables['num_ssd'],
+                                     fun_test.shared_variables['num_volumes'], *row_data_list)
 
             table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
             stats_table_lst.append({'table_name': param['name'], 'table_data': table_data})
@@ -402,16 +385,16 @@ class EC42RandReadWr8kEffortAuto(ECVolumeLevelTestcase):
                               summary="Inspur TC 8.13.1: 8k data block random read/write IOPS performance of EC volume,"
                                       "Compression enabled, Effort: Auto, Algorithm: Deflate",
                               steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO with 1% compressible data.
-        8. Run the Performance for 8k transfer size Random read/write IOPS
-        8. Repeat step 7 & 8 for 50% compressible data and 80% compressible data.
-        """)
+                              1. Bring up F1 in FS1600
+                              2. Bring up and configure Remote Host
+                              3. Create 6 BLT volumes on dut instance.
+                              4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+                              5. Create a LS volume on top of the EC volume based on use_lsv config along with its 
+                              associative journal volume.
+                              6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host
+                              7. Run warm-up traffic using FIO with 1% compressible data.
+                              8. Run the Performance for 8k transfer size Random read/write IOPS
+                              9. Repeat step 7 & 8 for 50% compressible data and 80% compressible data.""")
 
     def setup(self):
         super(EC42RandReadWr8kEffortAuto, self).setup()
