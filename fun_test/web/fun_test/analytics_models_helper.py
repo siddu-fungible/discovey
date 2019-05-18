@@ -476,10 +476,10 @@ class WuLatencyAllocStackHelper(MetricHelper):
         entry = WuLatencyAllocStack
 
 
-def prepare_status_db():
+def prepare_status_db(chart_names):
     global_setting = MetricsGlobalSettings.objects.first()
     cache_valid = global_setting.cache_valid
-    chart_names = ["F1", "S1", "All metrics"]
+    # chart_names = ["F1", "S1", "All metrics"]
     for chart_name in chart_names:
         total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=cache_valid)
