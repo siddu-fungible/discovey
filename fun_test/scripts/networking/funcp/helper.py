@@ -1,11 +1,51 @@
 from lib.host.linux import *
+from scripts.networking.funeth.funeth import Funeth
 
 
-def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x8"):
+def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
+    if reboot:
+        linux_obj.reboot()
+        fun_test.sleep(message="waiting for server to come back up", seconds=120)
+        count = 0
+        while linux_obj.check_ssh():
+            fun_test.sleep(message="waiting for server to come back up", seconds=30)
+            count += 1
+            if count == 5:
+                fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
     lspci_out = linux_obj.lspci(grep_filter="LnkSta", verbose=True, device="1dad:")
+    result = "1"
     sections = ['LnkSta', 'Speed', 'Width', 'EqualizationComplete']
     for section in sections:
-        fun_test.test_assert(section in lspci_out, "{} seen".format(section))
+        if section not in lspci_out:
+            fun_test.critical("PCIE link did not come up")
+            result = "0"
     if mode not in sections:
         fun_test.critical("PCIE link did not come up in %s mode" % mode)
+        result = "2"
+    return result
+
+
+def setup_hu_host(funeth_obj, update_driver=True, enable_tso=True):
+    if update_driver:
+        funeth_obj.setup_workspace()
+        fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
+        fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
+        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+    for hu in funeth_obj.hu_hosts:
+        linux_obj = funeth_obj.linux_obj_dict[hu]
+        if enable_tso:
+            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False),
+                                 'Enable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        else:
+            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
+                                 'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
+                             'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
+            linux_obj.host_ip))
+        #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
+        #                    'HU PF and VF interface loopback ping test via NU')
