@@ -5,7 +5,6 @@ from scripts.networking.helper import *
 from lib.utilities.funcp_config import *
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
-from scripts.networking.funcp.helper import *
 
 
 class ScriptSetup(FunTestScript):
@@ -62,7 +61,7 @@ class VerifySetup(FunTestCase):
 
         while time.time() < t_end:
 
-            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=True, reboot_come=False), message="Boot F1s")
+            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False), message="Boot F1s")
             s05 = verify_host_pcie_link(hostname="cab03-qa-05")
             if s05 == "1":
                 server05 += 1
@@ -111,3 +110,27 @@ if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(VerifySetup())
     ts.run()
+
+
+def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
+    linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
+    if reboot:
+        linux_obj.reboot()
+        fun_test.sleep(message="waiting for server to come back up", seconds=120)
+        count = 0
+        while linux_obj.check_ssh():
+            fun_test.sleep(message="waiting for server to come back up", seconds=30)
+            count += 1
+            if count == 5:
+                fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
+    lspci_out = linux_obj.lspci(grep_filter="LnkSta", verbose=True, device="1dad:")
+    result = "1"
+    sections = ['LnkSta', 'Speed', 'Width', 'EqualizationComplete']
+    for section in sections:
+        if section not in lspci_out:
+            fun_test.critical("PCIE link did not come up")
+            result = "0"
+    if mode not in sections:
+        fun_test.critical("PCIE link did not come up in %s mode" % mode)
+        result = "2"
+    return result
