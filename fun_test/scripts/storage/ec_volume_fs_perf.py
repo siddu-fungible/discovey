@@ -1,10 +1,8 @@
 from lib.system.fun_test import *
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
-import fun_global
 from lib.fun.fs import Fs
 from lib.system import utils
-from datetime import datetime
 from ec_perf_helper import *
 
 
@@ -42,7 +40,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         self.fs = topology.get_dut_instance(index=0)
-        self.db_log_time = datetime.now()
 
         self.end_host = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.end_host.host_ip,
@@ -53,7 +50,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["syslog_level"] = self.syslog_level
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
         fun_test.shared_variables['nsid'] = 0
@@ -295,7 +291,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC Volume", test_method, *row_data_list)
+                    post_results("EC Volume", test_method, fun_test.shared_variables['num_ssd'],
+                                 fun_test.shared_variables['num_volumes'], *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

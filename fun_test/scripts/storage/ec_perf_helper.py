@@ -1,5 +1,6 @@
 from lib.system.fun_test import fun_test
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
+import fun_global
 import re
 
 fio_perf_table_header = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
@@ -15,24 +16,36 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "fio_job_name"]
 
 
-def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+def post_results(volume, test, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops, read_iops,
+                 write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
+                 write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
+                 read_99_99_latency, fio_job_name):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    db_log_time = fun_test.shared_variables["db_log_time"]
-    num_ssd = fun_test.shared_variables["num_ssd"]
-    num_volumes = fun_test.shared_variables["num_volumes"]
+    db_log_time = fun_global.get_current_time()
 
     blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volumes, fio_job_name=fio_job_name,
-                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
-                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
+    blt.add_entry(date_time=db_log_time,
+                  volume=volume,
+                  test=test,
+                  block_size=block_size,
+                  io_depth=int(io_depth),
+                  size=size,
+                  operation=operation,
+                  num_ssd=num_ssd,
+                  num_volume=num_volumes,
+                  fio_job_name=fio_job_name,
+                  write_iops=write_iops,
+                  read_iops=read_iops,
+                  write_throughput=write_bw,
+                  read_throughput=read_bw,
+                  write_avg_latency=write_latency,
+                  read_avg_latency=read_latency,
+                  write_90_latency=write_90_latency,
                   write_95_latency=write_95_latency, write_99_latency=write_99_latency,
                   write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
                   read_95_latency=read_95_latency, read_99_latency=read_99_latency,
