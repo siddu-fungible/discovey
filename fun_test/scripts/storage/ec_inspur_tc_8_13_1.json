@@ -79,7 +79,7 @@
       "rw": "write",
       "direct": 1,
       "buffer_compress_percentage": 50,
-      "buffer_pattern": "0xlivebeef",
+      "buffer_pattern": "0xdeadbeef",
       "prio": 0,
       "timeout": 720
     },
