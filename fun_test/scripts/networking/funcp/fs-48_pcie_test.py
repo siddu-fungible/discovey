@@ -61,29 +61,29 @@ class VerifySetup(FunTestCase):
 
         while time.time() < t_end:
 
-            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False), message="Boot F1s")
-            s05 = verify_host_pcie_link(hostname="cab03-qa-05")
+            # fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False), message="Boot F1s")
+            s05 = self.verify_host_pcie_link(hostname="cab03-qa-05")
             if s05 == "1":
                 server05 += 1
             elif s05 == "0":
                 server05_fails += 1
             elif s05 == "2":
                 server05_incorrect += 1
-            s06 = verify_host_pcie_link(hostname="cab03-qa-06")
+            s06 = self.verify_host_pcie_link(hostname="cab03-qa-06")
             if s06 == "1":
                 server06 += 1
             elif s06 == "0":
                 server06_fails += 1
             elif s06 == "2":
                 server06_incorrect += 1
-            s07 = verify_host_pcie_link(hostname="cab03-qa-07", username="localadmin", password="Precious1*", mode="x8")
+            s07 = self.verify_host_pcie_link(hostname="cab03-qa-07", username="localadmin", password="Precious1*", mode="x8")
             if s07 == "1":
                 server07 += 1
             elif s07 == "0":
                 server07_fails += 1
             elif s07 == "2":
                 server07_incorrect += 1
-            s08 = verify_host_pcie_link(hostname="cab03-qa-08")
+            s08 = self.verify_host_pcie_link(hostname="cab03-qa-08")
             if s08 == "1":
                 server08 += 1
             elif s07 == "0":
@@ -105,32 +105,30 @@ class VerifySetup(FunTestCase):
 
         pass
 
+    def verify_host_pcie_link(self, hostname, username="localadmin", password="Precious1*", mode="x16", reboot=True):
+        linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
+        if reboot:
+            linux_obj.reboot()
+            fun_test.sleep(message="waiting for server to come back up", seconds=120)
+            count = 0
+            while linux_obj.check_ssh():
+                fun_test.sleep(message="waiting for server to come back up", seconds=30)
+                count += 1
+                if count == 5:
+                    fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
+        lspci_out = linux_obj.lspci(grep_filter="LnkSta", verbose=True, device="1dad:")
+        result = "1"
+        sections = ['LnkSta', 'Speed', 'Width', 'EqualizationComplete']
+        for section in sections:
+            if section not in lspci_out:
+                fun_test.critical("PCIE link did not come up")
+                result = "0"
+        if mode not in sections:
+            fun_test.critical("PCIE link did not come up in %s mode" % mode)
+            result = "2"
+        return result
 
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(VerifySetup())
     ts.run()
-
-
-def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
-    linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
-    if reboot:
-        linux_obj.reboot()
-        fun_test.sleep(message="waiting for server to come back up", seconds=120)
-        count = 0
-        while linux_obj.check_ssh():
-            fun_test.sleep(message="waiting for server to come back up", seconds=30)
-            count += 1
-            if count == 5:
-                fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
-    lspci_out = linux_obj.lspci(grep_filter="LnkSta", verbose=True, device="1dad:")
-    result = "1"
-    sections = ['LnkSta', 'Speed', 'Width', 'EqualizationComplete']
-    for section in sections:
-        if section not in lspci_out:
-            fun_test.critical("PCIE link did not come up")
-            result = "0"
-    if mode not in sections:
-        fun_test.critical("PCIE link did not come up in %s mode" % mode)
-        result = "2"
-    return result
