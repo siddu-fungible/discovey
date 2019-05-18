@@ -161,9 +161,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
 
-            # Attaching/Exporting all the EC/LS volumes to the external server
-            fun_test.shared_variables["ec"]["setup_created"] = True
-
             # disabling the error_injection for the EC volume
             command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
                                                           command_duration=self.command_timeout)
@@ -219,7 +216,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
             fun_test.shared_variables['setup_created'] = True
-        fun_test.simple_assert(fun_test.shared_variables['setup_created'], message="Check Setup got created successfully")
+        fun_test.simple_assert(fun_test.shared_variables['setup_created'],
+                               message="Check Setup got created successfully")
 
     def run(self):
 
