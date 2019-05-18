@@ -3,15 +3,13 @@ from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
-from datetime import datetime
 from ec_perf_helper import *
 from fun_settings import DATA_STORE_DIR
 from fun_global import PerfUnit, is_production_mode
 from web.fun_test.analytics_models_helper import ModelHelper
 
 '''
-Script to measure performance for a Compression enabled Durable Volume 4:2 EC with Compression Effort Auto 
-and Compression Precentages (1%, 50% & 80%).
+Script to compare space savings achieved using Compression enabled storage engine Compression disabled ones
 '''
 
 
@@ -129,9 +127,8 @@ class ECVolumeLevelScript(FunTestScript):
         self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
 
-        interface_up_status = self.end_host.ifconfig_up_down(interface=self.test_interface_name,
-                                                             action="up")
-        fun_test.test_assert(interface_up_status, "Bringing up test interface")
+        fun_test.test_assert(self.end_host.ifconfig_up_down(interface=self.test_interface_name,
+                                                            action="up"), "Bringing up test interface")
 
         self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
                                    gateway=self.test_network["test_net_route"]["gw"],
@@ -171,6 +168,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.shared_variables['setup_complete'] = False
         huid = fun_test.shared_variables['huid']
         ctlid = fun_test.shared_variables['ctlid']
+        self.end_host = fun_test.shared_variables["end_host"]
+        self.test_network = fun_test.shared_variables["test_network"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
+
         # parse benchmark dictionary
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
@@ -183,11 +184,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             setattr(self, k, v)
 
         # compute BLT, EC vol size
-        self.end_host = fun_test.shared_variables["end_host"]
-        self.test_network = fun_test.shared_variables["test_network"]
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
-        fun_test.shared_variables["attach_transport"] = self.attach_transport
-
         if not fun_test.shared_variables['ip_configured']:
             fun_test.test_assert(self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])["status"],
                                  "ip_cfg configured on DUT instance")
@@ -330,8 +326,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             post_result_lst.append({'effort_name': self.accelerator_effort,
                                     'corpus_name': corpus,
                                     'f1_compression_ratio': comp_pct})
-            if not compare_result:
-                test_result = False
+            #if not compare_result:
+            #    test_result = False
             init_write_count = curr_write_count
             table_rows.append([corpus, "{0:04.2f}".format(comp_pct), test_corpuses[corpus]['gzip_comp_pct']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
@@ -339,7 +335,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                          self.gzip_effort),
                            table_data={"headers": table_header, "rows": table_rows})
         if is_production_mode():
-            self.publish_result(post_result_lst)
+            pass
+            #self.publish_result(post_result_lst)
 
         fun_test.test_assert(test_result,
                              message="F1 Compression benchmarking with Accelerator Effort: {0} and Gzip Effort: {1}".format(
@@ -368,15 +365,15 @@ class ECVolumeLevelTestcase(FunTestCase):
             ctlid = fun_test.shared_variables['ctlid']
             if fun_test.shared_variables["setup_complete"]:
                 # Detaching all the EC/LS volumes to the external server
-                for num in xrange(self.ec_info["num_volumes"]):
-                    command_result = self.storage_controller.volume_detach_remote(ns_id=num + 1,
-                                                                                  uuid=self.ec_info["attach_uuid"][num],
-                                                                                  huid=huid,
-                                                                                  ctlid=ctlid,
-                                                                                  transport=self.attach_transport,
-                                                                                  command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+                command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
+                                                                              uuid=self.ec_info["attach_uuid"][0],
+                                                                              huid=huid,
+                                                                              ctlid=ctlid,
+                                                                              remote_ip=self.remote_ip,
+                                                                              transport=self.attach_transport,
+                                                                              command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Detaching EC/LS volume on DUT")
 
             self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)
             fun_test.shared_variables["setup_complete"] = False
