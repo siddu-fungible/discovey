@@ -109,10 +109,9 @@ class VerifySetup(FunTestCase):
         linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
         if reboot:
             linux_obj.reboot()
-            fun_test.sleep(message="waiting for server to come back up", seconds=120)
             count = 0
-            while linux_obj.check_ssh():
-                fun_test.sleep(message="waiting for server to come back up", seconds=30)
+            while not linux_obj.check_ssh():
+                fun_test.sleep(message="waiting for server to come back up", seconds=15)
                 count += 1
                 if count == 5:
                     fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
