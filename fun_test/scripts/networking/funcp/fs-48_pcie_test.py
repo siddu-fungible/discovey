@@ -39,8 +39,8 @@ class VerifySetup(FunTestCase):
     def run(self):
         #funos-f1.stripped_vdd_en2.gz
         #cmukherjee/funos-f1.stripped.gz
-        funcp_obj = FunControlPlaneBringup(fs_name="fs-48", boot_image_f1_0="funos-f1.stripped_vdd_en2.gz",
-                                           boot_image_f1_1="funos-f1.stripped_vdd_en2.gz",
+        funcp_obj = FunControlPlaneBringup(fs_name="fs-48", boot_image_f1_0="ysingh/funos-f1.stripped_18may_pcie_test.gz",
+                                           boot_image_f1_1="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_args_f1_0="app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=0,1,2 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
@@ -62,28 +62,28 @@ class VerifySetup(FunTestCase):
         while time.time() < t_end:
 
             fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False), message="Boot F1s")
-            s05 = verify_host_pcie_link(hostname="cab03-qa-05")
+            s05 = self.verify_host_pcie_link(hostname="cab02-qa-05")
             if s05 == "1":
                 server05 += 1
             elif s05 == "0":
                 server05_fails += 1
             elif s05 == "2":
                 server05_incorrect += 1
-            s06 = verify_host_pcie_link(hostname="cab03-qa-06")
+            s06 = self.verify_host_pcie_link(hostname="cab02-qa-06")
             if s06 == "1":
                 server06 += 1
             elif s06 == "0":
                 server06_fails += 1
             elif s06 == "2":
                 server06_incorrect += 1
-            s07 = verify_host_pcie_link(hostname="cab03-qa-07", username="localadmin", password="Precious1*", mode="x8")
+            s07 = self.verify_host_pcie_link(hostname="cab02-qa-07", username="localadmin", password="Precious1*", mode="x8")
             if s07 == "1":
                 server07 += 1
             elif s07 == "0":
                 server07_fails += 1
             elif s07 == "2":
                 server07_incorrect += 1
-            s08 = verify_host_pcie_link(hostname="cab03-qa-08")
+            s08 = self.verify_host_pcie_link(hostname="cab02-qa-08")
             if s08 == "1":
                 server08 += 1
             elif s07 == "0":
@@ -105,32 +105,28 @@ class VerifySetup(FunTestCase):
 
         pass
 
+    def verify_host_pcie_link(self, hostname, username="localadmin", password="Precious1*", mode="x16", reboot=True):
+        linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
+        if reboot:
+            linux_obj.reboot()
+            count = 0
+            while not linux_obj.check_ssh():
+                fun_test.sleep(message="waiting for server to come back up", seconds=15)
+                count += 1
+                if count == 5:
+                    fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
+        lspci_out = linux_obj.sudo_command(command="sudo lspci -d 1dad: -vv | grep LnkSta")
+        result = "1"
+        if mode not in lspci_out:
+            if "LnkSta" not in lspci_out:
+                fun_test.critical("PCIE link did not come up")
+                result = "0"
+            else:
+                fun_test.critical("PCIE link did not come up in %s mode" % mode)
+                result = "2"
+        return result
 
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(VerifySetup())
     ts.run()
-
-
-def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
-    linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
-    if reboot:
-        linux_obj.reboot()
-        fun_test.sleep(message="waiting for server to come back up", seconds=120)
-        count = 0
-        while linux_obj.check_ssh():
-            fun_test.sleep(message="waiting for server to come back up", seconds=30)
-            count += 1
-            if count == 5:
-                fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
-    lspci_out = linux_obj.lspci(grep_filter="LnkSta", verbose=True, device="1dad:")
-    result = "1"
-    sections = ['LnkSta', 'Speed', 'Width', 'EqualizationComplete']
-    for section in sections:
-        if section not in lspci_out:
-            fun_test.critical("PCIE link did not come up")
-            result = "0"
-    if mode not in sections:
-        fun_test.critical("PCIE link did not come up in %s mode" % mode)
-        result = "2"
-    return result
