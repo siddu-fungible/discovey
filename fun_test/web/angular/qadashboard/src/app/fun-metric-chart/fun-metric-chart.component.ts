@@ -10,6 +10,16 @@ enum TimeMode {
   MONTH = "month"
 }
 
+enum Platform {
+  F1 = "F1",
+  S1 = "S1"
+}
+
+enum ExpectedOperation {
+  SAME_AS_F1 = "Same as F1",
+  F1_BY_4 = "F1/4"
+}
+
 @Component({
   selector: 'fun-metric-chart',
   templateUrl: './fun-metric-chart.component.html',
@@ -58,6 +68,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   y1AxisTitle: any;
   chartName: string;
   internalChartName: string;
+  platform: string;
   modelName: string;
   pointClicked: boolean = false;
   pointInfo: any;
@@ -81,9 +92,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   baseLineDate: string = null;
   visualizationUnit: string = null;
   changingVizUnit: string = null;
+  expectedOperation: String = null;
   selectedUnit: string = null;
   category: string[] = [];
   nwInfoFiles: string[] = [];
+
+  Platform = Platform;
 
   //category of the units for the unit conversion
   latency_category: string[] = ["nsecs", "usecs", "msecs", "secs"];
@@ -94,6 +108,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
   packets_per_second_category: string[] = ["Mpps", "pps"];
 
+  expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_BY_4];
 
   triageInfo: any = null;
   successCommit: string = null;
@@ -170,6 +185,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
       this.chartName = data.data["chart_name"];
       this.internalChartName = data.data["internal_chart_name"];
+      this.platform = data.data["platform"];
       this.modelName = data.data["metric_model_name"];
       this.setDefault();
       this.fetchInfo();
@@ -478,6 +494,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["leaf"] = this.inner.leaf;
     payload["base_line_date"] = this.baseLineDate;
     payload["visualization_unit"] = this.changingVizUnit;
+    payload["set_expected"] = this.expectedOperation;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
         this.editingDescription = false;

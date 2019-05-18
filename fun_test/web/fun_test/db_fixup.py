@@ -256,7 +256,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                 for entry in entries:
                     valid_dates.append(entry.date_time)
                     scores[entry.date_time] = entry.score
-                current_date = last_date + timedelta(days=1)
+                current_date = last_date
                 current_date = timezone.localtime(current_date)
                 current_date = adjust_timezone_for_day_light_savings(current_date)
         data_set_mofified = False
@@ -311,7 +311,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                     reference_value = expected_value
                                 if output_unit:
                                     reference_value = convert_to_base_unit(output_value=reference_value,
-                                                                           output_unit=chart.visualization_unit)
+                                                                           output_unit=data_set["output"]["unit"])
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
                                         output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0

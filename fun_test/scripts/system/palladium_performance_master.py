@@ -23,6 +23,9 @@ from dateutil.parser import parse
 from scripts.system.metric_parser import MetricParser
 from django.utils import timezone
 from web.fun_test.models_helper import add_jenkins_job_id_map
+from fun_global import FunPlatform
+
+F1 = FunPlatform.F1
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
@@ -55,6 +58,10 @@ TLS_32_TUNNEL = "tls_32_tunnel_teramark"
 TLS_64_TUNNEL = "tls_64_tunnel_teramark"
 SOAK_DMA_MEMCPY_THRESHOLD = "soak_funos_memcpy_threshold"
 
+IPSEC_ENC_SINGLE_TUNNEL = "ipsec_enc_single_tunnel_teramark"
+IPSEC_ENC_MULTI_TUNNEL = "ipsec_enc_multi_tunnel_teramark"
+IPSEC_DEC_SINGLE_TUNNEL = "ipsec_dec_single_tunnel_teramark"
+IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -87,8 +94,8 @@ def is_job_from_today(job_dt):
 
 
 def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit,
-                                 model_name):
-    charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
+                                 model_name, platform="F1"):
+    charts = MetricChart.objects.filter(metric_model_name=model_name, platform=platform)
     for chart in charts:
         chart.last_build_status = result
         chart.last_build_date = get_current_time()
@@ -114,10 +121,10 @@ def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, j
         chart.save()
 
 
-def set_networking_chart_status():
+def set_networking_chart_status(platform="F1"):
     for model in networking_models:
         metric_model = app_config.get_metric_models()[model]
-        charts = MetricChart.objects.filter(metric_model_name=model)
+        charts = MetricChart.objects.filter(metric_model_name=model, platform=platform)
         for chart in charts:
             status = True
             data_sets = json.loads(chart.data_sets)
@@ -157,6 +164,7 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            build_properties="", lsf_job_id="",
                            sdk_version=version)
 
+
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -172,7 +180,8 @@ class MyScript(FunTestScript):
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE,
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
-                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD]
+                RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
+                IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -185,6 +194,7 @@ class PalladiumPerformanceTc(FunTestCase):
     model = None
     result = fun_test.FAILED
     dt = get_rounded_time()
+    platform = F1
 
     def setup(self):
         self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
@@ -235,7 +245,7 @@ class PalladiumPerformanceTc(FunTestCase):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
 
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
@@ -245,308 +255,41 @@ class PalladiumPerformanceTc(FunTestCase):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
+                                     git_commit=self.git_commit, model_name=self.model, platform=self.platform)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
+    tags = ALLOC_SPEED_TEST_TAG
+    model = "AllocSpeedPerformance"
+    platform = F1
+
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Alloc speed test",
+                              summary="Alloc speed test on F1",
                               steps="Steps 1")
-
-    def cleanup(self):
-        print("Testcase cleanup")
-
-    def run(self):
-
-        output_one_malloc_free_wu = 0
-        output_one_malloc_free_threaded = 0
-        output_one_malloc_free_classic_min = output_one_malloc_free_classic_avg = output_one_malloc_free_classic_max = -1
-        wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = -1
-        wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = -1
-        try:
-
-            alloc_speed_test_found = False
-            wu_latency_test_found = False
-
-            fun_test.test_assert(self.validate_job(), "validating job")
-            for line in self.lines:
-                m = re.search(r'Time for one fun_malloc\+fun_free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]',
-                              line)
-                if m:
-                    alloc_speed_test_found = True
-                    d = json.loads(m.group(1))
-                    output_one_malloc_free_wu = int(d["avg"])
-                    output_one_malloc_free_wu_unit = d["unit"]
-                m = re.search(
-                    r'Time for one fun_malloc\+fun_free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_threaded_ns\]',
-                    line)
-                if m:
-                    d = json.loads(m.group(1))
-                    output_one_malloc_free_threaded = int(d['avg'])
-                    output_one_malloc_free_threaded_unit = d["unit"]
-                m = re.search(
-                    r'Time for one malloc\+free \(classic\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_classic_ns\]', line)
-                if m:
-                    d = json.loads(m.group(1))
-                    output_one_malloc_free_classic_avg = int(d['avg'])
-                    output_one_malloc_free_classic_min = int(d['min'])
-                    output_one_malloc_free_classic_max = int(d['max'])
-                    output_one_malloc_free_classic_avg_unit = d["unit"]
-                    output_one_malloc_free_classic_min_unit = d["unit"]
-                    output_one_malloc_free_classic_max_unit = d["unit"]
-
-                # wu_latency_test
-                m = re.search(r' wu_latency_test.*({.*}).*perf_wu_alloc_stack_ns', line)
-                if m:
-                    d = json.loads(m.group(1))
-                    wu_latency_test_found = True
-                    wu_alloc_stack_ns_min = int(d["min"])
-                    wu_alloc_stack_ns_avg = int(d["avg"])
-                    wu_alloc_stack_ns_max = int(d["max"])
-                    wu_alloc_stack_ns_min_unit = d["unit"]
-                    wu_alloc_stack_ns_avg_unit = d["unit"]
-                    wu_alloc_stack_ns_max_unit = d["unit"]
-                m = re.search(r' wu_latency_test.*({.*}).*perf_wu_ungated_ns', line)
-                if m:
-                    d = json.loads(m.group(1))
-                    wu_latency_test_found = True
-                    wu_ungated_ns_min = int(d["min"])
-                    wu_ungated_ns_avg = int(d["avg"])
-                    wu_ungated_ns_max = int(d["max"])
-                    wu_ungated_ns_min_unit = d["unit"]
-                    wu_ungated_ns_avg_unit = d["unit"]
-                    wu_ungated_ns_max_unit = d["unit"]
-
-            fun_test.log("Malloc Free threaded: {}".format(output_one_malloc_free_threaded))
-            fun_test.log("Malloc Free WU: {}".format(output_one_malloc_free_wu))
-            fun_test.log("Malloc Free classic: min: {}, avg: {}, max: {}".format(output_one_malloc_free_classic_min,
-                                                                                 output_one_malloc_free_classic_avg,
-                                                                                 output_one_malloc_free_classic_max))
-            fun_test.log("wu_latency_test: wu_alloc_stack_ns: min: {}, avg: {}, max: {}".format(wu_alloc_stack_ns_min,
-                                                                                                wu_alloc_stack_ns_avg,
-                                                                                                wu_alloc_stack_ns_max))
-            fun_test.log("wu_latency_test: wu_ungated_ns: min: {}, avg: {}, max: {}".format(wu_ungated_ns_min,
-                                                                                            wu_ungated_ns_avg,
-                                                                                            wu_ungated_ns_max))
-            self.result = RESULTS["PASSED"]
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        if self.result == fun_test.PASSED:
-            MetricHelper(model=AllocSpeedPerformance).add_entry(status=self.result,
-                                                                input_app="alloc_speed_test",
-                                                                output_one_malloc_free_wu=output_one_malloc_free_wu,
-                                                                output_one_malloc_free_threaded=output_one_malloc_free_threaded,
-                                                                output_one_malloc_free_classic_min=output_one_malloc_free_classic_min,
-                                                                output_one_malloc_free_classic_avg=output_one_malloc_free_classic_avg,
-                                                                output_one_malloc_free_classic_max=output_one_malloc_free_classic_max,
-                                                                output_one_malloc_free_wu_unit=output_one_malloc_free_wu_unit,
-                                                                output_one_malloc_free_threaded_unit=output_one_malloc_free_threaded_unit,
-                                                                output_one_malloc_free_classic_min_unit=output_one_malloc_free_classic_min_unit,
-                                                                output_one_malloc_free_classic_avg_unit=output_one_malloc_free_classic_avg_unit,
-                                                                output_one_malloc_free_classic_max_unit=output_one_malloc_free_classic_max_unit,
-                                                                input_date_time=self.dt)
-
-            MetricHelper(model=WuLatencyUngated).add_entry(status=self.result, input_app="wu_latency_test",
-                                                           output_min=wu_ungated_ns_min,
-                                                           output_max=wu_ungated_ns_max,
-                                                           output_avg=wu_ungated_ns_avg,
-                                                           output_min_unit=wu_ungated_ns_min_unit,
-                                                           output_max_unit=wu_ungated_ns_max_unit,
-                                                           output_avg_unit=wu_ungated_ns_avg_unit,
-                                                           input_date_time=self.dt)
-
-            MetricHelper(model=WuLatencyAllocStack).add_entry(status=self.result,
-                                                              input_app="wu_latency_test",
-                                                              output_min=wu_alloc_stack_ns_min,
-                                                              output_max=wu_alloc_stack_ns_max,
-                                                              output_avg=wu_alloc_stack_ns_avg,
-                                                              output_min_unit=wu_alloc_stack_ns_min_unit,
-                                                              output_max_unit=wu_alloc_stack_ns_max_unit,
-                                                              output_avg_unit=wu_alloc_stack_ns_avg_unit,
-                                                              input_date_time=self.dt)
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="AllocSpeedPerformance")
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="WuLatencyUngated")
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="WuLatencyAllocStack")
-
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class BcopyPerformanceTc(PalladiumPerformanceTc):
+    tags = ALLOC_SPEED_TEST_TAG
+    model = "BcopyPerformance"
+    platform = F1
+
     def describe(self):
         self.set_test_details(id=2,
                               summary="Bcopy performance",
                               steps="Steps 1")
 
-    def run(self):
-        plain = ""
-        coherent = ""
-        size = -1
-        iterations = -1
-        latency_units = ""
-        latency_min = -1
-        latency_max = -1
-        latency_avg = -1
-        latency_perf_name = ""
-        average_bandwidth = -1
-        average_bandwidth_perf_name = ""
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            m = None
-            n = None
-
-            for line in self.lines:
-                if not m:
-                    m = re.search(
-                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\]',
-                        line)
-                if not n:
-                    n = re.search(
-                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>.*)\]',
-                        line)
-                if m and n:
-                    stats_found = True
-                    coherent = "Coherent"
-                    if m.group("coherent") != "coherent":
-                        coherent = "Non-coherent"
-                    plain = "Plain"
-                    if m.group("plain") != "plain":
-                        plain = "DMA"
-                    size = m.group("size")
-                    fun_test.test_assert(size.endswith("KB"), "Size should be in KB")
-                    size = int(size.replace("KB", ""))
-
-                    iterations = int(m.group("iterations"))
-                    latency_units = m.group("latency_units")
-                    try:
-                        fun_test.test_assert_expected(expected="nsecs", actual=latency_units,
-                                                      message="Latency in nsecs")
-                    except:
-                        pass
-                    latency_json_raw = m.group("latency_json")
-                    latency_json = json.loads(latency_json_raw)
-                    latency_min = latency_json["min"]
-                    latency_max = latency_json["max"]
-                    latency_avg = latency_json["avg"]
-                    latency_unit = latency_json["unit"]
-                    latency_perf_name = m.group("latency_perf_name")
-                    bandwidth_json = json.loads(n.group("bandwidth_json"))
-                    average_bandwidth_unit = bandwidth_json["unit"]
-                    try:
-                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(bandwidth_json["value"])
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-
-                    average_bandwidth_perf_name = n.group("average_bandwidth_perf_name")
-                    MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
-                                                                   input_date_time=self.dt,
-                                                                   input_plain=plain,
-                                                                   input_coherent=coherent,
-                                                                   input_size=size,
-                                                                   input_iterations=iterations,
-                                                                   output_latency_units=latency_units,
-                                                                   output_latency_min=latency_min,
-                                                                   output_latency_max=latency_max,
-                                                                   output_latency_avg=latency_avg,
-                                                                   output_latency_min_unit=latency_unit,
-                                                                   output_latency_max_unit=latency_unit,
-                                                                   output_latency_avg_unit=latency_unit,
-                                                                   input_latency_perf_name=latency_perf_name,
-                                                                   output_average_bandwith=average_bandwidth,
-                                                                   output_average_bandwith_unit=average_bandwidth_unit,
-                                                                   input_average_bandwith_perf_name=average_bandwidth_perf_name)
-                    m = None
-                    n = None
-            self.result = fun_test.PASSED
-            # if self.result == fun_test.PASSED:
-
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="BcopyPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
+    tags = ALLOC_SPEED_TEST_TAG
+    model = "BcopyFloodDmaPerformance"
+    platform = F1
+
     def describe(self):
         self.set_test_details(id=3,
                               summary="bcopy flood performance",
                               steps="Steps 1")
-
-    def run(self):
-        latency_units = latency_perf_name = average_bandwidth_perf_name = ""
-        size = n = latency_min = latency_max = latency_avg = average_bandwidth = -1
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-
-            for line in self.lines:
-                m = re.search(
-                    r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>\S+)\]',
-                    line)
-                if m:
-                    n = m.group("N")
-                    size = m.group("size")
-                    fun_test.test_assert(size.endswith("KB"), "Size should be in KB")
-                    size = int(size.replace("KB", ""))
-                    latency_units = m.group("latency_units")
-                    try:
-                        fun_test.test_assert_expected(expected="nsecs", actual=latency_units,
-                                                      message="Latency in nsecs")
-                    except:
-                        pass
-                    latency_json_raw = m.group("latency_json")
-                    latency_json = json.loads(latency_json_raw)
-                    latency_min = latency_json["min"]
-                    latency_max = latency_json["max"]
-                    latency_avg = latency_json["avg"]
-                    latency_unit = latency_json["unit"]
-                    latency_perf_name = m.group("latency_perf_name")
-                    bandwidth_json = json.loads(m.group("bandwidth_json"))
-                    average_bandwidth_unit = bandwidth_json["unit"]
-                    try:
-                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(bandwidth_json["value"])
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-
-                    average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
-
-                    MetricHelper(model=BcopyFloodDmaPerformance).add_entry(status=self.result,
-                                                                           input_date_time=self.dt,
-                                                                           input_n=n,
-                                                                           input_size=size,
-                                                                           output_latency_units=latency_units,
-                                                                           output_latency_min=latency_min,
-                                                                           output_latency_max=latency_max,
-                                                                           output_latency_avg=latency_avg,
-                                                                           output_latency_min_unit=latency_unit,
-                                                                           output_latency_max_unit=latency_unit,
-                                                                           output_latency_avg_unit=latency_unit,
-                                                                           input_latency_perf_name=latency_perf_name,
-                                                                           output_average_bandwith=average_bandwidth,
-                                                                           output_average_bandwith_unit=average_bandwidth_unit,
-                                                                           input_average_bandwith_perf_name=average_bandwidth_perf_name
-                                                                           )
-            self.result = fun_test.PASSED
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="BcopyFloodDmaPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class EcPerformanceTc(PalladiumPerformanceTc):
@@ -762,257 +505,69 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
 
 
 class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG
+    tags = ALLOC_SPEED_TEST_TAG
+    model = "WuDispatchTestPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=7,
                               summary="Wu Dispatch Test performance",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            i = 0
-
-            for line in self.lines:
-                m = re.search(
-                    r'Average\s+dispatch\s+WU\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
-                    line)
-                if m:
-                    average_json = json.loads(m.group("average_json"))
-                    output_average = int(average_json["value"])
-                    unit = average_json["unit"]
-                    input_app = "dispatch_speed_test"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_average"] = output_average
-                    metrics["output_average_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=WuDispatchTestPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="WuDispatchTestPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
+    model = "WuSendSpeedTestPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=8,
                               summary="Wu Send Speed Test performance",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            i = 0
-
-            for line in self.lines:
-                m = re.search(
-                    r'Average\s+WU\s+send\s+ungated\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
-                    line)
-                if m:
-                    average_json = json.loads(m.group("average_json"))
-                    output_average = int(average_json["value"])
-                    unit = average_json["unit"]
-                    input_app = "wu_send_speed_test"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_average"] = output_average
-                    metrics["output_average_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=WuSendSpeedTestPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="WuSendSpeedTestPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
+    model = "FunMagentPerformanceTest"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=9,
                               summary="Fun Magent Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-
-            for line in self.lines:
-                m = re.search(
-                    r'fun_magent.*=>\s+(?P<latency_json>{.*})\s+\[(?P<metric_name>fun_magent_rate_malloc_free_per_sec)\]',
-                    line)
-                if m:
-                    latency_json = json.loads(m.group("latency_json"))
-                    unit = latency_json["unit"]
-                    output_latency = int(latency_json["value"])
-                    input_app = "fun_magent_perf_test"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_latency"] = output_latency
-                    metrics["output_latency_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=FunMagentPerformanceTest).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="FunMagentPerformanceTest")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
+    model = "WuStackSpeedTestPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=10,
                               summary="Wu Send Speed Test performance",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-
-            for line in self.lines:
-                m = re.search(
-                    r'Average\s+wustack\s+alloc/+free\s+cycles:\s+(?P<average_json>{.*})\[(?P<metric_name>wustack_alloc_free_cycles)\]',
-                    line)
-                if m:
-                    average_json = json.loads(m.group("average_json"))
-                    output_average = int(average_json["value"])
-                    unit = average_json["unit"]
-                    input_app = "wustack_speed_test"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_average"] = output_average
-                    metrics["output_average_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=WuStackSpeedTestPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="WuStackSpeedTestPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
+    model = "SoakFunMallocPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=11,
                               summary="Soak fun malloc Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "soak_malloc_fun_malloc"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=SoakFunMallocPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="SoakFunMallocPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
+    model = "SoakClassicMallocPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=12,
                               summary="Soak classic malloc Performance Test",
                               steps="Steps 1")
-
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "soak_malloc_classic"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="SoakClassicMallocPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class BootTimingPerformanceTc(PalladiumPerformanceTc):
@@ -2053,7 +1608,6 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
                             self.add_entries_into_dual_table(default_metrics=metrics, line=line, date_time=date_time)
                             continue
 
-
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -2174,6 +1728,7 @@ class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               summary="Rcnvme random write all Performance Test on F1",
                               steps="Steps 1")
 
+
 class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
     tag = TLS_1_TUNNEL
     model = "JuniperTlsTunnelPerformance"
@@ -2214,17 +1769,80 @@ class SoakDmaMemcpyThresholdPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
+class WuLatencyUngatedPerformanceTc(PalladiumPerformanceTc):
+    tags = ALLOC_SPEED_TEST_TAG
+    model = "WuLatencyUngated"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=49,
+                              summary="Wu Latency Ungated Performance Test on F1",
+                              steps="Steps 1")
+
+
+class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
+    tags = ALLOC_SPEED_TEST_TAG
+    model = "WuLatencyAllocStack"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=50,
+                              summary="Wu Latency Alloc Stack Test on F1",
+                              steps="Steps 1")
+
+
+class JuniperIpsecEncryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_ENC_SINGLE_TUNNEL
+    model = "JuniperIpsecEncryptionSingleTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=51,
+                              summary="TeraMark IPSEC encryption single tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+
+class JuniperIpsecEncryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_ENC_MULTI_TUNNEL
+    model = "JuniperIpsecEncryptionMultiTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=52,
+                              summary="TeraMark IPSEC encryption multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+
+class JuniperIpsecDecryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_DEC_SINGLE_TUNNEL
+    model = "JuniperIpsecDecryptionSingleTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=53,
+                              summary="TeraMark IPSEC decryption single tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+
+class JuniperIpsecDecryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+    tag = IPSEC_DEC_MULTI_TUNNEL
+    model = "JuniperIpsecDecryptionMultiTunnelPerformance"
+
+    def describe(self):
+        self.set_test_details(id=54,
+                              summary="TeraMark IPSEC decryption multi tunnel Performance Test on F1 for IMIX",
+                              steps="Steps 1")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
-                              summary="Prepare Status Db",
+                              summary="Prepare Status Db on F1",
                               steps="Steps 1")
 
     def setup(self):
         pass
 
     def run(self):
-        prepare_status_db()
+        chart_names = [FunPlatform.F1, "All metrics"]
+        prepare_status_db(chart_names=chart_names)
         TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
 
     def cleanup(self):
@@ -2282,6 +1900,12 @@ if __name__ == "__main__":
     myscript.add_test_case(JuniperTls32TunnelPerformanceTC())
     myscript.add_test_case(JuniperTls64TunnelPerformanceTC())
     myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTC())
+    myscript.add_test_case(WuLatencyUngatedPerformanceTc())
+    myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
+    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTC())
+    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTC())
+    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTC())
+    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
