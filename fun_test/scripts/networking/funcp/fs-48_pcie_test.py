@@ -39,8 +39,8 @@ class VerifySetup(FunTestCase):
     def run(self):
         #funos-f1.stripped_vdd_en2.gz
         #cmukherjee/funos-f1.stripped.gz
-        funcp_obj = FunControlPlaneBringup(fs_name="fs-48", boot_image_f1_0="funos-f1.stripped_vdd_en2.gz",
-                                           boot_image_f1_1="funos-f1.stripped_vdd_en2.gz",
+        funcp_obj = FunControlPlaneBringup(fs_name="fs-48", boot_image_f1_0="ysingh/funos-f1.stripped_18may_pcie_test.gz",
+                                           boot_image_f1_1="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_args_f1_0="app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=0,1,2 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
