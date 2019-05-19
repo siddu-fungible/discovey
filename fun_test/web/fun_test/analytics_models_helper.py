@@ -340,6 +340,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                 completion_date = str(completion_date).split(":")
                 completion_date = completion_date[0] + ":" + completion_date[1]
                 build_date = parser.parse(completion_date)
+                suite_execution_id = fun_test.get_suite_execution_id()
                 add_jenkins_job_id_map(jenkins_job_id=0,
                                        fun_sdk_branch="",
                                        git_commit="",
@@ -347,7 +348,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                                        hardware_version="",
                                        completion_date=completion_date,
                                        build_properties="", lsf_job_id="",
-                                       sdk_version=version, build_date=build_date)
+                                       sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
             except:
                 pass
 
@@ -432,6 +433,7 @@ class ModelHelper(MetricHelper):
                     completion_date = date_time[0] + ":" + date_time[1]
                     build_date = parser.parse(completion_date)
                     version = new_kwargs["input_version"]
+                    suite_execution_id = fun_test.get_suite_execution_id()
                     add_jenkins_job_id_map(jenkins_job_id=0,
                                            fun_sdk_branch="",
                                            git_commit="",
@@ -439,7 +441,7 @@ class ModelHelper(MetricHelper):
                                            hardware_version="",
                                            completion_date=completion_date,
                                            build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=build_date)
+                                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
                 result = True
             except Exception as ex:
                 fun_test.critical(str(ex))

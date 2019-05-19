@@ -284,10 +284,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let buildProperties = this.buildInfo[key]["build_properties"];
       let lsfJobId = this.buildInfo[key]["lsf_job_id"];
       let version = this.buildInfo[key]["sdk_version"];
+      let suite_execution_id = this.buildInfo[key]["suite_execution_id"];
       if (sdkBranch !== "")
         s["SDK branch"] = sdkBranch;
       if (lsfJobId !== "")
         s["Lsf job id"] = lsfJobId;
+      if (suite_execution_id !== -1)
+        s["Suite execution id"] = suite_execution_id;
       if (Number(softwareDate) > 0)
         s["Software date"] = softwareDate;
       if (hardwareVersion !== "")
