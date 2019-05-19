@@ -81,7 +81,7 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Configuring Linux host
         #host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
-        fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
+        #fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
                                                              self.test_interface_name)
