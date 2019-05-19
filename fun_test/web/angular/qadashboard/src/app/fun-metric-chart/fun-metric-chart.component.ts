@@ -3,6 +3,7 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
+import {catchError} from "rxjs/operators";
 
 enum TimeMode {
   ALL = "all",
@@ -257,8 +258,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let xDate = new Date(x).toISOString();
     xDate = xDate.replace("T", " ");
-    let dateString = xDate.split('.')[0];
-    let key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
+    let key = "";
+    try {
+      let dateString = xDate.split('.')[0];
+      key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
+    }
+    catch(e) {
+      this.loggerService.error("Date on xAxis tooltip failed");
+    }
     let s = "Error";
     if (this.buildInfo && key in this.buildInfo) {
       s = "";
@@ -280,9 +287,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let xDate = new Date(x).toISOString();
     xDate = xDate.replace("T", " ");
-    let dateString = xDate.split('.')[0];
-    let key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
-
+    let key = "";
+    try {
+      let dateString = xDate.split('.')[0];
+      key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
+    }
+    catch(e) {
+      this.loggerService.error("Date on xAxis point click call back failed");
+    }
     let s = {};
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
