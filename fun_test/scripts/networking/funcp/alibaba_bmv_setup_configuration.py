@@ -46,7 +46,7 @@ class BringupSetup(FunTestCase):
                                                           "--serial --dpc-uart --dis-stats retimer=0 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=3 --mgmt")
-        '''
+
         fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=True), message="Boot F1s")
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
         servers_mode = server_key["fs"][fs_name]
@@ -64,7 +64,7 @@ class BringupSetup(FunTestCase):
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/alibaba_bmv_configs_f1_1.json'
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1)
-        '''
+
         tb_config_obj = tb_configs.TBConfigs("FS45")
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
