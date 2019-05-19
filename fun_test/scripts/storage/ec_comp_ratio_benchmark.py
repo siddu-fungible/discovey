@@ -359,6 +359,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Do nvme disconnect
             cmd = "sudo nvme disconnect -d {0}".format(self.volume_name)
             self.end_host.sudo_command(cmd)
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                          message=" Execute nvme Disconnect for device: {}".format(self.volume_name))
 
             huid = fun_test.shared_variables['huid']
             ctlid = fun_test.shared_variables['ctlid']
