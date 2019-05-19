@@ -191,7 +191,20 @@ if __name__ == "__main_raw_nvmetcp__":
                         platform=FunPlatform.F1).save()
     print "added new qdepth charts for raw block nvmetcp"
 
-if __name__ == "__main_addJenkins__":
+if __name__ == "__main__":
+    model_name = "JenkinsJobIdMap"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model_name]
+    entries = metric_model.objects.all()
+    for entry in entries:
+        print entry.build_date
+        if entry.completion_date != "":
+            dt = parser.parse(entry.completion_date)
+            entry.build_date = dt
+            entry.save()
+            print "string date {}, date object {}".format(entry.completion_date, entry.build_date)
+
+if __name__ == "__main__":
     model_name = "BltVolumePerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model_name]
@@ -214,16 +227,3 @@ if __name__ == "__main_addJenkins__":
                                    build_properties="", lsf_job_id="",
                                    sdk_version=entry.input_version,
                                    build_date=build_date)
-
-if __name__ == "__main__":
-    model_name = "JenkinsJobIdMap"
-    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
-    metric_model = app_config.get_metric_models()[model_name]
-    entries = metric_model.objects.all()
-    for entry in entries:
-        print entry.build_date
-        if entry.completion_date != "":
-            dt = parser.parse(entry.completion_date)
-            entry.build_date = dt
-            entry.save()
-            print "string date {}, date object {}".format(entry.completion_date, entry.build_date)
