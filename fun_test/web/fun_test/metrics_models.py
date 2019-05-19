@@ -126,7 +126,7 @@ class Triage3Trial(models.Model):
     regex_match = models.TextField(default="")
     submission_date_time = models.DateTimeField(default=datetime.now)
     tags = JSONField(default=[])  # for re-runs
-    result = models.CharField(default=RESULTS["UNKNOWN"])
+    result = models.TextField(default=RESULTS["UNKNOWN"])
 
     def __str__(self):
         return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,

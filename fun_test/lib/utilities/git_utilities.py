@@ -34,6 +34,9 @@ class GitManager:
             query_params.append("since={}".format(since))
         if until:
             query_params.append("until={}".format(until))
+        query_params.append("merges=true")
+        query_params.append("base=master")
+
         if query_params:
             url += "?"
             for query_param in query_params:
@@ -47,7 +50,7 @@ class GitManager:
             r = requests.get(url=page_url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
             if r.status_code == 200:
                 response = r.json()
-                response = [x for x in response if len(x["parents"]) > 1]
+                # response = [x for x in response if len(x["parents"]) > 1]
                 # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
                 # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
                 response = [Commit(sha=x["sha"], date=x["commit"]["committer"]["date"]) for x in response]
@@ -78,8 +81,8 @@ class GitManager:
 
 if __name__ == "__main__":
     gm = GitManager()
-    from_sha = "f21cb50"
-    to_sha = "7efb833"
+    from_sha = "c1c35d173a"
+    to_sha = "e352ca6d8e"
 
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))

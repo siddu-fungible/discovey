@@ -148,7 +148,7 @@ export class TriageDetailComponent implements OnInit {
 
   restartTrial(trial) {
     let url = "/api/v1/triages/" + trial.triage_id + "/trials/" + trial.fun_os_sha;
-    let payload = {"status": 20};
+    let payload = {"status": 20}; //TODO
     payload["tag"] = trial.tag + "_" + trial.tags.length;
     let tempArray = Array.from(trial.tags);
     tempArray.push(trial.tag);

@@ -21,7 +21,7 @@ logger.propagate = False
 LOG_FILE_NAME = "triaging_log.txt"
 
 TEN_MB = 1e7
-DEBUG = True
+DEBUG = False
 
 if not DEBUG:
     handler = logging.handlers.RotatingFileHandler(LOG_FILE_NAME, maxBytes=TEN_MB, backupCount=5)
@@ -216,7 +216,7 @@ class TriageStateMachine:
         :return:
         """
         t = self.get_triage()
-        if t.triage_type == TriagingTypes.PASS_OR_FAIL:
+        if t.status > TriagingStates.COMPLETED and t.triage_type == TriagingTypes.PASS_OR_FAIL:
             completed_trials = Triage3Trial.objects.filter(triage_id=t.triage_id, trial_set_id=t.current_trial_set_id, status=TriageTrialStates.COMPLETED).order_by('-submission_date_time')
             trials_in_current_set = Triage3Trial.objects.filter(triage_id=t.triage_id, trial_set_id=t.current_trial_set_id)
 
@@ -245,19 +245,19 @@ class TriageStateMachine:
                             last_fail_sha = completed_trial.fun_os_sha
                         if last_pass_sha and last_fail_sha:
                             break
-            if not last_pass_sha:
-                self.error("last pass sha not available")
-            if not last_fail_sha:
-                self.error("last fail sha not available")
+                if not last_pass_sha:
+                    return self.error("last pass sha not available")
+                if not last_fail_sha:
+                    return self.error("last fail sha not available")
 
-            last_pass_index = self.all_shas.index(last_pass_sha)
-            last_fail_index = self.all_shas.index(last_fail_sha)
-            if last_fail_index < last_pass_index:
-                self.error("last fail index: {} is lesser than last pass index: {}".format(last_fail_index, last_pass_index))
-            if (last_fail_index - last_pass_index) <= 1:
-                return self.complete()
-            else:
-                self.start_trial_set(from_fun_os_sha=last_pass_sha, to_fun_os_sha=last_fail_sha)
+                last_pass_index = self.all_shas.index(last_pass_sha)
+                last_fail_index = self.all_shas.index(last_fail_sha)
+                if last_fail_index < last_pass_index:
+                    self.error("last fail index: {} is lesser than last pass index: {}".format(last_fail_index, last_pass_index))
+                if (last_fail_index - last_pass_index) <= 1:
+                    return self.complete()
+                else:
+                    self.start_trial_set(from_fun_os_sha=last_pass_sha, to_fun_os_sha=last_fail_sha)
 
 
     def complete(self):
@@ -319,6 +319,7 @@ class TrialStateMachine:
             params["RUN_MODE"] = "Batch"
             params["PRIORITY"] = "low_priority"
             params["BRANCH_FunOS"] = self.fun_os_sha
+            params["HW_VERSION"] = "rel_081618_svn67816_emu"
             # params["PCI_MODE"] = "root_complex"
             try:
                 queue_item = jm.build(params=params)
@@ -354,6 +355,8 @@ class TrialStateMachine:
                 trial.status = TriageTrialStates.IN_LSF
                 trial.save()
             job_info = lsf_server.get_last_job(tag=trial.tag)
+            if job_info and "job_id" in job_info:
+                trial.lsf_job_id = job_info["job_id"]
             if job_info and "state" in job_info:
                 if job_info["state"] == "completed":
                     trial.status = TriageTrialStates.PREPARING_RESULTS
@@ -386,8 +389,9 @@ class TrialStateMachine:
                 elif code == -1:
                     trial.result = RESULTS["UNKNOWN"]
                     trial.status = TriageTrialStates.ERROR
+                    self.error("Error in validating LSF: {}".format(message))
                     trial.save()
-
+        trial.save()
         return status
 
     def validate_lsf_job(self, trial):
@@ -404,9 +408,10 @@ class TrialStateMachine:
                 message = "return_code not in job_info"
             else:
                 if not job_info["return_code"]:
-                    code = 1
-                else:
                     code = 0
+                else:
+                    code = 1
+
         return code, message
 
 if __name__ == "__main2__":
