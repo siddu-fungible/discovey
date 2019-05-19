@@ -357,10 +357,6 @@ class ECVolumeLevelTestcase(FunTestCase):
     def cleanup(self):
         try:
             # Do nvme disconnect
-            cmd = "sudo nvme disconnect -d {0}".format(self.volume_name)
-            self.end_host.sudo_command(cmd)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message=" Execute nvme Disconnect for device: {}".format(self.volume_name))
 
             huid = fun_test.shared_variables['huid']
             ctlid = fun_test.shared_variables['ctlid']
@@ -374,6 +370,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                               transport=self.attach_transport,
                                                                               command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Detaching EC/LS volume on DUT")
+            cmd = "sudo nvme disconnect -d {0}".format(self.volume_name)
+            self.end_host.sudo_command(cmd)
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                          message=" Execute nvme Disconnect for device: {}".format(self.volume_name))
+
 
             self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)
             fun_test.shared_variables["setup_complete"] = False
