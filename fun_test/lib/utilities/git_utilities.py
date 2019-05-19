@@ -34,8 +34,8 @@ class GitManager:
             query_params.append("since={}".format(since))
         if until:
             query_params.append("until={}".format(until))
-        query_params.append("merges=true")
-        query_params.append("base=master")
+        #query_params.append("q=merges:true")
+        # query_params.append("base=master")
 
         if query_params:
             url += "?"
@@ -81,8 +81,11 @@ class GitManager:
 
 if __name__ == "__main__":
     gm = GitManager()
-    from_sha = "c1c35d173a"
-    to_sha = "e352ca6d8e"
+    # from_sha = "c1c35d173a"
+    #to_sha = "e352ca6d8e"
+
+    to_sha = "02a757c06684d32ab239a38496a283a992603a5e"
+    from_sha = "e352ca6d8e319cd9b0b0706c3596b7392ca1e6de"
 
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))

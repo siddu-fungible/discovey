@@ -81,7 +81,13 @@
             <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
             <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ commit.lsfJobId }}" target="_blank">link</a></td>
             <td>{{ commit.tag }}</td>
-            <td>{{ commit.regexMatch }}</td>
+
+            <td>
+              <ng-container>
+              </ng-container>
+              {{ commit.regexMatch }}
+              <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+            </td>
           </ng-container>
 
         </tr>

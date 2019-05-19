@@ -168,6 +168,7 @@ class TriageStateMachine:
         t = self.get_triage()
         t.current_trial_from_sha = first_commit
         t.current_trial_to_sha = last_commit
+
         t.save()
 
 
@@ -238,13 +239,12 @@ class TriageStateMachine:
                     elif completed_trial.fun_os_sha == t.from_fun_os_sha:
                         if trial_result == RESULTS["FAILED"]:
                             self.error("The earliest commit: {} actually FAILED. Please re-submit triage".format(t.from_fun_os_sha))
-                    else:
-                        if trial_result == RESULTS["PASSED"]:
-                            last_pass_sha = completed_trial.fun_os_sha
-                        elif trial_result == RESULTS["FAILED"]:
-                            last_fail_sha = completed_trial.fun_os_sha
-                        if last_pass_sha and last_fail_sha:
-                            break
+                    if trial_result == RESULTS["PASSED"]:
+                        last_pass_sha = completed_trial.fun_os_sha
+                    elif trial_result == RESULTS["FAILED"]:
+                        last_fail_sha = completed_trial.fun_os_sha
+                    if last_pass_sha and last_fail_sha:
+                        break
                 if not last_pass_sha:
                     return self.error("last pass sha not available")
                 if not last_fail_sha:
@@ -257,6 +257,9 @@ class TriageStateMachine:
                 if (last_fail_index - last_pass_index) <= 1:
                     return self.complete()
                 else:
+                    t = self.get_triage()
+                    t.current_trial_set_id += 1
+                    t.save()
                     self.start_trial_set(from_fun_os_sha=last_pass_sha, to_fun_os_sha=last_fail_sha)
 
 
@@ -270,6 +273,7 @@ class TriageStateMachine:
         status = t.status
 
         if status == TriagingStates.INIT:
+            t = self.get_triage()
             t.current_trial_from_sha = t.from_fun_os_sha
             t.current_trial_to_sha = t.to_fun_os_sha
             t.status = TriagingStates.IN_PROGRESS
@@ -320,6 +324,7 @@ class TrialStateMachine:
             params["PRIORITY"] = "low_priority"
             params["BRANCH_FunOS"] = self.fun_os_sha
             params["HW_VERSION"] = "rel_081618_svn67816_emu"
+            params["HW_MODEL"] = "F1DevBoard"
             # params["PCI_MODE"] = "root_complex"
             try:
                 queue_item = jm.build(params=params)
@@ -332,6 +337,8 @@ class TrialStateMachine:
             trial.save()
         elif status == TriageTrialStates.BUILDING_ON_JENKINS:
             try:
+                if trial.jenkins_build_number < 0:
+                    raise Exception("Jenkins build number is invalid")
                 jm = JenkinsManager()
                 job_info = jm.get_job_info(build_number=trial.jenkins_build_number)
                 if not job_info["building"]:
@@ -386,12 +393,13 @@ class TrialStateMachine:
                     trial.result = RESULTS["FAILED"]
                     trial.status = TriageTrialStates.COMPLETED
                     trial.save()
+                """
                 elif code == -1:
                     trial.result = RESULTS["UNKNOWN"]
                     trial.status = TriageTrialStates.ERROR
                     self.error("Error in validating LSF: {}".format(message))
                     trial.save()
-        trial.save()
+                """
         return status
 
     def validate_lsf_job(self, trial):

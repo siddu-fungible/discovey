@@ -58,7 +58,8 @@ def trials(request, triage_id, fun_os_sha):
                           "lsf_job_id": trial.lsf_job_id,
                           "tag": trial.tag,
                           "regex_match": trial.regex_match,
-                          "tags": trial.tags}
+                          "tags": trial.tags,
+                          "result": trial.result}
             result.append(one_record)
     return result
 

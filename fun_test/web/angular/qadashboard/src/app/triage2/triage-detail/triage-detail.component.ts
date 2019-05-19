@@ -20,6 +20,7 @@ class CommitNode {
   triageId: number;
   trial: any;
   selected: boolean = false;
+  result: string;
 };
 
 
@@ -96,6 +97,7 @@ export class TriageDetailComponent implements OnInit {
         commitNode.selectedForTrial = true;
         commitNode.triageId = trial.triage_id;
         commitNode.trial = trial; // to store the whole trial object
+        commitNode.result = trial.result;
       }
 
     })
