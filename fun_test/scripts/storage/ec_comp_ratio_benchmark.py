@@ -358,7 +358,7 @@ class ECVolumeLevelTestcase(FunTestCase):
     def cleanup(self):
         try:
             # Do nvme disconnect
-            cmd = "sudo nvme disconnect -n {0} -d {1}".format(self.nvme_subsystem, self.volume_name)
+            cmd = "sudo nvme disconnect -d {1}".format(self.volume_name)
             self.end_host.sudo_command(cmd)
 
             huid = fun_test.shared_variables['huid']

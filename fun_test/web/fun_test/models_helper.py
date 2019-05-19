@@ -530,10 +530,10 @@ def _get_suite_executions(execution_id=None,
                 se.save()
     return all_objects_dict
 
-def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties, lsf_job_id, sdk_version=""):
+def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties, lsf_job_id, sdk_version="", build_date=datetime.now()):
     print"Hardware_version: {}".format(hardware_version)
     try:
-        entry = JenkinsJobIdMap.objects.get(completion_date=completion_date)
+        entry = JenkinsJobIdMap.objects.get(completion_date=completion_date, build_date=build_date)
     except ObjectDoesNotExist:
         entry = JenkinsJobIdMap(completion_date=completion_date,
                                 jenkins_job_id=jenkins_job_id,
@@ -542,7 +542,7 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 software_date=software_date,
                                 hardware_version=hardware_version,
                                 build_properties=build_properties,
-                                lsf_job_id=lsf_job_id, sdk_version=sdk_version)
+                                lsf_job_id=lsf_job_id, sdk_version=sdk_version, build_date=build_date)
         entry.save()
 
 def _get_suite_execution_attributes(suite_execution):

@@ -97,6 +97,7 @@ class TestFirewallPerformance(FunTestCase):
     update_charts = True
     update_json = True
     single_flow = False
+    test_time = 120
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -168,9 +169,12 @@ class TestFirewallPerformance(FunTestCase):
         result = self.template_obj.start_sequencer()
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Wait until test is finish"
-        result = self.template_obj.wait_until_complete()
-        fun_test.test_assert(result, checkpoint)
+        sequencer_handle = self.template_obj.get_sequencer_handle()
+
+        output = run_dpcsh_commands(template_obj=self.template_obj, sequencer_handle=sequencer_handle,
+                                    network_controller_obj=network_controller_obj,
+                                    test_type=MEMORY_TYPE_DDR, single_flow=self.single_flow,
+                                    half_load_latency=self.half_load_latency, test_time=self.test_time)
 
         fun_test.log("Fetching PSW NU Global stats after test")
         network_controller_obj.peek_psw_global_stats()
