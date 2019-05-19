@@ -1389,8 +1389,7 @@ class NetworkController(DpcshClient):
         try:
             cmd = "stats/per_vp"
             fun_test.debug("Getting vp per pkt")
-            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION,
-                                       sleep_duration=20)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
             fun_test.debug("Per vppkts stats: %s" % result['data'])
             stats = result['data']
@@ -1758,6 +1757,17 @@ class NetworkController(DpcshClient):
         try:
             cmd = ['backtrace', vp_no]
             result = self.json_execute(verb='debug', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def debug_vp_util(self):
+        result = None
+        try:
+            cmd = ['vp_util']
+            result = self.json_execute(verb='debug', data=cmd)
+            fun_test.simple_assert(result['status'], "Debug cmd ran")
+            result = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

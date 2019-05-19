@@ -23,6 +23,7 @@ JUNIPER_PERFORMANCE_MODEL_NAME = "TeraMarkJuniperNetworkingPerformance"
 HNU_PERFORMANCE_MODEL_NAME = "NuTransitPerformance"
 MEMORY_TYPE_HBM = "HBM"
 MEMORY_TYPE_DDR = "DDR"
+FLOW_TYPE_FWD = "FWD"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
@@ -625,6 +626,16 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def get_sequencer_handle(self):
+        return self._fetch_sequencer_handles()[0]
+
+    def get_sequencer_state(self, sequencer_handle):
+        try:
+            state = self.stc_manager.stc.get(sequencer_handle, 'testState')
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return state
 
 # TODO: We might need this sqlite wrapper later on to fetch more detail test data
 
