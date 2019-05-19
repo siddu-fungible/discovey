@@ -40,9 +40,9 @@ class PcieHost(FunTestScript):
 class PceiHostLnkSta(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Check PCIe host can see F1 with expected LnkSta",
+                              summary="Check PCIe host can see F1 with expected width in LnkSta",
                               steps="""
-        1. Check PCIe host can see F1 with expected LnkSta
+        1. Check PCIe host can see F1 with expected width in LnkSta
         """)
 
     def setup(self):
