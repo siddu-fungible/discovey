@@ -164,6 +164,7 @@ class LsfStatusServer:
             jenkins_url = job_info["jenkins_url"]
             build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
             build_properties = self._get(url=build_properties_url)
+            build_date = parser.parse(completion_date)
             if build_properties == None:
                 build_properties = ""
             add_jenkins_job_id_map(jenkins_job_id=job_info["jenkins_build_number"],
@@ -172,7 +173,7 @@ class LsfStatusServer:
                                                  software_date=job_info["software_date"],
                                                  hardware_version=job_info["hardware_version"],
                                                  completion_date=completion_date,
-                                                 build_properties=build_properties, lsf_job_id=lsf_id)
+                                                 build_properties=build_properties, lsf_job_id=lsf_id, build_date=build_date)
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])
