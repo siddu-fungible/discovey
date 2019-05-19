@@ -155,7 +155,7 @@ def add_version_to_jenkins_job_id_map(date_time, version):
     date_time = timezone.localtime(date_time)
     date_time = str(date_time).split(":")
     completion_date = date_time[0] + ":" + date_time[1]
-    build_date = parser.parse(completion_date)
+    build_date = parse(completion_date)
     add_jenkins_job_id_map(jenkins_job_id=0,
                            fun_sdk_branch="",
                            git_commit="",
