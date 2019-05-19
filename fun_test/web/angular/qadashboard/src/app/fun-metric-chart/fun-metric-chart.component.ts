@@ -3,7 +3,6 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
-import {catchError} from "rxjs/operators";
 
 enum TimeMode {
   ALL = "all",
@@ -256,7 +255,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
-    let key = this.getKey(x);
+    let key = this._getBuildKey(x);
     let s = "Error";
     if (this.buildInfo && key in this.buildInfo) {
       s = "";
@@ -276,7 +275,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
-    let key = this.getKey(x);
+    let key = this._getBuildKey(x);
     let s = {};
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
@@ -318,7 +317,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     return s;
   }
 
-  getKey(x): string {
+  _getBuildKey(x): string {
     let xDate = new Date(x).toISOString();
     xDate = xDate.replace("T", " ");
     let key = "";
