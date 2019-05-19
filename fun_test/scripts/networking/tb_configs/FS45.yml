@@ -13,7 +13,7 @@ hu:
   namespaces:
     default:
       interfaces:
-        - hu1-f0:
+        - hu2-f0:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 18.1.1.1
             ipv4_netmask: 255.255.255.0
@@ -32,7 +32,7 @@ hu2:
   namespaces:
     default:
       interfaces:
-        - hu2-f0:
+        - hu0-f0:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 19.1.1.1
             ipv4_netmask: 255.255.255.0
