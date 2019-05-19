@@ -7,6 +7,7 @@ import pickle
 import json
 import re
 from web.fun_test.analytics_models_helper import ModelHelper
+from fun_global import PerfUnit
 
 
 TCP_PERFORMANCE_MODEL_NAME = "TeraMarkFunTcpThroughputPerformance"
@@ -62,7 +63,7 @@ def use_model_helper(model_name, data_dict, unit_dict):
 
 
 def populate_performance_json_file(flow_type, model_name, frame_size, num_flows, throughput_n2t, pps_n2t,
-                                   timestamp, filename, protocol="TCP", mode="100G"):
+                                   timestamp, filename, mode="100G"):
     results = []
     output = False
     try:
@@ -90,10 +91,53 @@ def populate_performance_json_file(flow_type, model_name, frame_size, num_flows,
             fun_test.simple_assert(file_created, "Create Performance JSON file")
 
         unit_dict = {}
-        unit_dict["pps_unit"] = "pps"
-        unit_dict["throughput_unit"] = "Mbps"
+        unit_dict["pps_unit"] = PerfUnit.UNIT_PPS
+        unit_dict["throughput_unit"] = PerfUnit.UNIT_MBITS_PER_SEC
         add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
         fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+        fun_test.add_checkpoint("Entry added to model %s" % model_name)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_cps_performance_json_file(flow_type, model_name, frame_size, cps_type, max_cps, max_latency, avg_latency,
+                                       timestamp, filename, mode="100G"):
+    results = []
+    output = False
+    try:
+        output_dict = {"mode": mode,
+                       "flow_type": flow_type,
+                       "frame_size": frame_size,
+                       "cps_type": cps_type,
+                       "max_cps": max_cps,
+                       "max_latency": max_latency,
+                       "avg_latency": avg_latency,
+                       "timestamp": str(timestamp),
+                       "version": fun_test.get_version()
+                       }
+        fun_test.log("FunOS version is %s" % output_dict['version'])
+        results.append(output_dict)
+        file_path = LOGS_DIR + "/%s" % filename
+        contents = _parse_file_to_json_in_order(file_name=file_path)
+        if contents:
+            append_new_results = contents + results
+            file_created = create_counters_file(json_file_name=file_path,
+                                                counter_dict=append_new_results)
+            fun_test.simple_assert(file_created, "Create Performance JSON file")
+        else:
+            file_created = create_counters_file(json_file_name=file_path,
+                                                counter_dict=results)
+            fun_test.simple_assert(file_created, "Create Performance JSON file")
+
+        unit_dict = {}
+        unit_dict["max_cps_unit"] = PerfUnit.UNIT_CPS
+        unit_dict["max_latency_unit"] = PerfUnit.UNIT_USECS
+        unit_dict["avg_latency_unit"] = PerfUnit.UNIT_USECS
+        # TODO: Enable after getting model name from Ashwin for CPS TeraMarks
+        # add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
+        # fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
         fun_test.add_checkpoint("Entry added to model %s" % model_name)
         output = True
     except Exception as ex:
@@ -105,7 +149,7 @@ def get_pps_from_mbps(mbps, byte_frame_size):
     return (float(mbps) * 1000000) / (byte_frame_size * 8)
 
 
-def execute_shell_file(linux_obj, target_file, output_file=None):
+def execute_shell_file(linux_obj, target_file, output_file=None, sudo=False):
     output = {}
     output['result'] = False
     try:
@@ -114,7 +158,10 @@ def execute_shell_file(linux_obj, target_file, output_file=None):
         cmd = "sh %s" % target_file
         if output_file:
             cmd = "sh %s > %s" % (target_file, output_file)
-        out = linux_obj.command(command=cmd)
+        if sudo:
+            out = linux_obj.sudo_command(command=cmd)
+        else:
+            out = linux_obj.command(command=cmd)
         output['output'] = out
         output['result'] = True
     except Exception as ex:
@@ -226,6 +273,20 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
             fun_test.log(line)
         fun_test.log_enable_timestamps()
 
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return mpstat_dump_filepath
+
+
+def populate_tcpdump_redirect_file(dump_filename):
+    mpstat_dump_filepath = None
+    try:
+        contents = "To access the pcap file for this run. Log in to poc-server-06 (username: localadmin) and " \
+                   "cd to /home/localadmin/netperf_teramark_capture. " \
+                   "File name is <funos_version>_<no_of_conn>_tcpdump.pcap\n For e.g 6459_1_tcpdump.pcap"
+        tcpdump_dump_filepath = LOGS_DIR + "/%s" % dump_filename
+        with open(tcpdump_dump_filepath, 'w') as f:
+            f.writelines(contents)
     except Exception as ex:
         fun_test.critical(str(ex))
     return mpstat_dump_filepath
@@ -667,6 +728,35 @@ def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file
     return True
 
 
+def run_tcpdump_command(linux_obj, tcp_dump_file, interface, snaplen=80, filecount=1, count=2000000):
+    result = None
+    try:
+        cmd = "sudo tcpdump -leni %s tcp -w %s -s %d -W %d -c %d" % (interface, tcp_dump_file, snaplen,
+                                                                     filecount, count)
+        fun_test.log("tcpdump command formed: %s" % cmd)
+        process_id = linux_obj.start_bg_process(command=cmd)
+        fun_test.log("tcpdump started process id: %s" % process_id)
+        if process_id:
+            result = process_id
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_interface_name(file_path):
+    interface_name = None
+    try:
+        with open(file_path, 'r') as f:
+            contents = f.read()
+            m = re.search(r'sudo\s+ifconfig\s+(\w+).*', contents, re.IGNORECASE)
+            if m:
+                interface_name = m.group(1)
+        fun_test.log("Interface used: %s" % interface_name)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return interface_name
+
+
 def run_netperf(linux_obj, cmd, duration=60):
     result = {"throughput": -1}
     try:
@@ -720,5 +810,117 @@ def create_performance_table(total_throughput, num_flows, total_pps):
     except Exception as ex:
         fun_test.critical(str(ex))
     return table_created
+
+
+def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, cpu=1, duration=60):
+    result = {'max_cps': None, 'max_latency': None, 'avg_latency': None, 'status': False, 'summary_dict': None}
+    output_file_path = fun_test.get_temp_file_path(file_name=fun_test.get_temp_file_name()) + ".txt"
+    try:
+        count = 1
+        max_cps_found = False
+        version = fun_test.get_version()
+        profile_name = astf_profile.split('/')[1].split('.')[0]
+        flow_list_file = str(version) + "_" + profile_name + '_flowlist.txt'
+        resource_pc_file = str(version) + "_" + profile_name + '_resource_pc.txt'
+        resource_bam_file = str(version) + "_" + profile_name + '_resource_bam.txt'
+        cps = base_cps
+        while True:
+            if max_cps_found:
+                break
+            if count == 1:
+                cps = base_cps
+            else:
+                if cps in range(0, 800):
+                    cps = cps + 100
+                elif cps >= 800:
+                    cps = cps + 50
+
+            fun_test.log_section("Find Max CPS and latency for %s. Base CPS Given: %d "
+                                 "Current iteration count: %d Current CPS value: %d" % (profile_name,
+                                                                                        base_cps, count, cps))
+            cmd = trex_obj.get_trex_cmd(astf_profile=astf_profile, astf=True, duration=duration, latency=True,
+                                        warmup_time=5, latency_packet_rate=100, cps_rate=cps, cpu=cpu,
+                                        output_file=output_file_path, bg=True)
+            fun_test.simple_assert(cmd, "Get TRex cps command")
+
+            checkpoint = "Execute TRex command"
+            output = trex_obj.execute_trex_command(cmd=cmd, timeout=duration)
+            fun_test.test_assert(output, checkpoint)
+
+            checkpoint = "Running dpcsh commands to capture stats during run"
+            output = run_dpcsh_commands(network_controller_obj=network_controller_obj,
+                                        flow_list_file=flow_list_file,
+                                        resource_bam_file=resource_bam_file, resource_pc_file=resource_pc_file)
+            fun_test.simple_assert(output, checkpoint)
+
+            fun_test.simple_assert(trex_obj.poll_for_trex_process(max_time=duration), "Ensure TRex process finish")
+
+            checkpoint = "Parse TRex output file"
+            summary = trex_obj.read_trex_output_summary(file_path=output_file_path)
+            fun_test.simple_assert(summary, checkpoint)
+
+            checkpoint = "Collect summary stats for %d iteration" % count
+            summary_dict = trex_obj.get_trex_summary_stats(summary_contents=summary)
+            fun_test.simple_assert(summary_dict, checkpoint)
+
+            checkpoint = "Summary Table for Iteration: %d CPS: %d Profile: %s" % (count, cps, profile_name)
+            trex_obj.pretty_print_summary_dict(summary_dict=summary_dict, table_header=checkpoint)
+            fun_test.add_checkpoint(checkpoint)
+
+            checkpoint = "Validate summary stats"
+            validate_stats = validate_summary_stats(summary_dict=summary_dict)
+            if validate_stats:
+                result['max_cps'] = cps
+                result['max_latency'] = summary_dict['max_latency']
+                result['avg_latency'] = summary_dict['avg_latency']
+                result['status'] = True
+                result['summary_dict'] = summary_dict
+            else:
+                if cps != base_cps and 'max_cps' in result:
+                    fun_test.log(
+                        "<=======> FAILED Iteration: %d CPS: %d Profile: %s <=======>" % (count, cps, profile_name),
+                        fun_test.LOG_LEVEL_CRITICAL)
+                    fun_test.log("<=======> Last Successful CPS was %d in iteration %d <=======>" % (result['max_cps'],
+                                                                                                     count - 1))
+                    max_cps_found = True
+                else:
+                    fun_test.log(
+                        "<=======> FAILED Iteration: %d Base CPS: %d Profile: %s <=======>" % (count, cps,
+                                                                                               profile_name),
+                        fun_test.LOG_LEVEL_CRITICAL)
+                    break
+            fun_test.add_checkpoint(checkpoint)
+            count += 1
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    finally:
+        trex_obj.remove_file(file_name=output_file_path)
+    return result
+
+
+def validate_summary_stats(summary_dict):
+    result = False
+    try:
+        if 'tcps_conn_attempt' in summary_dict['client'] and 'tcps_connects' in summary_dict['client']:
+            fun_test.test_assert_expected(expected=summary_dict['client']['tcps_conn_attempt'],
+                                          actual=summary_dict['client']['tcps_connects'],
+                                          message='Ensure TCP connections attempted equal to connections established.',
+                                          ignore_on_success=True)
+
+        fun_test.simple_assert('embryonic_tcp_conn_drops' not in summary_dict['client'],
+                               "check for embryonic connections dropped")
+        fun_test.simple_assert('tcps_retransmit_syn_timeouts' not in summary_dict['client'],
+                               "check for retransmit SYN timeouts")
+        fun_test.simple_assert('tcps_keepalive_timeouts' not in summary_dict['client'], "check for keepalive timeouts")
+        fun_test.simple_assert('tcps_conn_keepalive_drops' not in summary_dict['client'],
+                               "check for connections dropped in keepalive")
+        fun_test.simple_assert('max_latency' in summary_dict, "check for max latency")
+        fun_test.simple_assert('avg_latency' in summary_dict, "check for avg latency")
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
 
 

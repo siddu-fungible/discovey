@@ -16,7 +16,7 @@ import datetime
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
 from web.web_global import *
-from web.fun_test.triaging_global import TriagingStates, TriagingResult
+from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult, TriagingTypes
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -33,10 +33,6 @@ class MetricsGlobalSettingsSerializer(ModelSerializer):
         model = MetricsGlobalSettings
         fields = "__all__"
 
-
-class TriageType:
-    SCORES = "SCORES"
-    PASS_FAIL = "PASS/FAIL"
 
 class SchedulingStates:
     ACTIVE = "Active"
@@ -94,75 +90,53 @@ class MetricChartStatus(models.Model):
         ]
 
 
-class Triage2(models.Model):
+class Triage3(models.Model):
     metric_id = models.IntegerField()
-    triage_id = models.IntegerField()
-    triage_type = models.CharField(max_length=15, default=TriageType.SCORES)
-    from_fun_os_sha = models.TextField()
-    to_fun_os_sha = models.TextField()
+    triage_id = models.IntegerField(unique=True)
+    triage_type = models.IntegerField(default=TriagingTypes.REGEX_MATCH)
+    from_fun_os_sha = models.TextField()  # The initial lower bound
+    to_fun_os_sha = models.TextField()    # The initial upper bound
     submission_date_time = models.DateTimeField(default=datetime.now)
-    status = models.TextField(default=TriagingStates.UNKNOWN)
+    status = models.IntegerField(default=TriagingStates.UNKNOWN)
     result = models.TextField(default=TriagingResult.UNKNOWN)
     build_parameters = JSONField()
+
     current_trial_set_id = models.IntegerField(default=-1)
     current_trial_set_count = models.IntegerField(default=-1)
+    current_trial_from_sha = models.TextField(default="")
+    current_trial_to_sha = models.TextField(default="")
+
+    submitter_email = models.EmailField(default="john.abraham@fungible.com")
+    base_tag = models.TextField(default="qa_triage")
+    regex_match_string = models.TextField(default="")
+
+    @staticmethod
+    def get_tag(base_tag, other_tag):
+        return "{}_{}".format(base_tag, other_tag)
 
 
-class Triage2Trial(models.Model):
+class Triage3Trial(models.Model):
     triage_id = models.IntegerField()
     fun_os_sha = models.TextField()
     trial_set_id = models.IntegerField(default=-1)
     status = models.IntegerField(default=TriagingStates.UNKNOWN)
-
-
-class Triage(models.Model):
-    metric_id = models.IntegerField(default=-1)
-    metric_type = models.CharField(max_length=15, default=TriageType.SCORES)
-    triage_id = models.IntegerField(default=-1)
-    date_time = models.DateTimeField(default=datetime.now)
-    degraded_suite_execution_id = models.IntegerField(default=-1)
-    degraded_jenkins_job_id = models.IntegerField(default=-1)
-    degraded_lsf_job_id = models.IntegerField(default=-1)
-    degraded_git_commit = models.TextField(default="")
-    degraded_build_properties = models.TextField(default="")
-    stable_suite_execution_id = models.IntegerField(default=-1)
-    stable_jenkins_job_id = models.IntegerField(default=-1)
-    stable_lsf_job_id = models.IntegerField(default=-1)
-    stable_git_commit = models.TextField(default="")
-    stable_build_properties = models.TextField(default="")
-    last_good_score = models.FloatField(default=-1)
-    status = models.CharField(max_length=30, default=SchedulingStates.ACTIVE)
-    max_tries = models.IntegerField(default=-1)
-    faulty_commit = models.TextField(default="")
-    boot_args = models.TextField(default="")
-    fun_os_make_flags = models.TextField(default="")
-    email = models.TextField(default="")
-
-    def __str__(self):
-        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.last_good_score)
-        return s
-
-class TriageFlow(models.Model):
-    metric_id = models.IntegerField(default=-1)
-    metric_type = models.CharField(max_length=15, default=TriageType.SCORES)
-    triage_id = models.IntegerField(default=-1)
-    triage_flow_id = models.IntegerField(default=-1, unique=True)
-    date_time = models.DateTimeField(default=datetime.now)
-    score = models.FloatField(default=-1)
-    suite_execution_id = models.IntegerField(default=-1)
-    jenkins_job_id = models.IntegerField(default=-1)
+    jenkins_build_number = models.IntegerField(default=-1)
     lsf_job_id = models.IntegerField(default=-1)
-    status = models.CharField(max_length=30, default=SchedulingStates.WAITING)
-    git_commit = models.TextField(default="")
-    committer = models.TextField(default="")
-    build_properties = models.TextField(default="")
-    boot_args = models.TextField(default="")
-    fun_os_make_flags = models.TextField(default="")
-    email = models.TextField(default="")
+    tag = models.TextField(default="")
+    regex_match = models.TextField(default="")
+    submission_date_time = models.DateTimeField(default=datetime.now)
+    tags = JSONField(default=[])  # for re-runs
 
     def __str__(self):
-        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.score)
-        return s
+        return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
+                                                                             self.tag,
+                                                                             self.fun_os_sha,
+                                                                             self.trial_set_id,
+                                                                             TriageTrialStates().code_to_string(self.status))
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class TimestampField(serializers.Field):
     def to_representation(self, value):
@@ -216,6 +190,7 @@ class MetricChart(models.Model):
     visualization_unit = models.CharField(max_length=20, default="")
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
+    platform = models.TextField(default=FunPlatform.F1)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
@@ -1872,6 +1847,110 @@ class JuniperCryptoTunnelPerformance(models.Model):
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_test = models.TextField(default="crypto_dp_tunnel")
+    input_num_tunnels = models.IntegerField(default=-1)
+    input_algorithm = models.TextField(default="")
+    input_operation = models.TextField(default="")
+    input_key_size = models.IntegerField(default=-1)
+    input_src_memory = models.TextField(default="BM")
+    input_dst_memory = models.TextField(default="BM")
+    input_pkt_size = models.FloatField(verbose_name="pkt size B", default=-1)
+    output_packets_per_sec = models.FloatField(verbose_name="packets per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
+    output_packets_per_sec_unit = models.TextField(default="Mpps")
+    output_throughput_unit = models.TextField(default="Gbps")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class JuniperIpsecEncryptionSingleTunnelPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.TextField(default="ipsec_tunnel_throughput")
+    input_num_tunnels = models.IntegerField(default=-1)
+    input_algorithm = models.TextField(default="")
+    input_operation = models.TextField(default="")
+    input_key_size = models.IntegerField(default=-1)
+    input_src_memory = models.TextField(default="BM")
+    input_dst_memory = models.TextField(default="BM")
+    input_pkt_size = models.FloatField(verbose_name="pkt size B", default=-1)
+    output_packets_per_sec = models.FloatField(verbose_name="packets per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
+    output_packets_per_sec_unit = models.TextField(default="Mpps")
+    output_throughput_unit = models.TextField(default="Gbps")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class JuniperIpsecEncryptionMultiTunnelPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.TextField(default="ipsec_tunnel_throughput")
+    input_num_tunnels = models.IntegerField(default=-1)
+    input_algorithm = models.TextField(default="")
+    input_operation = models.TextField(default="")
+    input_key_size = models.IntegerField(default=-1)
+    input_src_memory = models.TextField(default="BM")
+    input_dst_memory = models.TextField(default="BM")
+    input_pkt_size = models.FloatField(verbose_name="pkt size B", default=-1)
+    output_packets_per_sec = models.FloatField(verbose_name="packets per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
+    output_packets_per_sec_unit = models.TextField(default="Mpps")
+    output_throughput_unit = models.TextField(default="Gbps")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class JuniperIpsecDecryptionSingleTunnelPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.TextField(default="ipsec_tunnel_throughput")
+    input_num_tunnels = models.IntegerField(default=-1)
+    input_algorithm = models.TextField(default="")
+    input_operation = models.TextField(default="")
+    input_key_size = models.IntegerField(default=-1)
+    input_src_memory = models.TextField(default="BM")
+    input_dst_memory = models.TextField(default="BM")
+    input_pkt_size = models.FloatField(verbose_name="pkt size B", default=-1)
+    output_packets_per_sec = models.FloatField(verbose_name="packets per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
+    output_packets_per_sec_unit = models.TextField(default="Mpps")
+    output_throughput_unit = models.TextField(default="Gbps")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class JuniperIpsecDecryptionMultiTunnelPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.TextField(default="ipsec_tunnel_throughput")
     input_num_tunnels = models.IntegerField(default=-1)
     input_algorithm = models.TextField(default="")
     input_operation = models.TextField(default="")

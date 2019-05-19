@@ -106,6 +106,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
+        '''
         try:
             self.blt_details = fun_test.shared_variables["blt_details"]
             self.end_host_inst = fun_test.shared_variables["end_host_inst"]
@@ -131,7 +132,7 @@ class BLTVolumePerformanceScript(FunTestScript):
                                          format(x, curr_uuid))
         except:
             fun_test.log("Clean-up of volume failed.")
-
+        '''
         fun_test.log("FS cleanup")
         fun_test.shared_variables["fs"].cleanup()
 
@@ -162,9 +163,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             setattr(self, k, v)
 
         # Setting the list of block size and IO depth combo
-        if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
+        if 'fio_jobs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_jobs_iodepth']:
             benchmark_parsing = False
-            fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
+            fun_test.critical("Num Jobs and IO depth combo to be used for this {} testcase is not available in "
                               "the {} file".format(testcase, benchmark_file))
 
         # Setting expected FIO results
@@ -177,8 +178,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             if len(self.fio_sizes) != len(self.expected_fio_result.keys()):
                 benchmark_parsing = False
                 fun_test.critical("Mismatch in FIO sizes and its benchmarking results")
-        elif "fio_bs_iodepth" in benchmark_dict[testcase]:
-            if len(self.fio_bs_iodepth) != len(self.expected_fio_result.keys()):
+        elif "fio_jobs_iodepth" in benchmark_dict[testcase]:
+            if len(self.fio_jobs_iodepth) != len(self.expected_fio_result.keys()):
                 benchmark_parsing = False
                 fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
 
@@ -189,7 +190,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
-                     format(testcase, self.fio_bs_iodepth))
+                     format(testcase, self.fio_jobs_iodepth))
         fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
                      format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
@@ -280,6 +281,24 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             self.end_host.sudo_command("ip6tables -F")
             self.end_host.sudo_command("dmesg -c > /dev/null")
 
+            try:
+                self.end_host.sudo_command("service irqbalance stop")
+                fun_test.sleep("Disable irqbalance", 5)
+                command_result = self.end_host.sudo_command("service irqbalance status")
+                if "inactive" in command_result:
+                    fun_test.log("IRQ balance disabled")
+                else:
+                    fun_test.critical("IRQ Balance still active")
+            except:
+                fun_test.log("irqbalance service not found")
+
+            install_status = self.end_host.install_package("tuned")
+            fun_test.test_assert(install_status, "tuned installed successfully")
+
+            active_profile = self.end_host.sudo_command("tuned-adm active")
+            if "network-throughput" not in active_profile:
+                self.end_host.sudo_command("tuned-adm profile network-throughput")
+
             command_result = self.end_host.command("lsmod | grep -w nvme")
             if "nvme" in command_result:
                 fun_test.log("nvme driver is loaded")
@@ -310,7 +329,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 self.end_host.sudo_command("route add -net 29.1.1.0/24 gw {}".format(iface_gw))
                 self.end_host.sudo_command("arp -s {} 00:de:ad:be:ef:00".format(iface_gw))
 
-            fun_test.sleep("x86 Config done", seconds=5)
+            fun_test.sleep("x86 Config done", seconds=10)
             if hasattr(self, "nvme_io_q"):
                 command_result = self.end_host.sudo_command(
                     "nvme connect -t {} -a {} -s {} -n nqn.2017-05.com.fungible:nss-uuid1 -i {}".
@@ -335,6 +354,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                           message="{} device type check".format(self.volume_name))
 
+            self.end_host.sudo_command("dmesg | grep -i nvme")
+
             # Pre-conditioning the volume (one time task)
             if self.warm_up_traffic:
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
@@ -343,7 +364,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("FIO Command Output:\n{}".format(fio_output))
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
-#
+            fun_test.log("Done with setup")
             fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
@@ -353,25 +374,25 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         row_data_dict = {}
 
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+        table_data_headers = ["Num Jobs", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+        table_data_cols = ["num_jobs", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
+                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
         fio_result = {}
         fio_output = {}
         internal_result = {}
 
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_jobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
             internal_result[combo] = {}
@@ -379,27 +400,25 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             for mode in self.fio_modes:
 
                 tmp = combo.split(',')
-                plain_block_size = float(tmp[0].strip('() '))
-                fio_block_size = tmp[0].strip('() ') + 'k'
+                fio_numjobs = tmp[0].strip('() ')
                 fio_iodepth = tmp[1].strip('() ')
+                fio_block_size = self.fio_bs
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
                 row_data_dict["mode"] = mode
                 row_data_dict["iodepth"] = fio_iodepth
+                row_data_dict["num_jobs"] = fio_numjobs
                 row_data_dict["block_size"] = fio_block_size
                 row_data_dict["size"] = self.fio_cmd_args["size"]
 
-                fun_test.log("Running FIO {} only test with num_jobs {}, "
-                             "the block size and IO depth set to {} & {}".
-                             format(mode, self.fio_num_jobs, fio_block_size, fio_iodepth))
+                fun_test.log("Running FIO {} test for blocksize : {} using num_jobs: {}, IO depth: {}".
+                             format(mode, self.fio_bs, fio_numjobs, fio_iodepth))
 
-                if self.fio_num_jobs == 1:
+                if int(fio_numjobs) == 1:
                     cpus_allowed = "8"
-                elif self.fio_num_jobs == 4:
+                elif int(fio_numjobs) == 4:
                     cpus_allowed = "8,9,10,11"
-                elif self.fio_num_jobs == 8:
-                    cpus_allowed = "8,9,10,11,12,13,14,15"
-                elif self.fio_num_jobs == 16:
+                elif int(fio_numjobs) >= 8:
                     cpus_allowed = "8,9,10,11,12,13,14,15,24,25,26,27,28,29,30,31"
 
                 # Flush cache before read test
@@ -407,16 +426,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 self.end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
 
                 # Check EQM stats before test
-                self.eqm_stats_before = {}
-                self.eqm_stats_before = self.storage_controller.peek(props_tree="stats/eqm")
-                eqm_result = False
+                # self.eqm_stats_before = {}
+                # self.eqm_stats_before = self.storage_controller.peek(props_tree="stats/eqm")
+                # eqm_result = False
 
                 fun_test.log("Running FIO...")
-                fio_job_name = "fio_" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
-                                                                 numjobs=self.fio_num_jobs,
+                                                                 numjobs=fio_numjobs,
                                                                  rw=mode,
                                                                  bs=fio_block_size,
                                                                  iodepth=fio_iodepth,
@@ -426,8 +445,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 fun_test.test_assert(fio_output[combo][mode], "Fio {} test for numjobs {} & iodepth {}".
-                                     format(mode, self.fio_num_jobs, fio_iodepth))
+                                     format(mode, fio_numjobs, fio_iodepth))
 
+                '''
                 self.eqm_stats_after = {}
                 self.eqm_stats_after = self.storage_controller.peek(props_tree="stats/eqm")
 
@@ -439,7 +459,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         stat_delta = current_value - value
                         fun_test.critical("There is a mismatch in {} stat, delta {}".
                                           format(field, stat_delta))
-
+                '''
+                
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 for op, stats in fio_output[combo][mode].items():
@@ -475,13 +496,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             table_data_rows.append(row_data_list)
             post_results("BLT_IO_Scaling", test_method, *row_data_list)
 
+        table_name = "BLT " + unicode.upper(mode) + " Results Summary"
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="BLT IO Scaling ", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="{}".format(table_name), table_name=self.summary, table_data=table_data)
         # Posting the final status of the test result
         test_result = True
         fun_test.log(fio_result)
         fun_test.log(internal_result)
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_jobs_iodepth:
             for mode in self.fio_modes:
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
@@ -501,7 +523,7 @@ class BLTFioSeqRead(BLTVolumePerformanceTestcase):
         2. Export (Attach) this BLT to the external host connected via the network interface. 
         3. Pre-condition the volume with write test using fio.
         4. Run the FIO Seq Read test(without verify) from the 
-         host with numjobs = 8 & IOdepth = 1,4,8,16 and check the performance. 
+         host with numjobs & IOdepth : (1,1),(8,1),(16,1),(16,2),(16,4) and check the performance. 
         ''')
 
 
@@ -515,7 +537,7 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
         2. Export (Attach) this BLT to the external host connected via the network interface. 
         3. Pre-condition the volume with write test using fio.
         4. Run the FIO Rand Read test(without verify) from the 
-         host with numjobs = 8 & IOdepth = 1,4,8,16 and check the performance. 
+         host with numjobs & IOdepth : (1,1),(8,1),(16,1),(16,2),(16,4) and check the performance. 
         ''')
 
 

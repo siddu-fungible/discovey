@@ -425,6 +425,9 @@
                 "name": "non_teramarks_customer_juniper",
                 "weight": 1,
                 "label": "Juniper",
+                "extensible_references": [
+                  "teramarks_customer_juniper"
+                ],
                 "children": [
                   {
                     "info": "juniper_NU_VP_NU_FWD_NFCP",
@@ -511,6 +514,18 @@
                     ]
                   }
                 ]
+              },
+              {
+                "info": "Alibaba",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "non_teramarks_customer_alibaba",
+                "weight": 0,
+                "label": "Alibaba",
+                "extensible_references": [
+                  "teramarks_customer_alibaba"
+                ],
+                "children": []
               }
             ]
           }
@@ -2868,14 +2883,6 @@
                             "label": "Latency, QDepth=1"
                           },
                           {
-                            "info": "read_qd4_nvmetcp_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_qd4_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
                             "info": "read_qd8_nvmetcp_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
@@ -2890,6 +2897,22 @@
                             "name": "read_qd16_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "read_qd32_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd32_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "read_qd64_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd64_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
                           }
                         ]
                       },
@@ -2918,14 +2941,6 @@
                             "label": "Latency, QDepth=1"
                           },
                           {
-                            "info": "rand_read_qd4_nvmetcp_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd4_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
                             "info": "rand_read_qd8_nvmetcp_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
@@ -2940,6 +2955,22 @@
                             "name": "rand_read_qd16_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "rand_read_qd32_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd32_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "rand_read_qd64_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd64_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
                           }
                         ]
                       }
@@ -3201,7 +3232,7 @@
                     "leaf": false,
                     "name": "juniper_ipsec",
                     "weight": 1,
-                    "label": "IPSEC",
+                    "label": "Crypto",
                     "children": [
                       {
                         "info": "juniper_ipsec_crypto_single_tunnel",
@@ -3250,6 +3281,130 @@
                             "metric_model_name": "JuniperCryptoTunnelPerformance",
                             "leaf": true,
                             "name": "juniper_crypto_multi_tunnel_output_pps",
+                            "weight": 1,
+                            "label": "Packets per sec"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "info": "juniper_ipsec_encryption",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_ipsec_encryption",
+                    "weight": 1,
+                    "label": "IPSEC - Encryption",
+                    "children": [
+                      {
+                        "info": "juniper_ipsec_enc_single_tunnel",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "juniper_ipsec_enc_single_tunnel",
+                        "weight": 1,
+                        "label": "Single Tunnel",
+                        "children": [
+                          {
+                            "info": "juniper_ipsec_enc_single_tunnel_output_throughput",
+                            "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "juniper_ipsec_enc_single_tunnel_output_pps",
+                            "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_enc_single_tunnel_output_pps",
+                            "weight": 1,
+                            "label": "Packets per sec"
+                          }
+                        ]
+                      },
+                      {
+                        "info": "juniper_ipsec_enc_multi_tunnel",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "juniper_ipsec_enc_multi_tunnel",
+                        "weight": 1,
+                        "label": "Multi Tunnel",
+                        "children": [
+                          {
+                            "info": "juniper_ipsec_enc_multi_tunnel_output_throughput",
+                            "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "juniper_ipsec_enc_multi_tunnel_output_pps",
+                            "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
+                            "weight": 1,
+                            "label": "Packets per sec"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "info": "juniper_ipsec_decryption",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_ipsec_decryption",
+                    "weight": 1,
+                    "label": "IPSEC - Decryption",
+                    "children": [
+                      {
+                        "info": "juniper_ipsec_dec_single_tunnel",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "juniper_ipsec_dec_single_tunnel",
+                        "weight": 1,
+                        "label": "Single Tunnel",
+                        "children": [
+                          {
+                            "info": "juniper_ipsec_dec_single_tunnel_output_throughput",
+                            "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "juniper_ipsec_dec_single_tunnel_output_pps",
+                            "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_dec_single_tunnel_output_pps",
+                            "weight": 1,
+                            "label": "Packets per sec"
+                          }
+                        ]
+                      },
+                      {
+                        "info": "juniper_ipsec_dec_multi_tunnel",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "juniper_ipsec_dec_multi_tunnel",
+                        "weight": 1,
+                        "label": "Multi Tunnel",
+                        "children": [
+                          {
+                            "info": "juniper_ipsec_dec_multi_tunnel_output_throughput",
+                            "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "juniper_ipsec_dec_multi_tunnel_output_pps",
+                            "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                            "leaf": true,
+                            "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
                           }
