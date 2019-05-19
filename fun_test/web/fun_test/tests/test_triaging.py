@@ -134,7 +134,7 @@ class TriageStateMachine:
 
     def start_trial(self, fun_os_sha):
         t = self.get_triage()
-        started = False
+        active = False
         if not Triage3Trial.objects.filter(triage_id=t.triage_id, fun_os_sha=fun_os_sha).exists():
             trial = Triage3Trial(fun_os_sha=fun_os_sha,
                                  triage_id=self.triage_id,
@@ -146,13 +146,15 @@ class TriageStateMachine:
             trial.tag = trial_tag
             trial.save()
             logger.debug("Started trial for {}".format(fun_os_sha))
-            started = True
+            active = True
         else:
             trial = Triage3Trial.objects.get(triage_id=t.triage_id, fun_os_sha=fun_os_sha)
             trial.trial_set_id = t.current_trial_set_id
             trial.save()
+            if trial.status < TriageTrialStates.COMPLETED:
+                active = True
             logger.debug("Skipping trial for {} as it was already complete".format(fun_os_sha))
-        return started
+        return active
 
     def start_trial_set(self, from_fun_os_sha, to_fun_os_sha):
         # create trial sets for boundary shas and in-between shas
@@ -171,26 +173,24 @@ class TriageStateMachine:
 
         t.save()
 
-
         increment = len(commits_subset)/self.STEP
         if t.triage_type == TriagingTypes.PASS_OR_FAIL:
             increment = len(commits_subset)/2
 
         if not increment:
             increment = 1
-        num_trials = 0
+        num_active_trials = 0
         max_trials = 8
         for commit_index in range(0, len(commits_subset), increment):
             this_commit = commits_subset[commit_index]
             logger.debug("Candidate: {}".format(str(this_commit)))
-            started = self.start_trial(fun_os_sha=this_commit)
-            if started:
-                num_trials += 1
-            if num_trials > max_trials:
-                raise Exception("Too many trials")
+            active = self.start_trial(fun_os_sha=this_commit)
+            if active:
+                num_active_trials += 1
 
-        if not num_trials:
+        if not num_active_trials:
             pass
+        return num_active_trials
 
     def is_current_trial_set_complete(self):
         trial_count = Triage3Trial.objects.filter(triage_id=triage_id, trial_set_id=t.current_trial_set_id, status__gt=TriageTrialStates.COMPLETED)
@@ -260,8 +260,9 @@ class TriageStateMachine:
                     t = self.get_triage()
                     t.current_trial_set_id += 1
                     t.save()
-                    self.start_trial_set(from_fun_os_sha=last_pass_sha, to_fun_os_sha=last_fail_sha)
-
+                    num_active = self.start_trial_set(from_fun_os_sha=last_pass_sha, to_fun_os_sha=last_fail_sha)
+                    if not num_active:
+                        self.complete()
 
     def complete(self):
         t = self.get_triage()
@@ -456,6 +457,9 @@ if __name__ == "__main__":
     while True:
         triages = Triage3.objects.filter(status__gt=TriagingStates.COMPLETED)
         for triage in triages:
-            s = TriageStateMachine(triage=triage)
-            s.run()
+            try:
+                s = TriageStateMachine(triage=triage)
+                s.run()
+            except Exception as ex:
+                logger.exception(ex)
             time.sleep(5)

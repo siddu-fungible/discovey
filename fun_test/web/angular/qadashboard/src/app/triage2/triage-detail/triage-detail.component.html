@@ -44,9 +44,11 @@
 
   <div class="card">
     <div class="card-header">
-      Trials
+      Trials&nbsp;
+      <span>&nbsp;&nbsp;Show all commits: &nbsp;&nbsp;</span>
+      <input class="" id="show_all" type="checkbox" [checked]="showAll" [(ngModel)]="showAll">
     </div>
-    <div class="card-body">
+      <div class="card-body">
       <table class="table table-responsive">
         <tr>
           <th></th>
