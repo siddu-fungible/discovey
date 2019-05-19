@@ -57,31 +57,6 @@ class FunTimer:
 # in one trial set we execute multiple trials. The fun_os_sha for each trial is selected
 #
 
-class Test1(Thread):
-    def __init__(self, triage_id):
-        super(Test1, self).__init__()
-        self.triage_id = triage_id
-
-    def run(self):
-        t = Triage3.objects.get(triage_id=self.triage_id)
-        current_trial_set_id = t.current_trial_set_id
-        ft = FunTimer(max_time=20)
-        new_set_timer = FunTimer(max_time=60)
-
-        while True:
-            trials = Triage3Trial.objects.filter(triage_id=t.triage_id, trial_set_id=current_trial_set_id)
-            for trial in trials:
-                if not ft.is_expired():
-                    trial.status = TriageTrialStates.BUILDING_ON_JENKINS
-                    trial.save()
-                else:
-                    trial.status = TriageTrialStates.COMPLETED
-                    trial.save()
-                if new_set_timer.is_expired():
-                    t.current_trial_set_id = t.current_trial_set_id + 1
-                    t.save()
-                    new_set_timer.start()
-            time.sleep(5)
 
 def long_to_short_sha(long_sha):
     return long_sha[:7]
