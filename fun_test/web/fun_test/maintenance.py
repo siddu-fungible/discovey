@@ -3,6 +3,7 @@ from lib.system.fun_test import *
 from datetime import datetime
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
+from django.utils import timezone
 
 if __name__ == "__main_s1_platform__":
     charts = MetricChart.objects.all()

@@ -256,16 +256,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
-    let xDate = new Date(x).toISOString();
-    xDate = xDate.replace("T", " ");
-    let key = "";
-    try {
-      let dateString = xDate.split('.')[0];
-      key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
-    }
-    catch(e) {
-      this.loggerService.error("Date on xAxis tooltip failed");
-    }
+    let key = this.getKey(x);
     let s = "Error";
     if (this.buildInfo && key in this.buildInfo) {
       s = "";
@@ -285,16 +276,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
-    let xDate = new Date(x).toISOString();
-    xDate = xDate.replace("T", " ");
-    let key = "";
-    try {
-      let dateString = xDate.split('.')[0];
-      key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
-    }
-    catch(e) {
-      this.loggerService.error("Date on xAxis point click call back failed");
-    }
+    let key = this.getKey(x);
     let s = {};
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
@@ -334,6 +316,20 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       s["Value"] = y;
     }
     return s;
+  }
+
+  getKey(x): string {
+    let xDate = new Date(x).toISOString();
+    xDate = xDate.replace("T", " ");
+    let key = "";
+    try {
+      let dateString = xDate.split('.')[0];
+      key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+    }
+    catch(e) {
+      this.loggerService.error("Date on xAxis is empty for tooltip and point click call back");
+    }
+    return key;
   }
 
   // populates chartInfo and fetches metrics data
