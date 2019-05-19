@@ -20,6 +20,7 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 from lib.system.fun_test import *
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from django.utils import timezone
+from dateutil import parser
 
 def get_time_from_timestamp(timestamp):
     time_obj = parse(timestamp)
@@ -252,7 +253,6 @@ class BltVolumePerformanceHelper(MetricHelper):
         try:
             if version == -1:
                 version = str(fun_test.get_version())
-
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
@@ -335,6 +335,21 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
             one_entry.save()
+            try:
+                completion_date = timezone.localtime(date_time)
+                completion_date = str(completion_date).split(":")
+                completion_date = completion_date[0] + ":" + completion_date[1]
+                build_date = parser.parse(completion_date)
+                add_jenkins_job_id_map(jenkins_job_id=0,
+                                       fun_sdk_branch="",
+                                       git_commit="",
+                                       software_date=0,
+                                       hardware_version="",
+                                       completion_date=completion_date,
+                                       build_properties="", lsf_job_id="",
+                                       sdk_version=version, build_date=build_date)
+            except:
+                pass
 
 
 class AllocSpeedPerformanceHelper(MetricHelper):
@@ -415,6 +430,7 @@ class ModelHelper(MetricHelper):
                     date_time = timezone.localtime(new_kwargs["input_date_time"])
                     date_time = str(date_time).split(":")
                     completion_date = date_time[0] + ":" + date_time[1]
+                    build_date = parser.parse(completion_date)
                     version = new_kwargs["input_version"]
                     add_jenkins_job_id_map(jenkins_job_id=0,
                                            fun_sdk_branch="",
@@ -423,7 +439,7 @@ class ModelHelper(MetricHelper):
                                            hardware_version="",
                                            completion_date=completion_date,
                                            build_properties="", lsf_job_id="",
-                                           sdk_version=version)
+                                           sdk_version=version, build_date=build_date)
                 result = True
             except Exception as ex:
                 fun_test.critical(str(ex))

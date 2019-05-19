@@ -290,6 +290,7 @@ class JenkinsJobIdMap(models.Model):
     build_properties = models.TextField(default="")
     lsf_job_id = models.TextField(default="")
     sdk_version = models.TextField(default="")
+    build_date = models.DateTimeField(default=datetime.now)
 
     def __str__(self):
         return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
