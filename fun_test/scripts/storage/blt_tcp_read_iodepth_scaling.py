@@ -409,7 +409,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 row_data_dict["iodepth"] = fio_iodepth
                 row_data_dict["num_jobs"] = fio_numjobs
                 row_data_dict["block_size"] = fio_block_size
-                row_data_dict["size"] = self.fio_cmd_args["size"]
+                file_size_in_gb = self.blt_details["capacity"] / 1073741824
+                row_data_dict["size"] = str(file_size_in_gb) + "GB"
 
                 fun_test.log("Running FIO {} test for blocksize : {} using num_jobs: {}, IO depth: {}".
                              format(mode, self.fio_bs, fio_numjobs, fio_iodepth))
