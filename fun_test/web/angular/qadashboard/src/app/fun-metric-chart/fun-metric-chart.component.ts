@@ -257,18 +257,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let xDate = new Date(x).toISOString();
     xDate = xDate.replace("T", " ");
-    let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-    let match = r.exec(xDate);
-    let key = "";
-    if (match) {
-      key = match[1];
-    } else {
-      let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
-      match = reg.exec(x);
-      if (match) {
-        key = match[1].replace('T', ' ');
-      }
-    }
+    let dateString = xDate.split('.')[0];
+    let key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
     let s = "Error";
     if (this.buildInfo && key in this.buildInfo) {
       s = "";
@@ -290,18 +280,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let xDate = new Date(x).toISOString();
     xDate = xDate.replace("T", " ");
-    let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-    let match = r.exec(xDate);
-    let key = "";
-    if (match) {
-      key = match[1];
-    } else {
-      let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
-      match = reg.exec(x);
-      if (match) {
-        key = match[1].replace('T', ' ');
-      }
-    }
+    let dateString = xDate.split('.')[0];
+    let key = dateString.slice(0, -2) + '00'; //added since the past vales do not have accurate timestamp
+
     let s = {};
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
@@ -818,7 +799,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
     let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
     let localYearString = String(localDate.getFullYear());
-    let keySplitString = localDate.toLocaleString("default", { hourCycle: "h24" }).split(" ");
+    let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
     let timeString = keySplitString[1].split(":");
     let hour = ((Number(timeString[0]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[0] + ":";
     let minutes = ((Number(timeString[1]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[1] + ":";
@@ -918,11 +899,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               let outputUnit = oneRecord[unit];
               if (output > 0) {
                 if (outputUnit && outputUnit !== "" && outputUnit !== this.visualizationUnit) {
-                output = this.convertToBaseUnit(outputUnit, output);
-                output = this.convertToVisualizationUnit(this.visualizationUnit, output);
-              }
-              total += output;
-              count++;
+                  output = this.convertToBaseUnit(outputUnit, output);
+                  output = this.convertToVisualizationUnit(this.visualizationUnit, output);
+                }
+                total += output;
+                count++;
               }
             }
             startIndex--;
