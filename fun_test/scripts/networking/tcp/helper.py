@@ -664,33 +664,35 @@ def trim_json_contents(filepath):
     return result
 
 
-def run_netperf_concurrently(cmd_list, linux_obj, network_controller_obj, display_output=False):
+def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=False, num_flows=1):
     result = {}
     try:
         version = fun_test.get_version()
-        num_flows = len(cmd_list)
         multi_task_obj = MultiProcessingTasks()
         index = 1
-        duration = len(cmd_list) * 60
-        for cmd in cmd_list:
-            multi_task_obj.add_task(func=run_netperf,
-                                    func_args=(linux_obj, cmd, duration),
-                                    task_key="conn_%d" % index)
-            index += 1
+        total_netperf_processes = 0
+        for linux_obj, cmd_list in cmd_dict.iteritems():
+            duration = len(cmd_list) * 60
+            total_netperf_processes = total_netperf_processes + len(cmd_list)
+            for cmd in cmd_list:
+                multi_task_obj.add_task(func=run_netperf,
+                                        func_args=(linux_obj, cmd, duration),
+                                        task_key="conn_%d" % index)
+                index += 1
 
         flow_list_file = str(version) + "_" + str(num_flows) + '_flowlist.txt'
         resource_pc_file = str(version) + "_" + str(num_flows) + '_resource_pc.txt'
         resource_bam_file = str(version) + "_" + str(num_flows) + '_resource_bam.txt'
 
         multi_task_obj.add_task(func=run_dpcsh_commands,
-                                func_args=(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file,
-                                           display_output),
+                                func_args=(network_controller_obj, flow_list_file, resource_bam_file,
+                                           resource_pc_file, display_output),
                                 task_key='')
 
-        run_started = multi_task_obj.run(max_parallel_processes=len(cmd_list) + 1, parallel=True)
+        run_started = multi_task_obj.run(max_parallel_processes=total_netperf_processes + 1, parallel=True)
         fun_test.test_assert(run_started, "Ensure netperf commands started")
 
-        for index in range(1, len(cmd_list) + 1):
+        for index in range(1, total_netperf_processes + 1):
             task_key = 'conn_%d' % index
             res = multi_task_obj.get_result(task_key=task_key)
             result[task_key] = res
@@ -700,7 +702,8 @@ def run_netperf_concurrently(cmd_list, linux_obj, network_controller_obj, displa
             all_throughputs.append(val['throughput'])
         result['total_throughput'] = sum(all_throughputs)
     except Exception as ex:
-        get_stale_socket_connections(linux_obj=linux_obj, port_value=4555)
+        for linux_obj in cmd_dict:
+            get_stale_socket_connections(linux_obj=linux_obj, port_value=4555)
         fun_test.critical(str(ex))
     return result
 
@@ -772,7 +775,7 @@ def run_netperf(linux_obj, cmd, duration=60):
 
 
 def get_netperf_cmd_list(dip, protocol='tcp', duration=60, num_flows=1, send_size="128K",
-                         port1=1000, port2=4555):
+                         port1=1000, port2=4555, start_core_id=8, end_core_id=15):
     cmd_list = []
     try:
         if protocol.lower() == 'udp':
@@ -780,10 +783,10 @@ def get_netperf_cmd_list(dip, protocol='tcp', duration=60, num_flows=1, send_siz
         else:
             t = 'TCP_STREAM'
 
-        cpu = 8
+        cpu = start_core_id
         for conn in range(0, num_flows):
-            if cpu > 15:
-                cpu = 8
+            if cpu > end_core_id:
+                cpu = start_core_id
             cmd = "taskset -c %d netperf -t %s -H %s -l %s -f m -j -N -P 0 -- -k \"THROUGHPUT\" -s %s -P %d,%d " % (
                 cpu, t, dip, duration, send_size, port1, port2
             )

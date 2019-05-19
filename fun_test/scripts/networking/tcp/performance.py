@@ -12,10 +12,13 @@ import re
 network_controller_obj = None
 nu_lab_handle = None
 app = "tcp_server"
-host_name = "poc-server-06"
+host_name1 = "poc-server-06"
+host_name2 = "nu-lab-04"
 hosts_json_file = ASSET_DIR + "/hosts.json"
 setup_fpg1_file = "setup_fpg1.sh"
+setup_fpg0_file = "fpg0.sh"
 setup_fpg1_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg1_file
+setup_fpg0_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg0_file
 TIMESTAMP = None
 filename = "tcp_performance.json"
 use_mpstat = True
@@ -40,13 +43,12 @@ class TcpPerformance(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="""
-        1. Setup fpg on nu-lab-04
+        1. Setup fpg on host
         2. set syslog 2
         3. Execute tcp_server in dpcsh""")
 
     def setup(self):
-        global nu_lab_obj, network_controller_obj, nu_lab_ip, nu_lab_username, nu_lab_password, nu_lab_obj2, \
-            mpstat_obj, mpstat_obj2, mode, TIMESTAMP
+        global network_controller_obj, mode, TIMESTAMP
 
         TIMESTAMP = get_current_time()
         nu_config_obj = NuConfigManager()
@@ -84,21 +86,35 @@ class TcpPerformance(FunTestScript):
         syslog = network_controller_obj.set_syslog_level(level=2)
         fun_test.simple_assert(syslog, "Set syslog level to 2")
 
-        exec_app = network_controller_obj.execute_app(name=app)
-        fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
+        # exec_app = network_controller_obj.execute_app(name=app)
+        # fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
 
-        # Setup fpg1
-        host_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name)
-        fun_test.simple_assert(host_info, 'Host info fetched')
-        nu_lab_username = host_info['ssh_username']
-        nu_lab_ip = host_info['host_ip']
-        nu_lab_password = host_info['ssh_password']
-        nu_lab_obj = Linux(host_ip=nu_lab_ip, ssh_username=nu_lab_username,
-                           ssh_password=nu_lab_password)
+        # Fetch hosts details
+        host1_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name1)
+        fun_test.simple_assert(host1_info, 'Host info fetched')
+        host1_username = host1_info['ssh_username']
+        host1_ip = host1_info['host_ip']
+        host1_password = host1_info['ssh_password']
 
-        nu_lab_obj2 = copy.deepcopy(nu_lab_obj)
-        mpstat_obj = copy.deepcopy(nu_lab_obj)
-        mpstat_obj2 = copy.deepcopy(nu_lab_obj)
+        fun_test.shared_variables['host1_username'] = host1_username
+        fun_test.shared_variables['host1_password'] = host1_password
+        fun_test.shared_variables['host1_ip'] = host1_ip
+
+        host2_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name2)
+        fun_test.simple_assert(host2_info, 'Host info fetched')
+        host2_username = host2_info['ssh_username']
+        host2_ip = host2_info['host_ip']
+        host2_password = host2_info['ssh_password']
+
+        fun_test.shared_variables['host2_username'] = host2_username
+        fun_test.shared_variables['host2_password'] = host2_password
+        fun_test.shared_variables['host2_ip'] = host2_ip
+
+        fun_test.shared_variables['host1_obj'] = Linux(host_ip=host1_ip, ssh_username=host1_username,
+                                                       ssh_password=host1_password)
+
+        fun_test.shared_variables['host2_obj'] = Linux(host_ip=host2_ip, ssh_username=host2_username,
+                                                       ssh_password=host2_password)
 
     def cleanup(self):
         if 'fs' in fun_test.shared_variables:
@@ -120,32 +136,39 @@ class TcpPerformance1Conn(FunTestCase):
                               1. Setup fpg1 on %s
                               2. Run netperf file with 1 connection
                               3. Update tcp_performance.json file with throughput and pps
-                              """ % host_name)
+                              """ % host_name1)
 
     def setup(self):
-        fun_test.simple_assert(self.netperf_remote_port, "Value of server port is %s" % self.netperf_remote_port)
+        host1_ip = fun_test.shared_variables['host1_ip']
+        host1_username = fun_test.shared_variables['host1_username']
+        host1_password = fun_test.shared_variables['host1_password']
+        host1_obj = fun_test.shared_variables['host1_obj']
 
         # Check stale socket connections
-        stale_connections = get_stale_socket_connections(linux_obj=nu_lab_obj, port_value=self.netperf_remote_port)
+        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen are %s" % stale_connections)
 
         target_file_path = "/tmp/" + setup_fpg1_file
         file_transfer = fun_test.scp(source_file_path=setup_fpg1_filepath, target_file_path=target_file_path,
-                                     target_ip=nu_lab_ip, target_username=nu_lab_username,
-                                     target_password=nu_lab_password)
-        fun_test.simple_assert(file_transfer, "Ensure %s is scp to %s" % (setup_fpg1_file, nu_lab_ip))
+                                     target_ip=host1_ip, target_username=host1_username,
+                                     target_password=host1_password)
+        fun_test.simple_assert(file_transfer, "Ensure %s is scp to %s" % (setup_fpg1_file, host1_ip))
         
         fun_test.sleep("Letting file be copied", seconds=1)
 
         # Execute sh file
         fun_test.log("Creating interface and applying routes")
-        output = execute_shell_file(linux_obj=nu_lab_obj, target_file=target_file_path)
+        output = execute_shell_file(linux_obj=host1_obj, target_file=target_file_path)
         fun_test.simple_assert(output['result'], "Ensure file %s is executed" % target_file_path)
 
         fun_test.log("Display applied routes")
-        nu_lab_obj.get_ip_route()
+        host1_obj.get_ip_route()
 
     def run(self):
+        host1_obj = fun_test.shared_variables['host1_obj']
+        mpstat_obj = copy.deepcopy(host1_obj)
+        host1_username = fun_test.shared_variables['host1_username']
+
         test_parameters = {'dest_ip': '29.1.1.2', 'protocol': 'tcp', 'num_flows': self.num_flows,
                            'duration': self.duration, 'port1': 1000, 'port2': 4555, 'send_size': '128K'}
 
@@ -154,7 +177,7 @@ class TcpPerformance1Conn(FunTestCase):
             branch_name = fun_test.shared_variables['funos_branch']
 
         fun_test.log("Capture netstat before traffic")
-        netstat_1 = get_netstat_output(linux_obj=nu_lab_obj)
+        netstat_1 = get_netstat_output(linux_obj=host1_obj)
 
         # Start mpstat
         version = fun_test.get_version()
@@ -170,9 +193,9 @@ class TcpPerformance1Conn(FunTestCase):
         checkpoint = "Start tcpdump capture in background before starting traffic"
         interface_name = get_interface_name(file_path=setup_fpg1_filepath)
         tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.pcap'
-        tcpdump_output_file = "/home/%s/%s/%s" % (nu_lab_obj.ssh_username, "netperf_teramark_capture",
+        tcpdump_output_file = "/home/%s/%s/%s" % (host1_username, "netperf_teramark_capture",
                                                   tcpdump_temp_filename)
-        result = run_tcpdump_command(linux_obj=nu_lab_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
+        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
                                      count=100000, filecount=1)
         fun_test.simple_assert(result, checkpoint)
         fun_test.shared_variables['tcpdump_pid'] = result
@@ -185,14 +208,16 @@ class TcpPerformance1Conn(FunTestCase):
         fun_test.simple_assert(cmd_list, 'Ensure netperf command formed')
 
         network_controller_obj.disconnect()
-        netperf_result = run_netperf_concurrently(cmd_list=cmd_list, linux_obj=nu_lab_obj,
-                                                  network_controller_obj=network_controller_obj, display_output=False)
+        cmd_dict = {host1_obj: cmd_list}
+        netperf_result = run_netperf_concurrently(cmd_dict=cmd_dict,
+                                                  network_controller_obj=network_controller_obj, display_output=False,
+                                                  num_flows=self.num_flows)
         fun_test.test_assert(netperf_result, 'Ensure result found')
 
         fun_test.sleep("Wait after traffic", seconds=self.test_run_time)
 
         if 'tcpdump_pid' in fun_test.shared_variables:
-            nu_lab_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
+            host1_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
 
         total_throughput = netperf_result['total_throughput']
         fun_test.log("Total throughput seen is %s" % total_throughput)
@@ -213,7 +238,7 @@ class TcpPerformance1Conn(FunTestCase):
         fun_test.sleep("Letting file to be scp", seconds=2)
 
         fun_test.log("Capture netstat after traffic")
-        netstat_2 = get_netstat_output(linux_obj=nu_lab_obj)
+        netstat_2 = get_netstat_output(linux_obj=host1_obj)
 
         # Get diff stats
         netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '_netstat.txt'
@@ -231,12 +256,14 @@ class TcpPerformance1Conn(FunTestCase):
             fun_test.test_assert(output, "JSON file populated")
 
     def cleanup(self):
+        host1_obj = fun_test.shared_variables['host1_obj']
+
         # Check stale socket connections
-        stale_connections = get_stale_socket_connections(linux_obj=nu_lab_obj, port_value=self.netperf_remote_port)
+        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen are %s" % stale_connections)
 
         if 'tcpdump_pid' in fun_test.shared_variables:
-            nu_lab_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
+            host1_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
 
 
 class TcpPerformance4Conn(TcpPerformance1Conn):
@@ -251,7 +278,7 @@ class TcpPerformance4Conn(TcpPerformance1Conn):
                               1. Setup fpg1 on %s
                               2. Run netperf file with 4 connection
                               3. Update tcp_performance.json file with throughput and pps
-                              """ % host_name)
+                              """ % host_name1)
 
 
 class TcpPerformance8Conn(TcpPerformance1Conn):
@@ -264,14 +291,232 @@ class TcpPerformance8Conn(TcpPerformance1Conn):
                               1. Setup fpg1 on %s
                               2. Run netperf file with 8 connection
                               3. Update tcp_performance.json file with throughput and pps
-                              """ % host_name)
+                              """ % host_name1)
+
+
+# 2 Hosts with 8 connections on each host
+class TcpPerformance16Conn2Host(FunTestCase):
+    default_frame_size = 1500
+    test_run_time = 10
+    duration = 60
+    num_flows = 16
+    netperf_remote_port = 4555
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Test Tcp performance for 16 connection for 1500B stream",
+                              steps="""
+                              1. Setup fpg1 on %s and fpg0 on %s
+                              2. Run netperf file with 8 connections on %s and 8 connections on %s
+                              3. Update tcp_performance.json file with throughput and pps
+                              """ % (host_name1, host_name2, host_name1, host_name2))
+
+    def setup(self):
+        host1_ip = fun_test.shared_variables['host1_ip']
+        host1_username = fun_test.shared_variables['host1_username']
+        host1_password = fun_test.shared_variables['host1_password']
+        host1_obj = fun_test.shared_variables['host1_obj']
+
+        host2_ip = fun_test.shared_variables['host2_ip']
+        host2_username = fun_test.shared_variables['host2_username']
+        host2_password = fun_test.shared_variables['host2_password']
+        host2_obj = fun_test.shared_variables['host2_obj']
+
+        # Check stale socket connections
+        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
+        fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name1, stale_connections))
+
+        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
+        fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name2, stale_connections))
+
+        checkpoint = "Copy setup file %s to %s" % (setup_fpg1_file, host_name1)
+        target_file_path = "/tmp/" + setup_fpg1_file
+        file_transfer = fun_test.scp(source_file_path=setup_fpg1_filepath, target_file_path=target_file_path,
+                                     target_ip=host1_ip, target_username=host1_username,
+                                     target_password=host1_password)
+        fun_test.simple_assert(file_transfer, checkpoint)
+
+        fun_test.sleep("Letting file be copied", seconds=1)
+
+        checkpoint = "Execute setup file %s on %s" % (target_file_path, host_name1)
+        output = execute_shell_file(linux_obj=host1_obj, target_file=target_file_path)
+        fun_test.simple_assert(output['result'], checkpoint)
+
+        checkpoint = "Copy setup file %s to %s" % (setup_fpg0_file, host_name2)
+        target_file_path = "/tmp/" + setup_fpg0_file
+        file_transfer = fun_test.scp(source_file_path=setup_fpg0_filepath, target_file_path=target_file_path,
+                                     target_ip=host2_ip, target_username=host2_username,
+                                     target_password=host2_password)
+        fun_test.simple_assert(file_transfer, checkpoint)
+
+        fun_test.sleep("Letting file be copied", seconds=1)
+
+        # Execute setup file on host2
+        checkpoint = "Execute setup file %s on %s" % (target_file_path, host_name2)
+        output = execute_shell_file(linux_obj=host2_obj, target_file=target_file_path, sudo=True)
+        fun_test.simple_assert(output['result'], checkpoint)
+
+        checkpoint = "Display applied routes on %s" % host_name1
+        host1_obj.get_ip_route()
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Display applied routes on %s" % host_name2
+        host2_obj.get_ip_route()
+        fun_test.add_checkpoint(checkpoint)
+
+    def run(self):
+        host1_obj = fun_test.shared_variables['host1_obj']
+        mpstat_host1_obj = copy.deepcopy(host1_obj)
+
+        host2_obj = fun_test.shared_variables['host2_obj']
+
+        host1_username = fun_test.shared_variables['host1_username']
+        host2_username = fun_test.shared_variables['host2_username']
+
+        test_parameters = {'dest_ip': '29.1.1.2', 'protocol': 'tcp', 'num_flows': self.num_flows,
+                           'duration': self.duration, 'port1': 1000, 'port2': 4555, 'send_size': '128K'}
+
+        branch_name = None
+        if 'funos_branch' in fun_test.shared_variables:
+            branch_name = fun_test.shared_variables['funos_branch']
+
+        checkpoint = "Capture netstat before traffic on %s" % host_name1
+        netstat_host1_before = get_netstat_output(linux_obj=host1_obj)
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Capture netstat before traffic on %s" % host_name2
+        netstat_host2_before = get_netstat_output(linux_obj=host2_obj)
+        fun_test.add_checkpoint(checkpoint)
+
+        # Start mpstat
+        # TODO: For now we capture mpstat only on poc-server-06 and not on nu-lab-04.
+        version = fun_test.get_version()
+        mpstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_mpstat.txt' % (host_name1)
+        mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
+        if use_mpstat:
+            fun_test.log("Starting to run mpstat command")
+            mp_out = run_mpstat_command(linux_obj=mpstat_host1_obj, interval=self.test_run_time,
+                                        output_file=mpstat_output_file, bg=True, count=6)
+            fun_test.log('mpstat cmd process id: %s' % mp_out)
+            fun_test.add_checkpoint("Started mpstat command")
+
+        # TODO: revisit tcpdump file creation after John's reply
+        checkpoint = "Start tcpdump capture in background before starting traffic on %s" % host_name1
+        interface_name = get_interface_name(file_path=setup_fpg1_filepath)
+        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name1
+        tcpdump_output_file = "/home/%s/%s/%s" % (host1_username, "netperf_teramark_capture",
+                                                  tcpdump_temp_filename)
+        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
+                                     count=100000, filecount=1)
+        fun_test.simple_assert(result, checkpoint)
+        fun_test.shared_variables['tcpdump_pid1'] = result
+
+        checkpoint = "Start tcpdump capture in background before starting traffic on %s" % host_name2
+        interface_name = get_interface_name(file_path=setup_fpg0_filepath)
+        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name2
+        tcpdump_output_file = "/home/%s/%s/%s" % (host2_username, "netperf_teramark_capture",
+                                                  tcpdump_temp_filename)
+        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
+                                     count=100000, filecount=1)
+        fun_test.simple_assert(result, checkpoint)
+        fun_test.shared_variables['tcpdump_pid2'] = result
+
+        checkpoint = "Starting netperf test on %s and %s" % (host_name1, host_name2)
+        host1_cmd_list = get_netperf_cmd_list(dip=test_parameters['dest_ip'],
+                                              duration=test_parameters['duration'],
+                                              num_flows=8,
+                                              send_size=test_parameters['send_size'])
+        fun_test.simple_assert(host1_cmd_list, 'Ensure netperf command formed')
+
+        host2_cmd_list = get_netperf_cmd_list(dip=test_parameters['dest_ip'],
+                                              duration=test_parameters['duration'],
+                                              num_flows=8,
+                                              start_core_id=0, end_core_id=7,
+                                              send_size=test_parameters['send_size'])
+        fun_test.simple_assert(host2_cmd_list, 'Ensure netperf command formed')
+
+        network_controller_obj.disconnect()
+        cmd_dict = {host1_obj: host1_cmd_list, host2_obj: host2_cmd_list}
+        netperf_result = run_netperf_concurrently(cmd_dict=cmd_dict,
+                                                  network_controller_obj=network_controller_obj,
+                                                  display_output=False, num_flows=self.num_flows)
+        fun_test.test_assert(netperf_result, checkpoint)
+
+        fun_test.sleep("Wait after traffic", seconds=self.test_run_time)
+
+        if 'tcpdump_pid1' in fun_test.shared_variables and 'tcpdump_pid2' in fun_test.shared_variables:
+            host1_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid1']), sudo=True)
+            host2_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid2']), sudo=True)
+
+        total_throughput = netperf_result['total_throughput']
+        fun_test.log("Total throughput seen is %s" % total_throughput)
+        fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" % total_throughput)
+
+        pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
+        fun_test.log("Total PPS value is %s" % round(pps, 2))
+
+        create_performance_table(total_throughput=total_throughput, total_pps=round(pps, 2), num_flows=self.num_flows)
+
+        # Scp mpstat json to LOGS dir
+        if use_mpstat:
+            populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_host1_obj,
+                                        dump_filename=mpstat_temp_filename)
+
+        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.txt'
+        populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename)
+        fun_test.sleep("Letting file to be scp", seconds=2)
+
+        checkpoint = "Capture netstat after traffic on %s" % host_name1
+        netstat_host1_after = get_netstat_output(linux_obj=host1_obj)
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Capture netstat after traffic on %s" % host_name2
+        netstat_host2_after = get_netstat_output(linux_obj=host2_obj)
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Populate Netstat diff output file captured on %s" % host_name1
+        netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_netstat.txt' % host_name1
+        diff_netstat = get_diff_stats(old_stats=netstat_host1_before, new_stats=netstat_host1_after)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+        fun_test.test_assert(populate, checkpoint)
+
+        checkpoint = "Populate Netstat diff output file captured on %s" % host_name2
+        netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_netstat.txt' % host_name2
+        diff_netstat = get_diff_stats(old_stats=netstat_host2_before, new_stats=netstat_host2_after)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+        fun_test.test_assert(populate, checkpoint)
+
+        # Parse output to get json
+        if not branch_name:
+            output = populate_performance_json_file(mode=mode, flow_type="FunTCP_Server_Throughput",
+                                                    frame_size=self.default_frame_size,
+                                                    num_flows=self.num_flows,
+                                                    throughput_n2t=total_throughput, pps_n2t=pps, timestamp=TIMESTAMP,
+                                                    filename=filename, model_name=TCP_PERFORMANCE_MODEL_NAME)
+            fun_test.test_assert(output, "JSON file populated")
+
+    def cleanup(self):
+        host1_obj = fun_test.shared_variables['host1_obj']
+        host2_obj = fun_test.shared_variables['host2_obj']
+
+        # Check stale socket connections
+        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
+        fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name1, stale_connections))
+
+        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
+        fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name2, stale_connections))
+
+        if 'tcpdump_pid1' in fun_test.shared_variables and 'tcpdump_pid2' in fun_test.shared_variables:
+            host1_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid1']), sudo=True)
+            host2_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid2']), sudo=True)
 
 
 if __name__ == '__main__':
     ts = TcpPerformance()
 
-    ts.add_test_case(TcpPerformance1Conn())
-    ts.add_test_case(TcpPerformance4Conn())
-    ts.add_test_case(TcpPerformance8Conn())
+    # ts.add_test_case(TcpPerformance1Conn())
+    # ts.add_test_case(TcpPerformance4Conn())
+    #v ts.add_test_case(TcpPerformance8Conn())
+    ts.add_test_case(TcpPerformance16Conn2Host())
 
     ts.run()

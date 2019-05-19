@@ -195,7 +195,8 @@ class TestTcpPerformance(FunTestCase):
         fun_test.simple_assert(cmd_list, 'Ensure netperf command formed')
 
         network_controller_obj.disconnect()
-        netperf_result = run_netperf_concurrently(cmd_list=cmd_list, linux_obj=nu_lab_obj,
+        cmd_dict = {nu_lab_obj: cmd_list}
+        netperf_result = run_netperf_concurrently(cmd_dict=cmd_dict, num_flows=num_flows,
                                                   network_controller_obj=network_controller_obj, display_output=True)
         fun_test.test_assert(netperf_result, 'Ensure result found')
 
