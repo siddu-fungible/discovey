@@ -35,6 +35,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
   suiteUrl = "http://integration.fungible.local/regression/suite_detail/";
   LOGS_DIR = "/static/logs";
+  suiteLogsDir = "http://integration.fungible.local/regression/static_serve_log_directory/";
 
   status: string = null;
   showingTable: boolean;
@@ -292,6 +293,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Lsf job id"] = lsfJobId;
       if (suite_execution_id !== -1)
         s["Suite execution id"] = suite_execution_id;
+        s["Suite log directory"] = suite_execution_id;
       if (Number(softwareDate) > 0)
         s["Software date"] = softwareDate;
       if (hardwareVersion !== "")
@@ -597,6 +599,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   openSuiteUrl(suiteId): void {
     window.open(this.suiteUrl + suiteId, '_blank');
+  }
+
+  openSuiteLog(suiteId): void {
+    window.open(this.suiteLogsDir + suiteId, '_blank');
   }
 
   openVersionUrl(version): void {
