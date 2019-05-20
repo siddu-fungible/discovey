@@ -70,8 +70,8 @@ class TcpPerformance(FunTestScript):
         syslog = network_controller_obj.set_syslog_level(level=2)
         fun_test.simple_assert(syslog, "Set syslog level to 2")
 
-        # exec_app = network_controller_obj.execute_app(name=app)
-        # fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
+        exec_app = network_controller_obj.execute_app(name=app)
+        fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
 
         # Setup fpg1
         host_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name)
@@ -162,7 +162,6 @@ class TestCloseResetCps(FunTestCase):
 
         # Parse output to get json
         if not branch_name:
-            fun_test.simple_assert('max_cps' not in result, "Max CPS not found in result")
             output = populate_cps_performance_json_file(mode=mode, flow_type="FunTCP_Server_CPS",
                                                         frame_size=self.default_frame_size,
                                                         cps_type=profile_name,
@@ -195,5 +194,5 @@ class TestCloseFinCps(TestCloseResetCps):
 if __name__ == '__main__':
     ts = TcpPerformance()
     ts.add_test_case(TestCloseResetCps())
-    # ts.add_test_case(TestCloseFinCps())
+    ts.add_test_case(TestCloseFinCps())
     ts.run()
