@@ -621,7 +621,7 @@ def populate_resource_bam_output_file(network_controller_obj, filename, max_time
         with open(file_path, 'a') as f:
             f.writelines(lines)
 
-        fun_test.add_auxillary_file(description='DPC Resource BAM %d stats', filename=file_path)
+        fun_test.add_auxillary_file(description='DPC Resource BAM stats', filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -751,13 +751,19 @@ def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file
     return True
 
 
-def run_tcpdump_command(linux_obj, tcp_dump_file, interface, snaplen=80, filecount=1, count=2000000):
+def run_tcpdump_command(linux_obj, tcp_dump_file, interface, snaplen=80, filecount=1, count=2000000, sudo=False):
     result = None
     try:
         cmd = "sudo tcpdump -leni %s tcp -w %s -s %d -W %d -c %d" % (interface, tcp_dump_file, snaplen,
                                                                      filecount, count)
         fun_test.log("tcpdump command formed: %s" % cmd)
-        process_id = linux_obj.start_bg_process(command=cmd)
+        if sudo:
+            cmd = "nohup tcpdump -leni %s tcp -w %s -s %d -W %d -c %d >/dev/null 2>&1 &" % (
+                interface, tcp_dump_file, snaplen, filecount, count)
+            linux_obj.sudo_command(command=cmd)
+            process_id = linux_obj.get_process_id_by_pattern(process_pat="tcpdump")
+        else:
+            process_id = linux_obj.start_bg_process(command=cmd)
         fun_test.log("tcpdump started process id: %s" % process_id)
         if process_id:
             result = process_id
@@ -913,6 +919,8 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
                         "<=======> FAILED Iteration: %d Base CPS: %d Profile: %s <=======>" % (count, cps,
                                                                                                profile_name),
                         fun_test.LOG_LEVEL_CRITICAL)
+                    result['status'] = True
+                    result['summary_dict'] = summary_dict
                     break
             fun_test.add_checkpoint(checkpoint)
             count += 1

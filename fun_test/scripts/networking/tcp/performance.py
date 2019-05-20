@@ -409,8 +409,8 @@ class TcpPerformance16Conn2Host(FunTestCase):
         interface_name = get_interface_name(file_path=setup_fpg0_filepath)
         tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name2
         tcpdump_output_file2 = fun_test.get_temp_file_path(file_name=tcpdump_temp_filename)
-        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file2,
-                                     count=100000, filecount=1)
+        result = run_tcpdump_command(linux_obj=host2_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file2,
+                                     count=100000, filecount=1, sudo=True)
         fun_test.simple_assert(result, checkpoint)
         fun_test.shared_variables['tcpdump_pid2'] = result
 
