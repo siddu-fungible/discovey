@@ -270,10 +270,9 @@ class FunethPerformanceBase(FunTestCase):
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr(dhost,
                                                                    funeth_obj.tb_config_obj.get_an_interface(dhost))
 
-            # Check dip pingable
-            ping_result = linux_obj_src.ping(dip, count=5, max_percentage_loss=0, interval=0.1,
-                                size=frame_size-20-8,  # IP header 20B, ICMP header 8B
-                                sudo=True)
+            # Check dip pingable - IP header 20B, ICMP header 8B
+            ping_result = linux_obj_src.ping(dip, count=5, max_percentage_loss=20, size=frame_size-20-8)
+
             fun_test.test_assert(ping_result, '{} ping {} with packet size {}'.format(
                 linux_obj_src.host_ip, dip, frame_size))
 
