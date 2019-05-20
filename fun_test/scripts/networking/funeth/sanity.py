@@ -42,7 +42,7 @@ try:
     else:
         enable_tso = False
 except:
-    enable_tso = False
+    enable_tso = True
 
 # Use control plane or not
 try:
