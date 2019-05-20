@@ -840,7 +840,6 @@ def get_single_dict_stats(result):
 def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, display_output=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
 
         result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
@@ -849,8 +848,11 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, di
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
 
-        with open(file_path, 'a') as f:
+        with open(filename, 'a') as f:
             f.writelines(lines)
+
+        description = "Resource pc %s" % pc_id
+        fun_test.add_auxillary_file(description=description, filename=filename)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -867,7 +869,6 @@ def populate_vp_util_output_file(network_controller_obj, filename, display_outpu
     output = False
     try:
         filtered_dict = {}
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
 
         result = network_controller_obj.debug_vp_util()
@@ -879,8 +880,11 @@ def populate_vp_util_output_file(network_controller_obj, filename, display_outpu
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
 
-        with open(file_path, 'a') as f:
+        with open(filename, 'a') as f:
             f.writelines(lines)
+
+        description = "Vp util"
+        fun_test.add_auxillary_file(description=description, filename=filename)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -897,7 +901,6 @@ def populate_vp_util_output_file(network_controller_obj, filename, display_outpu
 def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
 
         result = network_controller_obj.peek_per_vp_stats()
@@ -906,8 +909,11 @@ def populate_per_vp_output_file(network_controller_obj, filename, display_output
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
 
-        with open(file_path, 'a') as f:
+        with open(filename, 'a') as f:
             f.writelines(lines)
+
+        description = "Per vp"
+        fun_test.add_auxillary_file(description=description, filename=filename)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -940,15 +946,21 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
         vp_util_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_vp_util.txt"
         per_vp_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_per_vp.txt"
 
+        artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
+        artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
+        artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
+        artifact_vp_util_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_file)
+        artifact_per_vp_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_file)
+
         while not sequencer_passed:
 
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                             filename=resource_pc_1_file, pc_id=1, display_output=display_output)
+                                             filename=artifact_resource_pc_1_file, pc_id=1, display_output=display_output)
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                             filename=resource_pc_2_file, pc_id=2, display_output=display_output)
-            populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=bam_stats_file)
-            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=vp_util_file)
-            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=per_vp_file)
+                                             filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
+            populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
+            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
 
             fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
 
@@ -998,7 +1010,6 @@ def get_resource_bam_table(result):
 def populate_resource_bam_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
 
         result = network_controller_obj.peek_resource_bam_stats()
@@ -1007,8 +1018,11 @@ def populate_resource_bam_output_file(network_controller_obj, filename, display_
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
 
-        with open(file_path, 'a') as f:
+        with open(filename, 'a') as f:
             f.writelines(lines)
+
+        description = "Bam stats"
+        fun_test.add_auxillary_file(description=description, filename=filename)
 
         if display_output:
             fun_test.log_disable_timestamps()
