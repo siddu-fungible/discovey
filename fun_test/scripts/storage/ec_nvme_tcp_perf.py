@@ -70,10 +70,10 @@ class ECVolumeLevelScript(FunTestScript):
         self.test_network = self.csr_network[str(self.fpg_inteface_index)]
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["test_network"] = self.test_network
-        fun_test.shared_variables["db_log_time"] = datetime.now()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["syslog_level"] = self.syslog_level
+        fun_test.shared_variables['topology'] = topology
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
