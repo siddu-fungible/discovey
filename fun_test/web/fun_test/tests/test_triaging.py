@@ -300,7 +300,7 @@ class TrialStateMachine:
             params["PRIORITY"] = "low_priority"
             params["BRANCH_FunOS"] = self.fun_os_sha
             params["HW_VERSION"] = "rel_081618_svn67816_emu"
-            params["HW_MODEL"] = "F1DevBoard"
+            # params["HW_MODEL"] = "F1DevBoard"
             # params["PCI_MODE"] = "root_complex"
             try:
                 queue_item = jm.build(params=params)
