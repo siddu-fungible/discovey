@@ -48,14 +48,20 @@
             <td class="no-wrap">
               <b>{{ point.name }}:</b>
             </td>
-            <td *ngIf="point.name!=='Lsf job id' && point.name !=='SDK version'" class="word-break">
-              {{ point.value }}
-            </td>
             <td *ngIf="point.name==='Lsf job id'" class="word-break">
               <a [routerLink]="" (click)="openLsfUrl(point.value)">{{ point.value }}</a>
             </td>
             <td *ngIf="point.name==='SDK version'" class="word-break">
               <a [routerLink]="" (click)="openVersionUrl(point.value)">{{ point.value }}</a>
+            </td>
+            <td *ngIf="point.name==='Suite execution id'" class="word-break">
+              <a [routerLink]="" (click)="openSuiteUrl(point.value)">{{ point.value }}</a>
+            </td>
+            <td *ngIf="point.name==='Suite log directory'" class="word-break">
+              <a [routerLink]="" (click)="openSuiteLog(point.value)">{{ point.value }}</a>
+            </td>
+            <td *ngIf="point.name!=='Lsf job id' && point.name !=='SDK version'" class="word-break">
+              {{ point.value }}
             </td>
           </tr>
           <tr *ngIf="nwInfoFiles.length!==0" class="word-break">

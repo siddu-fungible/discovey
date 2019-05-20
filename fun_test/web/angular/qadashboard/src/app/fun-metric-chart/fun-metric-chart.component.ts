@@ -33,7 +33,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
+  suiteUrl = "http://integration.fungible.local/regression/suite_detail/";
   LOGS_DIR = "/static/logs";
+  suiteLogsDir = "http://integration.fungible.local/regression/static_serve_log_directory/";
 
   status: string = null;
   showingTable: boolean;
@@ -255,20 +257,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
-    let xDate = new Date(x).toISOString();
-    xDate = xDate.replace("T", " ");
-    let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-    let match = r.exec(xDate);
-    let key = "";
-    if (match) {
-      key = match[1];
-    } else {
-      let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
-      match = reg.exec(x);
-      if (match) {
-        key = match[1].replace('T', ' ');
-      }
-    }
+    let key = this._getBuildKey(x);
     let s = "Error";
     if (this.buildInfo && key in this.buildInfo) {
       s = "";
@@ -288,21 +277,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
-    let xDate = new Date(x).toISOString();
-    xDate = xDate.replace("T", " ");
-    let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-    let match = r.exec(xDate);
-    let key = "";
-    if (match) {
-      key = match[1];
-    } else {
-      let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
-      match = reg.exec(x);
-      if (match) {
-        key = match[1].replace('T', ' ');
-      }
-    }
+    let key = this._getBuildKey(x);
     let s = {};
+    this.nwInfoFiles = [];
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
       hardwareVersion = this.buildInfo[key]["hardware_version"];
@@ -310,16 +287,20 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let buildProperties = this.buildInfo[key]["build_properties"];
       let lsfJobId = this.buildInfo[key]["lsf_job_id"];
       let version = this.buildInfo[key]["sdk_version"];
+      let suite_execution_id = this.buildInfo[key]["suite_execution_id"];
       if (sdkBranch !== "")
         s["SDK branch"] = sdkBranch;
       if (lsfJobId !== "")
         s["Lsf job id"] = lsfJobId;
+      if (suite_execution_id !== -1) {
+        s["Suite execution id"] = suite_execution_id;
+        s["Suite log directory"] = suite_execution_id;
+      }
       if (Number(softwareDate) > 0)
         s["Software date"] = softwareDate;
       if (hardwareVersion !== "")
         s["Hardware version"] = hardwareVersion;
       if (version !== "") {
-        this.nwInfoFiles = [];
         s["SDK version"] = "bld_" + version;
         this.status = "Fetching networking artifacts";
         this.apiService.get('/regression/get_networking_artifacts/' + version).subscribe((data) => {
@@ -341,6 +322,20 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       s["Value"] = y;
     }
     return s;
+  }
+
+  _getBuildKey(x): string {
+    let xDate = new Date(x).toISOString();
+    xDate = xDate.replace("T", " ");
+    let key = "";
+    try {
+      let dateString = xDate.split('.')[0];
+      key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+    }
+    catch(e) {
+      this.loggerService.error("Date on xAxis is empty for tooltip and point click call back");
+    }
+    return key;
   }
 
   // populates chartInfo and fetches metrics data
@@ -603,6 +598,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     window.open(this.lsfUrl + lsfId, '_blank');
   }
 
+  openSuiteUrl(suiteId): void {
+    window.open(this.suiteUrl + suiteId, '_blank');
+  }
+
+  openSuiteLog(suiteId): void {
+    window.open(this.suiteLogsDir + suiteId, '_blank');
+  }
+
   openVersionUrl(version): void {
     window.open(this.versionUrl + version, '_blank');
   }
@@ -818,7 +821,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
     let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
     let localYearString = String(localDate.getFullYear());
-    let keySplitString = localDate.toLocaleString("default", { hourCycle: "h24" }).split(" ");
+    let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
     let timeString = keySplitString[1].split(":");
     let hour = ((Number(timeString[0]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[0] + ":";
     let minutes = ((Number(timeString[1]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[1] + ":";
@@ -918,11 +921,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               let outputUnit = oneRecord[unit];
               if (output > 0) {
                 if (outputUnit && outputUnit !== "" && outputUnit !== this.visualizationUnit) {
-                output = this.convertToBaseUnit(outputUnit, output);
-                output = this.convertToVisualizationUnit(this.visualizationUnit, output);
-              }
-              total += output;
-              count++;
+                  output = this.convertToBaseUnit(outputUnit, output);
+                  output = this.convertToVisualizationUnit(this.visualizationUnit, output);
+                }
+                total += output;
+                count++;
               }
             }
             startIndex--;

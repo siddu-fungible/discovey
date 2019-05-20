@@ -155,6 +155,8 @@ def add_version_to_jenkins_job_id_map(date_time, version):
     date_time = timezone.localtime(date_time)
     date_time = str(date_time).split(":")
     completion_date = date_time[0] + ":" + date_time[1]
+    build_date = parse(completion_date)
+    suite_execution_id = fun_test.get_suite_execution_id()
     add_jenkins_job_id_map(jenkins_job_id=0,
                            fun_sdk_branch="",
                            git_commit="",
@@ -162,7 +164,7 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            hardware_version="",
                            completion_date=completion_date,
                            build_properties="", lsf_job_id="",
-                           sdk_version=version)
+                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
 
 
 class MyScript(FunTestScript):

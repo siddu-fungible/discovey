@@ -16,6 +16,8 @@ class ExpandedTopology(ToDictMixin):
         result = None
         if index in self.duts:
             result = self.duts[index]
+        else:
+            fun_test.log("Dut Index: {} not found".format(index))
         return result
 
     def get_tg(self, index):
