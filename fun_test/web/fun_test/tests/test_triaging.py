@@ -4,7 +4,7 @@ from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, Tria
 from web.fun_test.metrics_models import TriagingResult
 from web.fun_test.metrics_models import Triage3, Triage3Trial
 from lib.host.lsf_status_server import LsfStatusServer
-
+from web.fun_test.models import Daemon
 from fun_global import get_current_time
 import time
 import sys
@@ -29,7 +29,7 @@ else:
     handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 logger.addHandler(hdlr=handler)
-
+DAEMON_NAME = "triaging_daemon"
 
 class FunTimer:
     def __init__(self, max_time=10000):
@@ -435,6 +435,7 @@ if __name__ == "__main__":
             try:
                 s = TriageStateMachine(triage=triage)
                 s.run()
+                Daemon.get(name=DAEMON_NAME).beat()
             except Exception as ex:
                 logger.exception(ex)
             time.sleep(5)
