@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+from lib.system.utils import MultiProcessingTasks
 import re
 import os
 import sys
@@ -50,7 +51,7 @@ class Funeth:
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].command('export WORKSPACE=$WSTMP')
 
-    def update_src(self):
+    def update_src(self, parallel=True):
         """Update driver source."""
 
         def update_mirror(ws, repo, hu, **kwargs):
@@ -78,11 +79,10 @@ class Funeth:
             if branch:
                 self.linux_obj_dict[hu].command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
 
-        result = True
-        for hu in self.hu_hosts:
+        def _update_src(linux_obj):
             sdkdir = os.path.join(self.ws, 'FunSDK')
-            self.linux_obj_dict[hu].command('sudo rm -rf {}'.format(self.ws))
-            self.linux_obj_dict[hu].create_directory(self.ws, sudo=False)
+            linux_obj.command('sudo rm -rf {}'.format(self.ws))
+            linux_obj.create_directory(self.ws, sudo=False)
 
             update_mirror(self.ws, 'fungible-host-drivers', hu)
             update_mirror(self.ws, 'FunSDK-small',hu)
@@ -95,24 +95,67 @@ class Funeth:
             if self.funos_branch:
                 local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-            output = self.linux_obj_dict[hu].command(
+            output = linux_obj.command(
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
-            result &= re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+
+        result = True
+
+        if parallel:
+            mp_task_obj = MultiProcessingTasks()
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                mp_task_obj.add_task(
+                    func=_update_src,
+                    func_args=(linux_obj,),
+                    task_key='{}'.format(linux_obj.host_ip))
+
+            mp_task_obj.run(max_parallel_processes=len(self.hu_hosts))
+
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+
+        else:
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= _update_src(linux_obj)
 
         return result
 
-    def build(self):
+    def build(self, parallel=True):
         """Build driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         funsdkdir = os.path.join(self.ws, 'FunSDK')
 
-        result = True
-        for hu in self.hu_hosts:
+        def _build(linux_obj):
             if self.funos_branch:
-                self.linux_obj_dict[hu].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
+                linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-            output = self.linux_obj_dict[hu].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
-            result &= re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+            output = linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
+            return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+
+        result = True
+
+        if parallel:
+            mp_task_obj = MultiProcessingTasks()
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                mp_task_obj.add_task(
+                    func=_build,
+                    func_args=(linux_obj,),
+                    task_key='{}'.format(linux_obj.host_ip))
+
+            mp_task_obj.run(max_parallel_processes=len(self.hu_hosts))
+
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+
+        else:
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= _build(linux_obj)
 
         return result
 
@@ -243,7 +286,7 @@ class Funeth:
 
         return result
 
-    def enable_namespace_interfaces_multi_txq(self, nu_or_hu, num_queues=8, ns=None):
+    def enable_namespace_interfaces_multi_txq(self, nu_or_hu, num_queues=8, ns=None, xps_cpus=True):
         """Enable interfaces multi tx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
@@ -258,13 +301,24 @@ class Funeth:
             match = re.search(r'Current hardware settings:.*RX:\s+\d+.*TX:\s+{}'.format(num_queues), output, re.DOTALL)
             result &= match is not None
 
+            # Configure XPS CPU mapping to have CPU-Txq one to one mapping
+            if xps_cpus:
+                cmds = []
+                cpu_id = 0x0100  # TODO: pass in args
+                for i in range(num_queues):
+                    cmds.append('echo {:04x} > /sys/class/net/{}/queues/tx-{}/xps_cpus'.format(cpu_id, intf, i))
+                    cpu_id <<= 1
+                self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds))
+                self.linux_obj_dict[nu_or_hu].command(
+                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues-1, intf))
+
         return result
 
-    def enable_multi_txq(self, nu_or_hu, num_queues=8):
+    def enable_multi_txq(self, nu_or_hu, num_queues=8, xps_cpus=True):
         """Enable multi tx queue to the interfaces."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            result &= self.enable_namespace_interfaces_multi_txq(nu_or_hu, num_queues, ns)
+            result &= self.enable_namespace_interfaces_multi_txq(nu_or_hu, num_queues, ns, xps_cpus=xps_cpus)
 
         return result
 
@@ -317,6 +371,34 @@ class Funeth:
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             result &= self.configure_namespace_ipv4_routes(nu_or_hu, ns)
+
+        return result
+
+    def configure_namespace_arps(self, nu_or_hu, ns):
+        """Configure a namespace's ARP entries."""
+        result = True
+        for arp in self.tb_config_obj.get_arps(nu_or_hu, ns):
+            ipv4_addr = arp['ipv4_addr']
+            mac_addr = arp['mac_addr']
+
+            cmds = (
+                'arp -s {} {}'.format(ipv4_addr, mac_addr),
+                'arp -na',
+            )
+            for cmd in cmds:
+                if ns is None:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                else:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+            result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(ipv4_addr, mac_addr), output) is not None
+
+        return result
+
+    def configure_arps(self, nu_or_hu):
+        """Configure ARP entries."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.configure_namespace_arps(nu_or_hu, ns)
 
         return result
 

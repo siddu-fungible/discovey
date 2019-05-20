@@ -151,6 +151,7 @@ class TestFwdPerformance(FunTestCase):
     single_flow = False
     test_time = 20
     test_type = FLOW_TYPE_FWD
+    num_flows = 128000000
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -271,7 +272,7 @@ class TestFwdPerformance(FunTestCase):
                                                                               mode=mode,
                                                                               flow_direction=self.flow_direction,
                                                                               file_name=OUTPUT_JSON_FILE_NAME,
-                                                                              num_flows=128000000,
+                                                                              num_flows=self.num_flows,
                                                                               half_load_latency=self.half_load_latency,
                                                                               model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
                                                                               update_charts=self.update_charts,
@@ -294,6 +295,7 @@ class TestFwdLatency(TestFwdPerformance):
     update_charts = True
     update_json = True
     single_flow = False
+    num_flows = 128000000
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
