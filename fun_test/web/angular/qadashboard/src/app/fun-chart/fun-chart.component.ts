@@ -17,6 +17,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() mileStones: any = null;
   @Input() y1AxisPlotLines: any = null;
   @Input() yMax: number = null;
+  @Input() yMin: number = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
@@ -104,6 +105,9 @@ export class FunChartComponent implements OnInit, OnChanges {
       }
       if (this.yMax) {
         chartOptions.yAxis["max"] = this.yMax;
+      }
+      if (this.yMin) {
+        chartOptions.yAxis["min"] = this.yMin;
       }
       chartOptions.yAxis["plotLines"] = [];
       if (this.y1AxisPlotLines) {

@@ -41,6 +41,10 @@ def trials(request, triage_id, fun_os_sha):
                 tags = request_json.get("tags", None)
                 if tags is not None:
                     first_trial.tags = tags
+                if first_trial.status == TriageTrialStates.INIT:
+                    triage = Triage3.objects.get(triage_id=triage_id)
+                    triage.status = TriagingStates.IN_PROGRESS
+                    triage.save()
                 first_trial.save()
     elif request.method == "GET":
         q = Q(triage_id=triage_id)
@@ -58,7 +62,8 @@ def trials(request, triage_id, fun_os_sha):
                           "lsf_job_id": trial.lsf_job_id,
                           "tag": trial.tag,
                           "regex_match": trial.regex_match,
-                          "tags": trial.tags}
+                          "tags": trial.tags,
+                          "result": trial.result}
             result.append(one_record)
     return result
 

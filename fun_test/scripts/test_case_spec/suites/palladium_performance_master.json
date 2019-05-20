@@ -1,4 +1,5 @@
 [
   {"info": {"tags": ["palladium-performance"]}},
-  {"path": "system/palladium_performance_master.py"}
+  {"path": "system/palladium_performance_master.py"},
+  {"path": "system/s1_performance_master.py"}
 ]

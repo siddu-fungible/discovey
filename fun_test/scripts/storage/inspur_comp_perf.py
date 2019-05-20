@@ -55,7 +55,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                     target_port=come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
-        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=self.f1_in_use,
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0,
                                                                             f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if testbed_type == "fs-6" and host_ip != "poc-server-01":

@@ -3,9 +3,9 @@ import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {TriageService} from "../triage.service";
-import {CommonService} from "../../services/common/common.service";
-import {LoggerService} from "../../services/logger/logger.service";
-import {ApiService} from "../../services/api/api.service";
+import {CommonService} from "../../../services/common/common.service";
+import {LoggerService} from "../../../services/logger/logger.service";
+import {ApiService} from "../../../services/api/api.service";
 
 class CommitNode {
   funOsSha: string;
@@ -20,6 +20,7 @@ class CommitNode {
   triageId: number;
   trial: any;
   selected: boolean = false;
+  result: string;
 };
 
 
@@ -38,7 +39,7 @@ export class TriageDetailComponent implements OnInit {
   commits: CommitNode [] = [];
   commitMap: any = {};
   commitFetchStatus: string = null;
-  showAll: boolean = true;
+  showAll: boolean = true;  // Show all potential git commits
 
   FUN_OS_GITHUB_BASE_URL = "https://github.com/fungible-inc/FunOS/commit/";
 
@@ -96,6 +97,7 @@ export class TriageDetailComponent implements OnInit {
         commitNode.selectedForTrial = true;
         commitNode.triageId = trial.triage_id;
         commitNode.trial = trial; // to store the whole trial object
+        commitNode.result = trial.result;
       }
 
     })
@@ -148,7 +150,7 @@ export class TriageDetailComponent implements OnInit {
 
   restartTrial(trial) {
     let url = "/api/v1/triages/" + trial.triage_id + "/trials/" + trial.fun_os_sha;
-    let payload = {"status": 20};
+    let payload = {"status": 20}; //TODO
     payload["tag"] = trial.tag + "_" + trial.tags.length;
     let tempArray = Array.from(trial.tags);
     tempArray.push(trial.tag);

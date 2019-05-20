@@ -82,7 +82,6 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "rwmixread": 70,
       "runtime": 120,
       "timeout": 180
     },
@@ -148,7 +147,6 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "rwmixread": 70,
       "runtime": 120,
       "timeout": 180
     },

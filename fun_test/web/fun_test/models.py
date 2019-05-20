@@ -291,6 +291,7 @@ class JenkinsJobIdMap(models.Model):
     lsf_job_id = models.TextField(default="")
     sdk_version = models.TextField(default="")
     build_date = models.DateTimeField(default=datetime.now)
+    suite_execution_id = models.IntegerField(default=-1)
 
     def __str__(self):
         return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
@@ -379,6 +380,30 @@ class User(FunModel):
 
     def __str__(self):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
+
+
+class Daemon(FunModel):
+    name = models.TextField(unique=True)
+    daemon_id = models.IntegerField()
+    heart_beat_time = models.DateTimeField(default=datetime.now)
+
+    def beat(self):
+        self.heart_beat_time = get_current_time()
+        self.save()
+
+    @staticmethod
+    def next_id():
+        return Daemon.objects.all().count() + 1
+
+    @staticmethod
+    def get(name):
+        if Daemon.objects.filter(name=name).exists():
+            result = Daemon.objects.get(name=name)
+        else:
+            d = Daemon(name=name, id=Daemon.next_id())
+            d.save()
+            result = d
+        return result
 
 class TestbedNotificationEmails(FunModel):
     email = models.EmailField(max_length=30, unique=True)

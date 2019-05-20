@@ -115,7 +115,7 @@ class LsfStatusServer:
                 # dt = dt.astimezone(pytz.timezone('Etc/Greenwich'))
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
-                response = self.get_job_by_id(job_id=job_info["job_id"]) # Workaround
+                response = self.get_job_by_id(job_id=job_info["job_id"])  # Workaround
                 try:
                     response_dict = json.loads(response)
                     fun_test.log(json.dumps(response_dict, indent=4))
@@ -165,15 +165,17 @@ class LsfStatusServer:
             build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
             build_properties = self._get(url=build_properties_url)
             build_date = parser.parse(completion_date)
+            suite_execution_id = fun_test.get_suite_execution_id()
             if build_properties == None:
                 build_properties = ""
             add_jenkins_job_id_map(jenkins_job_id=job_info["jenkins_build_number"],
-                                                 fun_sdk_branch=job_info["branch_funsdk"],
-                                                 git_commit=job_info["git_commit"],
-                                                 software_date=job_info["software_date"],
-                                                 hardware_version=job_info["hardware_version"],
-                                                 completion_date=completion_date,
-                                                 build_properties=build_properties, lsf_job_id=lsf_id, build_date=build_date)
+                                   fun_sdk_branch=job_info["branch_funsdk"],
+                                   git_commit=job_info["git_commit"],
+                                   software_date=job_info["software_date"],
+                                   hardware_version=job_info["hardware_version"],
+                                   completion_date=completion_date,
+                                   build_properties=build_properties, lsf_job_id=lsf_id, build_date=build_date,
+                                   suite_execution_id=suite_execution_id)
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])
