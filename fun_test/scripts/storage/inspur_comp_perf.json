@@ -81,7 +81,7 @@
       "buffer_compress_percentage": 50,
       "buffer_pattern": "0xdeadbeef",
       "prio": 0,
-      "timeout": 720
+      "timeout": 900
     },
     "fio_cmd_args": {
       "bs": "8k",
@@ -92,7 +92,7 @@
       "runtime": 300,
       "buffer_compress_percentage": 50,
       "buffer_pattern": "0xdeadbeef",
-      "timeout": 180
+      "timeout": 330
     },
     "fio_modes": [
       "randrw"
