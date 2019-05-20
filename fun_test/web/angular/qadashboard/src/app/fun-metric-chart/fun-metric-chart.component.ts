@@ -293,7 +293,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       if (lsfJobId !== "")
         s["Lsf job id"] = lsfJobId;
       if (suite_execution_id !== -1) {
-        s["Suite execution id"] = suite_execution_id;
+        s["Suite execution detail"] = suite_execution_id;
         s["Suite log directory"] = suite_execution_id;
       }
       if (Number(softwareDate) > 0)
