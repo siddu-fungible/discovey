@@ -159,9 +159,12 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
 
     fpg_stats = {}
     for nc_obj in network_controller_objs:
+        f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
+        fun_test.log('{} dpc: echo hello'.format(f1))
         nc_obj.echo_hello()
         if not fpg_stats:
             for i in fpg_interfaces:
+                fun_test.log('{} dpc: Get FPG stats'.format(f1))
                 r = nc_obj.peek_fpg_port_stats(port_num=i)
                 # TODO: handle None
                 #if not r:
@@ -171,6 +174,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
                 )
 
         # Check parser stuck
+        fun_test.log('{} dpc: Get parser stats'.format(f1))
         output = nc_obj.peek_parser_stats().get('global')
         for blk in output:
             eop_cnt = output[blk].get('eop_cnt')
@@ -178,13 +182,17 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             if eop_cnt != prv_sent:
                 fun_test.test_assert(False, '{} parser is stuck'.format(blk))
 
+        fun_test.log('{} dpc: Get PSW stats'.format(f1))
         nc_obj.peek_psw_global_stats()
+        fun_test.log('{} dpc: Get FCB stats'.format(f1))
         nc_obj.peek_fcp_global_stats()
+        fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
         nc_obj.peek_vp_packets()
 
         # Check VP stuck
         is_vp_stuck = False
         for pc_id in (1, 2):
+            fun_test.log('{} dpc: Get resource PC {} stats'.format(f1, pc_id))
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
             for core_str, val_dict in output.items():
                 if any(val_dict.values()) != 0:  # VP stuck
@@ -196,8 +204,11 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         if is_vp_stuck:
             fun_test.test_assert(False, 'VP is stuck')
         #nc_obj.peek_per_vp_stats()
+        fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
         nc_obj.peek_resource_bam_stats()
+        fun_test.log('{} dpc: Get EQM stats'.format(f1))
         nc_obj.peek_eqm_stats()
+        fun_test.log('{} dpc: Get resource nux stats'.format(f1))
         nc_obj.peek_resource_nux_stats()
     fpg_rx_bytes = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
