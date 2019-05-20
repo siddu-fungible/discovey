@@ -72,6 +72,13 @@
         "dut": "fs-6",
         "fpg_interface_info": {
           "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "hosts": 1,
+              "host_info": {
+                "name": "poc-server-01"
+              }
+            },
             "4": {
               "type": "INTERFACE_TYPE_ETHERNET",
               "hosts": 1,
@@ -105,6 +112,18 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "dut": "fs-15"
+      }
+    }
+  },
+  "fs-alibaba": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-45"
+      },
+     "1": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-48"
       }
     }
   },

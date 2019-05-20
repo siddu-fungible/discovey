@@ -19,20 +19,21 @@ tb_config = {
             "huid": 7,
             "fnid": 5,
             "ctlid": 0,
-            "perf_multiplier": 1
+            "perf_multiplier": 1,
+            "f1_ip": "29.1.1.1",
+            "tcp_port": 1099
         },
     },
     "tg_info": {
         0: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.23.37",
-            "remote_ip": "20.1.1.1",
+            "ip": "poc-server-01",
             "user": "localadmin",
             "passwd": "Precious1*",
-            "ipmi_name": "10.1.22.61",
-            "ipmi_iface": "lanplus",
-            "ipmi_user": "admin",
-            "ipmi_passwd": "admin",
+            "iface_name": "enp175s0",
+            "iface_ip": "20.1.1.1",
+            "iface_gw": "20.1.1.2",
+            "iface_mac": "fe:dc:ba:44:66:30"
         }
     }
 }
@@ -234,7 +235,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt_details"] = self.blt_details
 
-            # self.end_host.enter_sudo()
+            self.dpc_host.sudo_command("iptables -F")
+            self.dpc_host.sudo_command("ip6tables -F")
+
             self.dpc_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
             command_result = self.dpc_host.lsmod(module="nvme")
@@ -265,14 +268,29 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(x, cur_uuid))
 
-                command_result = self.storage_controller.volume_attach_remote(
-                    ns_id=x, uuid=cur_uuid, huid=tb_config['dut_info'][0]['huid'],
-                    ctlid=tb_config['dut_info'][0]['ctlid'], fnid=tb_config['dut_info'][0]['fnid'],
-                    remote_ip=tb_config['tg_info'][0]['remote_ip'], transport="TCP",
-                    command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Attaching BLT {} with uuid {}".format(x, cur_uuid))
+            # Create Controller
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                       transport="TCP",
+                                                                       remote_ip=tb_config['tg_info'][host_index][
+                                                                           'iface_ip'],
+                                                                       nqn=self.nqn,
+                                                                       port=tb_config['dut_info'][0]['tcp_port'])
+            fun_test.test_assert(command_result["status"], "Create NVMe controller")
+
+            for x in range(1, self.blt_count + 1, 1):
+                cur_uuid = self.thin_uuid[x-1]
+                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                                     vol_uuid=cur_uuid,
+                                                                                     ns_id=x)
+                fun_test.test_assert(command_result["status"], "Attach BLT {} with uuid {} to controller".
+                                     format(x, cur_uuid))
+
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
+
+            self.end_host.sudo_command("iptables -F")
+            self.end_host.sudo_command("ip6tables -F")
+            self.end_host.sudo_command("dmesg -c > /dev/null")
 
             command_result = self.end_host.command("lsmod | grep -w nvme")
             if "nvme" in command_result:
@@ -302,7 +320,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             fun_test.sleep("x86 Config done", seconds=5)
             command_result = self.end_host.sudo_command(
-                "nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1 -i 8")
+                "nvme connect -t tcp -a 29.1.1.1 -s 1099 -n nqn.2017-05.com.fungible:nss-uuid1")
             fun_test.log(command_result)
 
             # Checking that the above created BLT volume is visible to the end host

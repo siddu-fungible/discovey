@@ -1,0 +1,101 @@
+{"F1-0":
+{
+	"Description": "FS11 F1_0 abstract cfg",
+	"F1Index" : 1,
+	"Interfaces" : [
+	{
+		"name" : "fpg0",
+		"address" : "20.1.1.2",
+		"prefix length" : 30,
+		"spine_index" : 0,
+		"gph_index" : 1,
+		"enable" : true
+	},
+	{
+		"name" : "fpg4",
+		"address" : "21.1.1.2",
+		"prefix length" : 30,
+		"spine_index" : 0,
+		"gph_index" : 2,
+		"enable" : true
+	},
+	{
+		"name" : "fpg16",
+		"address" : "9.0.16.2",
+		"prefix length" : 30,
+		"spine_index" : 0,
+		"gph_index" : 7,
+		"enable" : true
+	},
+	{
+		"name" : "fpg12",
+		"address" : "9.0.20.2",
+		"prefix length" : 30,
+		"spine_index" : 1,
+		"gph_index" : 8,
+		"enable" : true
+	},
+	{
+		"name" : "lo:0",
+		"address" : "9.0.0.1",
+		"prefix length" : 32,
+		"enable" : true
+	},
+	{
+		"name" : "vlan2",
+		"address" : "53.1.1.254",
+		"prefix length" : 24,
+		"enable" : true
+	}
+	],
+	"BGP" : {
+	"Local AS": 65501,
+	"Neighbors" : [
+	{ "peer" : "9.0.16.1", "peer-as": 65001},
+	{ "peer" : "9.0.20.1", "peer-as": 65002}
+	]
+	}
+},
+"F1-1":
+{
+	"Description": "FS11 F1_1 abstract cfg",
+	"F1Index" : 2,
+	"Interfaces" : [
+	{
+		"name" : "fpg12",
+		"address" : "9.1.16.2",
+		"prefix length" : 30,
+		"spine_index" : 0,
+		"gph_index" : 7,
+		"enable" : true
+	},
+	{
+		"name" : "fpg20",
+		"address" : "9.1.20.2",
+		"prefix length" : 30,
+		"spine_index" : 1,
+		"gph_index" : 8,
+		"enable" : true
+	},
+	{
+		"name" : "lo:0",
+		"address" : "9.0.0.2",
+		"prefix length" : 32,
+		"enable" : true
+	},
+	{
+		"name" : "vlan2",
+		"address" : "54.1.1.254",
+		"prefix length" : 24,
+		"enable" : true
+	}
+	],
+	"BGP" : {
+	"Local AS": 65502,
+	"Neighbors" : [
+	{ "peer" : "9.1.16.1", "peer-as": 65001},
+	{ "peer" : "9.1.20.1", "peer-as": 65002}
+	]
+	}
+}
+}

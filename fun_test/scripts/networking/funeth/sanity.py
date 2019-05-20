@@ -1,7 +1,8 @@
 from lib.system.fun_test import *
-from lib.fun.fs import Fs
+from fun_settings import SCRIPTS_DIR
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.network_controller import NetworkController
+from lib.utilities.funcp_config import *
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 
@@ -32,6 +33,27 @@ except (KeyError, ValueError):
     DPC_PROXY_IP2 = '10.1.20.137'
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
+
+# Enable LSO or not
+try:
+    inputs = fun_test.get_job_inputs()
+    if inputs and inputs.get('lso', 0):
+        enable_tso = True
+    else:
+        enable_tso = False
+except:
+    enable_tso = False
+
+# Use control plane or not
+try:
+    inputs = fun_test.get_job_inputs()
+    if inputs and inputs.get('control_plane', 0):
+        control_plane = True
+    else:
+        control_plane = False
+except:
+    control_plane = False
+
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
@@ -73,11 +95,19 @@ def setup_hu_host(funeth_obj, update_driver=True):
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
-        fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False), 'Enable HU host {} funeth interfaces TSO.'.format(
-            linux_obj.host_ip))
+        if enable_tso:
+            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False),
+                                 'Enable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        else:
+            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
+                                 'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
+                             'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(
             linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
@@ -97,29 +127,40 @@ class FunethSanity(FunTestScript):
 
         # Boot up FS1600
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
-            #boot_args = "app=hw_hsu_test retimer=0,1 --disable_dispatch_loop_switch --dpc-uart --dpc-server --csr-replay --all_100g"
-            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --rxlog"
-            # fs = Fs.get(disable_f1_index=1)
-            topology_helper = TopologyHelper()
-            topology_helper.set_dut_parameters(dut_index=0,
-                                               disable_f1_index=1,
-                                               custom_boot_args=boot_args)
+
+            if control_plane:
+                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server"
+                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server"
+                topology_helper = TopologyHelper()
+                topology_helper.set_dut_parameters(dut_index=0,
+                                                   f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                                  1: {"boot_args": f1_1_boot_args}}
+                                                   )
+            else:
+                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+                topology_helper = TopologyHelper()
+                topology_helper.set_dut_parameters(dut_index=0,
+                                                   custom_boot_args=boot_args)
+
             topology = topology_helper.deploy()
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
             fun_test.shared_variables["topology"] = topology
 
-            #host_instance1 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=4)
-            #host_instance2 = topology.get_host_instance(dut_index=0, host_index=0, interface_index=5)
-            #dpcsh_client = DpcshClient(target_ip=host_instance1.host_ip, target_port=fs.get_come().get_dpc_port(0))
-            #dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
-            # TODO: get dpc proxy ip/port
             come = fs.get_come()
             global DPC_PROXY_IP
             global DPC_PROXY_PORT
             DPC_PROXY_IP = come.host_ip
             DPC_PROXY_PORT = come.get_dpc_port(0)
-            # TODO: get DPC_PROXY_IP2 and DPC_PROXY_PORT2 for F1_1
+            DPC_PROXY_PORT2 = come.get_dpc_port(1)
+
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11' and control_plane:
+            funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
+            funcp_obj.bringup_funcp()
+            funcp_obj.assign_mpg_ips()
+            abstract_json_file = '{}/networking/tb_configs/FS11_abstract_config.json'.format(SCRIPTS_DIR)
+            funcp_obj.funcp_abstract_config(abstract_config_file=abstract_json_file)
+            # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)

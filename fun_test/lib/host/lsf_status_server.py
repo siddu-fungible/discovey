@@ -55,33 +55,34 @@ class LsfStatusServer:
         last_job = {}
         try:
             past_jobs = self.get_past_jobs_by_tag(tag=tag, add_info_to_db=True)
-            last_job = past_jobs[0]
-            local_past_jobs_index = fun_test.get_local_setting("lsf_past_jobs_index")
-            if local_past_jobs_index:
-                last_job = past_jobs[int(local_past_jobs_index)]
-            job_id = last_job["job_id"]
-            jenkins_job_id = last_job["jenkins_build_number"]
-            result["job_id"] = job_id
-            result["jenkins_build_number"] = jenkins_job_id
-            fun_test.add_checkpoint("Validating Job: {}".format(job_id))
-            fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
-            if validate:
-                fun_test.add_checkpoint("Fetching return code for: {}".format(job_id))
-                response = self.get_job_by_id(job_id=job_id)
-                response = self.get_job_by_id(job_id=job_id)
+            if len(past_jobs):
+                last_job = past_jobs[0]
+                local_past_jobs_index = fun_test.get_local_setting("lsf_past_jobs_index")
+                if local_past_jobs_index:
+                    last_job = past_jobs[int(local_past_jobs_index)]
+                job_id = last_job["job_id"]
+                jenkins_job_id = last_job["jenkins_build_number"]
+                result["job_id"] = job_id
+                result["jenkins_build_number"] = jenkins_job_id
+                fun_test.add_checkpoint("Validating Job: {}".format(job_id))
+                fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
+                if validate:
+                    fun_test.add_checkpoint("Fetching return code for: {}".format(job_id))
+                    response = self.get_job_by_id(job_id=job_id)
+                    response = self.get_job_by_id(job_id=job_id)
 
-                response_dict = {"output_text": "-1"}
-                try:
-                    response_dict = json.loads(response)
-                    # last_job = response_dict
-                    response_dict = response_dict["job_dict"]
-                    print(json.dumps(response_dict, indent=4))
-                    return_code = int(response_dict["return_code"])
-                    # fun_test.test_assert(not return_code, "Valid return code")
-                    result = last_job
-                except Exception as ex:
-                    fun_test.log("Actual response:" + response)
-                    fun_test.critical(str(ex))
+                    response_dict = {"output_text": "-1"}
+                    try:
+                        response_dict = json.loads(response)
+                        # last_job = response_dict
+                        response_dict = response_dict["job_dict"]
+                        print(json.dumps(response_dict, indent=4))
+                        return_code = int(response_dict["return_code"])
+                        # fun_test.test_assert(not return_code, "Valid return code")
+                        result = last_job
+                    except Exception as ex:
+                        fun_test.log("Actual response:" + response)
+                        fun_test.critical(str(ex))
 
                 # last_job = response
 
@@ -114,7 +115,7 @@ class LsfStatusServer:
                 # dt = dt.astimezone(pytz.timezone('Etc/Greenwich'))
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
-                response = self.get_job_by_id(job_id=job_info["job_id"]) # Workaround
+                response = self.get_job_by_id(job_id=job_info["job_id"])  # Workaround
                 try:
                     response_dict = json.loads(response)
                     fun_test.log(json.dumps(response_dict, indent=4))
@@ -163,15 +164,18 @@ class LsfStatusServer:
             jenkins_url = job_info["jenkins_url"]
             build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
             build_properties = self._get(url=build_properties_url)
+            build_date = parser.parse(completion_date)
+            suite_execution_id = fun_test.get_suite_execution_id()
             if build_properties == None:
                 build_properties = ""
             add_jenkins_job_id_map(jenkins_job_id=job_info["jenkins_build_number"],
-                                                 fun_sdk_branch=job_info["branch_funsdk"],
-                                                 git_commit=job_info["git_commit"],
-                                                 software_date=job_info["software_date"],
-                                                 hardware_version=job_info["hardware_version"],
-                                                 completion_date=completion_date,
-                                                 build_properties=build_properties, lsf_job_id=lsf_id)
+                                   fun_sdk_branch=job_info["branch_funsdk"],
+                                   git_commit=job_info["git_commit"],
+                                   software_date=job_info["software_date"],
+                                   hardware_version=job_info["hardware_version"],
+                                   completion_date=completion_date,
+                                   build_properties=build_properties, lsf_job_id=lsf_id, build_date=build_date,
+                                   suite_execution_id=suite_execution_id)
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])

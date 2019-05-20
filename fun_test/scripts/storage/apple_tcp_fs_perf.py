@@ -302,7 +302,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt_details"] = self.blt_details
             fun_test.shared_variables["stripe_details"] = self.stripe_details
 
-            # self.end_host.enter_sudo()
+            self.dpc_host.sudo_command("iptables -F")
+            self.dpc_host.sudo_command("ip6tables -F")
+
             self.dpc_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
             command_result = self.dpc_host.lsmod(module="nvme")
@@ -394,6 +396,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             # Checking that the above created striped volume is visible to the end host
             for host_index in range(0, self.host_count):
                 end_host = self.end_host_list[host_index]
+                end_host.sudo_command("iptables -F")
+                end_host.sudo_command("ip6tables -F")
+                end_host.sudo_command("dmesg -c > /dev/null")
                 # Load nvme and nvme_tcp modules
                 command_result = end_host.command("lsmod | grep -w nvme")
                 if "nvme" in command_result:
@@ -657,29 +662,18 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         else:
                             ifop = "lesser"
                             elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
                         if compare(actual, value, self.fio_pass_threshold, ifop):
                             fio_result[combo][mode] = False
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))'''
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} got {} than the expected value {}".
                                          format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
-                            '''fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
                 row_data_dict["readiops"] = int(round(avg_tps[x]))
                 row_data_dict["readbw"] = int(round(avg_kbs_read[x] / 1000))
-            # row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
 
             # Building the table row for this variation for both the script table and performance dashboard
             row_data_list = []

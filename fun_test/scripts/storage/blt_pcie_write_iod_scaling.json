@@ -1,0 +1,42 @@
+{
+  "BLTFioSeqWrite": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
+                       "name": "thin-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "fio_num_jobs": 8,
+    "fio_cmd_args": {"size": "1G", "direct": 1, "prio": 0, "runtime": 600, "timeout": 630},
+    "fio_modes": ["write"],
+    "fio_bs_iodepth": ["(4, 1)", "(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"write": "iod_scaling"},
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 1)": {"write": {"write": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 8)": {"write": {"write": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
+    }
+  },
+  "BLTFioRandWrite": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
+                       "name": "thin-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "fio_num_jobs": 8,
+    "fio_cmd_args": {"size": "1G", "direct": 1, "prio": 0, "runtime": 600, "timeout": 630},
+    "fio_modes": ["randwrite"],
+    "fio_bs_iodepth": ["(4, 1)", "(4, 8)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"randwrite": "iod_scaling"},
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 1)": {"randwrite": {"write": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 8)": {"randwrite": {"write": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
+    }
+  }
+}

@@ -20,6 +20,7 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 from lib.system.fun_test import *
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from django.utils import timezone
+from dateutil import parser
 
 def get_time_from_timestamp(timestamp):
     time_obj = parse(timestamp)
@@ -248,8 +249,10 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
                   write_90_latency_unit="usecs", write_95_latency_unit="usecs",
                   write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
-                  read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs"):
+                  read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs", version=-1):
         try:
+            if version == -1:
+                version = str(fun_test.get_version())
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
                                                      input_test=test,
@@ -259,7 +262,8 @@ class BltVolumePerformanceHelper(MetricHelper):
                                                      input_operation=operation,
                                                      input_num_ssd=num_ssd,
                                                      input_num_volume=num_volume,
-                                                     input_fio_job_name=fio_job_name)
+                                                     input_fio_job_name=fio_job_name,
+                                                     input_version=version)
             entry.output_write_iops = write_iops
             entry.output_read_iops = read_iops
             entry.output_write_throughput = write_throughput
@@ -301,6 +305,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              input_num_ssd=num_ssd,
                                              input_num_volume=num_volume,
                                              input_fio_job_name=fio_job_name,
+                                             input_version=version,
                                              output_write_iops=write_iops,
                                              output_read_iops=read_iops,
                                              output_write_throughput=write_throughput,
@@ -330,6 +335,22 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_99_latency_unit=read_99_latency_unit,
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
             one_entry.save()
+            try:
+                completion_date = timezone.localtime(date_time)
+                completion_date = str(completion_date).split(":")
+                completion_date = completion_date[0] + ":" + completion_date[1]
+                build_date = parser.parse(completion_date)
+                suite_execution_id = fun_test.get_suite_execution_id()
+                add_jenkins_job_id_map(jenkins_job_id=0,
+                                       fun_sdk_branch="",
+                                       git_commit="",
+                                       software_date=0,
+                                       hardware_version="",
+                                       completion_date=completion_date,
+                                       build_properties="", lsf_job_id="",
+                                       sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
+            except:
+                pass
 
 
 class AllocSpeedPerformanceHelper(MetricHelper):
@@ -410,7 +431,9 @@ class ModelHelper(MetricHelper):
                     date_time = timezone.localtime(new_kwargs["input_date_time"])
                     date_time = str(date_time).split(":")
                     completion_date = date_time[0] + ":" + date_time[1]
+                    build_date = parser.parse(completion_date)
                     version = new_kwargs["input_version"]
+                    suite_execution_id = fun_test.get_suite_execution_id()
                     add_jenkins_job_id_map(jenkins_job_id=0,
                                            fun_sdk_branch="",
                                            git_commit="",
@@ -418,7 +441,7 @@ class ModelHelper(MetricHelper):
                                            hardware_version="",
                                            completion_date=completion_date,
                                            build_properties="", lsf_job_id="",
-                                           sdk_version=version)
+                                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
                 result = True
             except Exception as ex:
                 fun_test.critical(str(ex))
@@ -471,10 +494,10 @@ class WuLatencyAllocStackHelper(MetricHelper):
         entry = WuLatencyAllocStack
 
 
-def prepare_status_db():
+def prepare_status_db(chart_names):
     global_setting = MetricsGlobalSettings.objects.first()
     cache_valid = global_setting.cache_valid
-    chart_names = ["F1", "S1", "All metrics"]
+    # chart_names = ["F1", "S1", "All metrics"]
     for chart_name in chart_names:
         total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)
         prepare_status(chart=total_chart, purge_old_status=False, cache_valid=cache_valid)

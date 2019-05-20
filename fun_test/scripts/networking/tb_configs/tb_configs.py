@@ -137,3 +137,14 @@ class TBConfigs:
         if ns is None:
             ns = 'default'
         return self.configs[nu_or_hu]['namespaces'][ns]['routes']
+
+    def get_arps(self, nu_or_hu, ns):
+        """Get arp entries.
+
+        :param ns: str
+        :return:
+            list of dict, e.g. [{'ipv4_addr': 53.1.1.4, 'mac_addr': 00:de:ad:be:ef:11},]
+        """
+        if ns is None:
+            ns = 'default'
+        return self.configs[nu_or_hu]['namespaces'][ns]['arps']

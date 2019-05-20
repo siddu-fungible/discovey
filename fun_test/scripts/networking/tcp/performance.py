@@ -166,6 +166,16 @@ class TcpPerformance1Conn(FunTestCase):
                                         output_file=mpstat_output_file, bg=True, count=6)
             fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command")
+
+        checkpoint = "Start tcpdump capture in background before starting traffic"
+        interface_name = get_interface_name(file_path=setup_fpg1_filepath)
+        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.pcap'
+        tcpdump_output_file = "/home/%s/%s/%s" % (nu_lab_obj.ssh_username, "netperf_teramark_capture",
+                                                  tcpdump_temp_filename)
+        result = run_tcpdump_command(linux_obj=nu_lab_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
+                                     count=100000, filecount=1)
+        fun_test.simple_assert(result, checkpoint)
+        fun_test.shared_variables['tcpdump_pid'] = result
         
         fun_test.log("Starting netperf test")
         cmd_list = get_netperf_cmd_list(dip=test_parameters['dest_ip'],
@@ -178,19 +188,11 @@ class TcpPerformance1Conn(FunTestCase):
         netperf_result = run_netperf_concurrently(cmd_list=cmd_list, linux_obj=nu_lab_obj,
                                                   network_controller_obj=network_controller_obj, display_output=False)
         fun_test.test_assert(netperf_result, 'Ensure result found')
-        '''
-        checkpoint = "Get Flow list, resource pc and resource bam stats"
-        flowlist_temp_filename = str(version) + "_" + str(self.num_flows) + '_flowlist.txt'
-        resource_pc_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_pc.txt'
-        resource_bam_temp_filename = str(version) + "_" + str(self.num_flows) + '_resource_bam.txt'
-        dpc_result = run_dpcsh_commands(network_controller_obj=network_controller_obj,
-                                        flow_list_file=flowlist_temp_filename,
-                                        resource_pc_file=resource_pc_temp_filename,
-                                        resource_bam_file=resource_bam_temp_filename)
-        fun_test.test_assert(dpc_result, checkpoint)
-        '''
 
         fun_test.sleep("Wait after traffic", seconds=self.test_run_time)
+
+        if 'tcpdump_pid' in fun_test.shared_variables:
+            nu_lab_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
 
         total_throughput = netperf_result['total_throughput']
         fun_test.log("Total throughput seen is %s" % total_throughput)
@@ -206,6 +208,8 @@ class TcpPerformance1Conn(FunTestCase):
             populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_obj,
                                         dump_filename=mpstat_temp_filename)
 
+        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.txt'
+        populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename)
         fun_test.sleep("Letting file to be scp", seconds=2)
 
         fun_test.log("Capture netstat after traffic")
@@ -230,6 +234,9 @@ class TcpPerformance1Conn(FunTestCase):
         # Check stale socket connections
         stale_connections = get_stale_socket_connections(linux_obj=nu_lab_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen are %s" % stale_connections)
+
+        if 'tcpdump_pid' in fun_test.shared_variables:
+            nu_lab_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
 
 
 class TcpPerformance4Conn(TcpPerformance1Conn):

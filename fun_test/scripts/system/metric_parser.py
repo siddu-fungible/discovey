@@ -6,20 +6,21 @@ import json
 import collections
 from fun_global import RESULTS
 from dateutil.parser import parse
+from fun_global import FunPlatform
 
 app_config = apps.get_app_config(app_label='fun_test')
 
 
 class MetricParser():
-    def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None):
+    def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None, platform=FunPlatform.F1):
         result = {}
         if model_name:
-            result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time)
+            result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform)
         else:
             if metric_id:
                 chart = MetricChart.objects.get(metric_id=metric_id)
                 model_name = chart.metric_model_name
-                result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time)
+                result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform)
 
         if auto_add_to_db:
             if result["data"]:
@@ -28,7 +29,7 @@ class MetricParser():
                     MetricHelper(model=metric_model).add_entry(**entry)
         return result
 
-    def regex_by_model(self, model_name, logs, date_time):
+    def regex_by_model(self, model_name, logs, date_time, platform):
         if "FlowTest" in model_name:
             return self.flow_test(logs=logs, date_time=date_time)
         elif "Dfa" in model_name or "Nfa" in model_name:
@@ -37,7 +38,7 @@ class MetricParser():
             return self.rcnvme(logs=logs, date_time=date_time, model_name=model_name)
         elif "HuLatency" in model_name or "HuThroughput" in model_name:
             return self.hu_networking(logs=logs, date_time=date_time)
-        elif "JuniperCrypto" in model_name:
+        elif "JuniperCryptoTunnel" in model_name or "JuniperIpsec" in model_name:
             return self.crypto_tunnel(logs=logs, date_time=date_time)
         elif "LookupEngine" in model_name:
             return self.lookup_engine(logs=logs, date_time=date_time)
@@ -45,6 +46,28 @@ class MetricParser():
             return self.crypto_tunnel(logs=logs, date_time=date_time)
         elif "MemcpyThreshold" in model_name:
             return self.memcpy_threshold(logs=logs, date_time=date_time)
+        elif "WuDispatchTest" in model_name:
+            return self.wu_dispatch(logs=logs, date_time=date_time, platform=platform)
+        elif "WuSendSpeedTest" in model_name:
+            return self.wu_send_speed(logs=logs, date_time=date_time, platform=platform)
+        elif "FunMagent" in model_name:
+            return self.fun_magent(logs=logs, date_time=date_time, platform=platform)
+        elif "WuStackSpeed" in model_name:
+            return self.wu_stack_speed(logs=logs, date_time=date_time, platform=platform)
+        elif "SoakFunMalloc" in model_name:
+            return self.soak_fun_malloc(logs=logs, date_time=date_time, platform=platform)
+        elif "SoakClassicMalloc" in model_name:
+            return self.soak_classic_malloc(logs=logs, date_time=date_time, platform=platform)
+        elif "AllocSpeed" in model_name:
+            return self.alloc_speed(logs=logs, date_time=date_time, platform=platform)
+        elif "WuLatencyUngated" in model_name:
+            return self.wu_latency_ungated(logs=logs, date_time=date_time, platform=platform)
+        elif "WuLatencyAllocStack" in model_name:
+            return self.wu_latency_alloc_stack(logs=logs, date_time=date_time, platform=platform)
+        elif "BcopyPerformance" in model_name:
+            return self.bcopy(logs=logs, date_time=date_time, platform=platform)
+        elif "BcopyFloodDmaPerformance" in model_name:
+            return self.bcopy_flood(logs=logs, date_time=date_time, platform=platform)
         else:
             return {}
 
@@ -378,3 +401,374 @@ class MetricParser():
         self.result = {}
         self.result["data"] = []
         self.status = RESULTS["FAILED"]
+
+    def wu_dispatch(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(r'Average\s+dispatch\s+WU\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]', line)
+            if m:
+                self.match_found = True
+                average_json = json.loads(m.group("average_json"))
+                output_average = int(average_json["value"])
+                unit = average_json["unit"]
+                input_app = "dispatch_speed_test"
+                input_metric_name = m.group("metric_name")
+                self.metrics["input_app"] = input_app
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["output_average"] = output_average
+                self.metrics["output_average_unit"] = unit
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def wu_send_speed(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'Average\s+WU\s+send\s+ungated\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
+                line)
+            if m:
+                self.match_found = True
+                average_json = json.loads(m.group("average_json"))
+                output_average = int(average_json["value"])
+                unit = average_json["unit"]
+                input_app = "wu_send_speed_test"
+                input_metric_name = m.group("metric_name")
+                self.metrics["input_app"] = input_app
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["output_average"] = output_average
+                self.metrics["output_average_unit"] = unit
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def fun_magent(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            with open("/tmp/a.txt", "a+") as f:
+                f.write(line)
+            m = re.search(
+                r'fun_magent.*=>\s+(?P<latency_json>{.*})\s+\[(?P<metric_name>fun_magent_rate_malloc_free_per_sec)\]',
+                line)
+            if m:
+                self.match_found = True
+                latency_json = json.loads(m.group("latency_json"))
+                unit = latency_json["unit"]
+                output_latency = int(latency_json["value"])
+                input_app = "fun_magent_perf_test"
+                input_metric_name = m.group("metric_name")
+                self.metrics["input_app"] = input_app
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["output_latency"] = output_latency
+                self.metrics["output_latency_unit"] = unit
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def wu_stack_speed(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'Average\s+wustack\s+alloc/+free\s+cycles:\s+(?P<average_json>{.*})\[(?P<metric_name>wustack_alloc_free_cycles)\]',
+                line)
+            if m:
+                self.match_found = True
+                average_json = json.loads(m.group("average_json"))
+                output_average = int(average_json["value"])
+                unit = average_json["unit"]
+                input_app = "wustack_speed_test"
+                input_metric_name = m.group("metric_name")
+                self.metrics["output_average"] = output_average
+                self.metrics["output_average_unit"] = unit
+                self.metrics["input_app"] = input_app
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def soak_fun_malloc(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]',
+                line)
+            if m:
+                self.match_found = True
+                value_json = json.loads(m.group("value_json"))
+                output_ops_per_sec = float(value_json["value"])
+                unit = value_json["unit"]
+                input_app = "soak_malloc_fun_malloc"
+                input_metric_name = m.group("metric_name")
+                self.metrics["output_ops_per_sec"] = output_ops_per_sec
+                self.metrics["output_ops_per_sec_unit"] = unit
+                self.metrics["input_app"] = input_app
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def soak_classic_malloc(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]',
+                line)
+            if m:
+                self.match_found = True
+                value_json = json.loads(m.group("value_json"))
+                output_ops_per_sec = float(value_json["value"])
+                unit = value_json["unit"]
+                input_app = "soak_malloc_classic"
+                input_metric_name = m.group("metric_name")
+                self.metrics["output_ops_per_sec"] = output_ops_per_sec
+                self.metrics["output_ops_per_sec_unit"] = unit
+                self.metrics["input_app"] = input_app
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def alloc_speed(self, logs, date_time, platform):
+        self.initialize()
+        m = None
+        n = None
+        o = None
+        output_one_malloc_free_wu = -1
+        output_one_malloc_free_threaded = -1
+        output_one_malloc_free_classic_min = output_one_malloc_free_classic_avg = output_one_malloc_free_classic_max = -1
+        for line in logs:
+            if not m:
+                m = re.search(r'Time for one fun_malloc\+fun_free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]',
+                              line)
+                if m:
+                    d = json.loads(m.group(1))
+                    output_one_malloc_free_wu = int(d["avg"])
+                    output_one_malloc_free_wu_unit = d["unit"]
+            if not n:
+                n = re.search(
+                    r'Time for one fun_malloc\+fun_free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_threaded_ns\]',
+                    line)
+                if n:
+                    d = json.loads(n.group(1))
+                    output_one_malloc_free_threaded = int(d['avg'])
+                    output_one_malloc_free_threaded_unit = d["unit"]
+            if not o:
+                o = re.search(
+                    r'Time for one malloc\+free \(classic\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_classic_ns\]', line)
+                if o:
+                    d = json.loads(o.group(1))
+                    output_one_malloc_free_classic_avg = int(d['avg'])
+                    output_one_malloc_free_classic_min = int(d['min'])
+                    output_one_malloc_free_classic_max = int(d['max'])
+                    output_one_malloc_free_classic_avg_unit = d["unit"]
+                    output_one_malloc_free_classic_min_unit = d["unit"]
+                    output_one_malloc_free_classic_max_unit = d["unit"]
+            if m and n and o:
+                self.match_found = True
+                self.metrics["input_app"] = "alloc_speed_test"
+                self.metrics["output_one_malloc_free_wu"] = output_one_malloc_free_wu
+                self.metrics["output_one_malloc_free_threaded"] = output_one_malloc_free_threaded
+                self.metrics["output_one_malloc_free_classic_min"] = output_one_malloc_free_classic_min
+                self.metrics["output_one_malloc_free_classic_avg"] = output_one_malloc_free_classic_avg
+                self.metrics["output_one_malloc_free_classic_max"] = output_one_malloc_free_classic_max
+                self.metrics["output_one_malloc_free_wu_unit"] = output_one_malloc_free_wu_unit
+                self.metrics["output_one_malloc_free_threaded_unit"] = output_one_malloc_free_threaded_unit
+                self.metrics["output_one_malloc_free_classic_min_unit"] = output_one_malloc_free_classic_min_unit
+                self.metrics["output_one_malloc_free_classic_avg_unit"] = output_one_malloc_free_classic_avg_unit
+                self.metrics["output_one_malloc_free_classic_max_unit"] = output_one_malloc_free_classic_max_unit
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+                m = None
+                n = None
+                o = None
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def wu_latency_ungated(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r' wu_latency_test.*({.*}).*perf_wu_ungated_ns',
+                line)
+            if m:
+                self.match_found = True
+                d = json.loads(m.group(1))
+                wu_ungated_ns_min = int(d["min"])
+                wu_ungated_ns_avg = int(d["avg"])
+                wu_ungated_ns_max = int(d["max"])
+                wu_ungated_ns_min_unit = d["unit"]
+                wu_ungated_ns_avg_unit = d["unit"]
+                wu_ungated_ns_max_unit = d["unit"]
+
+                self.metrics["input_app"] = "wu_latency_test"
+                self.metrics["output_min"] = wu_ungated_ns_min
+                self.metrics["output_max"] = wu_ungated_ns_max
+                self.metrics["output_avg"] = wu_ungated_ns_avg
+                self.metrics["output_min_unit"] = wu_ungated_ns_min_unit
+                self.metrics["output_max_unit"] = wu_ungated_ns_max_unit
+                self.metrics["output_avg_unit"] = wu_ungated_ns_avg_unit
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def wu_latency_alloc_stack(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'wu_latency_test.*({.*}).*perf_wu_alloc_stack_ns',
+                line)
+            if m:
+                self.match_found = True
+                d = json.loads(m.group(1))
+                wu_alloc_stack_ns_min = int(d["min"])
+                wu_alloc_stack_ns_avg = int(d["avg"])
+                wu_alloc_stack_ns_max = int(d["max"])
+                wu_alloc_stack_ns_min_unit = d["unit"]
+                wu_alloc_stack_ns_avg_unit = d["unit"]
+                wu_alloc_stack_ns_max_unit = d["unit"]
+
+                self.metrics["input_app"] = "wu_latency_test"
+                self.metrics["output_min"] = wu_alloc_stack_ns_min
+                self.metrics["output_max"] = wu_alloc_stack_ns_max
+                self.metrics["output_avg"] = wu_alloc_stack_ns_avg
+                self.metrics["output_min_unit"] = wu_alloc_stack_ns_min_unit
+                self.metrics["output_max_unit"] = wu_alloc_stack_ns_max_unit
+                self.metrics["output_avg_unit"] = wu_alloc_stack_ns_avg_unit
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def bcopy(self, logs, date_time, platform):
+        self.initialize()
+        m = None
+        n = None
+        for line in logs:
+            if not m:
+                m = re.search(
+                    r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\]',
+                    line)
+            if not n:
+                n = re.search(
+                    r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>.*)\]',
+                    line)
+            if m and n:
+                self.match_found = True
+                coherent = "Coherent"
+                if m.group("coherent") != "coherent":
+                    coherent = "Non-coherent"
+                plain = "Plain"
+                if m.group("plain") != "plain":
+                    plain = "DMA"
+                size = m.group("size")
+                size = int(size.replace("KB", ""))
+                latency_json_raw = m.group("latency_json")
+                latency_json = json.loads(latency_json_raw)
+                bandwidth_json = json.loads(n.group("bandwidth_json"))
+                average_bandwidth = int(bandwidth_json["value"])
+
+                self.metrics["input_plain"] = plain
+                self.metrics["input_coherent"] = coherent
+                self.metrics["input_size"] = size
+                self.metrics["input_iterations"] = int(m.group("iterations"))
+                self.metrics["output_latency_units"] = m.group("latency_units")
+                self.metrics["output_latency_min"] = latency_json["min"]
+                self.metrics["output_latency_max"] = latency_json["max"]
+                self.metrics["output_latency_avg"] = latency_json["avg"]
+                self.metrics["output_latency_min_unit"] = latency_json["unit"]
+                self.metrics["output_latency_max_unit"] = latency_json["unit"]
+                self.metrics["output_latency_avg_unit"] = latency_json["unit"]
+                self.metrics["input_latency_perf_name"] = m.group("latency_perf_name")
+                self.metrics["output_average_bandwith"] = average_bandwidth
+                self.metrics["output_average_bandwith_unit"] = bandwidth_json["unit"]
+                self.metrics["input_average_bandwith_perf_name"] = n.group("average_bandwidth_perf_name")
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+                m = None
+                n = None
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def bcopy_flood(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>\S+)\]',
+                line)
+            if m:
+                self.match_found = True
+                latency_json_raw = m.group("latency_json")
+                latency_json = json.loads(latency_json_raw)
+                bandwidth_json = json.loads(m.group("bandwidth_json"))
+                average_bandwidth = int(bandwidth_json["value"])
+                size = m.group("size")
+                size = int(size.replace("KB", ""))
+
+                self.metrics["input_n"] = m.group("N")
+                self.metrics["input_size"] = size
+                self.metrics["output_latency_units"] = m.group("latency_units")
+                self.metrics["output_latency_min"] = latency_json["min"]
+                self.metrics["output_latency_max"] = latency_json["max"]
+                self.metrics["output_latency_avg"] = latency_json["avg"]
+                self.metrics["output_latency_min_unit"] = latency_json["unit"]
+                self.metrics["output_latency_max_unit"] = latency_json["unit"]
+                self.metrics["output_latency_avg_unit"] = latency_json["unit"]
+                self.metrics["input_latency_perf_name"] = m.group("latency_perf_name")
+                self.metrics["output_average_bandwith"] = average_bandwidth
+                self.metrics["output_average_bandwith_unit"] = bandwidth_json["unit"]
+                self.metrics["input_average_bandwith_perf_name"] = m.group("average_bandwidth_perf_name")
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
