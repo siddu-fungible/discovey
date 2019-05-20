@@ -81,7 +81,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1)
         fun_test.shared_variables["fs"] = fs
 
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
+        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
