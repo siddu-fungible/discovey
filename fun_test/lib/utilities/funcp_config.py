@@ -179,28 +179,32 @@ class FunControlPlaneBringup:
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
 
         setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
-                                                     timeout=900)
+                                                     timeout=1200)
         sections = ['Bring up Control Plane', 'Device 1dad:', 'move fpg interface to f0 docker',
                     'libfunq bind  End', 'move fpg interface to f1 docker', 'Bring up Control Plane dockers']
         for section in sections:
             fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
 
         linux_obj_come.disconnect()
+        return True
 
-    def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1,host_ip="qa-ubuntu-02",
-                              workspace="/tmp", ssh_username="qa-admin", ssh_password="Precious1*"):
-        linux_obj = Linux(host_ip=host_ip, ssh_username=ssh_username, ssh_password=ssh_password)
+    def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/tmp",
+                              ssh_username=None, ssh_password=None):
+        if host_ip and ssh_password and ssh_username:
+            linux_obj = Linux(host_ip=host_ip, ssh_username= ssh_username, ssh_password=ssh_password)
+        else:
+            linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
         linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
         funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
         fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
         fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
         # Get FunControlPlane
-        fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
-        fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
         if abstract_config_f1_0:
             self.abstract_configs_f1_0 = fun_test.parse_file_to_json(abstract_config_f1_0)
 
-        if not abstract_config_f1_1:
+        if abstract_config_f1_1:
             self.abstract_configs_f1_1 = fun_test.parse_file_to_json(abstract_config_f1_1)
 
         for f1 in self.mpg_ips:
@@ -218,7 +222,7 @@ class FunControlPlaneBringup:
                                  message="Execute abstract config on %s" % f1)
         linux_obj.disconnect()
 
-    def assign_mpg_ips(self):
+    def assign_mpg_ips_dhcp(self):
 
         linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                                     ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
@@ -285,6 +289,7 @@ class FunControlPlaneBringup:
                                        "python-yaml python-jinja2 python-pip")
         linux_obj.sudo_command(command="pip install pexpect")
         linux_obj.sudo_command(command="apt-get install docker.io")
+        #add usermod
         linux_obj.disconnect()
 
     def funcp_sanity(self, check_bgp=False):
@@ -298,6 +303,15 @@ class FunControlPlaneBringup:
 
     def fetch_mpg_ips(self):
         self.mpg_ips = {}
+        linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        docker_output = linux_obj_come.command(command="docker ps -a")
+        print "\n" + docker_output
+        self.docker_names = linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
+        fun_test.test_assert_expected(expected=2, actual=len(self.docker_names), message="Make sure 2 dockers are up")
+        linux_obj_come.disconnect()
+
         for docker_name in self.docker_names:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
