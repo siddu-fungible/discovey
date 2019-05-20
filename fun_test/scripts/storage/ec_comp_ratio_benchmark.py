@@ -358,7 +358,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         try:
             # Do nvme disconnect
 
-            huid = fun_test.shared_variables['huid']
+            '''huid = fun_test.shared_variables['huid']
             ctlid = fun_test.shared_variables['ctlid']
             if fun_test.shared_variables["setup_complete"]:
                 # Detaching all the EC/LS volumes to the external server
@@ -375,7 +375,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                           message=" Execute nvme Disconnect for device: {}".format(self.volume_name))
 
-            self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)
+            self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)'''
             fun_test.shared_variables["setup_complete"] = False
         except Exception as ex:
             fun_test.critical(ex.message)
