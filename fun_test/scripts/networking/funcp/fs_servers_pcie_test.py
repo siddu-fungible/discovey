@@ -5,6 +5,8 @@ from scripts.networking.helper import *
 from lib.utilities.funcp_config import *
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
+from lib.topology.topology_helper import TopologyHelper
+import pprint
 
 
 class ScriptSetup(FunTestScript):
@@ -39,66 +41,54 @@ class VerifySetup(FunTestCase):
     def run(self):
         #funos-f1.stripped_vdd_en2.gz
         #cmukherjee/funos-f1.stripped.gz
-        funcp_obj = FunControlPlaneBringup(fs_name="fs-48", boot_image_f1_0="ysingh/funos-f1.stripped_18may_pcie_test.gz",
+        fs_name=""
+        if fun_test.get_job_environment_variable('test_bed_type'):
+            fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        else:
+            fs_name = "fs-45"
+        funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_image_f1_0="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_image_f1_1="ysingh/funos-f1.stripped_18may_pcie_test.gz",
                                            boot_args_f1_0="app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server "
-                                                          "--serial --dpc-uart --dis-stats retimer=0,1,2 --mgmt",
+                                                          "--serial --dpc-uart --dis-stats retimer=0 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
-                                                          "--serial --dpc-uart --dis-stats retimer=0 --mgmt")
+                                                          "--serial --dpc-uart --dis-stats retimer=3 --mgmt")
+        f1_0_boot_args = "app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server --serial --dpc-uart --dis-stats " \
+                         "retimer=0 --mgmt"
+        f1_1_boot_args = "app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server --serial --dpc-uart --dis-stats " \
+                         "retimer=0 --mgmt"
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(dut_index=0,
+                                           f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                          1: {"boot_args": f1_1_boot_args}}
+                                           )
+
         t_end = time.time() + 60 * 120
-        server05 = 0
-        server05_fails = 0
-        server05_incorrect = 0
-        server06 = 0
-        server06_fails = 0
-        server06_incorrect = 0
-        server07 = 0
-        server07_fails = 0
-        server07_incorrect = 0
-        server08 = 0
-        server08_fails = 0
-        server08_incorrect = 0
 
+        server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
+        servers_mode = server_key["fs"][fs_name]
+        final_result = {}
+        for server in servers_mode:
+            final_result[server] = {"success": 0, "incomplete": 0, "failure": 0}
         while time.time() < t_end:
+            # fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False),
+            #                      message="Boot F1s")
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology deployed")
 
-            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False), message="Boot F1s")
-            s05 = self.verify_host_pcie_link(hostname="cab02-qa-05")
-            if s05 == "1":
-                server05 += 1
-            elif s05 == "0":
-                server05_fails += 1
-            elif s05 == "2":
-                server05_incorrect += 1
-            s06 = self.verify_host_pcie_link(hostname="cab02-qa-06")
-            if s06 == "1":
-                server06 += 1
-            elif s06 == "0":
-                server06_fails += 1
-            elif s06 == "2":
-                server06_incorrect += 1
-            s07 = self.verify_host_pcie_link(hostname="cab02-qa-07", username="localadmin", password="Precious1*", mode="x8")
-            if s07 == "1":
-                server07 += 1
-            elif s07 == "0":
-                server07_fails += 1
-            elif s07 == "2":
-                server07_incorrect += 1
-            s08 = self.verify_host_pcie_link(hostname="cab02-qa-08")
-            if s08 == "1":
-                server08 += 1
-            elif s07 == "0":
-                server08_fails += 1
-            elif s07 == "2":
-                server08_incorrect += 1
+            for server in servers_mode:
+                print server
+                result = self.verify_host_pcie_link(hostname=server, mode=servers_mode[server])
+                if result == "1":
+                    final_result[server]["success"] += 1
+                if result == "0":
+                    final_result[server]["failure"] += 1
+                if result == "2":
+                    final_result[server]["incomplete"] += 1
+
             print("#####################################################################################")
-            fun_test.log("Server 05 success : %s | Incomplete : %s | Failures : %s"
-                         % (server05, server05_incorrect, server05_fails))
-            fun_test.log("Server 06 success : %s | Incomplete : %s | Failures : %s"
-                         % (server06, server06_incorrect, server06_fails))
-            fun_test.log("Server 07 success : %s | Incomplete : %s | Failures : %s"
-                         % (server07, server07_incorrect, server07_fails))
-            fun_test.log("Server 08 success : %s | Incomplete : %s | Failures : %s"
-                         % (server08, server08_incorrect, server08_fails))
+            fun_test.log(final_result)
+            pprint.pprint(final_result)
             print("#####################################################################################")
 
     def cleanup(self):
@@ -115,6 +105,14 @@ class VerifySetup(FunTestCase):
                 count += 1
                 if count == 5:
                     fun_test.test_assert(expression=False, message="Cant reboot server %s" % hostname)
+        else:
+            count = 0
+            while not linux_obj.check_ssh():
+                fun_test.sleep(message="waiting for server to come back up", seconds=30)
+                count += 1
+                if count == 5:
+                    fun_test.test_assert(expression=False, message="Cant reach server %s" % hostname)
+
         lspci_out = linux_obj.sudo_command(command="sudo lspci -d 1dad: -vv | grep LnkSta")
         result = "1"
         if mode not in lspci_out:
@@ -125,6 +123,7 @@ class VerifySetup(FunTestCase):
                 fun_test.critical("PCIE link did not come up in %s mode" % mode)
                 result = "2"
         return result
+
 
 if __name__ == '__main__':
     ts = ScriptSetup()

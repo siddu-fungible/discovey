@@ -504,23 +504,16 @@ def build_to_date_map(request):
             key = int(m.group(1))
         # print "Completion date:" + entry.completion_date
         try:
-            key = entry.completion_date
-            dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
-
-            if (dt.year == 2018 and ((dt.month == 11 and dt.day >= 4) or dt.month > 11)) or (
-                    dt.year == 2019 and ((dt.month < 3) or (dt.month == 3 and dt.day < 10))):
-                dt = dt + timedelta(hours=8)  # TODO: hardcoded
-            else:
-                dt = dt + timedelta(hours=7)  # TODO: hardcoded
-            key = str(dt)
-            key = re.sub(r':\d{2}-.*', '', key)
+            key = str(entry.build_date)
+            key = key.split('+')[0]
             build_info[key] = {"software_date": entry.software_date,
                                "hardware_version": entry.hardware_version,
                                "fun_sdk_branch": entry.fun_sdk_branch,
                                "git_commit": entry.git_commit,
                                "build_properties": entry.build_properties,
                                "lsf_job_id": entry.lsf_job_id,
-                               "sdk_version": entry.sdk_version}
+                               "sdk_version": entry.sdk_version,
+                               "suite_execution_id": entry.suite_execution_id}
             # print str(dt)
         except Exception as ex:
             print ex

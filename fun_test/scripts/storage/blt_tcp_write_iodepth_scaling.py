@@ -1,4 +1,4 @@
-﻿from lib.system.fun_test import *
+from lib.system.fun_test import *
 from lib.system import utils
 from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
@@ -39,7 +39,6 @@ tb_config = {
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
-
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -269,7 +268,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                  format(self.ctrlr_uuid))
 
             for x in range(1, self.blt_count + 1, 1):
-                cur_uuid = self.thin_uuid[x-1]
+                cur_uuid = self.thin_uuid[x - 1]
                 command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                      ns_id=x,
                                                                                      vol_uuid=cur_uuid)
@@ -333,10 +332,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             if hasattr(self, "nvme_io_q"):
                 command_result = self.end_host.sudo_command(
                     "nvme connect -t {} -a {} -s {} -n nqn.2017-05.com.fungible:nss-uuid1 -i {}".
-                    format(unicode.lower(nvme_transport),
-                           tb_config['dut_info'][0]['f1_ip'],
-                           tb_config['dut_info'][0]['tcp_port'],
-                           self.nvme_io_q))
+                        format(unicode.lower(nvme_transport),
+                               tb_config['dut_info'][0]['f1_ip'],
+                               tb_config['dut_info'][0]['tcp_port'],
+                               self.nvme_io_q))
                 fun_test.log(command_result)
             else:
                 command_result = self.end_host.sudo_command(
@@ -422,7 +421,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 elif int(fio_numjobs) >= 8:
                     cpus_allowed = "8,9,10,11,12,13,14,15,24,25,26,27,28,29,30,31"
 
-                # Flush cache before read test
+                # Flush cache before test
                 self.end_host.sudo_command("sync")
                 self.end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
 
@@ -432,7 +431,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # eqm_result = False
 
                 fun_test.log("Running FIO...")
-                fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + \
+                               self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device,
@@ -461,7 +461,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         fun_test.critical("There is a mismatch in {} stat, delta {}".
                                           format(field, stat_delta))
                 '''
-                
+
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 for op, stats in fio_output[combo][mode].items():
@@ -514,38 +514,37 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         pass
 
 
-class BLTFioSeqRead(BLTVolumePerformanceTestcase):
+class BLTFioSeqWrite(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sequential Read performance on BLT volume with different IO Depth",
+                              summary="Sequential Write performance on BLT volume with different IO Depth",
                               steps='''
         1. Create a BLT on FS attached with SSD.
         2. Export (Attach) this BLT to the external host connected via the network interface. 
         3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Seq Read test(without verify) from the 
+        4. Run the FIO Seq Write test(without verify) from the 
          host with numjobs & IOdepth : (1,1),(8,1),(16,1),(16,2),(16,4) and check the performance. 
         ''')
 
 
-class BLTFioRandRead(BLTVolumePerformanceTestcase):
+class BLTFioRandWrite(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Random Read performance on BLT volume with different IO Depth",
+                              summary="Random Write performance on BLT volume with different IO Depth",
                               steps='''
         1. Create a BLT on FS attached with SSD.
         2. Export (Attach) this BLT to the external host connected via the network interface. 
         3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Rand Read test(without verify) from the 
+        4. Run the FIO Rand Write test(without verify) from the 
          host with numjobs & IOdepth : (1,1),(8,1),(16,1),(16,2),(16,4) and check the performance. 
         ''')
 
 
 if __name__ == "__main__":
-
     bltscript = BLTVolumePerformanceScript()
-    bltscript.add_test_case(BLTFioSeqRead())
-    bltscript.add_test_case(BLTFioRandRead())
+    bltscript.add_test_case(BLTFioSeqWrite())
+    bltscript.add_test_case(BLTFioRandWrite())
 
     bltscript.run()
