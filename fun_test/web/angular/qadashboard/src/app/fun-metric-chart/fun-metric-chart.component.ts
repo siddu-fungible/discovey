@@ -33,6 +33,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
+  suiteUrl = "http://integration.fungible.local/regression/suite_detail/";
   LOGS_DIR = "/static/logs";
 
   status: string = null;
@@ -592,6 +593,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   openLsfUrl(lsfId): void {
     window.open(this.lsfUrl + lsfId, '_blank');
+  }
+
+  openSuiteUrl(suiteId): void {
+    window.open(this.suiteUrl + suiteId, '_blank');
   }
 
   openVersionUrl(version): void {
