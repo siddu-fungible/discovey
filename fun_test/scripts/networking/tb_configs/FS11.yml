@@ -61,7 +61,7 @@ hu:
           nexthop: 53.1.1.254
       arps:
         - ipv4_addr: 53.1.1.4
-        - mac_addr: 00:de:ad:be:ef:21
+          mac_addr: 00:de:ad:be:ef:21
 
 hu2:
   hostname: poc-server-10
@@ -85,7 +85,7 @@ hu2:
           nexthop: 53.1.1.254
       arps:
         - ipv4_addr: 53.1.1.1
-        - mac_addr: 00:de:ad:be:ef:11
+          mac_addr: 00:de:ad:be:ef:11
 
 #hu3:
 #  hostname: poc-server-08
