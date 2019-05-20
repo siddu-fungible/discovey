@@ -279,6 +279,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let key = this._getBuildKey(x);
     let s = {};
+    this.nwInfoFiles = [];
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
       hardwareVersion = this.buildInfo[key]["hardware_version"];
@@ -300,7 +301,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       if (hardwareVersion !== "")
         s["Hardware version"] = hardwareVersion;
       if (version !== "") {
-        this.nwInfoFiles = [];
         s["SDK version"] = "bld_" + version;
         this.status = "Fetching networking artifacts";
         this.apiService.get('/regression/get_networking_artifacts/' + version).subscribe((data) => {
