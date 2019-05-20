@@ -131,7 +131,7 @@ class FunTestCase3(FunTestCase):
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
 
 class RetrieveLogLinesCase1(FunTestCase):
-    tag = "qa_rgx_nfa_sanity"
+    tag = "qa_rgx_nfa_runtime_sanity"
     result = fun_test.FAILED
 
     def __init__(self, **kwargs):
@@ -190,7 +190,7 @@ class RetrieveLogLinesCase1(FunTestCase):
             fun_test.log(line)
 
 class RetrieveLogLinesCase2(FunTestCase):
-    tag = "qa_rgx_dfa_sanity"
+    tag = "qa_rgx_dfa_runtime_sanity"
     result = fun_test.FAILED
 
     def __init__(self, **kwargs):
@@ -249,7 +249,7 @@ class RetrieveLogLinesCase2(FunTestCase):
             fun_test.log(line)
 
 class RetrieveLogLinesCase3(FunTestCase):
-    tag = "qa_rgx_software_sanity"
+    tag = "qa_rgx_software_runtime_sanity"
     result = fun_test.FAILED
 
     def __init__(self, **kwargs):

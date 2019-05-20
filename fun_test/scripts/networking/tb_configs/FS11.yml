@@ -1,7 +1,7 @@
 router_mac:
   00:de:ad:be:ef:00
 
-# NU host
+# NU host - the keyword must start with "nu"
 nu:
   hostname: poc-server-06
   username: localadmin
@@ -15,7 +15,9 @@ nu:
             ipv4_addr: 20.1.1.1
             ipv4_netmask: 255.255.255.0
       routes:
-        - prefix: 53.1.1.1/32
+        - prefix: 53.1.1.0/24
+          nexthop: 20.1.1.2
+        - prefix: 21.1.1.0/24
           nexthop: 20.1.1.2
 
 nu2:
@@ -31,10 +33,12 @@ nu2:
             ipv4_addr: 21.1.1.1
             ipv4_netmask: 255.255.255.0
       routes:
-        - prefix: 53.1.1.4/32
+        - prefix: 53.1.1.0/24
+          nexthop: 21.1.1.2
+        - prefix: 20.1.1.0/24
           nexthop: 21.1.1.2
 
-# HU host
+# HU host - the keyword must start with "hu"
 hu:
   hostname: poc-server-05
   username: localadmin
@@ -49,12 +53,15 @@ hu:
         - hu1-f0:
             mac_addr: 00:de:ad:be:ef:11
             ipv4_addr: 53.1.1.1
-            ipv4_netmask: 255.255.255.254
+            ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 20.1.1.0/24
-          nexthop: 53.1.1.0
-        - prefix: 53.1.1.4/32
-          nexthop: 53.1.1.0
+          nexthop: 53.1.1.254
+        - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.254
+      arps:
+        - ipv4_addr: 53.1.1.4
+          mac_addr: 00:de:ad:be:ef:21
 
 hu2:
   hostname: poc-server-10
@@ -68,14 +75,17 @@ hu2:
     default:
       interfaces:
         - hu2-f0:
-            mac_addr: 00:de:ad:be:ef:11
+            mac_addr: 00:de:ad:be:ef:21
             ipv4_addr: 53.1.1.4
-            ipv4_netmask: 255.255.255.254
+            ipv4_netmask: 255.255.255.0
       routes:
+        - prefix: 20.1.1.0/24
+          nexthop: 53.1.1.254
         - prefix: 21.1.1.0/24
-          nexthop: 53.1.1.5
-        - prefix: 53.1.1.1/32
-          nexthop: 53.1.1.5
+          nexthop: 53.1.1.254
+      arps:
+        - ipv4_addr: 53.1.1.1
+          mac_addr: 00:de:ad:be:ef:11
 
 #hu3:
 #  hostname: poc-server-08
