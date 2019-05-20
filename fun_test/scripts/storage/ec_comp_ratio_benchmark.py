@@ -326,7 +326,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             post_result_lst.append({'effort_name': self.accelerator_effort,
                                     'corpus_name': corpus,
                                     'f1_compression_ratio': comp_pct})
-            #if not compare_result:
+            # if not compare_result:
             #    test_result = False
             init_write_count = curr_write_count
             table_rows.append([corpus, "{0:04.2f}".format(comp_pct), test_corpuses[corpus]['gzip_comp_pct']])
@@ -346,10 +346,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         generic_helper = ModelHelper(model_name="InspurZipCompressionRatiosPerformance")
         fun_test.log(result_lst)
         try:
-            generic_helper.set_units(**unit_dict)
             for d in result_lst:
+                generic_helper.set_units(**unit_dict)
                 generic_helper.add_entry(**d)
-            generic_helper.set_status(fun_test.PASSED)
+                generic_helper.set_status(fun_test.PASSED)
         except Exception as ex:
             fun_test.critical(ex.message)
         fun_test.log("Result posted to database")
@@ -374,7 +374,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.end_host.sudo_command(cmd)
             fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
                                           message=" Execute nvme Disconnect for device: {}".format(self.volume_name))
-
 
             self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)
             fun_test.shared_variables["setup_complete"] = False
