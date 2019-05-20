@@ -337,13 +337,13 @@ class TrialStateMachine:
             if past_jobs:
                 trial.status = TriageTrialStates.IN_LSF
                 trial.save()
-            job_info = lsf_server.get_last_job(tag=trial.tag)
-            if job_info and "job_id" in job_info:
-                trial.lsf_job_id = job_info["job_id"]
-            if job_info and "state" in job_info:
-                if job_info["state"] == "completed":
-                    trial.status = TriageTrialStates.PREPARING_RESULTS
-                    trial.save()
+                job_info = lsf_server.get_last_job(tag=trial.tag)
+                if job_info and "job_id" in job_info:
+                    trial.lsf_job_id = job_info["job_id"]
+                if job_info and "state" in job_info:
+                    if job_info["state"] == "completed":
+                        trial.status = TriageTrialStates.PREPARING_RESULTS
+                        trial.save()
 
         elif status == TriageTrialStates.PREPARING_RESULTS:
             lsf_server = LsfStatusServer()  # TODO
