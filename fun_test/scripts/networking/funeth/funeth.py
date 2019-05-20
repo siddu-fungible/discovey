@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+from lib.system.utils import MultiProcessingTasks
 import re
 import os
 import sys
@@ -50,7 +51,7 @@ class Funeth:
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].command('export WORKSPACE=$WSTMP')
 
-    def update_src(self):
+    def update_src(self, parallel=True):
         """Update driver source."""
 
         def update_mirror(ws, repo, hu, **kwargs):
@@ -78,11 +79,10 @@ class Funeth:
             if branch:
                 self.linux_obj_dict[hu].command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
 
-        result = True
-        for hu in self.hu_hosts:
+        def _update_src(linux_obj):
             sdkdir = os.path.join(self.ws, 'FunSDK')
-            self.linux_obj_dict[hu].command('sudo rm -rf {}'.format(self.ws))
-            self.linux_obj_dict[hu].create_directory(self.ws, sudo=False)
+            linux_obj.command('sudo rm -rf {}'.format(self.ws))
+            linux_obj.create_directory(self.ws, sudo=False)
 
             update_mirror(self.ws, 'fungible-host-drivers', hu)
             update_mirror(self.ws, 'FunSDK-small',hu)
@@ -95,24 +95,67 @@ class Funeth:
             if self.funos_branch:
                 local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-            output = self.linux_obj_dict[hu].command(
+            output = linux_obj.command(
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
-            result &= re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+
+        result = True
+
+        if parallel:
+            mp_task_obj = MultiProcessingTasks()
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                mp_task_obj.add_task(
+                    func=_update_src,
+                    func_args=(linux_obj,),
+                    task_key='{}'.format(linux_obj.host_ip))
+
+            mp_task_obj.run(max_parallel_processes=len(self.hu_hosts))
+
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+
+        else:
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= _update_src(linux_obj)
 
         return result
 
-    def build(self):
+    def build(self, parallel=True):
         """Build driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         funsdkdir = os.path.join(self.ws, 'FunSDK')
 
-        result = True
-        for hu in self.hu_hosts:
+        def _build(linux_obj):
             if self.funos_branch:
-                self.linux_obj_dict[hu].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
+                linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-            output = self.linux_obj_dict[hu].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
-            result &= re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+            output = linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
+            return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+
+        result = True
+
+        if parallel:
+            mp_task_obj = MultiProcessingTasks()
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                mp_task_obj.add_task(
+                    func=_build,
+                    func_args=(linux_obj,),
+                    task_key='{}'.format(linux_obj.host_ip))
+
+            mp_task_obj.run(max_parallel_processes=len(self.hu_hosts))
+
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+
+        else:
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= _build(linux_obj)
 
         return result
 
