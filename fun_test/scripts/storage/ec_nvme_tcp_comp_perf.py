@@ -146,22 +146,14 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
         try:
             self.ec_info = fun_test.shared_variables["ec_info"]
-            self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
-            ns_id = fun_test.shared_variables['ns_id']
 
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
-                fun_test.test_assert(self.storage_controller.volume_detach_remote(ns_id=ns_id,
-                                                                                  uuid=self.ec_info["attach_uuid"][0],
-                                                                                  huid=self.huid,
-                                                                                  ctlid=self.ctlid,
-                                                                                  remote_ip=self.remote_ip,
-                                                                                  transport=self.attach_transport,
-                                                                                  command_duration=self.command_timeout)[
-                                         "status"],
-                                     "Detaching EC/LS volume on DUT with ns_id: {}".format(ns_id))
-
+                self.storage_controller.detach_volume_from_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                                                                      ns_id=fun_test.shared_variables['ns_id'])
+                self.storage_controller.delete_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                                                          command_duration=self.command_timeout)
                 # Unconfiguring all the LSV/EC and it's plex volumes
                 self.end_host.unconfigure_ec_volume(storage_controller=self.storage_controller,
                                                     ec_info=self.ec_info,
@@ -230,15 +222,26 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Attaching/Exporting all the EC/LS volumes to the external server
             self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
             fun_test.shared_variables["remote_ip"] = self.remote_ip
+            # create controlloer
+            ctrlr_uuid = utils.generate_uuid()
+            fun_test.shared_variables['cntrlr_uuid'] = ctrlr_uuid
+            fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                           transport=self.attach_transport,
+                                                                           remote_ip=self.remote_ip,
+                                                                           nqn=self.nvme_subsystem,
+                                                                           port=self.transport_port,
+                                                                           command_duration=self.command_timeout)[
+                                     'status'],
+                                 message="Create controller with uuid: {}".format(ctrlr_uuid))
+            # attach nvme device to controller
 
-            fun_test.test_assert(self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
-                                                                              uuid=self.ec_info["attach_uuid"][0],
-                                                                              huid=self.huid,
-                                                                              ctlid=self.ctlid,
-                                                                              remote_ip=self.remote_ip,
-                                                                              transport=self.attach_transport,
-                                                                              command_duration=self.command_timeout)[
-                                     "status"], "Attach EC/LS volume on DUT with ns_id: {}".format(self.ns_id))
+            fun_test.test_assert(self.storage_controller.attach_volume_to_controller(ns_id=self.ns_id,
+                                                                                     ctrlr_uuid=ctrlr_uuid,
+                                                                                     vol_uuid=
+                                                                                     self.ec_info["attach_uuid"][0],
+                                                                                     command_duration=self.command_timeout)[
+                                     "status"],
+                                 "Attach EC/LS volume on DUT with ns_id: {}".format(self.ns_id))
             fun_test.shared_variables["ec"]["setup_created"] = True
 
             # disabling the error_injection for the EC volume
