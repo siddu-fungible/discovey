@@ -1,5 +1,8 @@
 from lib.system.fun_test import *
 import re
+from lib.system.utils import MultiProcessingTasks
+from prettytable import PrettyTable
+from datetime import datetime
 
 FRAMES_RECEIVED_OK = "aFramesReceivedOK"
 FRAMES_TRANSMITTED_OK = "aFramesTransmittedOK"
@@ -788,3 +791,246 @@ def get_qos_stats(network_controller_obj, queue_no, dut_port, queue_type='pg_deq
     except Exception as ex:
         fun_test.critical(str(ex))
     return qos_val
+
+def get_timestamp():
+    ts = time.time()
+    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def get_nested_dict_stats(result):
+    master_table_obj = PrettyTable()
+    master_table_obj.align = 'l'
+    master_table_obj.border = False
+    master_table_obj.header = False
+    try:
+        for key in sorted(result):
+            table_obj = PrettyTable(['Field Name', 'Counter'])
+            table_obj.align = 'l'
+            for _key in sorted(result[key]):
+                if isinstance(result[key][_key], dict):
+                    table_obj = PrettyTable()
+                    table_obj.align = 'l'
+                    inner_table_obj = PrettyTable(['Field Name', 'Counter'])
+                    inner_table_obj.align = 'l'
+                    for _key1 in sorted(result[key][_key]):
+                        inner_table_obj.add_row([_key1, result[key][_key][_key1]])
+                    table_obj.add_row([_key, inner_table_obj])
+                table_obj.add_row([_key, result[key][_key]])
+            master_table_obj.add_row([key, table_obj])
+        print master_table_obj
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return master_table_obj
+
+
+def get_single_dict_stats(result):
+    master_table_obj = PrettyTable(['Field Name', 'Counter'])
+    master_table_obj.align = 'l'
+    master_table_obj.border = True
+    master_table_obj.header = True
+    try:
+        for key in sorted(result):
+            master_table_obj.add_row([key, result[key]])
+        print master_table_obj
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return master_table_obj
+
+
+def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
+        master_table_obj = get_nested_dict_stats(result=result)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append(master_table_obj.get_string())
+        lines.append('\n\n\n')
+
+        with open(filename, 'a') as f:
+            f.writelines(lines)
+
+        description = "Resource pc %s" % pc_id
+        fun_test.add_auxillary_file(description=description, filename=filename)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("PC Resource result for id: %d" % pc_id)
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+def populate_vp_util_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        filtered_dict = {}
+        lines = list()
+
+        result = network_controller_obj.debug_vp_util()
+        for key, val in sorted(result.iteritems()):
+            if "CCV1" in key or "CCV2" in key:
+                filtered_dict[key] = val
+        master_table_obj = get_single_dict_stats(result=filtered_dict)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append(master_table_obj.get_string())
+        lines.append('\n\n\n')
+
+        with open(filename, 'a') as f:
+            f.writelines(lines)
+
+        description = "Vp util"
+        fun_test.add_auxillary_file(description=description, filename=filename)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("VP util output")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result = network_controller_obj.peek_per_vp_stats()
+        master_table_obj = get_nested_dict_stats(result=result)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append(master_table_obj.get_string())
+        lines.append('\n\n\n')
+
+        with open(filename, 'a') as f:
+            f.writelines(lines)
+
+        description = "Per vp"
+        fun_test.add_auxillary_file(description=description, filename=filename)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("VP util output")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, test_type, single_flow, half_load_latency,test_time, display_output=False):
+    try:
+        sequencer_passed = False
+        version = fun_test.get_version()
+        flow = "multi_flow"
+        if single_flow:
+            flow = "single_flow"
+        latency = "full_load_latency"
+        if half_load_latency:
+            latency = "half_load_latency"
+        flow_latency = "%s_%s" % (flow, latency)
+        sleep_time = int(test_time/10)
+
+        resource_pc_1_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_resource_pc_1.txt'
+        resource_pc_2_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_resource_pc_2.txt'
+        bam_stats_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_bam.txt'
+        vp_util_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_vp_util.txt"
+        per_vp_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_per_vp.txt"
+
+        artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
+        artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
+        artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
+        artifact_vp_util_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_file)
+        artifact_per_vp_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_file)
+
+        while not sequencer_passed:
+
+            populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                             filename=artifact_resource_pc_1_file, pc_id=1, display_output=display_output)
+            populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                             filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
+            populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
+            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
+
+            fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
+
+            state = template_obj.get_sequencer_state(sequencer_handle=sequencer_handle)
+            if state.lower() == template_obj.PASSED.lower():
+                sequencer_passed = True
+                fun_test.log("Sequencer passed. Stopping dpcsh commands")
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return True
+
+
+def get_resource_bam_table(result):
+    table_obj = None
+    bam_pool_decode_dict = {
+        'pool0': 'BM_POOL_FUNOS',
+        'pool1': 'BM_POOL_NU_ETP_CMDLIST',
+        'pool2': 'BM_POOL_HU_REQ',
+        'pool3': 'BM_POOL_SW_PREFETCH',
+        'pool4': 'BM_POOL_NU_ERP_FCP',
+        'pool19': 'BM_POOL_NU_ERP_CC',
+        'pool20': 'BM_POOL_NU_ERP_SAMPLING',
+        'pool34': 'BM_POOL_REGEX',
+        'pool35': 'BM_POOL_REFBUF',
+        'pool49': 'BM_POOL_NU_ERP_NONFCP',
+        'pool50': 'BM_POOL_HNU_NONFCP',
+        'pool62': 'BM_POOL_HNU_PREFETCH',
+        'pool63': 'BM_POOL_NU_PREFETCH', }
+
+    try:
+        table_obj = PrettyTable(['Field Name', 'Counters'])
+        table_obj.align = 'l'
+        for key in result:
+            decode_value = ''
+            pool_value = key.split(' ')[0]
+            if 'usage' in key:
+                pool_value = key.split(' ')[1]
+            if pool_value in bam_pool_decode_dict:
+                decode_value = bam_pool_decode_dict[pool_value]
+            table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return table_obj
+
+
+def populate_resource_bam_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result = network_controller_obj.peek_resource_bam_stats()
+        master_table_obj = get_resource_bam_table(result=result)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append(master_table_obj.get_string())
+        lines.append('\n\n\n')
+
+        with open(filename, 'a') as f:
+            f.writelines(lines)
+
+        description = "Bam stats"
+        fun_test.add_auxillary_file(description=description, filename=filename)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("BAM Resource result")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output

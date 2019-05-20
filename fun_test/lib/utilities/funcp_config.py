@@ -54,7 +54,7 @@ class FunControlPlaneBringup:
         if reboot_come:
             fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
                                  "ComE rebooted successfully")
-            fun_test.sleep(message="waiting for COMe", seconds=120)
+            fun_test.sleep(message="waiting for COMe", seconds=90)
             if power_cycle_come:
                 come_ping_test = False
 
@@ -94,7 +94,7 @@ class FunControlPlaneBringup:
         fs_0.bmc.start_uart_log_listener(f1_index=0)
         fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
                              "ComE rebooted successfully")
-        fun_test.sleep(message="waiting for COMe", seconds=120)
+        fun_test.sleep(message="waiting for COMe", seconds=90)
         if power_cycle_come:
             come_ping_test = False
 
@@ -133,7 +133,7 @@ class FunControlPlaneBringup:
         fs.bmc.start_uart_log_listener(f1_index=1)
         fun_test.test_assert(fs.come_reset(power_cycle=True, non_blocking=True),
                              "ComE rebooted successfully")
-        fun_test.sleep(message="waiting for COMe", seconds=120)
+        fun_test.sleep(message="waiting for COMe", seconds=90)
         if power_cycle_come:
             come_ping_test = False
 

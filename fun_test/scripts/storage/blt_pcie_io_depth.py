@@ -344,6 +344,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     fio_job_iodepth = 32
                 elif combo == "(8, 8)":
                     fio_job_iodepth = 64
+                elif combo == "(8, 16)":
+                    fio_job_iodepth = 128
 
                 self.end_host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 fun_test.log("Running FIO...")
