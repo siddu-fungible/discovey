@@ -23,14 +23,16 @@ FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
     ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
     ('HU_HU_NFCP', 'HU -> HU non-FCP'), # test case id: 3xxxx
-    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
-    #    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
+#    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
+#    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 ])
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
-NUM_FLOWS = (1, 8,)  # TODO: May add more
-NUM_HOSTS = (1, 2,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
+#NUM_FLOWS = (1, 8,)  # TODO: May add more
+#NUM_HOSTS = (1, 2,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
+NUM_FLOWS = (1,)  # TODO: May add more
+NUM_HOSTS = (1,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = (nm.THROUGHPUT,
                     nm.PPS,
@@ -160,14 +162,15 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
     fpg_stats = {}
     for nc_obj in network_controller_objs:
         nc_obj.echo_hello()
-        for i in fpg_interfaces:
-            r = nc_obj.peek_fpg_port_stats(port_num=i)
-            # TODO: handle None
-            #if not r:
-            #    r = [{}]
-            fpg_stats.update(
-                {i: r}
-            )
+        if not fpg_stats:
+            for i in fpg_interfaces:
+                r = nc_obj.peek_fpg_port_stats(port_num=i)
+                # TODO: handle None
+                #if not r:
+                #    r = [{}]
+                fpg_stats.update(
+                    {i: r}
+                )
 
         # Check parser stuck
         output = nc_obj.peek_parser_stats().get('global')
@@ -183,7 +186,7 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
 
         # Check VP stuck
         is_vp_stuck = False
-        for pc_id in (1,2 ):
+        for pc_id in (1, 2):
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
             for core_str, val_dict in output.items():
                 if any(val_dict.values()) != 0:  # VP stuck
@@ -211,10 +214,6 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
-
-
-def get_fpg_packet_stats():
-    pass
 
 
 class FunethPerformanceBase(FunTestCase):
@@ -272,6 +271,14 @@ class FunethPerformanceBase(FunTestCase):
             linux_obj_dst = funeth_obj.linux_obj_dict[dhost]
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr(dhost,
                                                                    funeth_obj.tb_config_obj.get_an_interface(dhost))
+
+            # Check dip pingable
+            ping_result = linux_obj_src.ping(dip, count=5, max_percentage_loss=0, interval=0.1,
+                                size=frame_size-20-8,  # IP header 20B, ICMP header 8B
+                                sudo=True)
+            fun_test.test_assert(ping_result, '{} ping {} with packet size {}'.format(
+                linux_obj_src.host_ip, dip, frame_size))
+
             suffix = '{}2{}'.format(shost[0], dhost[0])
             arg_dicts.append(
                 {'linux_obj': linux_obj_src,
@@ -281,7 +288,7 @@ class FunethPerformanceBase(FunTestCase):
                  'protocol': protocol,
                  'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
                  'duration': duration,
-                 'frame_size': frame_size,
+                 'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
                  }
             )
