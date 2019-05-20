@@ -299,8 +299,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Software date"] = softwareDate;
       if (hardwareVersion !== "")
         s["Hardware version"] = hardwareVersion;
+      this.nwInfoFiles = [];
       if (version !== "") {
-        this.nwInfoFiles = [];
         s["SDK version"] = "bld_" + version;
         this.status = "Fetching networking artifacts";
         this.apiService.get('/regression/get_networking_artifacts/' + version).subscribe((data) => {
