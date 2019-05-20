@@ -1,6 +1,6 @@
 from lib.system.fun_test import fun_test
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
-import fun_global
+from datetime import datetime
 import re
 
 fio_perf_table_header = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
@@ -26,7 +26,7 @@ def post_results(volume, test, num_ssd, num_volumes, block_size, io_depth, size,
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    db_log_time = fun_global.get_current_time()
+    db_log_time = datetime.now()
 
     blt = BltVolumePerformanceHelper()
     blt.add_entry(date_time=db_log_time,

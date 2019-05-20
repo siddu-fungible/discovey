@@ -1,6 +1,5 @@
 from lib.system.fun_test import *
 from lib.fun.fs import Fs
-from datetime import datetime
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
@@ -74,6 +73,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = datetime.now()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["fs"] = self.fs
+        fun_test.shared_variables["syslog_level"] = self.syslog_level
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
@@ -411,12 +411,12 @@ class ECVolumeLevelTestcase(FunTestCase):
 class EC42FioSeqReadOnly(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="EC volume performance for sequential Read queries",
+                              summary="EC volume performance for sequential Read queries with different IO DEPTH NVME/TCP fabric",
                               steps="""
         1. Create 6 BLT volumes on dut instance.
         2. Create a 4:2 EC volume on top of the 6 BLT volumes.
         3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface. 
+        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the NVME/TCP interface. 
         5. Run the FIO sequential read only test(without verify) for required block size and IO depth from the 
         EP host and check the performance are inline with the expected threshold.
         """)
@@ -434,12 +434,12 @@ class EC42FioSeqReadOnly(ECVolumeLevelTestcase):
 class EC42FioRandReadOnly(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="EC volume performance for random read only queries",
+                              summary="EC volume performance for random read queries with different IO DEPTH NVME/TCP fabric",
                               steps="""
         1. Create 6 BLT volumes in dut instance.
         2. Create a 4:2 EC volume on top of the 6 BLT volumes.
         3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface.
+        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the NVME/TCP interface.
         5. Run the FIO random read only test(without verify) for required block size and IO depth from the 
         EP host and check the performance are inline with the expected threshold.
         """)

@@ -48,8 +48,8 @@
     },
     "write_fio_cmd_args": {
       "bs": "4k",
-      "iodepth": 1,
-      "size": "25G",
+      "iodepth": 8,
+      "size": "100%",
       "rw": "write",
       "direct": 1,
       "prio": 0,
@@ -63,10 +63,10 @@
     ],
     "read_fio_cmd_args": {
       "bs": "4k",
-      "numjobs": 1,
+      "numjobs": 8,
       "cpumask": 1,
-      "iodepth": 19,
-      "size": "25G",
+      "iodepth": 2,
+      "size": "100%",
       "rw": "read",
       "name": "ec_fio_25G",
       "direct": 1,
@@ -85,7 +85,6 @@
       "timeout": 720,
       "buffer_pattern": "0xdeadbeef"
     },
-    // Todo Get Expected Performance numbers
     "command_timeout": 30,
     "nvme_device": "/dev/nvme",
     "test_parameters": [
@@ -149,8 +148,8 @@
     },
     "write_fio_cmd_args": {
       "bs": "4k",
-      "iodepth": 1,
-      "size": "25G",
+      "iodepth": 8,
+      "size": "100%",
       "rw": "write",
       "direct": 1,
       "prio": 0,
@@ -186,7 +185,6 @@
       "timeout": 720,
       "buffer_pattern": "0xdeadbeef"
     },
-    // Todo Get Expected Performance numbers
     "command_timeout": 30,
     "nvme_device": "/dev/nvme",
     "test_parameters": [
