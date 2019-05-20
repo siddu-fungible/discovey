@@ -77,7 +77,7 @@
         </tr>
         <tr *ngFor="let triage of triages">
           <td>
-            <a href="/triaging/{{ triage.triage_id }}" target="_blank">Details</a>
+            <a href="/regression/triaging/{{ triage.triage_id }}" target="_blank">Details</a>
           </td>
           <td>
             <ng-container *ngIf="triage.status > triagingStringToCodeMap['COMPLETED']">

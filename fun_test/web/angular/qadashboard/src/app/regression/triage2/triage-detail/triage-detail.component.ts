@@ -3,9 +3,9 @@ import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {TriageService} from "../triage.service";
-import {CommonService} from "../../services/common/common.service";
-import {LoggerService} from "../../services/logger/logger.service";
-import {ApiService} from "../../services/api/api.service";
+import {CommonService} from "../../../services/common/common.service";
+import {LoggerService} from "../../../services/logger/logger.service";
+import {ApiService} from "../../../services/api/api.service";
 
 class CommitNode {
   funOsSha: string;

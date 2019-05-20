@@ -58,9 +58,9 @@ import { TestBedComponent } from './regression/test-bed/test-bed.component';
 import { JirasComponent } from './regression/jiras/jiras.component';
 import { JobSpecComponent } from './regression/job-spec/job-spec.component';
 import { JsonInputComponent } from './ui-elements/json-input/json-input.component';
-import { Triage2Component } from './triage2/triage2.component';
+import { Triage2Component } from './regression/triage2/triage2.component';
 import { JenkinsFormComponent } from './jenkins-form/jenkins-form.component';
-import { TriageDetailComponent } from './triage2/triage-detail/triage-detail.component';
+import { TriageDetailComponent } from './regression/triage2/triage-detail/triage-detail.component';
 
 @NgModule({
   declarations: [
