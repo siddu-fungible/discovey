@@ -86,8 +86,8 @@ class TcpPerformance(FunTestScript):
         syslog = network_controller_obj.set_syslog_level(level=2)
         fun_test.simple_assert(syslog, "Set syslog level to 2")
 
-        # exec_app = network_controller_obj.execute_app(name=app)
-        # fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
+        exec_app = network_controller_obj.execute_app(name=app)
+        fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
 
         # Fetch hosts details
         host1_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name1)
@@ -167,7 +167,6 @@ class TcpPerformance1Conn(FunTestCase):
     def run(self):
         host1_obj = fun_test.shared_variables['host1_obj']
         mpstat_obj = copy.deepcopy(host1_obj)
-        host1_username = fun_test.shared_variables['host1_username']
 
         test_parameters = {'dest_ip': '29.1.1.2', 'protocol': 'tcp', 'num_flows': self.num_flows,
                            'duration': self.duration, 'port1': 1000, 'port2': 4555, 'send_size': '128K'}
@@ -193,8 +192,7 @@ class TcpPerformance1Conn(FunTestCase):
         checkpoint = "Start tcpdump capture in background before starting traffic"
         interface_name = get_interface_name(file_path=setup_fpg1_filepath)
         tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.pcap'
-        tcpdump_output_file = "/home/%s/%s/%s" % (host1_username, "netperf_teramark_capture",
-                                                  tcpdump_temp_filename)
+        tcpdump_output_file = fun_test.get_temp_file_path(file_name=tcpdump_temp_filename)
         result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
                                      count=100000, filecount=1)
         fun_test.simple_assert(result, checkpoint)
@@ -231,11 +229,11 @@ class TcpPerformance1Conn(FunTestCase):
         # Scp mpstat json to LOGS dir
         if use_mpstat:
             populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_obj,
-                                        dump_filename=mpstat_temp_filename)
+                                        dump_filename=mpstat_temp_filename, version=version, num_flows=self.num_flows,
+                                        host_name=host_name1)
 
-        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.txt'
-        populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename)
-        fun_test.sleep("Letting file to be scp", seconds=2)
+        populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename, version=version, num_flows=self.num_flows,
+                                       host_name=host_name1, host_obj=host1_obj, source_file_path=tcpdump_output_file)
 
         fun_test.log("Capture netstat after traffic")
         netstat_2 = get_netstat_output(linux_obj=host1_obj)
@@ -243,7 +241,8 @@ class TcpPerformance1Conn(FunTestCase):
         # Get diff stats
         netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '_netstat.txt'
         diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
+                                                version=version, num_flows=self.num_flows, host_name=host_name1)
         fun_test.test_assert(populate, "Populate netstat into txt file")
 
         # Parse output to get json
@@ -326,7 +325,7 @@ class TcpPerformance16Conn2Host(FunTestCase):
         stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name1, stale_connections))
 
-        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
+        stale_connections = get_stale_socket_connections(linux_obj=host2_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name2, stale_connections))
 
         checkpoint = "Copy setup file %s to %s" % (setup_fpg1_file, host_name1)
@@ -370,9 +369,6 @@ class TcpPerformance16Conn2Host(FunTestCase):
 
         host2_obj = fun_test.shared_variables['host2_obj']
 
-        host1_username = fun_test.shared_variables['host1_username']
-        host2_username = fun_test.shared_variables['host2_username']
-
         test_parameters = {'dest_ip': '29.1.1.2', 'protocol': 'tcp', 'num_flows': self.num_flows,
                            'duration': self.duration, 'port1': 1000, 'port2': 4555, 'send_size': '128K'}
 
@@ -391,7 +387,7 @@ class TcpPerformance16Conn2Host(FunTestCase):
         # Start mpstat
         # TODO: For now we capture mpstat only on poc-server-06 and not on nu-lab-04.
         version = fun_test.get_version()
-        mpstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_mpstat.txt' % (host_name1)
+        mpstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_mpstat.txt' % host_name1
         mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
         if use_mpstat:
             fun_test.log("Starting to run mpstat command")
@@ -400,13 +396,11 @@ class TcpPerformance16Conn2Host(FunTestCase):
             fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command")
 
-        # TODO: revisit tcpdump file creation after John's reply
         checkpoint = "Start tcpdump capture in background before starting traffic on %s" % host_name1
         interface_name = get_interface_name(file_path=setup_fpg1_filepath)
         tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name1
-        tcpdump_output_file = "/home/%s/%s/%s" % (host1_username, "netperf_teramark_capture",
-                                                  tcpdump_temp_filename)
-        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
+        tcpdump_output_file1 = fun_test.get_temp_file_path(file_name=tcpdump_temp_filename)
+        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file1,
                                      count=100000, filecount=1)
         fun_test.simple_assert(result, checkpoint)
         fun_test.shared_variables['tcpdump_pid1'] = result
@@ -414,9 +408,8 @@ class TcpPerformance16Conn2Host(FunTestCase):
         checkpoint = "Start tcpdump capture in background before starting traffic on %s" % host_name2
         interface_name = get_interface_name(file_path=setup_fpg0_filepath)
         tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name2
-        tcpdump_output_file = "/home/%s/%s/%s" % (host2_username, "netperf_teramark_capture",
-                                                  tcpdump_temp_filename)
-        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
+        tcpdump_output_file2 = fun_test.get_temp_file_path(file_name=tcpdump_temp_filename)
+        result = run_tcpdump_command(linux_obj=host1_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file2,
                                      count=100000, filecount=1)
         fun_test.simple_assert(result, checkpoint)
         fun_test.shared_variables['tcpdump_pid2'] = result
@@ -460,11 +453,18 @@ class TcpPerformance16Conn2Host(FunTestCase):
         # Scp mpstat json to LOGS dir
         if use_mpstat:
             populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_host1_obj,
-                                        dump_filename=mpstat_temp_filename)
+                                        dump_filename=mpstat_temp_filename, host_name=host_name1, version=version,
+                                        num_flows=self.num_flows)
 
-        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '_tcpdump.txt'
-        populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename)
-        fun_test.sleep("Letting file to be scp", seconds=2)
+        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name1
+        populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename, host_name=host_name1,
+                                       source_file_path=tcpdump_output_file1, version=version,
+                                       num_flows=self.num_flows, host_obj=host1_obj)
+
+        tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name2
+        populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename, host_name=host_name2,
+                                       source_file_path=tcpdump_output_file2, version=version,
+                                       num_flows=self.num_flows, host_obj=host2_obj)
 
         checkpoint = "Capture netstat after traffic on %s" % host_name1
         netstat_host1_after = get_netstat_output(linux_obj=host1_obj)
@@ -477,13 +477,15 @@ class TcpPerformance16Conn2Host(FunTestCase):
         checkpoint = "Populate Netstat diff output file captured on %s" % host_name1
         netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_netstat.txt' % host_name1
         diff_netstat = get_diff_stats(old_stats=netstat_host1_before, new_stats=netstat_host1_after)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
+                                                host_name=host_name1, version=version, num_flows=self.num_flows)
         fun_test.test_assert(populate, checkpoint)
 
         checkpoint = "Populate Netstat diff output file captured on %s" % host_name2
         netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_netstat.txt' % host_name2
         diff_netstat = get_diff_stats(old_stats=netstat_host2_before, new_stats=netstat_host2_after)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
+                                                host_name=host_name2, version=version, num_flows=self.num_flows)
         fun_test.test_assert(populate, checkpoint)
 
         # Parse output to get json
@@ -503,7 +505,7 @@ class TcpPerformance16Conn2Host(FunTestCase):
         stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name1, stale_connections))
 
-        stale_connections = get_stale_socket_connections(linux_obj=host1_obj, port_value=self.netperf_remote_port)
+        stale_connections = get_stale_socket_connections(linux_obj=host2_obj, port_value=self.netperf_remote_port)
         fun_test.log("Number of orphaned connections seen on %s are %s" % (host_name2, stale_connections))
 
         if 'tcpdump_pid1' in fun_test.shared_variables and 'tcpdump_pid2' in fun_test.shared_variables:
@@ -514,9 +516,9 @@ class TcpPerformance16Conn2Host(FunTestCase):
 if __name__ == '__main__':
     ts = TcpPerformance()
 
-    # ts.add_test_case(TcpPerformance1Conn())
-    # ts.add_test_case(TcpPerformance4Conn())
-    #v ts.add_test_case(TcpPerformance8Conn())
+    ts.add_test_case(TcpPerformance1Conn())
+    ts.add_test_case(TcpPerformance4Conn())
+    ts.add_test_case(TcpPerformance8Conn())
     ts.add_test_case(TcpPerformance16Conn2Host())
 
     ts.run()

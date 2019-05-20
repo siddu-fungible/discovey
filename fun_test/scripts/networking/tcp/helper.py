@@ -234,7 +234,7 @@ def create_interrupts_table(stat, key_name):
     return table_obj
 
 
-def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
+def populate_mpstat_output_file(output_file, linux_obj, dump_filename, num_flows, host_name, version):
     mpstat_dump_filepath = None
     try:
         contents = linux_obj.read_file(file_name=output_file, include_last_line=False)
@@ -259,13 +259,15 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
 
                 stats_table.add_row([stat['timestamp'], cpu_load_table, node_load_table])
                 interrupts_table.add_row([stat['timestamp'], sum_interrupts_table, soft_interrupts_table])
-
-        mpstat_dump_filepath = LOGS_DIR + "/%s" % dump_filename
+        mpstat_dump_filepath = fun_test.get_test_case_artifact_file_name(dump_filename)
         lines = ['<=======> Mpstat output <=======>\n', '\n<=======> Hosts MetaData <=======>\n',
                  hosts_table.get_string(), '\n<=======> Statistics <=======>\n', stats_table.get_string(),
                  '\n<=======> Interrupts <=======>\n', interrupts_table.get_string()]
         with open(mpstat_dump_filepath, 'w') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description='FunOS Version: %s Num Flows: %s Host: %s mpstat log' % (
+            version, num_flows, host_name), filename=mpstat_dump_filepath)
 
         fun_test.log_disable_timestamps()
         fun_test.log_section('Mpstats output')
@@ -278,17 +280,22 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
     return mpstat_dump_filepath
 
 
-def populate_tcpdump_redirect_file(dump_filename):
+def populate_tcpdump_redirect_file(dump_filename, source_file_path, host_obj, host_name, version, num_flows):
     mpstat_dump_filepath = None
     try:
-        contents = "To access the pcap file for this run. Log in to poc-server-06 (username: localadmin) and " \
-                   "cd to /home/localadmin/netperf_teramark_capture. " \
-                   "File name is <funos_version>_<no_of_conn>_tcpdump.pcap\n For e.g 6459_1_tcpdump.pcap"
-        tcpdump_dump_filepath = LOGS_DIR + "/%s" % dump_filename
-        with open(tcpdump_dump_filepath, 'w') as f:
-            f.writelines(contents)
+        target_file_name = fun_test.get_test_case_artifact_file_name(dump_filename)
+        file_transfer = fun_test.scp(source_file_path=source_file_path, source_ip=host_obj.host_ip,
+                                     source_username=host_obj.ssh_username, source_password=host_obj.ssh_password,
+                                     target_file_path=target_file_name, timeout=300)
+        fun_test.simple_assert(file_transfer, "scp pcap file from linux host to logs dir")
+        fun_test.sleep("Letting file to be scp", seconds=2)
+
+        fun_test.add_auxillary_file(description='FunOS Version: %s Num Flows: %s Host: %s tcpdump log' % (
+            version, num_flows, host_name), filename=target_file_name)
     except Exception as ex:
         fun_test.critical(str(ex))
+    finally:
+        host_obj.sudo_command(command="rm -rf %s" % source_file_path)
     return mpstat_dump_filepath
 
 
@@ -387,10 +394,9 @@ def get_diff_stats(old_stats, new_stats):
     return result
 
 
-def populate_netstat_output_file(diff_stats, filename):
+def populate_netstat_output_file(diff_stats, filename, version, host_name, num_flows):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         netstat_table = PrettyTable(diff_stats.keys())
         rows = []
         for key in diff_stats:
@@ -404,8 +410,14 @@ def populate_netstat_output_file(diff_stats, filename):
         netstat_table.add_row(rows)
 
         lines = ['<=======> Netstat output <=======>\n', netstat_table.get_string()]
+
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
         with open(file_path, 'w') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description='FunOS Version: %s Num Flows: %s Host: %s Netstat log' % (
+            version, num_flows, host_name), filename=file_path)
 
         fun_test.log_disable_timestamps()
         fun_test.log_section('Netstat diff output')
@@ -454,7 +466,6 @@ def inner_table_obj(result):
 def populate_flow_list_output_file(network_controller_obj, filename, max_time=20, display_output=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         master_table_obj = PrettyTable()
         master_table_obj.align = 'l'
         master_table_obj.header = False
@@ -471,8 +482,11 @@ def populate_flow_list_output_file(network_controller_obj, filename, max_time=20
                 lines.append(master_table_obj.get_string())
                 lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
 
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
         with open(file_path, 'w') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description='DPC Flow List stats', filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -525,7 +539,6 @@ def dma_resource_table(result):
 def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=20, display_output=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
@@ -537,8 +550,12 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, ma
             lines.append(master_table_obj.get_string())
             lines.append('\n\n\n')
 
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
         with open(file_path, 'a') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description='DPC Resource PC id %d stats' % pc_id, filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -588,7 +605,6 @@ def get_resource_bam_table(result):
 def populate_resource_bam_output_file(network_controller_obj, filename, max_time=20, display_output=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
@@ -600,8 +616,12 @@ def populate_resource_bam_output_file(network_controller_obj, filename, max_time
             lines.append(master_table_obj.get_string())
             lines.append('\n\n\n')
 
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
         with open(file_path, 'a') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description='DPC Resource BAM %d stats', filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -815,7 +835,7 @@ def create_performance_table(total_throughput, num_flows, total_pps):
     return table_created
 
 
-def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, cpu=1, duration=60):
+def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, cpu=1, duration=60, end_cps=None):
     result = {'max_cps': None, 'max_latency': None, 'avg_latency': None, 'status': False, 'summary_dict': None}
     output_file_path = fun_test.get_temp_file_path(file_name=fun_test.get_temp_file_name()) + ".txt"
     try:
@@ -828,6 +848,8 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
         resource_bam_file = str(version) + "_" + profile_name + '_resource_bam.txt'
         cps = base_cps
         while True:
+            if end_cps and cps >= end_cps:
+                break
             if max_cps_found:
                 break
             if count == 1:
@@ -897,7 +919,7 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
     except Exception as ex:
         fun_test.critical(str(ex))
     finally:
-        trex_obj.remove_file(file_name=output_file_path)
+        trex_obj.sudo_command(command="rm -rf %s" % output_file_path)
     return result
 
 
