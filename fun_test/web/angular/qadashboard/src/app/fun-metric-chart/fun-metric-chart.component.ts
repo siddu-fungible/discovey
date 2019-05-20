@@ -88,7 +88,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   maxExpected: number = null; // maximum value of all the 'expected' values of the datasets
   maxDataPoint: number = null; // maximum value of all the data points from all the datasets
   originalMaxDataPoint: number = null;//when the unit changes, restore to original max
+  minDataSet: number = null;
   yMax: number = null;
+  yMin: number = null;
   yAxisSet: any = new Set(); //to cehck for duplicates in the expected value so that the text is not overwritten
 
   baseLineDate: string = null;
@@ -332,7 +334,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let dateString = xDate.split('.')[0];
       key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
     }
-    catch(e) {
+    catch (e) {
       this.loggerService.error("Date on xAxis is empty for tooltip and point click call back");
     }
     return key;
@@ -410,9 +412,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.showAllExpectedValues = false;
     this.showSelect = false;
     this.yMax = null;
+    this.yMin = null;
     this.series = null;
     this.values = null;
     this.maxDataSet = null;
+    this.minDataSet = null;
     this.maxExpected = null;
     this.maxDataPoint = null;
     this.category = [];
@@ -775,6 +779,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     this.maxExpected = maximum;
     this.calculateMax();
+    this.calculateMin();
   }
 
   // calculate the yMax which is the maximum number of the display range on y axis
@@ -797,6 +802,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.yMax = null;
     }
     this.yMax = this.yMax + (Number(this.yMax) * 0.05);
+  }
+
+  // calculate the yMin which is the maximum number of the display range on y axis
+  calculateMin(): void {
+    if (this.minDataSet && this.minDataSet > 0) {
+      this.yMin = this.minDataSet;
+      // this.yMin = this.yMin - (Number(this.yMin) * 0.05);
+    } else {
+      this.yMin = null;
+    }
+
   }
 
   //fetch the data from backend
@@ -877,6 +893,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let seriesDates = [];
       this.expectedValues = [];
       this.maxDataSet = null;
+      this.minDataSet = null;
       this.maxExpected = null;
       this.maxDataPoint = null;
       this.yMax = null;
@@ -963,6 +980,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             this.maxDataSet = thisMaximum;
           }
         }
+        if (this.minDataSet === null && thisMinimum > 0) {
+          this.minDataSet = thisMinimum;
+        } else {
+          if (thisMinimum > 0 && thisMinimum < this.minDataSet) {
+            this.minDataSet = thisMinimum;
+          }
+        }
         if (this.maxExpected === null) {
           this.maxExpected = expected;
         } else {
@@ -972,6 +996,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
       }
       this.calculateMax();
+      this.calculateMin();
       this.chart1YaxisTitle = this.visualizationUnit;
       this.series = seriesDates;
       this.values = chartDataSets.slice();
