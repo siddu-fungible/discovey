@@ -145,31 +145,31 @@
     "artifact_dir": "compression",
     "test_corpus": {
       "artificl": {
-        "orig_size": 311296,
+        "orig_size": 417792,
         "gzip_comp_pct": 71.18
       },
       "calgary": {
-        "orig_size": 3262788,
+        "orig_size": 3485696,
         "gzip_comp_pct": 61.67
       },
       "cantrbry": {
-        "orig_size": 2822079,
+        "orig_size": 2969600,
         "gzip_comp_pct": 69.02
       },
       "large": {
-        "orig_size": 11170777,
+        "orig_size": 11296768,
         "gzip_comp_pct": 64.66
       },
       "misc": {
-        "orig_size": 1019491,
+        "orig_size": 1093632,
         "gzip_comp_pct": 52.62
       },
       "silesia": {
-        "orig_size": 178396430,
+        "orig_size": 212619264,
         "gzip_comp_pct": 56.69
       },
       "enwik8": {
-        "orig_size": 100000000,
+        "orig_size": 100274176,
         "gzip_comp_pct": 63.45
       }
     }
