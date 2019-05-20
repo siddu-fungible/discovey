@@ -51,7 +51,7 @@ class Funeth:
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].command('export WORKSPACE=$WSTMP')
 
-    def update_src(self, parallel=True):
+    def update_src(self, parallel=False):
         """Update driver source."""
 
         def update_mirror(ws, repo, hu, **kwargs):
@@ -123,7 +123,7 @@ class Funeth:
 
         return result
 
-    def build(self, parallel=True):
+    def build(self, parallel=False):
         """Build driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         funsdkdir = os.path.join(self.ws, 'FunSDK')
