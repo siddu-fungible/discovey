@@ -1,0 +1,78 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# HU host
+hu:
+  hostname: cab02-qa-05
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu2-f0
+  vf_interface: hu2-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f0:
+            mac_addr: 00:de:ad:be:ef:21
+            ipv4_addr: 18.1.1.1
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 192.168.1.0/24
+          nexthop: 18.1.1.2
+hu2:
+  hostname: cab02-qa-06
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu1-f0
+  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu0-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 19.1.1.1
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 192.168.2.0/24
+        nexthop: 19.1.1.2
+
+hu3:
+  hostname: cab02-qa-07
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 8
+  pf_interface: hu0-f0
+  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu0-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 20.1.1.1
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 192.168.3.0/24
+        nexthop: 20.1.1.2
+
+hu4:
+  hostname: cab02-qa-08
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 8
+  pf_interface: hu1-f0
+  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+      - hu0-f0:
+          mac_addr: 00:de:ad:be:ef:11
+          ipv4_addr: 21.1.1.1
+          ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 192.168.4.0/24
+        nexthop: 21.1.1.2
