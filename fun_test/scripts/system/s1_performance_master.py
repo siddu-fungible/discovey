@@ -162,6 +162,6 @@ if __name__ == "__main__":
     myscript.add_test_case(AllocSpeedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyUngatedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceS1Tc())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
