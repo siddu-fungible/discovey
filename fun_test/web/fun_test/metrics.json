@@ -116,6 +116,14 @@
                         "name": "funtcp_server_throughput_8tcp",
                         "weight": 1,
                         "label": "8 TCP Flow(s)"
+                      },
+                      {
+                        "info": "funtcp_server_throughput_16tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_16tcp",
+                        "weight": 1,
+                        "label": "16 TCP Flow(s)"
                       }
                     ]
                   },
