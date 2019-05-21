@@ -96,6 +96,11 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
     tc_id = fun_test.current_test_case_id
     network_controller_objs = fun_test.shared_variables['network_controller_objs']
 
+    # funeth interface interrupts
+    funeth_obj = fun_test.shared_variables['funeth_obj']
+    for hu in funeth_obj.hu_hosts:
+        funeth_obj.get_interrupts(hu)
+
     # netstat
     fun_test.log("Capture netstat {} test".format(when))
     netstats_dict[when] = {}

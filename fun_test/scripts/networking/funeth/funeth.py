@@ -422,3 +422,14 @@ class Funeth:
     def ifup(self, intf, hu='hu'):
         """No shut interface."""
         self.linux_obj_dict[hu].command('sudo ip link set {} up'.format(intf))
+
+    def get_interrupts(self, nu_or_hu):
+        """Get HU host funeth interface interrupts."""
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))

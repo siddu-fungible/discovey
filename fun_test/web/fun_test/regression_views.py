@@ -158,6 +158,8 @@ def submit_job(request):
             environment = request_json["environment"]
         if "emails" in request_json:
             emails = request_json["emails"]
+        if "email_list" in request_json:
+            emails = request_json["email_list"]
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 

@@ -151,7 +151,7 @@ class RetrieveLogLinesCase1(FunTestCase):
         self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def validate_job(self, validation_required=True):
-        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
+        job_info = self.lsf_status_server.get_last_job(tag="qa_rgx_nfa_runtime_sanity")
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
@@ -210,7 +210,7 @@ class RetrieveLogLinesCase2(FunTestCase):
         self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def validate_job(self, validation_required=True):
-        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
+        job_info = self.lsf_status_server.get_last_job(tag="qa_rgx_dfa_runtime_sanity")
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
@@ -269,7 +269,7 @@ class RetrieveLogLinesCase3(FunTestCase):
         self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def validate_job(self, validation_required=True):
-        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
+        job_info = self.lsf_status_server.get_last_job(tag="qa_rgx_software_runtime_sanity")
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]

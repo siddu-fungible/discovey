@@ -299,7 +299,7 @@ def get_send_size(protocol, frame_size):
 
 def calculate_ethernet_throughput(protocol, frame_size, payload_throughput):
     send_size = get_send_size(protocol, frame_size)
-    return round(payload_throughput / (float(send_size) / frame_size), 3)
+    return round(payload_throughput / (float(send_size) / (frame_size+20)), 3)  # IPG 20B
 
 
 def calculate_pps(protocol, frame_size, throughput):
