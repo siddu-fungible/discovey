@@ -146,6 +146,8 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         try:
             with open(json_file_name, "w") as f:
                 json.dump(counter_dict, f, indent=4, default=str)
+
+            fun_test.add_auxillary_file(description="Counters file", filename=json_file_name)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
