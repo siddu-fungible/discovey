@@ -44,9 +44,11 @@
 
   <div class="card">
     <div class="card-header">
-      Trials
+      Trials&nbsp;
+      <span>&nbsp;&nbsp;Show all commits: &nbsp;&nbsp;</span>
+      <input class="" id="show_all" type="checkbox" [checked]="showAll" [(ngModel)]="showAll">
     </div>
-    <div class="card-body">
+      <div class="card-body">
       <table class="table table-responsive">
         <tr>
           <th></th>
@@ -79,9 +81,15 @@
             <td>{{ commit.trialSetId }}</td>
             <td><app-smart-label [value]="triagingTrialStateMap[commit.status]"></app-smart-label></td>
             <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
-            <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ trial.lsfJobId }}" target="_blank">link</a></td>
+            <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ commit.lsfJobId }}" target="_blank">link</a></td>
             <td>{{ commit.tag }}</td>
-            <td>{{ commit.regexMatch }}</td>
+
+            <td>
+              <ng-container>
+              </ng-container>
+              {{ commit.regexMatch }}
+              <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+            </td>
           </ng-container>
 
         </tr>

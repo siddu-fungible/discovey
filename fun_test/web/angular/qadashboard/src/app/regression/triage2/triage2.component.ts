@@ -1,10 +1,10 @@
 import {Component, OnInit} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 import {TriageService} from "./triage.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
-import {UserService} from "../services/user/user.service";
+import {UserService} from "../../services/user/user.service";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 
 

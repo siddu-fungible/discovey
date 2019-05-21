@@ -4,6 +4,7 @@ from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
 from lib.system import utils
 from ec_perf_helper import *
+import fun_global
 
 
 class ECVolumeLevelScript(FunTestScript):
@@ -61,11 +62,11 @@ class ECVolumeLevelScript(FunTestScript):
 
             if fun_test.shared_variables["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
-                command_result = self.storage_controller.volume_detach_remote(ns_id=ns_id,
-                                                                              uuid=self.ec_info["attach_uuid"][0],
-                                                                              huid=self.huid,
-                                                                              ctlid=self.ctlid,
-                                                                              command_duration=self.command_timeout)
+                command_result = self.storage_controller.volume_detach_pcie(ns_id=ns_id,
+                                                                            uuid=self.ec_info["attach_uuid"][0],
+                                                                            huid=self.huid,
+                                                                            ctlid=self.ctlid,
+                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(0))
 

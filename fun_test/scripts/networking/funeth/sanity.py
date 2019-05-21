@@ -37,12 +37,12 @@ except (KeyError, ValueError):
 # Enable LSO or not
 try:
     inputs = fun_test.get_job_inputs()
-    if inputs and inputs.get('lso', 0):
+    if inputs and inputs.get('lso', 1):
         enable_tso = True
     else:
         enable_tso = False
 except:
-    enable_tso = False
+    enable_tso = True
 
 # Use control plane or not
 try:

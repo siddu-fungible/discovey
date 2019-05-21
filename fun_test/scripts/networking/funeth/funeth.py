@@ -29,15 +29,16 @@ class Funeth:
         self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
         self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
 
-    def lspci(self):
+    def lspci(self, check_pcie_width=True):
         """Do lspci to check funeth controller."""
         result = True
         for hu in self.hu_hosts:
             output = self.linux_obj_dict[hu].command('lspci -d 1dad:')
             result &= re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output) is not None
 
-            output = self.linux_obj_dict[hu].sudo_command('lspci -d 1dad: -vv | grep LnkSta')
-            result &= re.findall(r'Width x(\d+)', output) == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]*4
+            if check_pcie_width:
+                output = self.linux_obj_dict[hu].sudo_command('lspci -d 1dad: -vv | grep LnkSta')
+                result &= re.findall(r'Width x(\d+)', output) == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]*4
 
         return result
 
@@ -51,7 +52,7 @@ class Funeth:
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].command('export WORKSPACE=$WSTMP')
 
-    def update_src(self, parallel=True):
+    def update_src(self, parallel=False):
         """Update driver source."""
 
         def update_mirror(ws, repo, hu, **kwargs):
@@ -123,7 +124,7 @@ class Funeth:
 
         return result
 
-    def build(self, parallel=True):
+    def build(self, parallel=False):
         """Build driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         funsdkdir = os.path.join(self.ws, 'FunSDK')
@@ -421,3 +422,14 @@ class Funeth:
     def ifup(self, intf, hu='hu'):
         """No shut interface."""
         self.linux_obj_dict[hu].command('sudo ip link set {} up'.format(intf))
+
+    def get_interrupts(self, nu_or_hu):
+        """Get HU host funeth interface interrupts."""
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))

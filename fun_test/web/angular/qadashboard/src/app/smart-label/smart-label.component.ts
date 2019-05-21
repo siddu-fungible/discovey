@@ -21,13 +21,16 @@ export class SmartLabelComponent implements OnInit, OnChanges {
     if (this.type) {
       this.type = this.type.toLowerCase();
     } else {
-      if (this.value === "IN_PROGRESS") {
-        this.type = "info";
-      } else if (this.value === "COMPLETED" || this.value.toLowerCase() === "passed") {
-        this.type = "passed";
-      } else if (this.value.toLowerCase() === "failed" || this.value.toLowerCase() === "error") {
-        this.type = "failed";
+      if (this.value) {
+        if (this.value === "IN_PROGRESS") {
+          this.type = "info";
+        } else if (this.value === "COMPLETED" || this.value.toLowerCase() === "passed") {
+          this.type = "passed";
+        } else if (this.value.toLowerCase() === "failed" || this.value.toLowerCase() === "error") {
+          this.type = "failed";
+        }
       }
+
     }
   }
 

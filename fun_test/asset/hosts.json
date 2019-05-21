@@ -40,12 +40,22 @@
   "poc-server-08": {
     "host_ip": "poc-server-08",
     "ssh_username": "localadmin",
-    "ssh_password": "Precious1*"
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "poc-server-08-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "poc-server-09": {
     "host_ip": "poc-server-09",
     "ssh_username": "localadmin",
-    "ssh_password": "Precious1*"
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "poc-server-09-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "poc-server-10": {
     "host_ip": "poc-server-10",
