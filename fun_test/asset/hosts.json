@@ -82,5 +82,11 @@
     "host_ip": "nu-lab-04",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
+  },
+  "mktg-server-01": {
+    "host_ip": "mktg-server-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_name": "enp216s0"
   }
 }
