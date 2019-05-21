@@ -289,7 +289,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             if hasattr(self, "reboot_host") and self.reboot_host:
                 for end_host in self.end_host_list:
                     end_host.reboot(non_blocking=True)
-                fun_test.sleep("Server rebooting", 280)
+                fun_test.sleep("Server rebooting", 340)
         except:
             fun_test.log("Failure during reboot of host")
 
