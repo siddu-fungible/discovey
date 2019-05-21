@@ -69,8 +69,8 @@
               <input type="checkbox" [checked]="commit.selected" [(ngModel)]="commit.selected">
             </td>
             <td>{{ index + 1 }} &nbsp;
-              <ng-container *ngIf="commit.status <= 10 && commit.selectedForTrial">
-                <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit.trial)">Re-start</button>
+              <ng-container>
+                <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit)">{{ commit.status <= 10 && commit.selectedForTrial? "Re-start": "Start" }}</button>
               </ng-container>
             </td>
             <td>

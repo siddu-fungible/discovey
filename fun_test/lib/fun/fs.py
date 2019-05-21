@@ -194,13 +194,13 @@ class Bmc(Linux):
     def _get_boot_args_for_index(self, boot_args, f1_index):
         return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
 
-
     def u_boot_load_image(self,
                           index,
                           boot_args,
                           tftp_load_address="0xa800000080000000",
                           tftp_server=TFTP_SERVER_IP,
-                          tftp_image_path="funos-f1.stripped.gz"):
+                          tftp_image_path="funos-f1.stripped.gz",
+                          gateway_ip=None):
         result = None
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
 
@@ -209,21 +209,20 @@ class Bmc(Linux):
 
                             f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
-        tempip = self.host_ip.split('.')
-        tempip[3] = "1"
-        gatewayip = ".".join(tempip)
-        self.u_boot_command(command="setenv gatewayip %s" % gatewayip, timeout=10, expected=self.U_BOOT_F1_PROMPT,
-                            f1_index=index)
-        self.u_boot_command(command="setenv serverip 10.1.21.48", timeout=10, expected=self.U_BOOT_F1_PROMPT,
+
+        if gateway_ip:
+            self.u_boot_command(command="setenv gatewayip {}".format(gateway_ip), timeout=10, expected=self.U_BOOT_F1_PROMPT,
+                                f1_index=index)
+
+        self.u_boot_command(command="setenv serverip {}".format(TFTP_SERVER_IP), timeout=10, expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
         self.u_boot_command(
             command="setenv bootargs {}".format(
                 self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
-        # self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
-        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
+        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
 
         output = self.u_boot_command(
@@ -562,7 +561,8 @@ class Fs(object, ToDictMixin):
                  power_cycle_come=False,
                  disable_f1_index=None,
                  disable_uart_logger=None,
-                 f1_parameters=None):
+                 f1_parameters=None,
+                 gateway_ip=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -583,6 +583,7 @@ class Fs(object, ToDictMixin):
         self.disable_uart_logger = disable_uart_logger
         self.come_initialized = False
         self.f1_parameters = f1_parameters
+        self.gateway_ip = gateway_ip
 
     def reachability_check(self):
         # TODO
@@ -625,6 +626,7 @@ class Fs(object, ToDictMixin):
         bmc_spec = fs_spec["bmc"]
         fpga_spec = fs_spec["fpga"]
         come_spec = fs_spec["come"]
+        gateway_ip = fs_spec.get("gateway_ip", None)
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
@@ -638,6 +640,7 @@ class Fs(object, ToDictMixin):
                   boot_args=boot_args,
                   disable_f1_index=disable_f1_index,
                   disable_uart_logger=disable_uart_logger,
+                  gateway_ip=gateway_ip,
                   f1_parameters=f1_parameters)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
@@ -657,7 +660,7 @@ class Fs(object, ToDictMixin):
                 if f1_index in self.f1_parameters:
                     if "boot_args" in self.f1_parameters[f1_index]:
                         boot_args = self.f1_parameters[f1_index]["boot_args"]
-            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args), "U-Bootup f1: {} complete".format(f1_index))
+            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip), "U-Bootup f1: {} complete".format(f1_index))
             fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 

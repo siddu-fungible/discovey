@@ -1,4 +1,5 @@
 from web.web_global import api_safe_json_response
+from fun_global import get_current_time
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.metrics_models import Triage3, Triage3Trial, LastTriageId
 from web.fun_test.triaging_global import TriageTrialStates, TriagingStates, TriagingTypes
@@ -18,6 +19,13 @@ def trial_set(request, triage_id):
     t.current_trial_from_sha = from_fun_os_sha
     t.current_trial_to_sha = to_fun_os_sha
     t.save()
+
+
+def long_to_short_sha(long_sha):
+    return long_sha[:7]
+
+def get_trial_tag(base_tag, triage_id, fun_os_sha):  #TODO
+    return "{}_{}_{}".format(base_tag, triage_id, long_to_short_sha(fun_os_sha))
 
 @csrf_exempt
 @api_safe_json_response
@@ -46,6 +54,18 @@ def trials(request, triage_id, fun_os_sha):
                     triage.status = TriagingStates.IN_PROGRESS
                     triage.save()
                 first_trial.save()
+            else:
+                request_json = json.loads(request.body)
+                t = Triage3.objects.get(triage_id=triage_id)
+                fun_os_sha = request_json["fun_os_sha"]
+                trial = Triage3Trial(fun_os_sha=fun_os_sha,
+                                     triage_id=triage_id,
+                                     trial_set_id=t.current_trial_set_id,
+                                     status=TriagingStates.INIT,
+                                     submission_date_time=get_current_time())
+                trial_tag = get_trial_tag(base_tag="qa_triage", triage_id=triage_id, fun_os_sha=fun_os_sha)
+                trial.tag = trial_tag
+                trial.save()
     elif request.method == "GET":
         q = Q(triage_id=triage_id)
         if fun_os_sha:
