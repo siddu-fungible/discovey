@@ -136,7 +136,7 @@ class TBConfigs:
         """
         if ns is None:
             ns = 'default'
-        return self.configs[nu_or_hu]['namespaces'][ns]['routes']
+        return self.configs[nu_or_hu]['namespaces'][ns].get('routes', [])
 
     def get_arps(self, nu_or_hu, ns):
         """Get arp entries.
@@ -147,4 +147,4 @@ class TBConfigs:
         """
         if ns is None:
             ns = 'default'
-        return self.configs[nu_or_hu]['namespaces'][ns]['arps']
+        return self.configs[nu_or_hu]['namespaces'][ns].get('arps', [])
