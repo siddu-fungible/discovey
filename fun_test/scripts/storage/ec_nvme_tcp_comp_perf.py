@@ -211,8 +211,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
-            (ec_config_status, self.ec_info) = self.end_host.configure_ec_volume(self.storage_controller, self.ec_info,
-                                                                                 self.command_timeout)
+            (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                           self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
             fun_test.log("EC details after configuring EC Volume:")
@@ -390,7 +390,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 class EC42NvmeTcpPerf(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="EC volume performance for sequential Read queries",
+                              summary="EC volume performance for sequential and random read queries",
                               steps="""
         1. Create 6 BLT volumes on dut instance.
         2. Create a 4:2 EC volume on top of the 6 BLT volumes.
@@ -398,6 +398,7 @@ class EC42NvmeTcpPerf(ECVolumeLevelTestcase):
         4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the NVME/TCP interface. 
         5. Run the FIO sequential read only test(without verify) for required block size and IO depth from the 
         EP host and check the performance are inline with the expected threshold.
+        6. Repeat step 5 for random read queries and log the result.
         """)
 
     def setup(self):

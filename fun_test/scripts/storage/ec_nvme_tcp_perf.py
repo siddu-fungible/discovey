@@ -162,9 +162,8 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
-                self.end_host.unconfigure_ec_volume(storage_controller=self.storage_controller,
-                                                    ec_info=self.ec_info,
-                                                    command_timeout=self.command_timeout)
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
         self.storage_controller.disconnect()
@@ -227,8 +226,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
-            (ec_config_status, self.ec_info) = self.end_host.configure_ec_volume(self.storage_controller, self.ec_info,
-                                                                                 self.command_timeout)
+            (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                           self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
             fun_test.log("EC details after configuring EC Volume:")
