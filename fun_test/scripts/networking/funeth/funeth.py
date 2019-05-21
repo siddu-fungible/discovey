@@ -82,7 +82,7 @@ class Funeth:
 
         def _update_src(linux_obj):
             sdkdir = os.path.join(self.ws, 'FunSDK')
-            linux_obj.command('sudo rm -rf {}'.format(self.ws))
+            linux_obj.sudo_command('rm -rf {}'.format(self.ws))
             linux_obj.create_directory(self.ws, sudo=False)
 
             update_mirror(self.ws, 'fungible-host-drivers', hu)
