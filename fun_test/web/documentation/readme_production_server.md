@@ -73,6 +73,7 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo i
 # cd web/angular/qadashboard/
 # npm install
 # ng build --prod  --output-hashing none
+# cd ../../
 # nohup python web/start_production_server.py &> server.out  &
 ~~~~
 
