@@ -63,6 +63,12 @@ Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
 qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo iptables -i enp3s0f0 -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
 ~~~~
 
+## SSH settings
+~~~~
+qa-admin@qa-ubuntu-01:~$ grep Client /etc/ssh/sshd_config 
+ClientAliveInterval 1200
+ClientAliveCountMax 3
+~~~~
 
 ## Starting the web-server
 ~~~~
@@ -73,6 +79,7 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo i
 # cd web/angular/qadashboard/
 # npm install
 # ng build --prod  --output-hashing none
+# cd ../../../
 # nohup python web/start_production_server.py &> server.out  &
 ~~~~
 

@@ -59,6 +59,8 @@ hu:
           nexthop: 53.1.1.254
         - prefix: 21.1.1.0/24
           nexthop: 53.1.1.254
+        - prefix: 54.1.1.0/24
+          nexthop: 53.1.1.254
       arps:
         - ipv4_addr: 53.1.1.4
           mac_addr: 00:de:ad:be:ef:21
@@ -82,6 +84,8 @@ hu2:
         - prefix: 20.1.1.0/24
           nexthop: 53.1.1.254
         - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.254
+        - prefix: 54.1.1.0/24
           nexthop: 53.1.1.254
       arps:
         - ipv4_addr: 53.1.1.1
@@ -118,7 +122,7 @@ hu2:
 #    default:
 #      interfaces:
 #        - hu3-f0:
-#            mac_addr: 00:de:ad:be:ef:11
+#            mac_addr: 00:de:ad:be:ef:31
 #            ipv4_addr: 54.1.1.4
 #            ipv4_netmask: 255.255.255.0
 #      routes:

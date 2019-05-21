@@ -483,7 +483,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                                                               unit_dict=unit_dict)
                             fun_test.add_checkpoint("Entry added for frame size %s to model %s" % (frame_size, model_name))
             if update_json:
-                file_path = LOGS_DIR + "/%s" % file_name
+                file_path = fun_test.get_test_case_artifact_file_name(post_fix_name=file_name)
                 contents = self._parse_file_to_json_in_order(file_name=file_path)
                 if contents:
                     append_new_results = contents + results
