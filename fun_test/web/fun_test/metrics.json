@@ -2711,6 +2711,14 @@
                             "name": "read_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "read_qd128_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd128_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=128"
                           }
                         ]
                       },
@@ -2777,6 +2785,14 @@
                             "name": "rand_read_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "rand_read_qd128_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd128_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=128"
                           }
                         ]
                       }
