@@ -336,7 +336,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
             one_entry.save()
             try:
-                fun_test.log("Entering the jenkins job id map entry")
+                fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
                 completion_date = timezone.localtime(date_time)
                 completion_date = str(completion_date).split(":")
                 completion_date = completion_date[0] + ":" + completion_date[1]
