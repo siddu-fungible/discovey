@@ -463,7 +463,7 @@ def inner_table_obj(result):
     return table_obj
 
 
-def populate_flow_list_output_file(network_controller_obj, filename, max_time=20, display_output=False):
+def populate_flow_list_output_file(network_controller_obj, filename, max_time=10, display_output=False):
     output = False
     try:
         master_table_obj = PrettyTable()
@@ -472,7 +472,7 @@ def populate_flow_list_output_file(network_controller_obj, filename, max_time=20
         timer = FunTimer(max_time=max_time)
         lines = list()
         while not timer.is_expired():
-            fun_test.sleep('Get flow list', seconds=5)
+            fun_test.sleep('Get flow list', seconds=1)
             result = network_controller_obj.get_flow_list()['data']
             if result:
                 for key in sorted(result):
@@ -485,7 +485,6 @@ def populate_flow_list_output_file(network_controller_obj, filename, max_time=20
         file_path = fun_test.get_test_case_artifact_file_name(filename)
         with open(file_path, 'w') as f:
             f.writelines(lines)
-
         fun_test.add_auxillary_file(description='DPC Flow List stats', filename=file_path)
 
         if display_output:
@@ -536,13 +535,13 @@ def dma_resource_table(result):
     return table_obj
 
 
-def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=20, display_output=False):
+def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=10, display_output=False):
     output = False
     try:
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
-            fun_test.sleep(message="Peek stats resource pc %d" % pc_id, seconds=5)
+            fun_test.sleep(message="Peek stats resource pc %d" % pc_id, seconds=1)
 
             result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
             master_table_obj = get_nested_dict_stats(result=result)
@@ -602,13 +601,13 @@ def get_resource_bam_table(result):
     return table_obj
 
 
-def populate_resource_bam_output_file(network_controller_obj, filename, max_time=20, display_output=False):
+def populate_resource_bam_output_file(network_controller_obj, filename, max_time=10, display_output=False):
     output = False
     try:
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
-            fun_test.sleep(message="Peek stats resource BAM", seconds=5)
+            fun_test.sleep(message="Peek stats resource BAM", seconds=1)
 
             result = network_controller_obj.peek_resource_bam_stats()
             master_table_obj = get_resource_bam_table(result=result)
@@ -704,15 +703,26 @@ def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=Fa
         resource_pc_file = str(version) + "_" + str(num_flows) + '_resource_pc.txt'
         resource_bam_file = str(version) + "_" + str(num_flows) + '_resource_bam.txt'
 
+        # No need to add more task for dpcsh command instead start a thread after few secs of traffic to collect
+        # dpcsh output
+        '''
         multi_task_obj.add_task(func=run_dpcsh_commands,
                                 func_args=(network_controller_obj, flow_list_file, resource_bam_file,
                                            resource_pc_file, display_output),
                                 task_key='')
+        '''
 
-        run_started = multi_task_obj.run(max_parallel_processes=total_netperf_processes + 1, parallel=True)
+        thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=run_dpcsh_commands,
+                                                  network_controller_obj=network_controller_obj,
+                                                  flow_list_file=flow_list_file, resource_bam_file=resource_bam_file,
+                                                  resource_pc_file=resource_pc_file, display_output=display_output)
+
+        run_started = multi_task_obj.run(max_parallel_processes=total_netperf_processes, parallel=True)
         fun_test.test_assert(run_started, "Ensure netperf commands started")
 
-        for index in range(1, total_netperf_processes + 1):
+        fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=5)
+
+        for index in range(1, total_netperf_processes):
             task_key = 'conn_%d' % index
             res = multi_task_obj.get_result(task_key=task_key)
             result[task_key] = res
@@ -841,7 +851,8 @@ def create_performance_table(total_throughput, num_flows, total_pps):
     return table_created
 
 
-def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, cpu=1, duration=60, end_cps=None):
+def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, increment_count,
+                            cpu=1, duration=60, end_cps=None):
     result = {'max_cps': None, 'max_latency': None, 'avg_latency': None, 'status': False, 'summary_dict': None}
     output_file_path = fun_test.get_temp_file_path(file_name=fun_test.get_temp_file_name()) + ".txt"
     try:
@@ -861,10 +872,7 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
             if count == 1:
                 cps = base_cps
             else:
-                if cps in range(0, 800):
-                    cps = cps + 100
-                elif cps >= 800:
-                    cps = cps + 50
+                cps += increment_count
 
             fun_test.log_section("Find Max CPS and latency for %s. Base CPS Given: %d "
                                  "Current iteration count: %d Current CPS value: %d" % (profile_name,
