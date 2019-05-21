@@ -1908,6 +1908,6 @@ if __name__ == "__main__":
     myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTC())
     myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTC())
     myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTC())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
