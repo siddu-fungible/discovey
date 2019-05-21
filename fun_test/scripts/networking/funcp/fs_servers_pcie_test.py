@@ -52,16 +52,6 @@ class VerifySetup(FunTestCase):
                                                           "--serial --dpc-uart --dis-stats retimer=0 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=3 --mgmt")
-        f1_0_boot_args = "app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server --serial --dpc-uart --dis-stats " \
-                         "retimer=0 --mgmt"
-        f1_1_boot_args = "app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server --serial --dpc-uart --dis-stats " \
-                         "retimer=0 --mgmt"
-
-        topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=0,
-                                           f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                          1: {"boot_args": f1_1_boot_args}}
-                                           )
 
         t_end = time.time() + 60 * 120
 
@@ -71,10 +61,8 @@ class VerifySetup(FunTestCase):
         for server in servers_mode:
             final_result[server] = {"success": 0, "incomplete": 0, "failure": 0}
         while time.time() < t_end:
-            # fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False),
-            #                      message="Boot F1s")
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
+            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, reboot_come=False),
+                                 message="Boot F1s")
 
             for server in servers_mode:
                 print server
