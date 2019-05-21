@@ -41,8 +41,8 @@ class BringupSetup(FunTestCase):
         #cmukherjee/funos-f1.stripped.gz
         # Working FunCP - cmukherjee/funos-f1.stripped.gz
         fs_name = "fs-45"
-        funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_image_f1_0="ysingh/funos-f1.stripped_19may.gz",
-                                           boot_image_f1_1="ysingh/funos-f1.stripped_19may.gz",
+        funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_image_f1_0="cmukherjee/funos-f1.stripped.gz",
+                                           boot_image_f1_1="cmukherjee/funos-f1.stripped.gz",
                                            boot_args_f1_0="app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=0 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
@@ -55,13 +55,14 @@ class BringupSetup(FunTestCase):
         servers_mode = server_key["fs"][fs_name]
         for server in servers_mode:
             print server
-            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server])
+            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
             fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                      % server)
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs("FS45")
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
+        setup_hu_host(funeth_obj, update_driver=True)
         # funcp_obj.prepare_come_for_control_plane()
 
         # Bringup FunCP
@@ -77,8 +78,6 @@ class BringupSetup(FunTestCase):
 
 
 
-        # HU host
-        setup_hu_host(funeth_obj, update_driver=True)
 
 
     def cleanup(self):
