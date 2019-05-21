@@ -425,7 +425,7 @@ if __name__ == "__main_128_tcp__":
                     platform=FunPlatform.F1).save()
     print "added random write raw block nvmetcp"
 
-if __name__ == "__main__":
+if __name__ == "__main_128_pcie__":
     internal_chart_names = ["read_qd128_pcie_output_latency", "rand_read_qd128_pcie_output_latency"]
     chart_name = "Latency, QDepth=128"
     for internal_chart_name in internal_chart_names:
@@ -479,6 +479,28 @@ if __name__ == "__main__":
         chart.save()
     print "added charts for qd128 raw block pcie"
 
-
-
-
+if __name__ == "__main__":
+    model_names = ["WuDispatchTestPerformance", "WuSendSpeedTestPerformance", "FunMagentPerformanceTest",
+                   "WuStackSpeedTestPerformance", "SoakFunMallocPerformance", "SoakClassicMallocPerformance",
+                   "BcopyFloodDmaPerformance", "BcopyPerformance", "AllocSpeedPerformance", "WuLatencyUngated",
+                   "WuLatencyAllocStack"]
+    for model_name in model_names:
+        app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+        metric_model = app_config.get_metric_models()[model_name]
+        entries = metric_model.objects.filter(input_platform=FunPlatform.S1)
+        print len(entries), model_name
+        entries.delete()
+        print len(entries), model_name
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if chart.internal_chart_name.endswith('_S1'):
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["output"]["min"] = 0
+                data_set["output"]["max"] = -1
+                data_set["output"]["expected"] = -1
+                data_set["output"]["reference"] = -1
+                data_set["output"]["unit"] = chart.visualization_unit
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+            print "chart name is: {}".format(chart.chart_name)
