@@ -662,10 +662,10 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).cleanup()
 
 
-class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
+class SequentialWrite1024kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Inspur TC 8.11.2: 1024k data block sequential read/write IOPS performance"
+                              summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
                                       "of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -675,20 +675,20 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
         7. Run warm-up traffic using FIO
-        8. Run the Performance for 1024k transfer size Sequential read/write IOPS
+        8. Run the Performance for 1024k transfer size Sequential write IOPS
         """)
 
     def setup(self):
-        super(SequentialReadWrite1024kBlocks, self).setup()
+        super(SequentialWrite1024kBlocks, self).setup()
 
     def run(self):
-        super(SequentialReadWrite1024kBlocks, self).run()
+        super(SequentialWrite1024kBlocks, self).run()
 
     def cleanup(self):
-        super(SequentialReadWrite1024kBlocks, self).cleanup()
+        super(SequentialWrite1024kBlocks, self).cleanup()
 
 
-class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
+class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
                               summary="Inspur TC 8.11.3: Integrated  model read/write IOPS performance of EC volume",
@@ -704,13 +704,13 @@ class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(IntegratedModelReadWriteIOPS, self).setup()
+        super(MixedRandReadWriteIOPS, self).setup()
 
     def run(self):
-        super(IntegratedModelReadWriteIOPS, self).run()
+        super(MixedRandReadWriteIOPS, self).run()
 
     def cleanup(self):
-        super(IntegratedModelReadWriteIOPS, self).cleanup()
+        super(MixedRandReadWriteIOPS, self).cleanup()
 
 
 class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
@@ -791,8 +791,8 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    ecscript.add_test_case(SequentialWrite1024kBlocks())
+    ecscript.add_test_case(MixedRandReadWriteIOPS())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
     # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
