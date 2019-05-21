@@ -691,7 +691,7 @@ class SequentialWrite1024kBlocks(ECVolumeLevelTestcase):
 class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Inspur TC 8.11.3: Integrated  model read/write IOPS performance of EC volume",
+                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
