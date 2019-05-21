@@ -155,9 +155,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.storage_controller.delete_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
                                                           command_duration=self.command_timeout)
                 # Unconfiguring all the LSV/EC and it's plex volumes
-                self.end_host.unconfigure_ec_volume(storage_controller=self.storage_controller,
-                                                    ec_info=self.ec_info,
-                                                    command_timeout=self.command_timeout)
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
         self.storage_controller.disconnect()
