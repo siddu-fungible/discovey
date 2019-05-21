@@ -1,6 +1,5 @@
 from lib.system.fun_test import *
 from lib.fun.fs import Fs
-from datetime import datetime
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.system import utils
@@ -75,6 +74,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["topology"] = topology
+        fun_test.shared_variables["db_log_time"] = datetime.now()
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
@@ -138,6 +138,7 @@ class ECVolumeLevelScript(FunTestScript):
             remote_ip = fun_test.shared_variables["remote_ip"]
             attach_transport = fun_test.shared_variables["attach_transport"]
             attach_ns_id = fun_test.shared_variables["ns_id"]
+            self.storage_controller = fun_test.shared_variables["storage_controller"]
             if fun_test.shared_variables["ec"]["setup_created"]:
                 for num in xrange(ec_info["num_volumes"]):
                     command_result = self.storage_controller.volume_detach_remote(ns_id=attach_ns_id,
@@ -365,8 +366,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                             row_data_list.append(row_data_dict[i])
                     table_data_rows.append(row_data_list)
                     if fun_global.is_production_mode():
-                        post_results("EC42_CompressionVol", testcase, fun_test.shared_variables['num_ssd'],
-                                     fun_test.shared_variables['num_volumes'], *row_data_list)
+                        post_results(volume="EC42_CompressionVol",
+                                     test=testcase,
+                                     log_time=fun_test.shared_variables["db_log_time"],
+                                     num_ssd=fun_test.shared_variables['num_ssd'],
+                                     num_volumes=fun_test.shared_variables['num_volumes'],
+                                     *row_data_list)
 
             table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
             stats_table_lst.append({'table_name': param['name'], 'table_data': table_data})

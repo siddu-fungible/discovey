@@ -78,6 +78,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["num_ssd"] = self.num_ssd
         fun_test.shared_variables["num_volume"] = self.num_volume
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
+        fun_test.shared_variables["db_log_time"] = datetime.now()
 
         # Configuring Linux host
         fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
@@ -150,8 +151,9 @@ class ECVolumeLevelScript(FunTestScript):
 
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
-                self.storage_controller.detach_volume_from_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
-                                                                      ns_id=fun_test.shared_variables['ns_id'])
+                self.storage_controller.detach_volume_from_controller(
+                    ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                    ns_id=fun_test.shared_variables['ns_id'])
                 self.storage_controller.delete_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
                                                           command_duration=self.command_timeout)
                 # Unconfiguring all the LSV/EC and it's plex volumes
@@ -314,7 +316,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         for param in self.test_parameters:
             self.warm_up_fio_cmd_args['buffer_compress_percentage'] = param['compress_percent']
             fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device,
-                                                        cpus_allowed=self.numa_cpus,
                                                         **self.warm_up_fio_cmd_args),
                                  message="Pre Populate Disk with {}% compressible Data".format(
                                      param['compress_percent']))
@@ -372,8 +373,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                             row_data_list.append(row_data_dict[i])
                     table_data_rows.append(row_data_list)
                     if fun_global.is_production_mode():
-                        post_results("EC42_CompStorage_Perf_Vol", testcase, fun_test.shared_variables['num_ssd'],
-                                     fun_test.shared_variables['num_volumes'], *row_data_list)
+                        post_results(volume="EC42_CompStorage_Perf_Vol",
+                                     test=testcase,
+                                     log_time=fun_test.shared_variables['db_log_time'],
+                                     num_ssd=fun_test.shared_variables['num_ssd'],
+                                     num_volumes=fun_test.shared_variables['num_volumes'],
+                                     *row_data_list)
 
             table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
             stats_table_lst.append({'table_name': param['name'], 'table_data': table_data})

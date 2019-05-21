@@ -74,6 +74,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables['topology'] = topology
+        fun_test.shared_variables["db_log_time"] = datetime.now()
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
@@ -388,11 +389,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC42CompEnableNvmeTcp", fun_test.shared_variables['num_ssd'],
-                                 fun_test.shared_variables['num_volumes'], test_method, *row_data_list)
+                    post_results(volume="EC42CompEnableNvmeTcp",
+                                 test=testcase,
+                                 num_ssd=fun_test.shared_variables['num_ssd'],
+                                 num_volumes=fun_test.shared_variables['num_volumes'],
+                                 *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance stats for EC42, Compression Effort: Auto", table_name=self.summary,
+        fun_test.add_table(panel_header="Performance stats for EC42 Volume", table_name=self.summary,
                            table_data=table_data)
 
         # Posting the final status of the test result
