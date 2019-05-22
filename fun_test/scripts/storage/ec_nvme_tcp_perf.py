@@ -259,7 +259,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.test_assert(command_result["status"],
                                  "Attach EC/LS volume with nsid: {} to controller with uuid: {}".format(self.ns_id,
-                                                                                                      self.ctrlr_uuid))
+                                                                                                        self.ctrlr_uuid))
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables['nsid'] = self.ns_id
             # disabling the error_injection for the EC volume
