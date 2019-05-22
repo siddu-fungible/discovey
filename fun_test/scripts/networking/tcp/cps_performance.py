@@ -1,3 +1,17 @@
+"""
+Inputs to the script as follows
+
+--inputs
+{\"speed\":\"SPEED_100G\",\"disable_f1_index\":0,\"base_cps\":50,\"duration\":60,\"incremental_count\":100}
+
+speed = SPEED_100G (Interface speed)
+disable_f1_index = 0 ( Boot only F1_1 of FS-7)
+base_cps = 50 (Initial value of CPS to start the test)
+duration = 60 (Test Duration)
+incremental_count = 100 (Counter value at which cps value will be incremental starting from base_cps)
+end_cps = 500 (Max CPS value)  <-- This parameter is optional and can be use for debug purpose.
+                                   If not given test will find the max value.
+"""
 from lib.system.fun_test import *
 from lib.host.linux import *
 from scripts.networking.nu_config_manager import *
@@ -13,8 +27,8 @@ nu_lab_handle = None
 app = "tcp_server"
 host_name = "nu-lab-04"
 hosts_json_file = ASSET_DIR + "/hosts.json"
-setup_fpg1_file = "setup_trex_fpg.sh"
-setup_fpg1_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg1_file
+setup_fpg0_file = "fpg0.sh"
+setup_fpg0_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg0_file
 TIMESTAMP = None
 filename = "tcp_cps_performance.json"
 use_mpstat = False
@@ -96,12 +110,11 @@ class TcpPerformance(FunTestScript):
 class TestCloseResetCps(FunTestCase):
     default_frame_size = 1500
     test_run_time = 60
-    duration = 60
     astf_profile = 'astf/close_reset_cps.py'
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Get Max CPS TCP with profile astf/close_reset_cps.py and measure latency",
+                              summary="Get Max CPS TCP with profile astf/close_reset_cps and measure latency",
                               steps="""
                               1. Setup fpg1 on %s
                               2. Run TRex command to measure max cps and latency in a loop starting from max 
@@ -112,14 +125,28 @@ class TestCloseResetCps(FunTestCase):
     def setup(self):
         trex_manager = fun_test.shared_variables['trex_manager']
 
-        port_info = [{'dest_mac': '00:de:ad:be:ef:00', 'src_mac': 'fe:dc:ba:44:55:99'},
-                     {'dest_mac': 'fe:dc:ba:44:55:99', 'src_mac': '00:de:ad:be:ef:00'}]
+        port_info = [{'dest_mac': '00:de:ad:be:ef:00', 'src_mac': 'fe:dc:ba:44:66:30'},
+                     {'dest_mac': '98:03:9b:7f:c7:1c', 'src_mac': '98:03:9b:7f:b8:8c'}]
 
         checkpoint = "Ensure %s config file is correct" % TREX_CONFIG_FILE
         trex_manager.ensure_trex_config_correct(port_info=port_info)
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
         # TODO: If config file is not present or macs are wrong edit the file
+
+        checkpoint = "Copy setup file %s to %s" % (setup_fpg0_file, host_name)
+        target_file_path = "/tmp/" + setup_fpg0_file
+        file_transfer = fun_test.scp(source_file_path=setup_fpg0_filepath, target_file_path=target_file_path,
+                                     target_ip=nu_lab_ip, target_username=nu_lab_username,
+                                     target_password=nu_lab_password)
+        fun_test.simple_assert(file_transfer, checkpoint)
+
+        fun_test.sleep("Letting file be copied", seconds=1)
+
+        # Execute setup file on host2
+        checkpoint = "Execute setup file %s on %s" % (target_file_path, host_name)
+        output = execute_shell_file(linux_obj=nu_lab_obj, target_file=target_file_path, sudo=True)
+        fun_test.simple_assert(output['result'], checkpoint)
 
         fun_test.log("Display applied routes")
         nu_lab_obj.get_ip_route()
@@ -128,6 +155,13 @@ class TestCloseResetCps(FunTestCase):
         trex_manager = fun_test.shared_variables['trex_manager']
         inputs = fun_test.shared_variables['inputs']
         base_cps = inputs['base_cps']
+        test_duration = inputs['duration']
+        increment_count = inputs['increment_count']
+
+        end_cps = None
+        if 'end_cps' in inputs:
+            end_cps = inputs['end_cps']
+
         profile_name = self.astf_profile.split('/')[1].split('.')[0]
         version = fun_test.get_version()
 
@@ -142,7 +176,8 @@ class TestCloseResetCps(FunTestCase):
         checkpoint = "Find max cps for profile %s" % self.astf_profile
         result = find_max_cps_using_trex(network_controller_obj=network_controller_obj, trex_obj=trex_manager,
                                          astf_profile=self.astf_profile, base_cps=base_cps,
-                                         cpu=1, duration=60)
+                                         cpu=1, duration=test_duration, end_cps=end_cps,
+                                         increment_count=increment_count)
         fun_test.test_assert(result['status'], checkpoint)
 
         checkpoint = "Capture netstat after traffic"
@@ -152,8 +187,12 @@ class TestCloseResetCps(FunTestCase):
         # Get diff stats
         netstat_temp_filename = str(version) + "_" + profile_name + '_netstat.txt'
         diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
+                                                host_name=host_name, version=version, num_flows="cps")
         fun_test.test_assert(populate, "Populate netstat into txt file")
+
+        if not result['max_cps']:
+            fun_test.simple_assert(False, "Max CPS not found. It seems base cps iteration itself failed")
 
         # Parse output to get json
         if not branch_name:
@@ -168,10 +207,26 @@ class TestCloseResetCps(FunTestCase):
             fun_test.test_assert(output, "JSON file populated")
 
     def cleanup(self):
-        pass
+        if 'tcpdump_pid' in fun_test.shared_variables:
+            nu_lab_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
+
+
+class TestCloseFinCps(TestCloseResetCps):
+    astf_profile = "astf/close_fin_cps.py"
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Get Max CPS TCP with profile astf/close_fin_cps and measure latency",
+                              steps="""
+                              1. Setup fpg1 on %s
+                              2. Run TRex command to measure max cps and latency in a loop starting from max 
+                              3. Update tcp_cps_performance.json with the max cps and latency numbers for cps type 
+                              close_reset_cps
+                              """ % host_name)
 
 
 if __name__ == '__main__':
     ts = TcpPerformance()
     ts.add_test_case(TestCloseResetCps())
+    ts.add_test_case(TestCloseFinCps())
     ts.run()
