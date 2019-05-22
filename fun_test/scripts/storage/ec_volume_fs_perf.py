@@ -179,6 +179,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 transport=self.transport,
                 huid=self.huid,
                 ctlid=self.ctlid,
+                fnid=self.fnid,
                 command_duration=self.command_timeout)['status'],
                                  message="Create Controller with UUID: {}".format(
                                      fun_test.shared_variables['cntrlr_uuid']))
