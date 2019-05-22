@@ -63,12 +63,15 @@ class ECVolumeLevelScript(FunTestScript):
                 ns_id = fun_test.shared_variables['nsid']
                 ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
                 # Detaching all the EC/LS volumes to the external server
-                self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                      ns_id=ns_id,
-                                                                      command_duration=self.command_timeout)
+                fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                                           ns_id=ns_id,
+                                                                                           command_duration=self.command_timeout)[
+                                         'status'],
+                                     message="Detach nsid: {} from controller: {}".format(ns_id, ctrlr_uuid))
 
-                self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
-                                                          command_duration=self.command_timeout)
+                fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                               command_duration=self.command_timeout),
+                                     message="Delete Controller uuid: {}".format(ctrlr_uuid))
 
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
