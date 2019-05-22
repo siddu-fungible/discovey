@@ -719,7 +719,9 @@ class Fs(object, ToDictMixin):
         bmc = self.get_bmc()
         bmc.command("gpiotool 57 --get-data")
         bmc.command("gpiotool 57 --set-data-low")
+        bmc.command("sleep 2")
         bmc.command("gpiotool 57 --set-data-high")
+        bmc.command("sleep 2")
         fun_test.add_checkpoint("Retimer workarounds applied")
 
     def is_ready(self):
