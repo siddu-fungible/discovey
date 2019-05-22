@@ -234,7 +234,7 @@ def create_interrupts_table(stat, key_name):
     return table_obj
 
 
-def populate_mpstat_output_file(output_file, linux_obj, dump_filename, num_flows, host_name, version):
+def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
     mpstat_dump_filepath = None
     try:
         contents = linux_obj.read_file(file_name=output_file, include_last_line=False)
@@ -259,15 +259,17 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename, num_flows
 
                 stats_table.add_row([stat['timestamp'], cpu_load_table, node_load_table])
                 interrupts_table.add_row([stat['timestamp'], sum_interrupts_table, soft_interrupts_table])
-        mpstat_dump_filepath = fun_test.get_test_case_artifact_file_name(dump_filename)
+
         lines = ['<=======> Mpstat output <=======>\n', '\n<=======> Hosts MetaData <=======>\n',
                  hosts_table.get_string(), '\n<=======> Statistics <=======>\n', stats_table.get_string(),
                  '\n<=======> Interrupts <=======>\n', interrupts_table.get_string()]
+
+        mpstat_dump_filepath = fun_test.get_test_case_artifact_file_name(dump_filename)
+
         with open(mpstat_dump_filepath, 'w') as f:
             f.writelines(lines)
 
-        fun_test.add_auxillary_file(description='FunOS Version: %s Num Flows: %s Host: %s mpstat log' % (
-            version, num_flows, host_name), filename=mpstat_dump_filepath)
+        fun_test.add_auxillary_file(description=dump_filename, filename=mpstat_dump_filepath)
 
         fun_test.log_disable_timestamps()
         fun_test.log_section('Mpstats output')
@@ -394,7 +396,7 @@ def get_diff_stats(old_stats, new_stats):
     return result
 
 
-def populate_netstat_output_file(diff_stats, filename, version, host_name, num_flows):
+def populate_netstat_output_file(diff_stats, filename):
     output = False
     try:
         netstat_table = PrettyTable(diff_stats.keys())
@@ -416,8 +418,7 @@ def populate_netstat_output_file(diff_stats, filename, version, host_name, num_f
         with open(file_path, 'w') as f:
             f.writelines(lines)
 
-        fun_test.add_auxillary_file(description='FunOS Version: %s Num Flows: %s Host: %s Netstat log' % (
-            version, num_flows, host_name), filename=file_path)
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
 
         fun_test.log_disable_timestamps()
         fun_test.log_section('Netstat diff output')
@@ -463,7 +464,8 @@ def inner_table_obj(result):
     return table_obj
 
 
-def populate_flow_list_output_file(network_controller_obj, filename, max_time=10, display_output=False):
+def populate_flow_list_output_file(network_controller_obj, filename, max_time=10, display_output=True,
+                                   iteration=False):
     output = False
     try:
         master_table_obj = PrettyTable()
@@ -482,10 +484,14 @@ def populate_flow_list_output_file(network_controller_obj, filename, max_time=10
                 lines.append(master_table_obj.get_string())
                 lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
 
+                if not iteration:
+                    break
+
         file_path = fun_test.get_test_case_artifact_file_name(filename)
         with open(file_path, 'w') as f:
             f.writelines(lines)
-        fun_test.add_auxillary_file(description='DPC Flow List stats', filename=file_path)
+
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -535,7 +541,8 @@ def dma_resource_table(result):
     return table_obj
 
 
-def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=10, display_output=False):
+def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=10, display_output=True,
+                                     iteration=False):
     output = False
     try:
         lines = list()
@@ -549,12 +556,15 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, ma
             lines.append(master_table_obj.get_string())
             lines.append('\n\n\n')
 
+            if not iteration:
+                break
+
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'a') as f:
             f.writelines(lines)
 
-        fun_test.add_auxillary_file(description='DPC Resource PC id %d stats' % pc_id, filename=file_path)
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -739,19 +749,21 @@ def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=Fa
 
 
 def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file,
-                       display_output=False):
+                       display_output=False, iteration=True):
     try:
         fun_test.add_checkpoint('Get flow list')
         populate_flow_list_output_file(network_controller_obj=network_controller_obj, filename=flow_list_file,
-                                       display_output=display_output)
+                                       display_output=display_output, iteration=iteration)
 
         fun_test.add_checkpoint('Get Resource pc id 1')
         populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                         filename=resource_pc_file, pc_id=1, display_output=display_output)
+                                         filename=resource_pc_file, pc_id=1, display_output=display_output,
+                                         iteration=iteration)
 
         fun_test.add_checkpoint('Get Resource pc id 2')
         populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                         filename=resource_pc_file, pc_id=2, display_output=display_output)
+                                         filename=resource_pc_file, pc_id=2, display_output=display_output,
+                                         iteration=iteration)
 
         fun_test.add_checkpoint('Get Resource BAM')
         populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=resource_bam_file,
@@ -889,7 +901,8 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
             checkpoint = "Running dpcsh commands to capture stats during run"
             output = run_dpcsh_commands(network_controller_obj=network_controller_obj,
                                         flow_list_file=flow_list_file,
-                                        resource_bam_file=resource_bam_file, resource_pc_file=resource_pc_file)
+                                        resource_bam_file=resource_bam_file, resource_pc_file=resource_pc_file,
+                                        iteration=True, display_output=False)
             fun_test.simple_assert(output, checkpoint)
 
             fun_test.simple_assert(trex_obj.poll_for_trex_process(max_time=duration), "Ensure TRex process finish")

@@ -235,8 +235,7 @@ class TcpPerformance1Conn(FunTestCase):
         # Scp mpstat json to LOGS dir
         if use_mpstat:
             populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_obj,
-                                        dump_filename=mpstat_temp_filename, version=version, num_flows=self.num_flows,
-                                        host_name=host_name1)
+                                        dump_filename=mpstat_temp_filename)
 
         populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename, version=version, num_flows=self.num_flows,
                                        host_name=host_name1, host_obj=host1_obj, source_file_path=tcpdump_output_file)
@@ -247,8 +246,7 @@ class TcpPerformance1Conn(FunTestCase):
         # Get diff stats
         netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '_netstat.txt'
         diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
-                                                version=version, num_flows=self.num_flows, host_name=host_name1)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
         fun_test.test_assert(populate, "Populate netstat into txt file")
 
         # Parse output to get json
@@ -463,8 +461,7 @@ class TcpPerformance16Conn2Host(FunTestCase):
         # Scp mpstat json to LOGS dir
         if use_mpstat:
             populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_host1_obj,
-                                        dump_filename=mpstat_temp_filename, host_name=host_name1, version=version,
-                                        num_flows=self.num_flows)
+                                        dump_filename=mpstat_temp_filename)
 
         tcpdump_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_tcpdump.pcap' % host_name1
         populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename, host_name=host_name1,
@@ -487,15 +484,13 @@ class TcpPerformance16Conn2Host(FunTestCase):
         checkpoint = "Populate Netstat diff output file captured on %s" % host_name1
         netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_netstat.txt' % host_name1
         diff_netstat = get_diff_stats(old_stats=netstat_host1_before, new_stats=netstat_host1_after)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
-                                                host_name=host_name1, version=version, num_flows=self.num_flows)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
         fun_test.test_assert(populate, checkpoint)
 
         checkpoint = "Populate Netstat diff output file captured on %s" % host_name2
         netstat_temp_filename = str(version) + "_" + str(self.num_flows) + '%s_netstat.txt' % host_name2
         diff_netstat = get_diff_stats(old_stats=netstat_host2_before, new_stats=netstat_host2_after)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
-                                                host_name=host_name2, version=version, num_flows=self.num_flows)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
         fun_test.test_assert(populate, checkpoint)
 
         # Parse output to get json
