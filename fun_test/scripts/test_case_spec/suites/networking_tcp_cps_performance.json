@@ -1,6 +1,6 @@
 [
   {"path": "networking/tcp/cps_performance.py", "inputs": {"speed": "SPEED_100G", "disable_f1_index": 0, "base_cps": 50,
-    "duration": 60, "incremental_count": 100}, "test_case_ids": [1]},
+    "duration": 60, "increment_count": 100}, "test_case_ids": [1]},
   {"path": "networking/tcp/cps_performance.py", "inputs": {"speed": "SPEED_100G", "disable_f1_index": 0, "base_cps": 50,
-    "duration": 60, "incremental_count": 100}, "test_case_ids": [2]}
+    "duration": 60, "increment_count": 100}, "test_case_ids": [2]}
 ]
