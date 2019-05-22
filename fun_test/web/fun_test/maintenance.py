@@ -505,7 +505,7 @@ if __name__ == "__main_s1_fix__":
             chart.save()
             print "chart name is: {}".format(chart.chart_name)
 
-if __name__ == "__main__":
+if __name__ == "__main_funtcp_16flows__":
     internal_chart_name = "funtcp_server_throughput_16tcp"
     chart = MetricChart.objects.get(internal_chart_name="funtcp_server_throughput_8tcp")
     data_sets = json.loads(chart.data_sets)
@@ -527,4 +527,58 @@ if __name__ == "__main__":
                 base_line_date=chart.base_line_date,
                 work_in_progress=False,
                 platform=FunPlatform.F1).save()
+
+if __name__ == "__main__":
+    internal_chart_names = ["read_iod128_durable_volume_ec_output_latency", "rand_read_iod128_durable_volume_ec_output_latency"]
+    chart_name = "Latency, QDepth=128"
+    for internal_chart_name in internal_chart_names:
+        if "rand_read" in internal_chart_name:
+            chart = MetricChart.objects.get(internal_chart_name="rand_read_iod64_durable_volume_ec_output_latency")
+            fio_job_name = "ec_randread_iodepth_128"
+        else:
+            chart = MetricChart.objects.get(internal_chart_name="read_iod64_durable_volume_ec_output_latency")
+            fio_job_name = "ec_read_iodepth_128"
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_fio_job_name"] = fio_job_name
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=chart.description,
+                    owner_info=chart.owner_info,
+                    source=chart.source,
+                    positive=chart.positive,
+                    y1_axis_title=chart.y1_axis_title,
+                    visualization_unit=chart.y1_axis_title,
+                    metric_model_name=chart.metric_model_name,
+                    base_line_date=chart.base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+
+    iops_charts = ["rand_read_iod_durable_volume_ec_output_iops", "read_iod_durable_volume_ec_output_iops"]
+    for iops_chart in iops_charts:
+        chart = MetricChart.objects.get(internal_chart_name=iops_chart)
+        if "rand_read" in iops_chart:
+            operation = "randread"
+            fio_job_name = "ec_randread_iodepth_128"
+        else:
+            operation = "read"
+            fio_job_name = "ec_read_iodepth_128"
+        data_sets = json.loads(chart.data_sets)
+        one_data_set = {}
+        one_data_set["name"] = "qd128"
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_operation"] = operation
+        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+        one_data_set["output"] = {"name": "output_read_iops", 'min': 0, "max": -1, "expected": -1, "reference": -1,
+                                  "unit": chart.visualization_unit}
+        data_sets.append(one_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added charts for qd128 durable volume pcie"
 
