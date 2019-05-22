@@ -10,8 +10,11 @@ class StorageController(DpcshClient):
         super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port,
                                                 verbose=verbose)
 
-    def ip_cfg(self, ip, command_duration=TIMEOUT):
+    def ip_cfg(self, ip, command_duration=TIMEOUT, **kwargs):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip}}
+        if kwargs:
+            for key in kwargs:
+                cfg_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=cfg_dict, command_duration=command_duration)
 
     def create_thin_block_volume(self, capacity, uuid, block_size, name, use_ls=False, command_duration=TIMEOUT):
