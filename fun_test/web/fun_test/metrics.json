@@ -2681,22 +2681,6 @@
                             "label": "Latency, QDepth=1"
                           },
                           {
-                            "info": "read_qd4_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_qd4_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
-                            "info": "read_qd8_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_qd8_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=8"
-                          },
-                          {
                             "info": "read_qd16_pcie_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
@@ -2753,22 +2737,6 @@
                             "name": "rand_read_qd1_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
-                          },
-                          {
-                            "info": "rand_read_qd4_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd4_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
-                            "info": "rand_read_qd8_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd8_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=8"
                           },
                           {
                             "info": "rand_read_qd16_pcie_output_latency",
@@ -3757,6 +3725,24 @@
                     "name": "inspur_8115_olap_rw",
                     "weight": 0,
                     "label": "8_11_5:OLAP_RW, F1(s)=1",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8131_compression_ratio_benchmarking",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8131_compression_ratio_benchmarking",
+                    "weight": 0,
+                    "label": "8_13_1:Compression_Benchmark",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8132_8k_rand_rw_comp",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8132_8k_rand_rw_comp",
+                    "weight": 0,
+                    "label": "8_13_2:8K_RAND_RW_COMP, F1(s)=1",
                     "children": []
                   }
                 ]

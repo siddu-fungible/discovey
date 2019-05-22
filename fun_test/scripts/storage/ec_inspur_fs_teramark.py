@@ -347,18 +347,23 @@ class ECVolumeLevelScript(FunTestScript):
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
+            self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
-                    command_result = self.storage_controller.volume_detach_remote(
-                        ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
-                        remote_ip=self.remote_ip, transport=self.attach_transport, command_duration=self.command_timeout)
+                    command_result = self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
                 unconfigure_ec_volume(storage_controller=self.storage_controller, ec_info=self.ec_info,
                                       command_timeout=self.command_timeout)
+
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                           command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -446,14 +451,26 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
             fun_test.shared_variables["remote_ip"] = self.remote_ip
 
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                       transport=self.attach_transport,
+                                                                       remote_ip=self.remote_ip,
+                                                                       nqn=self.nvme_subsystem,
+                                                                       port=self.transport_port,
+                                                                       command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"],
+                                 "Create Storage Controller for {} with controller uuid {} on DUT".
+                                 format(self.attach_transport, self.ctrlr_uuid))
+
             for num in xrange(self.ec_info["num_volumes"]):
-                command_result = self.storage_controller.volume_attach_remote(
-                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], huid=self.huid, ctlid=self.ctlid,
-                    remote_ip=self.remote_ip, transport=self.attach_transport, command_duration=self.command_timeout)
+                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
+                    ns_id=num + 1, vol_uuid=self.ec_info["attach_uuid"][num], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
 
             fun_test.shared_variables["ec"]["setup_created"] = True
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
 
             # disabling the error_injection for the EC volume
             command_result = {}
@@ -568,7 +585,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_iodepth = combo.split(',')[1].strip('() ')
 
             for mode in self.fio_modes:
-                fio_block_size = self.fio_cmd_args["bs"]
+                if hasattr(self, self.fio_cmd_args["bs"]):
+                    fio_block_size = self.fio_cmd_args["bs"]
+                else:
+                    fio_block_size = "Mixed"
                 fio_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
@@ -665,7 +685,7 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
 class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Inspur TC 8.11.2: 1024k data block sequential read/write IOPS performance"
+                              summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
                                       "of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -675,7 +695,7 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
         5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
         7. Run warm-up traffic using FIO
-        8. Run the Performance for 1024k transfer size Sequential read/write IOPS
+        8. Run the Performance for 1024k transfer size Sequential write IOPS
         """)
 
     def setup(self):
@@ -688,10 +708,10 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
         super(SequentialReadWrite1024kBlocks, self).cleanup()
 
 
-class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
+class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Inspur TC 8.11.3: Integrated  model read/write IOPS performance of EC volume",
+                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -704,13 +724,13 @@ class IntegratedModelReadWriteIOPS(ECVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(IntegratedModelReadWriteIOPS, self).setup()
+        super(MixedRandReadWriteIOPS, self).setup()
 
     def run(self):
-        super(IntegratedModelReadWriteIOPS, self).run()
+        super(MixedRandReadWriteIOPS, self).run()
 
     def cleanup(self):
-        super(IntegratedModelReadWriteIOPS, self).cleanup()
+        super(MixedRandReadWriteIOPS, self).cleanup()
 
 
 class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
@@ -791,8 +811,8 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(IntegratedModelReadWriteIOPS())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(MixedRandReadWriteIOPS())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
     # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())

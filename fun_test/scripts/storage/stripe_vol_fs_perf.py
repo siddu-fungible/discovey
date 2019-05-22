@@ -282,11 +282,27 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
                                  format(self.stripe_uuid))
 
-            command_result = self.storage_controller.volume_attach_pcie(
-                ns_id=self.stripe_details["ns_id"], uuid=self.stripe_uuid, huid=tb_config['dut_info'][0]['huid'],
-                ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
+            # Create controller
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(
+                ctrlr_uuid=self.ctrlr_uuid,
+                transport="PCI",
+                fnid=tb_config['dut_info'][0]['fnid'],
+                ctlid=tb_config['dut_info'][0]['ctlid'],
+                huid=tb_config['dut_info'][0]['huid'],
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching Stripe volume on DUT")
+            fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
+                                 format(self.ctrlr_uuid))
+
+            # Attach controller
+            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                                 vol_uuid=self.stripe_uuid,
+                                                                                 ns_id=self.stripe_details["ns_id"],
+                                                                                 command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
+                                 format(self.thin_uuid, self.ctrlr_uuid))
 
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid

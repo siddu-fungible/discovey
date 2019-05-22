@@ -91,6 +91,9 @@
   },
   {
     "name": "fs-11",
+    "workarounds": {
+      "retimer_workaround": true
+    },
     "bmc": {
       "mgmt_ip": "10.1.21.16",
       "mgmt_ssh_username": "sysadmin",

@@ -69,7 +69,7 @@
     "io_queues": 0,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
-    "fio_cmd_args": {"bs": "8k", "size": "100%", "direct": 1, "prio":  0, "rwmixread": 70, "runtime": 120, "timeout": 180},
+    "fio_cmd_args": {"bs": "8k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "timeout": 180},
     "fio_modes": ["randrw"],
     "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
     "fio_job_name": "inspur_8k_random_read_write"
@@ -92,9 +92,6 @@
       },
       "ndata": 4,
       "nparity": 2,
-      //"capacity": 3298534883328,
-      //"capacity": 2199023255552,
-      //"capacity": 549755813888,
       "capacity": 68719476736,
       "use_lsv": 1,
       "lsv_pct": 0.30,
@@ -102,32 +99,24 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    // timeout used for the storage controller
     "command_timeout": 30,
     "iter_interval": 60,
-    // Head room needed for the LS volume in percentage
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "vdbench_path": "/usr/local/share/vdbench",
-    "warm_up_traffic": 1,
-    "warm_up_timeout": 5400,
-    //"warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=32\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=32\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=12h,interval=30",
-    "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=6h,interval=30",
-    "warm_up_config_file": "populate_disk",
-    "read_pct": 0.7,
-    "operation": "rw",
-    //"perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=1\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=1\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=60,maxdata=8t,interval=10,warmup=10",
-    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=8\nwd=wd1,sd=sd*,seekpct=0,rdpct=70,xfersize=1024k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=64g,interval=10,warmup=10",
-    "perf_run_config_file": "inspur_1024k_sequential_read_write_vdbench",
-    "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 0,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
+    "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "timeout": 180},
+    "fio_modes": ["rw"],
+    "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
+    "fio_job_name": "inspur_1024k_sequential_read_write"
   },
-  "IntegratedModelReadWriteIOPS": {
+  "MixedRandReadWriteIOPS": {
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -145,9 +134,6 @@
       },
       "ndata": 4,
       "nparity": 2,
-      //"capacity": 3298534883328,
-      //"capacity": 2199023255552,
-      //"capacity": 549755813888,
       "capacity": 68719476736,
       "use_lsv": 1,
       "lsv_pct": 0.30,
@@ -155,30 +141,22 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    // timeout used for the storage controller
     "command_timeout": 30,
-    "iter_interval": 60,
-    // Head room needed for the LS volume in percentage
+    "iter_interval": 30,
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "vdbench_path": "/usr/local/share/vdbench",
-    "warm_up_traffic": 1,
-    "warm_up_timeout": 5400,
-    //"warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=32\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=32\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=12h,interval=30",
-    "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=6h,interval=30",
-    "warm_up_config_file": "populate_disk",
-    "read_pct": 0.8,
-    "operation": "randrw",
-    //"perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=1\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=1\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=100,xfersize=8k,skew=40\nwd=wd2,sd=sd*,seekpct=100,rdpct=0,xfersize=8k,skew=10\nwd=wd3,sd=sd*,seekpct=100,rdpct=100,xfersize=1024k,skew=10\nwd=wd4,sd=sd*,seekpct=100,rdpct=0,xfersize=1024k,skew=10\nrd=rd1,wd=wd*,iorate=max,elapsed=60,maxdata=8t,interval=10,warmup=10",
-    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=8\nwd=wd1,sd=sd*,seekpct=100,rdpct=100,xfersize=8k,skew=40\nwd=wd2,sd=sd*,seekpct=100,rdpct=0,xfersize=8k,skew=10\nwd=wd3,sd=sd*,seekpct=100,rdpct=100,xfersize=1024k,skew=40\nwd=wd4,sd=sd*,seekpct=100,rdpct=0,xfersize=1024k,skew=10\nrd=rd1,wd=wd*,iorate=max,elapsed=120,maxdata=64g,interval=10,warmup=10",
-    "perf_run_config_file": "inspur_integrated_model_read_write_vdbench",
-    "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 0,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
+    "fio_cmd_args": {"bssplit": "8k/50:1024k/50", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 80, "percentage_random": "100%", "ramp_time": 10, "runtime": 120, "timeout": 180},
+    "fio_modes": ["randrw"],
+    "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
+    "fio_job_name": "inspur_mixed_random_read_write"
   },
   "OLTPModelReadWriteIOPS": {
     "ec_info": {

@@ -48,29 +48,29 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["topology"] = topology
-        fun_test.shared_variables["fs"] = self.fs
-        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
         fun_test.shared_variables['nsid'] = 0
+        fun_test.shared_variables['db_log_time'] = datetime.now()
 
     def cleanup(self):
         try:
-            self.ec_info = fun_test.shared_variables["ec_info"]
-            ns_id = fun_test.shared_variables['nsid']
-
             if fun_test.shared_variables["setup_created"]:
+                self.ec_info = fun_test.shared_variables["ec_info"]
+                ns_id = fun_test.shared_variables['nsid']
+                ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
                 # Detaching all the EC/LS volumes to the external server
-                command_result = self.storage_controller.volume_detach_pcie(ns_id=ns_id,
-                                                                            uuid=self.ec_info["attach_uuid"][0],
-                                                                            huid=self.huid,
-                                                                            ctlid=self.ctlid,
-                                                                            command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(0))
+                fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                                           ns_id=ns_id,
+                                                                                           command_duration=self.command_timeout)[
+                                         'status'],
+                                     message="Detach nsid: {} from controller: {}".format(ns_id, ctrlr_uuid))
 
-                # Unconfiguring all the LSV/EC and it's plex volumes
+                fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                               command_duration=self.command_timeout),
+                                     message="Delete Controller uuid: {}".format(ctrlr_uuid))
+
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
         except Exception as ex:
@@ -145,7 +145,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Configuring the controller
-            command_result = {}
             command_result = self.storage_controller.command(command="enable_counters", legacy=True,
                                                              command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
@@ -172,13 +171,25 @@ class ECVolumeLevelTestcase(FunTestCase):
                                           expected=0,
                                           message="Ensuring error_injection got disabled")
 
-            # Attaching/Exporting the EC/LS volume to the external server
-            fun_test.test_assert(self.storage_controller.volume_attach_pcie(ns_id=self.ns_id,
-                                                                            uuid=self.ec_info["attach_uuid"][0],
-                                                                            huid=self.huid,
-                                                                            ctlid=self.ctlid,
-                                                                            command_duration=self.command_timeout)[
-                                     "status"], "Attaching EC/LS volume on DUT")
+            fun_test.shared_variables['cntrlr_uuid'] = utils.generate_uuid()
+            fun_test.test_assert(self.storage_controller.create_controller(
+                ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                transport=self.transport,
+                huid=self.huid,
+                ctlid=self.ctlid,
+                fnid=self.fnid,
+                command_duration=self.command_timeout)['status'],
+                                 message="Create Controller with UUID: {}".format(
+                                     fun_test.shared_variables['cntrlr_uuid']))
+            fun_test.test_assert(self.storage_controller.attach_volume_to_controller(
+                ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                ns_id=self.ns_id,
+                vol_uuid=self.ec_info["attach_uuid"][0],
+                command_duration=self.command_timeout)['status'],
+                                 message="Attach LSV Volume {0} to the Controller with uuid: {1}".format(
+                                     self.ec_info["attach_uuid"][0],
+                                     fun_test.shared_variables['cntrlr_uuid']))
+
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
                                                           legacy=False,
@@ -260,6 +271,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
                                                               "io_depth: {2}, num_jobs: {3}".
                                      format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
+                if mode == 'read' or mode == 'randread':  # default fio output write values to -1 before updating into db
+                    for key in fio_output[combo][mode]['write']:
+                        fio_output[combo][mode]['write'][key] = -1
 
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
@@ -280,9 +294,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.critical("No output from FIO test, hence moving to the next variation")
                     continue
 
-                # Comparing the FIO results with the expected value for the current block size and IO depth combo
-                row_data_dict["fio_job_name"] = fio_job_name
-
                 # Building the table raw for this variation
                 row_data_list = []
                 for i in fio_perf_table_cols:
@@ -292,8 +303,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC Volume", test_method, fun_test.shared_variables['num_ssd'],
-                                 fun_test.shared_variables['num_volumes'], *row_data_list)
+                    post_results("EC Volume",
+                                 test_method,
+                                 fun_test.shared_variables['db_log_time'],
+                                 fun_test.shared_variables['num_ssd'],
+                                 fun_test.shared_variables['num_volumes'],
+                                 *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

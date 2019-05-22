@@ -16,7 +16,8 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "fio_job_name"]
 
 
-def post_results(volume, test, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops, read_iops,
+def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
+                 read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
                  read_99_99_latency, fio_job_name):
@@ -26,10 +27,8 @@ def post_results(volume, test, num_ssd, num_volumes, block_size, io_depth, size,
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    db_log_time = datetime.now()
-
     blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=db_log_time,
+    blt.add_entry(date_time=log_time,
                   volume=volume,
                   test=test,
                   block_size=block_size,
@@ -101,3 +100,43 @@ def fetch_numa_cpus(end_host, ethernet_adapter):
     fun_test.test_assert(numa_cpus, "CPU associated to Ethernet Adapter NUMA")
     fun_test.log("Ethernet Adapter: {}, NUMA Node: {}, NUMA CPU: {}".format(ethernet_adapter, numa_node, numa_cpus))
     return numa_cpus
+
+
+def enable_counters(storage_controller, timeout=30):
+    fun_test.test_assert(storage_controller.command(command="enable_counters",
+                                                    legacy=True,
+                                                    command_duration=timeout)["status"],
+                         message="Enabling counters on DUT")
+
+
+def configure_fs_ip(storage_controller, ip):
+    command_result = storage_controller.ip_cfg(ip=ip)
+    fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+
+
+def disable_error_inject(storage_controller, timeout=30):
+    command_result = storage_controller.poke("params/ecvol/error_inject 0",
+                                             command_duration=timeout)
+    fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
+
+    # Ensuring that the error_injection got disabled properly
+    fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
+    command_result = storage_controller.peek("params/ecvol", command_duration=timeout)
+    fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
+    fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
+                                  expected=0,
+                                  message="Ensuring error_injection got disabled")
+
+
+def set_syslog_level(storage_controller, log_level, timeout=30):
+    command_result = storage_controller.poke(props_tree=["params/syslog/level", log_level],
+                                             legacy=False,
+                                             command_duration=timeout)
+    fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(log_level))
+
+    command_result = storage_controller.peek(props_tree="params/syslog/level",
+                                                  legacy=False,
+                                                  command_duration=timeout)
+    fun_test.test_assert_expected(expected=log_level,
+                                  actual=command_result["data"],
+                                  message="Checking syslog level")

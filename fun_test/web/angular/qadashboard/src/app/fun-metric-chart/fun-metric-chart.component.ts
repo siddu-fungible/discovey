@@ -109,7 +109,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   cycles_category: string[] = ["cycles"];
   bits_bytes_category: string[] = ["b", "B", "KB", "MB", "GB", "TB"];
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
-  packets_per_second_category: string[] = ["Mpps", "pps"];
+  packets_per_second_category: string[] = ["Mpps", "pps", "Kpps", "Gpps"];
+  connections_per_second_category: string[] = ["Mcps", "cps", "Kcps", "Gcps"];
 
   expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_BY_4];
 
@@ -371,6 +372,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.category = [...this.ops_category];
         } else if (this.packets_per_second_category.includes(this.visualizationUnit)) {
           this.category = [...this.packets_per_second_category];
+        } else if (this.connections_per_second_category.includes(this.visualizationUnit)) {
+          this.category = [...this.connections_per_second_category];
         }
         this.selectedUnit = this.visualizationUnit;
       }
@@ -1097,6 +1100,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gpps") {
         output = output * Math.pow(10, 9);
       }
+    } else if (this.connections_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mcps") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "Kcps") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "Gcps") {
+        output = output * Math.pow(10, 9);
+      }
     }
 
     return output;
@@ -1168,6 +1179,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Kpps") {
         output = output / Math.pow(10, 3);
       } else if (outputUnit === "Gpps") {
+        output = output / Math.pow(10, 9);
+      }
+    } else if (this.connections_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mcps") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "Kcps") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "Gcps") {
         output = output / Math.pow(10, 9);
       }
     }
