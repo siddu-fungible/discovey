@@ -48,8 +48,6 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["topology"] = topology
-        fun_test.shared_variables["fs"] = self.fs
-        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
