@@ -74,7 +74,7 @@
     "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
     "fio_job_name": "inspur_8k_random_read_write"
   },
-  "SequentialWrite1024kBlocks": {
+  "SequentialReadWrite1024kBlocks": {
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -111,10 +111,10 @@
     "io_queues": 0,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
-    "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "ramp_time": 10, "runtime": 120, "timeout": 180},
-    "fio_modes": ["write"],
+    "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "timeout": 180},
+    "fio_modes": ["rw"],
     "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
-    "fio_job_name": "inspur_1024k_sequential_write"
+    "fio_job_name": "inspur_1024k_sequential_read_write"
   },
   "MixedRandReadWriteIOPS": {
     "ec_info": {
