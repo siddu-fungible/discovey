@@ -26,6 +26,9 @@ Enable Docker remote API
 ~~~~
 qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ grep ExecStart /lib/systemd/system/docker.service
 ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:4243 $DOCKER_OPTS
+
+systemctl daemon-reload
+sudo service docker restart
 ~~~~
 Verify Docker remote API
 ~~~~
