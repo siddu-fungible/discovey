@@ -56,7 +56,7 @@ class BringupSetup(FunTestCase):
         servers_mode = server_key["fs"][fs_name]
         for server in servers_mode:
             print server
-            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server])
             fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                      % server)
         # install drivers on PCIE connected servers
