@@ -54,6 +54,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
         fun_test.shared_variables['nsid'] = 0
+        fun_test.shared_variables['db_log_time'] = datetime.now()
+
 
     def cleanup(self):
         try:
@@ -260,6 +262,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
                                                               "io_depth: {2}, num_jobs: {3}".
                                      format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
+                if mode == 'read' or mode == 'randread':    # default fio output write values to -1 before updating into db
+                    for key in fio_output[combo][mode]['write']:
+                        fio_output[combo][mode]['write'][key] = -1
 
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
@@ -280,9 +285,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.critical("No output from FIO test, hence moving to the next variation")
                     continue
 
-                # Comparing the FIO results with the expected value for the current block size and IO depth combo
-                row_data_dict["fio_job_name"] = fio_job_name
-
                 # Building the table raw for this variation
                 row_data_list = []
                 for i in fio_perf_table_cols:
@@ -292,8 +294,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC Volume", test_method, fun_test.shared_variables['num_ssd'],
-                                 fun_test.shared_variables['num_volumes'], *row_data_list)
+                    post_results(volume="EC Volume",
+                                 log_time=fun_test.shared_variables['db_log_time'],
+                                 test=test_method,
+                                 num_ssd=fun_test.shared_variables['num_ssd'],
+                                 num_volumes=fun_test.shared_variables['num_volumes'],
+                                 *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

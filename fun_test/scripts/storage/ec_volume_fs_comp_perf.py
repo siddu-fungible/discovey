@@ -182,10 +182,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
-        '''self.end_host = Linux(host_ip="10.1.21.48",
-                              ssh_username="stack",
-                              ssh_password="stack",
-                              ssh_port=2220)'''
 
         fun_test.shared_variables["ec_coding"] = self.ec_coding
         num_blts = self.ec_coding["ndata"] + self.ec_coding["nparity"]
@@ -262,22 +258,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                         command_duration=self.command_timeout)[
                                  'status'],
                              message="Attach LSV Volume {0} to the Controller".format(lsv_vol_uuid))
-        '''
-        ctrlr_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                       transport=self.volume_info["ctrlr"]["transport"],
-                                                                       huid=self.volume_info["ctrlr"]["huid"],
-                                                                       ctlid=self.volume_info["ctrlr"]["ctlid"],
-                                                                       fnid=self.volume_info["ctrlr"]["fnid"])[
-                                 'status'],
-                             message="Create Controller with uuid: {}".format(ctrlr_uuid))
-        self.vols_created["ctrlr"].append({"uuid": ctrlr_uuid})
-
-        # Attach LS vol to External server
-        fun_test.test_assert(self.storage_controller.attach_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                       nsid=self.volume_info["ctrlr"]["nsid"],
-                                                                       vol_uuid=lsv_vol_uuid)['status'],
-                             message="Attach LSV Volume {0} to Controller uud: {1}".format(lsv_vol_uuid, ctrlr_uuid))'''
 
         # Disable error injection and verify
         fun_test.test_assert(self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0],
