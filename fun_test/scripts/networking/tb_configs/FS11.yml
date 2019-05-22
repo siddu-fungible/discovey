@@ -60,10 +60,12 @@ hu:
         - prefix: 21.1.1.0/24
           nexthop: 53.1.1.254
         - prefix: 54.1.1.0/24
-          nexthop: 53.1.1.254
+          nexthop: 53.1.1.253  # vlan2 IRB
       arps:
         - ipv4_addr: 53.1.1.4
           mac_addr: 00:de:ad:be:ef:21
+        - ipv4_addr: 53.1.1.253
+          mac_addr: 00:f1:1d:ad:00:3e
 
 hu2:
   hostname: poc-server-10
@@ -86,10 +88,12 @@ hu2:
         - prefix: 21.1.1.0/24
           nexthop: 53.1.1.254
         - prefix: 54.1.1.0/24
-          nexthop: 53.1.1.254
+          nexthop: 53.1.1.253
       arps:
         - ipv4_addr: 53.1.1.1
           mac_addr: 00:de:ad:be:ef:11
+        - ipv4_addr: 53.1.1.253
+          mac_addr: 00:f1:1d:ad:00:3e
 
 hu3:
   hostname: poc-server-08
@@ -108,7 +112,10 @@ hu3:
             ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
-          nexthop: 54.1.1.254
+          nexthop: 54.1.1.253
+      arps:
+        - ipv4_addr: 54.1.1.253
+          mac_addr: 00:f1:1d:ad:00:3e
 
 hu4:
   hostname: poc-server-09
@@ -127,4 +134,7 @@ hu4:
             ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
-          nexthop: 54.1.1.254
+          nexthop: 54.1.1.253
+      arps:
+        - ipv4_addr: 54.1.1.253
+          mac_addr: 00:f1:1d:ad:00:3e
