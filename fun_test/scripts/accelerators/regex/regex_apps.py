@@ -42,7 +42,7 @@ class FunTestCase1(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=pm_test_bootstrap param-file=/nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --test-exit-fast"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --test-exit-fast"
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_nfa_runtime_sanity"
