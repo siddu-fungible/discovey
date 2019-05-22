@@ -41,8 +41,8 @@ class BringupSetup(FunTestCase):
         #cmukherjee/funos-f1.stripped.gz
         # Working FunCP - cmukherjee/funos-f1.stripped.gz
         fs_name = "fs-45"
-        funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_image_f1_0="cmukherjee/funos-f1.stripped.gz",
-                                           boot_image_f1_1="cmukherjee/funos-f1.stripped.gz",
+        funcp_obj = FunControlPlaneBringup(fs_name=fs_name, boot_image_f1_0="s_11509_funos-f1.stripped.gz",
+                                           boot_image_f1_1="s_11509_funos-f1.stripped.gz",
                                            boot_args_f1_0="app=mdt_test,hw_hsu_test cc_huid=3 --all_100g --dpc-server "
                                                           "--serial --dpc-uart --dis-stats retimer=0 --mgmt",
                                            boot_args_f1_1="app=mdt_test,hw_hsu_test cc_huid=2 --all_100g --dpc-server "
@@ -64,9 +64,8 @@ class BringupSetup(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True)
         # funcp_obj.prepare_come_for_control_plane()
-
         # Bringup FunCP
-        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=True), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
         funcp_obj.assign_mpg_ips_dhcp()
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script

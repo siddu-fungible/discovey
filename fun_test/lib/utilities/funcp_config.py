@@ -176,6 +176,13 @@ class FunControlPlaneBringup:
                         'Cloning into \'FunControlPlane\'', 'Prepare End']
             for section in sections:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
+            linux_obj_come.remove_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
+                                                 "F1_test_platform_cfg.json")
+            hu_fix_file = fun_test.get_script_parent_directory() + 'F1_test_platform_cfg.json'
+            json_file = fun_test.parse_file_to_json(hu_fix_file)
+            linux_obj_come.create_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
+                                                 "F1_test_platform_cfg.json", contents=json.dumps(json_file))
+
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
 
         setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
