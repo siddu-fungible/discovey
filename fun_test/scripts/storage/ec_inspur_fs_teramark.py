@@ -585,7 +585,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_iodepth = combo.split(',')[1].strip('() ')
 
             for mode in self.fio_modes:
-                fio_block_size = self.fio_cmd_args["bs"]
+                if hasattr(self, self.fio_cmd_args["bs"]):
+                    fio_block_size = self.fio_cmd_args["bs"]
+                else:
+                    fio_block_size = "Mixed"
                 fio_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
@@ -679,7 +682,7 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).cleanup()
 
 
-class SequentialWrite1024kBlocks(ECVolumeLevelTestcase):
+class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
@@ -696,13 +699,13 @@ class SequentialWrite1024kBlocks(ECVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(SequentialWrite1024kBlocks, self).setup()
+        super(SequentialReadWrite1024kBlocks, self).setup()
 
     def run(self):
-        super(SequentialWrite1024kBlocks, self).run()
+        super(SequentialReadWrite1024kBlocks, self).run()
 
     def cleanup(self):
-        super(SequentialWrite1024kBlocks, self).cleanup()
+        super(SequentialReadWrite1024kBlocks, self).cleanup()
 
 
 class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
@@ -808,7 +811,7 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialWrite1024kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(MixedRandReadWriteIOPS())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
     # ecscript.add_test_case(OLAPModelReadWriteIOPS())
