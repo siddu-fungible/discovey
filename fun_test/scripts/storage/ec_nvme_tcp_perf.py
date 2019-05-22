@@ -74,6 +74,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables['topology'] = topology
+        fun_test.shared_variables["db_log_time"] = datetime.now()
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
@@ -147,24 +148,24 @@ class ECVolumeLevelScript(FunTestScript):
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
+            storage_controller = fun_test.shared_variables["storage_controller"]
 
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
-                    command_result = self.storage_controller.volume_detach_remote(ns_id=num + 1,
-                                                                                  uuid=self.ec_info["attach_uuid"][num],
-                                                                                  huid=self.huid,
-                                                                                  ctlid=self.ctlid,
-                                                                                  remote_ip=self.remote_ip,
-                                                                                  transport=self.attach_transport,
-                                                                                  command_duration=self.command_timeout)
+                    command_result = storage_controller.volume_detach_remote(ns_id=num + 1,
+                                                                             uuid=self.ec_info["attach_uuid"][num],
+                                                                             huid=self.huid,
+                                                                             ctlid=self.ctlid,
+                                                                             remote_ip=self.remote_ip,
+                                                                             transport=self.attach_transport,
+                                                                             command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
-                self.end_host.unconfigure_ec_volume(storage_controller=self.storage_controller,
-                                                    ec_info=self.ec_info,
-                                                    command_timeout=self.command_timeout)
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
         self.storage_controller.disconnect()
@@ -227,8 +228,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
-            (ec_config_status, self.ec_info) = self.end_host.configure_ec_volume(self.storage_controller, self.ec_info,
-                                                                                 self.command_timeout)
+            (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                           self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
             fun_test.log("EC details after configuring EC Volume:")
@@ -388,11 +389,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC42CompEnableNvmeTcp", fun_test.shared_variables['num_ssd'],
-                                 fun_test.shared_variables['num_volumes'], test_method, *row_data_list)
+                    post_results(volume="EC42CompEnableNvmeTcp",
+                                 test=testcase,
+                                 num_ssd=fun_test.shared_variables['num_ssd'],
+                                 num_volumes=fun_test.shared_variables['num_volumes'],
+                                 *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance stats for EC42, Compression Effort: Auto", table_name=self.summary,
+        fun_test.add_table(panel_header="Performance stats for EC42 Volume", table_name=self.summary,
                            table_data=table_data)
 
         # Posting the final status of the test result
