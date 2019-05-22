@@ -3765,7 +3765,7 @@
                     "leaf": false,
                     "name": "inspur_8131_compression_ratio_benchmarking",
                     "weight": 0,
-                    "label": "8_13_1:Compression Ratio Benchmarking",
+                    "label": "8_13_1:Compression_Benchmark",
                     "children": []
                   },
                   {
