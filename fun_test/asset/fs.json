@@ -147,6 +147,25 @@
     }
   },
   {
+    "name": "fs-41",
+    "gateway_ip": "10.1.105.1",
+    "bmc": {
+      "mgmt_ip": "10.1.105.151",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "mgmt_ip": "10.1.105.152",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
+    },
+    "come": {
+      "mgmt_ip": "10.1.105.153",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
+  },
+  {
     "name": "fs-48",
     "bmc": {
       "mgmt_ip": "10.1.105.166",
