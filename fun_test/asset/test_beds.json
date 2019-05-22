@@ -196,6 +196,14 @@
       }
     }
   },
+  "fs-41": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-41"
+      }
+    }
+  },
   "fs-60": {
     "dut_info": {
       "0": {
