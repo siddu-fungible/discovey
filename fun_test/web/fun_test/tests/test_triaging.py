@@ -301,7 +301,7 @@ class TrialStateMachine:
             params["BRANCH_FunOS"] = self.fun_os_sha
             params["HW_VERSION"] = "rel_081618_svn67816_emu"
             # params["HW_MODEL"] = "F1DevBoard"
-            # params["PCI_MODE"] = "root_complex"
+            params["PCI_MODE"] = "root_complex"
             try:
                 queue_item = jm.build(params=params)
                 build_number = jm.get_build_number(queue_item=queue_item)

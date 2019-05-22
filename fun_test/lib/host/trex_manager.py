@@ -6,7 +6,7 @@ import yaml
 
 TREX_BINARY_PATH = "~/trex-core/scripts"
 TREX_BINARY = "./t-rex-64"
-TREX_CONFIG_FILE = "/etc/trex_cfg.yaml"
+TREX_CONFIG_FILE = "/etc/trex_cfg_100g.yaml"
 
 
 class TrexManager(Linux):
@@ -28,7 +28,7 @@ class TrexManager(Linux):
         return result
 
     def get_trex_cmd(self, astf_profile, cps_rate=30, duration=30, cpu=1, astf=True, output_file=None, bg=False,
-                     latency=True, warmup_time=5, latency_packet_rate=100):
+                     latency=True, warmup_time=5, latency_packet_rate=100, cfg=TREX_CONFIG_FILE):
         cmd = None
         try:
             cmd = "%s -f %s -m %d -d %d -c %d " % (TREX_BINARY, astf_profile, cps_rate, duration, cpu)
@@ -36,6 +36,8 @@ class TrexManager(Linux):
                 cmd += "-k %d -l %d " % (warmup_time, latency_packet_rate)
             if astf:
                 cmd += "--astf"
+            if cfg:
+                cmd += " --cfg %s" % cfg
             if bg:
                 cmd = 'nohup ' + cmd
                 cmd += r' > ' + output_file + " 2>&1 &"

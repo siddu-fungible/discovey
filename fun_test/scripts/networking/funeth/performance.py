@@ -58,10 +58,13 @@ class FunethPerformance(sanity.FunethSanity):
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
         linux_objs = funeth_obj.linux_obj_dict.values()
-        #self.iperf_manager_obj = IPerfManager(linux_objs)
-        self.netperf_manager_obj = nm.NetperfManager(linux_objs)
 
-        #fun_test.test_assert(self.iperf_manager_obj.setup(), 'Set up for throughput/latency test')
+        fun_test.log("Configure irq affinity")
+        for hu in funeth_obj.hu_hosts:
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
+            # TODO: Configure irq affinity for rx
+
+        self.netperf_manager_obj = nm.NetperfManager(linux_objs)
         fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
 
         network_controller_objs = []

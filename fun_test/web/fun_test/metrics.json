@@ -116,6 +116,14 @@
                         "name": "funtcp_server_throughput_8tcp",
                         "weight": 1,
                         "label": "8 TCP Flow(s)"
+                      },
+                      {
+                        "info": "funtcp_server_throughput_16tcp",
+                        "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_throughput_16tcp",
+                        "weight": 1,
+                        "label": "16 TCP Flow(s)"
                       }
                     ]
                   },
@@ -2711,6 +2719,14 @@
                             "name": "read_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "read_qd128_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_qd128_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=128"
                           }
                         ]
                       },
@@ -2777,6 +2793,14 @@
                             "name": "rand_read_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "rand_read_qd128_pcie_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_qd128_pcie_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=128"
                           }
                         ]
                       }
@@ -3733,6 +3757,24 @@
                     "name": "inspur_8115_olap_rw",
                     "weight": 0,
                     "label": "8_11_5:OLAP_RW, F1(s)=1",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8131_compression_ratio_benchmarking",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8131_compression_ratio_benchmarking",
+                    "weight": 0,
+                    "label": "8_13_1:Compression Ratio Benchmarking",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8132_8k_rand_rw_comp",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8132_8k_rand_rw_comp",
+                    "weight": 0,
+                    "label": "8_13_2:8K_RAND_RW_COMP, F1(s)=1",
                     "children": []
                   }
                 ]

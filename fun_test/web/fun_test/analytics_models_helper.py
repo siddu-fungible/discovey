@@ -294,7 +294,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_99_99_latency_unit = read_99_99_latency_unit
             entry.save()
         except ObjectDoesNotExist:
-            pass
+            fun_test.log("Adding new entry into model using helper")
             one_entry = BltVolumePerformance(input_date_time=date_time,
                                              input_volume_type=volume,
                                              input_test=test,
@@ -336,6 +336,7 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_read_99_99_latency_unit=read_99_99_latency_unit)
             one_entry.save()
             try:
+                fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
                 completion_date = timezone.localtime(date_time)
                 completion_date = str(completion_date).split(":")
                 completion_date = completion_date[0] + ":" + completion_date[1]
@@ -349,8 +350,8 @@ class BltVolumePerformanceHelper(MetricHelper):
                                        completion_date=completion_date,
                                        build_properties="", lsf_job_id="",
                                        sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
-            except:
-                pass
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 
 class AllocSpeedPerformanceHelper(MetricHelper):

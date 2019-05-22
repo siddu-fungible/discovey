@@ -99,7 +99,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   expectedOperation: String = null;
   selectedUnit: string = null;
   category: string[] = [];
-  nwInfoFiles: string[] = [];
 
   Platform = Platform;
 
@@ -136,7 +135,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.status = "Updating";
     this.showingTable = false;
-    this.nwInfoFiles = [];
     this.showingConfigure = false;
     this.headers = null;
     this.metricId = -1;
@@ -281,7 +279,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let key = this._getBuildKey(x);
     let s = {};
-    this.nwInfoFiles = [];
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
       hardwareVersion = this.buildInfo[key]["hardware_version"];
@@ -304,16 +301,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Hardware version"] = hardwareVersion;
       if (version !== "") {
         s["SDK version"] = "bld_" + version;
-        this.status = "Fetching networking artifacts";
-        this.apiService.get('/regression/get_networking_artifacts/' + version).subscribe((data) => {
-          if (data) {
-            this.nwInfoFiles = data.data;
-          }
-          this.status = null;
-        }, error => {
-          this.loggerService.error("Fetch networking artifacts");
-          this.status = null;
-        });
       }
       if (this.buildInfo[key]["git_commit"] !== "")
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
@@ -420,7 +407,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.maxExpected = null;
     this.maxDataPoint = null;
     this.category = [];
-    this.nwInfoFiles = [];
     this.selectedUnit = null;
   }
 
