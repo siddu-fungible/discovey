@@ -195,8 +195,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # Create controller
         if not fun_test.shared_variables['ctlr_configured']:
-            ctrlr_uuid = utils.generate_uuid()
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                        transport=self.attach_transport,
                                                                        remote_ip=self.remote_ip,
                                                                        nqn=self.nvme_subsystem,
