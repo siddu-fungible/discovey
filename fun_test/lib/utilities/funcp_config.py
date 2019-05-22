@@ -46,12 +46,12 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
-        fs_0.bmc.start_uart_log_listener(f1_index=0)
+        fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device=None)
         fun_test.test_assert(
             fs_0.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args,
                                        gateway_ip=gatewayip),
             "U-Bootup f1: {} complete".format(1))
-        fs_0.bmc.start_uart_log_listener(f1_index=1)
+        fs_0.bmc.start_uart_log_listener(f1_index=1, serial_device=None)
         if reboot_come:
             fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
                                  "ComE rebooted successfully")
