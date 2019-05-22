@@ -230,7 +230,7 @@ if __name__ == "__main_converted_old_storge_versions__":
                                    sdk_version=entry.input_version,
                                    build_date=build_date)
 
-if __name__ == "__main__":
+if __name__ == "__main_128_tcp__":
     internal_iops_chart_names = ["rand_read_qd_nvmetcp_output_iops", "read_qd_nvmetcp_output_iops"]
     # internal_latency_chart_names = ["read_qd1_nvmetcp_output_latency", "read_qd8_nvmetcp_output_latency",
     #                              "read_qd16_nvmetcp_output_latency", "read_qd32_nvmetcp_output_latency", "read_qd64_nvmetcp_output_latency",
@@ -329,7 +329,7 @@ if __name__ == "__main__":
                         platform=FunPlatform.F1).save()
     print "added 128 qdepth charts for raw block nvmetcp"
 
-if __name__ == "__main__":
+if __name__ == "__main_128_tcp__":
     fio_job_names = ["fio_tcp_randwrite_blt_1_1_scaling",
                      "fio_tcp_randwrite_blt_8_1_scaling",
                      "fio_tcp_randwrite_blt_16_1_scaling",
@@ -424,4 +424,107 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added random write raw block nvmetcp"
+
+if __name__ == "__main_128_pcie__":
+    internal_chart_names = ["read_qd128_pcie_output_latency", "rand_read_qd128_pcie_output_latency"]
+    chart_name = "Latency, QDepth=128"
+    for internal_chart_name in internal_chart_names:
+        if "rand_read" in internal_chart_name:
+            chart = MetricChart.objects.get(internal_chart_name="rand_read_qd64_pcie_output_latency")
+            fio_job_name = "fio_pcie_randread_blt_128_iod_scaling"
+        else:
+            chart = MetricChart.objects.get(internal_chart_name="read_qd64_pcie_output_latency")
+            fio_job_name = "fio_pcie_read_blt_128_iod_scaling"
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_fio_job_name"] = fio_job_name
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=chart.description,
+                    owner_info=chart.owner_info,
+                    source=chart.source,
+                    positive=chart.positive,
+                    y1_axis_title=chart.y1_axis_title,
+                    visualization_unit=chart.y1_axis_title,
+                    metric_model_name=chart.metric_model_name,
+                    base_line_date=chart.base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+
+    iops_charts = ["read_qd_pcie_output_iops", "rand_read_qd_pcie_output_iops"]
+    for iops_chart in iops_charts:
+        chart = MetricChart.objects.get(internal_chart_name=iops_chart)
+        if "rand_read" in iops_chart:
+            operation = "randread"
+            fio_job_name = "fio_pcie_randread_blt_128_iod_scaling"
+        else:
+            operation = "read"
+            fio_job_name = "fio_pcie_read_blt_128_iod_scaling"
+        data_sets = json.loads(chart.data_sets)
+        one_data_set = {}
+        one_data_set["name"] = "qd128"
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_operation"] = operation
+        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+        one_data_set["output"] = {"name": "output_read_iops", 'min': 0, "max": -1, "expected": -1, "reference": -1,
+                                  "unit": chart.visualization_unit}
+        data_sets.append(one_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added charts for qd128 raw block pcie"
+
+if __name__ == "__main_s1_fix__":
+    model_names = ["WuDispatchTestPerformance", "WuSendSpeedTestPerformance", "FunMagentPerformanceTest",
+                   "WuStackSpeedTestPerformance", "SoakFunMallocPerformance", "SoakClassicMallocPerformance",
+                   "BcopyFloodDmaPerformance", "BcopyPerformance", "AllocSpeedPerformance", "WuLatencyUngated",
+                   "WuLatencyAllocStack"]
+    for model_name in model_names:
+        app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+        metric_model = app_config.get_metric_models()[model_name]
+        entries = metric_model.objects.filter(input_platform=FunPlatform.S1)
+        print len(entries), model_name
+        entries.delete()
+        print len(entries), model_name
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if chart.internal_chart_name.endswith('_S1'):
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["output"]["min"] = 0
+                data_set["output"]["max"] = -1
+                data_set["output"]["expected"] = -1
+                data_set["output"]["reference"] = -1
+                data_set["output"]["unit"] = chart.visualization_unit
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+            print "chart name is: {}".format(chart.chart_name)
+
+if __name__ == "__main__":
+    internal_chart_name = "funtcp_server_throughput_16tcp"
+    chart = MetricChart.objects.get(internal_chart_name="funtcp_server_throughput_8tcp")
+    data_sets = json.loads(chart.data_sets)
+    for data_set in data_sets:
+        data_set["inputs"]["input_num_flows"] = 16
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name="16 TCP Flow(s)",
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description=chart.description,
+                owner_info=chart.owner_info,
+                source=chart.source,
+                positive=chart.positive,
+                y1_axis_title=chart.y1_axis_title,
+                visualization_unit=chart.y1_axis_title,
+                metric_model_name=chart.metric_model_name,
+                base_line_date=chart.base_line_date,
+                work_in_progress=False,
+                platform=FunPlatform.F1).save()
 

@@ -100,6 +100,19 @@ class Funeth:
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
             return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
 
+        def _update_src2(linux_obj):
+            sdkdir = os.path.join(self.ws, 'FunSDK')
+            linux_obj.sudo_command('rm -rf {}'.format(self.ws))
+            linux_obj.create_directory(self.ws, sudo=False)
+
+            # clone FunSDK, host-drivers, FunOS
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws))
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws))
+
+            output = linux_obj.command(
+                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
+            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+
         result = True
 
         if parallel:
@@ -107,7 +120,7 @@ class Funeth:
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
                 mp_task_obj.add_task(
-                    func=_update_src,
+                    func=_update_src2,
                     func_args=(linux_obj,),
                     task_key='{}'.format(linux_obj.host_ip))
 
@@ -120,7 +133,7 @@ class Funeth:
         else:
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                result &= _update_src(linux_obj)
+                result &= _update_src2(linux_obj)
 
         return result
 
@@ -133,7 +146,8 @@ class Funeth:
             if self.funos_branch:
                 linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-            output = linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
+            output = linux_obj.command(
+                'export WORKSPACE={}; cd {}; make clean; make PALLADIUM=yes'.format(self.ws, drvdir), timeout=600)
             return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
         result = True

@@ -41,7 +41,7 @@ export class Triage2Component implements OnInit {
       'submitter': [null, Validators.required],
       'from_fun_os_sha': [null, Validators.required],
       'to_fun_os_sha': [null, Validators.required],
-      'metric_id': [null, Validators.required],
+      'metric_id': [-1],
       'triage_type': [null, Validators.required],
       'regex_match_string': [null]
     });

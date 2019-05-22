@@ -21,7 +21,7 @@ class MyScript(FunTestScript):
         invalidate_goodness_cache()
 
 class WuDispatchTestPerformanceS1Tc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG_S1
+    tag = ALLOC_SPEED_TEST_TAG_S1
     model = "WuDispatchTestPerformance"
     platform = S1
 
@@ -81,7 +81,7 @@ class SoakClassicMallocPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class BcopyFloodPerformanceS1Tc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG_S1
+    tag = ALLOC_SPEED_TEST_TAG_S1
     model = "BcopyFloodDmaPerformance"
     platform = S1
 
@@ -91,7 +91,7 @@ class BcopyFloodPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class BcopyPerformanceS1Tc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG_S1
+    tag = ALLOC_SPEED_TEST_TAG_S1
     model = "BcopyPerformance"
     platform = S1
 
@@ -101,7 +101,7 @@ class BcopyPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class AllocSpeedPerformanceS1Tc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG_S1
+    tag = ALLOC_SPEED_TEST_TAG_S1
     model = "AllocSpeedPerformance"
     platform = S1
 
@@ -111,7 +111,7 @@ class AllocSpeedPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class WuLatencyUngatedPerformanceS1Tc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG_S1
+    tag = ALLOC_SPEED_TEST_TAG_S1
     model = "WuLatencyUngated"
     platform = S1
 
@@ -121,7 +121,7 @@ class WuLatencyUngatedPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class WuLatencyAllocStackPerformanceS1Tc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG_S1
+    tag = ALLOC_SPEED_TEST_TAG_S1
     model = "WuLatencyAllocStack"
     platform = S1
 
@@ -162,6 +162,6 @@ if __name__ == "__main__":
     myscript.add_test_case(AllocSpeedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyUngatedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceS1Tc())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
