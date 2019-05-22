@@ -112,17 +112,18 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             {linux_obj.host_ip: helper.get_netstat_output(linux_obj=linux_obj)}
         )
 
-    # peek resource/pc/[1], and peek resource/pc/[1]
-    for nc_obj in network_controller_objs:
-        for pc_id in (1, 2):
-            checkpoint = "Peek stats resource pc {} {} test".format(pc_id, when)
-            resource_pc_temp_filename = '{}_F1_{}_resource_pc_{}_{}.txt'.format(str(version),
-                                                                                network_controller_objs.index(nc_obj),
-                                                                                pc_id, when)
-            fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
-                                                                           filename=resource_pc_temp_filename,
-                                                                           pc_id=pc_id, display_output=False),
-                                   checkpoint)
+    # It generates too much log, in a loop? Disable it before it's fixed.
+    ## peek resource/pc/[1], and peek resource/pc/[1]
+    #for nc_obj in network_controller_objs:
+    #    for pc_id in (1, 2):
+    #        checkpoint = "Peek stats resource pc {} {} test".format(pc_id, when)
+    #        resource_pc_temp_filename = '{}_F1_{}_resource_pc_{}_{}.txt'.format(str(version),
+    #                                                                            network_controller_objs.index(nc_obj),
+    #                                                                            pc_id, when)
+    #        fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
+    #                                                                       filename=resource_pc_temp_filename,
+    #                                                                       pc_id=pc_id, display_output=False),
+    #                               checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
