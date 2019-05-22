@@ -54,6 +54,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
         fun_test.shared_variables['nsid'] = 0
+        fun_test.shared_variables['db_log_time'] = datetime.now()
+
 
     def cleanup(self):
         try:
@@ -292,8 +294,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC Volume", test_method, fun_test.shared_variables['num_ssd'],
-                                 fun_test.shared_variables['num_volumes'], *row_data_list)
+                    post_results(volume="EC Volume",
+                                 log_time=fun_test.shared_variables['db_log_time'],
+                                 test=test_method,
+                                 num_ssd=fun_test.shared_variables['num_ssd'],
+                                 num_volumes=fun_test.shared_variables['num_volumes'],
+                                 *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
