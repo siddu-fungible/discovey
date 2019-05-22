@@ -360,7 +360,8 @@ class ECVolumeLevelScript(FunTestScript):
                 unconfigure_ec_volume(storage_controller=self.storage_controller, ec_info=self.ec_info,
                                       command_timeout=self.command_timeout)
 
-                self.storage_controller.delete_controller(self.ctrlr_uuid, command_duration=self.command_timeout)
+                self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                          command_duration=self.command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
 
