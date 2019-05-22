@@ -45,6 +45,7 @@
     "ctlid": 2,
     "iter_interval": 5,
     "ns_id": 1,
+    "transport": "PCI",
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "8k",
@@ -117,6 +118,7 @@
     "iter_interval": 5,
     "check_lsv_stats": 0,
     "ns_id": 1,
+    "transport": "PCI",
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "4k",
