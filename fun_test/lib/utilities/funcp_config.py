@@ -178,12 +178,12 @@ class FunControlPlaneBringup:
             for section in sections:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
             linux_obj_come.remove_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
-                                                 "F1_test_platform_cfg.json")
-            hu_fix_file = fun_test.get_script_parent_directory() + 'F1_test_platform_cfg.json'
+                                                 "F1_TOR.json")
+            hu_fix_file = fun_test.get_script_parent_directory() + '/F1_TOR.json'
             json_file = fun_test.parse_file_to_json(hu_fix_file)
             linux_obj_come.create_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
-                                                 "F1_test_platform_cfg.json", contents=json.dumps(json_file))
-
+                                                 "F1_TOR.json", contents=json.dumps(json_file))
+            fun_test.log("Updated F1_TOR.json file")
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
 
         setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
@@ -347,11 +347,21 @@ class FunControlPlaneBringup:
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
             linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
-            if docker_name.rstrip().endswith() == "0":
+            if docker_name.rstrip().endswith("0"):
                 for ip in f1_0:
-                    linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_0_outgoing[1],
-                                                                                      f1_0_outgoing[0]))
+                    try:
+                        linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_0_outgoing[1],
+                                                                                          f1_0_outgoing[0]))
+                    except:
+                        op = linux_obj.sudo_command(command="route -n | grep %s" % ip[:-3])
+                        fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
+            elif docker_name.rstrip().endswith("1"):
                 for ip in f1_1:
-                    linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_1_outgoing[1],
-                                                                                      f1_1_outgoing[0]))
+                    try:
+                        linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_1_outgoing[1],
+                                                                                          f1_1_outgoing[0]))
+                    except:
+                        op = linux_obj.sudo_command(command="route -n | grep %s" % ip[:-3])
+                        fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
+
             linux_obj.disconnect()
