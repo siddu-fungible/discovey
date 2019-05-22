@@ -11,6 +11,7 @@ from fun_global import PerfUnit
 
 
 TCP_PERFORMANCE_MODEL_NAME = "TeraMarkFunTcpThroughputPerformance"
+TCP_CPS_PERFORMANCE_MODEL_NAME = "TeraMarkFunTcpConnectionsPerSecondPerformance"
 
 
 def _parse_file_to_json_in_order(file_name):
@@ -135,9 +136,8 @@ def populate_cps_performance_json_file(flow_type, model_name, frame_size, cps_ty
         unit_dict["max_cps_unit"] = PerfUnit.UNIT_CPS
         unit_dict["max_latency_unit"] = PerfUnit.UNIT_USECS
         unit_dict["avg_latency_unit"] = PerfUnit.UNIT_USECS
-        # TODO: Enable after getting model name from Ashwin for CPS TeraMarks
-        # add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
-        # fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+        add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
+        fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
         fun_test.add_checkpoint("Entry added to model %s" % model_name)
         output = True
     except Exception as ex:
@@ -853,7 +853,7 @@ def create_performance_table(total_throughput, num_flows, total_pps):
 
 def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, increment_count,
                             cpu=1, duration=60, end_cps=None):
-    result = {'max_cps': None, 'max_latency': None, 'avg_latency': None, 'status': False, 'summary_dict': None}
+    result = {'max_cps': -1, 'max_latency': -1, 'avg_latency': -1, 'status': False, 'summary_dict': None}
     output_file_path = fun_test.get_temp_file_path(file_name=fun_test.get_temp_file_name()) + ".txt"
     try:
         count = 1

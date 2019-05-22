@@ -191,9 +191,6 @@ class TestCloseResetCps(FunTestCase):
                                                 host_name=host_name, version=version, num_flows="cps")
         fun_test.test_assert(populate, "Populate netstat into txt file")
 
-        if not result['max_cps']:
-            fun_test.simple_assert(False, "Max CPS not found. It seems base cps iteration itself failed")
-
         # Parse output to get json
         if not branch_name:
             output = populate_cps_performance_json_file(mode=mode, flow_type="FunTCP_Server_CPS",
@@ -203,7 +200,7 @@ class TestCloseResetCps(FunTestCase):
                                                         max_latency=result['max_latency'],
                                                         avg_latency=result['avg_latency'],
                                                         timestamp=TIMESTAMP,
-                                                        filename=filename, model_name=TCP_PERFORMANCE_MODEL_NAME)
+                                                        filename=filename, model_name=TCP_CPS_PERFORMANCE_MODEL_NAME)
             fun_test.test_assert(output, "JSON file populated")
 
     def cleanup(self):

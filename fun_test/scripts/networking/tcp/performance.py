@@ -219,10 +219,16 @@ class TcpPerformance1Conn(FunTestCase):
 
         total_throughput = netperf_result['total_throughput']
         fun_test.log("Total throughput seen is %s" % total_throughput)
-        fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" % total_throughput)
+        # TODO: We don't need to fail the case if total_throughput <= 0 instead put -1 in JSON and
+        # TODO: Model so that it gets reflected on dashboard
+        # fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" % total_throughput)
 
         pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
         fun_test.log("Total PPS value is %s" % round(pps, 2))
+
+        if total_throughput <= 0.0 and pps <= 0.0:
+            total_throughput = -1
+            pps = -1
 
         create_performance_table(total_throughput=total_throughput, total_pps=round(pps, 2), num_flows=self.num_flows)
 
@@ -443,10 +449,14 @@ class TcpPerformance16Conn2Host(FunTestCase):
 
         total_throughput = netperf_result['total_throughput']
         fun_test.log("Total throughput seen is %s" % total_throughput)
-        fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" % total_throughput)
+        # fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" % total_throughput)
 
         pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
         fun_test.log("Total PPS value is %s" % round(pps, 2))
+
+        if total_throughput <= 0.0 and pps <= 0.0:
+            total_throughput = -1
+            pps = -1
 
         create_performance_table(total_throughput=total_throughput, total_pps=round(pps, 2), num_flows=self.num_flows)
 
