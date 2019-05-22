@@ -465,7 +465,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.ec_info["num_volumes"]):
                 command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
-                    ns_id=num + 1, uuid=self.ec_info["attach_uuid"][num], command_duration=self.command_timeout)
+                    ns_id=num + 1, vol_uuid=self.ec_info["attach_uuid"][num], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
 
