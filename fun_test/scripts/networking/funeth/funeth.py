@@ -109,11 +109,13 @@ class Funeth:
             linux_obj.create_directory(self.ws, sudo=False)
 
             # clone FunSDK, host-drivers, FunOS
-            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws))
-            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws))
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
+                              timeout=300)
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
+                              timeout=300)
 
             output = linux_obj.command(
-                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
+                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
             return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
 
         result = True
