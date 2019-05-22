@@ -3758,6 +3758,24 @@
                     "weight": 0,
                     "label": "8_11_5:OLAP_RW, F1(s)=1",
                     "children": []
+                  },
+                  {
+                    "info": "inspur_8131_compression_ratio_benchmarking",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8131_compression_ratio_benchmarking",
+                    "weight": 0,
+                    "label": "8_13_1:Compression Ratio Benchmarking",
+                    "children": []
+                  },
+                  {
+                    "info": "inspur_8132_8k_rand_rw_comp",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8132_8k_rand_rw_comp",
+                    "weight": 0,
+                    "label": "8_13_2:8K_RAND_RW_COMP, F1(s)=1",
+                    "children": []
                   }
                 ]
               },
