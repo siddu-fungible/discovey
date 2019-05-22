@@ -205,12 +205,12 @@
     "name": "fs-60",
     "gateway_ip": "10.1.105.1",
     "bmc": {
-      "mgmt_ip": "10.1.105.171",
+      "mgmt_ip": "10.1.105.169",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.105.171",
+      "mgmt_ip": "10.1.105.170",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
