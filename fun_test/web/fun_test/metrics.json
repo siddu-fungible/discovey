@@ -2681,22 +2681,6 @@
                             "label": "Latency, QDepth=1"
                           },
                           {
-                            "info": "read_qd4_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_qd4_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
-                            "info": "read_qd8_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "read_qd8_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=8"
-                          },
-                          {
                             "info": "read_qd16_pcie_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
@@ -2753,22 +2737,6 @@
                             "name": "rand_read_qd1_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
-                          },
-                          {
-                            "info": "rand_read_qd4_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd4_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=4"
-                          },
-                          {
-                            "info": "rand_read_qd8_pcie_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd8_pcie_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=8"
                           },
                           {
                             "info": "rand_read_qd16_pcie_output_latency",
