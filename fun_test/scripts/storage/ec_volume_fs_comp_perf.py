@@ -253,7 +253,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Create Controller
         fun_test.shared_variables['cntrlr_uuid'] = utils.generate_uuid()
         fun_test.test_assert(
-            self.storage_controller.create_controller(cntrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+            self.storage_controller.create_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
                                                       transport=self.transport,
                                                       huid=tb_config['dut_info'][0]['huid'],
                                                       ctlid=tb_config['dut_info'][0]['ctlid'],
