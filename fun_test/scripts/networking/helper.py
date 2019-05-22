@@ -817,7 +817,6 @@ def get_nested_dict_stats(result):
                     table_obj.add_row([_key, inner_table_obj])
                 table_obj.add_row([_key, result[key][_key]])
             master_table_obj.add_row([key, table_obj])
-        print master_table_obj
     except Exception as ex:
         fun_test.critical(str(ex))
     return master_table_obj
@@ -831,7 +830,6 @@ def get_single_dict_stats(result):
     try:
         for key in sorted(result):
             master_table_obj.add_row([key, result[key]])
-        print master_table_obj
     except Exception as ex:
         fun_test.critical(str(ex))
     return master_table_obj
@@ -901,10 +899,14 @@ def populate_vp_util_output_file(network_controller_obj, filename, display_outpu
 def populate_per_vp_output_file(network_controller_obj, filename, display_output=False):
     output = False
     try:
+        filtered_dict = {}
         lines = list()
 
         result = network_controller_obj.peek_per_vp_stats()
-        master_table_obj = get_nested_dict_stats(result=result)
+        for key, val in sorted(result.iteritems()):
+            if "FA1" in key or "FA2" in key:
+                filtered_dict[key] = val
+        master_table_obj = get_nested_dict_stats(result=filtered_dict)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
         lines.append('\n\n\n')
@@ -953,7 +955,7 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
         artifact_per_vp_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_file)
 
         while not sequencer_passed:
-
+            fun_test.log_module_filter("random_module")
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
                                              filename=artifact_resource_pc_1_file, pc_id=1, display_output=display_output)
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
@@ -961,6 +963,7 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
             populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
             populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
+            fun_test.log_module_filter_disable()
 
             fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
 
