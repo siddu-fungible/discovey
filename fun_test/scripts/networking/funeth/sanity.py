@@ -47,12 +47,22 @@ except:
 # Use control plane or not
 try:
     inputs = fun_test.get_job_inputs()
-    if inputs and inputs.get('control_plane', 0):
-        control_plane = True
+    if inputs:
+        control_plane = (inputs.get('control_plane', 0) == 1)
     else:
         control_plane = False
 except:
     control_plane = False
+
+# Update driver or not
+try:
+    inputs = fun_test.get_job_inputs()
+    if inputs:
+        update_driver = (inputs.get('update_driver', 1) == 1)
+    else:
+        update_driver = True
+except:
+    update_driver = True
 
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
@@ -159,7 +169,7 @@ class FunethSanity(FunTestScript):
         setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj, update_driver=True)
+        setup_hu_host(funeth_obj, update_driver=update_driver)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
