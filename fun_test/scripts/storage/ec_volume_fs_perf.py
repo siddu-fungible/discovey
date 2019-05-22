@@ -262,6 +262,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
                                                               "io_depth: {2}, num_jobs: {3}".
                                      format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
+                if mode == 'read' or mode == 'randread':    # default fio output write values to -1 before updating into db
+                    for key in fio_output[combo][mode]['write']:
+                        fio_output[combo][mode]['write'][key] = -1
 
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
@@ -281,9 +284,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fio_result[combo][mode] = False
                     fun_test.critical("No output from FIO test, hence moving to the next variation")
                     continue
-
-                # Comparing the FIO results with the expected value for the current block size and IO depth combo
-                row_data_dict["fio_job_name"] = fio_job_name
 
                 # Building the table raw for this variation
                 row_data_list = []
