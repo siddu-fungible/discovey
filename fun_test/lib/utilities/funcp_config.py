@@ -55,7 +55,7 @@ class FunControlPlaneBringup:
         if reboot_come:
             fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
                                  "ComE rebooted successfully")
-            fun_test.sleep(message="waiting for COMe", seconds=90)
+            fun_test.sleep(message="waiting for COMe", seconds=120)
             if power_cycle_come:
                 come_ping_test = False
 
@@ -81,7 +81,7 @@ class FunControlPlaneBringup:
             fun_test.test_assert(fs_0.come.is_dpc_ready(), "DPC ready")
         return True
 
-    def boot_f1_0(self, power_cycle_come=True):
+    def boot_f1_0(self, power_cycle_come=True, gatewayip=None):
         fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
                       boot_args=self.boot_args_f1_0, disable_f1_index=1)
 
@@ -90,7 +90,7 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
-                                                        boot_args=fs_0.boot_args),
+                                                        boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
         fs_0.bmc.start_uart_log_listener(f1_index=0)
         fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
@@ -120,7 +120,7 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.come.setup_dpc(), "Setup DPC")
         fun_test.test_assert(fs_0.come.is_dpc_ready(), "DPC ready")
 
-    def boot_f1_1(self, power_cycle_come=True):
+    def boot_f1_1(self, power_cycle_come=True, gatewayip=None):
         fs = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_1,
                       boot_args=self.boot_args_f1_1, disable_f1_index=0)
 
@@ -129,7 +129,7 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
         fun_test.test_assert(fs.fpga_initialize(), "FPGA initiaize")
         fun_test.test_assert(fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs.tftp_image_path,
-                                                        boot_args=fs.boot_args),
+                                                        boot_args=fs.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(1))
         fs.bmc.start_uart_log_listener(f1_index=1)
         fun_test.test_assert(fs.come_reset(power_cycle=True, non_blocking=True),
@@ -177,6 +177,7 @@ class FunControlPlaneBringup:
                         'Cloning into \'FunControlPlane\'', 'Prepare End']
             for section in sections:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
+            '''
             linux_obj_come.remove_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
                                                  "F1_TOR.json")
             hu_fix_file = fun_test.get_script_parent_directory() + '/F1_TOR.json'
@@ -184,6 +185,7 @@ class FunControlPlaneBringup:
             linux_obj_come.create_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
                                                  "F1_TOR.json", contents=json.dumps(json_file))
             fun_test.log("Updated F1_TOR.json file")
+            '''
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
 
         setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
