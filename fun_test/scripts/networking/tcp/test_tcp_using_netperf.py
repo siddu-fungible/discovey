@@ -222,8 +222,7 @@ class TestTcpPerformance(FunTestCase):
         # Scp mpstat json to LOGS dir
         if use_mpstat:
             populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=mpstat_obj,
-                                        dump_filename=mpstat_temp_filename, host_name=host_name, version=version,
-                                        num_flows=num_flows)
+                                        dump_filename=mpstat_temp_filename)
 
         fun_test.sleep("Letting file to be scp", seconds=2)
 
@@ -236,8 +235,7 @@ class TestTcpPerformance(FunTestCase):
         # Get diff stats
         netstat_temp_filename = str(version) + "_" + str(num_flows) + '_netstat.txt'
         diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
-                                                host_name=host_name, num_flows=num_flows, version=version)
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
         fun_test.test_assert(populate, "Populate netstat into txt file")
 
         # Parse output to get json
