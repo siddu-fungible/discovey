@@ -74,7 +74,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables['topology'] = topology
-        fun_test.shared_variables['db_log_time'] = datetime.now()
+        fun_test.shared_variables['db_log_time'] = get_current_time()
         fun_test.shared_variables["remote_ip"] = self.test_network["test_interface_ip"].split('/')[0]
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
