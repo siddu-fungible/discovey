@@ -437,12 +437,20 @@ class ECVolumeLevelTestcase(FunTestCase):
             ec_name = self.vols_created['ec'][0]['name']
             plex_ids = [x['uuid'] for x in self.vols_created["raw"]]
             num_blts = self.ec_coding["ndata"] + self.ec_coding["nparity"]
+            ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
 
-            self.storage_controller.detach_volume_from_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
-                                                                  ns_id=self.volume_info['ctrlr']['nsid'],
-                                                                  command_duration=self.command_timeout)
-            self.storage_controller.delete_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
-                                                      command_duration=self.command_timeout)
+            fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                                       ns_id=self.volume_info['ctrlr'][
+                                                                                           'nsid'],
+                                                                                       command_duration=self.command_timeout)[
+                                     'status'],
+                                 message="Detach nsid: {} from controller: {}".format(self.volume_info['ctrlr']['nsid'],
+                                                                                      ctrlr_uuid))
+
+            fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                           command_duration=self.command_timeout)[
+                                     'status'],
+                                 message="Delete Controller uuid: {}".format(ctrlr_uuid))
 
             # Delete LSV Volume
             self.storage_controller.delete_volume(name=lsv_name,
