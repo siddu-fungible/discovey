@@ -337,7 +337,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             one_entry.save()
             try:
                 fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
-                completion_date = timezone.localtime(date_time)
+                completion_date = timezone.localtime(one_entry.input_date_time)
                 completion_date = str(completion_date).split(":")
                 completion_date = completion_date[0] + ":" + completion_date[1]
                 build_date = parser.parse(completion_date)
