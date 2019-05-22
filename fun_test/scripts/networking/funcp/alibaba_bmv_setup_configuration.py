@@ -76,7 +76,8 @@ class BringupSetup(FunTestCase):
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1)
 
-
+        funcp_obj.add_routes_towards_f1(f1_0_outgoing=["fpg0", "1.1.1.1"], f1_0=["19.1.1.1/24", "20.1.1.1/24"],
+                                        f1_1_outgoing=["fpg0", "1.1.2.1"], f1_1=["19.1.1.1/24", "20.1.1.1/24"])
 
 
 

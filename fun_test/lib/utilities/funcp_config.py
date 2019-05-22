@@ -323,3 +323,27 @@ class FunControlPlaneBringup:
             mpg_ip = ifconfig_output.split()[1]
             self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
             linux_obj.disconnect()
+
+    def add_routes_towards_f1(self, f1_0, f1_1, f1_0_outgoing, f1_1_outgoing):
+        linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        docker_output = linux_obj_come.command(command="docker ps -a")
+        print "\n" + docker_output
+        self.docker_names = linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
+        fun_test.test_assert_expected(expected=2, actual=len(self.docker_names), message="Make sure 2 dockers are up")
+        linux_obj_come.disconnect()
+
+        for docker_name in self.docker_names:
+            linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+            linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+            if docker_name.rstrip().endswith() == "0":
+                for ip in f1_0:
+                    linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_0_outgoing[1],
+                                                                                      f1_0_outgoing[0]))
+                for ip in f1_1:
+                    linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_1_outgoing[1],
+                                                                                      f1_1_outgoing[0]))
+            linux_obj.disconnect()
