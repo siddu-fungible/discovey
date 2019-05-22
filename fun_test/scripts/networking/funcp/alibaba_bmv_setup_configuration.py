@@ -49,7 +49,8 @@ class BringupSetup(FunTestCase):
                                                           "--serial --dpc-uart --dis-stats retimer=3 --mgmt")
         #Boot both F1s and reboot COMe
 
-        fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False), message="Boot F1s")
+        fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, gatewayip="10.1.105.1"),
+                             message="Boot F1s")
         #reboot PCIe connected servers and verify PCIe connections
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
         servers_mode = server_key["fs"][fs_name]

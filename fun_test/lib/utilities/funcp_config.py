@@ -34,7 +34,7 @@ class FunControlPlaneBringup:
         self.mpg_ips = {}
         self.docker_names = []
 
-    def boot_both_f1(self, power_cycle_come=True, reboot_come=True):
+    def boot_both_f1(self, power_cycle_come=True, reboot_come=True, gatewayip=None):
         fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
                       boot_args=self.boot_args_f1_0)
         fs_1 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_1,
@@ -44,7 +44,7 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
-                                                        boot_args=fs_0.boot_args),
+                                                        boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
         fs_0.bmc.start_uart_log_listener(f1_index=0)
         fun_test.test_assert(
