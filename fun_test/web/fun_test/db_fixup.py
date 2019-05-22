@@ -37,7 +37,8 @@ operations_category = ["op", "Kop", "Mop", "Gop"]
 cycles_category = ["cycles"]
 bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
 bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
-packets_per_sec_category = ["pps", "Mpps"]
+packets_per_sec_category = ["pps", "Mpps", "Kpps", "Gpps"]
+connections_per_sec_category = ["cps", "Mcps", "Kcps", "Gcps"]
 
 
 def get_rounded_time(dt):
@@ -549,6 +550,13 @@ def convert_to_base_unit(output_value, output_unit):
             if output_unit == "Kpps":
                 output_value = float(output_value * math.pow(10, 3))
             if output_unit == "Gpps":
+                output_value = float(output_value * math.pow(10, 9))
+        elif output_unit in connections_per_sec_category:
+            if output_unit == "Mcps":
+                output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "Kcps":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "Gcps":
                 output_value = float(output_value * math.pow(10, 9))
     return output_value
 
