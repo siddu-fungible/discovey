@@ -191,8 +191,7 @@ class TestCloseResetCps(FunTestCase):
         # Get diff stats
         netstat_temp_filename = str(version) + "_" + profile_name + '_netstat.txt'
         diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
-        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename,
-                                                host_name=host_name, version=version, num_flows="cps")
+        populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
         fun_test.test_assert(populate, "Populate netstat into txt file")
 
         # Parse output to get json
