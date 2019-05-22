@@ -11,6 +11,7 @@ duration = 60 (Test Duration)
 incremental_count = 100 (Counter value at which cps value will be incremental starting from base_cps)
 end_cps = 500 (Max CPS value)  <-- This parameter is optional and can be use for debug purpose.
                                    If not given test will find the max value.
+publish_result = False/True  -<- Optional By default True
 """
 from lib.system.fun_test import *
 from lib.host.linux import *
@@ -157,6 +158,9 @@ class TestCloseResetCps(FunTestCase):
         base_cps = inputs['base_cps']
         test_duration = inputs['duration']
         increment_count = inputs['increment_count']
+        publish_result = True
+        if 'publish_result' in inputs:
+            publish_result = inputs['publish_result']
 
         end_cps = None
         if 'end_cps' in inputs:
@@ -193,15 +197,17 @@ class TestCloseResetCps(FunTestCase):
 
         # Parse output to get json
         if not branch_name:
-            output = populate_cps_performance_json_file(mode=mode, flow_type="FunTCP_Server_CPS",
-                                                        frame_size=self.default_frame_size,
-                                                        cps_type=profile_name,
-                                                        max_cps=result['max_cps'],
-                                                        max_latency=result['max_latency'],
-                                                        avg_latency=result['avg_latency'],
-                                                        timestamp=TIMESTAMP,
-                                                        filename=filename, model_name=TCP_CPS_PERFORMANCE_MODEL_NAME)
-            fun_test.test_assert(output, "JSON file populated")
+            if publish_result:
+                output = populate_cps_performance_json_file(mode=mode, flow_type="FunTCP_Server_CPS",
+                                                            frame_size=self.default_frame_size,
+                                                            cps_type=profile_name,
+                                                            max_cps=result['max_cps'],
+                                                            max_latency=result['max_latency'],
+                                                            avg_latency=result['avg_latency'],
+                                                            timestamp=TIMESTAMP,
+                                                            filename=filename,
+                                                            model_name=TCP_CPS_PERFORMANCE_MODEL_NAME)
+                fun_test.test_assert(output, "JSON file populated")
 
     def cleanup(self):
         if 'tcpdump_pid' in fun_test.shared_variables:
