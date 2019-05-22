@@ -7,7 +7,7 @@ hu:
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
-  pcie_width: 8
+  pcie_width: 16
   pf_interface: hu2-f0
   vf_interface: hu2-f8
   namespaces:
