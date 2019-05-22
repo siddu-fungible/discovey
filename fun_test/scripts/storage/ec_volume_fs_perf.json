@@ -116,6 +116,7 @@
     "command_timeout": 30,
     "huid": 3,
     "ctlid": 2,
+    "fnid": 2,
     "iter_interval": 5,
     "check_lsv_stats": 0,
     "ns_id": 1,
