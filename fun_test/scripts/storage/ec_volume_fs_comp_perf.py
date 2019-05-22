@@ -33,6 +33,7 @@ tb_config = {
             "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
+            "fnid": 2,
             "interface_info": {
                 0: {
                     "vms": 0,
@@ -257,6 +258,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                       transport=self.transport,
                                                       huid=tb_config['dut_info'][0]['huid'],
                                                       ctlid=tb_config['dut_info'][0]['ctlid'],
+                                                      fnid=tb_config['dut_info'][0]['fnid'],
                                                       command_duration=self.command_timeout)['status'],
             message="Create Controller with UUID: {}".format(fun_test.shared_variables['cntrlr_uuid']))
         fun_test.test_assert(
