@@ -75,6 +75,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables['topology'] = topology
         fun_test.shared_variables['db_log_time'] = datetime.now()
+        fun_test.shared_variables["remote_ip"] = self.test_network["test_interface_ip"].split('/')[0]
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
@@ -205,6 +206,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.numa_cpus = fun_test.shared_variables["numa_cpus"]
+        self.remote_ip = fun_test.shared_variables['remote_ip']
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
 
@@ -219,14 +221,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
-            # Configuring the controller
-            command_result = self.storage_controller.command(command="enable_counters",
-                                                             legacy=True,
-                                                             command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
+            # enable counters
+            enable_counters(self.storage_controller, self.command_timeout)
 
-            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+            # ipcfg on fs
+            configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
+
+            # configure controller
             self.ctrlr_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                        transport=self.attach_transport,
@@ -234,7 +235,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                        nqn=self.nvme_subsystem,
                                                                        port=self.transport_port,
                                                                        command_duration=self.command_timeout)
-            fun_test.log(command_result)
             fun_test.test_assert(command_result["status"],
                                  "Create Storage Controller for {} with controller uuid {} on DUT".
                                  format(self.attach_transport, self.ctrlr_uuid))
@@ -249,8 +249,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("{}: {}".format(k, v))
 
             # Attaching/Exporting all the EC/LS volumes to the external server
-            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
             command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                  ns_id=self.ns_id,
                                                                                  vol_uuid=self.ec_info["attach_uuid"][
@@ -262,31 +260,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                                         self.ctrlr_uuid))
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables['nsid'] = self.ns_id
-            # disabling the error_injection for the EC volume
-            command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
 
-            # Ensuring that the error_injection got disabled properly
-            fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-            command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
-                                          expected=0,
-                                          message="Ensuring error_injection got disabled")
+            disable_error_inject(self.storage_controller, self.command_timeout)
 
             # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
-
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level",
-                                                          legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level,
-                                          actual=command_result["data"],
-                                          message="Checking syslog level")
+            set_syslog_level(self.storage_controller, log_level=self.syslog_level, timeout=self.command_timeout)
 
         if not fun_test.shared_variables["ec"]["nvme_connect"]:
             # Checking nvme-connect status
@@ -457,6 +435,5 @@ class EC42FioTcpRead(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(EC42FioTcpRead())
     ecscript.add_test_case(EC42FioTcpRead())
     ecscript.run()
