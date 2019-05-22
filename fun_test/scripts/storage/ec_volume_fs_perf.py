@@ -175,7 +175,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.shared_variables['cntrlr_uuid'] = utils.generate_uuid()
             fun_test.test_assert(self.storage_controller.create_controller(
-                cntrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
                 transport=self.transport,
                 huid=self.huid,
                 ctlid=self.ctlid,
