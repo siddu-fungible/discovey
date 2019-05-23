@@ -30,7 +30,7 @@ class StorageFsTemplate(object):
     DEPLOY_TIMEOUT = 1200
     LAUNCH_SCRIPT = "./integration_test/emulation/test_system.py "
     PREPARE_CMD = "{} --prepare --docker".format(LAUNCH_SCRIPT)
-    DEPLOY_CONTAINER = "{} --setup --docker".format(LAUNCH_SCRIPT)
+    DEPLOY_CONTAINER_CMD = "{} --setup --docker".format(LAUNCH_SCRIPT)
     F1_0_HANDLE = None
     F1_1_HANDLE = None
 
@@ -43,7 +43,7 @@ class StorageFsTemplate(object):
 
     def deploy_funcp_container(self, update_n_deploy=True, update_workspace=True):
         # check if come is up
-        result = {'status': False, 'container_info': []}
+        result = {'status': False, 'container_info': {}, 'container_names': []}
         if not self.come_obj.check_ssh():
             return result
 
@@ -62,24 +62,24 @@ class StorageFsTemplate(object):
         launch_resp = self.launch_funcp_containers()
         if not launch_resp:
             fun_test.critical("FunCP container launch failed")
-            return response
+            return result
 
         # get container names.
         get_containers = self.get_container_names()
         if not get_containers['status']:
             return result
-
-        for cntnr in get_containers['container_name_list']:
+        result['container_names'] = get_containers['container_name_list']
+        for container_name in get_containers['container_name_list']:
             cntnr_obj = FunCpDockerContainer(host_ip=self.come_obj.host_ip,
                                              ssh_username=self.come_obj.ssh_username,
                                              ssh_password=self.come_obj.ssh_password,
                                              ssh_port=self.come_obj.ssh_port,
-                                             name=cntnr)
-            if "0" in cntnr:  # based on logic that container names will always be F1-1, F1-0
+                                             name=container_name)
+            if "0" in container_name:  # based on logic that container names will always be F1-1, F1-0
                 self.F1_0_HANDLE = cntnr_obj
             else:
-                self.F1_0_HANDLE = cntnr_obj
-            result['container_info'].append(cntnr_obj)
+                self.F1_1_HANDLE = cntnr_obj
+            result['container_info'][container_name] = cntnr_obj
 
         result['status'] = True
         return result
@@ -87,7 +87,8 @@ class StorageFsTemplate(object):
     def update_fundsk(self):
         result = False
         response = self.come_obj.check_file_directory_exists(self.FUNSDK_DIR)
-        if not response:  # todo Raise fun_test.critical
+        if not response:
+            fun_test.critical("{} dir does not exists".format(self.FUNSDK_DIR))
             return result
         self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
         self.come_obj.sudo_command("git pull", timeout=self.DEFAULT_TIMEOUT)
@@ -115,7 +116,7 @@ class StorageFsTemplate(object):
     def launch_funcp_containers(self, mode):
         result = False
         self.enter_funsdk()
-        cmd = self.DEPLOY_CONTAINER
+        cmd = self.DEPLOY_CONTAINER_CMD
         if mode:
             cmd += " --{}".format(self.mode)
         response = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT)
@@ -150,6 +151,7 @@ class StorageFsTemplate(object):
         # Stop Container F1_0
         if self.F1_0_HANDLE:
             self.stop_container(self.F1_0_HANDLE.name)
+        # Stop Container F1_1
         if self.F1_1_HANDLE:
             self.stop_container(self.F1_0_HANDLE.name)
 
