@@ -12,6 +12,7 @@ from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint, SwitchEndPoint
 from lib.system.utils import parse_file_to_json
 from lib.host.linux import Linux
 from lib.host.router import Router
+from lib.topology.host import Host
 from lib.fun.fs import ComE
 
 
@@ -43,6 +44,11 @@ class TopologyHelper:
             fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
 
         self.expanded_topology = ExpandedTopology()
+
+        if "host_info" in spec:
+            hosts = spec["host_info"]
+            for host_name, host_spec in hosts.items():
+                self.expanded_topology.hosts[host_name] = Host(name=host_name, spec=spec)
 
         if "switch_info" in spec:
             switches = spec["switch_info"]
@@ -201,6 +207,12 @@ class TopologyHelper:
 
         if True:  # Storage style where each container has F1 and Host in it
 
+            hosts = topology.hosts
+            for host_name, host in hosts.items():
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=host.name)
+                fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host.name))
+                linux_obj = Linux(**host_spec)
+                host.set_instance(linux_obj)
 
             duts = topology.duts
 
