@@ -5,18 +5,20 @@ from lib.topology.end_points import BareMetalEndPoint, QemuColocatedHypervisorEn
 from lib.topology.end_points import DutEndPoint, EndPoint
 
 
-class DutInterface(ToDictMixin):
+class DutInterface(object, ToDictMixin):
     INTERFACE_TYPE_PCIE = "INTERFACE_TYPE_PCIE"
     INTERFACE_TYPE_ETHERNET = "INTERFACE_TYPE_ETHERNET"
+    INTERFACE_TYPE_ETHERNET_BOND = "INTERFACE_TYPE_ETHERNET_BOND"
 
     TO_DICT_VARS = ["index", "type", "peer_info"]
 
-    def __init__(self, index, type, f1_index=0):
+    def __init__(self, index, type, f1_index=0, **kwargs):
         self.index = index  # interface index
         self.peer_info = None
         self.type = type  # pcie, ethernet
         self.dual_interface_index = None
-        self.f1_index = 0
+        self.f1_index = f1_index
+        self.ip = None
 
     def get_peer_instance(self):
         return self.peer_info
@@ -27,6 +29,9 @@ class DutInterface(ToDictMixin):
         if num_hosts:
             fun_test.debug("User intended baremetal for Interface: {}".format(self.index))
             self.peer_info = BareMetalEndPoint(host_info=host_info)
+
+    def add_peer_switch_interface(self, switch_obj):
+        self.peer_info = switch_obj
 
     def add_peer_dut_interface(self, dut_index, peer_fpg_interface_info):  # Sometimes interfaces are just connected to another DUT
         self.peer_info = DutEndPoint(dut_index=dut_index, fpg_interface_info=peer_fpg_interface_info)
@@ -51,6 +56,14 @@ class DutInterface(ToDictMixin):
         self.dual_interface_index = interface_index
 
 
+class BondInterface(DutInterface):
+    INTERFACE_TYPE_ETHERNET_BOND = "INTERFACE_TYPE_ETHERNET_BOND"
+
+    def __init__(self, **kwargs):
+        super(BondInterface, self).__init__(**kwargs)
+        self.ip = kwargs.get("ip", None)
+        self.fpg_slaves = kwargs.get("fpg_slaves", None)
+
 class Dut(ToDictMixin):
     DUT_TYPE_FSU = "DUT_TYPE_FSU"
     DUT_TYPE_FM8 = "DUT_TYPE_FM8"
@@ -70,6 +83,7 @@ class Dut(ToDictMixin):
         self.index = index
         self.interfaces = {}  # For PCIe interfaces
         self.fpg_interfaces = {0: {}, 1: {}}  # for each F1
+        self.bond_interfaces = {0: {}, 1: {}}
         self.spec = spec
         self.mode = mode
         self.instance = None
@@ -96,6 +110,12 @@ class Dut(ToDictMixin):
         dut_interface_obj = DutInterface(index=index, type=type, f1_index=f1_index)
         self.fpg_interfaces[f1_index][index] = dut_interface_obj
         return dut_interface_obj
+
+    def add_bond_interface(self, index, type, f1_index, fpg_slaves, ip):
+        dut_interface_obj = BondInterface(index=index, type=type, f1_index=f1_index, fpg_slaves=fpg_slaves, ip=ip)
+        self.bond_interfaces[f1_index][index] = dut_interface_obj
+        return dut_interface_obj
+
 
     def set_start_mode(self, mode):
         self.start_mode = mode

@@ -8,6 +8,8 @@ class ExpandedTopology(ToDictMixin):
         self.duts = {}
         self.tgs = {}
         self.active_orchestrators = []
+        self.switches = {}
+
 
     def add_active_orchestrator(self, orchestrator):
         self.active_orchestrators.append(orchestrator)
@@ -18,6 +20,14 @@ class ExpandedTopology(ToDictMixin):
             result = self.duts[index]
         else:
             fun_test.log("Dut Index: {} not found".format(index))
+        return result
+
+    def get_switch(self, name):
+        result = None
+        if name in self.switches:
+            result = self.switches[name]
+        else:
+            fun_test.log("Switch: {} not found".format(name))
         return result
 
     def get_tg(self, index):
@@ -31,6 +41,13 @@ class ExpandedTopology(ToDictMixin):
         dut = self.get_dut(index=index)
         if dut:
             result = dut.get_instance()
+        return result
+
+    def get_switch_instance(self, name):
+        result = None
+        switch = self.get_switch(name=name)
+        if switch:
+            result = switch.get_instance()
         return result
 
     def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):

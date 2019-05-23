@@ -7,9 +7,10 @@ from dut import Dut, DutInterface
 from lib.host.traffic_generator import Fio, LinuxHost
 from lib.system.fun_test import FunTestLibException, FunTimer
 from topology import ExpandedTopology
-from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
+from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint, SwitchEndPoint
 from lib.system.utils import parse_file_to_json
 from lib.host.linux import Linux
+from lib.host.router import Router
 from lib.fun.fs import ComE
 
 
@@ -41,6 +42,12 @@ class TopologyHelper:
             fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
 
         self.expanded_topology = ExpandedTopology()
+
+        if "switch_info" in spec:
+            switches = spec["switch_info"]
+            for switch_name, switch_spec in switches.items():
+                self.expanded_topology.switches[switch_name] = SwitchEndPoint(name=switch_name, spec=switch_spec)
+
         # fun_test.simple_assert("dut_info" in spec, "dut_info in spec")  #TODO
         if "dut_repeat" in spec:
             repeat_count = spec["dut_repeat"]["count"]
@@ -74,6 +81,11 @@ class TopologyHelper:
                 fpg_interfaces = {}
                 if "fpg_interface_info" in dut_info:
                     fpg_interfaces = dut_info["fpg_interface_info"]
+
+                bond_interfaces = {}
+                if "bond_interface_info" in dut_info:
+                    bond_interfaces = dut_info["bond_interface_info"]
+
                 # Assign endpoints on interfaces
                 for interface_index, interface_info in interfaces.items():
                     interface_index = int(interface_index)
@@ -101,15 +113,31 @@ class TopologyHelper:
                 for f1_index, interfaces_info in fpg_interfaces.items():
                     for interface_index, interface_info in interfaces_info.items():
                         interface_index = int(interface_index)
-                        dut_interface_obj = dut_obj.add_fpg_interface(index=interface_index, type=interface_info['type'], f1_index=int(f1_index))
+                        dut_interface_obj = dut_obj.add_fpg_interface(index=interface_index,
+                                                                      type=interface_info['type'],
+                                                                      f1_index=int(f1_index))
                         if "hosts" in interface_info:
                             dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"], host_info=interface_info["host_info"])
-                        if "dut_info" in interface_info:
+                        elif "dut_info" in interface_info:
                             this_dut_info = interface_info["dut_info"]
                             dut_index = this_dut_info["dut_index"]
                             fun_test.simple_assert("fpg_interface_info" in this_dut_info, "fpg_interface_info is expected")
                             peer_fpg_interface_info = this_dut_info["fpg_interface_info"]
                             dut_interface_obj.add_peer_dut_interface(dut_index=dut_index, peer_fpg_interface_info=peer_fpg_interface_info)
+                        elif "switch_info" in interface_info:
+                            switch_spec = interface_info["switch_info"]
+                            switch_obj = self.expanded_topology.get_switch(switch_spec["name"])
+                            fun_test.simple_assert(switch_obj, "switch_obj")
+                            dut_interface_obj.add_peer_switch_interface(switch_obj=switch_obj)
+
+                for f1_index, interfaces_info in bond_interfaces.items():
+                    for interface_index, interface_info in interfaces_info.items():
+                        interface_index = int(interface_index)
+                        dut_obj.add_bond_interface(index=interface_index,
+                                                   type=interface_info['type'],
+                                                   f1_index=int(f1_index),
+                                                   fpg_slaves=interface_info["fpg_slaves"],
+                                                   ip=interface_info["ip"])
 
         if "tg_info" in spec:
             tgs = spec["tg_info"]
@@ -174,6 +202,13 @@ class TopologyHelper:
 
         if True:  # Storage style where each container has F1 and Host in it
 
+
+            switches = topology.switches
+            for switch_name, switch_obj in switches.items():
+                fun_test.log("Allocating switch: {}".format(switch_name))
+                self.allocate_switch(switch_name=switch_name, switch_obj=switch_obj)
+                fun_test.add_checkpoint("Added switch: {}".format(switch_name))
+
             duts = topology.duts
 
             # Determine the number of storage containers you need
@@ -206,17 +241,6 @@ class TopologyHelper:
 
                             if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
                                 fun_test.test_assert(instance.reboot(non_blocking=True), "Host instance: {} rebooted issued".format(str(instance)))
-                                # instance.lspci(grep_filter="1dad")
-                                pass
-                                '''
-                                disable_f1_index = dut_obj.get_instance().disable_f1_index
-                                com_e = ComE(host_ip=instance.host_ip, ssh_username=instance.ssh_username,
-                                             ssh_password=instance.ssh_password)
-                                com_e.initialize(disable_f1_index=disable_f1_index)
-                                fun_test.test_assert(com_e.detect_pfs(), "PFs detected on Host")
-                                fun_test.test_assert(com_e.setup_dpc(), "Setup DPC on Host")
-                                com_e.disconnect()
-                                '''
 
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
@@ -241,13 +265,23 @@ class TopologyHelper:
                             elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                                 self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                          orchestrator_obj=orchestrator)
+
                             elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
                                 self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                          orchestrator_obj=orchestrator)
                             elif peer_info.type == peer_info.END_POINT_TYPE_DUT:
                                 peer_dut_end_point = peer_info
-                                peer_dut_instance = self.expanded_topology.get_dut_instance(peer_dut_end_point.dut_index)
+                                peer_dut_instance = self.expanded_topology.get_dut_instance(peer_dut_end_point.dut_index)  # Should be changed to allocate_dut
                                 peer_info.set_instance(peer_dut_instance)
+
+                            elif peer_info.type == peer_info.END_POINT_TYPE_SWITCH:
+                                peer_instance = self.expanded_topology.get_switch_instance(peer_info.name)
+                                peer_info.set_instance(peer_instance)
+
+            for dut_index, dut_obj in duts.items():
+                for f1_index, interface_info in dut_obj.bond_interfaces.iteritems():
+                    for interface_index, interface_obj in interface_info.items():
+                        pass #Optionally work on peer endpoint
 
             tgs = topology.tgs
 
@@ -283,6 +317,11 @@ class TopologyHelper:
         dut_instance = orchestrator_obj.launch_dut_instance(dut_index=dut_index, dut_obj=dut_obj)
         fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
         dut_obj.set_instance(dut_instance)
+
+    @fun_test.safe
+    def allocate_switch(self, switch_name, switch_obj):
+        switch_instance = None #TODO: Not implemented Router(host_ip="127.0.0.1", ssh_username="fun", ssh_password="123")
+        switch_obj.set_instance(switch_instance)
 
     @fun_test.safe
     def allocate_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO

@@ -211,5 +211,140 @@
         "dut": "fs-60"
       }
     }
+  },
+  "inspur": {
+    "type": "dynamic", // Used to decide whether this testbed is used with CSR-replay or not. If it is CSR reply then it will won't have bond interface, and the hosts will be directly connected to the NU interface itself
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-41",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [0, 4, 8, 12],
+              "ip": "15.41.1.2/24"
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [0, 4, 8, 12],
+              "ip": "15.41.2.2/24"
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/22"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/23"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/20"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/21"
+              }
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/18"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/19"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/16"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/17"
+              }
+            }
+          }
+        }
+      }
+    },
+    "switch_info": {
+      "qfx-1": {
+        "interface_info" : {
+          "et-0/0/0": {
+            "ip": "15.1.1.1/24",
+            "host_info": {
+              "name": "mktg-server-01"
+            }
+          },
+          "et-0/0/1": {
+            "ip": "15.1.2.1/24",
+            "host_info": {
+              "name": "mktg-server-02"
+            }
+          }
+        }
+      }
+    },
+    "hosts_info": {
+      "0": {
+        "type": "Host",
+        "name": "mktg-server-01",
+        "interface_info": {
+          "0": {
+            "name": "enp216s0",
+            "ip": "15.1.1.2/24",
+            "switch_info": {
+              "name": "qfx-1",
+              "port": "et-0/0/0"
+            }
+          }
+        }
+      },
+      "1": {
+        "type": "Host",
+        "name": "mktg-server-02",
+        "interface_info": {
+          "0": {
+            "name": "enp216s0",
+            "ip": "15.1.2.2/24",
+            "switch_info": {
+              "name": "qfx-1",
+              "port": "et-0/0/1"
+            }
+          }
+        }
+      }
+    }
   }
 }
