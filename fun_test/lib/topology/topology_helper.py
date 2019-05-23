@@ -3,7 +3,8 @@ import dill
 
 from asset.asset_manager import *
 from fun_settings import REGRESSION_SERVICE_HOST
-from dut import Dut, DutInterface
+from lib.topology.dut import Dut, DutInterface
+from lib.topology.switch import Switch
 from lib.host.traffic_generator import Fio, LinuxHost
 from lib.system.fun_test import FunTestLibException, FunTimer
 from topology import ExpandedTopology
@@ -46,7 +47,7 @@ class TopologyHelper:
         if "switch_info" in spec:
             switches = spec["switch_info"]
             for switch_name, switch_spec in switches.items():
-                self.expanded_topology.switches[switch_name] = SwitchEndPoint(name=switch_name, spec=switch_spec)
+                self.expanded_topology.switches[switch_name] = Switch(name=switch_name, spec=switch_spec)
 
         # fun_test.simple_assert("dut_info" in spec, "dut_info in spec")  #TODO
         if "dut_repeat" in spec:
@@ -126,9 +127,7 @@ class TopologyHelper:
                             dut_interface_obj.add_peer_dut_interface(dut_index=dut_index, peer_fpg_interface_info=peer_fpg_interface_info)
                         elif "switch_info" in interface_info:
                             switch_spec = interface_info["switch_info"]
-                            switch_obj = self.expanded_topology.get_switch(switch_spec["name"])
-                            fun_test.simple_assert(switch_obj, "switch_obj")
-                            dut_interface_obj.add_peer_switch_interface(switch_obj=switch_obj)
+                            dut_interface_obj.add_peer_switch_interface(switch_spec=switch_spec)
 
                 for f1_index, interfaces_info in bond_interfaces.items():
                     for interface_index, interface_info in interfaces_info.items():
@@ -202,12 +201,6 @@ class TopologyHelper:
 
         if True:  # Storage style where each container has F1 and Host in it
 
-
-            switches = topology.switches
-            for switch_name, switch_obj in switches.items():
-                fun_test.log("Allocating switch: {}".format(switch_name))
-                self.allocate_switch(switch_name=switch_name, switch_obj=switch_obj)
-                fun_test.add_checkpoint("Added switch: {}".format(switch_name))
 
             duts = topology.duts
 

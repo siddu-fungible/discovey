@@ -2,7 +2,7 @@ from lib.system.fun_test import fun_test
 from lib.fun.f1 import F1
 from lib.system.utils import ToDictMixin
 from lib.topology.end_points import BareMetalEndPoint, QemuColocatedHypervisorEndPoint, HypervisorEndPoint
-from lib.topology.end_points import DutEndPoint, EndPoint
+from lib.topology.end_points import DutEndPoint, EndPoint, SwitchEndPoint
 
 
 class DutInterface(object, ToDictMixin):
@@ -30,8 +30,8 @@ class DutInterface(object, ToDictMixin):
             fun_test.debug("User intended baremetal for Interface: {}".format(self.index))
             self.peer_info = BareMetalEndPoint(host_info=host_info)
 
-    def add_peer_switch_interface(self, switch_obj):
-        self.peer_info = switch_obj
+    def add_peer_switch_interface(self, switch_spec):
+        self.peer_info = SwitchEndPoint(name=switch_spec["name"], port=switch_spec["port"], spec=switch_spec)
 
     def add_peer_dut_interface(self, dut_index, peer_fpg_interface_info):  # Sometimes interfaces are just connected to another DUT
         self.peer_info = DutEndPoint(dut_index=dut_index, fpg_interface_info=peer_fpg_interface_info)
@@ -100,6 +100,9 @@ class Dut(ToDictMixin):
 
     def get_fpg_interfaces(self, f1_index=0):
         return self.fpg_interfaces[f1_index]
+
+    def get_bond_interfaces(self, f1_index=0):
+        return self.bond_interfaces[f1_index]
 
     def add_interface(self, index, type):
         dut_interface_obj = DutInterface(index=index, type=type)

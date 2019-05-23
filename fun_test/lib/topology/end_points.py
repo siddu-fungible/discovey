@@ -61,10 +61,11 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
 class SwitchEndPoint(EndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_SWITCH
 
-    def __init__(self, name, spec):
+    def __init__(self, name, port, spec):
         super(SwitchEndPoint, self).__init__()
         self.spec = spec
         self.name = name
+        self.port = port
 
     def set_instance(self, instance):
         self.instance = instance

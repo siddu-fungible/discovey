@@ -45,9 +45,7 @@ class ExpandedTopology(ToDictMixin):
 
     def get_switch_instance(self, name):
         result = None
-        switch = self.get_switch(name=name)
-        if switch:
-            result = switch.get_instance()
+        result = self.get_switch(name=name)
         return result
 
     def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
