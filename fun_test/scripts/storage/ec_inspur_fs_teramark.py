@@ -538,12 +538,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["volume_name"] = self.volume_name
             fun_test.shared_variables["ec"]["nvme_connect"] = True
 
-        self.fio_filename = ""
-        for device in xrange(len(self.nvme_block_device_list)):
-            if device == 0:
-                self.fio_filename = self.nvme_block_device_list[device]
-            else:
-                self.fio_filename = self.fio_filename + ":" + self.nvme_block_device_list[device]
+            self.fio_filename = ":".join(self.nvme_block_device_list)
+            fun_test.shared_variables["self.fio_filename"] = self.fio_filename
 
         # Executing the FIO command to fill the volume to it's capacity
         if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
@@ -563,6 +559,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
         self.volume_name = fun_test.shared_variables["volume_name"]
+        self.fio_filename = fun_test.shared_variables["self.fio_filename"]
 
         if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
             self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
