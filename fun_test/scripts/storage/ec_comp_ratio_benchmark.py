@@ -205,7 +205,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"],
                                  "Create Storage Controller for {} with controller uuid {} on DUT".
                                  format(self.attach_transport, self.ctrlr_uuid))
-            fun_test.shared_variables["ctrlr_uuid"] = ctrlr_uuid
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
             fun_test.shared_variables['ctlr_configured'] = True
 
         # Configure EC volume
