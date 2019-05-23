@@ -517,28 +517,35 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
             # Checking that the above created BLT volume is visible to the end host
-            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
-            for volume_name in lsblk_output:
-                match = re.search(volume_pattern, volume_name)
-                if match:
-                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
-                    self.volume_name = self.nvme_block_device.replace("/dev/", "")
-                    fun_test.test_assert_expected(expected=self.volume_name,
-                                                  actual=lsblk_output[volume_name]["name"],
-                                                  message="{} device available".format(self.volume_name))
-                    break
-            else:
-                fun_test.test_assert(False, "{} device available".format(self.volume_name))
+            self.nvme_block_device_list = []
+            for num in xrange(self.ec_info["num_volumes"]):
+                volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(num+1)
+                for volume_name in lsblk_output:
+                    match = re.search(volume_pattern, volume_name)
+                    if match:
+                        self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(num+1)
+                        self.nvme_block_device_list.append(self.nvme_block_device)
+                        self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                        fun_test.test_assert_expected(expected=self.volume_name,
+                                                      actual=lsblk_output[volume_name]["name"],
+                                                      message="{} device available".format(self.volume_name))
+                        break
+                else:
+                    fun_test.test_assert(False, "{} device available".format(self.volume_name))
+                fun_test.log("NVMe Block Device/s: {}".format(self.nvme_block_device_list))
 
             fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
             fun_test.shared_variables["volume_name"] = self.volume_name
             fun_test.shared_variables["ec"]["nvme_connect"] = True
 
+            self.fio_filename = ":".join(self.nvme_block_device_list)
+            fun_test.shared_variables["self.fio_filename"] = self.fio_filename
+
         # Executing the FIO command to fill the volume to it's capacity
         if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
 
             fun_test.log("Executing the FIO command to perform sequential write to volume")
-            fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, cpus_allowed=self.numa_cpus,
+            fio_output = self.end_host.pcie_fio(filename=self.fio_filename, cpus_allowed=self.numa_cpus,
                                                 **self.warm_up_fio_cmd_args)
             fun_test.log("FIO Command Output:\n{}".format(fio_output))
             fun_test.test_assert(fio_output, "Pre-populating the volume")
@@ -552,6 +559,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
         self.volume_name = fun_test.shared_variables["volume_name"]
+        self.fio_filename = fun_test.shared_variables["self.fio_filename"]
 
         if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
             self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
@@ -610,7 +618,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                              format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
                 fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
+                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.fio_filename, rw=mode,
                                                                  numjobs=fio_num_jobs, iodepth=fio_iodepth,
                                                                  name=fio_job_name, cpus_allowed=self.numa_cpus,
                                                                  **self.fio_cmd_args)

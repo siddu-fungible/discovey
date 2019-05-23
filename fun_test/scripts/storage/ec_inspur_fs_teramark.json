@@ -55,7 +55,8 @@
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1
+      "num_ssd": 12,
+      "num_volumes": 2
     },
     "command_timeout": 30,
     "iter_interval": 30,
