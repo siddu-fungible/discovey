@@ -52,11 +52,13 @@ class Listener:
                         self.buffer += new_data
 
                     self.fh.write(self.buffer)
-                    self.buffer = ""
                     self.fh.flush()
+
                     if expected_data in self.buffer:
                         return_from_function = True
+                        self.buffer = ""
                         break
+                    self.buffer = ""
 
             except Exception as ex:
                 print ex
