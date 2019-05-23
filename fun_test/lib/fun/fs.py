@@ -103,7 +103,7 @@ class Bmc(Linux):
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
         self.uart_log_listener_process_ids = []
-        self.u_boot_logs = ""
+        self.u_boot_logs = ["" for x in range(self.NUM_F1S)]  # for each F1
 
     @fun_test.safe
     def ping(self,
@@ -186,7 +186,7 @@ class Bmc(Linux):
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output".format(expected))
         output = nc.close()
-        self.u_boot_logs += output
+        self.u_boot_logs[f1_index] += output
         return output
 
     def start_uart_log_listener(self, f1_index, serial_device):
@@ -353,7 +353,7 @@ class Bmc(Linux):
     def cleanup(self):
         fun_test.sleep("Allowing time to generate full report", seconds=45)
 
-        fun_test.log("U-boot logs: {}: END".format(self.u_boot_logs))
+        # fun_test.log("U-boot logs: {}: END".format(self.u_boot_logs))
         """
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
@@ -379,6 +379,10 @@ class Bmc(Linux):
                              source_username=self.ssh_username,
                              source_password=self.ssh_password,
                              target_file_path=artifact_file_name)
+                with open(artifact_file_name, "r+") as f:
+                    content = f.read()
+                    f.seek(0, 0)
+                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
 
                 fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
                                             filename=artifact_file_name)
