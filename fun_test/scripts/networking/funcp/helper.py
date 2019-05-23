@@ -35,7 +35,7 @@ def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*"
 def setup_hu_host(funeth_obj, update_driver=True, enable_tso=True):
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
