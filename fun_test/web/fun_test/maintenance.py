@@ -528,7 +528,7 @@ if __name__ == "__main_funtcp_16flows__":
                 work_in_progress=False,
                 platform=FunPlatform.F1).save()
 
-if __name__ == "__main__":
+if __name__ == "__main_qd128_pcie__":
     internal_chart_names = ["read_iod128_durable_volume_ec_output_latency", "rand_read_iod128_durable_volume_ec_output_latency"]
     chart_name = "Latency, QDepth=128"
     for internal_chart_name in internal_chart_names:
@@ -581,4 +581,131 @@ if __name__ == "__main__":
         chart.data_sets = json.dumps(data_sets)
         chart.save()
     print "added charts for qd128 durable volume pcie"
+
+if __name__ == "__main__":
+    output_names = ["output_latency", "output_iops"]
+    operations = ["write", "rand_write"]
+    names = ["pcie"]
+    qdepths = ["qd1", "qd4", "qd8", "qd16", "qd32", "qd64"]
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=5, day=20, minute=0, hour=0, second=0)
+    for name in names:
+        for operation in operations:
+            for output_name in output_names:
+                source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/blt_pcie_io_depth.py"
+                if operation == "rand_write":
+                    job_names = ["fio_pcie_randwrite_blt_", "_iod_scaling"]
+                    data_set_operation = "randwrite"
+                    copy = "rand_write_qd1_pcie_output_latency"
+                else:
+                    job_names = ["fio_pcie_write_blt_", "_iod_scaling"]
+                    data_set_operation = "write"
+                    copy = "write_qd1_pcie_output_latency"
+
+                if "iops" in output_name:
+                    internal_chart_name = operation + "_" + "qd" + "_" + name + "_" + output_name
+                    chart_name = "IOPS"
+                    positive = True
+                    y1_axis_title = "ops"
+                    data_sets = []
+                    for qdepth in qdepths:
+                        if qdepth == "qd1":
+                            fio_job_name = job_names[0] + "1_1" + job_names[1]
+                        elif qdepth == "qd4":
+                            fio_job_name = job_names[0] + "4_1" + job_names[1]
+                        elif qdepth == "qd8":
+                            fio_job_name = job_names[0] + "8_1" + job_names[1]
+                        elif qdepth == "qd16":
+                            fio_job_name = job_names[0] + "8_2" + job_names[1]
+                        elif qdepth == "qd32":
+                            fio_job_name = job_names[0] + "8_4" + job_names[1]
+                        else:
+                            fio_job_name = job_names[0] + "8_8" + job_names[1]
+
+                        one_data_set = {}
+                        one_data_set["name"] = qdepth
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                        one_data_set["inputs"]["input_operation"] = data_set_operation
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"] = {"name": "output_write_iops", 'min': 0, "max": -1, "expected": -1,
+                                                  "reference": -1, "unit": y1_axis_title}
+                        data_sets.append(one_data_set)
+
+                    try:
+                        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+                        chart.data_sets = json.dumps(data_sets)
+                        chart.save()
+                    except ObjectDoesNotExist:
+                        metric_id = LastMetricId.get_next_id()
+                        MetricChart(chart_name=chart_name,
+                                    metric_id=metric_id,
+                                    internal_chart_name=internal_chart_name,
+                                    data_sets=json.dumps(data_sets),
+                                    leaf=True,
+                                    description="TBD",
+                                    owner_info="Manu KS (manu.ks@fungible.com)",
+                                    source=source,
+                                    positive=positive,
+                                    y1_axis_title=y1_axis_title,
+                                    visualization_unit=y1_axis_title,
+                                    metric_model_name=model_name,
+                                    base_line_date=base_line_date,
+                                    work_in_progress=False,
+                                    platform=FunPlatform.F1).save()
+                else:
+                    for qdepth in qdepths:
+                        if qdepth == "qd1":
+                            fio_job_name = job_names[0] + "1_1" + job_names[1]
+                        elif qdepth == "qd4":
+                            fio_job_name = job_names[0] + "4_1" + job_names[1]
+                        elif qdepth == "qd8":
+                            fio_job_name = job_names[0] + "8_1" + job_names[1]
+                        elif qdepth == "qd16":
+                            fio_job_name = job_names[0] + "8_2" + job_names[1]
+                        elif qdepth == "qd32":
+                            fio_job_name = job_names[0] + "8_4" + job_names[1]
+                        else:
+                            fio_job_name = job_names[0] + "8_8" + job_names[1]
+                        chart_name = "Latency"
+                        internal_chart_name = operation + "_" + qdepth + "_" + name + "_" + output_name
+                        positive = False
+                        y1_axis_title = "usecs"
+
+                        copy_chart = MetricChart.objects.get(internal_chart_name=copy)
+                        data_sets = json.loads(copy_chart.data_sets)
+                        for data_set in data_sets:
+                            data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                            data_set["inputs"]["input_operation"] = data_set_operation
+                            data_set["inputs"]["input_platform"] = FunPlatform.F1
+                            data_set["output"]["expected"] = -1
+                            data_set["output"]["min"] = 0
+                            data_set["output"]["max"] = -1
+                            data_set["output"]["reference"] = -1
+                            data_set["output"]["unit"] = y1_axis_title
+
+                        try:
+                            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+                            chart.data_sets = json.dumps(data_sets)
+                            chart.save()
+                        except ObjectDoesNotExist:
+                            metric_id = LastMetricId.get_next_id()
+                            MetricChart(chart_name=chart_name,
+                                        metric_id=metric_id,
+                                        internal_chart_name=internal_chart_name,
+                                        data_sets=json.dumps(data_sets),
+                                        leaf=True,
+                                        description="TBD",
+                                        owner_info="Manu KS (manu.ks@fungible.com)",
+                                        source=source,
+                                        positive=positive,
+                                        y1_axis_title=y1_axis_title,
+                                        visualization_unit=y1_axis_title,
+                                        metric_model_name=model_name,
+                                        base_line_date=base_line_date,
+                                        work_in_progress=False,
+                                        platform=FunPlatform.F1).save()
+    print "added charts for raw block write and random write different io depths"
+
+
 
