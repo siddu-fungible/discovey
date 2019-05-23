@@ -577,6 +577,14 @@ class ECVolumeLevelTestcase(FunTestCase):
         fio_result = {}
         fio_output = {}
 
+        for k, v in self.fio_cmd_args.iteritems():
+            if k == "bs":
+                fio_block_size = self.fio_cmd_args["bs"]
+                break
+            if k == "bssplit":
+                fio_block_size = "Mixed"
+                break
+
         for combo in self.fio_numjobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
@@ -585,10 +593,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_iodepth = combo.split(',')[1].strip('() ')
 
             for mode in self.fio_modes:
-                if hasattr(self, self.fio_cmd_args["bs"]):
+                """if hasattr(self, self.fio_cmd_args["bs"]):
                     fio_block_size = self.fio_cmd_args["bs"]
                 else:
-                    fio_block_size = "Mixed"
+                    fio_block_size = "Mixed"""""
                 fio_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
@@ -811,8 +819,8 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(MixedRandReadWriteIOPS())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
     # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
