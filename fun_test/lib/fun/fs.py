@@ -102,6 +102,8 @@ class Bmc(Linux):
         self.uart_log_threads = {}
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
+        self.uart_log_listener_process_ids = []
+        self.u_boot_logs = ["" for x in range(self.NUM_F1S)]  # for each F1
 
     @fun_test.safe
     def ping(self,
@@ -184,17 +186,22 @@ class Bmc(Linux):
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output".format(expected))
         output = nc.close()
+        self.u_boot_logs[f1_index] += output
         return output
 
-    def start_uart_log_listener(self, f1_index):
+    def start_uart_log_listener(self, f1_index, serial_device):
 
+        """
         t = UartLogger(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         self.uart_log_threads[f1_index] = t
         if not self.disable_uart_logger:
             t.start()
-
-        # self.command("{} --device={} --speed={} --output_file={}".format(self.BMC_UART_LOG_LISTENER_PATH))
-        pass
+        """
+        output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
+        process_id = self.start_bg_process("python {} --proxy_port={} --output_file={}".format(self.BMC_UART_LOG_LISTENER_PATH,
+                                                                                                self.SERIAL_PROXY_PORTS[f1_index],
+                                                                                                output_file), nohup=False)
+        self.uart_log_listener_process_ids.append(process_id)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
@@ -296,7 +303,7 @@ class Bmc(Linux):
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999", multiple=True)
         fun_test.simple_assert(len(serial_proxy_ids) == 2, "2 serial proxies are alive")
 
-        """
+
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
         fun_test.scp(source_file_path=uart_listener_script,
                      target_ip=self.host_ip,
@@ -308,7 +315,7 @@ class Bmc(Linux):
         for log_listener_process in log_listener_processes:
             self.kill_process(signal=9, process_id=log_listener_process)
 
-        """
+
 
     def initialize(self, reset=False):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
@@ -345,6 +352,9 @@ class Bmc(Linux):
 
     def cleanup(self):
         fun_test.sleep("Allowing time to generate full report", seconds=45)
+
+        # fun_test.log("U-boot logs: {}: END".format(self.u_boot_logs))
+        """
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
             uart_log_thread.close()
@@ -353,6 +363,30 @@ class Bmc(Linux):
                 f.write(log)
             fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
                                         filename=artifact_file_name)
+        """
+
+        for f1_index in range(self.NUM_F1S):
+            if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
+                continue
+            log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE + ".*_{}.*txt".format(f1_index), multiple=True)
+            for log_listener_process in log_listener_processes:
+                self.kill_process(signal=15, process_id=int(log_listener_process))
+                self.kill_process(signal=9, process_id=log_listener_process)
+
+                artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
+                fun_test.scp(source_ip=self.host_ip,
+                             source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
+                             source_username=self.ssh_username,
+                             source_password=self.ssh_password,
+                             target_file_path=artifact_file_name)
+                with open(artifact_file_name, "r+") as f:
+                    content = f.read()
+                    f.seek(0, 0)
+                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
+
+                fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
+                                            filename=artifact_file_name)
+
 
     def get_f1_device_paths(self):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
@@ -366,7 +400,7 @@ class Bmc(Linux):
                 console_or_sbp = m.group(2)
                 device_path = m.group(3)
                 if f1_index == self.disable_f1_index:
-                    fun_test.critical("Disabling F1_{} for now".format(f1_index))
+                    fun_test.log("Disabling F1_{} for this run".format(f1_index))
                     continue
                 if f1_index not in f1_info:
                     f1_info[f1_index] = {}
@@ -695,7 +729,7 @@ class Fs(object, ToDictMixin):
                         boot_args = self.f1_parameters[f1_index]["boot_args"]
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip), "U-Bootup f1: {} complete".format(f1_index))
             fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
-            self.bmc.start_uart_log_listener(f1_index=f1_index)
+            self.bmc.start_uart_log_listener(f1_index=f1_index, serial_device=self.f1s.get(f1_index).serial_device_path)
 
         if True:
             self.get_come()

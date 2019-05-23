@@ -7,7 +7,7 @@ hu:
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
-  pcie_width: 8
+  pcie_width: 16
   pf_interface: hu2-f0
   vf_interface: hu2-f8
   namespaces:
@@ -21,7 +21,7 @@ hu:
         - prefix: 19.1.1.0/24
           nexthop: 18.1.1.1
         - prefix: 20.1.1.1/24
-          nexthop: 19.1.1.1
+          nexthop: 18.1.1.1
 hu2:
   hostname: cab03-qa-02
   username: localadmin

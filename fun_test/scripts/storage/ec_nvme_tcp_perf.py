@@ -198,8 +198,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 6
         if not hasattr(self, "num_volume"):
             self.num_volume = 1
-
-        # End of benchmarking json file parsing
+        fun_test.shared_variables["num_ssd"] = self.num_ssd
+        fun_test.shared_variables["num_volumes"] = self.num_ssd
 
         self.end_host = fun_test.shared_variables["end_host"]
         self.test_network = fun_test.shared_variables["test_network"]

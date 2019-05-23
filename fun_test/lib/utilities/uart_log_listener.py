@@ -6,6 +6,8 @@ import sys
 import signal
 import threading
 
+
+READ_BUF_SIZE = 2048
 class Listener:
     def __init__(self, ip, port, output_file=None):
         self.buffer = ""
@@ -23,7 +25,7 @@ class Listener:
         self.socket.connect((ip, port))
         print ("Connected to {}:{}".format(ip, port))
 
-    def read_until(self, expected_data, timeout=15):
+    def read_until(self, expected_data, timeout=1):
         self.buffer = ""
         if timeout:
             self.socket.settimeout(timeout)
@@ -36,20 +38,30 @@ class Listener:
                 for s in readable:
                     if timeout:
                         self.socket.settimeout(timeout)
-                    new_data = s.recv(1024)
+                    new_data = s.recv(READ_BUF_SIZE)
                     self.buffer += new_data
                     while new_data and expected_data not in self.buffer:
                         if timeout:
+                            # print ("Setting timeout")
                             self.socket.settimeout(timeout)
-                        new_data = s.recv(1024)
+                        try:
+                            new_data = s.recv(READ_BUF_SIZE)
+                        except socket.timeout:
+                            # print "socket timeout"
+                            break
                         self.buffer += new_data
+
                     self.fh.write(self.buffer)
-                    if not new_data or expected_data in self.buffer:
+                    self.fh.flush()
+
+                    if expected_data in self.buffer:
                         return_from_function = True
+                        self.buffer = ""
                         break
+                    self.buffer = ""
 
             except Exception as ex:
-                break
+                print ex
 
             time.sleep(0.00001)
         return self.buffer
@@ -63,17 +75,11 @@ class Listener:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="UART redirect")
-    parser.add_argument('--device', dest="device")
-    parser.add_argument('--speed', dest="speed")
     parser.add_argument('--proxy_port', dest="proxy_port", help="pyserial tcp proxy port")
     parser.add_argument('--output_file', default=None)
     args = parser.parse_args()
-    device = args.device
-    speed = args.speed
     proxy_port = args.proxy_port
     output_file = args.output_file
-    print "Device: {}".format(device)
-    print "Speed: {}".format(speed)
     print "Proxy port: {}".format(proxy_port)
     print "Output file: {}".format(output_file)
     nc = Listener(ip="127.0.0.1", port=int(proxy_port), output_file=output_file)
