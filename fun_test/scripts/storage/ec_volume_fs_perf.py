@@ -52,7 +52,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["setup_created"] = False
         fun_test.shared_variables['nsid'] = 0
-        fun_test.shared_variables['db_log_time'] = datetime.now()
+        fun_test.shared_variables['db_log_time'] = get_current_time()
 
     def cleanup(self):
         try:

@@ -2,7 +2,6 @@ from lib.system.fun_test import *
 from lib.system import utils
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from lib.fun.fs import Fs
-from datetime import datetime
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
@@ -238,7 +237,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        self.db_log_time = datetime.now()
+        self.db_log_time = get_current_time()
 
         self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip,
@@ -518,28 +517,35 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
             # Checking that the above created BLT volume is visible to the end host
-            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.ns_id)
-            for volume_name in lsblk_output:
-                match = re.search(volume_pattern, volume_name)
-                if match:
-                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(self.ns_id)
-                    self.volume_name = self.nvme_block_device.replace("/dev/", "")
-                    fun_test.test_assert_expected(expected=self.volume_name,
-                                                  actual=lsblk_output[volume_name]["name"],
-                                                  message="{} device available".format(self.volume_name))
-                    break
-            else:
-                fun_test.test_assert(False, "{} device available".format(self.volume_name))
+            self.nvme_block_device_list = []
+            for num in xrange(self.ec_info["num_volumes"]):
+                volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(num+1)
+                for volume_name in lsblk_output:
+                    match = re.search(volume_pattern, volume_name)
+                    if match:
+                        self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(num+1)
+                        self.nvme_block_device_list.append(self.nvme_block_device)
+                        self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                        fun_test.test_assert_expected(expected=self.volume_name,
+                                                      actual=lsblk_output[volume_name]["name"],
+                                                      message="{} device available".format(self.volume_name))
+                        break
+                else:
+                    fun_test.test_assert(False, "{} device available".format(self.volume_name))
+                fun_test.log("NVMe Block Device/s: {}".format(self.nvme_block_device_list))
 
             fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
             fun_test.shared_variables["volume_name"] = self.volume_name
             fun_test.shared_variables["ec"]["nvme_connect"] = True
 
+            self.fio_filename = ":".join(self.nvme_block_device_list)
+            fun_test.shared_variables["self.fio_filename"] = self.fio_filename
+
         # Executing the FIO command to fill the volume to it's capacity
         if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
 
             fun_test.log("Executing the FIO command to perform sequential write to volume")
-            fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, cpus_allowed=self.numa_cpus,
+            fio_output = self.end_host.pcie_fio(filename=self.fio_filename, cpus_allowed=self.numa_cpus,
                                                 **self.warm_up_fio_cmd_args)
             fun_test.log("FIO Command Output:\n{}".format(fio_output))
             fun_test.test_assert(fio_output, "Pre-populating the volume")
@@ -553,6 +559,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
         self.volume_name = fun_test.shared_variables["volume_name"]
+        self.fio_filename = fun_test.shared_variables["self.fio_filename"]
 
         if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
             self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
@@ -577,6 +584,14 @@ class ECVolumeLevelTestcase(FunTestCase):
         fio_result = {}
         fio_output = {}
 
+        for k, v in self.fio_cmd_args.iteritems():
+            if k == "bs":
+                fio_block_size = self.fio_cmd_args["bs"]
+                break
+            if k == "bssplit":
+                fio_block_size = "Mixed"
+                break
+
         for combo in self.fio_numjobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
@@ -585,10 +600,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_iodepth = combo.split(',')[1].strip('() ')
 
             for mode in self.fio_modes:
-                if hasattr(self, self.fio_cmd_args["bs"]):
+                """if hasattr(self, self.fio_cmd_args["bs"]):
                     fio_block_size = self.fio_cmd_args["bs"]
                 else:
-                    fio_block_size = "Mixed"
+                    fio_block_size = "Mixed"""""
                 fio_result[combo][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
@@ -603,7 +618,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                              format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
                 fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
+                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.fio_filename, rw=mode,
                                                                  numjobs=fio_num_jobs, iodepth=fio_iodepth,
                                                                  name=fio_job_name, cpus_allowed=self.numa_cpus,
                                                                  **self.fio_cmd_args)
@@ -638,7 +653,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results("Inspur Performance Test", test_method, *row_data_list)
+                # post_results("Inspur Performance Test", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -811,8 +826,8 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(MixedRandReadWriteIOPS())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
     # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())

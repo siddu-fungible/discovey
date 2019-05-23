@@ -9,6 +9,7 @@ class EndPoint(object, ToDictMixin):
     END_POINT_TYPE_FIO = "END_POINT_TYPE_FIO"
     END_POINT_TYPE_LINUX_HOST = "END_POINT_TYPE_LINUX_HOST"
     END_POINT_TYPE_DUT = "END_POINT_TYPE_DUT"   # DUT is connected to DUT
+    END_POINT_TYPE_SWITCH = "END_POINT_TYPE_SWITCH"
 
     # Hypervisor Endpoint types indicate Containers capable of carrying multiple hosts
     END_POINT_TYPE_HYPERVISOR = "END_POINT_TYPE_HYPERVISOR"
@@ -54,6 +55,22 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
         self.instance = instance
 
     def get_host_instance(self, host_index=None):
+        return self.instance
+
+
+class SwitchEndPoint(EndPoint, ToDictMixin):
+    end_point_type = EndPoint.END_POINT_TYPE_SWITCH
+
+    def __init__(self, name, port, spec):
+        super(SwitchEndPoint, self).__init__()
+        self.spec = spec
+        self.name = name
+        self.port = port
+
+    def set_instance(self, instance):
+        self.instance = instance
+
+    def get_instance(self):
         return self.instance
 
 class DutEndPoint(EndPoint, ToDictMixin):

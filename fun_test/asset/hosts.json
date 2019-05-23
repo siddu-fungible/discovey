@@ -67,12 +67,6 @@
       "password": "ADMIN"
     }
   },
-  "poc-server-01": {
-    "host_ip": "poc-server-01",
-    "ssh_username": "localadmin",
-    "ssh_password": "Precious1*",
-    "test_interface_name": "enp175s0"
-  },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",
     "ssh_username": "auto_admin",
@@ -80,6 +74,61 @@
   },
   "nu-lab-04": {
     "host_ip": "nu-lab-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-01": {
+    "host_ip": "mktg-server-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-02": {
+    "host_ip": "mktg-server-02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-03": {
+    "host_ip": "mktg-server-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-04": {
+    "host_ip": "mktg-server-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-05": {
+    "host_ip": "mktg-server-05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-06": {
+    "host_ip": "mktg-server-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-07": {
+    "host_ip": "mktg-server-07",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-08": {
+    "host_ip": "mktg-server-08",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-09": {
+    "host_ip": "mktg-server-09",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-10": {
+    "host_ip": "mktg-server-10",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-11": {
+    "host_ip": "mktg-server-11",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
   }
