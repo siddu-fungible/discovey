@@ -2977,14 +2977,6 @@
                         "label": "Latency, QDepth=1"
                       },
                       {
-                        "info": "read_iod8_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_iod8_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=8"
-                      },
-                      {
                         "info": "read_iod16_durable_volume_ec_output_latency",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
@@ -3007,6 +2999,14 @@
                         "name": "read_iod64_durable_volume_ec_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=64"
+                      },
+                      {
+                        "info": "read_iod128_durable_volume_ec_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "read_iod128_durable_volume_ec_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=128"
                       },
                       {
                         "info": "read_iod_durable_volume_ec_output_iops",
@@ -3035,14 +3035,6 @@
                         "label": "Latency, QDepth=1"
                       },
                       {
-                        "info": "rand_read_iod8_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_iod8_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=8"
-                      },
-                      {
                         "info": "rand_read_iod16_durable_volume_ec_output_latency",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
@@ -3065,6 +3057,14 @@
                         "name": "rand_read_iod64_durable_volume_ec_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=64"
+                      },
+                      {
+                        "info": "rand_read_iod128_durable_volume_ec_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "rand_read_iod128_durable_volume_ec_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=128"
                       },
                       {
                         "info": "rand_read_iod_durable_volume_ec_output_iops",
@@ -3742,7 +3742,7 @@
                     "leaf": false,
                     "name": "inspur_8132_8k_rand_rw_comp",
                     "weight": 0,
-                    "label": "8_13_2:8K_RAND_RW_COMP, F1(s)=1",
+                    "label": "8_14_1:8K_RAND_RW_COMP, F1(s)=1",
                     "children": []
                   }
                 ]
