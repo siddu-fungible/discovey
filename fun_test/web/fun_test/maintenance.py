@@ -582,7 +582,7 @@ if __name__ == "__main_qd128_pcie__":
         chart.save()
     print "added charts for qd128 durable volume pcie"
 
-if __name__ == "__main__":
+if __name__ == "__main_pcie_write__":
     output_names = ["output_latency", "output_iops"]
     operations = ["write", "rand_write"]
     names = ["pcie"]
@@ -706,6 +706,50 @@ if __name__ == "__main__":
                                         work_in_progress=False,
                                         platform=FunPlatform.F1).save()
     print "added charts for raw block write and random write different io depths"
+
+if __name__ == "__main__":
+    internal_chart_names = ["funtcp_server_cps_close_reset", "funtcp_server_cps_close_fin"]
+    for internal_chart_name  in internal_chart_names:
+        if "close_reset" in internal_chart_name:
+            name = "close reset"
+            chart_name = "Close Reset"
+            type = "close_reset_cps"
+        else:
+            name = "close fin"
+            chart_name = "Close Fin"
+            type = "close_fin_cps"
+        base_line_date = datetime(year=2019, month=5, day=20, minute=0, hour=0, second=0)
+
+        data_sets = []
+        one_data_set = {}
+        one_data_set["name"] = name
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+        one_data_set["inputs"]["input_frame_size"] = 1500
+        one_data_set["inputs"]["input_flow_type"] = "FunTCP_Server_CPS"
+        one_data_set["inputs"]["input_cps_type"] = type
+        one_data_set["output"] = {"name": "output_max_cps", 'min': 0, "max": -1, "expected": -1,
+                                  "reference": -1, "unit": "cps"}
+        data_sets.append(one_data_set)
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Rushikesh Pendse (rushikesh.pendse@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/tcp/cps_performance.py",
+                    positive=True,
+                    y1_axis_title="cps",
+                    visualization_unit="cps",
+                    metric_model_name="TeraMarkFunTcpConnectionsPerSecondPerformance",
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added cps charts for funtcp"
+
 
 
 

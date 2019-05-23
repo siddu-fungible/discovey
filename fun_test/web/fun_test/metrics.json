@@ -132,9 +132,26 @@
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
                     "name": "funtcp_server_cps",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "Connections per second",
-                    "children": []
+                    "children": [
+                      {
+                        "info": "funtcp_server_cps_close_reset",
+                        "metric_model_name": "TeraMarkFunTcpConnectionsPerSecondPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_cps_close_reset",
+                        "weight": 1,
+                        "label": "Close Reset"
+                      },
+                      {
+                        "info": "funtcp_server_cps_close_fin",
+                        "metric_model_name": "TeraMarkFunTcpConnectionsPerSecondPerformance",
+                        "leaf": true,
+                        "name": "funtcp_server_cps_close_fin",
+                        "weight": 1,
+                        "label": "Close Fin"
+                      }
+                    ]
                   },
                   {
                     "info": "funtcp_server_cc",
