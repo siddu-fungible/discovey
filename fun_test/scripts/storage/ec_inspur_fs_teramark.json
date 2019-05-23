@@ -56,7 +56,7 @@
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_ssd": 12,
-      "num_volumes": 8
+      "num_volumes": 6
     },
     "command_timeout": 30,
     "iter_interval": 30,
@@ -99,7 +99,7 @@
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_ssd": 12,
-      "num_volumes": 8
+      "num_volumes": 6
     },
     "command_timeout": 30,
     "iter_interval": 60,
@@ -142,7 +142,7 @@
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_ssd": 12,
-      "num_volumes": 8
+      "num_volumes": 6
     },
     "command_timeout": 30,
     "iter_interval": 30,
