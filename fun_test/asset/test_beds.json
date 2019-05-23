@@ -315,10 +315,8 @@
         }
       }
     },
-    "hosts_info": {
-      "0": {
-        "type": "Host",
-        "name": "mktg-server-01",
+    "host_info": {
+      "mktg-server-01": {
         "interface_info": {
           "0": {
             "name": "enp216s0",
@@ -330,9 +328,7 @@
           }
         }
       },
-      "1": {
-        "type": "Host",
-        "name": "mktg-server-02",
+      "mktg-server-02": {
         "interface_info": {
           "0": {
             "name": "enp216s0",

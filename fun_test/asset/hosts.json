@@ -67,12 +67,6 @@
       "password": "ADMIN"
     }
   },
-  "poc-server-01": {
-    "host_ip": "poc-server-01",
-    "ssh_username": "localadmin",
-    "ssh_password": "Precious1*",
-    "test_interface_name": "enp175s0"
-  },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",
     "ssh_username": "auto_admin",
@@ -80,6 +74,16 @@
   },
   "nu-lab-04": {
     "host_ip": "nu-lab-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-01": {
+    "host_ip": "mktg-server-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "mktg-server-02": {
+    "host_ip": "mktg-server-02",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
   }

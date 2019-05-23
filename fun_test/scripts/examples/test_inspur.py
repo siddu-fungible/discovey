@@ -79,6 +79,10 @@ class FunTestCase1(FunTestCase):
                     fun_test.log("Switch spec: {}".format(json.dumps(switch.spec, indent=4)))
                     fun_test.log("Port: {}".format(peer_end_point.port))
 
+        fun_test.log("Hosts")
+        hosts = topology.get_host_instances()
+        for host_name, host in hosts.items():
+            fun_test.log("Linux obj: {}".format(str(host)))
 
 
 

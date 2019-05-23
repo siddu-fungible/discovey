@@ -9,6 +9,7 @@ class ExpandedTopology(ToDictMixin):
         self.tgs = {}
         self.active_orchestrators = []
         self.switches = {}
+        self.hosts = {}
 
 
     def add_active_orchestrator(self, orchestrator):
@@ -46,6 +47,12 @@ class ExpandedTopology(ToDictMixin):
     def get_switch_instance(self, name):
         result = None
         result = self.get_switch(name=name)
+        return result
+
+    def get_host_instances(self):
+        result = {}
+        for host_name, host in self.hosts.iteritems():
+            result[host_name] = host.get_instance()
         return result
 
     def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
