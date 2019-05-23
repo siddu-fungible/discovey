@@ -213,7 +213,7 @@
     }
   },
   "inspur": {
-    "type": "dynamic", // Used to decide whether this testbed is used with CSR-replay or not. If it is CSR reply then it will won't have bond interface, and the hosts will be directly connected to the NU interface itself
+    "type": "dynamic",
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
