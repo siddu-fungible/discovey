@@ -260,6 +260,10 @@ class FunethPerformanceBase(FunTestCase):
             if flow_type == 'HU_HU_NFCP':
                 for i in range(0, num_hu_hosts, 2):
                     host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1]])
+                    if num_flows == 1:
+                        break
+                    elif len(host_pairs) == num_hosts:
+                        break
             elif flow_type == 'HU_HU_FCP':
                 for i in range(0, num_hu_hosts/2):
                     host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i + 2]])
