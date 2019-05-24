@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from web.fun_test.analytics_models_helper import get_data_collection_time
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -33,10 +34,9 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        date_time = get_current_time()
+        date_time = get_data_collection_time()
         fun_test.log("date_time is {}".format(date_time))
-        fun_test.update_job_environment_variable("test", str(date_time))
-        fun_test.log("updated the test variable with value {}".format(str(date_time)))
+        fun_test.log("updated the test variable with value {}".format(date_time))
 
 
 if __name__ == "__main__":

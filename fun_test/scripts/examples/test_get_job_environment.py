@@ -1,5 +1,5 @@
 from lib.system.fun_test import *
-from dateutil import parser
+from web.fun_test.analytics_models_helper import get_data_collection_time
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -34,10 +34,9 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        result = fun_test.get_stored_enviroment_variable("test")
-        fun_test.log("got the test variable that is already set {}".format(result))
-        result = parser.parse(result)
-        fun_test.log("converted to datetime object {}".format(result))
+        date_time = get_data_collection_time()
+        fun_test.log("date_time is {}".format(date_time))
+        fun_test.log("Got the test variable with value {}".format(date_time))
 
 
 if __name__ == "__main__":
