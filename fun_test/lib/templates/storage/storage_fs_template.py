@@ -35,17 +35,14 @@ class StorageFsTemplate(object):
     # F1_0_HANDLE = None
     # F1_1_HANDLE = None
 
-    def __init__(self, come_obj, mode=None):
-        self.come_obj = Linux(host_ip=come_obj.host_ip,
-                              ssh_username=come_obj.ssh_username,
-                              ssh_password=come_obj.ssh_password,
-                              ssh_port=come_obj.ssh_port)
-        self.mode = mode
+    def __init__(self, come_obj):
+        self.come_obj = come_obj
         self.container_info = {}
 
-    def deploy_funcp_container(self, update_n_deploy=True, update_workspace=True):
+    def deploy_funcp_container(self, update_n_deploy=True, update_workspace=True, mode=None):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
+        self.mode = mode
         if not self.come_obj.check_ssh():
             return result
 
@@ -61,7 +58,7 @@ class StorageFsTemplate(object):
                 return result
 
         # launch containers
-        launch_resp = self.launch_funcp_containers()
+        launch_resp = self.launch_funcp_containers(mode)
         if not launch_resp:
             fun_test.critical("FunCP container launch failed")
             return result
@@ -118,12 +115,12 @@ class StorageFsTemplate(object):
                 result = False
         return result
 
-    def launch_funcp_containers(self, mode):
+    def launch_funcp_containers(self, mode=None):
         result = False
         self.enter_funsdk()
         cmd = self.DEPLOY_CONTAINER_CMD
         if mode:
-            cmd += " --{}".format(self.mode)
+            cmd += " --{}".format(mode)
         response = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT)
         sections = ['Bring up Control Plane',
                     'Device 1dad:',
