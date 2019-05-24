@@ -149,7 +149,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
-            ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
+            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
             ns_id = fun_test.shared_variables['nsid']
 
             if fun_test.shared_variables["ec"]["setup_created"]:
