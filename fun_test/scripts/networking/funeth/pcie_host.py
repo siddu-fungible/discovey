@@ -15,8 +15,8 @@ class PcieHost(FunTestScript):
     def setup(self):
 
         fs = fun_test.get_job_environment_variable('test_bed_type')
-        if fs and fs != 'fs-11':
-            fun_test.test_assert(False, "Please use FS-11.")
+        if fs and fs not in ('fs-11' 'fs-45'):
+            fun_test.test_assert(False, "Please use FS-11 or FS-45.")
 
         # Boot up FS1600
         boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
@@ -27,12 +27,17 @@ class PcieHost(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
         fun_test.shared_variables["topology"] = topology
 
-        tb_config_obj = tb_configs.TBConfigs('FS11')
+        if fs == 'fs-11':
+            TB = 'FS11'
+        elif fs == 'fs-45':
+            TB = 'FS45'
+        tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
     def cleanup(self):
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+        fs = fun_test.get_job_environment_variable('test_bed_type')
+        if fs and fs not in ('fs-11' 'fs-45'):
             fun_test.shared_variables["topology"].cleanup()
             fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 
