@@ -74,6 +74,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables['topology'] = topology
+        fun_test.shared_variables['db_log_time'] = get_current_time()
+        fun_test.shared_variables["remote_ip"] = self.test_network["test_interface_ip"].split('/')[0]
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
@@ -147,24 +149,24 @@ class ECVolumeLevelScript(FunTestScript):
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
+            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
+            ns_id = fun_test.shared_variables['nsid']
 
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
-                for num in xrange(self.ec_info["num_volumes"]):
-                    command_result = self.storage_controller.volume_detach_remote(ns_id=num + 1,
-                                                                                  uuid=self.ec_info["attach_uuid"][num],
-                                                                                  huid=self.huid,
-                                                                                  ctlid=self.ctlid,
-                                                                                  remote_ip=self.remote_ip,
-                                                                                  transport=self.attach_transport,
-                                                                                  command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+                fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
+                    ctrlr_uuid=ctrlr_uuid,
+                    ns_id=ns_id,
+                    command_duration=self.command_timeout)['status'],
+                                     message="Detach nsid: {} from controller: {}".format(ns_id, ctrlr_uuid))
+
+                fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                               command_duration=self.command_timeout),
+                                     message="Delete Controller uuid: {}".format(ctrlr_uuid))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
-                self.end_host.unconfigure_ec_volume(storage_controller=self.storage_controller,
-                                                    ec_info=self.ec_info,
-                                                    command_timeout=self.command_timeout)
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
         self.storage_controller.disconnect()
@@ -196,14 +198,15 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 6
         if not hasattr(self, "num_volume"):
             self.num_volume = 1
-
-        # End of benchmarking json file parsing
+        fun_test.shared_variables["num_ssd"] = self.num_ssd
+        fun_test.shared_variables["num_volumes"] = self.num_ssd
 
         self.end_host = fun_test.shared_variables["end_host"]
         self.test_network = fun_test.shared_variables["test_network"]
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.numa_cpus = fun_test.shared_variables["numa_cpus"]
+        self.remote_ip = fun_test.shared_variables['remote_ip']
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
 
@@ -218,17 +221,27 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
-            # Configuring the controller
-            command_result = self.storage_controller.command(command="enable_counters",
-                                                             legacy=True,
-                                                             command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
+            # enable counters
+            enable_counters(self.storage_controller, self.command_timeout)
 
-            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+            # ipcfg on fs
+            configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
 
-            (ec_config_status, self.ec_info) = self.end_host.configure_ec_volume(self.storage_controller, self.ec_info,
-                                                                                 self.command_timeout)
+            # configure controller
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                       transport=self.attach_transport,
+                                                                       remote_ip=self.remote_ip,
+                                                                       nqn=self.nvme_subsystem,
+                                                                       port=self.transport_port,
+                                                                       command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"],
+                                 "Create Storage Controller for {} with controller uuid {} on DUT".
+                                 format(self.attach_transport, self.ctrlr_uuid))
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+
+            (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                           self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
             fun_test.log("EC details after configuring EC Volume:")
@@ -236,44 +249,22 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("{}: {}".format(k, v))
 
             # Attaching/Exporting all the EC/LS volumes to the external server
-            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
+            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                                 ns_id=self.ns_id,
+                                                                                 vol_uuid=self.ec_info["attach_uuid"][
+                                                                                     0],
+                                                                                 command_duration=self.command_timeout)
 
-            for num in xrange(self.ec_info["num_volumes"]):
-                command_result = self.storage_controller.volume_attach_remote(ns_id=num + 1,
-                                                                              uuid=self.ec_info["attach_uuid"][num],
-                                                                              huid=self.huid, ctlid=self.ctlid,
-                                                                              remote_ip=self.remote_ip,
-                                                                              transport=self.attach_transport,
-                                                                              command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Attach {} EC/LS volume on DUT".format(num))
+            fun_test.test_assert(command_result["status"],
+                                 "Attach EC/LS volume with nsid: {} to controller with uuid: {}".format(self.ns_id,
+                                                                                                        self.ctrlr_uuid))
             fun_test.shared_variables["ec"]["setup_created"] = True
+            fun_test.shared_variables['nsid'] = self.ns_id
 
-            # disabling the error_injection for the EC volume
-            command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
-
-            # Ensuring that the error_injection got disabled properly
-            fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-            command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]),
-                                          expected=0,
-                                          message="Ensuring error_injection got disabled")
+            disable_error_inject(self.storage_controller, self.command_timeout)
 
             # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
-
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level",
-                                                          legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level,
-                                          actual=command_result["data"],
-                                          message="Checking syslog level")
+            set_syslog_level(self.storage_controller, log_level=self.syslog_level, timeout=self.command_timeout)
 
         if not fun_test.shared_variables["ec"]["nvme_connect"]:
             # Checking nvme-connect status
@@ -360,6 +351,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                                      "Execute fio '{0}' test with block size:{1}, iodepth: {2} num_jobs: {3}".format(
                                          mode, self.fio_cmd_args["bs"], fio_iodepth, fio_num_jobs))
 
+                # default fio output write values to -1 before updating into db
+                if mode == 'read' or mode == 'randread':
+                    for key in fio_output[combo][mode]['write']:
+                        fio_output[combo][mode]['write'][key] = -1
+
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
                         if field == "iops":
@@ -388,8 +384,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
                 if fun_global.is_production_mode():
-                    post_results("EC42CompEnableNvmeTcp", fun_test.shared_variables['num_ssd'],
-                                 fun_test.shared_variables['num_volumes'], test_method, *row_data_list)
+                    post_results("EC42CompEnableNvmeTcp",
+                                 test_method,
+                                 fun_test.shared_variables['db_log_time'],
+                                 fun_test.shared_variables['num_ssd'],
+                                 fun_test.shared_variables['num_volumes'],
+                                 *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance stats for EC42, Compression Effort: Auto", table_name=self.summary,
@@ -408,10 +408,11 @@ class ECVolumeLevelTestcase(FunTestCase):
         pass
 
 
-class EC42FioSeqReadOnly(ECVolumeLevelTestcase):
+class EC42FioTcpRead(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="EC volume performance for sequential Read queries with different IO DEPTH NVME/TCP fabric",
+                              summary="EC volume performance for sequential and random read queries with different IO "
+                                      "DEPTH over NVME/TCP fabric",
                               steps="""
         1. Create 6 BLT volumes on dut instance.
         2. Create a 4:2 EC volume on top of the 6 BLT volumes.
@@ -419,43 +420,20 @@ class EC42FioSeqReadOnly(ECVolumeLevelTestcase):
         4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the NVME/TCP interface. 
         5. Run the FIO sequential read only test(without verify) for required block size and IO depth from the 
         EP host and check the performance are inline with the expected threshold.
+        6. Repeat step 5 with random read.
         """)
 
     def setup(self):
-        super(EC42FioSeqReadOnly, self).setup()
+        super(EC42FioTcpRead, self).setup()
 
     def run(self):
-        super(EC42FioSeqReadOnly, self).run()
+        super(EC42FioTcpRead, self).run()
 
     def cleanup(self):
-        super(EC42FioSeqReadOnly, self).cleanup()
-
-
-class EC42FioRandReadOnly(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="EC volume performance for random read queries with different IO DEPTH NVME/TCP fabric",
-                              steps="""
-        1. Create 6 BLT volumes in dut instance.
-        2. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the NVME/TCP interface.
-        5. Run the FIO random read only test(without verify) for required block size and IO depth from the 
-        EP host and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC42FioRandReadOnly, self).setup()
-
-    def run(self):
-        super(EC42FioRandReadOnly, self).run()
-
-    def cleanup(self):
-        super(EC42FioRandReadOnly, self).cleanup()
+        super(EC42FioTcpRead, self).cleanup()
 
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(EC42FioSeqReadOnly())
-    ecscript.add_test_case(EC42FioRandReadOnly())
+    ecscript.add_test_case(EC42FioTcpRead())
     ecscript.run()

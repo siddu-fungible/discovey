@@ -58,10 +58,13 @@ class FunethPerformance(sanity.FunethSanity):
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
         linux_objs = funeth_obj.linux_obj_dict.values()
-        #self.iperf_manager_obj = IPerfManager(linux_objs)
-        self.netperf_manager_obj = nm.NetperfManager(linux_objs)
 
-        #fun_test.test_assert(self.iperf_manager_obj.setup(), 'Set up for throughput/latency test')
+        fun_test.log("Configure irq affinity")
+        for hu in funeth_obj.hu_hosts:
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
+            # TODO: Configure irq affinity for rx
+
+        self.netperf_manager_obj = nm.NetperfManager(linux_objs)
         fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
 
         network_controller_objs = []
@@ -256,6 +259,10 @@ class FunethPerformanceBase(FunTestCase):
             if flow_type == 'HU_HU_NFCP':
                 for i in range(0, num_hu_hosts, 2):
                     host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1]])
+                    if num_flows == 1:
+                        break
+                    elif len(host_pairs) == num_hosts:
+                        break
             elif flow_type == 'HU_HU_FCP':
                 for i in range(0, num_hu_hosts/2):
                     host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i + 2]])

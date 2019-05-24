@@ -105,7 +105,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = datetime.now()
+        self.db_log_time = get_current_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()

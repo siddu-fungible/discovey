@@ -7,6 +7,9 @@ import sys
 from time import asctime
 
 
+CPU_LIST = range(8, 16)
+
+
 class Funeth:
     """Funeth driver class"""
 
@@ -82,7 +85,7 @@ class Funeth:
 
         def _update_src(linux_obj):
             sdkdir = os.path.join(self.ws, 'FunSDK')
-            linux_obj.command('sudo rm -rf {}'.format(self.ws))
+            linux_obj.sudo_command('rm -rf {}'.format(self.ws))
             linux_obj.create_directory(self.ws, sudo=False)
 
             update_mirror(self.ws, 'fungible-host-drivers', hu)
@@ -100,6 +103,21 @@ class Funeth:
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
             return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
 
+        def _update_src2(linux_obj):
+            sdkdir = os.path.join(self.ws, 'FunSDK')
+            linux_obj.sudo_command('rm -rf {}'.format(self.ws))
+            linux_obj.create_directory(self.ws, sudo=False)
+
+            # clone FunSDK, host-drivers, FunOS
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
+                              timeout=300)
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
+                              timeout=300)
+
+            output = linux_obj.command(
+                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
+            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+
         result = True
 
         if parallel:
@@ -107,7 +125,7 @@ class Funeth:
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
                 mp_task_obj.add_task(
-                    func=_update_src,
+                    func=_update_src2,
                     func_args=(linux_obj,),
                     task_key='{}'.format(linux_obj.host_ip))
 
@@ -120,7 +138,7 @@ class Funeth:
         else:
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                result &= _update_src(linux_obj)
+                result &= _update_src2(linux_obj)
 
         return result
 
@@ -133,7 +151,8 @@ class Funeth:
             if self.funos_branch:
                 linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-            output = linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
+            output = linux_obj.command(
+                'export WORKSPACE={}; cd {}; make clean; make PALLADIUM=yes'.format(self.ws, drvdir), timeout=600)
             return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
         result = True
@@ -305,10 +324,9 @@ class Funeth:
             # Configure XPS CPU mapping to have CPU-Txq one to one mapping
             if xps_cpus:
                 cmds = []
-                cpu_id = 0x0100  # TODO: pass in args
                 for i in range(num_queues):
+                    cpu_id = (1 << CPU_LIST[i%len(CPU_LIST)])
                     cmds.append('echo {:04x} > /sys/class/net/{}/queues/tx-{}/xps_cpus'.format(cpu_id, intf, i))
-                    cpu_id <<= 1
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds))
                 self.linux_obj_dict[nu_or_hu].command(
                     "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues-1, intf))
@@ -433,3 +451,30 @@ class Funeth:
                 else:
                     cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
+        """Configure irq affinity."""
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+
+                # cat irq affinity
+                cmds_cat = []
+                for i in irq_list:
+                    cmds_cat.append('cat /proc/irq/{}/smp_affinity'.format(i))
+                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+                # Change irq affinity
+                cmds_chg = []
+                for irq in irq_list:
+                    i = irq_list.index(irq)
+                    cpu_id = (1 << CPU_LIST[i % len(CPU_LIST)])
+                    cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
+                self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
+                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))

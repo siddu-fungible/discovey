@@ -1,3 +1,4 @@
 [
-  {"path": "storage/ec_inspur_fs_teramark.py"}
+  {"path": "storage/ec_inspur_fs_teramark.py"},
+  {"path": "storage/ec_inspur_fs_teramark_multivolume.py"}
 ]

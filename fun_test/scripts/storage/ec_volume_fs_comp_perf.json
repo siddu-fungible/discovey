@@ -86,6 +86,7 @@
       "buffer_pattern": "0xdeadbeef"
     },
     "command_timeout": 30,
+    "transport": "PCI",
     "nvme_device": "/dev/nvme",
     "test_parameters": [
       {
@@ -186,6 +187,7 @@
       "buffer_pattern": "0xdeadbeef"
     },
     "command_timeout": 30,
+    "transport": "PCI",
     "nvme_device": "/dev/nvme",
     "test_parameters": [
       {

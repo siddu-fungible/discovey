@@ -33,6 +33,7 @@ tb_config = {
             "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
+            "fnid": 2,
             "interface_info": {
                 0: {
                     "vms": 0,
@@ -127,7 +128,7 @@ class ECVolumeLevelScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = datetime.now()
+        self.db_log_time = get_current_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
@@ -144,7 +145,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables["run_time"] = datetime.now()
+        fun_test.shared_variables["run_time"] = get_current_time()
 
     def cleanup(self):
         try:
@@ -182,10 +183,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
-        '''self.end_host = Linux(host_ip="10.1.21.48",
-                              ssh_username="stack",
-                              ssh_password="stack",
-                              ssh_port=2220)'''
 
         fun_test.shared_variables["ec_coding"] = self.ec_coding
         num_blts = self.ec_coding["ndata"] + self.ec_coding["nparity"]
@@ -255,29 +252,23 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.vols_created["lsv"].append({"name": lsv_vol_name, "uuid": lsv_vol_uuid})
 
         # Create Controller
-        fun_test.test_assert(self.storage_controller.volume_attach_pcie(ns_id=self.volume_info["ctrlr"]["nsid"],
-                                                                        uuid=lsv_vol_uuid,
-                                                                        huid=tb_config['dut_info'][0]['huid'],
-                                                                        ctlid=tb_config['dut_info'][0]['ctlid'],
-                                                                        command_duration=self.command_timeout)[
-                                 'status'],
-                             message="Attach LSV Volume {0} to the Controller".format(lsv_vol_uuid))
-        '''
-        ctrlr_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                       transport=self.volume_info["ctrlr"]["transport"],
-                                                                       huid=self.volume_info["ctrlr"]["huid"],
-                                                                       ctlid=self.volume_info["ctrlr"]["ctlid"],
-                                                                       fnid=self.volume_info["ctrlr"]["fnid"])[
-                                 'status'],
-                             message="Create Controller with uuid: {}".format(ctrlr_uuid))
-        self.vols_created["ctrlr"].append({"uuid": ctrlr_uuid})
-
-        # Attach LS vol to External server
-        fun_test.test_assert(self.storage_controller.attach_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                       nsid=self.volume_info["ctrlr"]["nsid"],
-                                                                       vol_uuid=lsv_vol_uuid)['status'],
-                             message="Attach LSV Volume {0} to Controller uud: {1}".format(lsv_vol_uuid, ctrlr_uuid))'''
+        fun_test.shared_variables['cntrlr_uuid'] = utils.generate_uuid()
+        fun_test.test_assert(
+            self.storage_controller.create_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                                                      transport=self.transport,
+                                                      huid=tb_config['dut_info'][0]['huid'],
+                                                      ctlid=tb_config['dut_info'][0]['ctlid'],
+                                                      fnid=tb_config['dut_info'][0]['fnid'],
+                                                      command_duration=self.command_timeout)['status'],
+            message="Create Controller with UUID: {}".format(fun_test.shared_variables['cntrlr_uuid']))
+        fun_test.test_assert(
+            self.storage_controller.attach_volume_to_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
+                                                                ns_id=self.volume_info["ctrlr"]["nsid"],
+                                                                vol_uuid=lsv_vol_uuid,
+                                                                command_duration=self.command_timeout)['status'],
+            message="Attach LSV Volume {0} to the Controller with uuid: {1}".format(lsv_vol_uuid,
+                                                                                    fun_test.shared_variables[
+                                                                                        'cntrlr_uuid']))
 
         # Disable error injection and verify
         fun_test.test_assert(self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0],
@@ -448,12 +439,20 @@ class ECVolumeLevelTestcase(FunTestCase):
             ec_name = self.vols_created['ec'][0]['name']
             plex_ids = [x['uuid'] for x in self.vols_created["raw"]]
             num_blts = self.ec_coding["ndata"] + self.ec_coding["nparity"]
-            # Todo Delete the controller when implementation is done
-            self.storage_controller.volume_detach_pcie(ns_id=self.volume_info['ctrlr']['nsid'],
-                                                       uuid=lsv_uuid,
-                                                       huid=tb_config['dut_info'][0]['huid'],
-                                                       ctlid=tb_config['dut_info'][0]['ctlid'],
-                                                       command_duration=self.command_timeout)
+            ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
+
+            fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                                       ns_id=self.volume_info['ctrlr'][
+                                                                                           'nsid'],
+                                                                                       command_duration=self.command_timeout)[
+                                     'status'],
+                                 message="Detach nsid: {} from controller: {}".format(self.volume_info['ctrlr']['nsid'],
+                                                                                      ctrlr_uuid))
+
+            fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                           command_duration=self.command_timeout)[
+                                     'status'],
+                                 message="Delete Controller uuid: {}".format(ctrlr_uuid))
 
             # Delete LSV Volume
             self.storage_controller.delete_volume(name=lsv_name,

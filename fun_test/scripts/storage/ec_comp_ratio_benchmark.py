@@ -96,11 +96,12 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["test_network"] = self.test_network
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables['ip_configured'] = False
+        fun_test.shared_variables['ctlr_configured'] = False
         fun_test.shared_variables['artifacts_shared'] = False
         fun_test.shared_variables['nvme_device_connected'] = False
-        fun_test.shared_variables['huid'] = self.huid
-        fun_test.shared_variables['ctlid'] = self.ctlid
+        self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
+        fun_test.shared_variables["remote_ip"] = self.remote_ip
+        fun_test.shared_variables["topology"] = topology
 
         # Configure Linux Host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
@@ -156,21 +157,25 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
         try:
+            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
+            fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                           command_duration=self.command_timeout),
+                                 message="Delete Controller uuid: {}".format(ctrlr_uuid))
             self.storage_controller.disconnect()
-            self.fs.cleanup()
+
         except Exception as ex:
             fun_test.critical(ex.message)
-
+        finally:
+            fun_test.shared_variables["topology"].cleanup()
 
 class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
         testcase = self.__class__.__name__
         fun_test.shared_variables['setup_complete'] = False
-        huid = fun_test.shared_variables['huid']
-        ctlid = fun_test.shared_variables['ctlid']
         self.end_host = fun_test.shared_variables["end_host"]
         self.test_network = fun_test.shared_variables["test_network"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
+        self.remote_ip = fun_test.shared_variables["remote_ip"]
 
         # parse benchmark dictionary
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -183,15 +188,24 @@ class ECVolumeLevelTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        # compute BLT, EC vol size
-        if not fun_test.shared_variables['ip_configured']:
-            fun_test.test_assert(self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])["status"],
-                                 "ip_cfg configured on DUT instance")
-            fun_test.shared_variables['ip_configured'] = True
+        # Configure IP and Create controller on FS
+        if not fun_test.shared_variables['ctlr_configured']:
+            configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
 
-        self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-        fun_test.shared_variables["remote_ip"] = self.remote_ip
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                       transport=self.attach_transport,
+                                                                       remote_ip=self.remote_ip,
+                                                                       nqn=self.nvme_subsystem,
+                                                                       port=self.transport_port,
+                                                                       command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"],
+                                 "Create Storage Controller for {} with controller uuid {} on DUT".
+                                 format(self.attach_transport, self.ctrlr_uuid))
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+            fun_test.shared_variables['ctlr_configured'] = True
 
+        # Configure EC volume
         (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
                                                                                        self.command_timeout)
         fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
@@ -199,29 +213,18 @@ class ECVolumeLevelTestcase(FunTestCase):
         for k, v in self.ec_info.items():
             fun_test.log("{}: {}".format(k, v))
 
-        # Create Controller
-        fun_test.test_assert(self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
-                                                                          uuid=self.ec_info["attach_uuid"][0],
-                                                                          huid=huid,
-                                                                          ctlid=ctlid,
-                                                                          remote_ip=self.remote_ip,
-                                                                          transport=self.attach_transport,
-                                                                          command_duration=self.command_timeout)[
-                                 'status'],
-                             message="Attach LSV Volume {0} to the Controller".format(self.ec_info["attach_uuid"][0]))
+        # attach ec to controller to PCI
+        command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                             ns_id=self.ns_id,
+                                                                             vol_uuid=self.ec_info["attach_uuid"][
+                                                                                 0],
+                                                                             command_duration=self.command_timeout)
+        fun_test.test_assert(command_result["status"],
+                             "Attach EC/LS volume with nsid: {} to controller with uuid: {}".format(self.ns_id,
+                                                                                                    self.ctrlr_uuid))
 
         # Disable error injection and verify
-        fun_test.test_assert(self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0],
-                                                          legacy=False,
-                                                          command_duration=self.command_timeout)['status'],
-                             message="Disabling error_injection for EC volume on DUT")
-        fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-
-        fun_test.test_assert_expected(
-            actual=self.storage_controller.peek(props_tree="params/ecvol", legacy=False)["data"]["error_inject"],
-            expected=0,
-            message="Error injection variable set",
-            ignore_on_success=True)
+        disable_error_inject(self.storage_controller, self.command_timeout)
 
         # Checking nvme-connect status
         if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
@@ -301,7 +304,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         table_header = ["CorpusName", "F1CompressPrecent", "GzipCompressPercent"]
         test_result = True
         for corpus in test_corpuses:
-            # TOdo check if dir exists
             self.end_host.cp(source_file_name="{}{}".format(end_host_tmp_dir, corpus),
                              destination_file_name=mount_dir, recursive=True, sudo=True),
             corpus_dest_path = "{}/{}".format(mount_dir, corpus)
@@ -326,8 +328,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             post_result_lst.append({'effort_name': self.accelerator_effort,
                                     'corpus_name': corpus,
                                     'f1_compression_ratio': comp_pct})
-            # if not compare_result:
-            #    test_result = False
             init_write_count = curr_write_count
             table_rows.append([corpus, "{0:04.2f}".format(comp_pct), test_corpuses[corpus]['gzip_comp_pct']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
@@ -356,26 +356,18 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def cleanup(self):
         try:
-            # Do nvme disconnect
-
-            '''huid = fun_test.shared_variables['huid']
-            ctlid = fun_test.shared_variables['ctlid']
+            self.end_host.sudo_command("nvme disconnect -d {}".format(self.volume_name))
+            ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
             if fun_test.shared_variables["setup_complete"]:
                 # Detaching all the EC/LS volumes to the external server
-                command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
-                                                                              uuid=self.ec_info["attach_uuid"][0],
-                                                                              huid=huid,
-                                                                              ctlid=ctlid,
-                                                                              remote_ip=self.remote_ip,
-                                                                              transport=self.attach_transport,
-                                                                              command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Detaching EC/LS volume on DUT")
-            cmd = "sudo nvme disconnect -d {0}".format(self.volume_name)
-            self.end_host.sudo_command(cmd)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message=" Execute nvme Disconnect for device: {}".format(self.volume_name))
+                fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                                           ns_id=self.ns_id,
+                                                                                           command_duration=self.command_timeout)[
+                                         'status'],
+                                     message="Detach nsid: {} from controller: {}".format(self.ns_id, ctrlr_uuid))
 
-            self.storage_controller.unconfigure_ec_volume(self.ec_info, self.command_timeout)'''
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
             fun_test.shared_variables["setup_complete"] = False
         except Exception as ex:
             fun_test.critical(ex.message)

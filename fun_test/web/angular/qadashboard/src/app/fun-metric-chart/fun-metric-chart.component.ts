@@ -99,7 +99,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   expectedOperation: String = null;
   selectedUnit: string = null;
   category: string[] = [];
-  nwInfoFiles: string[] = [];
 
   Platform = Platform;
 
@@ -110,7 +109,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   cycles_category: string[] = ["cycles"];
   bits_bytes_category: string[] = ["b", "B", "KB", "MB", "GB", "TB"];
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
-  packets_per_second_category: string[] = ["Mpps", "pps"];
+  packets_per_second_category: string[] = ["Mpps", "pps", "Kpps", "Gpps"];
+  connections_per_second_category: string[] = ["Mcps", "cps", "Kcps", "Gcps"];
 
   expectedOperationCategory: string[] = [ExpectedOperation.SAME_AS_F1, ExpectedOperation.F1_BY_4];
 
@@ -136,7 +136,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.status = "Updating";
     this.showingTable = false;
-    this.nwInfoFiles = [];
     this.showingConfigure = false;
     this.headers = null;
     this.metricId = -1;
@@ -281,7 +280,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let key = this._getBuildKey(x);
     let s = {};
-    this.nwInfoFiles = [];
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
       hardwareVersion = this.buildInfo[key]["hardware_version"];
@@ -304,16 +302,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Hardware version"] = hardwareVersion;
       if (version !== "") {
         s["SDK version"] = "bld_" + version;
-        this.status = "Fetching networking artifacts";
-        this.apiService.get('/regression/get_networking_artifacts/' + version).subscribe((data) => {
-          if (data) {
-            this.nwInfoFiles = data.data;
-          }
-          this.status = null;
-        }, error => {
-          this.loggerService.error("Fetch networking artifacts");
-          this.status = null;
-        });
       }
       if (this.buildInfo[key]["git_commit"] !== "")
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
@@ -384,6 +372,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.category = [...this.ops_category];
         } else if (this.packets_per_second_category.includes(this.visualizationUnit)) {
           this.category = [...this.packets_per_second_category];
+        } else if (this.connections_per_second_category.includes(this.visualizationUnit)) {
+          this.category = [...this.connections_per_second_category];
         }
         this.selectedUnit = this.visualizationUnit;
       }
@@ -420,7 +410,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.maxExpected = null;
     this.maxDataPoint = null;
     this.category = [];
-    this.nwInfoFiles = [];
     this.selectedUnit = null;
   }
 
@@ -1111,6 +1100,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gpps") {
         output = output * Math.pow(10, 9);
       }
+    } else if (this.connections_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mcps") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "Kcps") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "Gcps") {
+        output = output * Math.pow(10, 9);
+      }
     }
 
     return output;
@@ -1182,6 +1179,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Kpps") {
         output = output / Math.pow(10, 3);
       } else if (outputUnit === "Gpps") {
+        output = output / Math.pow(10, 9);
+      }
+    } else if (this.connections_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mcps") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "Kcps") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "Gcps") {
         output = output / Math.pow(10, 9);
       }
     }

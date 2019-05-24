@@ -262,7 +262,7 @@ class PalladiumPerformanceTc(FunTestCase):
 
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG
+    tag = ALLOC_SPEED_TEST_TAG
     model = "AllocSpeedPerformance"
     platform = F1
 
@@ -273,7 +273,7 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
 
 class BcopyPerformanceTc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG
+    tag = ALLOC_SPEED_TEST_TAG
     model = "BcopyPerformance"
     platform = F1
 
@@ -284,7 +284,7 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
 
 
 class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG
+    tag = ALLOC_SPEED_TEST_TAG
     model = "BcopyFloodDmaPerformance"
     platform = F1
 
@@ -507,7 +507,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
 
 
 class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG
+    tag = ALLOC_SPEED_TEST_TAG
     model = "WuDispatchTestPerformance"
     platform = F1
 
@@ -1772,7 +1772,7 @@ class SoakDmaMemcpyThresholdPerformanceTC(PalladiumPerformanceTc):
 
 
 class WuLatencyUngatedPerformanceTc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG
+    tag = ALLOC_SPEED_TEST_TAG
     model = "WuLatencyUngated"
     platform = F1
 
@@ -1783,7 +1783,7 @@ class WuLatencyUngatedPerformanceTc(PalladiumPerformanceTc):
 
 
 class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
-    tags = ALLOC_SPEED_TEST_TAG
+    tag = ALLOC_SPEED_TEST_TAG
     model = "WuLatencyAllocStack"
     platform = F1
 
@@ -1908,6 +1908,6 @@ if __name__ == "__main__":
     myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTC())
     myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTC())
     myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTC())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

@@ -156,6 +156,7 @@ class TriageStateMachine:
             increment = 1
         num_active_trials = 0
         max_trials = 8
+        commit_index = 0
         for commit_index in range(0, len(commits_subset), increment):
             this_commit = commits_subset[commit_index]
             logger.debug("Candidate: {}".format(str(this_commit)))
@@ -163,8 +164,13 @@ class TriageStateMachine:
             if active:
                 num_active_trials += 1
 
-        if not num_active_trials:
-            pass
+        if commit_index + increment >= len(commits_subset):  # Ensure the last one always gets scheduled
+            this_commit = commits_subset[len(commits_subset) - 1]
+            logger.debug("Candidate: {}".format(str(this_commit)))
+            active = self.start_trial(fun_os_sha=this_commit)
+            if active:
+                num_active_trials += 1
+
         return num_active_trials
 
     def is_current_trial_set_complete(self):
@@ -438,4 +444,4 @@ if __name__ == "__main__":
                 Daemon.get(name=DAEMON_NAME).beat()
             except Exception as ex:
                 logger.exception(ex)
-            time.sleep(5)
+        time.sleep(5)

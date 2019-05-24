@@ -28,6 +28,9 @@ from web.fun_test.models import TestCaseExecutionSerializer
 from web.fun_test.models import SuiteReRunInfo, JobQueue
 from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
+from lib.utilities.send_mail import send_mail
+from web.fun_test.web_interface import get_suite_detail_url
+from web.fun_test.models import User
 import logging
 import subprocess
 import dateutil.parser
@@ -110,6 +113,7 @@ def test_case_re_run(request):
 @api_safe_json_response
 def submit_job(request):
     job_id = 0
+    submitter_email = None
     if request.method == 'POST':
         request_json = json.loads(request.body)
 
@@ -228,6 +232,18 @@ def submit_job(request):
                                 original_suite_execution_id=original_suite_execution_id,
                                 build_url=build_url,
                                 submitter_email=submitter_email)
+    if job_id > 0 and submitter_email:
+        submitter_user_name = ""
+        try:
+            user = User.objects.get(email=submitter_email)
+            submitter_user_name = "{} {}".format(user.first_name, user.last_name)
+        except ObjectDoesNotExist:
+            pass
+
+        contents = "Hi {}".format(submitter_user_name) + "<br>"
+        contents += "Your integration job's progress can be tracked at {}".format(get_suite_detail_url(suite_execution_id=job_id)) + "<br>"
+        contents += "Thank you<br>Regression team<br>"
+        send_mail(to_addresses=[submitter_email], subject="Integration Job: {} submitted".format(job_id), content=contents)
     return job_id
 
 

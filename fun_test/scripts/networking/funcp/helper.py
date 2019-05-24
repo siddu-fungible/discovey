@@ -5,6 +5,13 @@ from scripts.networking.funeth.funeth import Funeth
 def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=True):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
     if reboot:
+        try:
+            rm_funeth = linux_obj.sudo_command(command="rmmod funeth", timeout=60)
+            fun_test.test_assert("ERROR" not in rm_funeth, message="rmmod funeth succesful")
+        except:
+            funeth_op = linux_obj.command(command="lsmod | grep funeth")
+            fun_test.test_assert(expression="funeth" not in funeth_op, message="funeth not loaded.")
+        linux_obj.command(command="echo 'funeth removed'")
         linux_obj.reboot()
         count = 0
         while not linux_obj.check_ssh():
@@ -35,7 +42,7 @@ def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*"
 def setup_hu_host(funeth_obj, update_driver=True, enable_tso=True):
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')

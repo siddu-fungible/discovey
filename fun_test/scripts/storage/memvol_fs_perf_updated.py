@@ -12,7 +12,7 @@ from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 import uuid
 from datetime import datetime
-from thin_block_volume_fs_perf_tuning import *
+#from thin_block_volume_fs_perf_tuning import *
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
@@ -129,11 +129,12 @@ class MemVolPerformanceScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = datetime.now()
+        self.db_log_time = get_current_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
-                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
+        #self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
+        #                                            target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
+        self.storage_controller = f1.get_dpc_storage_controller()
 
         # Setting the syslog level to 2
         command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False)

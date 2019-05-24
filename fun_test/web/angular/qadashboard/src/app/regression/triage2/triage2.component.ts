@@ -41,7 +41,7 @@ export class Triage2Component implements OnInit {
       'submitter': [null, Validators.required],
       'from_fun_os_sha': [null, Validators.required],
       'to_fun_os_sha': [null, Validators.required],
-      'metric_id': [null, Validators.required],
+      'metric_id': [-1],
       'triage_type': [null, Validators.required],
       'regex_match_string': [null]
     });
@@ -144,7 +144,7 @@ export class Triage2Component implements OnInit {
     let url = "/api/v1/triages";
     this.apiService.post(url, payload).subscribe((response) => {
       this.loggerService.success("Triage submitted");
-      window.open("/triaging/" + response.data, '_blank');
+      window.open("/regression/triaging/" + response.data, '_blank');
     },error => {
       this.loggerService.error("Submitting triage failed");
     });

@@ -32,7 +32,7 @@
       }
     }
   },
-  "EC42FioSeqReadOnly": {
+  "EC42FioTcpRead": {
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -82,75 +82,11 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "runtime": 120,
-      "timeout": 180
+      "runtime": 180,
+      "timeout": 200
     },
     "fio_modes": [
-      "read"
-    ],
-    "fio_numjobs_iodepth": [
-      "(1, 1)",
-      "(8, 1)",
-      "(16, 1)",
-      "(16, 2)",
-      "(16, 4)"
-    ],
-    "fio_job_name": "ec_nvme_tcp"
-  },
-  "EC42FioRandReadOnly": {
-    "ec_info": {
-      "volume_types": {
-        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-        "ec": "VOL_TYPE_BLK_EC",
-        "lsv": "VOL_TYPE_BLK_LSV",
-        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-      },
-      "volume_block": {
-        "ndata": 4096,
-        "nparity": 4096,
-        "ec": 4096,
-        "lsv": 4096,
-        "jvol": 512
-      },
-      "ndata": 4,
-      "nparity": 2,
-      "capacity": 26843545600,
-      "use_lsv": 1,
-      "lsv_pct": 0.30,
-      "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
-      "num_volumes": 1
-    },
-    "command_timeout": 30,
-    "iter_interval": 3,
-    "ns_id": 1,
-    "attach_transport": "TCP",
-    "transport_port": 1099,
-    "huid": 7,
-    "ctlid": 0,
-    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "nvme_device": "/dev/nvme",
-    "io_queues": 0,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {
-      "bs": "8k",
-      "iodepth": 1,
-      "size": "100%",
-      "rw": "write",
-      "direct": 1,
-      "prio": 0,
-      "timeout": 720
-    },
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "runtime": 120,
-      "timeout": 180
-    },
-    "fio_modes": [
+      "read",
       "randread"
     ],
     "fio_numjobs_iodepth": [

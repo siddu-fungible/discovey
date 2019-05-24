@@ -11,6 +11,7 @@ from fun_global import PerfUnit
 
 
 TCP_PERFORMANCE_MODEL_NAME = "TeraMarkFunTcpThroughputPerformance"
+TCP_CPS_PERFORMANCE_MODEL_NAME = "TeraMarkFunTcpConnectionsPerSecondPerformance"
 
 
 def _parse_file_to_json_in_order(file_name):
@@ -135,9 +136,8 @@ def populate_cps_performance_json_file(flow_type, model_name, frame_size, cps_ty
         unit_dict["max_cps_unit"] = PerfUnit.UNIT_CPS
         unit_dict["max_latency_unit"] = PerfUnit.UNIT_USECS
         unit_dict["avg_latency_unit"] = PerfUnit.UNIT_USECS
-        # TODO: Enable after getting model name from Ashwin for CPS TeraMarks
-        # add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
-        # fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
+        add_entry = use_model_helper(model_name=model_name, data_dict=output_dict, unit_dict=unit_dict)
+        fun_test.simple_assert(add_entry, "Entry added to model %s" % model_name)
         fun_test.add_checkpoint("Entry added to model %s" % model_name)
         output = True
     except Exception as ex:
@@ -260,12 +260,16 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
                 stats_table.add_row([stat['timestamp'], cpu_load_table, node_load_table])
                 interrupts_table.add_row([stat['timestamp'], sum_interrupts_table, soft_interrupts_table])
 
-        mpstat_dump_filepath = LOGS_DIR + "/%s" % dump_filename
         lines = ['<=======> Mpstat output <=======>\n', '\n<=======> Hosts MetaData <=======>\n',
                  hosts_table.get_string(), '\n<=======> Statistics <=======>\n', stats_table.get_string(),
                  '\n<=======> Interrupts <=======>\n', interrupts_table.get_string()]
+
+        mpstat_dump_filepath = fun_test.get_test_case_artifact_file_name(dump_filename)
+
         with open(mpstat_dump_filepath, 'w') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description=dump_filename, filename=mpstat_dump_filepath)
 
         fun_test.log_disable_timestamps()
         fun_test.log_section('Mpstats output')
@@ -278,17 +282,22 @@ def populate_mpstat_output_file(output_file, linux_obj, dump_filename):
     return mpstat_dump_filepath
 
 
-def populate_tcpdump_redirect_file(dump_filename):
+def populate_tcpdump_redirect_file(dump_filename, source_file_path, host_obj, host_name, version, num_flows):
     mpstat_dump_filepath = None
     try:
-        contents = "To access the pcap file for this run. Log in to poc-server-06 (username: localadmin) and " \
-                   "cd to /home/localadmin/netperf_teramark_capture. " \
-                   "File name is <funos_version>_<no_of_conn>_tcpdump.pcap\n For e.g 6459_1_tcpdump.pcap"
-        tcpdump_dump_filepath = LOGS_DIR + "/%s" % dump_filename
-        with open(tcpdump_dump_filepath, 'w') as f:
-            f.writelines(contents)
+        target_file_name = fun_test.get_test_case_artifact_file_name(dump_filename)
+        file_transfer = fun_test.scp(source_file_path=source_file_path, source_ip=host_obj.host_ip,
+                                     source_username=host_obj.ssh_username, source_password=host_obj.ssh_password,
+                                     target_file_path=target_file_name, timeout=300)
+        fun_test.simple_assert(file_transfer, "scp pcap file from linux host to logs dir")
+        fun_test.sleep("Letting file to be scp", seconds=2)
+
+        fun_test.add_auxillary_file(description='FunOS Version: %s Num Flows: %s Host: %s tcpdump log' % (
+            version, num_flows, host_name), filename=target_file_name)
     except Exception as ex:
         fun_test.critical(str(ex))
+    finally:
+        host_obj.sudo_command(command="rm -rf %s" % source_file_path)
     return mpstat_dump_filepath
 
 
@@ -390,7 +399,6 @@ def get_diff_stats(old_stats, new_stats):
 def populate_netstat_output_file(diff_stats, filename):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         netstat_table = PrettyTable(diff_stats.keys())
         rows = []
         for key in diff_stats:
@@ -404,8 +412,13 @@ def populate_netstat_output_file(diff_stats, filename):
         netstat_table.add_row(rows)
 
         lines = ['<=======> Netstat output <=======>\n', netstat_table.get_string()]
+
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
         with open(file_path, 'w') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
 
         fun_test.log_disable_timestamps()
         fun_test.log_section('Netstat diff output')
@@ -451,17 +464,17 @@ def inner_table_obj(result):
     return table_obj
 
 
-def populate_flow_list_output_file(network_controller_obj, filename, max_time=20, display_output=False):
+def populate_flow_list_output_file(network_controller_obj, filename, max_time=10, display_output=True,
+                                   iteration=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         master_table_obj = PrettyTable()
         master_table_obj.align = 'l'
         master_table_obj.header = False
         timer = FunTimer(max_time=max_time)
         lines = list()
         while not timer.is_expired():
-            fun_test.sleep('Get flow list', seconds=5)
+            fun_test.sleep('Get flow list', seconds=1)
             result = network_controller_obj.get_flow_list()['data']
             if result:
                 for key in sorted(result):
@@ -471,8 +484,14 @@ def populate_flow_list_output_file(network_controller_obj, filename, max_time=20
                 lines.append(master_table_obj.get_string())
                 lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
 
+                if not iteration:
+                    break
+
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
         with open(file_path, 'w') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -522,14 +541,14 @@ def dma_resource_table(result):
     return table_obj
 
 
-def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=20, display_output=False):
+def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, max_time=10, display_output=True,
+                                     iteration=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
-            fun_test.sleep(message="Peek stats resource pc %d" % pc_id, seconds=5)
+            fun_test.sleep(message="Peek stats resource pc %d" % pc_id, seconds=1)
 
             result = network_controller_obj.peek_resource_pc_stats(pc_id=pc_id)
             master_table_obj = get_nested_dict_stats(result=result)
@@ -537,8 +556,15 @@ def populate_pc_resource_output_file(network_controller_obj, filename, pc_id, ma
             lines.append(master_table_obj.get_string())
             lines.append('\n\n\n')
 
+            if not iteration:
+                break
+
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
         with open(file_path, 'a') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -585,14 +611,13 @@ def get_resource_bam_table(result):
     return table_obj
 
 
-def populate_resource_bam_output_file(network_controller_obj, filename, max_time=20, display_output=False):
+def populate_resource_bam_output_file(network_controller_obj, filename, max_time=10, display_output=False):
     output = False
     try:
-        file_path = LOGS_DIR + "/%s" % filename
         lines = list()
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
-            fun_test.sleep(message="Peek stats resource BAM", seconds=5)
+            fun_test.sleep(message="Peek stats resource BAM", seconds=1)
 
             result = network_controller_obj.peek_resource_bam_stats()
             master_table_obj = get_resource_bam_table(result=result)
@@ -600,8 +625,12 @@ def populate_resource_bam_output_file(network_controller_obj, filename, max_time
             lines.append(master_table_obj.get_string())
             lines.append('\n\n\n')
 
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
         with open(file_path, 'a') as f:
             f.writelines(lines)
+
+        fun_test.add_auxillary_file(description='DPC Resource BAM stats', filename=file_path)
 
         if display_output:
             fun_test.log_disable_timestamps()
@@ -664,33 +693,46 @@ def trim_json_contents(filepath):
     return result
 
 
-def run_netperf_concurrently(cmd_list, linux_obj, network_controller_obj, display_output=False):
+def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=False, num_flows=1):
     result = {}
     try:
         version = fun_test.get_version()
-        num_flows = len(cmd_list)
         multi_task_obj = MultiProcessingTasks()
         index = 1
-        duration = len(cmd_list) * 60
-        for cmd in cmd_list:
-            multi_task_obj.add_task(func=run_netperf,
-                                    func_args=(linux_obj, cmd, duration),
-                                    task_key="conn_%d" % index)
-            index += 1
+        total_netperf_processes = 0
+        for linux_obj, cmd_list in cmd_dict.iteritems():
+            duration = len(cmd_list) * 60
+            total_netperf_processes = total_netperf_processes + len(cmd_list)
+            for cmd in cmd_list:
+                multi_task_obj.add_task(func=run_netperf,
+                                        func_args=(linux_obj, cmd, duration),
+                                        task_key="conn_%d" % index)
+                index += 1
 
         flow_list_file = str(version) + "_" + str(num_flows) + '_flowlist.txt'
         resource_pc_file = str(version) + "_" + str(num_flows) + '_resource_pc.txt'
         resource_bam_file = str(version) + "_" + str(num_flows) + '_resource_bam.txt'
 
+        # No need to add more task for dpcsh command instead start a thread after few secs of traffic to collect
+        # dpcsh output
+        '''
         multi_task_obj.add_task(func=run_dpcsh_commands,
-                                func_args=(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file,
-                                           display_output),
+                                func_args=(network_controller_obj, flow_list_file, resource_bam_file,
+                                           resource_pc_file, display_output),
                                 task_key='')
+        '''
 
-        run_started = multi_task_obj.run(max_parallel_processes=len(cmd_list) + 1, parallel=True)
+        thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=run_dpcsh_commands,
+                                                  network_controller_obj=network_controller_obj,
+                                                  flow_list_file=flow_list_file, resource_bam_file=resource_bam_file,
+                                                  resource_pc_file=resource_pc_file, display_output=display_output)
+
+        run_started = multi_task_obj.run(max_parallel_processes=total_netperf_processes, parallel=True)
         fun_test.test_assert(run_started, "Ensure netperf commands started")
 
-        for index in range(1, len(cmd_list) + 1):
+        fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=5)
+
+        for index in range(1, total_netperf_processes):
             task_key = 'conn_%d' % index
             res = multi_task_obj.get_result(task_key=task_key)
             result[task_key] = res
@@ -700,25 +742,28 @@ def run_netperf_concurrently(cmd_list, linux_obj, network_controller_obj, displa
             all_throughputs.append(val['throughput'])
         result['total_throughput'] = sum(all_throughputs)
     except Exception as ex:
-        get_stale_socket_connections(linux_obj=linux_obj, port_value=4555)
+        for linux_obj in cmd_dict:
+            get_stale_socket_connections(linux_obj=linux_obj, port_value=4555)
         fun_test.critical(str(ex))
     return result
 
 
 def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file,
-                       display_output=False):
+                       display_output=False, iteration=True):
     try:
         fun_test.add_checkpoint('Get flow list')
         populate_flow_list_output_file(network_controller_obj=network_controller_obj, filename=flow_list_file,
-                                       display_output=display_output)
+                                       display_output=display_output, iteration=iteration)
 
         fun_test.add_checkpoint('Get Resource pc id 1')
         populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                         filename=resource_pc_file, pc_id=1, display_output=display_output)
+                                         filename=resource_pc_file, pc_id=1, display_output=display_output,
+                                         iteration=iteration)
 
         fun_test.add_checkpoint('Get Resource pc id 2')
         populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
-                                         filename=resource_pc_file, pc_id=2, display_output=display_output)
+                                         filename=resource_pc_file, pc_id=2, display_output=display_output,
+                                         iteration=iteration)
 
         fun_test.add_checkpoint('Get Resource BAM')
         populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=resource_bam_file,
@@ -728,13 +773,19 @@ def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file
     return True
 
 
-def run_tcpdump_command(linux_obj, tcp_dump_file, interface, snaplen=80, filecount=1, count=2000000):
+def run_tcpdump_command(linux_obj, tcp_dump_file, interface, snaplen=80, filecount=1, count=2000000, sudo=False):
     result = None
     try:
         cmd = "sudo tcpdump -leni %s tcp -w %s -s %d -W %d -c %d" % (interface, tcp_dump_file, snaplen,
                                                                      filecount, count)
         fun_test.log("tcpdump command formed: %s" % cmd)
-        process_id = linux_obj.start_bg_process(command=cmd)
+        if sudo:
+            cmd = "nohup tcpdump -leni %s tcp -w %s -s %d -W %d -c %d >/dev/null 2>&1 &" % (
+                interface, tcp_dump_file, snaplen, filecount, count)
+            linux_obj.sudo_command(command=cmd)
+            process_id = linux_obj.get_process_id_by_pattern(process_pat="tcpdump")
+        else:
+            process_id = linux_obj.start_bg_process(command=cmd)
         fun_test.log("tcpdump started process id: %s" % process_id)
         if process_id:
             result = process_id
@@ -772,7 +823,7 @@ def run_netperf(linux_obj, cmd, duration=60):
 
 
 def get_netperf_cmd_list(dip, protocol='tcp', duration=60, num_flows=1, send_size="128K",
-                         port1=1000, port2=4555):
+                         port1=1000, port2=4555, start_core_id=8, end_core_id=15):
     cmd_list = []
     try:
         if protocol.lower() == 'udp':
@@ -780,10 +831,10 @@ def get_netperf_cmd_list(dip, protocol='tcp', duration=60, num_flows=1, send_siz
         else:
             t = 'TCP_STREAM'
 
-        cpu = 8
+        cpu = start_core_id
         for conn in range(0, num_flows):
-            if cpu > 15:
-                cpu = 8
+            if cpu > end_core_id:
+                cpu = start_core_id
             cmd = "taskset -c %d netperf -t %s -H %s -l %s -f m -j -N -P 0 -- -k \"THROUGHPUT\" -s %s -P %d,%d " % (
                 cpu, t, dip, duration, send_size, port1, port2
             )
@@ -812,8 +863,9 @@ def create_performance_table(total_throughput, num_flows, total_pps):
     return table_created
 
 
-def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, cpu=1, duration=60):
-    result = {'max_cps': None, 'max_latency': None, 'avg_latency': None, 'status': False, 'summary_dict': None}
+def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base_cps, increment_count,
+                            cpu=1, duration=60, end_cps=None):
+    result = {'max_cps': -1, 'max_latency': -1, 'avg_latency': -1, 'status': False, 'summary_dict': None}
     output_file_path = fun_test.get_temp_file_path(file_name=fun_test.get_temp_file_name()) + ".txt"
     try:
         count = 1
@@ -825,15 +877,14 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
         resource_bam_file = str(version) + "_" + profile_name + '_resource_bam.txt'
         cps = base_cps
         while True:
+            if end_cps and cps >= end_cps:
+                break
             if max_cps_found:
                 break
             if count == 1:
                 cps = base_cps
             else:
-                if cps in range(0, 800):
-                    cps = cps + 100
-                elif cps >= 800:
-                    cps = cps + 50
+                cps += increment_count
 
             fun_test.log_section("Find Max CPS and latency for %s. Base CPS Given: %d "
                                  "Current iteration count: %d Current CPS value: %d" % (profile_name,
@@ -850,7 +901,8 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
             checkpoint = "Running dpcsh commands to capture stats during run"
             output = run_dpcsh_commands(network_controller_obj=network_controller_obj,
                                         flow_list_file=flow_list_file,
-                                        resource_bam_file=resource_bam_file, resource_pc_file=resource_pc_file)
+                                        resource_bam_file=resource_bam_file, resource_pc_file=resource_pc_file,
+                                        iteration=True, display_output=False)
             fun_test.simple_assert(output, checkpoint)
 
             fun_test.simple_assert(trex_obj.poll_for_trex_process(max_time=duration), "Ensure TRex process finish")
@@ -888,13 +940,15 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
                         "<=======> FAILED Iteration: %d Base CPS: %d Profile: %s <=======>" % (count, cps,
                                                                                                profile_name),
                         fun_test.LOG_LEVEL_CRITICAL)
+                    result['status'] = True
+                    result['summary_dict'] = summary_dict
                     break
             fun_test.add_checkpoint(checkpoint)
             count += 1
     except Exception as ex:
         fun_test.critical(str(ex))
     finally:
-        trex_obj.remove_file(file_name=output_file_path)
+        trex_obj.sudo_command(command="rm -rf %s" % output_file_path)
     return result
 
 
