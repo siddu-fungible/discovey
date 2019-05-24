@@ -392,7 +392,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                  *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance stats for EC42, Compression Effort: Auto", table_name=self.summary,
+        fun_test.add_table(panel_header="Sequential and random read performance stats over NVME/TCP for EC42 Durable Vol",
+                           table_name=self.summary,
                            table_data=table_data)
 
         # Posting the final status of the test result

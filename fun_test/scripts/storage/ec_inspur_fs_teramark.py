@@ -222,7 +222,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.f1_in_use = 0
             self.syslog_level = 2
             self.command_timeout = 5
-            self.reboot_timeout = 300
+            self.reboot_timeout = 600
         else:
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)

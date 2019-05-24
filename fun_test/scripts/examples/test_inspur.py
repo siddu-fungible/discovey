@@ -48,6 +48,8 @@ class FunTestCase1(FunTestCase):
         fs = topology.get_dut_instance(index=0)
         fun_test.shared_variables["topology"] = topology
 
+        fun_test.log("Dut: spec")
+        fun_test.log(topology.get_dut(index=0).spec)
 
         fun_test.log("FPG interfaces:")
         fpg_interfaces = topology.get_dut(index=0).get_fpg_interfaces(f1_index=0)
@@ -80,9 +82,18 @@ class FunTestCase1(FunTestCase):
                     fun_test.log("Port: {}".format(peer_end_point.port))
 
         fun_test.log("Hosts")
-        hosts = topology.get_host_instances()
+        hosts = topology.get_hosts()
         for host_name, host in hosts.items():
-            fun_test.log("Linux obj: {}".format(str(host)))
+            test_interfaces = host.get_test_interfaces()
+            test_interface_0 = host.get_test_interface(index=0)
+
+            fun_test.log("Host-IP: {}".format(test_interface_0.ip))
+            fun_test.log("Peer-info: {}".format(test_interface_0.peer_info))
+            fun_test.log("Switch-name: {}".format(test_interface_0.peer_info["name"]))
+            fun_test.log("Switch-port: {}".format(test_interface_0.peer_info["port"]))
+
+            host_instance = host.get_instance()
+            # host_instance.command("date")
 
 
 

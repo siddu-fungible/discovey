@@ -55,6 +55,9 @@ class ExpandedTopology(ToDictMixin):
             result[host_name] = host.get_instance()
         return result
 
+    def get_hosts(self):
+        return self.hosts
+
     def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
         dut = self.get_dut(index=dut_index)
         if ssd_interface_index is not None:  # Backward compatibility
