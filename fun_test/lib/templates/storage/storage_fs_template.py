@@ -34,7 +34,7 @@ class StorageFsTemplate(object):
     F1_0_HANDLE = None
     F1_1_HANDLE = None
 
-    def __int__(self, come_obj, mode=None):
+    def __init__(self, come_obj, mode=None):
         self.come_obj = Linux(host_ip=come_obj.host_ip,
                               ssh_username=come_obj.ssh_username,
                               ssh_password=come_obj.ssh_password,
