@@ -29,6 +29,7 @@ class StorageFsTemplate(object):
     FUNSDK_DIR = "/mnt/keep/FunSDK/"
     DEFAULT_TIMEOUT = 300
     DEPLOY_TIMEOUT = 1200
+    BOND_BRINGUP_TIMEOUT = 300
     LAUNCH_SCRIPT = "./integration_test/emulation/test_system.py "
     PREPARE_CMD = "{} --prepare --docker".format(LAUNCH_SCRIPT)
     DEPLOY_CONTAINER_CMD = "{} --setup --docker".format(LAUNCH_SCRIPT)
@@ -149,6 +150,7 @@ class StorageFsTemplate(object):
             result['status'] = True
         return result
 
+    """
     def clear_containers(self):
         # Stop Container F1_0
         if self.F1_0_HANDLE:
@@ -161,7 +163,6 @@ class StorageFsTemplate(object):
         cmd = "docker stop {}".format(container_name)
         self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT)
 
-    """
     def get_f10_handle(self):
         handle = None
         if self.F1_0_HANDLE:
@@ -181,8 +182,8 @@ class StorageFsTemplate(object):
             handle = self.container_info[container_name]
         return handle
 
-    def configure_bond_interface(self, container_name, bond_bringup_timeout=300, slave_interface_list = [],
-                                 bond_dict = {}):
+    def configure_bond_interface(self, container_name, slave_interface_list = [], bond_dict = {},
+                                 bond_bringup_timeout=BOND_BRINGUP_TIMEOUT):
         """
         :param docker_handle:
         :param slave_interface_list:
@@ -199,9 +200,8 @@ class StorageFsTemplate(object):
 
         # Checking whether the bond interface IP and netmask is provided in the bond_dict
         fun_test.simple_assert("ip" in bond_dict and bond_dict["ip"], "Bond interface IP address provided")
+        fun_test.simple_assert("name" in bond_dict and bond_dict["name"], "Bond interface name provided")
 
-        if "name" not in bond_dict:
-            bond_dict["name"] = "bond0"
         if "mode" not in bond_dict:
             bond_dict["mode"] = "802.3ad"
         if "miimon" not in bond_dict:
@@ -240,14 +240,16 @@ class StorageFsTemplate(object):
 
         # Configuring IP address for the bond interface
         bond_ip_config = "ip addr add %(ip)s dev %(name)s" % bond_dict
-        bond_ip_config_status = container_obj.command(bond_ip_config)
-        fun_test.simple_assert(not bond_ip_config_status, "Configuring IP to {} interface".format(bond_dict["name"]))
+        container_obj.command(bond_ip_config)
+        fun_test.simple_assert(not container_obj.exit_status(), "Configuring IP to {} interface".
+                               format(bond_dict["name"]))
 
         # Enabling the bond interface after configuring IP address to it
         bond_status = container_obj.ifconfig_up_down(interface=bond_dict["name"], action="up")
         fun_test.simple_assert(bond_status, "Enabling {} interface".format(bond_dict["name"]))
 
         # Checking whether the bond0 is UP and Running
+        match = ""
         timer = FunTimer(max_time=bond_bringup_timeout)
         while not timer.is_expired():
             bond_output = container_obj.command("ifconfig {}".format(bond_dict["name"]))
