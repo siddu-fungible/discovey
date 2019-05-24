@@ -747,6 +747,12 @@ class Fs(object, ToDictMixin):
 
         # else:
         #    fun_test.critical("Skipping ComE initialization as retimer was used")
+        try:
+            self.get_bmc().disconnect()
+            self.get_fpga().disconnect()
+            self.get_come().disconnect()
+        except:
+            pass
         return True
 
     def _apply_retimer_workaround(self): #TODO:
