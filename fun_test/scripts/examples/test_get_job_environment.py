@@ -33,7 +33,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        result = fun_test.get_job_environment_variable("test")
+        result = fun_test.get_stored_enviroment_variable("test")
         fun_test.log("got the test variable that is already set {}".format(result))
 
 
