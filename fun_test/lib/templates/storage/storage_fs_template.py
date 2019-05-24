@@ -182,25 +182,30 @@ class StorageFsTemplate(object):
             handle = self.container_info[container_name]
         return handle
 
-    def configure_bond_interface(self, container_name, slave_interface_list = [], bond_dict = {},
-                                 bond_bringup_timeout=BOND_BRINGUP_TIMEOUT):
+    def configure_bond_interface(self, container_name, name, ip, slave_interface_list = [],
+                                 bond_bringup_timeout=BOND_BRINGUP_TIMEOUT, **kwargs):
         """
         :param docker_handle:
         :param slave_interface_list:
         :param bond_dict:
         :return:
 
-        The user has to pass all the slave interface name which will be part of bond interface in the form list
-        bond interface details like name, type, lacp, IP etc., should be packed in a dictionary
+        * The user has to pass all the slave interface name which will be part of bond interface in the form list
+        * Bond interface name and IP are mandatory one needs to be passed
+        * The other bond properties can be passed the name=value or as a dictionary at the end
         """
 
         container_obj = self.container_info[container_name]
         # Checking whether the two or more interfaces are passed to create the bond
         fun_test.simple_assert(len(slave_interface_list) >= 2, "Sufficient slave interfaces to form bond")
 
-        # Checking whether the bond interface IP and netmask is provided in the bond_dict
-        fun_test.simple_assert("ip" in bond_dict and bond_dict["ip"], "Bond interface IP address provided")
-        fun_test.simple_assert("name" in bond_dict and bond_dict["name"], "Bond interface name provided")
+        bond_dict = {}
+        bond_dict["name"] = name
+        bond_dict["ip"] = ip
+
+        if kwargs:
+            for key in kwargs:
+                bond_dict[key] = kwargs[key]
 
         if "mode" not in bond_dict:
             bond_dict["mode"] = "802.3ad"
