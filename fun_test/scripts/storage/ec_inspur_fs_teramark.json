@@ -55,8 +55,8 @@
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_ssd": 12,
-      "num_volumes": 6
+      "num_ssd": 6,
+      "num_volumes": 1
     },
     "command_timeout": 30,
     "iter_interval": 30,
@@ -69,7 +69,7 @@
     "nvme_device": "/dev/nvme",
     "io_queues": 0,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 2400},
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
     "fio_cmd_args": {"bs": "8k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "timeout": 180},
     "fio_modes": ["randrw"],
     "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
@@ -98,8 +98,8 @@
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_ssd": 12,
-      "num_volumes": 6
+      "num_ssd": 6,
+      "num_volumes": 1
     },
     "command_timeout": 30,
     "iter_interval": 60,
@@ -112,7 +112,7 @@
     "nvme_device": "/dev/nvme",
     "io_queues": 0,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 2400},
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
     "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "timeout": 180},
     "fio_modes": ["rw"],
     "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
@@ -141,8 +141,8 @@
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_ssd": 12,
-      "num_volumes": 6
+      "num_ssd": 6,
+      "num_volumes": 1
     },
     "command_timeout": 30,
     "iter_interval": 30,
@@ -155,7 +155,7 @@
     "nvme_device": "/dev/nvme",
     "io_queues": 0,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 2400},
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 720},
     "fio_cmd_args": {"bssplit": "8k/50:1024k/50", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 80, "percentage_random": "100%", "ramp_time": 10, "runtime": 120, "timeout": 180},
     "fio_modes": ["randrw"],
     "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],

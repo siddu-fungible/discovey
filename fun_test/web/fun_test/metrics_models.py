@@ -1389,6 +1389,7 @@ class TeraMarkFunTcpConnectionsPerSecondPerformance(models.Model):
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
     input_cps_type = models.TextField(verbose_name="CPS Type", default="")
+    input_platform = models.TextField(default=FunPlatform.F1)
 
     def __str__(self):
         s = ""
