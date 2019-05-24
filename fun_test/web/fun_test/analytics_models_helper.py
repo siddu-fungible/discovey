@@ -32,6 +32,18 @@ def invalidate_goodness_cache():
         chart.goodness_cache_valid = False
         chart.save()
 
+def get_data_collection_time():
+    result = None
+    if fun_test.suite_execution_id:
+        result = fun_test.get_stored_enviroment_variable("data_collection_time")
+        if not result:
+            date_time = get_current_time()
+            fun_test.update_job_environment_variable("data_collection_time", str(date_time))
+            result = date_time
+        else:
+            result = parser.parse(result)
+    return result
+
 
 class MetricHelper(object):
     def __init__(self, model):
