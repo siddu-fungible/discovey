@@ -82,8 +82,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "runtime": 120,
-      "timeout": 180
+      "runtime": 180,
+      "timeout": 200
     },
     "fio_modes": [
       "read",

@@ -96,15 +96,12 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["test_network"] = self.test_network
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables['ip_configured'] = False
         fun_test.shared_variables['ctlr_configured'] = False
         fun_test.shared_variables['artifacts_shared'] = False
         fun_test.shared_variables['nvme_device_connected'] = False
-        fun_test.shared_variables['huid'] = self.huid
-        fun_test.shared_variables['ctlid'] = self.ctlid
         self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
         fun_test.shared_variables["remote_ip"] = self.remote_ip
-
+        fun_test.shared_variables["topology"] = topology
 
         # Configure Linux Host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
@@ -160,18 +157,21 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
         try:
+            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
+            fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                           command_duration=self.command_timeout),
+                                 message="Delete Controller uuid: {}".format(ctrlr_uuid))
             self.storage_controller.disconnect()
-            self.fs.cleanup()
+
         except Exception as ex:
             fun_test.critical(ex.message)
-
+        finally:
+            fun_test.shared_variables["topology"].cleanup()
 
 class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
         testcase = self.__class__.__name__
         fun_test.shared_variables['setup_complete'] = False
-        huid = fun_test.shared_variables['huid']
-        ctlid = fun_test.shared_variables['ctlid']
         self.end_host = fun_test.shared_variables["end_host"]
         self.test_network = fun_test.shared_variables["test_network"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
@@ -188,13 +188,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        # Configure IP on FS
-        if not fun_test.shared_variables['ip_configured']:
-            configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
-            fun_test.shared_variables['ip_configured'] = True
-
-        # Create controller
+        # Configure IP and Create controller on FS
         if not fun_test.shared_variables['ctlr_configured']:
+            configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
+
             self.ctrlr_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                        transport=self.attach_transport,
@@ -359,7 +356,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def cleanup(self):
         try:
-            self.end_host.sudo_command("nvme diconnect -d {}".format(self.volume_name))
+            self.end_host.sudo_command("nvme disconnect -d {}".format(self.volume_name))
             ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
             if fun_test.shared_variables["setup_complete"]:
                 # Detaching all the EC/LS volumes to the external server
@@ -368,10 +365,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                            command_duration=self.command_timeout)[
                                          'status'],
                                      message="Detach nsid: {} from controller: {}".format(self.ns_id, ctrlr_uuid))
-
-                fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                               command_duration=self.command_timeout),
-                                     message="Delete Controller uuid: {}".format(ctrlr_uuid))
 
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
