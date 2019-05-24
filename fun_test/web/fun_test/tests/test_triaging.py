@@ -444,4 +444,4 @@ if __name__ == "__main__":
                 Daemon.get(name=DAEMON_NAME).beat()
             except Exception as ex:
                 logger.exception(ex)
-            time.sleep(5)
+        time.sleep(5)
