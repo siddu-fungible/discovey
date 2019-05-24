@@ -759,11 +759,11 @@ if __name__ == "__main__":
     base_line_date = datetime(year=2019, month=5, day=24, minute=0, hour=0, second=0)
     for internal_chart_name in internal_chart_names:
         if "bandwidth" in internal_chart_name:
-            y1_axis_title = "MBps"
+            y1_axis_title = PerfUnit.UNIT_MBYTES_PER_SEC
         elif "latency" in internal_chart_name:
-            y1_axis_title = "usecs"
+            y1_axis_title = PerfUnit.UNIT_USECS
         else:
-            y1_axis_title = "ops"
+            y1_axis_title = PerfUnit.UNIT_OPS
         copy_chart_name = internal_chart_name.replace("mrsw", "srsw")
         copy_chart = MetricChart.objects.get(internal_chart_name=copy_chart_name)
         data_sets = json.loads(copy_chart.data_sets)
