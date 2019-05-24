@@ -1,0 +1,4 @@
+[
+  {"path": "examples/test_update_job_environment.py"},
+  {"path": "examples/test_get_job_environment.py"}
+]
