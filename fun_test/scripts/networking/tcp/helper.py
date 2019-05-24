@@ -644,6 +644,57 @@ def populate_resource_bam_output_file(network_controller_obj, filename, max_time
     return output
 
 
+def get_single_dict_stats(result):
+    master_table_obj = PrettyTable(['Field Name', 'Counter'])
+    master_table_obj.align = 'l'
+    master_table_obj.border = True
+    master_table_obj.header = True
+    try:
+        for key in sorted(result):
+            master_table_obj.add_row([key, result[key]])
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return master_table_obj
+
+
+def populate_vp_util_output_file(network_controller_obj, filename, display_output=True, max_time=10, iteration=True):
+    output = False
+    try:
+        filtered_dict = {}
+        lines = list()
+        timer = FunTimer(max_time=max_time)
+        while not timer.is_expired():
+            result = network_controller_obj.debug_vp_util()
+            for key, val in sorted(result.iteritems()):
+                if "CCV1" in key or "CCV2" in key:
+                    filtered_dict[key] = val
+            master_table_obj = get_single_dict_stats(result=filtered_dict)
+            lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+            lines.append(master_table_obj.get_string())
+            lines.append('\n\n\n')
+
+            if not iteration:
+                break
+
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
+        with open(file_path, 'a') as f:
+            f.writelines(lines)
+
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("VP util output")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
 def get_timestamp():
     ts = time.time()
     return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
@@ -712,6 +763,7 @@ def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=Fa
         flow_list_file = str(version) + "_" + str(num_flows) + '_flowlist.txt'
         resource_pc_file = str(version) + "_" + str(num_flows) + '_resource_pc.txt'
         resource_bam_file = str(version) + "_" + str(num_flows) + '_resource_bam.txt'
+        vp_utils_file = str(version) + "_" + str(num_flows) + '_vp_utils.txt'
 
         # No need to add more task for dpcsh command instead start a thread after few secs of traffic to collect
         # dpcsh output
@@ -725,14 +777,15 @@ def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=Fa
         thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=run_dpcsh_commands,
                                                   network_controller_obj=network_controller_obj,
                                                   flow_list_file=flow_list_file, resource_bam_file=resource_bam_file,
-                                                  resource_pc_file=resource_pc_file, display_output=display_output)
+                                                  vp_utils_file=vp_utils_file, resource_pc_file=resource_pc_file,
+                                                  display_output=display_output)
 
         run_started = multi_task_obj.run(max_parallel_processes=total_netperf_processes, parallel=True)
         fun_test.test_assert(run_started, "Ensure netperf commands started")
 
         fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=5)
 
-        for index in range(1, total_netperf_processes):
+        for index in range(1, total_netperf_processes + 1):
             task_key = 'conn_%d' % index
             res = multi_task_obj.get_result(task_key=task_key)
             result[task_key] = res
@@ -748,7 +801,7 @@ def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=Fa
     return result
 
 
-def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file,
+def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file, resource_pc_file, vp_utils_file,
                        display_output=False, iteration=True):
     try:
         fun_test.add_checkpoint('Get flow list')
@@ -764,6 +817,10 @@ def run_dpcsh_commands(network_controller_obj, flow_list_file, resource_bam_file
         populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
                                          filename=resource_pc_file, pc_id=2, display_output=display_output,
                                          iteration=iteration)
+
+        fun_test.add_checkpoint('Get VP utils')
+        populate_vp_util_output_file(network_controller_obj=network_controller_obj,
+                                     filename=vp_utils_file, display_output=display_output, iteration=iteration)
 
         fun_test.add_checkpoint('Get Resource BAM')
         populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=resource_bam_file,
