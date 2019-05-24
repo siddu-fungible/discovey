@@ -180,7 +180,7 @@ class TopologyHelper:
             self.expanded_topology = self.get_expanded_topology()
             fun_test.simple_assert(self.expanded_topology, "Expanded Topology")
         duts = self.expanded_topology.duts
-        if dut_index:
+        if dut_index is not None:
             duts = filter(lambda x: x is dut_index, duts)
         for dut_index, dut in duts.iteritems():
             # dut = self.expanded_topology.get_dut(index=dut_index)
