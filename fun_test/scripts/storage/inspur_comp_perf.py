@@ -244,7 +244,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                  "Attach EC/LS volume with nsid: {} to controller with uuid: {}".format(self.ns_id,
                                                                                                         self.ctrlr_uuid))
             fun_test.shared_variables["ec"]["setup_created"] = True
-            fun_test.shared_variables['nsid'] = self.ns_id
+            fun_test.shared_variables['ns_id'] = self.ns_id
             # disabling the error_injection for the EC volume
             fun_test.test_assert(self.storage_controller.poke("params/ecvol/error_inject 0",
                                                               command_duration=self.command_timeout)["status"],
