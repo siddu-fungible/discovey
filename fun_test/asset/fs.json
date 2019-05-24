@@ -130,6 +130,10 @@
   },
   {
     "name": "fs-45",
+    "workarounds": {
+      "retimer_workaround": true
+    },
+    "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.163",
       "mgmt_ssh_username": "sysadmin",
@@ -236,6 +240,10 @@
   },
   {
     "name": "fs-48",
+    "workarounds": {
+      "retimer_workaround": true
+    },
+    "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.166",
       "mgmt_ssh_username": "sysadmin",
@@ -272,6 +280,9 @@
   },
   {
     "name": "fs-60",
+    "workarounds": {
+      "retimer_workaround": true
+    },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.169",
