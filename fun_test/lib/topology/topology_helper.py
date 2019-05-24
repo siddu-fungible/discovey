@@ -182,7 +182,6 @@ class TopologyHelper:
 
     @fun_test.safe
     def validate_topology(self):
-        return True
         topology = self.expanded_topology
         duts = topology.duts
 

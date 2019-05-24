@@ -26,7 +26,6 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
                 disable_f1_index = dut_obj.spec["disable_f1_index"]
             boot_args = dut_obj.spec.get("custom_boot_args", None)
         fs_obj = Fs.get(fs_spec=fs_spec, disable_f1_index=disable_f1_index, boot_args=boot_args)
-        return fs_obj
         # Start Fs
         fun_test.test_assert(fs_obj.bootup(non_blocking=True), "Fs bootup")
 
