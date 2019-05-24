@@ -750,6 +750,44 @@ if __name__ == "__main__":
                     platform=FunPlatform.F1).save()
     print "added cps charts for funtcp"
 
-
+if __name__ == "__main__":
+    # [{"inputs": {"input_operation": "randread", "input_platform": "F1",
+    #              "input_fio_job_name": "fio_randread_apple_single_tcp"}, "name": "iops",
+    #   "output": {"name": "output_read_iops", "reference": 88.134, "min": 0, "max": -1, "expected": 101.3,
+    #              "unit": "Kops"}}]
+    internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency", "apple_rand_read_mrsw_tcp_output_iops"]
+    base_line_date = datetime(year=2019, month=5, day=24, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "bandwidth" in internal_chart_name:
+            y1_axis_title = "MBps"
+        elif "latency" in internal_chart_name:
+            y1_axis_title = "usecs"
+        else:
+            y1_axis_title = "ops"
+        copy_chart_name = internal_chart_name.replace("mrsw", "srsw")
+        copy_chart = MetricChart.objects.get(internal_chart_name=copy_chart_name)
+        data_sets = json.loads(copy_chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_fio_job_name"] = data_set["inputs"]["input_fio_job_name"].replace("single", "multiple")
+            data_set["output"]["reference"] = -1
+            data_set["output"]["expected"] = -1
+            data_set["output"]["unit"] = y1_axis_title
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=copy_chart.chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=copy_chart.descripton,
+                    owner_info=copy_chart.owner_info,
+                    source=copy_chart.source,
+                    positive=copy_chart.positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=copy_chart.metric_model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added multiple reader tcp charts for apple"
 
 
