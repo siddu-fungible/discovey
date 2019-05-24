@@ -112,7 +112,6 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
             {linux_obj.host_ip: helper.get_netstat_output(linux_obj=linux_obj)}
         )
 
-     It generates too much log, in a loop? Disable it before it's fixed.
     # peek resource/pc/[1], and peek resource/pc/[1]
     for nc_obj in network_controller_objs:
         for pc_id in (1, 2):
