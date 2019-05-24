@@ -182,9 +182,11 @@ class TopologyHelper:
         duts = self.expanded_topology.duts
         if dut_index is not None:
             duts = filter(lambda x: x is dut_index, duts)
-        for dut_index, dut in duts.iteritems():
+        else:
+            duts = duts.values()
+        for dut in duts:
             # dut = self.expanded_topology.get_dut(index=dut_index)
-            fun_test.simple_assert(dut, "Dut index: {}".format(dut_index))
+            fun_test.simple_assert(dut, "Dut index: {}".format(dut.index))
             for key, value in kwargs.iteritems():
                 dut.spec[key] = value
         pass
