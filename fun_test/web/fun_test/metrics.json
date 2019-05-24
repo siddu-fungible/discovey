@@ -3787,6 +3787,22 @@
                         "name": "inspur_rand_read_write_qd64_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd128_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd128_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=128"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd256_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd256_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=256"
                       }
                     ]
                   },
@@ -3837,6 +3853,22 @@
                         "name": "inspur_rand_read_write_qd64_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=64"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd128_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd128_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=128"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd256_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd256_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=256"
                       }
                     ]
                   },
