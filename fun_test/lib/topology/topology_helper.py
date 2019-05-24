@@ -43,7 +43,7 @@ class TopologyHelper:
 
             fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
 
-        self.expanded_topology = ExpandedTopology()
+        self.expanded_topology = ExpandedTopology(spec=self.spec)
 
         if "host_info" in spec:
             hosts = spec["host_info"]
