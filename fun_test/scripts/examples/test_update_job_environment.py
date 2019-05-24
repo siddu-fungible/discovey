@@ -34,8 +34,9 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         date_time = get_current_time()
-        fun_test.update_job_environment_variable("test", date_time)
-        fun_test.log("updated the test variable with value {}".format(date_time))
+        fun_test.log("date_time is {}".format(date_time))
+        fun_test.update_job_environment_variable("test", str(date_time))
+        fun_test.log("updated the test variable with value {}".format(str(date_time)))
 
 
 if __name__ == "__main__":
