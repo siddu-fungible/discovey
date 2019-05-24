@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from dateutil import parser
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -35,6 +36,8 @@ class FunTestCase1(FunTestCase):
     def run(self):
         result = fun_test.get_stored_enviroment_variable("test")
         fun_test.log("got the test variable that is already set {}".format(result))
+        result = parser.parse(result)
+        fun_test.log("converted to datetime object {}".format(result))
 
 
 if __name__ == "__main__":
