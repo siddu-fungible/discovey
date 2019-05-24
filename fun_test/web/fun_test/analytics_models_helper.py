@@ -33,7 +33,7 @@ def invalidate_goodness_cache():
         chart.save()
 
 def get_data_collection_time():
-    result = None
+    result = get_current_time()
     if fun_test.suite_execution_id:
         result = fun_test.get_stored_enviroment_variable("data_collection_time")
         if not result:
