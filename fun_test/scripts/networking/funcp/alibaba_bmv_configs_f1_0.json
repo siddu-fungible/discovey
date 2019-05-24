@@ -15,12 +15,6 @@
 	    "address" : "18.1.1.1",
 	    "prefix length" : 24,
 	    "enable" : true
-	    },
-        {
-            "name" : "lo:0",
-            "address" : "7.7.7.7",
-            "prefix length" : 32,
-            "enable" : true
-        }
+	    }
     ]
 }
