@@ -316,6 +316,36 @@ class RegresssionScripts(models.Model):
     tags = models.TextField(default=json.dumps(['tag1']))
     baseline_suite_execution_id = models.IntegerField(default=-1, null=True)
 
+    @staticmethod
+    def get(script_path):
+        result = None
+        if script_path:
+            try:
+                result = RegresssionScripts.objects.get(script_path=script_path)
+            except ObjectDoesNotExist:
+                pass
+        return result
+
+
+class TestCaseInfo(FunModel):
+    """
+    # Model to store test-case id to script path mappings and associated summaries
+    """
+    test_case_id = models.TextField()
+    summary = models.TextField()
+    script_path = models.TextField()  # Maps to RegressionScripts
+
+    @staticmethod
+    def add_update(test_case_id, summary, script_path):
+        if TestCaseInfo.objects.filter(test_case_id=test_case_id, script_path=script_path).exists():
+            t = TestCaseInfo.objects.get(test_case_id=test_case_id, script_path=script_path)
+            t.summary = summary
+            t.save()
+        else:
+            t = TestCaseInfo(test_case_id=test_case_id, script_path=script_path, summary=summary)
+            t.save()
+
+
 class RegresssionScriptsSerializer(serializers.Serializer):
     script_path = serializers.CharField(max_length=200)
     modules = serializers.SerializerMethodField()
@@ -340,6 +370,8 @@ class ScriptInfo(models.Model):
     created_time = models.DateTimeField(default=datetime.now)
     status = models.TextField(default="ACTIVE")
     bug = models.TextField(default="")
+
+
 
 class SchedulerInfo(models.Model):
     """
