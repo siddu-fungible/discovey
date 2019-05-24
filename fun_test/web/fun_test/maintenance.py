@@ -707,7 +707,7 @@ if __name__ == "__main_pcie_write__":
                                         platform=FunPlatform.F1).save()
     print "added charts for raw block write and random write different io depths"
 
-if __name__ == "__main__":
+if __name__ == "__main_funtcp_cps__":
     internal_chart_names = ["funtcp_server_cps_close_reset", "funtcp_server_cps_close_fin"]
     for internal_chart_name  in internal_chart_names:
         if "close_reset" in internal_chart_name:
@@ -778,7 +778,7 @@ if __name__ == "__main__":
                     internal_chart_name=internal_chart_name,
                     data_sets=json.dumps(data_sets),
                     leaf=True,
-                    description=copy_chart.descripton,
+                    description=copy_chart.description,
                     owner_info=copy_chart.owner_info,
                     source=copy_chart.source,
                     positive=copy_chart.positive,
