@@ -23,7 +23,7 @@ class ScriptSetup(FunTestScript):
 class BringupSetup(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Bringup BGP on FS-45",
+                              summary="Bringup FS-48",
                               steps="""
                               1. BringUP both F1s
                               2. Bringup FunCP
@@ -49,7 +49,7 @@ class BringupSetup(FunTestCase):
                                                           "--serial --dpc-uart --dis-stats retimer=0 --mgmt")
         #Boot both F1s and reboot COMe
 
-        fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=False, gatewayip="10.1.105.1"),
+        fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=True, gatewayip="10.1.105.1"),
                              message="Boot F1s")
 
         # Bringup FunCP
@@ -66,7 +66,7 @@ class BringupSetup(FunTestCase):
             #                                                          % server)
 
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs("FS60")
+        tb_config_obj = tb_configs.TBConfigs("FS48")
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True)
@@ -76,7 +76,7 @@ class BringupSetup(FunTestCase):
         funcp_obj.assign_mpg_ips_dhcp()
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script
         #execute abstract file
-        
+
         abstract_json_file0 = fun_test.get_script_parent_directory() + '/alibaba_fpc_configs_fs48_f1_0.json'
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/alibaba_fcp_configs_fs48_f1_1.json'
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
