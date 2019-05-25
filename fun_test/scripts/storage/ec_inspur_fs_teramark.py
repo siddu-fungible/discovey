@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -237,7 +237,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        self.db_log_time = get_current_time()
+        self.db_log_time = get_data_collection_time()
 
         self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip,
