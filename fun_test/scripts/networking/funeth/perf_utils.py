@@ -76,7 +76,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
         funeth_obj.get_interrupts(hu)
 
     # ethtool -S
-    fun_test.log("Capture ethtool stats {} test".format(when))
+    fun_test.log("Collect ethtool stats {} test".format(when))
     for hu in funeth_obj.hu_hosts:
         output = funeth_obj.get_ethtool_stats(hu).values()[0]  # TODO: assume there is one funeth intf per host
         linux_obj = funeth_obj.linux_obj_dict[hu]
@@ -85,7 +85,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
         )
 
     # netstat
-    fun_test.log("Capture netstat {} test".format(when))
+    fun_test.log("Collect netstat {} test".format(when))
     netstats_dict[when] = {}
     for linux_obj in linux_objs:
         netstats_dict[when].update(
