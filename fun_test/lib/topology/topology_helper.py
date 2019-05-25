@@ -181,7 +181,8 @@ class TopologyHelper:
             fun_test.simple_assert(self.expanded_topology, "Expanded Topology")
         duts = self.expanded_topology.duts
         if dut_index is not None:
-            duts = filter(lambda x: x is dut_index, duts)
+            dut_indexes = filter(lambda x: x is dut_index, duts)
+            duts = [duts[x] for x in dut_indexes]
         else:
             duts = duts.values()
         for dut in duts:
