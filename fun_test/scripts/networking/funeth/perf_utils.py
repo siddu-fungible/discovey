@@ -77,6 +77,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
 
     # ethtool -S
     fun_test.log("Collect ethtool stats {} test".format(when))
+    ethtool_stats_dict[when] = {}
     for hu in funeth_obj.hu_hosts:
         output = funeth_obj.get_ethtool_stats(hu).values()[0]  # TODO: assume there is one funeth intf per host
         linux_obj = funeth_obj.linux_obj_dict[hu]
