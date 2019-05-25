@@ -23,7 +23,7 @@ FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
     ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
     ('HU_HU_NFCP', 'HU -> HU non-FCP'), # test case id: 3xxxx
-#    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
+    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
 #    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 ])
 TOOLS = ('netperf',)
@@ -115,14 +115,16 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
     # peek resource/pc/[1], and peek resource/pc/[1]
     for nc_obj in network_controller_objs:
         for pc_id in (1, 2):
+            fun_test.log_module_filter("random_module")
             checkpoint = "Peek stats resource pc {} {} test".format(pc_id, when)
             resource_pc_temp_filename = '{}_F1_{}_resource_pc_{}_{}.txt'.format(str(version),
                                                                                 network_controller_objs.index(nc_obj),
                                                                                 pc_id, when)
-            fun_test.simple_assert(helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
-                                                                           filename=resource_pc_temp_filename,
-                                                                           pc_id=pc_id, display_output=False),
-                                   checkpoint)
+            res_result = helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
+                                                                 filename=resource_pc_temp_filename,
+                                                                 pc_id=pc_id, display_output=False)
+            fun_test.log_module_filter_disable()
+            fun_test.simple_assert(res_result, checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
