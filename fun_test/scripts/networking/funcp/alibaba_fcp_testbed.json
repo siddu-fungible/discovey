@@ -4,16 +4,16 @@
             "boot_image_f1_0": "ysingh/funos-f1.stripped_24may_master.gz",
             "boot_image_f1_1": "ysingh/funos-f1.stripped_24may_master.gz",
             "gatewayip": "10.1.105.1",
-            "abtract_config_f1_0": "/alibaba_fpc_configs_fs48_f1_0.json",
-            "abtract_config_f1_1": "/alibaba_fpc_configs_fs48_f1_1.json",
+            "abtract_config_f1_0": "/alibaba_fcp_configs_fs48_f1_0.json",
+            "abtract_config_f1_1": "/alibaba_fcp_configs_fs48_f1_1.json",
             "prepare_docker":false
         },
         "fs-60": {
             "boot_image_f1_0": "ysingh/funos-f1.stripped_24may_master.gz",
             "boot_image_f1_1": "ysingh/funos-f1.stripped_24may_master.gz",
             "gatewayip": "10.1.105.1",
-            "abtract_config_f1_0": "/alibaba_fpc_configs_fs60_f1_0.json",
-            "abtract_config_f1_1": "/alibaba_fpc_configs_fs60_f1_1.json",
+            "abtract_config_f1_0": "/alibaba_fcp_configs_fs60_f1_0.json",
+            "abtract_config_f1_1": "/alibaba_fcp_configs_fs60_f1_1.json",
             "prepare_docker":false
         }
     }
