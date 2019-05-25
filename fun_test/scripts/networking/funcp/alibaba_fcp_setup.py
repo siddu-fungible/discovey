@@ -67,7 +67,7 @@ class BringupSetup(FunTestCase):
                 #                                                          % server)
 
             # install drivers on PCIE connected servers
-            tb_config_obj = tb_configs.TBConfigs(str('FS'+ item.split('-')[1]))
+            tb_config_obj = tb_configs.TBConfigs(str('FS'+ fs_name.split('-')[1]))
             funeth_obj = Funeth(tb_config_obj)
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True)
