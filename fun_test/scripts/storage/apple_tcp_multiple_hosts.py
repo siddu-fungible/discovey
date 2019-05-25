@@ -682,32 +682,27 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Host {} the IO size is {} kB".format(count, avg_kbs_read[count] / avg_tps[count]))
                 collective_tps += avg_tps[count]
                 collective_kbs_read += avg_kbs_read[count]
-            '''
+
             for x in range(1, self.host_count + 1, 1):
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 fun_test.log(fio_output[combo][mode][x])
                 for op, stats in fio_output[combo][mode][x].items():
                     for field, value in stats.items():
-                        if field == "iops":
-                            fio_output[combo][mode][x][op][field] = int(round(value * multiplier))
-                        if field == "bw":
-                            # Converting the KBps to MBps
-                            fio_output[combo][mode][x][op][field] = int(round(value * multiplier / 1000))
                         if field == "latency":
                             fio_output[combo][mode][x][op][field] = int(round(value / multiplier))
                 fun_test.log("FIO Command Output after multiplication:")
                 fun_test.log(fio_output[combo][mode][x])
-               fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                              self.iter_interval)
-               # Comparing the FIO results with the expected value for the current block size and IO depth combo
-               for op, stats in self.expected_fio_result[combo][mode].items():
-                   for field, value in stats.items():
-                       fun_test.log("op is: {} and field is: {} ".format(op, field))
-                       actual = fio_output[combo][mode][x][op][field]
-                       # row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
-                       #                              int((value * (1 + self.fio_pass_threshold))))
-            '''
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
+                # Comparing the FIO results with the expected value for the current block size and IO depth combo
+                for op, stats in self.expected_fio_result[combo][mode].items():
+                    for field, value in stats.items():
+                        fun_test.log("op is: {} and field is: {} ".format(op, field))
+                        actual = fio_output[combo][mode][x][op][field]
+                        row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
+                                                     int((value * (1 + self.fio_pass_threshold))))
+
             row_data_dict["fio_job_name"] = "fio_randread_apple_multiple_tcp"
             row_data_dict["readiops"] = int(round(collective_tps))
             row_data_dict["readbw"] = int(round(collective_kbs_read / 1000))
