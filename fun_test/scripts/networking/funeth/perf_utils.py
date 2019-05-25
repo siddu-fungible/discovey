@@ -41,7 +41,7 @@ def populate_diff_output_file(diff_stats, filename, desc='ethtool stats'):
             rows.append(inner_table)
         out_table.add_row(rows)
 
-        lines = ['<=======> {} output <=======>\n'.format(ethtool_stats_dict), out_table.get_string()]
+        lines = ['<=======> {} output <=======>\n'.format(desc), out_table.get_string()]
 
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
