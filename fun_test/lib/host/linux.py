@@ -1843,37 +1843,94 @@ class Linux(object, ToDictMixin):
         fun_test.debug(fio_dict)
         return fio_dict
 
+    def _ensure_reboot_is_initiated(self, ipmi_details, power_cycled=None):
+        reboot_initiated = False
+        reboot_initiated_wait_time = 120
+        reboot_initiated_timer = FunTimer(max_time=reboot_initiated_wait_time)
+
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        while not reboot_initiated and not reboot_initiated_timer.is_expired():
+            try:
+                if service_host:
+                    ping_result = service_host.ping(dst=self.host_ip, count=10)
+                    if not ping_result:
+                        reboot_initiated = True
+                        fun_test.log("Reboot initiated (based on pings)")
+                else:
+                    self.ping(dst="127.0.0.1")
+            except Exception as ex:
+                try:
+                    self.disconnect()
+                    self._set_defaults()
+                    reboot_initiated = True
+                    fun_test.log("Reboot initiated (based on failing ssh)")
+                except:
+                    pass
+        fun_test.critical("Unable to verify reboot was initiated. Wait-time: {}".format(reboot_initiated_wait_time))
+        if ipmi_details:
+            fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
+            ipmi_host_ip = ipmi_details["host_ip"]
+            ipmi_username = ipmi_details["username"]
+            ipmi_password = ipmi_details["password"]
+            try:
+                service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                fun_test.log("IPMI power-cycle complete")
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                power_cycled = True
+                return self._ensure_reboot_is_initiated(ipmi_details=None, power_cycled=power_cycled)
+        return reboot_initiated, power_cycled
+
+
     @fun_test.safe
-    def reboot(self, timeout=5, retries=6, max_wait_time=180, non_blocking=None, ipmi_details=None):
+    def reboot(self, timeout=5,
+               retries=6,
+               max_wait_time=180,
+               non_blocking=None,
+               ipmi_details=None,
+               wait_time_before_host_check=None):
         """
         :param timeout: deprecated
         :param retries: deprecated
         :param max_wait_time: Total time to wait before declaring failure
         :param non_blocking: if set to True, return immediately after issuing a reboot
         :param ipmi_details: if ipmi_details are provided we will try power-cycling in case normal bootup did not work
+        :param wait_time_before_host_check: wait time before we check if host is up. Might be useful when we know the
+                system is prone to crashes
         :return:
         """
         result = True
 
         # Rebooting the host
+
         try:
             self.sudo_command(command="reboot", timeout=timeout)
-            self.ping(dst="127.0.0.1", count=40)
         except Exception as ex:
-            self.disconnect()
-            self._set_defaults()
-            fun_test.sleep("Waiting for the host to go down", seconds=10)
             try:
                 self.disconnect()
                 self._set_defaults()
             except:
                 pass
-        if not non_blocking:
-            result = self.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
+
+        reboot_initiated, power_cycled_already = self._ensure_reboot_is_initiated(ipmi_details=ipmi_details)
+        if not reboot_initiated:
+            result = False
+        else:
+            result = True
+            if not non_blocking:
+                if wait_time_before_host_check:
+                    fun_test.sleep("Waiting before checking the host is up", seconds=wait_time_before_host_check)
+                result = self.ensure_host_is_up(max_wait_time=max_wait_time,
+                                                ipmi_details=ipmi_details,
+                                                power_cycle=not power_cycled_already)
         return result
 
     @fun_test.safe
-    def ensure_host_is_up(self, max_wait_time=180, ipmi_details=None):
+    def ensure_host_is_up(self, max_wait_time=180, ipmi_details=None, power_cycle=None):
         """
         Waits until the host is reachable. Typically needed after a reboot
         :param max_wait_time: total time to wait before giving
@@ -1889,7 +1946,6 @@ class Linux(object, ToDictMixin):
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
         ping_result = False
-        start_time = time.time()
         while not host_is_up and not max_reboot_timer.is_expired():
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=20)
@@ -1904,13 +1960,7 @@ class Linux(object, ToDictMixin):
                     fun_test.log("Host: {} is up".format(str(self)))
                     break
                 except Exception as ex:
-                    # If not able to ssh into host, then the previous ping passed because it would had fired before the
-                    # tcp module going down during the reboot. In other words, if any of the host's module suffered a
-                    # crash then the host take significant time to reboot. In this case, the first ping right after
-                    # issuing the reboot will always pass
-                    ping_result = False
-                    elapsed_time = time.time() - start_time
-                    max_reboot_timer = FunTimer(max_time=max_wait_time - elapsed_time)
+                    pass
             fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
         if not host_is_up:
             result = False
@@ -1918,7 +1968,7 @@ class Linux(object, ToDictMixin):
 
         if not host_is_up and service_host:
             result = False
-            if not result and ipmi_details:
+            if not result and ipmi_details and power_cycle:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]

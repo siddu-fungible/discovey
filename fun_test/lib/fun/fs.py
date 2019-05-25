@@ -529,6 +529,8 @@ class ComE(Linux):
                                           message="F1_{} funq bind device found".format(f1_index))
         '''
         fun_test.test_assert(num_pfs_detected, "At least one PF detected")
+        if self.disable_f1_index is None:
+            fun_test.test_assert_expected(actual=num_pfs_detected, expected=self.NUM_F1S, message="Number of PFs (Unassigned class)")
         return True
 
     def ensure_dpc_running(self):
