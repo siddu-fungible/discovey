@@ -23,7 +23,7 @@ FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
     ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
     ('HU_HU_NFCP', 'HU -> HU non-FCP'), # test case id: 3xxxx
-#    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
+    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
 #    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
 ])
 TOOLS = ('netperf',)

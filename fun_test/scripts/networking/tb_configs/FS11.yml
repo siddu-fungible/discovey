@@ -64,8 +64,6 @@ hu:
       arps:
         - ipv4_addr: 53.1.1.4
           mac_addr: 00:de:ad:be:ef:21
-        - ipv4_addr: 53.1.1.253
-          mac_addr: 00:f1:1d:ad:00:3e
 
 hu2:
   hostname: poc-server-10
@@ -92,8 +90,6 @@ hu2:
       arps:
         - ipv4_addr: 53.1.1.1
           mac_addr: 00:de:ad:be:ef:11
-        - ipv4_addr: 53.1.1.253
-          mac_addr: 00:f1:1d:ad:00:3e
 
 hu3:
   hostname: poc-server-08
@@ -113,9 +109,6 @@ hu3:
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 54.1.1.253
-      arps:
-        - ipv4_addr: 54.1.1.253
-          mac_addr: 00:f1:1d:ad:00:3e
 
 hu4:
   hostname: poc-server-09
@@ -135,6 +128,3 @@ hu4:
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 54.1.1.253
-      arps:
-        - ipv4_addr: 54.1.1.253
-          mac_addr: 00:f1:1d:ad:00:3e

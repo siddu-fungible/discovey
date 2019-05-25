@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from fun_settings import SCRIPTS_DIR
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.network_controller import NetworkController
-from lib.utilities.funcp_config import *
+from lib.utilities.funcp_config import FunControlPlaneBringup
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 
@@ -124,8 +124,9 @@ class FunethSanity(FunTestScript):
 
     def setup(self):
 
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         # Boot up FS1600
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+        if test_bed_type == 'fs-11':
 
             if control_plane:
                 f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server"
@@ -153,12 +154,13 @@ class FunethSanity(FunTestScript):
             DPC_PROXY_PORT = come.get_dpc_port(0)
             DPC_PROXY_PORT2 = come.get_dpc_port(1)
 
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11' and control_plane:
+        if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
             funcp_obj.bringup_funcp()
             funcp_obj.assign_mpg_ips()
             abstract_json_file = '{}/networking/tb_configs/FS11_abstract_config.json'.format(SCRIPTS_DIR)
             funcp_obj.funcp_abstract_config(abstract_config_file=abstract_json_file)
+            fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
             # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
@@ -169,7 +171,7 @@ class FunethSanity(FunTestScript):
         setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj, update_driver=update_driver)
+        setup_hu_host(funeth_obj, update_driver=True)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
