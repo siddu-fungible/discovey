@@ -67,6 +67,16 @@
       "password": "ADMIN"
     }
   },
+  "cab03-qa-01": {
+    "host_ip": "cab03-qa-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "cab03-qa-02": {
+    "host_ip": "cab03-qa-02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",
     "ssh_username": "auto_admin",
