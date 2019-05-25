@@ -139,7 +139,7 @@ class ECVolumeLevelScript(FunTestScript):
             curr_index = i - self.dut_start_index
             self.fs_obj.append(topology.get_dut_instance(index=i))
             self.fs_spec.append(topology.get_dut(index=i))
-            self.come_obj.append(self.fs_obj[curr_index].get_come)
+            self.come_obj.append(self.fs_obj[curr_index].get_come())
             try:
                 print("fs_obj[{}] is: {}".format(curr_index, self.fs_obj[curr_index]))
             except:
@@ -202,21 +202,28 @@ class ECVolumeLevelScript(FunTestScript):
             self.funcp_obj = {}
             self.funcp_spec = {}
             for index in xrange(self.num_duts):
-                self.funcp_obj[i] = StorageFsTemplate(self.come_obj[index])
-                self.funcp_spec[i] = self.funcp_obj[index].deploy_funcp_container(
+                self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
+                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
                     update_n_deploy=self.update_deploy_script, update_workspace=self.update_workspace,
                     mode=self.funcp_mode)
-                fun_test.test_assert(self.funcp_spec[i]["status"],
+                fun_test.test_assert(self.funcp_spec[index]["status"],
                                      "Starting FunCP docker container in DUT {}".format(index))
-                for f1_index, container_name in enumerate(sorted(self.funcp_spec[i]["container_names"])):
+                for f1_index, container_name in enumerate(sorted(self.funcp_spec[index]["container_names"])):
                     bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                     bond_name = "bond0"
-                    bond_ip = bond_interface[0].ip
-                    slave_interface_list = bond_interface[0].fpg_slaves
-                    self.funcp_obj[i].configure_bond_interface(container_name=container_name, name=bond_name,
-                                                               ip=bond_ip, slave_interface_list=slave_interface_list)
+                    bond_ip = bond_interfaces[0].ip
+                    slave_interface_list = bond_interfaces[0].fpg_slaves
+                    slave_interface_list = ["fpg" + str(i) for i in slave_interface_list]
+                    self.funcp_obj[index].configure_bond_interface(container_name=container_name, name=bond_name,
+                                                                   ip=bond_ip, slave_interface_list=slave_interface_list)
         else:
             pass
+
+        """
+        before funcp code: get the host handles, reboot hosts (non blocking) - check nvme and nvme_tcp module is loaded
+        add static route in both dockers
+        get host handles and ping both the bond
+        """
 
         exit(0)
 
