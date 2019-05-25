@@ -156,7 +156,7 @@ class FunethSanity(FunTestScript):
 
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
-            funcp_obj.bringup_funcp()
+            funcp_obj.bringup_funcp(prepare_docker=False)
             funcp_obj.assign_mpg_ips()
             abstract_json_file = '{}/networking/tb_configs/FS11_abstract_config.json'.format(SCRIPTS_DIR)
             funcp_obj.funcp_abstract_config(abstract_config_file=abstract_json_file)
