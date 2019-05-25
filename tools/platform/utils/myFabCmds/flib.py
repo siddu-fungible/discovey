@@ -70,7 +70,7 @@ def deploy_pkgs(on='bmc'):
         execute(_deploy_come, hosts=env.thissetup['come'][3])
 
 @task
-def setup(name="FS6", details=False):
+def setup(name="FS0", details=False):
     """Initialize the working setup and its role definitions"""
     if name not in env.setups:
         raise ValueError("Setup name %s is not defined ..." % name)
@@ -265,6 +265,14 @@ def poweroff():
         local("ipmitool -I lanplus -H {} -U {} -P {} power off".format(*ipmi_credentials))
 
 @task
+def poweron():
+    """just poweron host using ipmi subsystem"""
+    with settings( hide('stderr', 'running'), warn_only=True ):
+        ipmi_credentials = env.thissetup['ipmi'][0:3]
+        local("ipmitool -I lanplus -H {} -U {} -P {} power status".format(*ipmi_credentials))
+        local("ipmitool -I lanplus -H {} -U {} -P {} power on".format(*ipmi_credentials))
+
+@task
 def powerstatus():
     """ status directly using a mgmt ip """
     with settings( hide('stderr', 'running'), warn_only=True ):
@@ -285,8 +293,9 @@ def powercycle(waitfor=500):
         if not wait_until_alive(env.thissetup['come'][0], waitfor):
             raise RuntimeError("Cannot power-on system in %s seconds ... giving up ..." % waitfor)
 
+
 @task
-def poweron(waitfor=500):
+def poweronandwait(waitfor=500):
     """poweron host using ipmi subsystem"""
     with settings( hide('stderr', 'running'), warn_only=True ):
         ipmi_credentials = env.thissetup['ipmi'][0:3]
@@ -326,7 +335,7 @@ def check_serial_sockets():
     with settings( hide('stderr', 'running'), warn_only=True ):
         try:
             o = run("ps -ef | grep tcp_serial_redirect | grep -v grep")
-            return map(lambda l: l.split()[1], o.splitlines())
+            return True if len(map(lambda l: l.split()[1], o.splitlines())) == 2 else False
         except:
             return False
 
@@ -454,7 +463,8 @@ def argsF(index=0, bootargs=BOOTARGS):
     """ set bootargs of chip[index] with provided arguments """
     global child
     CCHUID = 3 - int(index)
-    bootargs = 'sku=SKU_FS1600_{} cc_huid={} '.format(index, CCHUID) + bootargs
+    bootargs = 'cc_huid={} '.format(CCHUID) + bootargs
+    bootargs = 'sku=SKU_FS1600_{} '.format(index) + bootargs
     child = connectF(index, reset=False)
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')

@@ -5,12 +5,12 @@ from fabric.api import env
 # Set below values if you keep your image at same path after build
 # default kept this some dummy values to avoid booting from any-image
 ###################################################################################
-env.DEFAULT_NFSFILE   = "/home/abc/tftpboot/funos-f1.stripped.gz"
-env.DEFAULT_TFTPFILE = "abc/tftpboot/funos-f1.stripped.gz"
+env.DEFAULT_NFSFILE   = "/home/users/tftpboot/funos-f1.stripped.gz"
+env.DEFAULT_TFTPFILE = "users/tftpboot/funos-f1.stripped.gz"
 #env.DEFAULT_BOOTARGS = "app=hw_hsu_test --memvol --csr-replay --all_100g --nofreeze --dpc-server --dpc-proxy syslog=6"
 #env.DEFAULT_BOOTARGS = 'app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze'
 #env.DEFAULT_BOOTARGS = 'app=hw_hsu_test --serial --memvol --all_100g --dpc-server retimer=0 --dpc-uart --csr-replay'
-env.DEFAULT_BOOTARGS = 'app=hw_hsu_test --serial --memvol --dpc-server --dpc-uart syslog=6'
+env.DEFAULT_BOOTARGS = 'app=hw_hsu_test --serial --memvol --all_100g --dpc-server --dpc-uart --dis-stats --mgmt syslog=6'
 
 ###################################################################################
 env.NFSSERVER = "10.1.20.54"
@@ -32,13 +32,13 @@ setups = {
         'fpga' : [ '10.1.20.122', 'root', '""' ],
         'come' : [ '10.1.20.164', 'fun', '123' ]
     },
-    'FS6' : {
-        'bmc'  : [ '10.1.20.153', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.20.153', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.20.153', 'admin', 'admin' ],
-        'fpga' : [ '10.1.20.124', 'root', '""' ],
-        'come' : [ '10.1.20.154', 'fun', '123' ]
-    },
+    #'FS6' : {
+    #    'bmc'  : [ '10.1.20.153', 'sysadmin', 'superuser' ],
+    #    'rf'   : [ '10.1.20.153', 'Administrator', 'superuser' ],
+    #    'ipmi' : [ '10.1.20.153', 'admin', 'admin' ],
+    #    'fpga' : [ '10.1.20.124', 'root', '""' ],
+    #    'come' : [ '10.1.20.154', 'fun', '123' ]
+    #},
     'FS7' : {
         'bmc'  : [ '10.1.20.19', 'sysadmin', 'superuser' ],
         'rf'   : [ '10.1.20.19', 'Administrator', 'superuser' ],
@@ -103,11 +103,11 @@ setups = {
         'come' : [ '10.1.20.151', 'fun', '123' ]
     },
     'FS39' : {
-        'bmc'  : [ '10.1.20.29', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.20.29', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.20.29', 'admin', 'admin' ],
-        'fpga' : [ '10.1.21.28', 'root', '""' ],
-        'come' : [ '10.1.20.151', 'fun', '123' ]
+        'bmc'  : [ '10.1.21.89', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.21.89', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.21.89', 'admin', 'admin' ],
+        'fpga' : [ '10.1.21.90', 'root', 'root' ],
+        'come' : [ '10.1.21.91', 'fun', '123' ]
     },
     'FS41' : {
         'bmc'  : [ '10.1.105.52', 'sysadmin', 'superuser' ],
@@ -193,11 +193,6 @@ setups = {
         'fpga' : [ '10.1.104.158', 'root', '""' ],
         'come' : [ '10.1.104.159', 'fun', '123' ]
     },
-#AAAA19131027 | FS-54 Serial console:10.1.104.202 7024 | MAC: 02:68:b3:29:da:3e IP: 10.1.104.163 | MAC: 02:68:B3:7f:65:57 IP: 10.1.104.169   | MAC: IP:
-#AAAA19131026 |  FS-55 Serial console: 10.1.104.202 7023 | MAC: 02:68:b3:29:da:40 IP: 10.1.104.167|  MAC: 02:68:B3:7f:65:58 IP: 10.1.104.167 | MAC: IP:
-#AAAA19131007 | FS-56 Serial console: 10.1.104.202 7022 | MAC: 02:68:b3:29:da:42 IP: 10.1.104.164 |  MAC: 02:68:B3:7f:65:59 IP: 10.1.104.164 | MAC: IP:
-#AAAA19131048 |  FS-57 Serial console: 10.1.104.202 7021 | MAC: 02:68:b3:29:da:44 IP: 10.1.104.165 | MAC: 02:68:B3:7f:65:60 IP: 10.1.104.165 | MAC: IP:
-#AAAA19131020 | FS-58 Serial console: 10.1.104.202 7020 | MAC: 02:68:b3:29:da:46 IP: 10.1.104.166 |  MAC: 02:68:B3:7f:65:61 IP: 10.1.104.166 | MAC: IP:
    'FS54' : {
         'bmc'  : [ '10.1.104.163', 'sysadmin', 'superuser' ],
         'rf'   : [ '10.1.104.163', 'Administrator', 'superuser' ],
@@ -206,18 +201,18 @@ setups = {
         'come' : [ '10.1.104.170', 'fun', '123' ]
     },
    'FS55' : {
-        'bmc'  : [ '10.1.104.167', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.104.167', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.104.167', 'admin', 'admin' ],
-        'fpga' : [ '10.1.104.164', 'root', '""' ],
-        'come' : [ '10.1.104.170', 'fun', '123' ]
+        'bmc'  : [ '10.1.20.156', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.20.156', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.20.156', 'admin', 'admin' ],
+        'fpga' : [ '10.1.21.0', 'root', 'root' ],
+        'come' : [ '10.1.20.164', 'fun', '123' ]
     },
    'FS56' : {
-        'bmc'  : [ '10.1.104.165', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.104.165', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.104.165', 'admin', 'admin' ],
-        'fpga' : [ '10.1.104.166', 'root', '""' ],
-        'come' : [ '10.1.104.170', 'fun', '123' ]
+        'bmc'  : [ '10.1.105.70', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.105.70', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.105.70', 'admin', 'admin' ],
+        'fpga' : [ '10.1.105.74', 'root', '""' ],
+        'come' : [ '10.1.105.73', 'fun', '123' ]
     },
    'FS57' : {
         'bmc'  : [ '10.1.104.173', 'sysadmin', 'superuser' ],
@@ -232,6 +227,69 @@ setups = {
         'ipmi' : [ '10.1.104.175', 'admin', 'admin' ],
         'fpga' : [ '10.1.104.176', 'root', '""' ],
         'come' : [ '10.1.104.170', 'fun', '123' ]
+    },
+   'FS59' : {
+        'bmc'  : [ '10.1.105.71', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.105.71', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.105.71', 'admin', 'admin' ],
+        'fpga' : [ '10.1.105.81', 'root', '""' ],
+        'come' : [ '10.1.105.89', 'fun', '123' ]
+    },
+   'FS60' : {
+        'bmc'  : [ '10.1.105.52', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.105.52', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.105.52', 'admin', 'admin' ],
+        'fpga' : [ '10.1.105.66', 'root', '""' ],
+        'come' : [ '10.1.105.171', 'fun', '123' ]
+    },
+   'FS61' : {
+        'bmc'  : [ '10.1.104.113', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.113', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.113', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.141', 'root', '""' ],
+        'come' : [ '10.1.104.128', 'fun', '123' ]
+    },
+   'FS62' : {
+        'bmc'  : [ '10.1.104.116', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.116', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.116', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.135', 'root', '""' ],
+        'come' : [ '10.1.104.132', 'fun', '123' ]
+    },
+   'FS63' : {
+        'bmc'  : [ '10.1.104.121', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.121', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.121', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.174', 'root', '""' ],
+        'come' : [ '10.1.104.133', 'fun', '123' ]
+    },
+   'FS64' : {
+        'bmc'  : [ '10.1.104.126', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.126', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.126', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.152', 'root', 'root' ],
+        'come' : [ '10.1.104.136', 'fun', '123' ]
+    },
+   'FS65' : {
+        'bmc'  : [ '10.1.104.164', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.164', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.164', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.155', 'root', 'root' ],
+        'come' : [ '10.1.104.166', 'fun', '123' ]
+    },
+   'FS66' : {
+        'bmc'  : [ '10.1.104.165', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.165', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.165', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.153', 'root', 'root' ],
+        'come' : [ '10.1.104.167', 'fun', '123' ]
+    },
+   'FS63' : {
+        'bmc'  : [ '10.1.107.61', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.107.61', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.107.61', 'admin', 'admin' ],
+        'fpga' : [ '10.1.107.55', 'root', 'root' ],
+        'come' : [ '10.1.104.136', 'fun', '123' ]
     },
 }
 
