@@ -207,7 +207,7 @@
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-45"
+        "dut": "fs-45",
         "pcie_interface_info": {
           "0": {
             "type": "INTERFACE_TYPE_PCIE",
