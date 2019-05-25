@@ -171,7 +171,7 @@ class FunethSanity(FunTestScript):
         setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj, update_driver=True)
+        setup_hu_host(funeth_obj, update_driver=update_driver)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
