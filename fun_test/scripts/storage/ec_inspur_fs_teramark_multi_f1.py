@@ -5,6 +5,7 @@ from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
+from lib.templates.storage.storage_fs_template import *
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -75,43 +76,147 @@ class ECVolumeLevelScript(FunTestScript):
 
         if not hasattr(self, "dut_start_index"):
             self.dut_start_index = 0
+        if not hasattr(self, "host_start_index"):
+            self.host_start_index = 0
+        if not hasattr(self, "update_workspace"):
+            self.update_workspace = False
+        if not hasattr(self, "update_deploy_script"):
+            self.update_deploy_script = False
+
+        job_inputs = fun_test.get_job_inputs()
+        print("job inputs is: {}".format(job_inputs))
+        if "dut_start_index" in job_inputs:
+            self.dut_start_index = job_inputs["dut_start_index"]
+            print("inside job inputs: dut_start_index: {}".format(self.dut_start_index))
+        if "host_start_index" in job_inputs:
+            self.host_start_index = job_inputs["host_start_index"]
+            print("inside job inputs: host_Start_index: {}".format(self.host_start_index))
+        if "update_workspace" in job_inputs:
+            self.update_workspace = job_inputs["update_workspace"]
+            print("inside job inputs: prepare_fucnp: {}".format(self.update_workspace))
+        if "update_deploy_script" in job_inputs:
+            self.update_deploy_script = job_inputs["update_deploy_script"]
+
         fun_test.log("Global Config: {}".format(self.__dict__))
 
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-
-        self.fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.testbed_type)
         self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
-        fun_test.log("{} FS Spec: {}".format(self.testbed_type, self.fs_spec))
         fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
+        self.total_avaialble_duts = len(self.testbed_config["dut_info"])
+        print("total_avaialble_duts are: {}".format(self.total_avaialble_duts))
 
-        self.num_dut = (self.num_f1s / self.num_f1_per_fs)
+        self.num_duts = (self.num_f1s / self.num_f1_per_fs)
+        print("num_dut is: {}".format(self.num_duts))
+
+        fun_test.test_assert(expression=self.num_duts <= self.total_avaialble_duts, message="Testbed has enough DUTs")
+
+        # Skipping DUTs not required for this test
+        self.skip_dut_list = []
+        for index in xrange(0, self.dut_start_index):
+            self.skip_dut_list.append(index)
+        for index in xrange(self.dut_start_index+self.num_duts, self.total_avaialble_duts):
+            self.skip_dut_list.append(index)
+        print("skip dut list is: {}".format(self.skip_dut_list))
+
         topology_helper = TopologyHelper()
-        """for index in xrange(self.dut_start_index, self.dut_start_index + self.num_dut):
-            print("Current index is: {}".format(index))
-            topology_helper.set_dut_parameters(dut_index=index, f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                               1: {"boot_args": self.bootargs[1]}})"""
-        topology_helper.set_dut_parameters(dut_index=0, f1_parameters={0: {"boot_args": self.f1_0_bootargs},
-                                                                       1: {"boot_args": self.f1_1_bootargs}})
+        topology_helper.disable_duts(self.skip_dut_list)
+        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                          1: {"boot_args": self.bootargs[1]}})
         topology = topology_helper.deploy()
-        print(topology.spec)
+        print("topology output is: {}".format(topology.spec))
         fun_test.test_assert(topology, "Topology deployed")
+        try:
+            print("topology spec: {}".format(topology.spec))
+        except:
+            pass
 
-
-        self.fs_obj = {}
-        self.fs_spec = {}
+        # Getting FS, F1 and COMe objects for all the DUTs going to be used in the test
+        self.fs_obj = []
+        self.fs_spec = []
+        self.come_obj = []
         self.f1_obj = {}
-        for i in xrange(self.num_dut):
-            self.fs_obj[i] = topology.get_dut_instance(index=i)
-            self.fs_spec[i] = topology.get_dut(index=i)
-            self.f1_obj[i] = []
-            print("fs_obj is: {}".format(self.fs_obj[i]))
-            print("fs_obj is: {}".format(dir(self.fs_obj[i])))
-            print("fs_spec is: {}".format(self.fs_spec[i]))
-            print("fs_full_spec is: {}".format(self.fs_obj[i].spec))
+        for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
+            curr_index = i - self.dut_start_index
+            self.fs_obj.append(topology.get_dut_instance(index=i))
+            self.fs_spec.append(topology.get_dut(index=i))
+            self.come_obj.append(self.fs_obj[curr_index].get_come)
+            try:
+                print("fs_obj[{}] is: {}".format(curr_index, self.fs_obj[curr_index]))
+            except:
+                pass
+            try:
+                print("fs_obj[{}] is: {}".format(curr_index, dir(self.fs_obj[curr_index])))
+            except:
+                pass
+            try:
+                print("come_obj[{}] is: {}".format(curr_index, self.come_obj[curr_index]))
+            except:
+                pass
+            try:
+                print("come_obj[{}] is: {}".format(curr_index, dir(self.come_obj[curr_index])))
+            except:
+                pass
+            try:
+                print("fs_spec[{}] is: {}".format(curr_index, self.fs_spec[curr_index]))
+            except:
+                pass
+            try:
+                print("fs_spec.spec[{}] is: {}".format(curr_index, self.fs_spec[curr_index].spec))
+            except:
+                pass
+            self.f1_obj[curr_index] = []
             for j in xrange(self.num_f1_per_fs):
-                self.f1_obj[i].append(self.fs_obj[i].get_f1(index=j))
-                print("f1_obj is: {}".format(self.f1_obj[i][j]))
-                print("f1_obj is: {}".format(dir(self.f1_obj[i][j])))
+                self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
+
+                fpg_interfaces = self.fs_spec[curr_index].get_fpg_interfaces(f1_index=j)
+                for fpg_interface_index, fpg_interface in fpg_interfaces.items():
+                    peer_end_point = fpg_interface.get_peer_instance()
+                    fun_test.log(
+                        "F1 index: {} FPG Interface: {} IP: {}".format(fpg_interface.f1_index, fpg_interface_index,
+                                                                       fpg_interface.ip))
+                fun_test.log("Bond Interfaces:")
+                bond_interfaces = self.fs_spec[curr_index].get_bond_interfaces(f1_index=j)
+                for bond_interface_index, bond_interface in bond_interfaces.items():
+                    fun_test.log("Bond interface index: {}".format(bond_interface_index))
+                    fun_test.log("IP: {}".format(bond_interface.ip))
+                    fpg_slaves = bond_interface.fpg_slaves
+                    fun_test.log("FPG slaves: {}".format(fpg_slaves))
+
+                    for fpg_slave_index in fpg_slaves:
+                        fpg_interface = self.fs_spec[curr_index].get_fpg_interface(f1_index=j,
+                                                                                   interface_index=fpg_slave_index)
+                        fun_test.log("Slave index: {} - FPG Interface: {}".format(fpg_slave_index, fpg_interface))
+
+                try:
+                    print("f1_obj[{}][{}] is: {}".format(curr_index, j, self.f1_obj[curr_index][j]))
+                except:
+                    pass
+                try:
+                    print("f1_obj[{}][{}] is: {}".format(curr_index, j, dir(self.f1_obj[curr_index][j])))
+                except:
+                    pass
+
+        # Bringing up of FunCP docker container if it is needed
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            self.funcp_obj = {}
+            self.funcp_spec = {}
+            for index in xrange(self.num_duts):
+                self.funcp_obj[i] = StorageFsTemplate(self.come_obj[index])
+                self.funcp_spec[i] = self.funcp_obj[index].deploy_funcp_container(
+                    update_n_deploy=self.update_deploy_script, update_workspace=self.update_workspace,
+                    mode=self.funcp_mode)
+                fun_test.test_assert(self.funcp_spec[i]["status"],
+                                     "Starting FunCP docker container in DUT {}".format(index))
+                for f1_index, container_name in enumerate(sorted(self.funcp_spec[i]["container_names"])):
+                    bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                    bond_name = "bond0"
+                    bond_ip = bond_interface[0].ip
+                    slave_interface_list = bond_interface[0].fpg_slaves
+                    self.funcp_obj[i].configure_bond_interface(container_name=container_name, name=bond_name,
+                                                               ip=bond_ip, slave_interface_list=slave_interface_list)
+        else:
+            pass
 
         exit(0)
 
