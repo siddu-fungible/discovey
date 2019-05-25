@@ -169,7 +169,7 @@ class BLTVolumeSanityScript(FunTestScript):
                 fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                command_duration=self.command_timeout),
                                      message="Delete Controller uuid: {}".format(ctrlr_uuid))
-
+                fun_test.sleep(5, "BLT volume detached from controller")
                 # delete BLT
                 fun_test.test_assert(self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
                                                                            block_size=self.blt_details["block_size"],
