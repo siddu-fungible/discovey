@@ -202,7 +202,7 @@ class StorageController(DpcshClient):
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
 
-    def configure_ec_volume(self, ec_info, command_timeout):
+    def configure_ec_volume(self, ec_info, command_timeout=TIMEOUT):
 
         result = True
         compression_enabled = False
@@ -339,7 +339,7 @@ class StorageController(DpcshClient):
 
         return (result, ec_info)
 
-    def unconfigure_ec_volume(self, ec_info, command_timeout):
+    def unconfigure_ec_volume(self, ec_info, command_timeout=TIMEOUT):
 
         # Unconfiguring LS volume based on the script config settting
         for num in xrange(ec_info["num_volumes"]):
@@ -388,6 +388,175 @@ class StorageController(DpcshClient):
                                                 ec_info["volume_capacity"][num][vtype]))
 
         return True
+
+    def configure_ec_volume_across_f1s(self, storage_controller_list = [], ec_info = {}, command_timeout=TIMEOUT):
+        """
+        :param storage_controller_list:
+        :param ec_info:
+        :param command_timeout:
+        :return: (status , ec_info)
+
+        The user has to provide the additional ec_info attribute to configure the EC volume's plex volume across
+        multiple F1
+        * storage_controller_list - list of storage controller objects in which the volume needs to be configured
+        * hosting_f1_list - list contains the F1s hosting each volume
+        * plex_spread_list - Same as above, but instead of that the list containing the actual number of plexes to be
+        configured in all the F1s, like [4, 2]
+        """
+        result = True
+        compression_enabled = False
+        if "ndata" not in ec_info or "nparity" not in ec_info or "capacity" not in ec_info:
+            result = False
+            fun_test.critical("Mandatory attributes needed for the EC volume creation is missing in ec_info dictionary")
+            return (result, ec_info)
+
+        if "num_volumes" not in ec_info:
+            fun_test.critical("Number of volumes needs to be configured is not provided. So going to configure only one"
+                              "EC/LSV volume")
+            ec_info["num_volumes"] = 1
+
+        num_f1 = len(storage_controller_list)
+        # If hosting_f1_list is not provided then the first volume will be host in first F1, second volume in second F1 and so on
+        if "hosting_f1_list" not in ec_info:
+            ec_info["hosting_f1_list"] = [0] * ec_info["num_volumes"]
+            i = 0
+            while i < ec_info["num_volumes"]:
+                j = 0
+                while j < num_f1:
+                    if j >= ec_info["num_volumes"]:
+                        break
+                    ec_info["hosting_f1_list"][i] = j
+                    i += 1
+                    j += 1
+
+        # If plex spread % or count is not given, equally splitting the plex across all the F1
+        if "plex_spread_list" not in ec_info:
+            ec_info["plex_spread_list"] = [0] * num_f1
+            for i in range(ec_info["ndata"] + ec_info["nparity"]):
+                ec_info["plex_spread_list"][i % num_f1] += 1
+
+        # Check if Compression has to be enabled on the Device
+        if "compress" in ec_info.keys() and ec_info['compress']:
+            compression_enabled = True
+            ec_info['use_lsv'] = True
+            # check if compression params are not passed assign default values
+            ec_info["zip_effort"] = ec_info['zip_effort'] if 'zip_effort' in ec_info.keys() else "ZIP_EFFORT_AUTO"
+            ec_info['zip_filter'] = ec_info['zip_filter'] if 'zip_filter' in ec_info.keys() else "FILTER_TYPE_DEFLATE"
+            fun_test.log("Configuring Compression enabled EC volume with effort: {}, filter: {}".format(
+                ec_info['zip_effort'], ec_info['zip_filter']))
+
+        ec_info["uuids"] = {}
+        ec_info["volume_capacity"] = {}
+        ec_info["attach_uuid"] = {}
+        ec_info["attach_size"] = {}
+
+        for num in xrange(ec_info["num_volumes"]):
+            ec_info["uuids"][num] = {}
+            ec_info["uuids"][num]["blt"] = []
+            ec_info["uuids"][num]["ec"] = []
+            ec_info["uuids"][num]["jvol"] = []
+            ec_info["uuids"][num]["lsv"] = []
+
+            # Calculating the sizes of all the volumes together creates the EC or LSV on top EC volume
+            ec_info["volume_capacity"][num] = {}
+            ec_info["volume_capacity"][num]["lsv"] = ec_info["capacity"]
+            ec_info["volume_capacity"][num]["ndata"] = int(round(float(ec_info["capacity"]) / ec_info["ndata"]))
+            ec_info["volume_capacity"][num]["nparity"] = ec_info["volume_capacity"][num]["ndata"]
+            # ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
+
+            if "use_lsv" in ec_info and ec_info["use_lsv"]:
+                fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
+                             "rounding that to the nearest 8KB value")
+                ec_info["volume_capacity"][num]["jvol"] = ec_info["lsv_chunk_size"] * ec_info["volume_block"]["lsv"] * \
+                                                          ec_info["jvol_size_multiplier"]
+
+                for vtype in ["ndata", "nparity"]:
+                    tmp = int(round(ec_info["volume_capacity"][num][vtype] * (1 + ec_info["lsv_pct"])))
+                    # Aligning the capacity the nearest nKB(volume block size) boundary
+                    ec_info["volume_capacity"][num][vtype] = ((tmp + (ec_info["volume_block"][vtype] - 1)) /
+                                                              ec_info["volume_block"][vtype]) * \
+                                                             ec_info["volume_block"][vtype]
+
+            # Setting the EC volume capacity to ndata times of ndata volume capacity
+            ec_info["volume_capacity"][num]["ec"] = ec_info["volume_capacity"][num]["ndata"] * ec_info["ndata"]
+
+            # Adding one more block to the plex volume size to add room for super block
+            for vtype in ["ndata", "nparity"]:
+                ec_info["volume_capacity"][num][vtype] = ec_info["volume_capacity"][num][vtype] + \
+                                                         ec_info["volume_block"][vtype]
+
+            # Configuring ndata and nparity number of BLT volumes
+            for vtype in ["ndata", "nparity"]:
+                ec_info["uuids"][num][vtype] = []
+                for i in range(ec_info[vtype]):
+                    this_uuid = utils.generate_uuid()
+                    ec_info["uuids"][num][vtype].append(this_uuid)
+                    ec_info["uuids"][num]["blt"].append(this_uuid)
+                    command_result = self.create_volume(
+                        type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
+                        block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
+                        command_duration=command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"],
+                                         "Creating {} {} {} {} {} bytes volume on DUT instance".
+                                         format(num, i, vtype, ec_info["volume_types"][vtype],
+                                                ec_info["volume_capacity"][num][vtype]))
+
+            # Configuring EC volume on top of BLT volumes
+            this_uuid = utils.generate_uuid()
+            ec_info["uuids"][num]["ec"].append(this_uuid)
+            command_result = self.create_volume(
+                type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
+                block_size=ec_info["volume_block"]["ec"], name="ec_" + this_uuid[-4:], uuid=this_uuid,
+                ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=ec_info["uuids"][num]["blt"],
+                command_duration=command_timeout)
+            fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on DUT instance".
+                                 format(num, ec_info["ndata"], ec_info["nparity"],
+                                        ec_info["volume_capacity"][num]["ec"]))
+            ec_info["attach_uuid"][num] = this_uuid
+            ec_info["attach_size"][num] = ec_info["volume_capacity"][num]["ec"]
+
+            # Configuring LS volume and its associated journal volume based on the script config setting
+            if "use_lsv" in ec_info and ec_info["use_lsv"]:
+                ec_info["uuids"][num]["jvol"] = utils.generate_uuid()
+                command_result = self.create_volume(
+                    type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
+                    block_size=ec_info["volume_block"]["jvol"], name="jvol_" + this_uuid[-4:],
+                    uuid=ec_info["uuids"][num]["jvol"], command_duration=command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on DUT instance".
+                                     format(num, ec_info["volume_capacity"][num]["jvol"]))
+
+                this_uuid = utils.generate_uuid()
+                ec_info["uuids"][num]["lsv"].append(this_uuid)
+                if compression_enabled:
+                    command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                        capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                        block_size=ec_info["volume_block"]["lsv"],
+                                                        name="lsv_" + this_uuid[-4:],
+                                                        uuid=this_uuid,
+                                                        group=ec_info["ndata"],
+                                                        jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                        pvol_id=ec_info["uuids"][num]["ec"],
+                                                        compress=ec_info['compress'],
+                                                        zip_effort=ec_info['zip_effort'],
+                                                        zip_filter=ec_info['zip_filter'],
+                                                        command_duration=command_timeout)
+                else:
+                    command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                        capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                        block_size=ec_info["volume_block"]["lsv"],
+                                                        name="lsv_" + this_uuid[-4:], uuid=this_uuid,
+                                                        group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                        pvol_id=ec_info["uuids"][num]["ec"],
+                                                        command_duration=command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT instance".
+                                     format(num, ec_info["volume_capacity"][num]["lsv"]))
+                ec_info["attach_uuid"][num] = this_uuid
+                ec_info["attach_size"][num] = ec_info["volume_capacity"][num]["lsv"]
+
+        return (result, ec_info)
 
     def plex_rebuild(self, subcmd, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
