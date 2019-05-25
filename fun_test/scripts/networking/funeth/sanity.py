@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from fun_settings import SCRIPTS_DIR
+from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.network_controller import NetworkController
 from lib.utilities.funcp_config import FunControlPlaneBringup
@@ -151,6 +152,7 @@ class FunethSanity(FunTestScript):
             global DPC_PROXY_IP
             global DPC_PROXY_PORT
             DPC_PROXY_IP = come.host_ip
+            fun_test.shared_variables["come_ip"] = come.host_ip
             DPC_PROXY_PORT = come.get_dpc_port(0)
             DPC_PROXY_PORT2 = come.get_dpc_port(1)
 
@@ -190,6 +192,12 @@ class FunethSanity(FunTestScript):
         fun_test.log("Collect syslog from HU hosts")
         funeth_obj.collect_syslog()
         fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
+
+        # TODO: Clean up control plane
+        linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
+        linux_obj.sudo_command('rmmod funeth')
+        linux_obj.sudo_command('docker kill F1-0 F1-1')
+        linux_obj.sudo_command('rm -fr /tmp/*')
 
 
 def collect_stats():
