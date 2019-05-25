@@ -1,0 +1,112 @@
+<div class="component">
+
+  <form [formGroup]="submissionForm">
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="submitter">Submitter: </label>
+      <select class="form-control" id="submitter" formControlName="submitter">
+        <option *ngFor="let user of users" [value]="user.email">{{ user.first_name }} {{ user.last_name }}
+          ({{ user.email }})
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="triage_type">Type: </label>
+      <select class="form-control" id="triage_type" formControlName="triage_type">
+        <option *ngFor="let triageType of triageTypes | keyvalue" [value]="triageType.value">{{ triageType.key }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group" *ngIf="triageTypes && submissionForm.value.triage_type == triageTypes.REGEX_MATCH">
+      <label class="control-label col-sm-2" for="regex_match_string">Regex match string: </label>
+      <input style="width: 400px" formControlName="regex_match_string" id="regex_match_string">
+    </div>
+
+    <div class="form-group" *ngIf="triageTypes && submissionForm.value.triage_type == triageTypes.SCORE">
+      <label class="control-label col-sm-2" for="metric_id">Metric ID: </label>
+      <input style="width: 300px" formControlName="metric_id" id="metric_id">
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="from_fun_os_sha">From FunOS commit: </label>
+      <input style="width: 400px" formControlName="from_fun_os_sha" id="from_fun_os_sha">
+    </div>
+
+    <div class="form-group">
+      <div class="flex-container">
+        <label class="control-label col-sm-2" for="to_fun_os_sha">To FunOS commit: </label>
+        <input style="width: 400px" formControlName="to_fun_os_sha" id="to_fun_os_sha">
+        <ng-container *ngIf="!gitShasValid">
+          <div style="margin-left: 20px">
+            <button *ngIf="!validateShasStatus" class="btn btn-primary btn-sm" (click)="validateShas()">Validate commits</button>
+            <fun-spinner [status]="validateShasStatus"></fun-spinner>
+          </div>
+        </ng-container>
+        <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span>
+      </div>
+    </div>
+
+
+  </form>
+  <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
+
+
+  <ng-container *ngIf="gitShasValid">
+    <button (click)="onSubmit()" class="btn btn-success" type="submit"
+            [disabled]="!submissionForm.valid || !gitShasValid">Submit
+    </button>
+  </ng-container>
+
+  <div class="card">
+    <div class="card-header">
+      Triages
+    </div>
+    <div class="card-body">
+      <table class="table table-responsive">
+        <tr>
+          <th></th>
+          <th></th>
+          <th>Status</th>
+          <th>Metric ID</th>
+          <th>Submitter</th>
+          <th>From FunOS sha</th>
+          <th>To FunOS sha</th>
+          <th>Build parameters</th>
+        </tr>
+        <tr *ngFor="let triage of triages">
+          <td>
+            <a href="/regression/triaging/{{ triage.triage_id }}" target="_blank">Details</a>
+          </td>
+          <td>
+            <ng-container *ngIf="triage.status > triagingStringToCodeMap['COMPLETED']">
+              <button class="btn btn-sm btn-danger" (click)="stopTriage(triage.triage_id)">Stop</button>
+            </ng-container>
+          </td>
+          <td>
+
+            <app-smart-label [value]="triagingStateMap[triage.status]"></app-smart-label>
+          </td>
+          <td>
+            {{ triage.metric_id }}
+          </td>
+          <td>
+            {{ triage.submitter_email }}
+          </td>
+          <td>
+            {{ getShortSha(triage.from_fun_os_sha) }}
+          </td>
+          <td>
+            {{ getShortSha(triage.to_fun_os_sha) }}
+          </td>
+          <td>
+            {{ triage.build_parameters | json }}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+

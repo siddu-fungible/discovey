@@ -1,4 +1,14 @@
 {
+  "GlobalSetup": {
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze  --useddr",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "huid": 3,
+    "ctlid": 2,
+    "syslog_level": 2,
+    "command_timeout": 5,
+    "reboot_timeout": 300
+  },
   "EC42FioSeqReadOnly": {
     "num_ssd": 1,
     "num_volume": 1,
@@ -6,47 +16,49 @@
       "ndata": 4,
       "nparity": 2
     },
-    "volume_types": {
-      "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-      "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-      "ec": "VOL_TYPE_BLK_EC",
-      "lsv": "VOL_TYPE_BLK_LSV",
-      "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 26843545600,
+      "use_lsv": 1,
+      "lsv_pct": 0.25,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
     },
-    "volume_capacity": {
-      "ndata": 6442450944,
-      "nparity": 6442450944,
-      "ec": 6442450944,
-      "jvol": 4194304
-    },
-    "volume_block": {
-      "ndata": 4096,
-      "nparity": 4096,
-      "ec": 4096,
-      "lsv": 4096,
-      "jvol": 512
-    },
-    // timeout used for the storage controller
     "command_timeout": 30,
+    "huid": 3,
+    "ctlid": 2,
+    "fnid": 2,
     "iter_interval": 5,
-    "use_lsv": 1,
-    // Head room needed for the LS volume in percentage
-    "lsv_pct": 0.3,
-    "check_lsv_stats": 0,
     "ns_id": 1,
+    "transport": "PCI",
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "bs": "4k",
+      "bs": "8k",
       "iodepth": 1,
-      "size": "20G",
+      "size": "25G",
       "rw": "write",
       "direct": 1,
       "prio": 0,
       "timeout": 720
     },
-    // FIO commandline arguments
     "fio_cmd_args": {
-      "size": "20G",
+      "size": "25G",
       "direct": 1,
       "prio": 0,
       "cpus_allowed": "0-7",
@@ -61,35 +73,15 @@
     "fio_modes": [
       "read"
     ],
-    // The below is the list of tuples in which the first element of the tuple represents the FIO block size in kB and
-    // the second element represents the IO depth
-    // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
-    //"fio_bs_iodepth": ["(4, 16)"],
     "fio_njobs_iodepth": [
       "(1, 1)",
       "(8, 1)",
       "(8, 2)",
       "(8, 4)",
-      "(8, 8)"
+      "(8, 8)",
+      "(8, 16)"
     ],
-    // Passing threshold for the FIO results from the expected benchmark values
-    "fio_pass_threshold": 0.05,
-    // Passing threshold of the internal volume stats from the expected benchmark values
-    "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme",
-    "expected_fio_result": {
-        "read": {
-          "read": {
-            "bw": 429,
-            "iops": 105,
-            "clatency": 149,
-            "latency90": 180,
-            "latency95": 206,
-            "latency99": 269,
-            "latency9999": 416
-          }
-        }
-      }
+    "nvme_device": "/dev/nvme"
   },
   "EC42FioRandReadOnly": {
     "num_ssd": 1,
@@ -98,44 +90,50 @@
       "ndata": 4,
       "nparity": 2
     },
-    "volume_types": {
-      "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-      "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-      "ec": "VOL_TYPE_BLK_EC",
-      "lsv": "VOL_TYPE_BLK_LSV",
-      "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-    },
-    "volume_capacity": {
-      "ndata": 6442450944,
-      "nparity": 6442450944,
-      "ec": 6442450944,
-      "jvol": 4194304
-    },
-    "volume_block": {
-      "ndata": 4096,
-      "nparity": 4096,
-      "ec": 4096,
-      "lsv": 4096,
-      "jvol": 512
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 26843545600,
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
     },
     "command_timeout": 30,
+    "huid": 3,
+    "ctlid": 2,
+    "fnid": 2,
     "iter_interval": 5,
-    "use_lsv": 1,
-    "lsv_pct": 0.3,
     "check_lsv_stats": 0,
     "ns_id": 1,
+    "transport": "PCI",
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "4k",
       "iodepth": 1,
-      "size": "20G",
+      "size": "100%",
       "rw": "write",
       "direct": 1,
       "prio": 0,
       "timeout": 720
     },
     "fio_cmd_args": {
-      "size": "20G",
+      "size": "100%",
       "direct": 1,
       "prio": 0,
       "cpus_allowed": "0-7",
@@ -150,29 +148,14 @@
     "fio_modes": [
       "randread"
     ],
-    //"fio_bs_iodepth": ["(4, 16)"],
     "fio_njobs_iodepth": [
       "(1, 1)",
       "(8, 1)",
       "(8, 2)",
       "(8, 4)",
-      "(8, 8)"
+      "(8, 8)",
+      "(8, 16)"
     ],
-    "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 33,
-    "nvme_device": "/dev/nvme",
-    "expected_fio_result": {
-        "randread": {
-          "read": {
-            "bw": 429,
-            "iops": 105,
-            "clatency": 149,
-            "latency90": 180,
-            "latency95": 206,
-            "latency99": 269,
-            "latency9999": 416
-          }
-        }
-      }
+    "nvme_device": "/dev/nvme"
   }
 }

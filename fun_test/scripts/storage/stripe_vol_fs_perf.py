@@ -99,7 +99,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = datetime.now()
+        self.db_log_time = get_current_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
@@ -282,11 +282,27 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Create Stripe Vol with uuid {} on DUT".
                                  format(self.stripe_uuid))
 
-            command_result = self.storage_controller.volume_attach_pcie(
-                ns_id=self.stripe_details["ns_id"], uuid=self.stripe_uuid, huid=tb_config['dut_info'][0]['huid'],
-                ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
+            # Create controller
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(
+                ctrlr_uuid=self.ctrlr_uuid,
+                transport="PCI",
+                fnid=tb_config['dut_info'][0]['fnid'],
+                ctlid=tb_config['dut_info'][0]['ctlid'],
+                huid=tb_config['dut_info'][0]['huid'],
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching Stripe volume on DUT")
+            fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
+                                 format(self.ctrlr_uuid))
+
+            # Attach controller
+            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                                 vol_uuid=self.stripe_uuid,
+                                                                                 ns_id=self.stripe_details["ns_id"],
+                                                                                 command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
+                                 format(self.thin_uuid, self.ctrlr_uuid))
 
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
             fun_test.shared_variables["stripe_uuid"] = self.stripe_uuid
@@ -479,7 +495,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         else:
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
-                    row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
 
                 row_data_dict["fio_job_name"] = fio_job_name
                 row_data_dict["readiops"] = int(round(avg_tps))

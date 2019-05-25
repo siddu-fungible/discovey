@@ -23,12 +23,20 @@
                 <b>{{ attribute.name }}</b>
               </td>
               <ng-container [ngSwitch]="attribute.name">
+                <td *ngSwitchCase="'Job state'">
+                  <app-smart-label [value]="stateStringMap[attribute.value]"></app-smart-label>
+                </td>
                 <td *ngSwitchCase="'Result'">
                   <app-smart-label [value]="attribute.value" [type]="attribute.value"></app-smart-label>
                 </td>
                 <td *ngSwitchCase="'Path'">
                   <ng-container *ngIf="suiteExecution">
                     {{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
+                  </ng-container>
+                </td>
+                <td *ngSwitchCase="'Completed Time'">
+                  <ng-container *ngIf="suiteExecution && suiteExecution.fields.state <= stateMap.COMPLETED">
+                    {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                   </ng-container>
                 </td>
                 <td *ngSwitchDefault>

@@ -13,14 +13,15 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 from scheduler.scheduler_global import SuiteType, JobStatusType
 from threading import Lock
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 import traceback
 
 import logging
 from fun_settings import COMMON_WEB_LOGGER_NAME
-logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 from web.fun_test.models import (
     SuiteExecution,
@@ -43,9 +44,11 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
+
 class TestCaseReRunState:
     RE_RUN_IN_PROGRESS = "re_run_in_progress"
     RE_RUN_COMPLETE = "re_run_complete"
+
 
 def _is_sub_class(base_class, mros):
     result = None
@@ -98,6 +101,7 @@ def inspect(module_name):
     '''
     return result
 
+
 def get_all_test_cases(script_path):
     test_cases = {}
 
@@ -112,6 +116,7 @@ def get_all_test_cases(script_path):
         print "Error: {}".format(str(ex))
 
     return test_cases
+
 
 def get_test_case_details(script_path, test_case_id):
     # from lib.system.fun_test import fun_test
@@ -147,12 +152,14 @@ def get_suite_container_execution(suite_container_execution_id):
     s = SuiteContainerExecution.objects.get(execution_id=suite_container_execution_id)
     return s
 
+
 def update_suite_container_execution(suite_container_execution_id, version=None):
     s = get_suite_container_execution(suite_container_execution_id=suite_container_execution_id)
     if s:
         if version:
             s.version = version
     s.save()
+
 
 def update_suite_execution(suite_execution_id,
                            result=None,
@@ -192,15 +199,17 @@ def update_suite_execution(suite_execution_id,
     # print te.version
     # print "Begin:"
     # traceback.print_stack()
-    logger.debug("End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result, te.version, te.state))
+    logger.debug("End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, te.result,
+                                                                                        te.version, te.state))
     # traceback.print_stack()
-    #sys.stdout.flush()
+    # sys.stdout.flush()
     # print "End:"
     return te
 
-def finalize_suite_execution(suite_execution_id):
 
+def finalize_suite_execution(suite_execution_id):
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
+
 
 def get_new_suite_execution_id():
     last_suite_execution_id = LastSuiteExecution.objects.all()
@@ -225,7 +234,6 @@ def add_suite_execution(submitted_time,
                         test_bed_type=None,
                         suite_type=SuiteType.STATIC,
                         submitter_email=None):
-
     if tags:
         tags = json.dumps(tags)
     else:
@@ -256,14 +264,17 @@ def add_suite_execution(submitted_time,
             time.sleep(random.uniform(0.1, 1.0))
     return s
 
+
 def set_suite_execution_banner(suite_execution_id, banner):
     suite_execution = get_suite_execution(suite_execution_id)
     suite_execution.banner = banner
     suite_execution.save()
 
+
 def get_suite_execution_banner(suite_execution_id, banner):
     suite_execution = get_suite_execution(suite_execution_id)
     return suite_execution.banner
+
 
 def get_suite_execution(suite_execution_id):
     result = None
@@ -272,6 +283,7 @@ def get_suite_execution(suite_execution_id):
     except Exception as ex:
         print str(ex)
     return result
+
 
 def get_next_test_case_execution_id():
     last_test_case_execution_id = LastTestCaseExecution.objects.all()
@@ -284,6 +296,7 @@ def get_next_test_case_execution_id():
         last_test_case_execution_id.save()
         last_test_case_execution_id.save()
     return last_test_case_execution_id.last_test_case_execution_id
+
 
 def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
     result = None
@@ -299,6 +312,7 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
         else:
             raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
     return result
+
 
 def add_test_case_execution(test_case_id,
                             suite_execution_id,
@@ -330,8 +344,8 @@ def add_test_case_execution(test_case_id,
             time.sleep(random.uniform(0.1, 3.0))
             print "Error: add_test_case_execution: {} index: {}".format(str(ex), index)
 
-
     return te
+
 
 def update_test_case_execution(test_case_execution_id, suite_execution_id, result):
     te = TestCaseExecution.objects.get(execution_id=test_case_execution_id,
@@ -340,6 +354,7 @@ def update_test_case_execution(test_case_execution_id, suite_execution_id, resul
     te.save()
     te.save()
     return te
+
 
 def report_re_run_result(execution_id, re_run_info=None):
     test_execution = get_test_case_execution(execution_id=execution_id)
@@ -362,7 +377,8 @@ def report_re_run_result(execution_id, re_run_info=None):
             original_test_case_execution.re_run_state = TestCaseReRunState.RE_RUN_COMPLETE
             original_test_case_execution.save()
             original_test_case_execution.save()
-            original_suite_execution = get_suite_execution(suite_execution_id=original_test_case_execution.suite_execution_id)
+            original_suite_execution = get_suite_execution(
+                suite_execution_id=original_test_case_execution.suite_execution_id)
             original_suite_execution.finalized = False
             original_suite_execution.save()
             original_suite_execution.save()
@@ -370,14 +386,15 @@ def report_re_run_result(execution_id, re_run_info=None):
             finalize_suite_execution(suite_execution_id=original_suite_execution.execution_id)
 
 
-
 def get_test_case_executions_by_suite_execution(suite_execution_id):
     results = TestCaseExecution.objects.filter(suite_execution_id=suite_execution_id)
     return results
 
+
 def get_test_case_execution(execution_id):
     results = TestCaseExecution.objects.filter(execution_id=execution_id)
-    return results[0]  #TODO: what if len(results) > 1
+    return results[0]  # TODO: what if len(results) > 1
+
 
 def _get_suite_executions(execution_id=None,
                           page=None,
@@ -391,7 +408,6 @@ def _get_suite_executions(execution_id=None,
                           get_count=False,
                           tags=None,
                           finalize=None):
-
     all_objects = None
     q = Q()
 
@@ -469,7 +485,7 @@ def _get_suite_executions(execution_id=None,
 
         for test_case_execution_id in test_case_execution_ids:
             test_case_execution = TestCaseExecution.objects.get(execution_id=test_case_execution_id)
-            te_result = test_case_execution.result.upper()  #TODO: Upper?
+            te_result = test_case_execution.result.upper()  # TODO: Upper?
             if te_result == RESULTS["FAILED"]:
                 num_failed += 1
             elif te_result == RESULTS["PASSED"]:
@@ -487,7 +503,6 @@ def _get_suite_executions(execution_id=None,
                                                           "inputs": test_case_execution.inputs,
                                                           "result": test_case_execution.result})
 
-
         if not finalized:
             if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
                 suite_result = RESULTS["PASSED"]
@@ -500,7 +515,7 @@ def _get_suite_executions(execution_id=None,
                 if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
                     suite_result = RESULTS["KILLED"]
 
-            if finalize:  #TODO: Perf too many saves
+            if finalize:  # TODO: Perf too many saves
                 se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
                 if finalize:
                     se.finalized = True
@@ -520,9 +535,12 @@ def _get_suite_executions(execution_id=None,
         suite_execution["num_not_run"] = num_not_run
         suite_execution["num_in_progress"] = num_in_progress
 
-        suite_execution["fields"]["scheduled_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["scheduled_time"])))
-        suite_execution["fields"]["submitted_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["submitted_time"])))
-        suite_execution["fields"]["completed_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["completed_time"])))
+        suite_execution["fields"]["scheduled_time"] = str(
+            timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["scheduled_time"])))
+        suite_execution["fields"]["submitted_time"] = str(
+            timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["submitted_time"])))
+        suite_execution["fields"]["completed_time"] = str(
+            timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["completed_time"])))
 
     with transaction.atomic():
         if finalize:
@@ -530,10 +548,13 @@ def _get_suite_executions(execution_id=None,
                 se.save()
     return all_objects_dict
 
-def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties, lsf_job_id, sdk_version=""):
+
+def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date,
+                           build_properties, lsf_job_id, sdk_version="", build_date=datetime.now,
+                           suite_execution_id=-1):
     print"Hardware_version: {}".format(hardware_version)
     try:
-        entry = JenkinsJobIdMap.objects.get(completion_date=completion_date)
+        entry = JenkinsJobIdMap.objects.get(completion_date=completion_date, build_date=build_date)
     except ObjectDoesNotExist:
         entry = JenkinsJobIdMap(completion_date=completion_date,
                                 jenkins_job_id=jenkins_job_id,
@@ -542,15 +563,20 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 software_date=software_date,
                                 hardware_version=hardware_version,
                                 build_properties=build_properties,
-                                lsf_job_id=lsf_job_id, sdk_version=sdk_version)
+                                lsf_job_id=lsf_job_id, sdk_version=sdk_version, build_date=build_date,
+                                suite_execution_id=suite_execution_id)
         entry.save()
+
 
 def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes = []
+    suite_execution_attributes.append({"name": "Job state", "value": suite_execution["fields"]["state"]})
     suite_execution_attributes.append({"name": "Result", "value": str(suite_execution["suite_result"])})
     suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
-    suite_execution_attributes.append({"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
-    suite_execution_attributes.append({"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
+    suite_execution_attributes.append(
+        {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
+    suite_execution_attributes.append(
+        {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})
     suite_execution_attributes.append({"name": "Passed", "value": suite_execution["num_passed"]})
     suite_execution_attributes.append({"name": "Failed", "value": suite_execution["num_failed"]})
@@ -563,13 +589,16 @@ def _get_suite_execution_attributes(suite_execution):
 
 
 def set_suite_re_run_info(original_suite_execution_id, re_run_suite_execution_id):
-    re_run = SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id, re_run_suite_execution_id=re_run_suite_execution_id)
+    re_run = SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id,
+                            re_run_suite_execution_id=re_run_suite_execution_id)
     re_run.save()
     re_run.save()
+
 
 def get_suite_executions_by_filter(**kwargs):
     suite_executions = SuiteExecution.objects.filter(**kwargs)
     return suite_executions
+
 
 def is_test_bed_with_manual_lock(test_bed_name):
     result = None

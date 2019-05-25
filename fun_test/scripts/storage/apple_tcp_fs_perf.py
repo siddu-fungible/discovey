@@ -122,7 +122,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = datetime.now()
+        self.db_log_time = get_current_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
@@ -289,7 +289,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             if hasattr(self, "reboot_host") and self.reboot_host:
                 for end_host in self.end_host_list:
                     end_host.reboot(non_blocking=True)
-                fun_test.sleep("Server rebooting", 280)
+                fun_test.sleep("Server rebooting", 340)
         except:
             fun_test.log("Failure during reboot of host")
 
@@ -662,29 +662,18 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         else:
                             ifop = "lesser"
                             elseop = "greater"
-                        # if actual < (value * (1 - self.fio_pass_threshold)) and ((value - actual) > 2):
                         if compare(actual, value, self.fio_pass_threshold, ifop):
                             fio_result[combo][mode] = False
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "FAILED", value, actual)
-                            fun_test.critical("{} {} {} is not within the allowed threshold value {}".
-                                              format(op, field, actual, row_data_dict[op + field][1:]))'''
-                        # elif actual > (value * (1 + self.fio_pass_threshold)) and ((actual - value) > 2):
                         elif compare(actual, value, self.fio_pass_threshold, elseop):
-                            '''fun_test.add_checkpoint("{} {} check for {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} got {} than the expected value {}".
                                          format(op, field, actual, elseop, row_data_dict[op + field][1:]))
                         else:
-                            '''fun_test.add_checkpoint("{} {} check {} test for the block size & IO depth combo {}"
-                                                    .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 row_data_dict["fio_job_name"] = fio_job_name
                 row_data_dict["readiops"] = int(round(avg_tps[x]))
                 row_data_dict["readbw"] = int(round(avg_kbs_read[x] / 1000))
-                row_data_dict["readlatency9999"] = fio_output[combo][mode][op]["latency9950"]
 
             # Building the table row for this variation for both the script table and performance dashboard
             row_data_list = []

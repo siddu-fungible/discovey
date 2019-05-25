@@ -37,7 +37,8 @@ operations_category = ["op", "Kop", "Mop", "Gop"]
 cycles_category = ["cycles"]
 bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
 bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
-packets_per_sec_category = ["pps", "Mpps"]
+packets_per_sec_category = ["pps", "Mpps", "Kpps", "Gpps"]
+connections_per_sec_category = ["cps", "Mcps", "Kcps", "Gcps"]
 
 
 def get_rounded_time(dt):
@@ -256,7 +257,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                 for entry in entries:
                     valid_dates.append(entry.date_time)
                     scores[entry.date_time] = entry.score
-                current_date = last_date + timedelta(days=1)
+                current_date = last_date
                 current_date = timezone.localtime(current_date)
                 current_date = adjust_timezone_for_day_light_savings(current_date)
         data_set_mofified = False
@@ -311,7 +312,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                     reference_value = expected_value
                                 if output_unit:
                                     reference_value = convert_to_base_unit(output_value=reference_value,
-                                                                           output_unit=chart.visualization_unit)
+                                                                           output_unit=data_set["output"]["unit"])
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
                                         output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
@@ -549,6 +550,13 @@ def convert_to_base_unit(output_value, output_unit):
             if output_unit == "Kpps":
                 output_value = float(output_value * math.pow(10, 3))
             if output_unit == "Gpps":
+                output_value = float(output_value * math.pow(10, 9))
+        elif output_unit in connections_per_sec_category:
+            if output_unit == "Mcps":
+                output_value = float(output_value * math.pow(10, 6))
+            if output_unit == "Kcps":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "Gcps":
                 output_value = float(output_value * math.pow(10, 9))
     return output_value
 

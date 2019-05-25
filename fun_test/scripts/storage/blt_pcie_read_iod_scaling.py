@@ -85,7 +85,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = datetime.now()
+        self.db_log_time = get_current_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
@@ -105,8 +105,8 @@ class BLTVolumePerformanceScript(FunTestScript):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
         try:
-            self.volume_details = fun_test.shared_variables["volume_details"]
-            command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
+            self.blt_details = fun_test.shared_variables["blt_details"]
+            command_result = self.storage_controller.volume_detach_pcie(ns_id=self.blt_details["ns_id"],
                                                                         uuid=fun_test.shared_variables["thin_uuid"],
                                                                         huid=tb_config['dut_info'][0]['huid'],
                                                                         ctlid=tb_config['dut_info'][0]['ctlid'],
@@ -115,10 +115,10 @@ class BLTVolumePerformanceScript(FunTestScript):
             fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
             # Deleting the volume
-            command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
-                                                                   block_size=self.volume_details["block_size"],
-                                                                   type=self.volume_details["type"],
-                                                                   name=self.volume_details["name"],
+            command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
+                                                                   block_size=self.blt_details["block_size"],
+                                                                   type=self.blt_details["type"],
+                                                                   name=self.blt_details["name"],
                                                                    uuid=fun_test.shared_variables["thin_uuid"],
                                                                    command_duration=10)
             fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
@@ -155,7 +155,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             setattr(self, k, v)
 
         # Setting the list of block size and IO depth combo
-        if 'fio_bs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_bs_iodepth']:
+        if 'fio_jobs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_jobs_iodepth']:
             benchmark_parsing = False
             fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
                               "the {} file".format(testcase, benchmark_file))
@@ -170,8 +170,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             if len(self.fio_sizes) != len(self.expected_fio_result.keys()):
                 benchmark_parsing = False
                 fun_test.critical("Mismatch in FIO sizes and its benchmarking results")
-        elif "fio_bs_iodepth" in benchmark_dict[testcase]:
-            if len(self.fio_bs_iodepth) != len(self.expected_fio_result.keys()):
+        elif "fio_jobs_iodepth" in benchmark_dict[testcase]:
+            if len(self.fio_jobs_iodepth) != len(self.expected_fio_result.keys()):
                 benchmark_parsing = False
                 fun_test.critical("Mismatch in block size and IO depth combo and its benchmarking results")
 
@@ -187,7 +187,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
-                     format(testcase, self.fio_bs_iodepth))
+                     format(testcase, self.fio_jobs_iodepth))
         fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
                      format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
@@ -197,7 +197,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         num_volume = self.num_volume
         fun_test.shared_variables["num_volume"] = num_volume
 
-        self.nvme_block_device = self.nvme_device + "n" + str(self.volume_details["ns_id"])
+        self.nvme_block_device = self.nvme_device + "n" + str(self.blt_details["ns_id"])
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         fs = fun_test.shared_variables["fs"]
@@ -208,7 +208,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
-            fun_test.shared_variables["volume_details"] = self.volume_details
+            fun_test.shared_variables["blt_details"] = self.blt_details
 
             self.end_host.sudo_command("dmesg -c > /dev/null")
             self.end_host.sudo_command("iptables -F")
@@ -234,9 +234,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_thin_block_volume(
-                capacity=self.volume_details["capacity"],
-                block_size=self.volume_details["block_size"],
-                name=self.volume_details["name"],
+                capacity=self.blt_details["capacity"],
+                block_size=self.blt_details["block_size"],
+                name=self.blt_details["name"],
                 uuid=self.thin_uuid,
                 command_duration=self.command_timeout)
             fun_test.log(command_result)
@@ -260,7 +260,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # Attach controller
             command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                  vol_uuid=self.thin_uuid,
-                                                                                 ns_id=self.volume_details["ns_id"],
+                                                                                 ns_id=self.blt_details["ns_id"],
                                                                                  command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
@@ -268,7 +268,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Checking that the above created BLT volume is visible to the end host
             fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_details["ns_id"])
+            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.blt_details["ns_id"])
             lsblk_output = self.end_host.lsblk()
             fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
@@ -289,11 +289,12 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
 
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
         fio_result = {}
         fio_output = {}
         internal_result = {}
+        row_data_dict = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
@@ -303,35 +304,54 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
 
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_jobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
             internal_result[combo] = {}
 
             for mode in self.fio_modes:
+
                 tmp = combo.split(',')
-                fio_block_size = tmp[0].strip('() ') + 'k'
+                fio_numjobs = tmp[0].strip('() ')
                 fio_iodepth = tmp[1].strip('() ')
+                fio_block_size = self.fio_bs
                 fio_result[combo][mode] = True
                 internal_result[combo][mode] = True
-                row_data_dict = {}
                 row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = fio_block_size
                 row_data_dict["iodepth"] = fio_iodepth
-                row_data_dict["size"] = self.fio_cmd_args["size"]
+                row_data_dict["num_jobs"] = fio_numjobs
+                row_data_dict["block_size"] = fio_block_size
+                file_size_in_gb = self.blt_details["capacity"] / 1073741824
+                row_data_dict["size"] = str(file_size_in_gb) + "GB"
 
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
                              format(mode, fio_block_size, fio_iodepth))
 
+                if combo == "(1, 1)":
+                    fio_job_iodepth = 1
+                elif combo == "(4, 1)":
+                    fio_job_iodepth = 4
+                elif combo == "(8, 1)":
+                    fio_job_iodepth = 8
+                elif combo == "(8, 2)":
+                    fio_job_iodepth = 16
+                elif combo == "(8, 4)":
+                    fio_job_iodepth = 32
+                elif combo == "(8, 8)":
+                    fio_job_iodepth = 64
+                elif combo == "(8, 16)":
+                    fio_job_iodepth = 128
+
                 self.end_host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 fun_test.log("Running FIO...")
                 # Job name will be fio_pcie_read_blt_X_iod_scaling
-                fio_job_name = "fio_pcie" + "_" + mode + "_" + "blt" + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                fio_job_name = "fio_pcie" + "_" + mode + "_" + "blt" + "_" + str(fio_job_iodepth) + "_" + \
+                               self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
 
@@ -339,7 +359,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  rw=mode,
                                                                  bs=fio_block_size,
                                                                  iodepth=fio_iodepth,
-                                                                 numjobs=self.fio_num_jobs,
+                                                                 numjobs=fio_numjobs,
                                                                  cpumask=254,
                                                                  name=fio_job_name,
                                                                  **self.fio_cmd_args)
@@ -416,7 +436,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         test_result = True
         fun_test.log(fio_result)
         fun_test.log(internal_result)
-        for combo in self.fio_bs_iodepth:
+        for combo in self.fio_jobs_iodepth:
             for mode in self.fio_modes:
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False

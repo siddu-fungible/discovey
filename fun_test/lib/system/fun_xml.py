@@ -831,7 +831,7 @@ class FunXml:
         page_tab2 = self.get_page_tab(name="Documentation", index=2, href_id="#documentation")
         page_tab3 = self.get_page_tab(name="Script", index=3, href_id="#script")
         page_tab4 = self.get_page_tab(name="Topology", index=4, href_id="#topology")
-        page_tab5 = self.get_page_tab(name="Aux", index=5, href_id="#aux")
+        page_tab5 = self.get_page_tab(name="FunOS logs/Other logs", index=5, href_id="#aux")
 
 
         self.nav_tab.append(page_tab1)

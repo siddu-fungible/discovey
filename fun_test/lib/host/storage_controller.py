@@ -2,6 +2,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.system.fun_test import *
 from lib.system import utils
 
+
 class StorageController(DpcshClient):
     TIMEOUT = 2
 
@@ -9,8 +10,11 @@ class StorageController(DpcshClient):
         super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port,
                                                 verbose=verbose)
 
-    def ip_cfg(self, ip, command_duration=TIMEOUT):
-        cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip}}
+    def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
+        if port:
+            cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip, "port": port}}
+        else:
+            cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip}}
         return self.json_execute(verb=self.mode, data=cfg_dict, command_duration=command_duration)
 
     def create_thin_block_volume(self, capacity, uuid, block_size, name, use_ls=False, command_duration=TIMEOUT):
@@ -201,6 +205,7 @@ class StorageController(DpcshClient):
     def configure_ec_volume(self, ec_info, command_timeout):
 
         result = True
+        compression_enabled = False
         if "ndata" not in ec_info or "nparity" not in ec_info or "capacity" not in ec_info:
             result = False
             fun_test.critical("Mandatory attributes needed for the EC volume creation is missing in ec_info dictionary")
@@ -210,6 +215,16 @@ class StorageController(DpcshClient):
             fun_test.critical("Number of volumes needs to be configured is not provided. So going to configure only one"
                               "EC/LSV volume")
             ec_info["num_volumes"] = 1
+
+        # Check if Compression has to be enabled on the Device
+        if "compress" in ec_info.keys() and ec_info['compress']:
+            compression_enabled = True
+            ec_info['use_lsv'] = True
+            # check if compression params are not passed assign default values
+            ec_info["zip_effort"] = ec_info['zip_effort'] if 'zip_effort' in ec_info.keys() else "ZIP_EFFORT_AUTO"
+            ec_info['zip_filter'] = ec_info['zip_filter'] if 'zip_filter' in ec_info.keys() else "FILTER_TYPE_DEFLATE"
+            fun_test.log("Configuring Compression enabled EC volume with effort: {}, filter: {}".format(
+                ec_info['zip_effort'], ec_info['zip_filter']))
 
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
@@ -295,12 +310,27 @@ class StorageController(DpcshClient):
 
                 this_uuid = utils.generate_uuid()
                 ec_info["uuids"][num]["lsv"].append(this_uuid)
-                command_result = self.create_volume(
-                    type=ec_info["volume_types"]["lsv"], capacity=ec_info["volume_capacity"][num]["lsv"],
-                    block_size=ec_info["volume_block"]["lsv"], name="lsv_" + this_uuid[-4:], uuid=this_uuid,
-                    group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"],
-                    pvol_id=ec_info["uuids"][num]["ec"],
-                    command_duration=command_timeout)
+                if compression_enabled:
+                    command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                        capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                        block_size=ec_info["volume_block"]["lsv"],
+                                                        name="lsv_" + this_uuid[-4:],
+                                                        uuid=this_uuid,
+                                                        group=ec_info["ndata"],
+                                                        jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                        pvol_id=ec_info["uuids"][num]["ec"],
+                                                        compress=ec_info['compress'],
+                                                        zip_effort=ec_info['zip_effort'],
+                                                        zip_filter=ec_info['zip_filter'],
+                                                        command_duration=command_timeout)
+                else:
+                    command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                        capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                        block_size=ec_info["volume_block"]["lsv"],
+                                                        name="lsv_" + this_uuid[-4:], uuid=this_uuid,
+                                                        group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                        pvol_id=ec_info["uuids"][num]["ec"],
+                                                        command_duration=command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT instance".
                                      format(num, ec_info["volume_capacity"][num]["lsv"]))

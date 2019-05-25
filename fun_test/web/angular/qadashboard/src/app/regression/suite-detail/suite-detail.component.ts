@@ -26,8 +26,12 @@ export class SuiteDetailComponent implements OnInit {
   currenReRunScriptInfo: any = null;
   testCaseInfo: any = {};
   scriptInfo: any = {};
+  stateStringMap: any = null;
+  stateMap: any = null;
 
   constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService, private commonService: CommonService) {
+    this.stateStringMap = this.regressionService.stateStringMap;
+    this.stateMap = this.regressionService.stateMap;
   }
 
   ngOnInit() {

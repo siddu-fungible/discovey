@@ -1,0 +1,99 @@
+<div class="component">
+  <table *ngIf="triage" class="table table-responsive">
+    <tr>
+      <th></th>
+      <th>Metric ID</th>
+      <th>Status</th>
+      <th>Result</th>
+      <th>Submitter</th>
+      <th>Type</th>
+      <th>From FunOS commit</th>
+      <th>To FunOS commit</th>
+      <th>Submission date</th>
+      <th>Build parameters</th>
+      <th>Num commits</th>
+    </tr>
+    <tr>
+      <td>
+        <ng-container *ngIf="triage.status > 10">
+          <button class="btn btn-sm btn-danger" (click)="stopTriage()">Stop</button>
+        </ng-container>
+      </td>
+      <td>{{ triage.metric_id }}</td>
+      <td>
+        <button *ngIf="triage.status < triagingStringToCodeMap['COMPLETED']; else completedStatus" class="btn btn-success" (click)="startTriage()">Start</button>
+        <ng-template #completedStatus>
+          <app-smart-label [value]="triagingStateMap[triage.status]">
+          </app-smart-label>
+        </ng-template>
+
+      </td>
+      <td><app-smart-label [value]="triage.result"></app-smart-label></td>
+      <td>{{ triage.submitter_email }}</td>
+      <td>{{ triage.triage_type }}</td>
+      <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.from_fun_os_sha }}">{{ getShortSha(triage.from_fun_os_sha) }}</a></td>
+      <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ triage.to_fun_os_sha }}">{{ getShortSha(triage.to_fun_os_sha) }}</a></td>
+      <td>{{ prettyTime(triage.submission_date_time) }}</td>
+      <td>{{ triage.build_parameters | json }}</td>
+      <td>{{ commits.length }}</td>
+    </tr>
+  </table>
+
+  <fun-spinner [status]="commitFetchStatus"></fun-spinner>
+  <button *ngIf="commits && commits.length > 0" class="btn btn-outline-primary" (click)="trySubset()">Try a subset</button>
+
+  <div class="card">
+    <div class="card-header">
+      Trials&nbsp;
+      <span>&nbsp;&nbsp;Show all commits: &nbsp;&nbsp;</span>
+      <input class="" id="show_all" type="checkbox" [checked]="showAll" [(ngModel)]="showAll">
+    </div>
+      <div class="card-body">
+      <table class="table table-responsive">
+        <tr>
+          <th></th>
+          <th>Index</th>
+          <th>Commit date</th>
+          <th>Sha</th>
+          <th>Set</th>
+          <th>Status</th>
+          <th>Jenkins</th>
+          <th>LSF</th>
+          <th>Tag</th>
+          <th>Result</th>
+        </tr>
+        <tr *ngFor="let commit of commits; let index = index">
+
+          <ng-container *ngIf="commit.selectedForTrial || showAll">
+            <td>
+              <input type="checkbox" [checked]="commit.selected" [(ngModel)]="commit.selected">
+            </td>
+            <td>{{ index + 1 }} &nbsp;
+              <ng-container>
+                <button class="btn btn-sm btn-outline-primary" (click)="restartTrial(commit)">{{ commit.status <= 10 && commit.selectedForTrial? "Re-start": "Start" }}</button>
+              </ng-container>
+            </td>
+            <td>
+
+              {{ prettyTime(commit.date) }}
+            </td>
+            <td><a target="_blank" href="{{ FUN_OS_GITHUB_BASE_URL }}/{{ commit.funOsSha }}">{{ getShortSha(commit.funOsSha) }}</a></td>
+            <td>{{ commit.trialSetId }}</td>
+            <td><app-smart-label [value]="triagingTrialStateMap[commit.status]"></app-smart-label></td>
+            <td><a target="_blank" *ngIf="commit.jenkinsBuildNumber > 0" href="http://jenkins-sw-master.fungible.local:8080/job/emulation/job/fun_on_demand/{{ commit.jenkinsBuildNumber }}/">link</a></td>
+            <td><a *ngIf="commit.lsfJobId > 0" href="http://palladium-jobs.fungible.local:8080/job/{{ commit.lsfJobId }}" target="_blank">link</a></td>
+            <td>{{ commit.tag }}</td>
+
+            <td>
+              <ng-container>
+              </ng-container>
+              {{ commit.regexMatch }}
+              <app-smart-label [value]="commit.result">{{ commit.result }}</app-smart-label>
+            </td>
+          </ng-container>
+
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>

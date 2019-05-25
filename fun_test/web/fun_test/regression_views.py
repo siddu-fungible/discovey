@@ -28,6 +28,9 @@ from web.fun_test.models import TestCaseExecutionSerializer
 from web.fun_test.models import SuiteReRunInfo, JobQueue
 from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
+from lib.utilities.send_mail import send_mail
+from web.fun_test.web_interface import get_suite_detail_url
+from web.fun_test.models import User
 import logging
 import subprocess
 import dateutil.parser
@@ -110,6 +113,7 @@ def test_case_re_run(request):
 @api_safe_json_response
 def submit_job(request):
     job_id = 0
+    submitter_email = None
     if request.method == 'POST':
         request_json = json.loads(request.body)
 
@@ -158,6 +162,8 @@ def submit_job(request):
             environment = request_json["environment"]
         if "emails" in request_json:
             emails = request_json["emails"]
+        if "email_list" in request_json:
+            emails = request_json["email_list"]
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 
@@ -226,6 +232,18 @@ def submit_job(request):
                                 original_suite_execution_id=original_suite_execution_id,
                                 build_url=build_url,
                                 submitter_email=submitter_email)
+    if job_id > 0 and submitter_email:
+        submitter_user_name = ""
+        try:
+            user = User.objects.get(email=submitter_email)
+            submitter_user_name = "{} {}".format(user.first_name, user.last_name)
+        except ObjectDoesNotExist:
+            pass
+
+        contents = "Hi {}".format(submitter_user_name) + "<br>"
+        contents += "Your integration job's progress can be tracked at {}".format(get_suite_detail_url(suite_execution_id=job_id)) + "<br>"
+        contents += "Thank you<br>Regression team<br>"
+        send_mail(to_addresses=[submitter_email], subject="Integration Job: {} submitted".format(job_id), content=contents)
     return job_id
 
 
@@ -504,23 +522,16 @@ def build_to_date_map(request):
             key = int(m.group(1))
         # print "Completion date:" + entry.completion_date
         try:
-            key = entry.completion_date
-            dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
-
-            if (dt.year == 2018 and ((dt.month == 11 and dt.day >= 4) or dt.month > 11)) or (
-                    dt.year == 2019 and ((dt.month < 3) or (dt.month == 3 and dt.day < 10))):
-                dt = dt + timedelta(hours=8)  # TODO: hardcoded
-            else:
-                dt = dt + timedelta(hours=7)  # TODO: hardcoded
-            key = str(dt)
-            key = re.sub(r':\d{2}-.*', '', key)
+            key = str(entry.build_date)
+            key = key.split('+')[0]
             build_info[key] = {"software_date": entry.software_date,
                                "hardware_version": entry.hardware_version,
                                "fun_sdk_branch": entry.fun_sdk_branch,
                                "git_commit": entry.git_commit,
                                "build_properties": entry.build_properties,
                                "lsf_job_id": entry.lsf_job_id,
-                               "sdk_version": entry.sdk_version}
+                               "sdk_version": entry.sdk_version,
+                               "suite_execution_id": entry.suite_execution_id}
             # print str(dt)
         except Exception as ex:
             print ex

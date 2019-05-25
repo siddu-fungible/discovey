@@ -46,6 +46,8 @@ class ScriptSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
+
+        network_controller_obj.debug_vp_util()
         '''
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
@@ -147,6 +149,9 @@ class TestFwdPerformance(FunTestCase):
     update_charts = True
     update_json = True
     single_flow = False
+    test_time = 20
+    test_type = FLOW_TYPE_FWD
+    num_flows = 128000000
 
     def _get_tcc_config_file_path(self, flow_direction):
         dir_name = None
@@ -218,9 +223,10 @@ class TestFwdPerformance(FunTestCase):
         result = self.template_obj.start_sequencer()
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Wait until test is finish"
-        result = self.template_obj.wait_until_complete()
-        fun_test.test_assert(result, checkpoint)
+        sequencer_handle = self.template_obj.get_sequencer_handle()
+
+        output = run_dpcsh_commands(template_obj=self.template_obj, sequencer_handle=sequencer_handle, network_controller_obj=network_controller_obj,
+                                    test_type=self.test_type, single_flow=self.single_flow, half_load_latency=self.half_load_latency, test_time=self.test_time)
 
         fun_test.log("Fetching PSW NU Global stats after test")
         network_controller_obj.peek_psw_global_stats()
@@ -266,7 +272,7 @@ class TestFwdPerformance(FunTestCase):
                                                                               mode=mode,
                                                                               flow_direction=self.flow_direction,
                                                                               file_name=OUTPUT_JSON_FILE_NAME,
-                                                                              num_flows=128000000,
+                                                                              num_flows=self.num_flows,
                                                                               half_load_latency=self.half_load_latency,
                                                                               model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
                                                                               update_charts=self.update_charts,
@@ -289,6 +295,7 @@ class TestFwdLatency(TestFwdPerformance):
     update_charts = True
     update_json = True
     single_flow = False
+    num_flows = 128000000
 
     def describe(self):
         self.set_test_details(id=self.tc_id,

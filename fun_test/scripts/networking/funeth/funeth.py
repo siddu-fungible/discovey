@@ -1,9 +1,13 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+from lib.system.utils import MultiProcessingTasks
 import re
 import os
 import sys
 from time import asctime
+
+
+CPU_LIST = range(8, 16)
 
 
 class Funeth:
@@ -28,15 +32,16 @@ class Funeth:
         self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
         self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
 
-    def lspci(self):
+    def lspci(self, check_pcie_width=True):
         """Do lspci to check funeth controller."""
         result = True
         for hu in self.hu_hosts:
             output = self.linux_obj_dict[hu].command('lspci -d 1dad:')
             result &= re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output) is not None
 
-            output = self.linux_obj_dict[hu].sudo_command('lspci -d 1dad: -vv | grep LnkSta')
-            result &= re.findall(r'Width x(\d+)', output) == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]*4
+            if check_pcie_width:
+                output = self.linux_obj_dict[hu].sudo_command('lspci -d 1dad: -vv | grep LnkSta')
+                result &= re.findall(r'Width x(\d+)', output) == ['{}'.format(self.tb_config_obj.get_hu_pcie_width(hu))]*4
 
         return result
 
@@ -50,7 +55,7 @@ class Funeth:
         for hu in self.hu_hosts:
             self.linux_obj_dict[hu].command('export WORKSPACE=$WSTMP')
 
-    def update_src(self):
+    def update_src(self, parallel=False):
         """Update driver source."""
 
         def update_mirror(ws, repo, hu, **kwargs):
@@ -78,11 +83,10 @@ class Funeth:
             if branch:
                 self.linux_obj_dict[hu].command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
 
-        result = True
-        for hu in self.hu_hosts:
+        def _update_src(linux_obj):
             sdkdir = os.path.join(self.ws, 'FunSDK')
-            self.linux_obj_dict[hu].command('sudo rm -rf {}'.format(self.ws))
-            self.linux_obj_dict[hu].create_directory(self.ws, sudo=False)
+            linux_obj.sudo_command('rm -rf {}'.format(self.ws))
+            linux_obj.create_directory(self.ws, sudo=False)
 
             update_mirror(self.ws, 'fungible-host-drivers', hu)
             update_mirror(self.ws, 'FunSDK-small',hu)
@@ -95,24 +99,83 @@ class Funeth:
             if self.funos_branch:
                 local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-            output = self.linux_obj_dict[hu].command(
+            output = linux_obj.command(
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
-            result &= re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+
+        def _update_src2(linux_obj):
+            sdkdir = os.path.join(self.ws, 'FunSDK')
+            linux_obj.sudo_command('rm -rf {}'.format(self.ws))
+            linux_obj.create_directory(self.ws, sudo=False)
+
+            # clone FunSDK, host-drivers, FunOS
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
+                              timeout=300)
+            linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
+                              timeout=300)
+
+            output = linux_obj.command(
+                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
+            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+
+        result = True
+
+        if parallel:
+            mp_task_obj = MultiProcessingTasks()
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                mp_task_obj.add_task(
+                    func=_update_src2,
+                    func_args=(linux_obj,),
+                    task_key='{}'.format(linux_obj.host_ip))
+
+            mp_task_obj.run(max_parallel_processes=len(self.hu_hosts))
+
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+
+        else:
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= _update_src2(linux_obj)
 
         return result
 
-    def build(self):
+    def build(self, parallel=False):
         """Build driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         funsdkdir = os.path.join(self.ws, 'FunSDK')
 
-        result = True
-        for hu in self.hu_hosts:
+        def _build(linux_obj):
             if self.funos_branch:
-                self.linux_obj_dict[hu].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
+                linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-            output = self.linux_obj_dict[hu].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
-            result &= re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+            output = linux_obj.command(
+                'export WORKSPACE={}; cd {}; make clean; make PALLADIUM=yes'.format(self.ws, drvdir), timeout=600)
+            return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
+
+        result = True
+
+        if parallel:
+            mp_task_obj = MultiProcessingTasks()
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                mp_task_obj.add_task(
+                    func=_build,
+                    func_args=(linux_obj,),
+                    task_key='{}'.format(linux_obj.host_ip))
+
+            mp_task_obj.run(max_parallel_processes=len(self.hu_hosts))
+
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+
+        else:
+            for hu in self.hu_hosts:
+                linux_obj = self.linux_obj_dict[hu]
+                result &= _build(linux_obj)
 
         return result
 
@@ -243,7 +306,7 @@ class Funeth:
 
         return result
 
-    def enable_namespace_interfaces_multi_txq(self, nu_or_hu, num_queues=8, ns=None):
+    def enable_namespace_interfaces_multi_txq(self, nu_or_hu, num_queues=8, ns=None, xps_cpus=True):
         """Enable interfaces multi tx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
@@ -258,13 +321,23 @@ class Funeth:
             match = re.search(r'Current hardware settings:.*RX:\s+\d+.*TX:\s+{}'.format(num_queues), output, re.DOTALL)
             result &= match is not None
 
+            # Configure XPS CPU mapping to have CPU-Txq one to one mapping
+            if xps_cpus:
+                cmds = []
+                for i in range(num_queues):
+                    cpu_id = (1 << CPU_LIST[i%len(CPU_LIST)])
+                    cmds.append('echo {:04x} > /sys/class/net/{}/queues/tx-{}/xps_cpus'.format(cpu_id, intf, i))
+                self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds))
+                self.linux_obj_dict[nu_or_hu].command(
+                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues-1, intf))
+
         return result
 
-    def enable_multi_txq(self, nu_or_hu, num_queues=8):
+    def enable_multi_txq(self, nu_or_hu, num_queues=8, xps_cpus=True):
         """Enable multi tx queue to the interfaces."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            result &= self.enable_namespace_interfaces_multi_txq(nu_or_hu, num_queues, ns)
+            result &= self.enable_namespace_interfaces_multi_txq(nu_or_hu, num_queues, ns, xps_cpus=xps_cpus)
 
         return result
 
@@ -320,6 +393,34 @@ class Funeth:
 
         return result
 
+    def configure_namespace_arps(self, nu_or_hu, ns):
+        """Configure a namespace's ARP entries."""
+        result = True
+        for arp in self.tb_config_obj.get_arps(nu_or_hu, ns):
+            ipv4_addr = arp['ipv4_addr']
+            mac_addr = arp['mac_addr']
+
+            cmds = (
+                'arp -s {} {}'.format(ipv4_addr, mac_addr),
+                'arp -na',
+            )
+            for cmd in cmds:
+                if ns is None:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                else:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+            result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(ipv4_addr, mac_addr), output) is not None
+
+        return result
+
+    def configure_arps(self, nu_or_hu):
+        """Configure ARP entries."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.configure_namespace_arps(nu_or_hu, ns)
+
+        return result
+
     def unload(self):
         """Unload driver."""
         result = True
@@ -339,3 +440,41 @@ class Funeth:
     def ifup(self, intf, hu='hu'):
         """No shut interface."""
         self.linux_obj_dict[hu].command('sudo ip link set {} up'.format(intf))
+
+    def get_interrupts(self, nu_or_hu):
+        """Get HU host funeth interface interrupts."""
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
+        """Configure irq affinity."""
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+
+                # cat irq affinity
+                cmds_cat = []
+                for i in irq_list:
+                    cmds_cat.append('cat /proc/irq/{}/smp_affinity'.format(i))
+                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+                # Change irq affinity
+                cmds_chg = []
+                for irq in irq_list:
+                    i = irq_list.index(irq)
+                    cpu_id = (1 << CPU_LIST[i % len(CPU_LIST)])
+                    cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
+                self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
+                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))

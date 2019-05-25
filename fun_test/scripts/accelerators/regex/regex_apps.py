@@ -42,8 +42,8 @@ class FunTestCase1(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=patmat_rt_test_two param-file=apps/nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --test-exit-fast"
-        funos_makeflags = "XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --test-exit-fast"
+        funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_nfa_runtime_sanity"
         params = {"BOOTARGS": boot_args,
@@ -78,8 +78,8 @@ class FunTestCase2(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=patmat_rt_test_two param-file=apps/nightly_dfa_B_dflt_b_dflt_dfa.json rbm-size=1m --test-exit-fast"
-        funos_makeflags = "XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_dfa_B_dflt_b_dflt_dfa.json rbm-size=1m --test-exit-fast"
+        funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_dfa_runtime_sanity"
         params = {"BOOTARGS": boot_args,
@@ -114,8 +114,8 @@ class FunTestCase3(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=patmat_rt_test_two param-file=apps/nightly_combined_H_dflt_h_dflt_combined.json rbm-size=1m --test-exit-fast"
-        funos_makeflags = "XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_combined_H_dflt_h_dflt_combined.json rbm-size=1m --test-exit-fast"
+        funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_software_runtime_sanity"
         params = {"BOOTARGS": boot_args,
@@ -131,7 +131,7 @@ class FunTestCase3(FunTestCase):
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
 
 class RetrieveLogLinesCase1(FunTestCase):
-    tag = "qa_rgx_nfa_sanity"
+    tag = "qa_rgx_nfa_runtime_sanity"
     result = fun_test.FAILED
 
     def __init__(self, **kwargs):
@@ -151,7 +151,7 @@ class RetrieveLogLinesCase1(FunTestCase):
         self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def validate_job(self, validation_required=True):
-        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
+        job_info = self.lsf_status_server.get_last_job(tag="qa_rgx_nfa_runtime_sanity")
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
@@ -190,7 +190,7 @@ class RetrieveLogLinesCase1(FunTestCase):
             fun_test.log(line)
 
 class RetrieveLogLinesCase2(FunTestCase):
-    tag = "qa_rgx_dfa_sanity"
+    tag = "qa_rgx_dfa_runtime_sanity"
     result = fun_test.FAILED
 
     def __init__(self, **kwargs):
@@ -210,7 +210,7 @@ class RetrieveLogLinesCase2(FunTestCase):
         self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def validate_job(self, validation_required=True):
-        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
+        job_info = self.lsf_status_server.get_last_job(tag="qa_rgx_dfa_runtime_sanity")
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
@@ -249,7 +249,7 @@ class RetrieveLogLinesCase2(FunTestCase):
             fun_test.log(line)
 
 class RetrieveLogLinesCase3(FunTestCase):
-    tag = "qa_rgx_software_sanity"
+    tag = "qa_rgx_software_runtime_sanity"
     result = fun_test.FAILED
 
     def __init__(self, **kwargs):
@@ -269,7 +269,7 @@ class RetrieveLogLinesCase3(FunTestCase):
         self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def validate_job(self, validation_required=True):
-        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
+        job_info = self.lsf_status_server.get_last_job(tag="qa_rgx_software_runtime_sanity")
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]

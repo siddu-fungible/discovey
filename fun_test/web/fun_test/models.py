@@ -290,6 +290,8 @@ class JenkinsJobIdMap(models.Model):
     build_properties = models.TextField(default="")
     lsf_job_id = models.TextField(default="")
     sdk_version = models.TextField(default="")
+    build_date = models.DateTimeField(default=datetime.now)
+    suite_execution_id = models.IntegerField(default=-1)
 
     def __str__(self):
         return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
@@ -313,6 +315,36 @@ class RegresssionScripts(models.Model):
     components = models.TextField(default=json.dumps(['component1']))
     tags = models.TextField(default=json.dumps(['tag1']))
     baseline_suite_execution_id = models.IntegerField(default=-1, null=True)
+
+    @staticmethod
+    def get(script_path):
+        result = None
+        if script_path:
+            try:
+                result = RegresssionScripts.objects.get(script_path=script_path)
+            except ObjectDoesNotExist:
+                pass
+        return result
+
+
+class TestCaseInfo(FunModel):
+    """
+    # Model to store test-case id to script path mappings and associated summaries
+    """
+    test_case_id = models.TextField()
+    summary = models.TextField()
+    script_path = models.TextField()  # Maps to RegressionScripts
+
+    @staticmethod
+    def add_update(test_case_id, summary, script_path):
+        if TestCaseInfo.objects.filter(test_case_id=test_case_id, script_path=script_path).exists():
+            t = TestCaseInfo.objects.get(test_case_id=test_case_id, script_path=script_path)
+            t.summary = summary
+            t.save()
+        else:
+            t = TestCaseInfo(test_case_id=test_case_id, script_path=script_path, summary=summary)
+            t.save()
+
 
 class RegresssionScriptsSerializer(serializers.Serializer):
     script_path = serializers.CharField(max_length=200)
@@ -338,6 +370,8 @@ class ScriptInfo(models.Model):
     created_time = models.DateTimeField(default=datetime.now)
     status = models.TextField(default="ACTIVE")
     bug = models.TextField(default="")
+
+
 
 class SchedulerInfo(models.Model):
     """
@@ -378,6 +412,30 @@ class User(FunModel):
 
     def __str__(self):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
+
+
+class Daemon(FunModel):
+    name = models.TextField(unique=True)
+    daemon_id = models.IntegerField()
+    heart_beat_time = models.DateTimeField(default=datetime.now)
+
+    def beat(self):
+        self.heart_beat_time = get_current_time()
+        self.save()
+
+    @staticmethod
+    def next_id():
+        return Daemon.objects.all().count() + 1
+
+    @staticmethod
+    def get(name):
+        if Daemon.objects.filter(name=name).exists():
+            result = Daemon.objects.get(name=name)
+        else:
+            d = Daemon(name=name, id=Daemon.next_id())
+            d.save()
+            result = d
+        return result
 
 class TestbedNotificationEmails(FunModel):
     email = models.EmailField(max_length=30, unique=True)

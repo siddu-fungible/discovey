@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER_IP, FUN_TEST_DIR, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, FUN_TEST_LIB_UTILITIES_DIR, INTEGRATION_DIR
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 
@@ -87,7 +87,8 @@ class Fpga(Linux):
 
 class Bmc(Linux):
     U_BOOT_INTERFACE_PATH = "/tmp/u_boot_interface.py"
-    F1_UART_LOG_LISTENER_PATH = "/tmp/uart_log_listener.py"
+    UART_LOG_LISTENER_FILE = "uart_log_listener.py"
+    BMC_UART_LOG_LISTENER_PATH = "/tmp/{}".format(UART_LOG_LISTENER_FILE)
     BMC_SCRIPT_DIRECTORY = "/mnt/sdmmc0p1/scripts"
     BMC_INSTALL_DIRECTORY = "/mnt/sdmmc0p1/_install"
     SERIAL_PROXY_PORTS = [9990, 9991]
@@ -101,6 +102,8 @@ class Bmc(Linux):
         self.uart_log_threads = {}
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
+        self.uart_log_listener_process_ids = []
+        self.u_boot_logs = ["" for x in range(self.NUM_F1S)]  # for each F1
 
     @fun_test.safe
     def ping(self,
@@ -183,24 +186,33 @@ class Bmc(Linux):
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output".format(expected))
         output = nc.close()
+        self.u_boot_logs[f1_index] += output
         return output
 
-    def start_uart_log_listener(self, f1_index):
+    def start_uart_log_listener(self, f1_index, serial_device):
+
+        """
         t = UartLogger(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         self.uart_log_threads[f1_index] = t
         if not self.disable_uart_logger:
             t.start()
+        """
+        output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
+        process_id = self.start_bg_process("python {} --proxy_port={} --output_file={}".format(self.BMC_UART_LOG_LISTENER_PATH,
+                                                                                                self.SERIAL_PROXY_PORTS[f1_index],
+                                                                                                output_file), nohup=False)
+        self.uart_log_listener_process_ids.append(process_id)
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
-
 
     def u_boot_load_image(self,
                           index,
                           boot_args,
                           tftp_load_address="0xa800000080000000",
                           tftp_server=TFTP_SERVER_IP,
-                          tftp_image_path="funos-f1.stripped.gz"):
+                          tftp_image_path="funos-f1.stripped.gz",
+                          gateway_ip=None):
         result = None
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
 
@@ -210,14 +222,19 @@ class Bmc(Linux):
                             f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
 
+        if gateway_ip:
+            self.u_boot_command(command="setenv gatewayip {}".format(gateway_ip), timeout=10, expected=self.U_BOOT_F1_PROMPT,
+                                f1_index=index)
+
+        self.u_boot_command(command="setenv serverip {}".format(TFTP_SERVER_IP), timeout=10, expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
         self.u_boot_command(
             command="setenv bootargs {}".format(
                 self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
-        # self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
-        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
+        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
 
         output = self.u_boot_command(
@@ -284,7 +301,21 @@ class Bmc(Linux):
 
         self.command("bash web/fungible/RUN_TCP_PYSERIAL.sh")
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999", multiple=True)
-        fun_test.simple_assert(len(serial_proxy_ids)==2, "2 serial proxies are alive")
+        fun_test.simple_assert(len(serial_proxy_ids) == 2, "2 serial proxies are alive")
+
+
+        uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
+        fun_test.scp(source_file_path=uart_listener_script,
+                     target_ip=self.host_ip,
+                     target_username=self.ssh_username,
+                     target_password=self.ssh_password,
+                     target_file_path=self.BMC_UART_LOG_LISTENER_PATH)
+        fun_test.simple_assert(self.list_files(self.BMC_UART_LOG_LISTENER_PATH), "UART log listener copied")
+        log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE, multiple=True)
+        for log_listener_process in log_listener_processes:
+            self.kill_process(signal=9, process_id=log_listener_process)
+
+
 
     def initialize(self, reset=False):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
@@ -321,6 +352,9 @@ class Bmc(Linux):
 
     def cleanup(self):
         fun_test.sleep("Allowing time to generate full report", seconds=45)
+
+        # fun_test.log("U-boot logs: {}: END".format(self.u_boot_logs))
+        """
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
             uart_log_thread.close()
@@ -329,6 +363,30 @@ class Bmc(Linux):
                 f.write(log)
             fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
                                         filename=artifact_file_name)
+        """
+
+        for f1_index in range(self.NUM_F1S):
+            if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
+                continue
+            log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE + ".*_{}.*txt".format(f1_index), multiple=True)
+            for log_listener_process in log_listener_processes:
+                self.kill_process(signal=15, process_id=int(log_listener_process))
+                self.kill_process(signal=9, process_id=log_listener_process)
+
+                artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
+                fun_test.scp(source_ip=self.host_ip,
+                             source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
+                             source_username=self.ssh_username,
+                             source_password=self.ssh_password,
+                             target_file_path=artifact_file_name)
+                with open(artifact_file_name, "r+") as f:
+                    content = f.read()
+                    f.seek(0, 0)
+                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
+
+                fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
+                                            filename=artifact_file_name)
+
 
     def get_f1_device_paths(self):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
@@ -342,7 +400,7 @@ class Bmc(Linux):
                 console_or_sbp = m.group(2)
                 device_path = m.group(3)
                 if f1_index == self.disable_f1_index:
-                    fun_test.critical("Disabling F1_{} for now".format(f1_index))
+                    fun_test.log("Disabling F1_{} for this run".format(f1_index))
                     continue
                 if f1_index not in f1_info:
                     f1_info[f1_index] = {}
@@ -556,7 +614,9 @@ class Fs(object, ToDictMixin):
                  power_cycle_come=False,
                  disable_f1_index=None,
                  disable_uart_logger=None,
-                 f1_parameters=None):
+                 f1_parameters=None,
+                 gateway_ip=None,
+                 retimer_workaround=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -577,6 +637,8 @@ class Fs(object, ToDictMixin):
         self.disable_uart_logger = disable_uart_logger
         self.come_initialized = False
         self.f1_parameters = f1_parameters
+        self.gateway_ip = gateway_ip
+        self.retimer_workround = retimer_workaround
 
     def reachability_check(self):
         # TODO
@@ -596,7 +658,13 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(fs_spec=None, tftp_image_path=None, boot_args=None, disable_f1_index=None, disable_uart_logger=None, f1_parameters=None):
+    def get(fs_spec=None,
+            tftp_image_path=None,
+            boot_args=None,
+            disable_f1_index=None,
+            disable_uart_logger=None,
+            f1_parameters=None,
+            retimer_workaround=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -619,6 +687,9 @@ class Fs(object, ToDictMixin):
         bmc_spec = fs_spec["bmc"]
         fpga_spec = fs_spec["fpga"]
         come_spec = fs_spec["come"]
+        gateway_ip = fs_spec.get("gateway_ip", None)
+        workarounds = fs_spec.get("workarounds", {})
+        retimer_workaround = workarounds.get("retimer_workaround", None)
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
@@ -632,13 +703,18 @@ class Fs(object, ToDictMixin):
                   boot_args=boot_args,
                   disable_f1_index=disable_f1_index,
                   disable_uart_logger=disable_uart_logger,
-                  f1_parameters=f1_parameters)
+                  gateway_ip=gateway_ip,
+                  f1_parameters=f1_parameters,
+                  retimer_workaround=retimer_workaround)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
 
         if reboot_bmc:
             fun_test.test_assert(self.reboot_bmc(), "Reboot BMC")
         fun_test.test_assert(self.bmc_initialize(), "BMC initialize")
+
+        if self.retimer_workround:
+            self._apply_retimer_workaround()
 
         fun_test.test_assert(self.set_f1s(), "Set F1s")
         fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
@@ -651,13 +727,10 @@ class Fs(object, ToDictMixin):
                 if f1_index in self.f1_parameters:
                     if "boot_args" in self.f1_parameters[f1_index]:
                         boot_args = self.f1_parameters[f1_index]["boot_args"]
-            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args), "U-Bootup f1: {} complete".format(f1_index))
+            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip), "U-Bootup f1: {} complete".format(f1_index))
             fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
-            self.bmc.start_uart_log_listener(f1_index=f1_index)
+            self.bmc.start_uart_log_listener(f1_index=f1_index, serial_device=self.f1s.get(f1_index).serial_device_path)
 
-
-
-        # if "retimer" not in self.boot_args:
         if True:
             self.get_come()
             fun_test.test_assert(self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come, non_blocking=non_blocking), "ComE rebooted successfully. Non-blocking: {}".format(non_blocking))
@@ -674,8 +747,22 @@ class Fs(object, ToDictMixin):
 
         # else:
         #    fun_test.critical("Skipping ComE initialization as retimer was used")
-
+        try:
+            self.get_bmc().disconnect()
+            self.get_fpga().disconnect()
+            self.get_come().disconnect()
+        except:
+            pass
         return True
+
+    def _apply_retimer_workaround(self): #TODO:
+        bmc = self.get_bmc()
+        bmc.command("gpiotool 57 --get-data")
+        bmc.command("gpiotool 57 --set-data-low")
+        bmc.command("sleep 2")
+        bmc.command("gpiotool 57 --set-data-high")
+        bmc.command("sleep 2")
+        fun_test.add_checkpoint("Retimer workarounds applied")
 
     def is_ready(self):
         if not self.come_initialized:

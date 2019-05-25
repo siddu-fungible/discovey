@@ -1,0 +1,58 @@
+{
+  "BLTFioSeqRead": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 25769803776, "block_size": 4096,
+                       "name": "thin-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 10,
+    "warm_up_traffic": 1,
+    "fio_bs": "4k",
+    "warm_up_fio_cmd_args": {"bs": "64k", "iodepth": 8, "fill_device": 1, "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "runtime": 120, "timeout": 130},
+    "fio_modes": ["read"],
+    "fio_jobs_iodepth": ["(1, 1)", "(4, 1)", "(8, 1)", "(8, 2)", "(8, 4)", "(8, 8)", "(8, 16)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "iod_scaling", "randread": "iod_scaling"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(1, 1)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 1)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 1)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 2)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 4)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 8)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 16)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
+    }
+  },
+  "BLTFioRandRead": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 25769803776, "block_size": 4096,
+                       "name": "thin-block1"},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 10,
+    "warm_up_traffic": 1,
+    "fio_bs": "4k",
+    "warm_up_fio_cmd_args": {"bs": "64k", "iodepth": 8, "fill_device": 1, "rw": "write", "direct": 1, "prio": 0,"timeout": 720},
+    "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "runtime": 120, "timeout": 130},
+    "fio_modes": ["randread"],
+    "fio_jobs_iodepth": ["(1, 1)", "(4, 1)", "(8, 1)", "(8, 2)", "(8, 4)", "(8, 8)", "(8, 16)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "iod_scaling", "randread": "iod_scaling"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(1, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(4, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 2)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 4)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 8)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}},
+      "(8, 16)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
+    }
+  }
+}
