@@ -444,6 +444,7 @@ class Funeth:
 
     def get_interrupts(self, nu_or_hu):
         """Get HU host funeth interface interrupts."""
+        output_dict = {}
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
                 cmd = 'cat /proc/interrupts | grep {}'.format(intf)
@@ -451,7 +452,23 @@ class Funeth:
                     cmds = ['sudo {}'.format(cmd), ]
                 else:
                     cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
-                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                output_dict.update({intf: output})
+        return output_dict
+
+    def get_ethtool_stats(self, nu_or_hu):
+        """Get HU host funeth interface ethtool stats."""
+        output_dict = {}
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                cmd = 'ethtool -S {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                output_dict.update({intf: output})
+        return output_dict
 
     def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
         """Configure irq affinity."""
@@ -486,7 +503,7 @@ class Funeth:
             linux_obj = self.linux_obj_dict[hu]
             for log_file in ('syslog',):
                 artifact_file_name = fun_test.get_test_case_artifact_file_name(
-                    post_fix_name='{}_{}'.format(log_file, linux_obj.host_ip))
+                    post_fix_name='{}_{}.txt'.format(log_file, linux_obj.host_ip))
                 fun_test.scp(source_ip=linux_obj.host_ip,
                              source_file_path="/var/log/{}".format(log_file),
                              source_username=linux_obj.ssh_username,
