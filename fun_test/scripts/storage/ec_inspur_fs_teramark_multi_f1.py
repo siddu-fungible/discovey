@@ -93,7 +93,9 @@ class ECVolumeLevelScript(FunTestScript):
         topology_helper.set_dut_parameters(dut_index=0, f1_parameters={0: {"boot_args": self.f1_0_bootargs},
                                                                        1: {"boot_args": self.f1_1_bootargs}})
         topology = topology_helper.deploy()
+        print(topology.spec)
         fun_test.test_assert(topology, "Topology deployed")
+
 
         self.fs_obj = {}
         self.fs_spec = {}
