@@ -22,6 +22,7 @@ class TopologyHelper:
         if spec_file:
             self.spec = parse_file_to_json(file_name=spec_file)
         self.expanded_topology = expanded_topology
+        self.disabled_dut_indexes = []
 
     def get_resource_requirements(self):
         pass
@@ -43,7 +44,7 @@ class TopologyHelper:
 
             fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
 
-        self.expanded_topology = ExpandedTopology()
+        self.expanded_topology = ExpandedTopology(spec=self.spec)
 
         if "host_info" in spec:
             hosts = spec["host_info"]
@@ -70,6 +71,10 @@ class TopologyHelper:
             duts = spec["dut_info"]
             for dut_index, dut_info in duts.items():
                 dut_index = int(dut_index)
+                if dut_index in self.disabled_dut_indexes:
+                    fun_test.log("Skipping initialization for Dut-index: {}".format(dut_index))
+                    continue
+
                 dut_type = dut_info["type"]
 
                 start_mode = F1.START_MODE_NORMAL
@@ -170,23 +175,35 @@ class TopologyHelper:
 
 
     @fun_test.safe
-    def set_dut_parameters(self, dut_index, **kwargs):
+    def set_dut_parameters(self, dut_index=None, **kwargs):
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
             fun_test.simple_assert(self.expanded_topology, "Expanded Topology")
-        dut = self.expanded_topology.get_dut(index=dut_index)
-        fun_test.simple_assert(dut, "Dut index: {}".format(dut_index))
-        for key, value in kwargs.iteritems():
-            dut.spec[key] = value
+        duts = self.expanded_topology.duts
+        if dut_index is not None:
+            dut_indexes = filter(lambda x: x is dut_index, duts)
+            duts = [duts[x] for x in dut_indexes]
+        else:
+            duts = duts.values()
+        for dut in duts:
+            # dut = self.expanded_topology.get_dut(index=dut_index)
+            fun_test.simple_assert(dut, "Dut index: {}".format(dut.index))
+            for key, value in kwargs.iteritems():
+                dut.spec[key] = value
         pass
 
     @fun_test.safe
+    def disable_duts(self, indexes=None):
+        self.disabled_dut_indexes = indexes
+
+    @fun_test.safe
     def validate_topology(self):
-        return True
         topology = self.expanded_topology
         duts = topology.duts
 
         for dut_index, dut_obj in duts.items():
+            if dut_index in self.disabled_dut_indexes:
+                continue
             fun_test.debug("Validating DUT readiness {}".format(dut_index))
             fun_test.test_assert(dut_obj.get_instance().is_ready(), "DUT: {} ready".format(dut_index))
 
@@ -225,6 +242,8 @@ class TopologyHelper:
             # Fetch storage container orchestrator
 
             for dut_index, dut_obj in duts.items():
+                if dut_index in self.disabled_dut_indexes:
+                    continue
                 fun_test.debug("Setting up DUT {}".format(dut_index))
 
                 orchestrator = asset_manager.get_orchestrator(is_simulation=fun_test.is_simulation(), dut_index=dut_index)

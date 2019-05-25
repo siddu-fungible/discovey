@@ -152,7 +152,8 @@ class Funeth:
                 linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
             output = linux_obj.command(
-                'export WORKSPACE={}; cd {}; make clean; make PALLADIUM=yes'.format(self.ws, drvdir), timeout=600)
+                'export WORKSPACE={}; cd {}; git log | head -n 5; make clean; make PALLADIUM=yes'.format(
+                    self.ws, drvdir), timeout=600)
             return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
         result = True
@@ -257,16 +258,16 @@ class Funeth:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
-                match = re.search(r'inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+                match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
             else:
-                match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
+                match = re.search(r'UP.*RUNNING.*HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
                                   output, re.DOTALL)
             if not match:
                 # Ubuntu 18.04
                 if self.tb_config_obj.is_alias(nu_or_hu, intf):
-                    match = re.search(r'inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
                 else:
-                    match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
                                       output, re.DOTALL)
             result &= match is not None
 
@@ -478,3 +479,18 @@ class Funeth:
                     cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+    def collect_syslog(self):
+        """Collect all HU hosts' syslog file and copy to job's Log directory."""
+        for hu in self.hu_hosts:
+            linux_obj = self.linux_obj_dict[hu]
+            for log_file in ('syslog',):
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name='{}_{}'.format(log_file, linux_obj.host_ip))
+                fun_test.scp(source_ip=linux_obj.host_ip,
+                             source_file_path="/var/log/{}".format(log_file),
+                             source_username=linux_obj.ssh_username,
+                             source_password=linux_obj.ssh_password,
+                             target_file_path=artifact_file_name)
+                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                                            filename=artifact_file_name)
