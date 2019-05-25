@@ -41,7 +41,7 @@
     },
     "fio_mode": "read",
     "fio_numjobs_iodepth": [
-      "(16, 4)"
+      "(8, 8)"
     ],
     "fio_job_name": "blt_tcp_sanity"
   },
@@ -56,7 +56,7 @@
     },
     "fio_mode": "randread",
     "fio_numjobs_iodepth": [
-      "(16, 4)"
+      "(8, 8)"
     ],
     "fio_job_name": "blt_tcp_sanity"
   },
@@ -72,7 +72,7 @@
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
-      "(16, 4)"
+      "(8, 8)"
     ],
     "fio_job_name": "blt_tcp_sanity"
   },
@@ -88,7 +88,7 @@
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
-      "(16, 4)"
+      "(8, 8)"
     ],
     "fio_job_name": "blt_tcp_sanity"
   },
@@ -104,7 +104,7 @@
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [
-      "(16, 4)"
+      "(8, 8)"
     ],
     "fio_job_name": "blt_tcp_sanity"
   },
@@ -120,9 +120,8 @@
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [
-      "(16, 4)"
+      "(8, 8)"
     ],
     "fio_job_name": "blt_tcp_sanity"
   }
-
 }

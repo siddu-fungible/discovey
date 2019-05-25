@@ -232,7 +232,7 @@ class BltPciRandRWMix(BltPciSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Test Sequential read-write mix 70:30 ratio queries on BLT volume over PCI",
+                              summary="Test Random read-write mix 70:30 ratio queries on BLT volume over PCI",
                               steps='''
         1. Create a BLT on FS attached with SSD.
         2. Export (Attach) this BLT to the host connected via the PCI interface. 
@@ -244,7 +244,7 @@ class BltPciRandWRMix(BltPciSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Test Sequential read-write mix 70:30 ratio queries on BLT volume over PCI",
+                              summary="Test Random read-write mix 70:30 ratio queries on BLT volume over PCI",
                               steps='''
         1. Create a BLT on FS attached with SSD.
         2. Export (Attach) this BLT to the external host connected via the PCI interface. 

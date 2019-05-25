@@ -279,7 +279,7 @@ class BltTcpRandRWMix(BltTcpSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Test Sequential read-write mix 70:30 ratio queries on BLT volume over nvme-tcp "
+                              summary="Test Random read-write mix 70:30 ratio queries on BLT volume over nvme-tcp "
                                       "fabric",
                               steps='''
         1. Create a BLT on FS attached with SSD.
@@ -292,7 +292,7 @@ class BltTcpRandWRMix(BltTcpSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Test Sequential read-write mix 70:30 ratio queries on BLT volume over nvme-tcp "
+                              summary="Test Random read-write mix 70:30 ratio queries on BLT volume over nvme-tcp "
                                       "fabric",
                               steps='''
         1. Create a BLT on FS attached with SSD.
