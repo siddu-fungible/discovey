@@ -258,16 +258,16 @@ class Funeth:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
-                match = re.search(r'inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+                match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
             else:
-                match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
+                match = re.search(r'UP.*RUNNING.*HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
                                   output, re.DOTALL)
             if not match:
                 # Ubuntu 18.04
                 if self.tb_config_obj.is_alias(nu_or_hu, intf):
-                    match = re.search(r'inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
                 else:
-                    match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
                                       output, re.DOTALL)
             result &= match is not None
 
