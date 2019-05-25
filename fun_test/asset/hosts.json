@@ -70,12 +70,22 @@
   "cab03-qa-01": {
     "host_ip": "cab03-qa-01",
     "ssh_username": "localadmin",
-    "ssh_password": "Precious1*"
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "cab03-qa-02": {
     "host_ip": "cab03-qa-02",
     "ssh_username": "localadmin",
-    "ssh_password": "Precious1*"
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-02-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",
