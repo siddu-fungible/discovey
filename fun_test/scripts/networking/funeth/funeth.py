@@ -481,6 +481,7 @@ class Funeth:
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
 
     def collect_syslog(self):
+        """Collect all HU hosts' syslog file and copy to job's Log directory."""
         for hu in self.hu_hosts:
             linux_obj = self.linux_obj_dict[hu]
             for log_file in ('syslog',):
