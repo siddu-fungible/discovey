@@ -157,9 +157,11 @@ class FunethSanity(FunTestScript):
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
             funcp_obj.bringup_funcp(prepare_docker=False)
-            funcp_obj.assign_mpg_ips()
-            abstract_json_file = '{}/networking/tb_configs/FS11_abstract_config.json'.format(SCRIPTS_DIR)
-            funcp_obj.funcp_abstract_config(abstract_config_file=abstract_json_file)
+            funcp_obj.assign_mpg_ips_dhcp()
+            abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+            abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+            funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                            abstract_config_f1_1=abstract_json_file_f1_1)
             fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
             # TODO: sanity check of control plane
 
@@ -184,6 +186,7 @@ class FunethSanity(FunTestScript):
             fun_test.shared_variables["topology"].cleanup()
         funeth_obj = fun_test.shared_variables['funeth_obj']
         funeth_obj.cleanup_workspace()
+        fun_test.log("Collect syslog from HU hosts")
         funeth_obj.collect_syslog()
         fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
 

@@ -203,6 +203,14 @@
       }
     }
   },
+  "fs-42": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-42"
+      }
+    }
+  },
   "fs-45": {
     "dut_info": {
       "0": {

@@ -94,10 +94,9 @@ netstats_dict = {}
 mpstat_dict = {}
 
 
-def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0):
+def collect_host_stats(linux_objs, version, when='before', duration=0):
 
     tc_id = fun_test.current_test_case_id
-    network_controller_objs = fun_test.shared_variables['network_controller_objs']
 
     # funeth interface interrupts
     funeth_obj = fun_test.shared_variables['funeth_obj']
@@ -111,6 +110,38 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
         netstats_dict[when].update(
             {linux_obj.host_ip: helper.get_netstat_output(linux_obj=linux_obj)}
         )
+
+    if when == 'after':
+        # Get diff netstat
+        for h in netstats_dict['after']:
+            diff_netstat = helper.get_diff_stats(old_stats=netstats_dict['before'][h],
+                                                 new_stats=netstats_dict['after'][h])
+            netstat_temp_filename = '{}_{}_netstat_{}.txt'.format(str(version), tc_id, str(h))
+            populate = helper.populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+            fun_test.test_assert(populate, "Populate {} netstat into txt file".format(h))
+
+    # mpstat
+    for linux_obj in linux_objs:
+        h = linux_obj.host_ip
+        mpstat_temp_filename = '{}_{}_mpstat_{}.txt'.format(str(version), tc_id, str(h))
+        mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
+        if when == 'before':
+            fun_test.log("Starting to run mpstat command")
+            mp_out = helper.run_mpstat_command(linux_obj=linux_obj, interval=2,
+                                               output_file=mpstat_output_file, bg=True, count=duration+5)
+            fun_test.log('mpstat cmd process id: %s' % mp_out)
+            fun_test.add_checkpoint("Started mpstat command in {}".format(h))
+        elif when == 'after':
+            # Scp mpstat json to LOGS dir
+            fun_test.log_module_filter("random_module")
+            helper.populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=linux_obj,
+                                               dump_filename=mpstat_temp_filename)
+            fun_test.log_module_filter_disable()
+
+
+def collect_dpc_stats(fpg_interfaces, version, when='before'):
+
+    network_controller_objs = fun_test.shared_variables['network_controller_objs']
 
     # peek resource/pc/[1], and peek resource/pc/[1]
     for nc_obj in network_controller_objs:
@@ -139,33 +170,6 @@ def collect_stats(fpg_interfaces, linux_objs, version, when='before', duration=0
     #    fun_test.simple_assert(
     #        helper.populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
     #        checkpoint)
-
-    # mpstat
-    for linux_obj in linux_objs:
-        h = linux_obj.host_ip
-        mpstat_temp_filename = '{}_{}_mpstat_{}.txt'.format(str(version), tc_id, str(h))
-        mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
-        if when == 'before':
-            fun_test.log("Starting to run mpstat command")
-            mp_out = helper.run_mpstat_command(linux_obj=linux_obj, interval=2,
-                                               output_file=mpstat_output_file, bg=True, count=duration+5)
-            fun_test.log('mpstat cmd process id: %s' % mp_out)
-            fun_test.add_checkpoint("Started mpstat command in {}".format(h))
-        elif when == 'after':
-            # Scp mpstat json to LOGS dir
-            fun_test.log_module_filter("random_module")
-            helper.populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=linux_obj,
-                                               dump_filename=mpstat_temp_filename)
-            fun_test.log_module_filter_disable()
-
-    if when == 'after':
-        # Get diff netstat
-        for h in netstats_dict['after']:
-            diff_netstat = helper.get_diff_stats(old_stats=netstats_dict['before'][h],
-                                                 new_stats=netstats_dict['after'][h])
-            netstat_temp_filename = '{}_{}_netstat_{}.txt'.format(str(version), tc_id, str(h))
-            populate = helper.populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
-            fun_test.test_assert(populate, "Populate {} netstat into txt file".format(h))
 
     fpg_stats = {}
     for nc_obj in network_controller_objs:
@@ -322,17 +326,15 @@ class FunethPerformanceBase(FunTestCase):
         # Collect stats before and after test run
         version = fun_test.get_version()
         fun_test.log('Collect stats before test')
-        fpg_tx_pkts1, _, fpg_rx_pkts1, _ = collect_stats(FPG_INTERFACES[:num_hosts],
-                                                         funeth_obj.linux_obj_dict.values(),
-                                                         version,
-                                                         when='before',
-                                                         duration=duration)
+        fpg_tx_pkts1, _, fpg_rx_pkts1, _ = collect_dpc_stats(FPG_INTERFACES[:num_hosts], version, when='before')
+        collect_host_stats(funeth_obj.linux_obj_dict.values(), version, when='before', duration=duration+10)
+
         result = perf_manager_obj.run(*arg_dicts)
+
         fun_test.log('Collect stats after test')
-        fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_stats(FPG_INTERFACES[:num_hosts],
-                                                         funeth_obj.linux_obj_dict.values(),
-                                                         version,
-                                                         when='after')
+        collect_host_stats(funeth_obj.linux_obj_dict.values(), version, when='after', duration=duration+10)
+        fpg_tx_pkts2, _, fpg_rx_pkts2, _ = collect_dpc_stats(FPG_INTERFACES[:num_hosts], version, when='after')
+
         if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
             if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
                 result.update(
