@@ -1844,32 +1844,70 @@ class Linux(object, ToDictMixin):
         return fio_dict
 
     @fun_test.safe
-    def reboot(self, timeout=5, retries=6, max_wait_time=180, non_blocking=None, ipmi_details=None):
+    def reboot(self, timeout=5,
+               retries=6,
+               max_wait_time=180,
+               non_blocking=None,
+               ipmi_details=None,
+               wait_time_before_host_check=None):
         """
         :param timeout: deprecated
         :param retries: deprecated
         :param max_wait_time: Total time to wait before declaring failure
         :param non_blocking: if set to True, return immediately after issuing a reboot
         :param ipmi_details: if ipmi_details are provided we will try power-cycling in case normal bootup did not work
+        :param wait_time_before_host_check: wait time before we check if host is up. Might be useful when we know the
+                system is prone to crashes
         :return:
         """
         result = True
 
         # Rebooting the host
+
         try:
             self.sudo_command(command="reboot", timeout=timeout)
-            self.ping(dst="127.0.0.1", count=40)
         except Exception as ex:
-            self.disconnect()
-            self._set_defaults()
-            fun_test.sleep("Waiting for the host to go down", seconds=10)
             try:
                 self.disconnect()
                 self._set_defaults()
             except:
                 pass
-        if not non_blocking:
-            result = self.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
+
+        reboot_initiated = False
+        reboot_initiated_wait_time = 120
+        reboot_initiated_timer = FunTimer(max_time=reboot_initiated_wait_time)
+
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+
+        while not reboot_initiated and not reboot_initiated_timer.is_expired():
+            try:
+                if service_host:
+                    ping_result = service_host.ping(dst=self.host_ip, count=10)
+                    if not ping_result:
+                        reboot_initiated = True
+                        fun_test.log("Reboot initiated (based on pings)")
+                else:
+                    self.ping(dst="127.0.0.1")
+            except Exception as ex:
+                try:
+                    self.disconnect()
+                    self._set_defaults()
+                    reboot_initiated = True
+                    fun_test.log("Reboot initiated (based on failing ssh)")
+                except:
+                    pass
+        if reboot_initiated_timer.is_expired():
+            fun_test.critical("Unable to verify reboot was initiated. Wait-time: {}".format(reboot_initiated_wait_time))
+            result = False
+        else:
+            result = True
+            if not non_blocking:
+                if wait_time_before_host_check:
+                    fun_test.sleep("Waiting before checking the host is up", seconds=wait_time_before_host_check)
+                result = self.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
         return result
 
     @fun_test.safe
