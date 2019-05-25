@@ -25,7 +25,9 @@
         <th *ngFor="let header of filtered(headers)" mat-sort-header="{{headers.indexOf(header)}}">{{ header }}</th>
       </tr>
       <tr *ngFor="let item of pagedItems">
-        <td *ngFor="let rowItems of filtered(item)">{{rowItems}}</td>
+        <td *ngFor="let rowItems of filtered(item); let index = index">
+          {{ index === 0? localizeTime(rowItems):rowItems }}
+        </td>
       </tr>
     </table>
     <a [routerLink]="" id="advancedLink" (click)="editColumns()">Advanced</a> <!-- hiding and showing columns-->

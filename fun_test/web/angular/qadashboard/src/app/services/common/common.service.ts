@@ -42,6 +42,12 @@ export class CommonService {
   }
 
   getPrettyLocalizeTime(t) {
-    return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    let result = t;
+    try {
+      result = this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    } catch (e) {
+      console.log(e);
+    }
+    return result;
   }
 }

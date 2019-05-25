@@ -1,6 +1,5 @@
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -11,6 +10,7 @@ import {Sort} from '@angular/material';
 import {PagerService} from '../services/pager/pager.service';
 import {LoggerService} from "../services/logger/logger.service";
 import {ApiService} from "../services/api/api.service";
+import {CommonService} from "../services/common/common.service";
 
 @Component({
   selector: 'fun-table',
@@ -27,8 +27,7 @@ export class FunTableComponent implements OnInit {
   headerIndexMap: Map<number, boolean> = new Map<number, boolean>();
   static readonly defaultPageSize: number = 10;
 
-  constructor(private apiService: ApiService, private pagerService: PagerService, private logger: LoggerService,
-              private changeDetector: ChangeDetectorRef) {
+  constructor(private apiService: ApiService, private pagerService: PagerService, private logger: LoggerService, private commonService: CommonService) {
     console.log("FunTableComponent init");
   }
 
@@ -118,6 +117,10 @@ export class FunTableComponent implements OnInit {
       }
       return false;
     });
+  }
+
+  localizeTime(t) {
+    return this.commonService.getPrettyLocalizeTime(t);
   }
 }
 
