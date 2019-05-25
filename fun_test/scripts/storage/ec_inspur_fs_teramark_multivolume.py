@@ -5,6 +5,7 @@ from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
+from web.fun_test.analytics_models_helper import get_data_collection_time
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -237,7 +238,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        self.db_log_time = get_current_time()
+        self.db_log_time = get_data_collection_time()
 
         self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip,
