@@ -1,11 +1,10 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
-from web.fun_test.analytics_models_helper import get_data_collection_time
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
