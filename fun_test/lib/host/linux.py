@@ -1877,6 +1877,7 @@ class Linux(object, ToDictMixin):
             ipmi_password = ipmi_details["password"]
             try:
                 service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                power_cycled = True
                 fun_test.log("IPMI power-cycle complete")
             except Exception as ex:
                 fun_test.critical(str(ex))
