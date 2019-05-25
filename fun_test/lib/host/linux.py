@@ -1889,7 +1889,6 @@ class Linux(object, ToDictMixin):
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
         ping_result = False
-        start_time = time.time()
         while not host_is_up and not max_reboot_timer.is_expired():
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=20)
@@ -1904,13 +1903,7 @@ class Linux(object, ToDictMixin):
                     fun_test.log("Host: {} is up".format(str(self)))
                     break
                 except Exception as ex:
-                    # If not able to ssh into host, then the previous ping passed because it would had fired before the
-                    # tcp module going down during the reboot. In other words, if any of the host's module suffered a
-                    # crash then the host take significant time to reboot. In this case, the first ping right after
-                    # issuing the reboot will always pass
-                    ping_result = False
-                    elapsed_time = time.time() - start_time
-                    max_reboot_timer = FunTimer(max_time=max_wait_time - elapsed_time)
+                    pass
             fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
         if not host_is_up:
             result = False

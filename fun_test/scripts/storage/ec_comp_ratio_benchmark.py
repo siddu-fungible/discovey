@@ -168,6 +168,7 @@ class ECVolumeLevelScript(FunTestScript):
         finally:
             fun_test.shared_variables["topology"].cleanup()
 
+
 class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
         testcase = self.__class__.__name__
@@ -204,6 +205,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                  format(self.attach_transport, self.ctrlr_uuid))
             fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
             fun_test.shared_variables['ctlr_configured'] = True
+        else:
+            self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
 
         # Configure EC volume
         (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
