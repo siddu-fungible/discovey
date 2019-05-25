@@ -479,3 +479,18 @@ class Funeth:
                     cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+    def collect_syslog(self):
+        """Collect all HU hosts' syslog file and copy to job's Log directory."""
+        for hu in self.hu_hosts:
+            linux_obj = self.linux_obj_dict[hu]
+            for log_file in ('syslog',):
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name='{}_{}'.format(log_file, linux_obj.host_ip))
+                fun_test.scp(source_ip=linux_obj.host_ip,
+                             source_file_path="/var/log/{}".format(log_file),
+                             source_username=linux_obj.ssh_username,
+                             source_password=linux_obj.ssh_password,
+                             target_file_path=artifact_file_name)
+                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                                            filename=artifact_file_name)

@@ -182,8 +182,10 @@ class FunethSanity(FunTestScript):
             fun_test.shared_variables["fs"].cleanup()
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             fun_test.shared_variables["topology"].cleanup()
-        fun_test.test_assert(fun_test.shared_variables['funeth_obj'].unload(), 'Unload funeth driver')
-        fun_test.shared_variables['funeth_obj'].cleanup_workspace()
+        funeth_obj = fun_test.shared_variables['funeth_obj']
+        funeth_obj.cleanup_workspace()
+        funeth_obj.collect_syslog()
+        fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
 
 
 def collect_stats():
