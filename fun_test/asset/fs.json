@@ -152,9 +152,6 @@
   },
   {
     "name": "fs-41",
-    "workarounds": {
-      "csr_replay": true
-    },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.151",
@@ -174,9 +171,6 @@
   },
   {
     "name": "fs-42",
-    "workarounds": {
-      "csr_replay": true
-    },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.154",
@@ -196,9 +190,6 @@
   },
   {
     "name": "fs-43",
-    "workarounds": {
-      "csr_replay": true
-    },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.157",
@@ -218,9 +209,6 @@
   },
   {
     "name": "fs-44",
-    "workarounds": {
-      "csr_replay": true
-    },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.160",
