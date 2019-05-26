@@ -52,9 +52,16 @@ class FunethPerformance(sanity.FunethSanity):
 
     def setup(self):
         super(FunethPerformance, self).setup()
+        funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld'),
+        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld'),
+        driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
+        fun_test.shared_variables['funsdk_bld'] = funsdk_bld
+        fun_test.shared_variables['driver_bld'] = driver_bld
+        fun_test.shared_variables['driver_commit'] = driver_commit
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
         linux_objs = funeth_obj.linux_obj_dict.values()
 
         fun_test.log("Configure irq affinity")
@@ -62,14 +69,16 @@ class FunethPerformance(sanity.FunethSanity):
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
             # TODO: Configure irq affinity for rx
 
-        self.netperf_manager_obj = nm.NetperfManager(linux_objs)
-        fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
+        netperf_manager_obj = nm.NetperfManager(linux_objs)
+        fun_test.shared_variables['netperf_manager_obj'] = netperf_manager_obj
+        fun_test.test_assert(netperf_manager_obj.setup(), 'Set up for throughput/latency test')
 
         network_controller_objs = []
         network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                          dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True))
         network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                          dpc_server_port=sanity.DPC_PROXY_PORT2, verbose=True))
+        fun_test.shared_variables['network_controller_objs'] = network_controller_objs
         # Configure small DF/Non-FCP thr to workaround SWOS-4771
         for nc_obj in network_controller_objs:
             f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -85,14 +94,10 @@ class FunethPerformance(sanity.FunethSanity):
                     port_mtu_set = nc_obj.set_port_mtu(p, fpg_mtu)
                     fun_test.test_assert(port_mtu_set, '{}: Configure FPG{} mtu {}'.format(f1, p, fpg_mtu))
 
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        fun_test.shared_variables['network_controller_objs'] = network_controller_objs
-        fun_test.shared_variables['netperf_manager_obj'] = self.netperf_manager_obj
-
     def cleanup(self):
         super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
-        fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
+        fun_test.test_assert(fun_test.shared_variables['netperf_manager_obj'].cleanup(), 'Clean up')
 
 
 class FunethPerformanceBase(FunTestCase):
