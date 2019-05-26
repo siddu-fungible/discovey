@@ -176,7 +176,7 @@ class FunethSanity(FunTestScript):
             setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj, update_driver=update_driver)
+        setup_hu_host(funeth_obj, update_driver=True)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
@@ -191,6 +191,8 @@ class FunethSanity(FunTestScript):
         funeth_obj.cleanup_workspace()
         fun_test.log("Collect syslog from HU hosts")
         funeth_obj.collect_syslog()
+        fun_test.log("Collect dmesg from HU hosts")
+        funeth_obj.collect_dmesg()
         fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
 
         # TODO: Clean up control plane

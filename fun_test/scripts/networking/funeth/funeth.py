@@ -511,3 +511,19 @@ class Funeth:
                              target_file_path=artifact_file_name)
                 fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
                                             filename=artifact_file_name)
+
+    def collect_dmesg(self):
+        """Collect all HU hosts' dmesg and copy to job's Log directory."""
+        for hu in self.hu_hosts:
+            linux_obj = self.linux_obj_dict[hu]
+            for log_file in ('dmesg',):
+                linux_obj.command('dmesg > /tmp/dmesg')
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name='{}_{}.txt'.format(log_file, linux_obj.host_ip))
+                fun_test.scp(source_ip=linux_obj.host_ip,
+                             source_file_path="/tmp/{}".format(log_file),
+                             source_username=linux_obj.ssh_username,
+                             source_password=linux_obj.ssh_password,
+                             target_file_path=artifact_file_name)
+                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                                            filename=artifact_file_name)
