@@ -495,7 +495,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
             fun_test.log("Drivers loaded on hosts")
             end_host = self.end_host_list[0]
-            end_host.sudo_command("tcpdump -i enp216s0 -w nvme_connect_auto.pcap &")
+            end_host.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
             end_host.sudo_command(
                 "nvme connect -t tcp -a {} -s {} -n nqn1 -q {}".
                 format(tb_config['dut_info'][0]['f1_ip'],
@@ -532,7 +532,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         for host_index in range(1, self.host_count):
             self.nqn = "nqn" + str(host_index + 1)
             end_host = self.end_host_list[host_index]
-            end_host.sudo_command("tcpdump -i enp216s0 -w nvme_connect_auto.pcap &")
+            end_host.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
             end_host.sudo_command("nvme connect -t tcp -a {} -s {} -n {} -q {}".
                                   format(tb_config['dut_info'][0]['f1_ip'],
                                          tb_config['dut_info'][0]['tcp_port'],
