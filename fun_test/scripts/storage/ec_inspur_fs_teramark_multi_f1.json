@@ -11,6 +11,7 @@
     "num_f1_per_fs": 2,
     "num_f1s": 2,
     "num_hosts": 1,
+    "load_modules": ["nvme", "nvme_tcp"],
     "syslog_level": 2,
     "command_timeout": 5,
     "reboot_timeout": 600,

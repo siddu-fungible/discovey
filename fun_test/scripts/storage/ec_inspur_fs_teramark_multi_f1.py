@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -130,6 +130,58 @@ class ECVolumeLevelScript(FunTestScript):
         except:
             pass
 
+        fun_test.log("Hosts")
+        hosts = topology.get_hosts()
+        print ("Available hosts are: {}".format(hosts))
+
+        required_host_index = []
+        required_host_names = []
+        for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
+            required_host_index.append(i)
+        print ("required_host_index: {}".format(required_host_index))
+        for j, host_name in enumerate(sorted(hosts)):
+            if j in required_host_index:
+                required_host_names.append(host_name)
+        print ("required_host_names: {}".format(required_host_names))
+
+        hosts_test_interfaces = []
+        host_handles = []
+        for host_name, host in hosts.items():
+            if host_name in required_host_names:
+                print ("host are: {}".format(host))
+                print ("host dir: {}".format(dir(host)))
+                print ("host_name are: {}".format(host_name))
+                print ("host_name dir: {}".format(dir(host_name)))
+                test_interfaces = host.get_test_interfaces()
+                print ("test_interfaces: {}".format(test_interfaces))
+
+                test_interface_0 = host.get_test_interface(index=0)
+                hosts_test_interfaces.append(host.get_test_interface(index=0))
+                print ("host_obj is: {}".format(hosts_test_interfaces))
+                print ("host_obj dir is: {}".format(dir(hosts_test_interfaces)))
+
+                print ("test_interface_0 : {}".format(test_interface_0))
+                print ("test_interface_0 dir : {}".format(dir(test_interface_0)))
+                print ("test_interface_0 type: {}".format(type(test_interface_0)))
+
+                fun_test.log("Host-IP: {}".format(test_interface_0.ip))
+                fun_test.log("Peer-info: {}".format(test_interface_0.peer_info))
+                fun_test.log("Switch-name: {}".format(test_interface_0.peer_info["name"]))
+                fun_test.log("Switch-port: {}".format(test_interface_0.peer_info["port"]))
+
+                host_instance = host.get_instance()
+                print ("hosts_instance: {}".format(host_instance))
+                print ("hosts_instance dir: {}".format(dir(host_instance)))
+                host_handles.append(host_instance)
+                # host_instance.command("date")
+
+        print ("hosts_instances: {}".format(host_handles))
+        print ("hosts_instances dir: {}".format(dir(host_handles)))
+
+        for host_handle in host_handles:
+            host_handle.command("hostname")
+            host_handle.reboot(non_blocking=True)
+
         # Getting FS, F1 and COMe objects for all the DUTs going to be used in the test
         self.fs_obj = []
         self.fs_spec = []
@@ -214,10 +266,68 @@ class ECVolumeLevelScript(FunTestScript):
                     bond_ip = bond_interfaces[0].ip
                     slave_interface_list = bond_interfaces[0].fpg_slaves
                     slave_interface_list = ["fpg" + str(i) for i in slave_interface_list]
-                    self.funcp_obj[index].configure_bond_interface(container_name=container_name, name=bond_name,
-                                                                   ip=bond_ip, slave_interface_list=slave_interface_list)
+                    self.funcp_obj[index].configure_bond_interface(container_name=container_name,
+                                                                   name=bond_name,
+                                                                   ip=bond_ip,
+                                                                   slave_interface_list=slave_interface_list)
+            print ("funcp_spec is: {}".format(self.funcp_spec))
+            print ("dir of funcp_spec is: {}".format(dir(self.funcp_spec)))
+            print ("type of funcp_spec is: {}".format(type(self.funcp_spec)))
+
+            print ("funcp_obj is: {}".format(self.funcp_obj))
+            print ("dir of funcp_obj is: {}".format(dir(self.funcp_obj)))
+            print ("type of funcp_obj is: {}".format(type(self.funcp_obj)))
         else:
             pass
+
+        hosts_up_count = 0
+        for host_handle in host_handles:
+            # Ensure hosts are up after reboot
+            # TODO: check reboot timeout
+            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                                 message="Ensure Host is reachable after reboot")
+            hosts_up_count += 1
+
+            # Ensure required modules are loaded on host server, if not load it
+            for module in self.load_modules:
+                module_check = host_handle.lsmod(module)
+                if not module_check:
+                    host_handle.modprobe(module)
+                    module_check = host_handle.lsmod(module)
+                    fun_test.sleep("Loading {} module".format(module))
+                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+
+        # TODO: Assert of critical message?
+        fun_test.test_assert_expected(expected=self.num_hosts, actual=hosts_up_count, message="Required hosts are up")
+
+        # Adding Static route and Ensuring Host is able to ping to both FunCP containers
+        # TODO: Should we add gateway IP in hosts.json or we should derive it?
+        gateway_ip = ["15.43.1.1", "15.43.2.1"]
+        for index in xrange(self.num_duts):
+            for f1_index, container_name in enumerate(sorted(self.funcp_spec[index]["container_names"])):
+                try:
+                    self.funcp_obj[index].container_info[container_name].command("hostname")
+                    cmd = "sudo ip route add 15.0.0.0/8 via {} dev {}".format(gateway_ip[f1_index], bond_name)
+                    route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                    print ("static route add output is: {}".format(route_add_status))
+
+                    """
+                    # Configuring Static route
+                    self.funcp_obj[index].container_info[container_name].ip_route_add(network="15.0.0.0/8",
+                                                                                      gateway=gateway_ip[f1_index],
+                                                                                      outbound_interface=bond_name,
+                                                                                      timeout=self.command_timeout)
+                    """
+                    """fun_test.test_assert_expected(
+                        expected=0, actual=self.funcp_obj[index].container_info[container_name].exit_status(),
+                        message="Configure static route")"""
+
+                    for host_handle in host_handles:
+                        ping_status = host_handle.ping(dst=gateway_ip[index])
+                        fun_test.test_assert(ping_status,
+                                             "Host is able to ping to {}'s bond interface".format(container_name))
+                except:
+                    print ("in except: failed")
 
         """
         before funcp code: get the host handles, reboot hosts (non blocking) - check nvme and nvme_tcp module is loaded
@@ -228,7 +338,7 @@ class ECVolumeLevelScript(FunTestScript):
         exit(0)
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        self.db_log_time = get_current_time()
+        self.db_log_time = get_data_collection_time()
 
         self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip,
