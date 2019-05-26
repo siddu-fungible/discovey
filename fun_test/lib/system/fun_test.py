@@ -1378,6 +1378,9 @@ class FunTestCase:
         self.id = id
         self.summary = summary
         self.steps = steps
+        if fun_test.suite_execution_id:
+            script_relative_path = fun_test.absolute_script_file_name.replace(SCRIPTS_DIR, "")
+            models_helper.update_test_case_info(test_case_id=self.id, summary=summary, script_path=script_relative_path)
 
     @abc.abstractmethod
     def describe(self):

@@ -32,7 +32,8 @@ from web.fun_test.models import (
     JenkinsJobIdMap,
     SuiteContainerExecution,
     SuiteReRunInfo,
-    TestBed
+    TestBed,
+    TestCaseInfo
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -130,15 +131,7 @@ def get_test_case_details(script_path, test_case_id):
 
     try:
         if test_case_id:
-            from lib.system.fun_test import fun_test
-            result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
-            # result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
-            if result:
-                if "classes" in result:
-                    for c in result["classes"]:
-                        if c["id"] == test_case_id:
-                            summary = c["summary"]
-                            # print "Summary", summary
+            summary = TestCaseInfo.get_summary(test_case_id=test_case_id, script_path=script_path)
         else:
             summary = "Script setup"
     except Exception as ex:
@@ -148,10 +141,12 @@ def get_test_case_details(script_path, test_case_id):
     return {"summary": this_summary}
 
 
+def update_test_case_info(test_case_id, script_path, summary, steps=None):
+    TestCaseInfo.add_update(test_case_id=test_case_id, script_path=script_path, summary=summary, steps=steps)
+
 def get_suite_container_execution(suite_container_execution_id):
     s = SuiteContainerExecution.objects.get(execution_id=suite_container_execution_id)
     return s
-
 
 def update_suite_container_execution(suite_container_execution_id, version=None):
     s = get_suite_container_execution(suite_container_execution_id=suite_container_execution_id)
