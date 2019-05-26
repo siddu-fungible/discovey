@@ -20,6 +20,7 @@
 	},
 	{
 		"name" : "fpg16",
+		"mtu": 9000,
 		"address" : "9.0.16.2",
 		"prefix length" : 30,
 		"spine_index" : 0,
@@ -28,6 +29,7 @@
 	},
 	{
 		"name" : "fpg12",
+		"mtu": 9000,
 		"address" : "9.0.20.2",
 		"prefix length" : 30,
 		"spine_index" : 1,
@@ -41,7 +43,7 @@
 		"enable" : true
 	},
 	{
-		"name" : "vlan2",
+		"name" : "vlan1",
 		"address" : "53.1.1.253",
 		"prefix length" : 24,
 		"enable" : true
