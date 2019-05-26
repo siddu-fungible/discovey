@@ -1879,6 +1879,7 @@ class Linux(object, ToDictMixin):
                 try:
                     service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     power_cycled = True
+                    reboot_initiated = True  # ipmi power-cycle already has a 30 second sleep
                     fun_test.log("IPMI power-cycle complete")
                 except Exception as ex:
                     fun_test.critical(str(ex))
