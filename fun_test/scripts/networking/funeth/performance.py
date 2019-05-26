@@ -296,8 +296,14 @@ if __name__ == "__main__":
                     sub_id_num_flows = sub_id_frame_size
                     for num_flows in NUM_FLOWS:
                         for num_hosts in NUM_HOSTS:
-                            summary = "{}: performance test by {}, with {}, {}-byte packets and {} flows in {} PCIe hosts".format(
-                                FLOW_TYPES_DICT.get(flow_type), tool, protocol, frame_size, num_flows, num_hosts
+                            summary = "{}: performance test by {}, with {}, {}-byte packets and {} flows {} {} PCIe hosts".format(
+                                FLOW_TYPES_DICT.get(flow_type),
+                                tool,
+                                protocol,
+                                frame_size,
+                                num_flows,
+                                'from' if flow_type.startswith('HU') else 'to',
+                                num_hosts
                             )
                             steps = summary
                             #print sub_id_num_flows, summary
