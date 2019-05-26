@@ -343,6 +343,7 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
 
         try:
+            self.fs = fun_test.shared_variables["fs"]
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
@@ -365,6 +366,8 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")
         except Exception as ex:
             fun_test.critical(str(ex))
+            fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
+            self.fs.come_reset(power_cycle=True)
 
         self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
