@@ -156,8 +156,9 @@ class Bmc(Linux):
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
         ipmi_details = self._get_ipmi_details()
-        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details),
-                             "Ensure ComE is reachable before reboot")
+        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=max_wait_time,
+                                                    ipmi_details=ipmi_details,
+                                                    power_cycle=power_cycle), "Ensure ComE is reachable before reboot")
 
         fun_test.log("Rebooting ComE")
         reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
