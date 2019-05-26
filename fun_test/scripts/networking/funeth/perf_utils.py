@@ -36,12 +36,12 @@ def populate_diff_output_file(diff_stats, filename, desc='ethtool stats'):
             inner_table.align = 'l'
             inner_table.border = False
             inner_table.header = False
-            for _key, _val in diff_stats[key].iteritems():
+            for _key, _val in sorted(diff_stats[key].iteritems()):
                 inner_table.add_row([_key, _val])
             rows.append(inner_table)
         out_table.add_row(rows)
 
-        lines = ['<=======> {} output <=======>\n'.format(ethtool_stats_dict), out_table.get_string()]
+        lines = ['<=======> {} diff <=======>\n'.format(desc), out_table.get_string()]
 
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
@@ -76,16 +76,17 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
         funeth_obj.get_interrupts(hu)
 
     # ethtool -S
-    fun_test.log("Capture ethtool stats {} test".format(when))
+    fun_test.log("Collect ethtool stats {} test".format(when))
+    ethtool_stats_dict[when] = {}
     for hu in funeth_obj.hu_hosts:
         output = funeth_obj.get_ethtool_stats(hu).values()[0]  # TODO: assume there is one funeth intf per host
         linux_obj = funeth_obj.linux_obj_dict[hu]
         ethtool_stats_dict[when].update(
-            {linux_obj.host_ip: dict(OrderedDict(re.findall(r'(\S+):\s+(\d+)', output)))}
+            {linux_obj.host_ip: {'NIC statistics': dict(OrderedDict(re.findall(r'(\S+):\s+(\d+)', output)))}}
         )
 
     # netstat
-    fun_test.log("Capture netstat {} test".format(when))
+    fun_test.log("Collect netstat {} test".format(when))
     netstats_dict[when] = {}
     for linux_obj in linux_objs:
         netstats_dict[when].update(
@@ -95,18 +96,22 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
     if when == 'after':
         # Get diff netstat
         for h in netstats_dict['after']:
+            fun_test.log_module_filter("random_module")
             diff_netstat = helper.get_diff_stats(old_stats=netstats_dict['before'][h],
                                                  new_stats=netstats_dict['after'][h])
             netstat_temp_filename = '{}_{}_netstat_{}.txt'.format(str(version), tc_id, str(h))
             populate = helper.populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
+            fun_test.log_module_filter_disable()
             fun_test.test_assert(populate, "Populate {} netstat into txt file".format(h))
 
         # Get diff ethtool stats
         for h in ethtool_stats_dict['after']:
+            fun_test.log_module_filter("random_module")
             diff_ethtool_stats = helper.get_diff_stats(old_stats=ethtool_stats_dict['before'][h],
                                                        new_stats=ethtool_stats_dict['after'][h])
             ethtool_temp_filename = '{}_{}_ethtool_stats_{}.txt'.format(str(version), tc_id, str(h))
             populate = populate_diff_output_file(diff_stats=diff_ethtool_stats, filename=ethtool_temp_filename)
+            fun_test.log_module_filter_disable()
             fun_test.test_assert(populate, "Populate {} ethtool stats into txt file".format(h))
 
     # mpstat
