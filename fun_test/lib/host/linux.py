@@ -1868,7 +1868,7 @@ class Linux(object, ToDictMixin):
                     reboot_initiated = True
                     fun_test.log("Reboot initiated (based on failing ssh)")
                 except:
-                    pass
+                    reboot_initiated = True
         if not reboot_initiated and reboot_initiated_timer.is_expired():
             fun_test.critical("Unable to verify reboot was initiated. Wait-time: {}".format(reboot_initiated_wait_time))
             if ipmi_details:
