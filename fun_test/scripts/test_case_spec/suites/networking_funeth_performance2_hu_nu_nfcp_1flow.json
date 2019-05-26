@@ -1,4 +1,4 @@
 [
   {"info": {"tags": ["networking-funeth-performance"]}},
-  {"path": "networking/funeth/performance.py", "test_case_ids": [1000], "inputs": {"debug": 1, "update_driver": 0}}
+  {"path": "networking/funeth/performance.py", "test_case_ids": [1000], "inputs": {"debug": 1}}
 ]
