@@ -91,7 +91,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
         funeth_obj.setup_workspace()
         fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(parallel=True), 'Update funeth driver source code.')
-        fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
+    fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
