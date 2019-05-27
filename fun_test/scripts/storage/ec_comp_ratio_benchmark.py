@@ -361,6 +361,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         try:
             self.end_host.unmount_volume(volume=self.volume_name)
             self.end_host.sudo_command("nvme disconnect -d {}".format(self.volume_name))
+            self.end_host.flush_cache_mem()
             ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
             if fun_test.shared_variables["setup_complete"]:
                 # Detaching all the EC/LS volumes to the external server
