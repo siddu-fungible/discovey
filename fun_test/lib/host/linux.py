@@ -1843,9 +1843,8 @@ class Linux(object, ToDictMixin):
         fun_test.debug(fio_dict)
         return fio_dict
 
-    def _ensure_reboot_is_initiated(self, ipmi_details, power_cycled=None):
+    def _ensure_reboot_is_initiated(self, ipmi_details, power_cycled=None, reboot_initiated_wait_time=60):
         reboot_initiated = False
-        reboot_initiated_wait_time = 120
         reboot_initiated_timer = FunTimer(max_time=reboot_initiated_wait_time)
 
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
@@ -1895,12 +1894,15 @@ class Linux(object, ToDictMixin):
                max_wait_time=180,
                non_blocking=None,
                ipmi_details=None,
-               wait_time_before_host_check=None):
+               wait_time_before_host_check=None,
+               reboot_initiated_wait_time=60):
         """
         :param timeout: deprecated
         :param retries: deprecated
         :param max_wait_time: Total time to wait before declaring failure
-        :param non_blocking: if set to True, return immediately after issuing a reboot
+        :param non_blocking: if set to True, return immediately after issuing a reboot. However, this does not impact
+               the check for reboot being initiated successfully. i.e, the function will try to confirm if reboot was
+               initiated regardless of the non-blocking input
         :param ipmi_details: if ipmi_details are provided we will try power-cycling in case normal bootup did not work
         :param wait_time_before_host_check: wait time before we check if host is up. Might be useful when we know the
                 system is prone to crashes
@@ -1919,9 +1921,11 @@ class Linux(object, ToDictMixin):
             except:
                 pass
 
-        reboot_initiated, power_cycled_already = self._ensure_reboot_is_initiated(ipmi_details=ipmi_details)
+        reboot_initiated, power_cycled_already = self._ensure_reboot_is_initiated(ipmi_details=ipmi_details,
+                                                                                  reboot_initiated_wait_time=reboot_initiated_wait_time)
         if not reboot_initiated:
             result = False
+            fun_test.log("Reboot was not initiated")
         else:
             result = True
             if not non_blocking:
