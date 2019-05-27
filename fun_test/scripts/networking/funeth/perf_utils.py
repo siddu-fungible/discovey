@@ -277,10 +277,13 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
         ptable = PrettyTable()
         field_names = ['', ]
         for result in results:
-            field_names.append('\n'.join(['{}: {}'.format(k, result[k]) for k in field_name_keys]))
+            field_names.append(', '.join(['{}: {}'.format(k, result[k]) for k in field_name_keys]))
         ptable.field_names = field_names
+
         r0 = results[0]
         funos_bld = r0.get('version')
+
+        rows = []
         for k in r0:
             if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
                 row = [k, ]
@@ -289,7 +292,13 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
                     if v == -1:
                         v = '.'
                     row.append(v)
-                ptable.add_row(row)
+                rows.append(row)
+
+        def sort_by_key(elem):
+            return elem[0]
+
+        for row in sorted(rows, key=sort_by_key):
+            ptable.add_row(row)
 
         lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
                  ptable.get_string()]

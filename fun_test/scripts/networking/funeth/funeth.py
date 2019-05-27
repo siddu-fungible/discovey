@@ -120,6 +120,7 @@ class Funeth:
             if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
 
                 # Get FunSdK bld
+                fun_test.log('Get FunSDK build info')
                 output = linux_obj.command('cd {}; cat build_info.txt'.format(sdkdir))
                 match = re.search(r'(\d+)', output)
                 if match:
@@ -128,7 +129,8 @@ class Funeth:
                     sdk_bld = None
 
                 # Get driver bld
-                output = linux_obj.command('cd {}; git log | head -n 5',format(drvdir))
+                fun_test.log('Get driver build/commit info')
+                output = linux_obj.command('cd {}; git log | head -n 5'.format(drvdir))
                 match = re.search(r'commit (\w+).* tag: (bld_\d+)', output)
                 if match:
                     drv_commit = match.group(1)
@@ -138,7 +140,7 @@ class Funeth:
                     drv_commit = match.group(1)
                     drv_bld = None
 
-                return sdkdir, drv_bld, drv_commit
+                return sdk_bld, drv_bld, drv_commit
 
         bld_list = []
 
