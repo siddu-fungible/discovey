@@ -87,10 +87,14 @@ def setup_nu_host(funeth_obj):
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
+    funsdk_bld = driver_bld = driver_commit = None
     if update_driver:
         funeth_obj.setup_workspace()
         fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
-        fun_test.test_assert(funeth_obj.update_src(parallel=True), 'Update funeth driver source code.')
+        update_src_result = funeth_obj.update_src(parallel=True)
+        if update_src_result:
+            funsdk_bld, driver_bld, driver_commit = update_src_result
+        fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
@@ -111,6 +115,8 @@ def setup_hu_host(funeth_obj, update_driver=True):
             linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
+
+    return funsdk_bld, driver_bld, driver_commit
 
 
 class FunethSanity(FunTestScript):
@@ -176,7 +182,7 @@ class FunethSanity(FunTestScript):
             setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj, update_driver=True)
+        self.funsdk_bld, self.driver_bld, self.driver_commit = setup_hu_host(funeth_obj, update_driver=True)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
@@ -196,10 +202,11 @@ class FunethSanity(FunTestScript):
         fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
 
         # TODO: Clean up control plane
-        linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
-        linux_obj.sudo_command('rmmod funeth')
-        linux_obj.sudo_command('docker kill F1-0 F1-1')
-        linux_obj.sudo_command('rm -fr /tmp/*')
+        if control_plane:
+            linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
+            linux_obj.sudo_command('rmmod funeth')
+            linux_obj.sudo_command('docker kill F1-0 F1-1')
+            linux_obj.sudo_command('rm -fr /tmp/*')
 
 
 def collect_stats():
@@ -562,7 +569,7 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
             FunethTestReboot,
     ):
         ts.add_test_case(tc())

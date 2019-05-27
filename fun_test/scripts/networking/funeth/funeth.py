@@ -105,6 +105,7 @@ class Funeth:
 
         def _update_src2(linux_obj):
             sdkdir = os.path.join(self.ws, 'FunSDK')
+            drvdir = os.path.join(self.ws, 'fungible-host-drivers')
             linux_obj.sudo_command('rm -rf {}'.format(self.ws))
             linux_obj.create_directory(self.ws, sudo=False)
 
@@ -116,9 +117,32 @@ class Funeth:
 
             output = linux_obj.command(
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
-            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+            if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
 
-        result = True
+                # Get FunSdK bld
+                fun_test.log('Get FunSDK build info')
+                output = linux_obj.command('cd {}; cat build_info.txt'.format(sdkdir))
+                match = re.search(r'(\d+)', output)
+                if match:
+                    sdk_bld = match.group(1)
+                else:
+                    sdk_bld = None
+
+                # Get driver bld
+                fun_test.log('Get driver build/commit info')
+                output = linux_obj.command('cd {}; git log | head -n 5'.format(drvdir))
+                match = re.search(r'commit (\w+).* tag: (bld_\d+)', output)
+                if match:
+                    drv_commit = match.group(1)
+                    drv_bld = match.group(2)
+                else:
+                    match = re.search(r'commit (\w+).*', output)
+                    drv_commit = match.group(1)
+                    drv_bld = None
+
+                return sdk_bld, drv_bld, drv_commit
+
+        bld_list = []
 
         if parallel:
             mp_task_obj = MultiProcessingTasks()
@@ -133,14 +157,19 @@ class Funeth:
 
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+                bld_list.append(mp_task_obj.get_result('{}'.format(linux_obj.host_ip)))
 
         else:
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                result &= _update_src2(linux_obj)
+                bld_list.append(_update_src2(linux_obj))
 
-        return result
+        if len(set(bld_list)) != 1:
+            fun_test.critical('Different FunSDK/Driver bld in hosts')
+            return False
+
+        else:
+            return bld_list[0]  # sdkdir, drv_bld, drv_commit
 
     def build(self, parallel=False):
         """Build driver."""

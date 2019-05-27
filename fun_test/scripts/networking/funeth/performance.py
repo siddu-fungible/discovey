@@ -52,9 +52,16 @@ class FunethPerformance(sanity.FunethSanity):
 
     def setup(self):
         super(FunethPerformance, self).setup()
+        funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld'),
+        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld'),
+        driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
+        fun_test.shared_variables['funsdk_bld'] = funsdk_bld
+        fun_test.shared_variables['driver_bld'] = driver_bld
+        fun_test.shared_variables['driver_commit'] = driver_commit
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
         linux_objs = funeth_obj.linux_obj_dict.values()
 
         fun_test.log("Configure irq affinity")
@@ -62,14 +69,16 @@ class FunethPerformance(sanity.FunethSanity):
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
             # TODO: Configure irq affinity for rx
 
-        self.netperf_manager_obj = nm.NetperfManager(linux_objs)
-        fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
+        netperf_manager_obj = nm.NetperfManager(linux_objs)
+        fun_test.shared_variables['netperf_manager_obj'] = netperf_manager_obj
+        fun_test.test_assert(netperf_manager_obj.setup(), 'Set up for throughput/latency test')
 
         network_controller_objs = []
         network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                          dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True))
         network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
                                                          dpc_server_port=sanity.DPC_PROXY_PORT2, verbose=True))
+        fun_test.shared_variables['network_controller_objs'] = network_controller_objs
         # Configure small DF/Non-FCP thr to workaround SWOS-4771
         for nc_obj in network_controller_objs:
             f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -85,14 +94,19 @@ class FunethPerformance(sanity.FunethSanity):
                     port_mtu_set = nc_obj.set_port_mtu(p, fpg_mtu)
                     fun_test.test_assert(port_mtu_set, '{}: Configure FPG{} mtu {}'.format(f1, p, fpg_mtu))
 
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        fun_test.shared_variables['network_controller_objs'] = network_controller_objs
-        fun_test.shared_variables['netperf_manager_obj'] = self.netperf_manager_obj
+        results = []
+        fun_test.shared_variables['results'] = results
 
     def cleanup(self):
+        perf_utils.populate_result_summary(fun_test.shared_variables['results'],
+                                           fun_test.shared_variables['funsdk_bld'],
+                                           fun_test.shared_variables['driver_bld'],
+                                           fun_test.shared_variables['driver_commit'],
+                                           '00_summary_of_results.txt')
         super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
-        fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
+        fun_test.test_assert(fun_test.shared_variables['netperf_manager_obj'].cleanup(), 'Clean up')
+
 
 
 class FunethPerformanceBase(FunTestCase):
@@ -196,30 +210,30 @@ class FunethPerformanceBase(FunTestCase):
                                                                         version,
                                                                         when='after')
 
-        if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
-            if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
-                result.update(
-                    {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
-                )
-            elif flow_type.startswith('NU2HU'):
-                if result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
-                    result.update(
-                        {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
-                    )
-                if result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
-                    result.update(
-                        {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
-                    )
-            elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
-                result.update(
-                    {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
-                )
-            elif flow_type.startswith('HU_HU') and result.get('{}_h2h'.format(nm.THROUGHPUT)) != nm.NA:
-                # HU -> HU via local F1, no FPG stats
-                # HU -> HU via FCP, don't check FPG stats as it includes FCP request/grant pkts
-                result.update(
-                    {'{}_h2h'.format(nm.PPS): nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
-                )
+        #if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
+        #    if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
+        #        result.update(
+        #            {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+        #        )
+        #    elif flow_type.startswith('NU2HU'):
+        #        if result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
+        #            result.update(
+        #                {'{}_n2h'.format(nm.PPS): (fpg_rx_pkts2 - fpg_rx_pkts1) / duration}
+        #            )
+        #        if result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
+        #            result.update(
+        #                {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+        #            )
+        #    elif flow_type.startswith('HU_NU') and result.get('{}_h2n'.format(nm.THROUGHPUT)) != nm.NA:
+        #        result.update(
+        #            {'{}_h2n'.format(nm.PPS): (fpg_tx_pkts2 - fpg_tx_pkts1) / duration}
+        #        )
+        #    elif flow_type.startswith('HU_HU') and result.get('{}_h2h'.format(nm.THROUGHPUT)) != nm.NA:
+        #        # HU -> HU via local F1, no FPG stats
+        #        # HU -> HU via FCP, don't check FPG stats as it includes FCP request/grant pkts
+        #        result.update(
+        #            {'{}_h2h'.format(nm.PPS): nm.calculate_pps(protocol, frame_size, result['throughput_h2h'])}
+        #        )
 
         # Check test passed or failed
         fun_test.log('NetperfManager Results:\n{}'.format(pprint.pformat(result)))
@@ -262,6 +276,7 @@ class FunethPerformanceBase(FunTestCase):
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
+        fun_test.shared_variables['results'].append(result)
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):
@@ -296,8 +311,14 @@ if __name__ == "__main__":
                     sub_id_num_flows = sub_id_frame_size
                     for num_flows in NUM_FLOWS:
                         for num_hosts in NUM_HOSTS:
-                            summary = "{}: performance test by {}, with {}, {}-byte packets and {} flows in {} PCIe hosts".format(
-                                FLOW_TYPES_DICT.get(flow_type), tool, protocol, frame_size, num_flows, num_hosts
+                            summary = "{}: performance test by {}, with {}, {}-byte packets and {} flows {} {} PCIe hosts".format(
+                                FLOW_TYPES_DICT.get(flow_type),
+                                tool,
+                                protocol,
+                                frame_size,
+                                num_flows,
+                                'from' if flow_type.startswith('HU') else 'to',
+                                num_hosts
                             )
                             steps = summary
                             #print sub_id_num_flows, summary
