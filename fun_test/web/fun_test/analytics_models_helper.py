@@ -698,144 +698,163 @@ if __name__ == "__main2__":
 
 if __name__ == "__main__":
     # prepare_status_db()
-    generic_helper = ModelHelper(model_name="TeraMarkJuniperNetworkingPerformance")
-    json_text = [{
-        "mode": "100G",
-        "version": 6284,
-        "timestamp": "2019-05-06 05:29:15.989421-07:00",
-        "half_load_latency": False,
-        "memory": "DDR",
-        "flow_type": "NU_LE_VP_NU_FW",
-        "frame_size": 64.0,
-        "pps": 40697455.92,
-        "throughput": 27999.85,
-        "latency_min": 2.42,
-        "latency_max": 14.83,
-        "latency_avg": 5.03,
-        "jitter_min": 0.0,
-        "jitter_max": 4.24,
-        "jitter_avg": 0.06,
-        "num_flows": 128000000,
-        "offloads": False,
-        "protocol": "UDP"
-    },
-    {
-        "mode": "100G",
-        "version": 6284,
-        "timestamp": "2019-05-06 05:29:15.989421-07:00",
-        "half_load_latency": False,
-        "memory": "DDR",
-        "flow_type": "NU_LE_VP_NU_FW",
-        "frame_size": 1500.0,
-        "pps": 16430764.88,
-        "throughput": 199798.1,
-        "latency_min": 2.82,
-        "latency_max": 8.76,
-        "latency_avg": 4.12,
-        "jitter_min": 0.0,
-        "jitter_max": 0.73,
-        "jitter_avg": 0.0,
-        "num_flows": 128000000,
-        "offloads": False,
-        "protocol": "UDP"
-    },
-    {
-        "mode": "100G",
-        "version": 6284,
-        "timestamp": "2019-05-06 05:29:15.989421-07:00",
-        "half_load_latency": False,
-        "memory": "DDR",
-        "flow_type": "NU_LE_VP_NU_FW",
-        "frame_size": 362.94,
-        "pps": 40089054.46,
-        "throughput": 120248.57,
-        "latency_min": 2.45,
-        "latency_max": 17.32,
-        "latency_avg": 4.98,
-        "jitter_min": 0.0,
-        "jitter_max": 2.11,
-        "jitter_avg": 0.05,
-        "num_flows": 128000000,
-        "offloads": False,
-        "protocol": "UDP"
-    },
-    {
-        "mode": "100G",
-        "version": 6284,
-        "timestamp": "2019-05-06 05:29:15.989421-07:00",
-        "half_load_latency": True,
-        "memory": "DDR",
-        "flow_type": "NU_LE_VP_NU_FW",
-        "frame_size": 64.0,
-        "pps": 20348822.69,
-        "throughput": 13999.99,
-        "latency_min": 2.7,
-        "latency_max": 6.77,
-        "latency_avg": 4.11,
-        "jitter_min": 0.0,
-        "jitter_max": 3.05,
-        "jitter_avg": 0.05,
-        "num_flows": 128000000,
-        "offloads": False,
-        "protocol": "UDP"
-    },
-    {
-        "mode": "100G",
-        "version": 6284,
-        "timestamp": "2019-05-06 05:29:15.989421-07:00",
-        "half_load_latency": True,
-        "memory": "DDR",
-        "flow_type": "NU_LE_VP_NU_FW",
-        "frame_size": 1500.0,
-        "pps": 8215386.59,
-        "throughput": 99899.1,
-        "latency_min": 2.72,
-        "latency_max": 5.8,
-        "latency_avg": 3.69,
-        "jitter_min": 0.0,
-        "jitter_max": 0.57,
-        "jitter_avg": 0.0,
-        "num_flows": 128000000,
-        "offloads": False,
-        "protocol": "UDP"
-    },
-    {
-        "mode": "100G",
-        "version": 6284,
-        "timestamp": "2019-05-06 05:29:15.989421-07:00",
-        "half_load_latency": True,
-        "memory": "DDR",
-        "flow_type": "NU_LE_VP_NU_FW",
-        "frame_size": 362.94,
-        "pps": 20044634.62,
-        "throughput": 60124.61,
-        "latency_min": 2.59,
-        "latency_max": 10.39,
-        "latency_avg": 3.66,
-        "jitter_min": 0.0,
-        "jitter_max": 2.04,
-        "jitter_avg": 0.04,
-        "num_flows": 128000000,
-        "offloads": False,
-        "protocol": "UDP"
-    }]
+    # generic_helper = ModelHelper(model_name="TeraMarkJuniperNetworkingPerformance")
+    # json_text = [{
+    #     "mode": "100G",
+    #     "version": 6284,
+    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
+    #     "half_load_latency": False,
+    #     "memory": "DDR",
+    #     "flow_type": "NU_LE_VP_NU_FW",
+    #     "frame_size": 64.0,
+    #     "pps": 40697455.92,
+    #     "throughput": 27999.85,
+    #     "latency_min": 2.42,
+    #     "latency_max": 14.83,
+    #     "latency_avg": 5.03,
+    #     "jitter_min": 0.0,
+    #     "jitter_max": 4.24,
+    #     "jitter_avg": 0.06,
+    #     "num_flows": 128000000,
+    #     "offloads": False,
+    #     "protocol": "UDP"
+    # },
+    # {
+    #     "mode": "100G",
+    #     "version": 6284,
+    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
+    #     "half_load_latency": False,
+    #     "memory": "DDR",
+    #     "flow_type": "NU_LE_VP_NU_FW",
+    #     "frame_size": 1500.0,
+    #     "pps": 16430764.88,
+    #     "throughput": 199798.1,
+    #     "latency_min": 2.82,
+    #     "latency_max": 8.76,
+    #     "latency_avg": 4.12,
+    #     "jitter_min": 0.0,
+    #     "jitter_max": 0.73,
+    #     "jitter_avg": 0.0,
+    #     "num_flows": 128000000,
+    #     "offloads": False,
+    #     "protocol": "UDP"
+    # },
+    # {
+    #     "mode": "100G",
+    #     "version": 6284,
+    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
+    #     "half_load_latency": False,
+    #     "memory": "DDR",
+    #     "flow_type": "NU_LE_VP_NU_FW",
+    #     "frame_size": 362.94,
+    #     "pps": 40089054.46,
+    #     "throughput": 120248.57,
+    #     "latency_min": 2.45,
+    #     "latency_max": 17.32,
+    #     "latency_avg": 4.98,
+    #     "jitter_min": 0.0,
+    #     "jitter_max": 2.11,
+    #     "jitter_avg": 0.05,
+    #     "num_flows": 128000000,
+    #     "offloads": False,
+    #     "protocol": "UDP"
+    # },
+    # {
+    #     "mode": "100G",
+    #     "version": 6284,
+    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
+    #     "half_load_latency": True,
+    #     "memory": "DDR",
+    #     "flow_type": "NU_LE_VP_NU_FW",
+    #     "frame_size": 64.0,
+    #     "pps": 20348822.69,
+    #     "throughput": 13999.99,
+    #     "latency_min": 2.7,
+    #     "latency_max": 6.77,
+    #     "latency_avg": 4.11,
+    #     "jitter_min": 0.0,
+    #     "jitter_max": 3.05,
+    #     "jitter_avg": 0.05,
+    #     "num_flows": 128000000,
+    #     "offloads": False,
+    #     "protocol": "UDP"
+    # },
+    # {
+    #     "mode": "100G",
+    #     "version": 6284,
+    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
+    #     "half_load_latency": True,
+    #     "memory": "DDR",
+    #     "flow_type": "NU_LE_VP_NU_FW",
+    #     "frame_size": 1500.0,
+    #     "pps": 8215386.59,
+    #     "throughput": 99899.1,
+    #     "latency_min": 2.72,
+    #     "latency_max": 5.8,
+    #     "latency_avg": 3.69,
+    #     "jitter_min": 0.0,
+    #     "jitter_max": 0.57,
+    #     "jitter_avg": 0.0,
+    #     "num_flows": 128000000,
+    #     "offloads": False,
+    #     "protocol": "UDP"
+    # },
+    # {
+    #     "mode": "100G",
+    #     "version": 6284,
+    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
+    #     "half_load_latency": True,
+    #     "memory": "DDR",
+    #     "flow_type": "NU_LE_VP_NU_FW",
+    #     "frame_size": 362.94,
+    #     "pps": 20044634.62,
+    #     "throughput": 60124.61,
+    #     "latency_min": 2.59,
+    #     "latency_max": 10.39,
+    #     "latency_avg": 3.66,
+    #     "jitter_min": 0.0,
+    #     "jitter_max": 2.04,
+    #     "jitter_avg": 0.04,
+    #     "num_flows": 128000000,
+    #     "offloads": False,
+    #     "protocol": "UDP"
+    # }]
+    #
+    # unit = {}
+    # unit["pps_unit"] = "pps"
+    # unit["throughput_unit"] = "Mbps"
+    # unit["latency_min_unit"] = "usecs"
+    # unit["latency_max_unit"] = "usecs"
+    # unit["latency_avg_unit"] = "usecs"
+    # unit["jitter_min_unit"] = "usecs"
+    # unit["jitter_max_unit"] = "usecs"
+    # unit["jitter_avg_unit"] = "usecs"
+    #
+    # for line in json_text:
+    #     status = fun_test.PASSED
+    #     try:
+    #         generic_helper.set_units(**unit)
+    #         generic_helper.add_entry(**line)
+    #         generic_helper.set_status(status)
+    #     except Exception as ex:
+    #         fun_test.critical(str(ex))
+    #     print "used generic helper to add an entry"
+    json_text = [{'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 53.345219, 'corpus_name': u'enwik8'},
+     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 56.596281870070456, 'corpus_name': u'misc'},
+     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 49.54274645518411, 'corpus_name': u'silesia'},
+     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 61.89778920481539, 'corpus_name': u'large'},
+     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 58.000550449492884, 'corpus_name': u'calgary'},
+     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 68.64279844752751, 'corpus_name': u'cantrbry'},
+     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 74.07162314967105, 'corpus_name': u'artificl'}]
 
-    unit = {}
-    unit["pps_unit"] = "pps"
-    unit["throughput_unit"] = "Mbps"
-    unit["latency_min_unit"] = "usecs"
-    unit["latency_max_unit"] = "usecs"
-    unit["latency_avg_unit"] = "usecs"
-    unit["jitter_min_unit"] = "usecs"
-    unit["jitter_max_unit"] = "usecs"
-    unit["jitter_avg_unit"] = "usecs"
-
-    for line in json_text:
-        status = fun_test.PASSED
-        try:
-            generic_helper.set_units(**unit)
-            generic_helper.add_entry(**line)
-            generic_helper.set_status(status)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        print "used generic helper to add an entry"
+    unit_dict = {"f1_compression_ratio_unit": "number"}
+    try:
+        for d in json_text:
+            generic_helper = ModelHelper(model_name="InspurZipCompressionRatiosPerformance")
+            generic_helper.set_units(**unit_dict)
+            d["date_time"] = get_data_collection_time()
+            generic_helper.add_entry(**d)
+            generic_helper.set_status(fun_test.PASSED)
+            fun_test.log("Result posted to database: {}".format(d))
+    except Exception as ex:
+        fun_test.critical(ex.message)
