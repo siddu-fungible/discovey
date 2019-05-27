@@ -229,7 +229,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
-def populate_result_summary(results, filename):
+def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, filename):
     """Populate result summary file.
 
     :param results: list of dict. One element is like below.
@@ -273,20 +273,13 @@ def populate_result_summary(results, filename):
     """
     output = False
     try:
-        field_name_keys = ['flow_type',
-                           'protocol',
-                           'frame_size',
-                           'num_flows',
-                           'num_hosts',
-                           'version',
-                           'funsdk_bld',
-                           'driver_bld',
-                           'driver_commit']
+        field_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts',]
         ptable = PrettyTable()
         ptable.field_names = ['', ]
         for result in results:
             ptable.field_names.extend(['\n'.join(['{}: {}'.format(k, result[k]) for k in field_name_keys])])
         r0 = results[0]
+        funos_bld = r0.get('version')
         for k in r0:
             if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
                 row = [k, ]
@@ -297,10 +290,12 @@ def populate_result_summary(results, filename):
                     row.append(v)
                 ptable.add_row(row)
 
+        lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
+                 ptable.get_string()]
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'w') as f:
-            f.writelines(ptable.get_string())
+            f.writelines(lines)
 
         fun_test.add_auxillary_file(description=filename, filename=file_path)
 
