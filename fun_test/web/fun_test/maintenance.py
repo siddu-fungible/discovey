@@ -858,14 +858,14 @@ if __name__ == "__main__":
                 for names in data_output_names:
                     if "iops" in names:
                         if "read" in names:
-                            name = "mv-read"
+                            name = "read(N vols)"
                         else:
-                            name = "mv-write"
+                            name = "write(N vols)"
                     else:
                         if "read" in names:
-                            name = "mv-read-avg"
+                            name = "read-avg(N vols)"
                         else:
-                            name = "mv-write-avg"
+                            name = "write-avg(N vols)"
                     one_data_set = {}
                     one_data_set["name"] = name
                     one_data_set["inputs"] = {}
