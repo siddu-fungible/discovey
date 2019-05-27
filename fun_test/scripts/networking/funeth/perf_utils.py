@@ -229,10 +229,9 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
-def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_commit, driver_bld, filename):
+def populate_result_summary(results, funsdk_commit, funsdk_bld, driver_commit, driver_bld, filename):
     """Populate result summary file.
 
-    :param tc_ids: test case id list.
     :param results: list of dict. One element is like below.
 
         {
@@ -277,13 +276,13 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
         ptable = PrettyTable()
         ptable.align = 'r'
 
-        # field name: tc_id
-        field_names = ['tc_id', ]
-        field_names.extend(tc_ids)
+        # field name: id  TODO: pass test case id
+        field_names = ['id', ]
+        field_names.extend(range(1, len(results)+1))
         ptable.field_names = field_names
 
         # rows: flow_type, protocol, frame_size, num_flows, num_hosts
-        row_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts', ]
+        row_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts',]
         rows0 = []
         for k in row_name_keys:
             row = [k, ]
