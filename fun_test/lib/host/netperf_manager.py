@@ -299,7 +299,7 @@ class NetperfManager:
                     lat_dict = rdict[direction][-1]  # latency result is the last element
                     for k, v in lat_dict.items():
                         result[direction].update(
-                            {'{}_unload'.format(k): round(v, 1) if v != NA else v}
+                            {'{}_uload'.format(k): round(v, 1) if v != NA else v}
                         )
                     fun_test.log('NetperfManager latency under load result\n{}'.format(result))
 

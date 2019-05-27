@@ -94,10 +94,14 @@ class FunethPerformance(sanity.FunethSanity):
                     port_mtu_set = nc_obj.set_port_mtu(p, fpg_mtu)
                     fun_test.test_assert(port_mtu_set, '{}: Configure FPG{} mtu {}'.format(f1, p, fpg_mtu))
 
+        results = []
+        fun_test.shared_variables['results'] = results
+
     def cleanup(self):
         super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(fun_test.shared_variables['netperf_manager_obj'].cleanup(), 'Clean up')
+        perf_utils.populate_result_summary(fun_test.shared_variables['results'], '00_summary_of_results.txt')
 
 
 class FunethPerformanceBase(FunTestCase):
@@ -267,6 +271,12 @@ class FunethPerformanceBase(FunTestCase):
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
+        result.update(
+            {'funsdk_bld': fun_test.shared_variables['funsdk_bld'],
+             'driver_bld': fun_test.shared_variables['driver_bld'],
+             'driver_commit': fun_test.shared_variables['driver_commit']}
+        )
+        fun_test.shared_variables['results'].append(result)
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):

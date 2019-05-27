@@ -227,3 +227,90 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
         [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
+
+
+def populate_result_summary(results, filename):
+    """Populate result summary file.
+
+    :param results: list of dict. One element is like below.
+
+        {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_P50_h2h": 34.0,
+        "latency_P50_h2n": -1,
+        "latency_P50_n2h": -1,
+        "latency_P90_h2h": 35.0,
+        "latency_P90_h2n": -1,
+        "latency_P90_n2h": -1,
+        "latency_P99_h2h": 36.0,
+        "latency_P99_h2n": -1,
+        "latency_P99_n2h": -1,
+        "latency_avg_h2h": 34.2,
+        "latency_avg_h2n": -1,
+        "latency_avg_n2h": -1,
+        "latency_max_h2h": 78.0,
+        "latency_max_h2n": -1,
+        "latency_max_n2h": -1,
+        "latency_min_h2h": 32.0,
+        "latency_min_h2n": -1,
+        "latency_min_n2h": -1,
+        "num_flows": 8,
+        "num_hosts": 1,
+        "offloads": true,
+        "pps_h2h": 1046038.05,
+        "pps_h2n": -1,
+        "pps_n2h": -1,
+        "protocol": "TCP",
+        "throughput_h2h": 12067.095,
+        "throughput_h2n": -1,
+        "throughput_n2h": -1,
+        "timestamp": "2019-05-26 12:37:54.859905-07:00",
+        "version": "6617-6-g60146766df",
+    }
+
+    :return: Bool
+    """
+    output = False
+    try:
+        field_name_keys = ['flow_type',
+                           'protocol',
+                           'frame_size',
+                           'num_flows',
+                           'num_hosts',
+                           'version',
+                           'funsdk_bld',
+                           'driver_bld',
+                           'driver_commit']
+        ptable = PrettyTable()
+        ptable.field_names = ['', ]
+        for result in results:
+            ptable.field_names.extend(['\n'.join(['{}: {}'.format(k, result[k]) for k in field_name_keys])])
+        r0 = results[0]
+        for k in r0:
+            if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
+                row = [k, ]
+                for result in results:
+                    v = result.pop(k)
+                    if v == -1:
+                        v = '.'
+                    row.append(v)
+                ptable.add_row(row)
+
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
+        with open(file_path, 'w') as f:
+            f.writelines(ptable.get_string())
+
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
+
+        fun_test.log_disable_timestamps()
+        fun_test.log_section('Summary of results')
+        for line in lines:
+            fun_test.log(line)
+        fun_test.log_enable_timestamps()
+
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
