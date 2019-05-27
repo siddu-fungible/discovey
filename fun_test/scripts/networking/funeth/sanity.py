@@ -1,8 +1,9 @@
 from lib.system.fun_test import *
 from fun_settings import SCRIPTS_DIR
+from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.network_controller import NetworkController
-from lib.utilities.funcp_config import *
+from lib.utilities.funcp_config import FunControlPlaneBringup
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 
@@ -86,11 +87,15 @@ def setup_nu_host(funeth_obj):
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
+    funsdk_bld = driver_bld = driver_commit = None
     if update_driver:
         funeth_obj.setup_workspace()
         fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
-        fun_test.test_assert(funeth_obj.update_src(parallel=True), 'Update funeth driver source code.')
-        fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
+        update_src_result = funeth_obj.update_src(parallel=True)
+        if update_src_result:
+            funsdk_bld, driver_bld, driver_commit = update_src_result
+        fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
+    fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
@@ -111,6 +116,8 @@ def setup_hu_host(funeth_obj, update_driver=True):
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
 
+    return funsdk_bld, driver_bld, driver_commit
+
 
 class FunethSanity(FunTestScript):
     def describe(self):
@@ -124,12 +131,13 @@ class FunethSanity(FunTestScript):
 
     def setup(self):
 
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         # Boot up FS1600
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
+        if test_bed_type == 'fs-11':
 
             if control_plane:
-                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server"
-                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server"
+                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -150,15 +158,19 @@ class FunethSanity(FunTestScript):
             global DPC_PROXY_IP
             global DPC_PROXY_PORT
             DPC_PROXY_IP = come.host_ip
+            fun_test.shared_variables["come_ip"] = come.host_ip
             DPC_PROXY_PORT = come.get_dpc_port(0)
             DPC_PROXY_PORT2 = come.get_dpc_port(1)
 
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-11' and control_plane:
+        if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
-            funcp_obj.bringup_funcp()
-            funcp_obj.assign_mpg_ips()
-            abstract_json_file = '{}/networking/tb_configs/FS11_abstract_config.json'.format(SCRIPTS_DIR)
-            funcp_obj.funcp_abstract_config(abstract_config_file=abstract_json_file)
+            funcp_obj.bringup_funcp(prepare_docker=False)
+            funcp_obj.assign_mpg_ips_dhcp()
+            abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+            abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+            funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                            abstract_config_f1_1=abstract_json_file_f1_1)
+            fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
             # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
@@ -166,10 +178,11 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
-        setup_nu_host(funeth_obj)
+        if not control_plane:
+            setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj, update_driver=update_driver)
+        self.funsdk_bld, self.driver_bld, self.driver_commit = setup_hu_host(funeth_obj, update_driver=True)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
@@ -180,8 +193,20 @@ class FunethSanity(FunTestScript):
             fun_test.shared_variables["fs"].cleanup()
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             fun_test.shared_variables["topology"].cleanup()
-        fun_test.test_assert(fun_test.shared_variables['funeth_obj'].unload(), 'Unload funeth driver')
-        fun_test.shared_variables['funeth_obj'].cleanup_workspace()
+        funeth_obj = fun_test.shared_variables['funeth_obj']
+        funeth_obj.cleanup_workspace()
+        fun_test.log("Collect syslog from HU hosts")
+        funeth_obj.collect_syslog()
+        fun_test.log("Collect dmesg from HU hosts")
+        funeth_obj.collect_dmesg()
+        fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
+
+        # TODO: Clean up control plane
+        if control_plane:
+            linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
+            linux_obj.sudo_command('rmmod funeth')
+            linux_obj.sudo_command('docker kill F1-0 F1-1')
+            linux_obj.sudo_command('rm -fr /tmp/*')
 
 
 def collect_stats():
@@ -544,7 +569,7 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
             FunethTestReboot,
     ):
         ts.add_test_case(tc())

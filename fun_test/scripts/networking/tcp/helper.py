@@ -932,6 +932,7 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
         flow_list_file = str(version) + "_" + profile_name + '_flowlist.txt'
         resource_pc_file = str(version) + "_" + profile_name + '_resource_pc.txt'
         resource_bam_file = str(version) + "_" + profile_name + '_resource_bam.txt'
+        vp_utils_file = str(version) + "_" + profile_name + '_vp_utils.txt'
         cps = base_cps
         while True:
             if end_cps and cps >= end_cps:
@@ -959,7 +960,7 @@ def find_max_cps_using_trex(network_controller_obj, trex_obj, astf_profile, base
             output = run_dpcsh_commands(network_controller_obj=network_controller_obj,
                                         flow_list_file=flow_list_file,
                                         resource_bam_file=resource_bam_file, resource_pc_file=resource_pc_file,
-                                        iteration=True, display_output=False)
+                                        iteration=True, display_output=False, vp_utils_file=vp_utils_file)
             fun_test.simple_assert(output, checkpoint)
 
             fun_test.simple_assert(trex_obj.poll_for_trex_process(max_time=duration), "Ensure TRex process finish")

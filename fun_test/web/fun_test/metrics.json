@@ -3728,7 +3728,42 @@
                     "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
                     "weight": 0,
                     "label": "Multiple-Reader TCP",
-                    "children": []
+                    "children": [
+                      {
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "apple_rand_read_mrsw_tcp",
+                        "weight": 1,
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "apple_rand_read_mrsw_tcp_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "apple_rand_read_mrsw_tcp_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "apple_rand_read_mrsw_tcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "apple_rand_read_mrsw_tcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "apple_rand_read_mrsw_tcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "apple_rand_read_mrsw_tcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               },

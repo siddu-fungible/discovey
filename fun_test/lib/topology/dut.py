@@ -68,15 +68,11 @@ class Dut(ToDictMixin):
     DUT_TYPE_FSU = "DUT_TYPE_FSU"
     DUT_TYPE_FM8 = "DUT_TYPE_FM8"
 
-
-
     MODE_SIMULATION = "MODE_SIMULATION"
     MODE_EMULATION = "MODE_EMULATION"
     MODE_REAL = "MODE_REAL"
 
     TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance", "fpg_interfaces"]
-
-
 
     def __init__(self, type, index, mode=MODE_SIMULATION, spec=None, start_mode=None):
         self.type = type

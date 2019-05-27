@@ -105,6 +105,7 @@ class Funeth:
 
         def _update_src2(linux_obj):
             sdkdir = os.path.join(self.ws, 'FunSDK')
+            drvdir = os.path.join(self.ws, 'fungible-host-drivers')
             linux_obj.sudo_command('rm -rf {}'.format(self.ws))
             linux_obj.create_directory(self.ws, sudo=False)
 
@@ -116,9 +117,32 @@ class Funeth:
 
             output = linux_obj.command(
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
-            return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
+            if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
 
-        result = True
+                # Get FunSdK bld
+                fun_test.log('Get FunSDK build info')
+                output = linux_obj.command('cd {}; cat build_info.txt'.format(sdkdir))
+                match = re.search(r'(\d+)', output)
+                if match:
+                    sdk_bld = match.group(1)
+                else:
+                    sdk_bld = None
+
+                # Get driver bld
+                fun_test.log('Get driver build/commit info')
+                output = linux_obj.command('cd {}; git log | head -n 5'.format(drvdir))
+                match = re.search(r'commit (\w+).* tag: (bld_\d+)', output)
+                if match:
+                    drv_commit = match.group(1)
+                    drv_bld = match.group(2)
+                else:
+                    match = re.search(r'commit (\w+).*', output)
+                    drv_commit = match.group(1)
+                    drv_bld = None
+
+                return sdk_bld, drv_bld, drv_commit
+
+        bld_list = []
 
         if parallel:
             mp_task_obj = MultiProcessingTasks()
@@ -133,14 +157,19 @@ class Funeth:
 
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                result &= mp_task_obj.get_result('{}'.format(linux_obj.host_ip))
+                bld_list.append(mp_task_obj.get_result('{}'.format(linux_obj.host_ip)))
 
         else:
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                result &= _update_src2(linux_obj)
+                bld_list.append(_update_src2(linux_obj))
 
-        return result
+        if len(set(bld_list)) != 1:
+            fun_test.critical('Different FunSDK/Driver bld in hosts')
+            return False
+
+        else:
+            return bld_list[0]  # sdkdir, drv_bld, drv_commit
 
     def build(self, parallel=False):
         """Build driver."""
@@ -152,7 +181,8 @@ class Funeth:
                 linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
             output = linux_obj.command(
-                'export WORKSPACE={}; cd {}; make clean; make PALLADIUM=yes'.format(self.ws, drvdir), timeout=600)
+                'export WORKSPACE={}; cd {}; git log | head -n 5; make clean; make PALLADIUM=yes'.format(
+                    self.ws, drvdir), timeout=600)
             return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
         result = True
@@ -257,16 +287,16 @@ class Funeth:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
-                match = re.search(r'inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+                match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
             else:
-                match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
+                match = re.search(r'UP.*RUNNING.*HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
                                   output, re.DOTALL)
             if not match:
                 # Ubuntu 18.04
                 if self.tb_config_obj.is_alias(nu_or_hu, intf):
-                    match = re.search(r'inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
                 else:
-                    match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
                                       output, re.DOTALL)
             result &= match is not None
 
@@ -443,6 +473,7 @@ class Funeth:
 
     def get_interrupts(self, nu_or_hu):
         """Get HU host funeth interface interrupts."""
+        output_dict = {}
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
                 cmd = 'cat /proc/interrupts | grep {}'.format(intf)
@@ -450,7 +481,23 @@ class Funeth:
                     cmds = ['sudo {}'.format(cmd), ]
                 else:
                     cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
-                self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                output_dict.update({intf: output})
+        return output_dict
+
+    def get_ethtool_stats(self, nu_or_hu):
+        """Get HU host funeth interface ethtool stats."""
+        output_dict = {}
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                cmd = 'ethtool -S {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                output_dict.update({intf: output})
+        return output_dict
 
     def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
         """Configure irq affinity."""
@@ -478,3 +525,34 @@ class Funeth:
                     cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+    def collect_syslog(self):
+        """Collect all HU hosts' syslog file and copy to job's Log directory."""
+        for hu in self.hu_hosts:
+            linux_obj = self.linux_obj_dict[hu]
+            for log_file in ('syslog',):
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name='{}_{}.txt'.format(log_file, linux_obj.host_ip))
+                fun_test.scp(source_ip=linux_obj.host_ip,
+                             source_file_path="/var/log/{}".format(log_file),
+                             source_username=linux_obj.ssh_username,
+                             source_password=linux_obj.ssh_password,
+                             target_file_path=artifact_file_name)
+                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                                            filename=artifact_file_name)
+
+    def collect_dmesg(self):
+        """Collect all HU hosts' dmesg and copy to job's Log directory."""
+        for hu in self.hu_hosts:
+            linux_obj = self.linux_obj_dict[hu]
+            for log_file in ('dmesg',):
+                linux_obj.command('dmesg > /tmp/dmesg')
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name='{}_{}.txt'.format(log_file, linux_obj.host_ip))
+                fun_test.scp(source_ip=linux_obj.host_ip,
+                             source_file_path="/tmp/{}".format(log_file),
+                             source_username=linux_obj.ssh_username,
+                             source_password=linux_obj.ssh_password,
+                             target_file_path=artifact_file_name)
+                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                                            filename=artifact_file_name)

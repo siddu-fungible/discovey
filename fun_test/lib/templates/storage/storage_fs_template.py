@@ -28,7 +28,7 @@ class StorageFsTemplate(object):
     NUM_FS_CONTAINERS = 2
     FUNSDK_DIR = "/mnt/keep/FunSDK/"
     DEFAULT_TIMEOUT = 300
-    DEPLOY_TIMEOUT = 1200
+    DEPLOY_TIMEOUT = 900
     BOND_BRINGUP_TIMEOUT = 300
     LAUNCH_SCRIPT = "./integration_test/emulation/test_system.py "
     PREPARE_CMD = "{} --prepare --docker".format(LAUNCH_SCRIPT)
@@ -117,12 +117,12 @@ class StorageFsTemplate(object):
         return result
 
     def launch_funcp_containers(self, mode=None):
-        result = False
+        result = True
         self.enter_funsdk()
         cmd = self.DEPLOY_CONTAINER_CMD
         if mode:
             cmd += " --{}".format(mode)
-        response = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT)
+        response = self.come_obj.command(cmd, timeout=self.DEPLOY_TIMEOUT)
         sections = ['Bring up Control Plane',
                     'Device 1dad:',
                     'move fpg interface to f0 docker',
@@ -140,6 +140,7 @@ class StorageFsTemplate(object):
         result = {'status': False, 'container_name_list': []}
         cmd = "docker ps --format '{{.Names}}'"
         result['container_name_list'] = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
+        result['container_name_list'] = [name.strip("\r") for name in result['container_name_list']]
         container_count = len(result['container_name_list'])
         if container_count != self.NUM_FS_CONTAINERS:
             fun_test.critical(
@@ -244,7 +245,7 @@ class StorageFsTemplate(object):
         fun_test.simple_assert(bond_status, "Disabling {} interface".format(bond_dict["name"]))
 
         # Configuring IP address for the bond interface
-        bond_ip_config = "ip addr add %(ip)s dev %(name)s" % bond_dict
+        bond_ip_config = "sudo ip addr add %(ip)s dev %(name)s" % bond_dict
         container_obj.command(bond_ip_config)
         fun_test.simple_assert(not container_obj.exit_status(), "Configuring IP to {} interface".
                                format(bond_dict["name"]))

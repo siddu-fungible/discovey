@@ -334,16 +334,34 @@ class TestCaseInfo(FunModel):
     test_case_id = models.TextField()
     summary = models.TextField()
     script_path = models.TextField()  # Maps to RegressionScripts
+    steps = models.TextField(default="")
 
     @staticmethod
-    def add_update(test_case_id, summary, script_path):
+    def add_update(test_case_id, summary, script_path, steps=None):
         if TestCaseInfo.objects.filter(test_case_id=test_case_id, script_path=script_path).exists():
             t = TestCaseInfo.objects.get(test_case_id=test_case_id, script_path=script_path)
             t.summary = summary
+            if steps:
+                t.steps = steps
             t.save()
         else:
             t = TestCaseInfo(test_case_id=test_case_id, script_path=script_path, summary=summary)
+            if steps:
+                t.steps = steps
             t.save()
+
+    @staticmethod
+    def get_summary(test_case_id, script_path):
+        result = "Unknown"
+        try:
+            t = TestCaseInfo.objects.get(test_case_id=test_case_id, script_path=script_path)
+            result = t.summary
+        except Exception as ex:
+            pass
+        return result
+
+    def __str__(self):
+        return "{} {}".format(self.test_case_id, self.summary)
 
 
 class RegresssionScriptsSerializer(serializers.Serializer):

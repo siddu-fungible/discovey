@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -237,7 +237,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
-        self.db_log_time = get_current_time()
+        self.db_log_time = get_data_collection_time()
 
         self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip,
@@ -266,6 +266,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["reboot_timeout"] = self.reboot_timeout
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         lspci_output = self.end_host.lspci(grep_filter=self.ethernet_adapter)
@@ -343,10 +344,12 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
 
         try:
+            self.fs = fun_test.shared_variables["fs"]
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
             self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+            self.reboot_timeout = fun_test.shared_variables["reboot_timeout"]
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
@@ -365,6 +368,8 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")
         except Exception as ex:
             fun_test.critical(str(ex))
+            fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
+            self.fs.come_reset(max_wait_time=self.reboot_timeout)
 
         self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
@@ -826,8 +831,8 @@ class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    ecscript.add_test_case(MixedRandReadWriteIOPS())
-    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    # ecscript.add_test_case(MixedRandReadWriteIOPS())
+    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
     # ecscript.add_test_case(OLAPModelReadWriteIOPS())
     # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
