@@ -284,7 +284,7 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
             if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
                 row = [k, ]
                 for result in results:
-                    v = result.pop(k)
+                    v = result.get(k)
                     if v == -1:
                         v = '.'
                     row.append(v)
