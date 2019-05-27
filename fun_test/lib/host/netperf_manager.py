@@ -200,8 +200,10 @@ class NetperfManager:
         result = {}
 
         # Do throughput test first, and latency test last
-        for measure_latency in (False, True):
-            if measure_latency:
+        #for measure_latency in (False, True):
+        # Test - 1: throughput only, 2: latency only, 3: latency under throughput load
+        for test in (1, 2, 3):
+            if test == 2:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=True)
                     perf_tuning_obj.mlnx_tune(profile='LOW_LATENCY_VMA')
@@ -228,7 +230,12 @@ class NetperfManager:
                 sip = arg_dict.get('sip', None)
                 ns = arg_dict.get('ns', None)
 
-                num_processes = 1 if measure_latency else num_flows
+                if test == 2:
+                    num_processes = 1
+                    measure_latency = True
+                else:
+                    num_processes = num_flows
+                    measure_latency = False
                 cpu_list = []
                 for i in range(0, num_processes):
                     cpu = 15 -i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
@@ -237,11 +244,22 @@ class NetperfManager:
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
                         task_key='{}_{}'.format(direction, i))
+                    if test == 3:
+                        if num_flows == 1:
+                            cpu -= 1
+                            cpu_list.append(cpu)
+                        measure_latency = True
+                        mp_task_obj.add_task(
+                            func=do_test,
+                            func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
+                            task_key='{}_{}_latency'.format(direction, i))
 
                 # Start netserver
                 self.start_netserver(linux_obj_dst, cpu_list=cpu_list)
-
-            mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list))
+            if test == 3:  # +1 for latency under load
+                mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list))
+            else:
+                mp_task_obj.run(max_parallel_processes=num_processes*len(direction_list))
             rdict = {}
             for direction in direction_list:
                 if direction not in result:
@@ -253,16 +271,18 @@ class NetperfManager:
                 )
                 for i in range(0, num_processes):
                     rdict[direction].append(mp_task_obj.get_result('{}_{}'.format(direction, i)))
+                if test == 3:
+                    rdict[direction].append(mp_task_obj.get_result('{}_{}_latency'.format(direction, i)))
                 fun_test.log('NetperfManager aggregated netperf result of {}\n{}'.format(direction, rdict[direction]))
 
-                if measure_latency:
+                if test == 2:
                     lat_dict = rdict[direction][-1]  # latency result is the last element
                     for k, v in lat_dict.items():
                         result[direction].update(
                             {k: round(v, 1) if v != NA else v}
                         )
                     fun_test.log('NetperfManager latency result\n{}'.format(result))
-                else:
+                elif test == 1:
                     throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT) != NA)
                     if not throughput:
                         result[direction].update(
@@ -271,10 +291,18 @@ class NetperfManager:
                     else:
                         result[direction].update(
                             {THROUGHPUT: calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
-                             #'pps': calculate_pps(protocol, frame_size, throughput),
+                             PPS: calculate_pps(protocol, frame_size, throughput),
                             }
                         )
                     fun_test.log('NetperfManager throughput result\n{}'.format(result))
+                elif test == 3:
+                    lat_dict = rdict[direction][-1]  # latency result is the last element
+                    for k, v in lat_dict.items():
+                        result[direction].update(
+                            {'{}_unload'.format(k): round(v, 1) if v != NA else v}
+                        )
+                    fun_test.log('NetperfManager latency under load result\n{}'.format(result))
+
 
         result_cooked = {}
         for direction in result:
