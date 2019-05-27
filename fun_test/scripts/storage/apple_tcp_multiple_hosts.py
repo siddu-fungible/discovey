@@ -614,7 +614,8 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     fun_test.log("Starting test from host {}".format(end_host))
                     # Get iostat results
                     self.iostat_host_thread = end_host.clone()
-                    iostat_thread = fun_test.execute_thread_after(time_in_seconds=1,
+                    iostat_wait_time = self.host_count + 1 - thread_count
+                    iostat_thread = fun_test.execute_thread_after(time_in_seconds=iostat_wait_time,
                                                                   func=get_iostat,
                                                                   host_thread=self.iostat_host_thread,
                                                                   count=thread_count,
