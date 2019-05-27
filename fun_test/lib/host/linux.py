@@ -1895,7 +1895,8 @@ class Linux(object, ToDictMixin):
                non_blocking=None,
                ipmi_details=None,
                wait_time_before_host_check=None,
-               reboot_initiated_wait_time=60):
+               reboot_initiated_wait_time=60,
+               reboot_initiated_check=True):
         """
         :param timeout: deprecated
         :param retries: deprecated
@@ -1906,6 +1907,8 @@ class Linux(object, ToDictMixin):
         :param ipmi_details: if ipmi_details are provided we will try power-cycling in case normal bootup did not work
         :param wait_time_before_host_check: wait time before we check if host is up. Might be useful when we know the
                 system is prone to crashes
+        :param reboot_initiated_wait_time: time to wait until we can confirm that reboot was initiated
+        :param reboot_initiated_check: check if reboot was successfully initiated, using a failing ping or ssh test
         :return:
         """
         result = True
@@ -1921,8 +1924,14 @@ class Linux(object, ToDictMixin):
             except:
                 pass
 
-        reboot_initiated, power_cycled_already = self._ensure_reboot_is_initiated(ipmi_details=ipmi_details,
-                                                                                  reboot_initiated_wait_time=reboot_initiated_wait_time)
+        reboot_initiated, power_cycled_already = (False, False)
+        if reboot_initiated_check:
+            reboot_initiated, power_cycled_already = self._ensure_reboot_is_initiated(ipmi_details=ipmi_details,
+                                                                                      reboot_initiated_wait_time=reboot_initiated_wait_time)
+        else:
+            reboot_initiated = True
+            fun_test.log("Reboot initiated check was not enabled. Assuming reboot was properly initiated")
+
         if not reboot_initiated:
             result = False
             fun_test.log("Reboot was not initiated")
