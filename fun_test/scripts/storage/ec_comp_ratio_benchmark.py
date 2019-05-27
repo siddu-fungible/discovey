@@ -346,21 +346,22 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def publish_result(self, result_lst):
         unit_dict = {"f1_compression_ratio_unit": PerfUnit.UNIT_NUMBER}
-        generic_helper = ModelHelper(model_name="InspurZipCompressionRatiosPerformance")
         fun_test.log(result_lst)
         try:
             for d in result_lst:
+                generic_helper = ModelHelper(model_name="InspurZipCompressionRatiosPerformance")
                 generic_helper.set_units(**unit_dict)
                 generic_helper.add_entry(**d)
                 generic_helper.set_status(fun_test.PASSED)
+                fun_test.log("Result posted to database: {}".format(d))
         except Exception as ex:
             fun_test.critical(ex.message)
-        fun_test.log("Result posted to database")
 
     def cleanup(self):
         try:
+            self.end_host.unmount_volume(volume=self.volume_name)
             self.end_host.sudo_command("nvme disconnect -d {}".format(self.volume_name))
-            ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
+            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
             if fun_test.shared_variables["setup_complete"]:
                 # Detaching all the EC/LS volumes to the external server
                 fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
