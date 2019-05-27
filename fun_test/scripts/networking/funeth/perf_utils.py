@@ -229,9 +229,10 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
-def populate_result_summary(results, funsdk_commit, funsdk_bld, driver_commit, driver_bld, filename):
+def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_commit, driver_bld, filename):
     """Populate result summary file.
 
+    :param tc_ids: test case id list.
     :param results: list of dict. One element is like below.
 
         {
@@ -276,18 +277,13 @@ def populate_result_summary(results, funsdk_commit, funsdk_bld, driver_commit, d
         ptable = PrettyTable()
         ptable.align = 'r'
 
-        # field name: flow_type
-        field_name_key = 'flow_type'
-        field_names = [field_name_key, ]
-        for result in results:
-            field_names.append(result[field_name_key])
+        # field name: tc_id
+        field_names = ['tc_id', ]
+        field_names.extend(tc_ids)
         ptable.field_names = field_names
 
-        r0 = results[0]
-        funos_bld = r0.get('version')
-
-        # rows: protocol, frame_size, num_flows, num_hosts
-        row_name_keys = ['protocol', 'frame_size', 'num_flows', 'num_hosts',]
+        # rows: flow_type, protocol, frame_size, num_flows, num_hosts
+        row_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts', ]
         rows0 = []
         for k in row_name_keys:
             row = [k, ]
@@ -298,6 +294,7 @@ def populate_result_summary(results, funsdk_commit, funsdk_bld, driver_commit, d
             ptable.add_row(row)
 
         # rows: latency, pps, throughput
+        r0 = results[0]
         rows = []
         for k in r0:
             if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
@@ -312,6 +309,7 @@ def populate_result_summary(results, funsdk_commit, funsdk_bld, driver_commit, d
         for row in sorted(rows, key=lambda elem: elem[0]):
             ptable.add_row(row)
 
+        funos_bld = r0.get('version')
         lines = [
             'FunOS: {}, FunSDK: {} {}, Driver: {} {}\n'.format(
                 funos_bld, funsdk_commit, funsdk_bld, driver_commit, driver_bld),
