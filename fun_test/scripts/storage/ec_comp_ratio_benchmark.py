@@ -6,7 +6,7 @@ from lib.fun.fs import Fs
 from ec_perf_helper import *
 from fun_settings import DATA_STORE_DIR
 from fun_global import PerfUnit, is_production_mode
-from web.fun_test.analytics_models_helper import ModelHelper
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 
 '''
 Script to compare space savings achieved using Compression enabled storage engine Compression disabled ones
@@ -37,6 +37,10 @@ def get_lsv_write_count(storage_controller, lsv_uuid):
 
 
 class ECVolumeLevelScript(FunTestScript):
+    ctrlr_uuid = None
+    storage_controller = None
+    end_host = None
+
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy F1's.
@@ -71,59 +75,178 @@ class ECVolumeLevelScript(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "FS Topology deployed")
 
-        self.fs = topology.get_dut_instance(index=0)
-
-        self.come = self.fs.get_come()
-        self.storage_controller = StorageController(target_ip=self.come.host_ip,
-                                                    target_port=self.come.get_dpc_port(self.f1_in_use))
+        fs = topology.get_dut_instance(index=0)
+        come = fs.get_come()
+        self.storage_controller = StorageController(target_ip=come.host_ip,
+                                                    target_port=come.get_dpc_port(self.f1_in_use))
 
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0,
                                                                             f1_index=self.f1_in_use)
+        test_interface_name = None
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if testbed_type == "fs-6" and host_ip != "poc-server-01":  # TODO temp check for FS6 should be removed
                 continue
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
                 self.end_host = host_info["host_obj"]
-                self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
-                self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
-                fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
+                test_interface_name = self.end_host.extra_attributes["test_interface_name"]
+                fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
+                fun_test.log("Test Interface is connected to FPG Index: {}".format(fpg_inteface_index))
                 break
         else:
             fun_test.test_assert(False, "Host found with Test Interface")
 
-        self.test_network = self.csr_network[str(self.fpg_inteface_index)]
+        test_network = self.csr_network[str(fpg_inteface_index)]
+        remote_ip = test_network["test_interface_ip"].split('/')[0]
         fun_test.shared_variables["end_host"] = self.end_host
-        fun_test.shared_variables["test_network"] = self.test_network
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables['ctlr_configured'] = False
-        fun_test.shared_variables['artifacts_shared'] = False
-        fun_test.shared_variables['nvme_device_connected'] = False
-        self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-        fun_test.shared_variables["remote_ip"] = self.remote_ip
         fun_test.shared_variables["topology"] = topology
+        fun_test.shared_variables['date_time'] = get_data_collection_time()
 
         # Configure Linux Host
-        fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout,
+        '''fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout,
                                                   max_wait_time=self.reboot_timeout),
-                             "End Host {} is up".format(self.end_host.host_ip))
+                             "End Host {} is up".format(self.end_host.host_ip))'''
 
         configure_endhost_interface(end_host=self.end_host,
-                                    test_network=self.test_network,
-                                    interface_name=self.test_interface_name)
+                                    test_network=test_network,
+                                    interface_name=test_interface_name)
 
         # Loading the nvme and nvme_tcp modules
         load_nvme_module(self.end_host)
         load_nvme_tcp_module(self.end_host)
 
+        # config ip
+        configure_fs_ip(self.storage_controller, test_network["f1_loopback_ip"])
+
+        # create controller
+        self.ctrlr_uuid = utils.generate_uuid()
+        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                       transport=self.attach_transport,
+                                                                       remote_ip=remote_ip,
+                                                                       nqn=self.nvme_subsystem,
+                                                                       port=self.transport_port,
+                                                                       command_duration=self.command_timeout)['status'],
+                             message="Create Storage Controller for {} with controller uuid {} on DUT".format(
+                                 self.attach_transport, self.ctrlr_uuid))
+
+        # create EC Volumes
+        configured_vols = {}  # dict to keep tab on ec vols created
+        ns_id = 1
+        fun_test.shared_variables['configured_vols'] = configured_vols
+        for effort in self.zip_effort_list:
+            self.ec_info["zip_effort"] = effort
+            (ec_config_status, ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                      self.command_timeout)
+            fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume with zip effort: {}".format(effort))
+            lsv_uuid = ec_info["attach_uuid"][0]
+            configured_vols[effort] = {'ns_id': ns_id, 'ec_info': ec_info, 'lsv_uuid': lsv_uuid}
+
+            fun_test.test_assert(self.storage_controller.attach_volume_to_controller(
+                ctrlr_uuid=self.ctrlr_uuid,
+                ns_id=ns_id,
+                vol_uuid=lsv_uuid,
+                command_duration=self.command_timeout)["status"],
+                                 message="Attach EC/LS volume with nsid: {} to controller with uuid: {}".format(
+                                     ns_id,
+                                     self.ctrlr_uuid))
+            ns_id += 1
+
+        # disable error injection for ec-volumes
+        disable_error_inject(self.storage_controller, self.command_timeout)
+
+        # execute nvme-connect
+        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
+                                                                             test_network["f1_loopback_ip"],
+                                                                             self.transport_port,
+                                                                             self.nvme_subsystem)
+        else:
+            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
+                self.attach_transport.lower(),
+                test_network["f1_loopback_ip"],
+                self.transport_port,
+                self.nvme_subsystem,
+                self.io_queues)
+
+        nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
+        fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
+
+        # Check all devices are visible and mount them on end host
+        for effort in configured_vols:
+            ns_id = configured_vols[effort]['ns_id']
+            fetch_nvme = fetch_nvme_device(self.end_host, ns_id)
+            fun_test.test_assert(fetch_nvme['status'], message="Check nvme device visible on end host")
+            configured_vols[effort]['volume_name'] = fetch_nvme['volume_name']
+            configured_vols[effort]['nvme_device'] = fetch_nvme['nvme_device']
+
+            # Create file system on attached device
+            fun_test.test_assert(self.end_host.create_filesystem(fs_type=self.file_system,
+                                                                 device=fetch_nvme['nvme_device'],
+                                                                 timeout=self.command_timeout),
+                                 message="Create File System on nvme device: {}".format(fetch_nvme['nvme_device']))
+
+            # create mount dir for respective volumes
+            mount_dir = "{0}{1}".format(self.mount_point, effort)
+            fun_test.test_assert(self.end_host.create_directory(dir_name=mount_dir),
+                                 message="Create Dir {0} to mount volume {1}".format(mount_dir,
+                                                                                     fetch_nvme['volume_name']))
+            configured_vols[effort]['mount_point'] = mount_dir
+
+            # mount volume on end host
+            fun_test.test_assert(self.end_host.mount_volume(volume=fetch_nvme['nvme_device'], directory=mount_dir),
+                                 message="Mount {0} volume on {1} directory".format(fetch_nvme['nvme_device'],
+                                                                                    mount_dir))
+
+        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        for service in udev_services:
+            fun_test.test_assert(self.end_host.systemctl(service_name=service,
+                                                         action="stop"),
+                                 "Stopping {} service".format(service))
+
+        end_host_tmp_dir = "/tmp/"
+        for corpus in self.corpus_list:
+            abs_path = "{0}/{1}/{2}".format(DATA_STORE_DIR, self.artifact_dir, corpus)
+            fun_test.test_assert(os.path.exists(abs_path), message="Check if Dir {} exists".format(abs_path),
+                                 ignore_on_success=True)
+            fun_test.test_assert(fun_test.scp(source_file_path=abs_path,
+                                              target_file_path=end_host_tmp_dir,
+                                              target_ip=self.end_host.host_ip,
+                                              target_username=self.end_host.ssh_username,
+                                              target_password=self.end_host.ssh_password,
+                                              target_port=self.end_host.ssh_port,
+                                              recursive=True,
+                                              timeout=300),
+                                 message="scp corpus {} to end host".format(abs_path), ignore_on_success=True)
+        fun_test.shared_variables['configured_vols'] = configured_vols
+
     def cleanup(self):
         try:
-            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
-            fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                           command_duration=self.command_timeout),
-                                 message="Delete Controller uuid: {}".format(ctrlr_uuid))
-            self.storage_controller.disconnect()
+            if 'configured_vols' in fun_test.shared_variables and fun_test.shared_variables['configured_vols']:
+                configured_vols = fun_test.shared_variables['configured_vols']
+                for effort in configured_vols:
+                    # Unmount Volume
+                    self.end_host.unmount_volume(volume=configured_vols[effort]['nvme_device'])
+                    # execute nvme disconnect
+                    self.end_host.sudo_command("nvme disconnect -d {}".format(configured_vols[effort]['volume_name']))
+                    # detach volume from controller
+                    fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid,
+                        ns_id=configured_vols[effort]['ns_id'],
+                        command_duration=self.command_timeout)['status'],
+                                         message="Detach nsid: {} from controller: {}".format(
+                                             configured_vols[effort]['ns_id'], self.ctrlr_uuid))
+                    # delete the volumes
+                    self.storage_controller.unconfigure_ec_volume(ec_info=configured_vols[effort]['ec_info'],
+                                                                  command_timeout=self.command_timeout)
 
+            # delete the controller
+            if self.ctrlr_uuid:
+                fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                               command_duration=self.command_timeout),
+                                     message="Delete Controller uuid: {}".format(self.ctrlr_uuid))
+            self.storage_controller.disconnect()
         except Exception as ex:
             fun_test.critical(ex.message)
         finally:
@@ -133,13 +256,6 @@ class ECVolumeLevelScript(FunTestScript):
 class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
         testcase = self.__class__.__name__
-        fun_test.shared_variables['setup_complete'] = False
-        self.end_host = fun_test.shared_variables["end_host"]
-        self.test_network = fun_test.shared_variables["test_network"]
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
-        self.remote_ip = fun_test.shared_variables["remote_ip"]
-
-        # parse benchmark dictionary
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
@@ -150,133 +266,34 @@ class ECVolumeLevelTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        # Configure IP and Create controller on FS
-        if not fun_test.shared_variables['ctlr_configured']:
-            configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
-
-            self.ctrlr_uuid = utils.generate_uuid()
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                       transport=self.attach_transport,
-                                                                       remote_ip=self.remote_ip,
-                                                                       nqn=self.nvme_subsystem,
-                                                                       port=self.transport_port,
-                                                                       command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"],
-                                 "Create Storage Controller for {} with controller uuid {} on DUT".
-                                 format(self.attach_transport, self.ctrlr_uuid))
-            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
-            fun_test.shared_variables['ctlr_configured'] = True
-        else:
-            self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-
-        # Configure EC volume
-        (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
-                                                                                       self.command_timeout)
-        fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
-        fun_test.log("EC details after configuring EC Volume:")
-        for k, v in self.ec_info.items():
-            fun_test.log("{}: {}".format(k, v))
-
-        # attach ec to controller to PCI
-        command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                             ns_id=self.ns_id,
-                                                                             vol_uuid=self.ec_info["attach_uuid"][
-                                                                                 0],
-                                                                             command_duration=self.command_timeout)
-        fun_test.test_assert(command_result["status"],
-                             "Attach EC/LS volume with nsid: {} to controller with uuid: {}".format(self.ns_id,
-                                                                                                    self.ctrlr_uuid))
-
-        # Disable error injection and verify
-        disable_error_inject(self.storage_controller, self.command_timeout)
-
-        # Checking nvme-connect status
-        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
-                                                                             self.test_network["f1_loopback_ip"],
-                                                                             str(self.transport_port),
-                                                                             self.nvme_subsystem)
-        else:
-            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
-                self.attach_transport.lower().lower(),
-                self.test_network["f1_loopback_ip"],
-                str(self.transport_port),
-                self.nvme_subsystem,
-                str(self.io_queues))
-
-        nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
-        fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
-
-        # Check nvme device is visible to end host
-        fetch_nvme = fetch_nvme_device(self.end_host, self.ns_id)
-        fun_test.test_assert(fetch_nvme['status'], message="Check nvme device visible on end host")
-        self.volume_name = fetch_nvme['volume_name']
-        self.nvme_block_device = fetch_nvme['nvme_device']
-        fun_test.shared_variables['setup_complete'] = True
-
-        # Disable the udev daemon which will skew the read stats of the volume during the test
-        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-        for service in udev_services:
-            fun_test.test_assert(self.end_host.systemctl(service_name=service,
-                                                         action="stop"),
-                                 "Stopping {} service".format(service))
-
-        # Create file system on attached device
-        fun_test.test_assert(self.end_host.create_filesystem(fs_type=self.file_system,
-                                                             device=self.nvme_block_device,
-                                                             timeout=self.command_timeout),
-                             message="Create File System on nvme device: {}".format(self.nvme_block_device))
-
-        # create mount dir
-        mount_dir = "{0}{1}".format(self.mount_point, testcase)
-
-        fun_test.test_assert(self.end_host.create_directory(dir_name=mount_dir),
-                             message="Create Dir {0} for mount".format(mount_dir))
-        fun_test.shared_variables['mount_dir'] = mount_dir
-        fun_test.test_assert(self.end_host.mount_volume(volume=self.nvme_block_device, directory=mount_dir),
-                             message="Mount {0} volume on {1} directory".format(self.nvme_block_device, mount_dir))
-
-        if not fun_test.shared_variables['artifacts_shared']:
-            end_host_tmp_dir = "/tmp/"
-            for corpus in self.test_corpus:
-                abs_path = "{0}/{1}/{2}".format(DATA_STORE_DIR, self.artifact_dir, corpus)
-                fun_test.test_assert(os.path.exists(abs_path), message="Check if Dir {} exists".format(abs_path),
-                                     ignore_on_success=True)
-                fun_test.test_assert(fun_test.scp(source_file_path=abs_path,
-                                                  target_file_path=end_host_tmp_dir,
-                                                  target_ip=self.end_host.host_ip,
-                                                  target_username=self.end_host.ssh_username,
-                                                  target_password=self.end_host.ssh_password,
-                                                  target_port=self.end_host.ssh_port,
-                                                  recursive=True,
-                                                  timeout=300),
-                                     message="scp corpus {} to end host".format(abs_path), ignore_on_success=True)
-            fun_test.shared_variables['artifacts_shared'] = True
-
     def run(self):
-        mount_dir = fun_test.shared_variables['mount_dir']
+        fun_test.simple_assert(self.accelerator_effort in fun_test.shared_variables['configured_vols'],
+                               message="Check vol info for the respective test case is present")
+        test_case_info = fun_test.shared_variables['configured_vols'][self.accelerator_effort]
+        storage_controller = fun_test.shared_variables["storage_controller"]
+        end_host = fun_test.shared_variables["end_host"]
+        mount_dir = test_case_info['mount_point']
         test_corpuses = self.test_corpus
         end_host_tmp_dir = "/tmp/"
-        lsv_uuid = self.ec_info["attach_uuid"][0]
-        self.end_host.flush_cache_mem()
+        lsv_uuid = test_case_info['lsv_uuid']
 
-        init_write_count = get_lsv_write_count(self.storage_controller, lsv_uuid)
+        end_host.flush_cache_mem()
+        init_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
 
         table_rows = []
         post_result_lst = []
         table_header = ["CorpusName", "F1CompressPrecent", "GzipCompressPercent"]
         test_result = True
         for corpus in test_corpuses:
-            self.end_host.cp(source_file_name="{}{}".format(end_host_tmp_dir, corpus),
-                             destination_file_name=mount_dir, recursive=True, sudo=True),
+            end_host.cp(source_file_name="{}{}".format(end_host_tmp_dir, corpus),
+                        destination_file_name=mount_dir, recursive=True, sudo=True),
             corpus_dest_path = "{}/{}".format(mount_dir, corpus)
-            fun_test.test_assert(self.end_host.check_file_directory_exists(corpus_dest_path),
+            fun_test.test_assert(end_host.check_file_directory_exists(corpus_dest_path),
                                  message="Check corpus got copied to mount dir",
                                  ignore_on_success=True)
-            self.end_host.flush_cache_mem()
+            end_host.flush_cache_mem()
 
-            curr_write_count = get_lsv_write_count(self.storage_controller, lsv_uuid)
+            curr_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
             comp_size = curr_write_count - init_write_count
             fun_test.simple_assert(comp_size, "Check compressed size is non-zero value")
             comp_pct = get_comp_percent(orig_size=test_corpuses[corpus]['orig_size'], comp_size=comp_size)
@@ -291,7 +308,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             post_result_lst.append({'effort_name': self.accelerator_effort,
                                     'corpus_name': corpus,
-                                    'f1_compression_ratio': comp_pct})
+                                    'f1_compression_ratio': comp_pct,
+                                    'date_time': fun_test.shared_variables['date_time']})
             init_write_count = curr_write_count
             table_rows.append([corpus, "{0:04.2f}".format(comp_pct), test_corpuses[corpus]['gzip_comp_pct']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
@@ -319,24 +337,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.critical(ex.message)
 
     def cleanup(self):
-        try:
-            if fun_test.shared_variables["setup_complete"]:
-                self.end_host.unmount_volume(volume=self.nvme_block_device)
-                self.end_host.sudo_command("nvme disconnect -d {}".format(self.volume_name))
-                self.end_host.flush_cache_mem()
-                ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
-                # Detaching all the EC/LS volumes to the external server
-                fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                                           ns_id=self.ns_id,
-                                                                                           command_duration=self.command_timeout)[
-                                         'status'],
-                                     message="Detach nsid: {} from controller: {}".format(self.ns_id, ctrlr_uuid))
-
-                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
-                                                              command_timeout=self.command_timeout)
-            fun_test.shared_variables["setup_complete"] = False
-        except Exception as ex:
-            fun_test.critical(ex.message)
+        pass
 
 
 class EcCompBenchmarkEffortAuto(ECVolumeLevelTestcase):
@@ -345,13 +346,13 @@ class EcCompBenchmarkEffortAuto(ECVolumeLevelTestcase):
                               summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with "
                                       "F1's compression engine and compare it with Gzip. F1 Effort: Auto, Gzip Effort: 6",
                               steps="""
-                              1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
-                                 a Journal Volume and an LSV volume with compression enabled effort Auto.
-                              2. Attach LSV volume to the nvme controller.  
-                              3. Create file system on the attached device and mount it with a directory.
-                              4. Capture write count before copying data to mount point and after copying it.
-                              5. Compute percentage space savings and compare it with that achieved using gzip
-                              """)
+                          1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
+                             a Journal Volume and an LSV volume with compression enabled effort Auto.
+                          2. Attach LSV volume to the nvme controller.  
+                          3. Create file system on the attached device and mount it with a directory.
+                          4. Capture write count before copying data to mount point and after copying it.
+                          5. Compute percentage space savings and compare it with that achieved using gzip
+                          """)
 
     def setup(self):
         super(EcCompBenchmarkEffortAuto, self).setup()
@@ -369,13 +370,13 @@ class EcCompBenchmarkEffort64Gbps(ECVolumeLevelTestcase):
                               summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with "
                                       "F1's compression engine and compare it with Gzip. F1 Effort: 64Gbps, Gzip Effort: 1",
                               steps="""
-                              1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
-                                 a Journal Volume and an LSV volume with compression enabled effort Auto.
-                              2. Attach LSV volume to the nvme controller.  
-                              3. Create file system on the attached device and mount it with a directory.
-                              4. Capture write count before copying data to mount point and after copying it.
-                              5. Compute percentage space savings and compare it with that achieved using gzip
-                              """)
+                          1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
+                             a Journal Volume and an LSV volume with compression enabled effort Auto.
+                          2. Attach LSV volume to the nvme controller.  
+                          3. Create file system on the attached device and mount it with a directory.
+                          4. Capture write count before copying data to mount point and after copying it.
+                          5. Compute percentage space savings and compare it with that achieved using gzip
+                          """)
 
     def setup(self):
         super(EcCompBenchmarkEffort64Gbps, self).setup()
@@ -393,13 +394,13 @@ class EcCompBenchmarkEffort2Gbps(ECVolumeLevelTestcase):
                               summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with"
                                       " F1's compression engine and compare it with Gzip. F1 Effort: 2Gbps, Gzip Effort: 9",
                               steps="""
-                              1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
-                                 a Journal Volume and an LSV volume with compression enabled effort Auto.
-                              2. Attach LSV volume to the nvme controller.  
-                              3. Create file system on the attached device and mount it with a directory.
-                              4. Capture write count before copying data to mount point and after copying it.
-                              5. Compute percentage space savings and compare it with that achieved using gzip
-                              """)
+                          1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
+                             a Journal Volume and an LSV volume with compression enabled effort Auto.
+                          2. Attach LSV volume to the nvme controller.  
+                          3. Create file system on the attached device and mount it with a directory.
+                          4. Capture write count before copying data to mount point and after copying it.
+                          5. Compute percentage space savings and compare it with that achieved using gzip
+                          """)
 
     def setup(self):
         super(EcCompBenchmarkEffort2Gbps, self).setup()
