@@ -274,6 +274,7 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
     output = False
     try:
         ptable = PrettyTable()
+        ptable.align = 'r'
 
         # field name: flow_type
         field_name_key = 'flow_type'
