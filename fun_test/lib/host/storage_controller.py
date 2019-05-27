@@ -389,7 +389,7 @@ class StorageController(DpcshClient):
 
         return True
 
-    def configure_ec_volume_across_f1s(self, storage_controller_list = [], ec_info = {}, command_timeout=TIMEOUT):
+    def configure_ec_volume_across_f1s(self, ec_info = {}, command_timeout=TIMEOUT):
         """
         :param storage_controller_list:
         :param ec_info:
@@ -399,6 +399,7 @@ class StorageController(DpcshClient):
         The user has to provide the additional ec_info attribute to configure the EC volume's plex volume across
         multiple F1
         * storage_controller_list - list of storage controller objects in which the volume needs to be configured
+        * f1_ips - list of all F1s IP addresses
         * hosting_f1_list - list contains the F1s hosting each volume
         * plex_spread_list - Same as above, but instead of that the list containing the actual number of plexes to be
         configured in all the F1s, like [4, 2]
@@ -407,15 +408,30 @@ class StorageController(DpcshClient):
         compression_enabled = False
         if "ndata" not in ec_info or "nparity" not in ec_info or "capacity" not in ec_info:
             result = False
-            fun_test.critical("Mandatory attributes needed for the EC volume creation is missing in ec_info dictionary")
-            return (result, ec_info)
+            fun_test.simple_assert(False, "Mandatory ndata/nparity/capacity attributes available")
+
+        if "storage_controller_list" not in ec_info:
+            fun_test.simple_assert(False, "Storage controller object list available")
+
+        if "f1_ips" not in ec_info:
+            fun_test.simple_assert(False, "F1s IP addresses available")
+
+        if "host_ips" not in ec_info:
+            fun_test.simple_assert(False, "Host IP addresses available")
+
+        fun_test.simple_assert(len(ec_info["storage_controller_list"]) == len(ec_info["f1_ips"]),
+                               "F1 IP address available for all the storage controller")
+
+        fun_test.simple_assert(len(ec_info["num_volumes"]) == len(ec_info["host_ips"]),
+                               "Host IP address available for all the volumes")
 
         if "num_volumes" not in ec_info:
             fun_test.critical("Number of volumes needs to be configured is not provided. So going to configure only one"
                               "EC/LSV volume")
             ec_info["num_volumes"] = 1
 
-        num_f1 = len(storage_controller_list)
+        num_f1 = len(ec_info["storage_controller_list"])
+
         # If hosting_f1_list is not provided then the first volume will be host in first F1, second volume in second F1 and so on
         if "hosting_f1_list" not in ec_info:
             ec_info["hosting_f1_list"] = [0] * ec_info["num_volumes"]
@@ -429,11 +445,37 @@ class StorageController(DpcshClient):
                     i += 1
                     j += 1
 
-        # If plex spread % or count is not given, equally splitting the plex across all the F1
+        # Check whether the spread list is given for all the volumes, else copy the one and only available spread to
+        # all the volumes
+        if "plex_spread_list" in ec_info and type(ec_info["plex_spread_list"][0] == int):
+            cur_spread = ec_info["plex_spread_list"]
+            ec_info["plex_spread_list"] = []
+            for num in range(ec_info["num_volumes"]):
+                ec_info["plex_spread_list"].append(cur_spread)
+
+        # If plex spread list is not given, equally splitting the plex across all the F1
         if "plex_spread_list" not in ec_info:
-            ec_info["plex_spread_list"] = [0] * num_f1
-            for i in range(ec_info["ndata"] + ec_info["nparity"]):
-                ec_info["plex_spread_list"][i % num_f1] += 1
+            ec_info["plex_spread_list"] = []
+            for num in range(ec_info["num_volumes"]):
+                ec_info["plex_spread_list"].append([0] * num_f1)
+                for i in range(ec_info["ndata"] + ec_info["nparity"]):
+                    ec_info["plex_spread_list"][num][i % num_f1] += 1
+
+        # In case if the spread list is not equal to the num_volumes, then copy last spread to the rest of the volumes
+        if len(ec_info["plex_spread_list"]) != ec_info["num_volumes"]:
+            last_spread = ec_info["plex_spread_list"]
+            ec_info["plex_spread_list"].extend([last_spread] *
+                                               (ec_info["num_volumes"] - len(ec_info["plex_spread_list"])))
+
+        # Preparing which plex volume needs to configured in which F1
+        plex_to_f1_map = []
+        for num in range(ec_info["num_volumes"]):
+            plex_to_f1_map.append([0] * (ec_info["ndata"] + ec_info["nparity"]))
+            mindex = 0
+            for sc_index, num_vol in enumerate(ec_info["plex_spread_list"][num]):
+                for i in range(num_vol):
+                    plex_to_f1_map[num][mindex] = sc_index
+                    mindex += 1
 
         # Check if Compression has to be enabled on the Device
         if "compress" in ec_info.keys() and ec_info['compress']:
@@ -456,6 +498,7 @@ class StorageController(DpcshClient):
             ec_info["uuids"][num]["ec"] = []
             ec_info["uuids"][num]["jvol"] = []
             ec_info["uuids"][num]["lsv"] = []
+            ec_info["uuids"][num]["ctlr"] = []
 
             # Calculating the sizes of all the volumes together creates the EC or LSV on top EC volume
             ec_info["volume_capacity"][num] = {}
@@ -485,14 +528,35 @@ class StorageController(DpcshClient):
                 ec_info["volume_capacity"][num][vtype] = ec_info["volume_capacity"][num][vtype] + \
                                                          ec_info["volume_block"][vtype]
 
+            # Configuring the controller in all the F1s for the current volume
+            cur_vol_host_f1 = ec_info["hosting_f1_list"][num]
+            cur_plex_to_f1_map = plex_to_f1_map[num]
+            for index, sc in enumerate(ec_info["storage_controller_list"]):
+                ctrlr_uuid = utils.generate_uuid()
+                ec_info["uuids"][num]["ctlr"].append(ctrlr_uuid)
+                if cur_vol_host_f1 == index:
+                    transport = "TCP"
+                    remote_ip = ec_info["host_ips"][num]
+                else:
+                    transport = "RDS"
+                    remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
+                command_result = sc.create_controller(ctrlr_uuid=ctrlr_uuid, transport=transport, remote_ip=remote_ip,
+                                                      nqn="nqn"+str(index), port=1099,
+                                                      command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"],
+                                     "Configuring {} transport Storage Controller for {} remote IP on {} DUT".
+                                     format(transport, remote_ip, index))
+
             # Configuring ndata and nparity number of BLT volumes
+            plex_num = 0
             for vtype in ["ndata", "nparity"]:
                 ec_info["uuids"][num][vtype] = []
                 for i in range(ec_info[vtype]):
                     this_uuid = utils.generate_uuid()
                     ec_info["uuids"][num][vtype].append(this_uuid)
                     ec_info["uuids"][num]["blt"].append(this_uuid)
-                    command_result = self.create_volume(
+                    sc_index = cur_plex_to_f1_map[plex_num]
+                    command_result = ec_info["storage_controller_list"][sc_index].create_volume(
                         type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
                         block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
                         command_duration=command_timeout)
@@ -501,6 +565,7 @@ class StorageController(DpcshClient):
                                          "Creating {} {} {} {} {} bytes volume on DUT instance".
                                          format(num, i, vtype, ec_info["volume_types"][vtype],
                                                 ec_info["volume_capacity"][num][vtype]))
+                    plex_num += 1
 
             # Configuring EC volume on top of BLT volumes
             this_uuid = utils.generate_uuid()
