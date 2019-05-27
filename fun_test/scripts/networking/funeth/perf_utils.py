@@ -229,7 +229,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
-def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, filename):
+def populate_result_summary(results, funsdk_commit, funsdk_bld, driver_commit, driver_bld, filename):
     """Populate result summary file.
 
     :param results: list of dict. One element is like below.
@@ -312,8 +312,10 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
         for row in sorted(rows, key=lambda elem: elem[0]):
             ptable.add_row(row)
 
-        lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
-                 ptable.get_string()]
+        lines = [
+            'FunOS: {}, FunSDK: {} {}, Driver: {} {}\n'.format(
+                funos_bld, funsdk_commit, funsdk_bld, driver_commit, driver_bld),
+            ptable.get_string()]
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'w') as f:

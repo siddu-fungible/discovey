@@ -123,7 +123,7 @@ class Funeth:
                 result_list = []
                 for repo, repo_dir in zip(('FunSDK', 'Driver'), (sdkdir, drvdir)):
                     fun_test.log('Get {} commit/build info'.format(repo))
-                    output = linux_obj.command('XTERM=xterm-256color; cd {}; git log --oneline -n 5'.format(repo_dir))
+                    output = linux_obj.command('TERM=xterm-256color; cd {}; git log --oneline -n 5'.format(repo_dir))
                     match = re.search(r'(\w+).*? tag: (bld_\d+)', output)
                     if match:
                         commit = match.group(1)
@@ -156,14 +156,15 @@ class Funeth:
                 linux_obj = self.linux_obj_dict[hu]
                 result_list.append(_update_src2(linux_obj))
 
-        if len(set(result_list)) != 1:
+        result = result_list[0]
+        if not all(r == result for r in result_list):
             fun_test.critical('Different FunSDK/Driver commit/bld in hosts')
             return False
-        elif len(result_list[0] != 4):
+        elif len(result) != 4:
             fun_test.critical('Failed to update FunSDK/Driver source')
             return False
         else:
-            return result_list[0]  # FunSDK commit, FunSDK bld, Driver commit, Driver bld
+            return result  # FunSDK commit, FunSDK bld, Driver commit, Driver bld
 
     def build(self, parallel=False):
         """Build driver."""

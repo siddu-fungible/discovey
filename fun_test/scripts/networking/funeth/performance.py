@@ -52,12 +52,14 @@ class FunethPerformance(sanity.FunethSanity):
 
     def setup(self):
         super(FunethPerformance, self).setup()
+        funsdk_commit = super(FunethPerformance, self).__getattribute__('funsdk_commit'),
         funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld'),
-        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld'),
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
+        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld'),
+        fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
-        fun_test.shared_variables['driver_bld'] = driver_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
+        fun_test.shared_variables['driver_bld'] = driver_bld
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -99,9 +101,10 @@ class FunethPerformance(sanity.FunethSanity):
 
     def cleanup(self):
         perf_utils.populate_result_summary(fun_test.shared_variables['results'],
+                                           fun_test.shared_variables['funsdk_commit'],
                                            fun_test.shared_variables['funsdk_bld'],
-                                           fun_test.shared_variables['driver_bld'],
                                            fun_test.shared_variables['driver_commit'],
+                                           fun_test.shared_variables['driver_bld'],
                                            '00_summary_of_results.txt')
         super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
