@@ -130,7 +130,7 @@ class Funeth:
 
                 # Get driver bld
                 fun_test.log('Get driver build/commit info')
-                output = linux_obj.command('cd {}; git log | head -n 5'.format(drvdir))
+                output = linux_obj.command('cd {}; git show HEAD'.format(drvdir))
                 match = re.search(r'commit (\w+).* tag: (bld_\d+)', output)
                 if match:
                     drv_commit = match.group(1)

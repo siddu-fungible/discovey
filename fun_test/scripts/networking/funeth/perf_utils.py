@@ -273,16 +273,30 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
     """
     output = False
     try:
-        field_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts',]
         ptable = PrettyTable()
-        field_names = ['', ]
+
+        # field name: flow_type
+        field_name_key = 'flow_type'
+        field_names = [field_name_key, ]
         for result in results:
-            field_names.append(', '.join(['{}: {}'.format(k, result[k]) for k in field_name_keys]))
+            field_names.append(result[field_name_key])
         ptable.field_names = field_names
 
         r0 = results[0]
         funos_bld = r0.get('version')
 
+        # rows: protocol, frame_size, num_flows, num_hosts
+        row_name_keys = ['protocol', 'frame_size', 'num_flows', 'num_hosts',]
+        rows0 = []
+        for k in row_name_keys:
+            row = [k, ]
+            for result in results:
+                row.append(result.get(k))
+            rows0.append(row)
+        for row in rows0:
+            ptable.add_row(row)
+
+        # rows: latency, pps, throughput
         rows = []
         for k in r0:
             if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
@@ -294,10 +308,7 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
                     row.append(v)
                 rows.append(row)
 
-        def sort_by_key(elem):
-            return elem[0]
-
-        for row in sorted(rows, key=sort_by_key):
+        for row in sorted(rows, key=lambda elem: elem[0]):
             ptable.add_row(row)
 
         lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
