@@ -4,7 +4,7 @@ from lib.system import utils
 import re
 
 
-def configure_ec_volume_across_f1s(self, ec_info={}, command_timeout=5):
+def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
     """
     :param storage_controller_list:
     :param ec_info:
