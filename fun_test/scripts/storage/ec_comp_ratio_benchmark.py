@@ -65,7 +65,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Global Config: {}".format(self.__dict__))
         testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(dut_index=self.f1_in_use,
+        topology_helper.set_dut_parameters(dut_index=0,
                                            custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
         topology = topology_helper.deploy()
@@ -104,56 +104,17 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
         # Configure Linux Host
-        host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
-        fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
+        fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout,
+                                                  max_wait_time=self.reboot_timeout),
+                             "End Host {} is up".format(self.end_host.host_ip))
 
-        interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
-                                                             self.test_interface_name)
-        interface_mac_config = "ip link set {} address {}".format(self.test_interface_name,
-                                                                  self.test_network["test_interface_mac"])
-        link_up_cmd = "ip link set {} up".format(self.test_interface_name)
-        static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
-                                               self.test_network["test_net_route"]["arp"])
-
-        self.end_host.sudo_command(command=interface_ip_config,
-                                   timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                      message="Configuring test interface IP address")
-
-        self.end_host.sudo_command(command=interface_mac_config,
-                                   timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                      message="Assigning MAC to test interface")
-
-        self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Bringing up test link")
-
-        fun_test.test_assert(self.end_host.ifconfig_up_down(interface=self.test_interface_name,
-                                                            action="up"), "Bringing up test interface")
-
-        self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
-                                   gateway=self.test_network["test_net_route"]["gw"],
-                                   outbound_interface=self.test_interface_name,
-                                   timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
-
-        self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                      message="Adding static ARP to F1 route")
+        configure_endhost_interface(end_host=self.end_host,
+                                    test_network=self.test_network,
+                                    interface_name=self.test_interface_name)
 
         # Loading the nvme and nvme_tcp modules
-        self.end_host.modprobe(module="nvme")
-        fun_test.sleep("Loading nvme module", 2)
-        command_result = self.end_host.lsmod(module="nvme")
-        fun_test.simple_assert(command_result, "Loading nvme module")
-        fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
-
-        self.end_host.modprobe(module="nvme_tcp")
-        fun_test.sleep("Loading nvme_tcp module", 2)
-        command_result = self.end_host.lsmod(module="nvme_tcp")
-        fun_test.simple_assert(command_result, "Loading nvme_tcp module")
-        fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
-                                      message="Loading nvme_tcp module")
+        load_nvme_module(self.end_host)
+        load_nvme_tcp_module(self.end_host)
 
     def cleanup(self):
         try:
@@ -359,11 +320,11 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def cleanup(self):
         try:
-            self.end_host.unmount_volume(volume=self.volume_name)
-            self.end_host.sudo_command("nvme disconnect -d {}".format(self.volume_name))
-            self.end_host.flush_cache_mem()
-            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
             if fun_test.shared_variables["setup_complete"]:
+                self.end_host.unmount_volume(volume=self.nvme_block_device)
+                self.end_host.sudo_command("nvme disconnect -d {}".format(self.volume_name))
+                self.end_host.flush_cache_mem()
+                ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
                 # Detaching all the EC/LS volumes to the external server
                 fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                            ns_id=self.ns_id,
