@@ -511,6 +511,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
                                           message="{} device type check".format(volume_name))
 
+            fun_test.log("Connect done")
             if self.warm_up_traffic and not self.create_file_system:
                 fun_test.log("Condition the disk")
                 # fio_output = end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
@@ -633,6 +634,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     else:
                         test_filename = self.nvme_block_device
                     wait_time = self.host_count + 1 - thread_count
+                    # fun_test.log("Wait time for thread {} is {}".format(thread_count, wait_time))
                     thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                             func=fio_parser,
                                                                             arg1=end_host_thread[thread_count],
@@ -648,7 +650,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
             fun_test.sleep("Fio threads started", 10)
             for x in range(1, self.host_count + 1, 1):
-                fun_test.log("Joining thread {}".format(x))
+                fun_test.log("Joining fio thread {}".format(x))
                 fun_test.join_thread(fun_test_thread_id=thread_id[x])
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fun_test.shared_variables["fio"][x])
@@ -659,6 +661,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             self.iostat_output = {}
             for x in range(1, self.host_count + 1, 1):
                 fun_test.join_thread(fun_test_thread_id=iostat_thread)
+                fun_test.log("Joining iostat thread {}".format(x))
                 self.iostat_output[x] = fun_test.shared_variables["iostat_output"][x].split("\n")
 
             total_tps = 0
@@ -696,13 +699,13 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             for x in range(1, self.host_count + 1, 1):
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
-                fun_test.log(fio_output[combo][mode][x])
+                # fun_test.log(fio_output[combo][mode][x])
                 for op, stats in fio_output[combo][mode][x].items():
                     for field, value in stats.items():
                         if field == "latency":
                             fio_output[combo][mode][x][op][field] = int(round(value / multiplier))
-                fun_test.log("FIO Command Output after multiplication:")
-                fun_test.log(fio_output[combo][mode][x])
+                # fun_test.log("FIO Command Output after multiplication:")
+                # fun_test.log(fio_output[combo][mode][x])
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
