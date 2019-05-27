@@ -380,13 +380,16 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     container_cli.command("sudo ifconfig bond0 up")
             container_cli.command("ping 15.42.1.1 -c 10")
             container_cli.command("sudo ip route add 15.0.0.0/8 via 15.42.1.1 dev bond0")
-            container_cli.command("ping 15.1.5.2 -c 10")
+            container_cli.command("ping {} -c 10".format(tb_config['tg_info'][host_index]['iface_ip']))
             fun_test.log("FunCP brought up")
+
+            '''
             # Configuring Local thin block volume
             command_result = self.storage_controller.json_execute(verb="enable_counters",
                                                                   command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+            '''
 
             # Pass F1 IP to controller
             command_result = self.storage_controller.ip_cfg(ip=tb_config['dut_info'][0]['f1_ip'],
@@ -704,7 +707,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
-                        fun_test.log("op is: {} and field is: {} ".format(op, field))
+                        # fun_test.log("op is: {} and field is: {} ".format(op, field))
                         actual = fio_output[combo][mode][x][op][field]
                         row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
                                                      int((value * (1 + self.fio_pass_threshold))))
