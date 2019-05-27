@@ -100,8 +100,7 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['results'] = results
 
     def cleanup(self):
-        perf_utils.populate_result_summary(tc_ids,
-                                           fun_test.shared_variables['results'],
+        perf_utils.populate_result_summary(fun_test.shared_variables['results'],
                                            fun_test.shared_variables['funsdk_commit'],
                                            fun_test.shared_variables['funsdk_bld'],
                                            fun_test.shared_variables['driver_commit'],
@@ -305,7 +304,6 @@ def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, n
 if __name__ == "__main__":
     ts = FunethPerformance()
     tcs = []
-    tc_ids = []
     id = 1000  # x... - flow_type, .x.. - protocol, ..x. - frame size, ...x - num of flows
     for flow_type in FLOW_TYPES_DICT:
         for tool in TOOLS:
@@ -330,7 +328,6 @@ if __name__ == "__main__":
                             tcs.append(create_testcases(
                                 sub_id_num_flows, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size)
                             )
-                            tc_ids.append(sub_id_num_flows)
                             sub_id_num_flows += 1
                             if num_flows == 1 or flow_type == 'HU_HU_NFCP':
                                 break
