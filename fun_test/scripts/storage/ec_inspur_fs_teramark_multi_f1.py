@@ -144,8 +144,9 @@ class ECVolumeLevelScript(FunTestScript):
                 required_host_names.append(host_name)
         print ("required_host_names: {}".format(required_host_names))
 
-        hosts_test_interfaces = []
-        host_handles = []
+        self.hosts_test_interfaces = []
+        self.host_handles = []
+        self.host_ips = []
         for host_name, host in hosts.items():
             if host_name in required_host_names:
                 print ("host are: {}".format(host))
@@ -156,15 +157,18 @@ class ECVolumeLevelScript(FunTestScript):
                 print ("test_interfaces: {}".format(test_interfaces))
 
                 test_interface_0 = host.get_test_interface(index=0)
-                hosts_test_interfaces.append(host.get_test_interface(index=0))
-                print ("host_obj is: {}".format(hosts_test_interfaces))
-                print ("host_obj dir is: {}".format(dir(hosts_test_interfaces)))
+                self.hosts_test_interfaces.append(host.get_test_interface(index=0))
+                print ("host_obj is: {}".format(self.hosts_test_interfaces))
+                print ("host_obj dir is: {}".format(dir(self.hosts_test_interfaces)))
 
                 print ("test_interface_0 : {}".format(test_interface_0))
                 print ("test_interface_0 dir : {}".format(dir(test_interface_0)))
                 print ("test_interface_0 type: {}".format(type(test_interface_0)))
 
                 fun_test.log("Host-IP: {}".format(test_interface_0.ip))
+                host_ip = test_interface_0.ip
+                self.host_ips.append(host_ip.split('/')[0])
+
                 fun_test.log("Peer-info: {}".format(test_interface_0.peer_info))
                 fun_test.log("Switch-name: {}".format(test_interface_0.peer_info["name"]))
                 fun_test.log("Switch-port: {}".format(test_interface_0.peer_info["port"]))
@@ -172,13 +176,14 @@ class ECVolumeLevelScript(FunTestScript):
                 host_instance = host.get_instance()
                 print ("hosts_instance: {}".format(host_instance))
                 print ("hosts_instance dir: {}".format(dir(host_instance)))
-                host_handles.append(host_instance)
+                self.host_handles.append(host_instance)
                 # host_instance.command("date")
 
-        print ("hosts_instances: {}".format(host_handles))
-        print ("hosts_instances dir: {}".format(dir(host_handles)))
+        print ("hosts_instances: {}".format(self.host_handles))
+        print ("hosts_instances dir: {}".format(dir(self.host_handles)))
+        print ("host_ips are: {}".format(self.host_ips))
 
-        for host_handle in host_handles:
+        for host_handle in self.host_handles:
             host_handle.command("hostname")
             host_handle.reboot(non_blocking=True)
 
@@ -187,6 +192,9 @@ class ECVolumeLevelScript(FunTestScript):
         self.fs_spec = []
         self.come_obj = []
         self.f1_obj = {}
+        self.sc_obj = []
+        self.f1_ips = []
+        self.gateway_ips = []
         for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
             curr_index = i - self.dut_start_index
             self.fs_obj.append(topology.get_dut_instance(index=i))
@@ -217,8 +225,13 @@ class ECVolumeLevelScript(FunTestScript):
             except:
                 pass
             self.f1_obj[curr_index] = []
+            # self.f1_ips[curr_index] = []  # TODO: check
+            # self.sc_obj[curr_index] = []  # TODO: Check
+            # self.gateway_ips[curr_index] = []  # TODO: check
             for j in xrange(self.num_f1_per_fs):
                 self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
+                self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller)
+                self.sc_obj[curr_index].append(self.f1_obj[curr_index][j].get_dpc_storage_controller)  # TODO: Check
 
                 fpg_interfaces = self.fs_spec[curr_index].get_fpg_interfaces(f1_index=j)
                 for fpg_interface_index, fpg_interface in fpg_interfaces.items():
@@ -231,6 +244,10 @@ class ECVolumeLevelScript(FunTestScript):
                 for bond_interface_index, bond_interface in bond_interfaces.items():
                     fun_test.log("Bond interface index: {}".format(bond_interface_index))
                     fun_test.log("IP: {}".format(bond_interface.ip))
+                    bond_interface_ip = bond_interface.ip
+                    self.f1_ips.append(bond_interface_ip.split('/')[0])
+                    # self.f1_ips[curr_index].append(bond_interface_ip.split('/')[0])  # TODO Check
+                    # self.gateway_ips[curr_index].append(self.f1_ips[curr_index].replace(r'\.\d+$', '.1'))  # TODO check
                     fpg_slaves = bond_interface.fpg_slaves
                     fun_test.log("FPG slaves: {}".format(fpg_slaves))
 
@@ -245,6 +262,14 @@ class ECVolumeLevelScript(FunTestScript):
                     pass
                 try:
                     print("f1_obj[{}][{}] is: {}".format(curr_index, j, dir(self.f1_obj[curr_index][j])))
+                except:
+                    pass
+                try:
+                    print ("storage_controller object for f1_obj[{}][{}] is: {}".format(curr_index, j, self.sc_obj))
+                except:
+                    pass
+                try:
+                    print ("F1 IP for f1_obj[{}][{}] is: {}".format(curr_index, j, self.f1_ips))
                 except:
                     pass
 
@@ -281,12 +306,19 @@ class ECVolumeLevelScript(FunTestScript):
             pass
 
         hosts_up_count = 0
-        for host_handle in host_handles:
+        for host_handle in self.host_handles:
             # Ensure hosts are up after reboot
             # TODO: check reboot timeout
             fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
                                  message="Ensure Host is reachable after reboot")
             hosts_up_count += 1
+
+            # TODO: enable after mpstat check is added
+            """
+            # Check and install systat package
+            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+            """
 
             # Ensure required modules are loaded on host server, if not load it
             for module in self.load_modules:
@@ -302,6 +334,10 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Adding Static route and Ensuring Host is able to ping to both FunCP containers
         # TODO: Should we add gateway IP in hosts.json or we should derive it?
+        """
+        f1_gateway_ip = []
+        f1_gateway_ip = self.f1_ips[index].replace(r'\.\d+$', '.1')
+        """
         gateway_ip = ["15.43.1.1", "15.43.2.1"]
         for index in xrange(self.num_duts):
             for f1_index, container_name in enumerate(sorted(self.funcp_spec[index]["container_names"])):
@@ -322,8 +358,8 @@ class ECVolumeLevelScript(FunTestScript):
                         expected=0, actual=self.funcp_obj[index].container_info[container_name].exit_status(),
                         message="Configure static route")"""
 
-                    for host_handle in host_handles:
-                        ping_status = host_handle.ping(dst=gateway_ip[index])
+                    for ip in xrange(len(gateway_ip)):
+                        ping_status = self.host_handles[index].ping(dst=gateway_ip[ip])
                         fun_test.test_assert(ping_status,
                                              "Host is able to ping to {}'s bond interface".format(container_name))
                 except:
