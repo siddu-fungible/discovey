@@ -1909,6 +1909,8 @@ class Linux(object, ToDictMixin):
                 system is prone to crashes
         :param reboot_initiated_wait_time: time to wait until we can confirm that reboot was initiated
         :param reboot_initiated_check: check if reboot was successfully initiated, using a failing ping or ssh test
+               This tries to address extreme cases where the system remains alive even after a reboot command was
+               executed
         :return:
         """
         result = True
