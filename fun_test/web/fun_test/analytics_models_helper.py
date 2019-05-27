@@ -35,7 +35,7 @@ def invalidate_goodness_cache():
 def get_data_collection_time():
     result = get_current_time()
     if fun_test.suite_execution_id:
-        result = fun_test.get_stored_enviroment_variable("data_collection_time")
+        result = fun_test.get_stored_environment_variable("data_collection_time")
         if not result:
             date_time = get_current_time()
             fun_test.update_job_environment_variable("data_collection_time", str(date_time))
