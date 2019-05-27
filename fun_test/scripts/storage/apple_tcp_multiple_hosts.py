@@ -80,19 +80,19 @@ tb_config = {
         },
         7: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.112",
-            "user": "localadmin",
-            "passwd": "Precious1*",
-            "iface_ip": "15.1.12.2",
-            "iface_gw": "15.1.12.1"
-        },
-        8: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
             "ip": "10.1.105.113",
             "user": "localadmin",
             "passwd": "Precious1*",
             "iface_ip": "15.1.13.2",
             "iface_gw": "15.1.13.1"
+        },
+        8: {
+            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
+            "ip": "10.1.105.112",
+            "user": "localadmin",
+            "passwd": "Precious1*",
+            "iface_ip": "15.1.12.2",
+            "iface_gw": "15.1.12.1"
         },
         9: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
@@ -175,7 +175,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def setup(self):
         # Reboot hosts
-        # for host_index in range(0, 9):
+        # for host_index in range(0, 8):
         #     end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
         #                      ssh_username=tb_config['tg_info'][host_index]['user'],
         #                      ssh_password=tb_config['tg_info'][host_index]['passwd']
@@ -184,7 +184,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         #         end_host.sudo_command("reboot", timeout=5)
         #     except:
         #         fun_test.log("Reboot of {} failed".format(host_index))
-#
+
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1, disable_uart_logger=True)
         fun_test.shared_variables["fs"] = fs
 
@@ -210,7 +210,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         #     fun_test.log("Couldn't stop docker")
         try:
             for end_host in fun_test.shared_variables["end_host_list"]:
-                end_host.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
                 end_host.sudo_command("for i in `pgrep fio`;do kill -9 $i;done")
                 end_host.sudo_command("umount /mnt")
                 fun_test.sleep("Unmounted vol", 1)
@@ -561,7 +560,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         internal_result = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
@@ -682,9 +681,11 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         non_zero += 1
                 avg_tps[count] = total_tps / non_zero
                 avg_kbs_read[count] = total_kbs_read / non_zero
+                '''
                 fun_test.log("Host {} the avg TPS is : {}".format(count, avg_tps[count]))
                 fun_test.log("Host {} the avg read rate is {} KB/s".format(count, avg_kbs_read[count]))
                 fun_test.log("Host {} the IO size is {} kB".format(count, avg_kbs_read[count] / avg_tps[count]))
+                '''
                 collective_tps += avg_tps[count]
                 collective_kbs_read += avg_kbs_read[count]
 

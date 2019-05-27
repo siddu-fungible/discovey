@@ -136,18 +136,18 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
 def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='before'):
 
     # peek resource/pc/[1], and peek resource/pc/[1]
-    for nc_obj in network_controller_objs:
-        for pc_id in (1, 2):
-            fun_test.log_module_filter("random_module")
-            checkpoint = "Peek stats resource pc {} {} test".format(pc_id, when)
-            resource_pc_temp_filename = '{}_F1_{}_resource_pc_{}_{}.txt'.format(str(version),
-                                                                                network_controller_objs.index(nc_obj),
-                                                                                pc_id, when)
-            res_result = helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
-                                                                 filename=resource_pc_temp_filename,
-                                                                 pc_id=pc_id, display_output=False)
-            fun_test.log_module_filter_disable()
-            fun_test.simple_assert(res_result, checkpoint)
+    #for nc_obj in network_controller_objs:
+    #    for pc_id in (1, 2):
+    #        fun_test.log_module_filter("random_module")
+    #        checkpoint = "Peek stats resource pc {} {} test".format(pc_id, when)
+    #        resource_pc_temp_filename = '{}_F1_{}_resource_pc_{}_{}.txt'.format(str(version),
+    #                                                                            network_controller_objs.index(nc_obj),
+    #                                                                            pc_id, when)
+    #        res_result = helper.populate_pc_resource_output_file(network_controller_obj=nc_obj,
+    #                                                             filename=resource_pc_temp_filename,
+    #                                                             pc_id=pc_id, display_output=False)
+    #        fun_test.log_module_filter_disable()
+    #        fun_test.simple_assert(res_result, checkpoint)
 
     ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
@@ -166,8 +166,6 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     fpg_stats = {}
     for nc_obj in network_controller_objs:
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
-        fun_test.log('{} dpc: echo hello'.format(f1))
-        nc_obj.echo_hello()
         if not fpg_stats:
             for i in fpg_interfaces:
                 fun_test.log('{} dpc: Get FPG stats'.format(f1))
@@ -229,3 +227,95 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
         [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
+
+
+def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, filename):
+    """Populate result summary file.
+
+    :param results: list of dict. One element is like below.
+
+        {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_P50_h2h": 34.0,
+        "latency_P50_h2n": -1,
+        "latency_P50_n2h": -1,
+        "latency_P90_h2h": 35.0,
+        "latency_P90_h2n": -1,
+        "latency_P90_n2h": -1,
+        "latency_P99_h2h": 36.0,
+        "latency_P99_h2n": -1,
+        "latency_P99_n2h": -1,
+        "latency_avg_h2h": 34.2,
+        "latency_avg_h2n": -1,
+        "latency_avg_n2h": -1,
+        "latency_max_h2h": 78.0,
+        "latency_max_h2n": -1,
+        "latency_max_n2h": -1,
+        "latency_min_h2h": 32.0,
+        "latency_min_h2n": -1,
+        "latency_min_n2h": -1,
+        "num_flows": 8,
+        "num_hosts": 1,
+        "offloads": true,
+        "pps_h2h": 1046038.05,
+        "pps_h2n": -1,
+        "pps_n2h": -1,
+        "protocol": "TCP",
+        "throughput_h2h": 12067.095,
+        "throughput_h2n": -1,
+        "throughput_n2h": -1,
+        "timestamp": "2019-05-26 12:37:54.859905-07:00",
+        "version": "6617-6-g60146766df",
+    }
+
+    :return: Bool
+    """
+    output = False
+    try:
+        field_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts',]
+        ptable = PrettyTable()
+        field_names = ['', ]
+        for result in results:
+            field_names.append(', '.join(['{}: {}'.format(k, result[k]) for k in field_name_keys]))
+        ptable.field_names = field_names
+
+        r0 = results[0]
+        funos_bld = r0.get('version')
+
+        rows = []
+        for k in r0:
+            if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
+                row = [k, ]
+                for result in results:
+                    v = result.get(k)
+                    if v == -1:
+                        v = '.'
+                    row.append(v)
+                rows.append(row)
+
+        def sort_by_key(elem):
+            return elem[0]
+
+        for row in sorted(rows, key=sort_by_key):
+            ptable.add_row(row)
+
+        lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
+                 ptable.get_string()]
+        file_path = fun_test.get_test_case_artifact_file_name(filename)
+
+        with open(file_path, 'w') as f:
+            f.writelines(lines)
+
+        fun_test.add_auxillary_file(description=filename, filename=file_path)
+
+        fun_test.log_disable_timestamps()
+        fun_test.log_section('Summary of results')
+        for line in lines:
+            fun_test.log(line)
+        fun_test.log_enable_timestamps()
+
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output

@@ -266,6 +266,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["reboot_timeout"] = self.reboot_timeout
 
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         lspci_output = self.end_host.lspci(grep_filter=self.ethernet_adapter)
@@ -348,6 +349,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.remote_ip = fun_test.shared_variables["remote_ip"]
             self.attach_transport = fun_test.shared_variables["attach_transport"]
             self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+            self.reboot_timeout = fun_test.shared_variables["reboot_timeout"]
             if fun_test.shared_variables["ec"]["setup_created"]:
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
@@ -367,7 +369,7 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
-            self.fs.come_reset(power_cycle=True)
+            self.fs.come_reset(max_wait_time=self.reboot_timeout)
 
         self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)

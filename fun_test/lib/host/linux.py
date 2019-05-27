@@ -1967,7 +1967,7 @@ class Linux(object, ToDictMixin):
             fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
         if not host_is_up:
             result = False
-            fun_test.critical("Host: {} is not reachable after reboot".format(self.host_ip))
+            fun_test.critical("Host: {} is not reachable".format(self.host_ip))
 
         if not host_is_up and service_host:
             result = False
