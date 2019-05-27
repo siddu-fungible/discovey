@@ -202,10 +202,11 @@ class FunethSanity(FunTestScript):
         fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
 
         # TODO: Clean up control plane
-        linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
-        linux_obj.sudo_command('rmmod funeth')
-        linux_obj.sudo_command('docker kill F1-0 F1-1')
-        linux_obj.sudo_command('rm -fr /tmp/*')
+        if control_plane:
+            linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
+            linux_obj.sudo_command('rmmod funeth')
+            linux_obj.sudo_command('docker kill F1-0 F1-1')
+            linux_obj.sudo_command('rm -fr /tmp/*')
 
 
 def collect_stats():
@@ -568,7 +569,7 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
             FunethTestReboot,
     ):
         ts.add_test_case(tc())
