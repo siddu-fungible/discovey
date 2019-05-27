@@ -291,7 +291,6 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
                     row.append(v)
                 ptable.add_row(row)
 
-        import pdb; pdb.set_trace()
         lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
                  ptable.get_string()]
         file_path = fun_test.get_test_case_artifact_file_name(filename)
