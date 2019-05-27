@@ -163,7 +163,7 @@ class FunTest:
         self.abort_requested = False
         self.environment = args.environment
         if self.environment:
-            self.environment = self.environment.decode('utf-8','ignore').encode("utf-8")
+            self.environment = self.environment.decode('utf-8', 'ignore').encode("utf-8")
         self.inputs = args.inputs
         self.re_run_info = args.re_run_info
         self.local_settings = {}
@@ -234,15 +234,22 @@ class FunTest:
         self._prepare_build_parameters()
         self.closed = False
 
-    def get_stored_enviroment_variable(self, variable_name):
+    def get_stored_environment_variable(self, variable_name):
+        result = None
+        if self.suite_execution_id:
+            stored_environment = self.get_stored_environment()
+            if stored_environment:
+                result = stored_environment[variable_name] if variable_name in stored_environment else None
+        return result
+
+    def get_stored_environment(self):
         result = None
         if self.suite_execution_id:
             suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
             stored_environment_string = suite_execution.environment
             if stored_environment_string is not None:
                 stored_environment = self.parse_string_to_json(stored_environment_string)
-                if stored_environment:
-                    result = stored_environment[variable_name] if variable_name in stored_environment else None
+                result = stored_environment
         return result
 
     def _prepare_build_parameters(self):
@@ -251,7 +258,7 @@ class FunTest:
             self.build_parameters["tftp_image_path"] = tftp_image_path
         else:
             # Check if it was stored by a previous script
-            tftp_image_path = self.get_stored_enviroment_variable(variable_name="tftp_image_path")
+            tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
             self.build_parameters["tftp_image_path"] = tftp_image_path
         user_supplied_build_parameters = self.get_job_environment_variable("build_parameters")
         if user_supplied_build_parameters:
@@ -295,8 +302,13 @@ class FunTest:
 
     def get_job_environment(self):
         result = {}
-        if self.environment:
-            result = self.parse_string_to_json(self.environment)
+        if not self.suite_execution_id:
+            if self.environment:
+                result = self.parse_string_to_json(self.environment)
+        else:
+            stored_environment = self.get_stored_environment()
+            if stored_environment:
+                result = stored_environment
         return result
 
     def get_job_environment_variable(self, variable):
