@@ -123,7 +123,8 @@ class Funeth:
                 result_list = []
                 for repo, repo_dir in zip(('FunSDK', 'Driver'), (sdkdir, drvdir)):
                     fun_test.log('Get {} commit/build info'.format(repo))
-                    output = linux_obj.command('TERM=xterm-256color; cd {}; git log --oneline -n 5'.format(repo_dir))
+                    output = linux_obj.command(
+                        'git config --global core.pager ""; cd {}; git log --oneline -n 5'.format(repo_dir))
                     match = re.search(r'(\w+).*? tag: (bld_\d+)', output)
                     if match:
                         commit = match.group(1)
