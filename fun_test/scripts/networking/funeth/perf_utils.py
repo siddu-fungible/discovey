@@ -275,9 +275,10 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
     try:
         field_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts',]
         ptable = PrettyTable()
-        ptable.field_names = ['', ]
+        field_names = ['', ]
         for result in results:
-            ptable.field_names.extend(['\n'.join(['{}: {}'.format(k, result[k]) for k in field_name_keys])])
+            field_names.append('\n'.join(['{}: {}'.format(k, result[k]) for k in field_name_keys]))
+        ptable.field_names = field_names
         r0 = results[0]
         funos_bld = r0.get('version')
         for k in r0:
@@ -290,6 +291,7 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
                     row.append(v)
                 ptable.add_row(row)
 
+        import pdb; pdb.set_trace()
         lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
                  ptable.get_string()]
         file_path = fun_test.get_test_case_artifact_file_name(filename)
