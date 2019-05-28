@@ -286,7 +286,7 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
         ptable.field_names = field_names
 
         # rows: flow_type, protocol, frame_size, num_flows, num_hosts
-        row_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts',]
+        row_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts', 'offloads', ]
         rows0 = []
         for k in row_name_keys:
             row = [k, ]
