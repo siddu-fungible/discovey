@@ -581,6 +581,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         for combo in self.fio_bs_iodepth:
             thread_id = {}
             end_host_thread = {}
+            iostat_thread = {}
             thread_count = 1
 
             for end_host in self.end_host_list:
@@ -616,13 +617,14 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     # Get iostat results
                     self.iostat_host_thread = end_host.clone()
                     iostat_wait_time = self.host_count + 1 - thread_count
-                    iostat_thread = fun_test.execute_thread_after(time_in_seconds=iostat_wait_time,
-                                                                  func=get_iostat,
-                                                                  host_thread=self.iostat_host_thread,
-                                                                  count=thread_count,
-                                                                  sleep_time=self.fio_cmd_args["runtime"] / 4,
-                                                                  iostat_interval=self.iostat_details["interval"],
-                                                                  iostat_iter=self.fio_cmd_args["runtime"] / 3)
+                    iostat_thread[thread_count] = fun_test.execute_thread_after(
+                        time_in_seconds=iostat_wait_time,
+                        func=get_iostat,
+                        host_thread=self.iostat_host_thread,
+                        count=thread_count,
+                        sleep_time=self.fio_cmd_args["runtime"] / 4,
+                        iostat_interval=self.iostat_details["interval"],
+                        iostat_iter=self.fio_cmd_args["runtime"] / 3)
 
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_6stripe_multi_" + mode + "_host_" + str(thread_count)\
@@ -660,7 +662,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
             self.iostat_output = {}
             for x in range(1, self.host_count + 1, 1):
-                fun_test.join_thread(fun_test_thread_id=iostat_thread)
+                fun_test.join_thread(fun_test_thread_id=iostat_thread[x])
                 fun_test.log("Joining iostat thread {}".format(x))
                 self.iostat_output[x] = fun_test.shared_variables["iostat_output"][x].split("\n")
 
