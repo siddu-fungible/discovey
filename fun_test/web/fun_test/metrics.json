@@ -3726,7 +3726,7 @@
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "Multiple-Reader TCP",
                     "children": [
                       {
@@ -3948,9 +3948,34 @@
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
                     "name": "inspur_8131_compression_ratio_benchmarking",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_13_1:Compression_Benchmark",
-                    "children": []
+                    "children": [
+                      {
+                        "info": "inspur_8131_compression_ratio_benchmarking_auto",
+                        "metric_model_name": "InspurZipCompressionRatiosPerformance",
+                        "leaf": true,
+                        "name": "inspur_8131_compression_ratio_benchmarking_auto",
+                        "weight": 1,
+                        "label": "Effort: Auto"
+                      },
+                      {
+                        "info": "inspur_8131_compression_ratio_benchmarking_64Gbps",
+                        "metric_model_name": "InspurZipCompressionRatiosPerformance",
+                        "leaf": true,
+                        "name": "inspur_8131_compression_ratio_benchmarking_64Gbps",
+                        "weight": 1,
+                        "label": "Effort: 64Gbps"
+                      },
+                      {
+                        "info": "inspur_8131_compression_ratio_benchmarking_2Gbps",
+                        "metric_model_name": "InspurZipCompressionRatiosPerformance",
+                        "leaf": true,
+                        "name": "inspur_8131_compression_ratio_benchmarking_2Gbps",
+                        "weight": 1,
+                        "label": "Effort: 2Gbps"
+                      }
+                    ]
                   },
                   {
                     "info": "inspur_8132_8k_rand_rw_comp",
