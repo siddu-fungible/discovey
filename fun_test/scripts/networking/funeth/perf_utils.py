@@ -157,7 +157,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     for nc_obj in network_controller_objs:
         fun_test.log_module_filter("random_module")
         output = nc_obj.get_flow_list(timeout=180).get('data')
-        fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=5)
+        fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=10)
         fun_test.log_module_filter_disable()
         flowlist_temp_filename = '{}_{}_F1_{}_flowlist_{}.txt'.format(str(version), tc_id,
                                                                       network_controller_objs.index(nc_obj), when)
