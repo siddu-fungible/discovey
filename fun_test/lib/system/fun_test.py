@@ -152,6 +152,7 @@ class FunTest:
             return
         else:
             self.fun_test_disabled = False
+        self.fun_xml_obj = None
         self.logs_dir = args.logs_dir
         self.log_prefix = args.log_prefix
         self.suite_execution_id = args.suite_execution_id
@@ -713,7 +714,8 @@ class FunTest:
         if self.log_function_name:
             module_line_info += ":{}".format(function_name)
 
-        self.fun_xml_obj.log(log=message, newline=newline)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.log(log=message, newline=newline)
 
         level_name = ""
         if level == self.LOG_LEVEL_CRITICAL:
@@ -932,23 +934,24 @@ class FunTest:
         assert_message = "ASSERT PASSED: expected={} actual={}, {}".format(expected, actual, message)
         if not expected == actual:
             assert_message = "ASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
-            self._append_assert_test_metric(assert_message)
-            self.fun_xml_obj.add_checkpoint(checkpoint=message,
-                                            expected=expected,
-                                            actual=actual,
-                                            result=FunTest.FAILED)
+            if self.initialized:
+                self._append_assert_test_metric(assert_message)
+                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                                                expected=expected,
+                                                actual=actual,
+                                                result=FunTest.FAILED)
             self.critical(assert_message)
             if self.pause_on_failure:
                 pdb.set_trace()
             raise TestException(assert_message)
         if not ignore_on_success:
             self.log(assert_message)
-            self._append_assert_test_metric(assert_message)
-
-            self.fun_xml_obj.add_checkpoint(checkpoint=message,
-                                            expected=expected,
-                                            actual=actual,
-                                            result=FunTest.PASSED)
+            if self.initialized:
+                self._append_assert_test_metric(assert_message)
+                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                                                expected=expected,
+                                                actual=actual,
+                                                result=FunTest.PASSED)
 
     def add_checkpoint(self,
                        checkpoint=None,
