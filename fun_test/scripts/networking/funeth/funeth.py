@@ -177,7 +177,7 @@ class Funeth:
                 linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
             output = linux_obj.command(
-                'export WORKSPACE={}; cd {}; git log | head -n 5; make clean; make PALLADIUM=yes'.format(
+                'export WORKSPACE={}; cd {}; make clean; make PALLADIUM=yes'.format(
                     self.ws, drvdir), timeout=600)
             return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
