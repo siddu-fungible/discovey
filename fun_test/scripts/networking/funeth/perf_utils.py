@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from scripts.networking.tcp import helper
 from collections import OrderedDict
 from prettytable import PrettyTable
+import json
 import re
 
 
@@ -153,14 +154,14 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     #checkpoint = "Get Flow list {} test".format(when)
     for nc_obj in network_controller_objs:
         fun_test.log_module_filter("random_module")
-        output = nc_obj.get_flow_list()
-        fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=10)
+        output = nc_obj.get_flow_list().get('data')
+        fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=2)
         fun_test.log_module_filter_disable()
         flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
                                                                    when)
         file_path = fun_test.get_test_case_artifact_file_name(flowlist_temp_filename)
         with open(file_path, 'w') as f:
-            f.write(output['data'])
+            json.dump(output, f, indent=4, separators=(',', ': '), sort_keys=True)
         fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
 
     fpg_stats = {}
