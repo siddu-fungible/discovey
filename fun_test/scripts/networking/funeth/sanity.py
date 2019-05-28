@@ -305,8 +305,8 @@ class FunethTestPacketSweep(FunTestCase):
         # HU
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
-        namespaces = [tb_config_obj.get_hu_pf_namespace(), tb_config_obj.get_hu_vf_namespace()]
-        interfaces = [tb_config_obj.get_hu_pf_interface(), tb_config_obj.get_hu_vf_interface()]
+        namespaces = [tb_config_obj.get_hu_pf_namespace(hu), tb_config_obj.get_hu_vf_namespace(hu)]
+        interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
         for namespace, interface in zip(namespaces, interfaces):
             ns = None if namespace == 'default' else namespace
             fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU, ns=ns),
@@ -338,7 +338,7 @@ class FunethTestPacketSweep(FunTestCase):
 
 
         if emulation_target == 'palladium':  # Use only one PF and one VF interface to save run time
-            interfaces = [tb_config_obj.get_hu_pf_interface(), tb_config_obj.get_hu_vf_interface()]
+            interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
         elif emulation_target == 'f1':
             interfaces = tb_config_obj.get_all_interfaces(hu)
         ip_addrs = [tb_config_obj.get_interface_ipv4_addr(hu, intf) for intf in interfaces]
@@ -376,7 +376,7 @@ class FunethTestScpBase(FunTestCase):
         # Create a file
         if TB == 'SN2':
             file_size = '2m'
-        elif TB == 'SB5':
+        else:
             file_size = '2g'
         linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
 
@@ -391,9 +391,9 @@ class FunethTestScpBase(FunTestCase):
         if nu_or_hu == nu:
             tb_config_obj = funeth_obj.tb_config_obj
             if pf_or_vf == 'pf':
-                ns = tb_config_obj.get_hu_pf_namespace()
+                ns = tb_config_obj.get_hu_pf_namespace(hu)
             elif pf_or_vf == 'vf':
-                ns = tb_config_obj.get_hu_vf_namespace()
+                ns = tb_config_obj.get_hu_vf_namespace(hu)
 
             if ns != 'default':
                 linux_obj = funeth_obj.linux_obj_dict[hu]
@@ -541,11 +541,11 @@ class FunethTestInterfaceFlapBase(FunTestCase):
 
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if pf_or_vf == 'pf':
-            namespace = tb_config_obj.get_hu_pf_namespace()
-            interface = tb_config_obj.get_hu_pf_interface()
+            namespace = tb_config_obj.get_hu_pf_namespace(hu)
+            interface = tb_config_obj.get_hu_pf_interface(hu)
         elif pf_or_vf == 'vf':
-            namespace = tb_config_obj.get_hu_vf_namespace()
-            interface = tb_config_obj.get_hu_vf_interface()
+            namespace = tb_config_obj.get_hu_vf_namespace(hu)
+            interface = tb_config_obj.get_hu_vf_interface(hu)
         ns = None if namespace == 'default' else namespace
 
         # ifconfig down
