@@ -166,7 +166,8 @@ class ECVolumeLevelScript(FunTestScript):
                 print ("test_interface_0 type: {}".format(type(test_interface_0)))
 
                 fun_test.log("Host-IP: {}".format(test_interface_0.ip))
-                host_ip = test_interface_0.ip
+                host_ip = self.hosts_test_interfaces[-1].ip
+                # host_ip = test_interface_0.ip
                 self.host_ips.append(host_ip.split('/')[0])
 
                 fun_test.log("Peer-info: {}".format(test_interface_0.peer_info))
@@ -183,8 +184,10 @@ class ECVolumeLevelScript(FunTestScript):
         print ("hosts_instances dir: {}".format(dir(self.host_handles)))
         print ("host_ips are: {}".format(self.host_ips))
 
+        # Rebooting all the hosts in non-blocking mode before the test
         for host_handle in self.host_handles:
             host_handle.command("hostname")
+            fun_test.log("Rebooting host: {}".format(host_handle.host_ip))
             host_handle.reboot(non_blocking=True)
 
         # Getting FS, F1 and COMe objects for all the DUTs going to be used in the test
@@ -231,7 +234,7 @@ class ECVolumeLevelScript(FunTestScript):
             for j in xrange(self.num_f1_per_fs):
                 self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
                 self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller)
-                self.sc_obj[curr_index].append(self.f1_obj[curr_index][j].get_dpc_storage_controller)  # TODO: Check
+                # self.sc_obj[curr_index].append(self.f1_obj[curr_index][j].get_dpc_storage_controller)  # TODO: Check
 
                 fpg_interfaces = self.fs_spec[curr_index].get_fpg_interfaces(f1_index=j)
                 for fpg_interface_index, fpg_interface in fpg_interfaces.items():
@@ -272,6 +275,14 @@ class ECVolumeLevelScript(FunTestScript):
                     print ("F1 IP for f1_obj[{}][{}] is: {}".format(curr_index, j, self.f1_ips))
                 except:
                     pass
+
+        fun_test.shared_variables["fs_obj"] = self.fs_obj
+        fun_test.shared_variables["come_obj"] = self.come_obj
+        fun_test.shared_variables["f1_obj"] = self.f1_obj
+        fun_test.shared_variables["sc_obj"] = self.sc_obj
+        fun_test.shared_variables["f1_ips"] = self.f1_ips
+        fun_test.shared_variables["host_handles"] = self.host_handles
+        fun_test.shared_variables["host_ips"] = self.host_ips
 
         # Bringing up of FunCP docker container if it is needed
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
