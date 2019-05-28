@@ -6,6 +6,7 @@ import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.templates.storage.storage_fs_template import *
+from ec_perf_helper import *
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -145,8 +146,9 @@ class ECVolumeLevelScript(FunTestScript):
         print ("required_host_names: {}".format(required_host_names))
 
         self.hosts_test_interfaces = []
-        self.host_handles = []
+        self.host_handles = {}
         self.host_ips = []
+        self.host_numa_cpus = {}
         for host_name, host in hosts.items():
             if host_name in required_host_names:
                 print ("host are: {}".format(host))
@@ -166,9 +168,9 @@ class ECVolumeLevelScript(FunTestScript):
                 print ("test_interface_0 type: {}".format(type(test_interface_0)))
 
                 fun_test.log("Host-IP: {}".format(test_interface_0.ip))
-                host_ip = self.hosts_test_interfaces[-1].ip
+                host_ip = self.hosts_test_interfaces[-1].ip.split('/')[0]
                 # host_ip = test_interface_0.ip
-                self.host_ips.append(host_ip.split('/')[0])
+                self.host_ips.append(host_ip)
 
                 fun_test.log("Peer-info: {}".format(test_interface_0.peer_info))
                 fun_test.log("Switch-name: {}".format(test_interface_0.peer_info["name"]))
@@ -177,7 +179,7 @@ class ECVolumeLevelScript(FunTestScript):
                 host_instance = host.get_instance()
                 print ("hosts_instance: {}".format(host_instance))
                 print ("hosts_instance dir: {}".format(dir(host_instance)))
-                self.host_handles.append(host_instance)
+                self.host_handles[host_ip] = host_instance
                 # host_instance.command("date")
 
         print ("hosts_instances: {}".format(self.host_handles))
@@ -185,10 +187,11 @@ class ECVolumeLevelScript(FunTestScript):
         print ("host_ips are: {}".format(self.host_ips))
 
         # Rebooting all the hosts in non-blocking mode before the test
-        for host_handle in self.host_handles:
-            host_handle.command("hostname")
-            fun_test.log("Rebooting host: {}".format(host_handle.host_ip))
-            host_handle.reboot(non_blocking=True)
+        for key in self.host_handles:
+            self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+            fun_test.log("Rebooting host: {}".format(key))
+            self.host_handles[key].reboot(non_blocking=True)
+        print ("host_nma_cpus is: {}".format(self.host_numa_cpus))
 
         # Getting FS, F1 and COMe objects for all the DUTs going to be used in the test
         self.fs_obj = []
@@ -294,6 +297,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["f1_ips"] = self.f1_ips
         fun_test.shared_variables["host_handles"] = self.host_handles
         fun_test.shared_variables["host_ips"] = self.host_ips
+        fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
 
         # Bringing up of FunCP docker container if it is needed
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
@@ -307,6 +311,7 @@ class ECVolumeLevelScript(FunTestScript):
                     mode=self.funcp_mode)
                 fun_test.test_assert(self.funcp_spec[index]["status"],
                                      "Starting FunCP docker container in DUT {}".format(index))
+                self.funcp_spec[index]["container_names"].sort()
                 for f1_index, container_name in enumerate(sorted(self.funcp_spec[index]["container_names"])):
                     bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                     bond_name = "bond0"
@@ -328,10 +333,10 @@ class ECVolumeLevelScript(FunTestScript):
             pass
 
         hosts_up_count = 0
-        for host_handle in self.host_handles:
+        for key in self.host_handles:
             # Ensure hosts are up after reboot
             # TODO: check reboot timeout
-            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+            fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
                                  message="Ensure Host is reachable after reboot")
             hosts_up_count += 1
 
@@ -344,10 +349,10 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Ensure required modules are loaded on host server, if not load it
             for module in self.load_modules:
-                module_check = host_handle.lsmod(module)
+                module_check = self.host_handles[key].lsmod(module)
                 if not module_check:
-                    host_handle.modprobe(module)
-                    module_check = host_handle.lsmod(module)
+                    self.host_handles[key].modprobe(module)
+                    module_check = self.host_handles[key].lsmod(module)
                     fun_test.sleep("Loading {} module".format(module))
                 fun_test.simple_assert(module_check, "{} module is loaded".format(module))
 
@@ -382,10 +387,11 @@ class ECVolumeLevelScript(FunTestScript):
                 except:
                     print ("in except: failed")
 
-        for index, ip in enumerate(self.f1_ips):
-            ping_status = self.host_handles[0].ping(dst=ip)
-            fun_test.test_assert(ping_status, "Host is able to ping to {}'s bond interface".
-                                 format(self.funcp_spec[0]["container_names"][index]))
+        for key in self.host_handles:
+            for index, ip in enumerate(self.f1_ips):
+                ping_status = self.host_handles[key].ping(dst=ip)
+                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                                     format(key, self.funcp_spec[0]["container_names"][index], ip))
 
         """
         before funcp code: get the host handles, reboot hosts (non blocking) - check nvme and nvme_tcp module is loaded
@@ -571,6 +577,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.f1_ips = fun_test.shared_variables["f1_ips"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.host_ips = fun_test.shared_variables["host_ips"]
+        self.host_numa_cpus = fun_test.shared_variables["numa_cpus"]
         # self.syslog_level = fun_test.shared_variables["syslog_level"]
         # self.numa_cpus = fun_test.shared_variables["numa_cpus"]
 
@@ -593,15 +600,92 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")"""
 
+            if len(self.host_ips) < self.ec_info["num_volumes"]:
+                self.final_host_ips = self.host_ips[:]
+                for i in range(len(self.host_ips), self.ec_info["num_volumes"]):
+                    self.final_host_ips.append(self.host_ips[len(self.host_ips) % i])
+
             self.ec_info["storage_controller_list"] = self.sc_obj
             self.ec_info["f1_ips"] = self.f1_ips
-            self.ec_info["host_ips"] = self.host_ips
+            self.ec_info["host_ips"] = self.final_host_ips
             (ec_config_status, self.ec_info) = configure_ec_volume_across_f1s(self.ec_info, self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
+            print ("ec_config_status output is: {}".format(ec_config_status))
+            print ("dir of ec_config_status output is: {}".format(dir(ec_config_status)))
 
+            # Test - return
             fun_test.log("EC details after configuring EC Volume:")
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
+
+            try:
+                print ("self.ec_info['host_ips'] is: {}".format(self.ec_info["host_ips"]))
+            except:
+                print ("self.ec_info['host_ips'] failed")
+
+            if not fun_test.shared_variables["ec"]["nvme_connect"]:
+                self.connected_nqn = []
+                self.nvme_block_device_list = []
+                for num in self.ec_info["num_volumes"]:
+                    host_ip = self.final_host_ips[num]
+                    current_nqn = self.ec_info["attach_nqn"][num]
+                    hosting_f1 = self.ec_info["hosting_f1_list"][num]
+                    hosting_f1_ip = self.f1_ips[hosting_f1]
+                    if current_nqn not in self.connected_nqn:
+                        # Checking nvme-connect status
+                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}".format(
+                                self.attach_transport.lower(), hosting_f1_ip,
+                                str(self.transport_port), self.ec_info["num_volumes"][num], host_ip)
+                        else:
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
+                                self.attach_transport.lower(), hosting_f1_ip, str(self.transport_port),
+                                self.ec_info["num_volumes"][num], str(self.io_queues), host_ip)
+
+                        nvme_connect_status = self.host_handles[host_ip].sudo_command(command=nvme_connect_cmd,
+                                                                                      timeout=self.command_timeout)
+                        fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+                        fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                                      message="NVME Connect Status from Host {} to F1 {}".
+                                                      format(host_ip, hosting_f1_ip))
+
+                        # TODO: Check the capacity of attached devices
+                        lsblk_output = self.host_handles[host_ip].lsblk("-b")
+                        fun_test.simple_assert(lsblk_output, "Listing available volumes")
+
+                        # Checking that the above created BLT volume is visible to the end host
+                        volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
+                        for volume_name in lsblk_output:
+                            match = re.search(volume_pattern, volume_name)
+                            if match:
+                                self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
+                                                         str(match.group(2))
+                                self.nvme_block_device_list.append(self.nvme_block_device)
+                                self.volume_name = self.nvme_block_device.replace("/dev/", "")
+                                break
+                        else:
+                            fun_test.test_assert(False, "{} device available".format(self.volume_name))
+                        fun_test.log("NVMe Block Device/s: {}".format(self.nvme_block_device_list))
+
+                    fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
+                    fun_test.shared_variables["volume_name"] = self.volume_name
+                    fun_test.shared_variables["ec"]["nvme_connect"] = True
+
+                    self.fio_filename = ":".join(self.nvme_block_device_list)
+                    fun_test.shared_variables["self.fio_filename"] = self.fio_filename
+
+            # Executing the FIO command to fill the volume to it's capacity
+            if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
+                for num in range(self.ec_info["num_volumes"]):
+                    host_ip = self.final_host_ips[num]
+                    fun_test.log("Executing the FIO command to perform sequential write to volume")
+                    fio_output = self.host_handles[host_ip].pcie_fio(filename=self.fio_filename,
+                                                                     cpus_allowed=self.host_numa_cpus[host_ip],
+                                                                     **self.warm_up_fio_cmd_args)
+                    fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                    fun_test.test_assert(fio_output, "Pre-populating the volume")
+
+                    fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
             """
             # Attaching/Exporting all the EC/LS volumes to the external server
