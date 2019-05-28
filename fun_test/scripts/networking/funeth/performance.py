@@ -27,8 +27,8 @@ FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
-NUM_FLOWS = (1, 8,)  # TODO: May add more
-NUM_HOSTS = (1, 2,)  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
+NUM_FLOWS = (1, 8, )  # TODO: May add more
+NUM_HOSTS = (1, 2, )  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = (nm.THROUGHPUT,
                     nm.PPS,
@@ -38,6 +38,12 @@ PERF_RESULT_KEYS = (nm.THROUGHPUT,
                     nm.LATENCY_P50,
                     nm.LATENCY_P90,
                     nm.LATENCY_P99,
+                    nm.LATENCY_MIN_ULOAD,
+                    nm.LATENCY_AVG_ULOAD,
+                    nm.LATENCY_MAX_ULOAD,
+                    nm.LATENCY_P50_ULOAD,
+                    nm.LATENCY_P90_ULOAD,
+                    nm.LATENCY_P99_ULOAD,
                     )
 FPG_INTERFACES = (0, 4,)
 
@@ -52,12 +58,14 @@ class FunethPerformance(sanity.FunethSanity):
 
     def setup(self):
         super(FunethPerformance, self).setup()
-        funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld'),
-        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld'),
+        funsdk_commit = super(FunethPerformance, self).__getattribute__('funsdk_commit')
+        funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld')
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
+        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
+        fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
-        fun_test.shared_variables['driver_bld'] = driver_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
+        fun_test.shared_variables['driver_bld'] = driver_bld
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -98,15 +106,19 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['results'] = results
 
     def cleanup(self):
-        perf_utils.populate_result_summary(fun_test.shared_variables['results'],
+        perf_utils.populate_result_summary(tc_ids,
+                                           fun_test.shared_variables['results'],
+                                           fun_test.shared_variables['funsdk_commit'],
                                            fun_test.shared_variables['funsdk_bld'],
-                                           fun_test.shared_variables['driver_bld'],
                                            fun_test.shared_variables['driver_commit'],
+                                           fun_test.shared_variables['driver_bld'],
                                            '00_summary_of_results.txt')
         super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(fun_test.shared_variables['netperf_manager_obj'].cleanup(), 'Clean up')
 
+
+tc_ids = []
 
 
 class FunethPerformanceBase(FunTestCase):
@@ -277,6 +289,7 @@ class FunethPerformanceBase(FunTestCase):
 
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
         fun_test.shared_variables['results'].append(result)
+        tc_ids.append(fun_test.current_test_case_id)
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):

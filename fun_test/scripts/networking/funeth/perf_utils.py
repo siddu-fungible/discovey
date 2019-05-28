@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from scripts.networking.tcp import helper
 from collections import OrderedDict
 from prettytable import PrettyTable
+import json
 import re
 
 
@@ -135,6 +136,8 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
 
 def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='before'):
 
+    tc_id = fun_test.current_test_case_id
+
     # peek resource/pc/[1], and peek resource/pc/[1]
     #for nc_obj in network_controller_objs:
     #    for pc_id in (1, 2):
@@ -149,20 +152,20 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     #        fun_test.log_module_filter_disable()
     #        fun_test.simple_assert(res_result, checkpoint)
 
-    ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
+    # flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
-    #network_controller_objs = fun_test.shared_variables['network_controller_objs']
     #for nc_obj in network_controller_objs:
     #    fun_test.log_module_filter("random_module")
-    #    output = nc_obj.get_flow_list()
-    #    fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=2)
+    #    output = nc_obj.get_flow_list(timeout=180).get('data')
+    #    fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=10)
     #    fun_test.log_module_filter_disable()
-    #    flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
-    #                                                               when)
-    #    fun_test.simple_assert(
-    #        helper.populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
-    #        checkpoint)
-
+    #    flowlist_temp_filename = '{}_{}_F1_{}_flowlist_{}.txt'.format(str(version), tc_id,
+    #                                                                  network_controller_objs.index(nc_obj), when)
+    #    file_path = fun_test.get_test_case_artifact_file_name(flowlist_temp_filename)
+    #    with open(file_path, 'w') as f:
+    #        json.dump(output, f, indent=4, separators=(',', ': '), sort_keys=True)
+    #    fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
+    #
     fpg_stats = {}
     for nc_obj in network_controller_objs:
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -229,9 +232,10 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
-def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, filename):
+def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_commit, driver_bld, filename):
     """Populate result summary file.
 
+    :param tc_ids: list of test case id.
     :param results: list of dict. One element is like below.
 
         {
@@ -273,16 +277,27 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
     """
     output = False
     try:
-        field_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts',]
         ptable = PrettyTable()
-        field_names = ['', ]
-        for result in results:
-            field_names.append(', '.join(['{}: {}'.format(k, result[k]) for k in field_name_keys]))
+        ptable.align = 'r'
+
+        # field name: tc_id
+        field_names = ['tc_id', ]
+        field_names.extend(tc_ids)
         ptable.field_names = field_names
 
-        r0 = results[0]
-        funos_bld = r0.get('version')
+        # rows: flow_type, protocol, frame_size, num_flows, num_hosts
+        row_name_keys = ['flow_type', 'protocol', 'frame_size', 'num_flows', 'num_hosts', 'offloads', ]
+        rows0 = []
+        for k in row_name_keys:
+            row = [k, ]
+            for result in results:
+                row.append(result.get(k))
+            rows0.append(row)
+        for row in rows0:
+            ptable.add_row(row)
 
+        # rows: latency, pps, throughput
+        r0 = results[0]
         rows = []
         for k in r0:
             if k.startswith('latency') or k.startswith('pps') or k.startswith('throughput'):
@@ -294,18 +309,18 @@ def populate_result_summary(results, funsdk_bld, driver_bld, driver_commit, file
                     row.append(v)
                 rows.append(row)
 
-        def sort_by_key(elem):
-            return elem[0]
-
-        for row in sorted(rows, key=sort_by_key):
+        for row in sorted(rows, key=lambda elem: elem[0]):
             ptable.add_row(row)
 
-        lines = ['FunOS: {}, FunSDK: {}, Driver: {} {}\n'.format(funos_bld, funsdk_bld, driver_bld, driver_commit),
+        funos_bld = r0.get('version')
+        lines = ['FunOS: {}'.format(funos_bld),
+                 'FunSDK: {} {}'.format(funsdk_commit, funsdk_bld),
+                 'Driver: {} {}'.format(driver_commit, driver_bld),
                  ptable.get_string()]
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'w') as f:
-            f.writelines(lines)
+            f.write('\n'.join(lines))
 
         fun_test.add_auxillary_file(description=filename, filename=file_path)
 

@@ -138,7 +138,7 @@ class ECVolumeLevelScript(FunTestScript):
             if fun_test.shared_variables["ec"]["setup_created"]:
                 ec_info = fun_test.shared_variables["ec_info"]
                 attach_ns_id = fun_test.shared_variables["ns_id"]
-                ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
+                ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
                 fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                            ns_id=attach_ns_id,
                                                                                            command_duration=self.command_timeout)[
@@ -206,10 +206,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Configuring the controller
-            fun_test.test_assert(self.storage_controller.command(command="enable_counters",
-                                                                 legacy=True,
-                                                                 command_duration=self.command_timeout)["status"],
-                                 "Enabling counters on DUT")
+            # enable_counters(self.storage_controller, self.command_timeout)
 
             fun_test.test_assert(self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])["status"],
                                  "ip_cfg configured on DUT instance")

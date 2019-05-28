@@ -33,11 +33,11 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 25769803776,
+      "capacity": 1073741824,
       "block_size": 4096,
       "name": "thin-block1"
     },
-    "iter_interval": 3,
+    "iter_interval": 2,
     "attach_transport": "TCP",
     "transport_port": 1099,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
@@ -50,7 +50,7 @@
       "rw": "write",
       "direct": 1,
       "prio": 0,
-      "timeout": 720
+      "timeout": 360
     }
   },
   "BltTcpSeqRead": {
@@ -59,8 +59,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "read",
     "fio_numjobs_iodepth": [
@@ -74,8 +74,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "randread",
     "fio_numjobs_iodepth": [
@@ -90,8 +90,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 70,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
@@ -106,8 +106,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
@@ -122,8 +122,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 70,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [
@@ -138,8 +138,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [

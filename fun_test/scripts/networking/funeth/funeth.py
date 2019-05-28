@@ -119,31 +119,24 @@ class Funeth:
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
             if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
 
-                # Get FunSdK bld
-                fun_test.log('Get FunSDK build info')
-                output = linux_obj.command('cd {}; cat build_info.txt'.format(sdkdir))
-                match = re.search(r'(\d+)', output)
-                if match:
-                    sdk_bld = match.group(1)
-                else:
-                    sdk_bld = None
+                # Get FunSDK, fungible-host-driver commit/bld info
+                result_list = []
+                for repo, repo_dir in zip(('FunSDK', 'Driver'), (sdkdir, drvdir)):
+                    fun_test.log('Get {} commit/build info'.format(repo))
+                    output = linux_obj.command(
+                        'git config --global core.pager ""; cd {}; git log --oneline -n 5'.format(repo_dir))
+                    match = re.search(r'(\w+).*? tag: (bld_\d+)', output)
+                    if match:
+                        commit = match.group(1)
+                        bld = match.group(2)
+                    else:
+                        match = re.search(r'(\w+).*?', output)
+                        commit = match.group(1)
+                        bld = None
+                    result_list.extend([commit, bld])
+                return result_list
 
-                # Get driver bld
-                fun_test.log('Get driver build/commit info')
-                output = linux_obj.command('cd {}; git log | head -n 5'.format(drvdir))
-                match = re.search(r'commit (\w+).* tag: (bld_\d+)', output)
-                if match:
-                    drv_commit = match.group(1)
-                    drv_bld = match.group(2)
-                else:
-                    match = re.search(r'commit (\w+).*', output)
-                    drv_commit = match.group(1)
-                    drv_bld = None
-
-                return sdk_bld, drv_bld, drv_commit
-
-        bld_list = []
-
+        result_list = []
         if parallel:
             mp_task_obj = MultiProcessingTasks()
             for hu in self.hu_hosts:
@@ -157,19 +150,22 @@ class Funeth:
 
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                bld_list.append(mp_task_obj.get_result('{}'.format(linux_obj.host_ip)))
+                result_list.append(mp_task_obj.get_result('{}'.format(linux_obj.host_ip)))
 
         else:
             for hu in self.hu_hosts:
                 linux_obj = self.linux_obj_dict[hu]
-                bld_list.append(_update_src2(linux_obj))
+                result_list.append(_update_src2(linux_obj))
 
-        if len(set(bld_list)) != 1:
-            fun_test.critical('Different FunSDK/Driver bld in hosts')
+        result = result_list[0]
+        if not all(r == result for r in result_list):
+            fun_test.critical('Different FunSDK/Driver commit/bld in hosts')
             return False
-
+        elif len(result) != 4:
+            fun_test.critical('Failed to update FunSDK/Driver source')
+            return False
         else:
-            return bld_list[0]  # sdkdir, drv_bld, drv_commit
+            return result  # FunSDK commit, FunSDK bld, Driver commit, Driver bld
 
     def build(self, parallel=False):
         """Build driver."""

@@ -12,6 +12,12 @@ LATENCY_P50 = 'latency_P50'
 LATENCY_P90 = 'latency_P90'
 LATENCY_P99 = 'latency_P99'
 LATENCY_MAX = 'latency_max'
+LATENCY_MIN_ULOAD = 'latency_min_uload'
+LATENCY_AVG_ULOAD = 'latency_avg_uload'
+LATENCY_P50_ULOAD = 'latency_P50_uload'
+LATENCY_P90_ULOAD = 'latency_P90_uload'
+LATENCY_P99_ULOAD = 'latency_P99_uload'
+LATENCY_MAX_ULOAD = 'latency_max_uload'
 NA = -1
 
 # Server has 2 socket, each CPU (Silver 4110) has 8 cores, NUMA 0: 0-7, NUMA 1: 8-15
@@ -202,7 +208,7 @@ class NetperfManager:
         # Do throughput test first, and latency test last
         #for measure_latency in (False, True):
         # Test - 1: throughput only, 2: latency only, 3: latency under throughput load
-        for test in (1, 2, 3):
+        for test in (1, 2, 3, ):
             if test == 2:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=True)
@@ -244,15 +250,15 @@ class NetperfManager:
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
                         task_key='{}_{}'.format(direction, i))
-                    if test == 3:
-                        if num_flows == 1:
-                            cpu -= 1
-                            cpu_list.append(cpu)
-                        measure_latency = True
-                        mp_task_obj.add_task(
-                            func=do_test,
-                            func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
-                            task_key='{}_{}_latency'.format(direction, i))
+                if test == 3:
+                    if num_flows == 1:
+                        cpu -= 1
+                        cpu_list.append(cpu)
+                    measure_latency = True
+                    mp_task_obj.add_task(
+                        func=do_test,
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
+                        task_key='{}_{}_latency'.format(direction, i))
 
                 # Start netserver
                 self.start_netserver(linux_obj_dst, cpu_list=cpu_list)
