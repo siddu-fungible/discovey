@@ -318,7 +318,7 @@ class Funeth:
             else:
                 cmds = ['sudo ip netns exec {} {}; sudo ip netns exec {}'.format(ns, cmd, cmd_chk)]
             if ns:
-                cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
+                cmds = ['sudo ip netns add {}'.format(ns), 'sudo ip link set {} netns {}'.format(intf, ns)] + cmds
             output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
 
             match = re.search(r'tcp-segmentation-offload: {}'.format(op), output)
