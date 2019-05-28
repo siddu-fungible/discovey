@@ -150,7 +150,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     #        fun_test.simple_assert(res_result, checkpoint)
 
     # flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
-    checkpoint = "Get Flow list {} test".format(when)
+    #checkpoint = "Get Flow list {} test".format(when)
     for nc_obj in network_controller_objs:
         fun_test.log_module_filter("random_module")
         output = nc_obj.get_flow_list()
@@ -158,9 +158,10 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
         fun_test.log_module_filter_disable()
         flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
                                                                    when)
-        fun_test.simple_assert(
-            helper.populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
-            checkpoint)
+        file_path = fun_test.get_test_case_artifact_file_name(flowlist_temp_filename)
+        with open(file_path, 'w') as f:
+            f.write(output['data'])
+        fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
 
     fpg_stats = {}
     for nc_obj in network_controller_objs:
