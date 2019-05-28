@@ -35,8 +35,6 @@ nu2:
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 21.1.1.2
-        - prefix: 53.1.9.0/24
-          nexthop: 21.1.1.2
         - prefix: 20.1.1.0/24
           nexthop: 21.1.1.2
 
@@ -89,8 +87,6 @@ hu2:
           nexthop: 53.1.1.254
         - prefix: 21.1.1.0/24
           nexthop: 53.1.1.254
-        - prefix: 53.1.9.0/24
-          nexthop: 53.1.1.254
         - prefix: 54.1.1.0/24
           nexthop: 53.1.1.253
       arps:
@@ -98,15 +94,6 @@ hu2:
           mac_addr: 00:de:ad:be:ef:11
         - ipv4_addr: 53.1.1.253
           mac_addr: 00:f1:1d:ad:00:3e
-    n1:
-      interfaces:
-        - hu2-f8:
-            mac_addr: 00:de:ad:be:ef:51
-            ipv4_addr: 53.1.9.4
-            ipv4_netmask: 255.255.255.0
-      routes:
-        - prefix: 53.1.1.0/24
-          nexthop: 53.1.9.254
 
 hu3:
   hostname: poc-server-08
