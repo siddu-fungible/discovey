@@ -230,11 +230,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.simple_assert(command_result, "Loading nvme module")
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
 
+            '''
             # Configuring Local thin block volume
             command_result = self.storage_controller.json_execute(verb="enable_counters",
                                                                   command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+            '''
 
             command_result = self.storage_controller.ip_cfg(ip=tb_config['dut_info'][0]['f1_ip'])
             fun_test.log(command_result)
@@ -339,10 +341,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log(command_result)
             else:
                 command_result = self.end_host.sudo_command(
-                    "nvme connect -t {} -a {} -s {} -n nqn.2017-05.com.fungible:nss-uuid1".
+                    "nvme connect -t {} -a {} -s {} -n {}".
                         format(unicode.lower(nvme_transport),
                                tb_config['dut_info'][0]['f1_ip'],
-                               tb_config['dut_info'][0]['tcp_port']))
+                               tb_config['dut_info'][0]['tcp_port'],
+                               self.nqn))
                 fun_test.log(command_result)
 
             # Checking that the above created BLT volume is visible to the end host

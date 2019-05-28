@@ -1,5 +1,5 @@
 [
-  "storage_sanity.json",
+  "storage_sanity_posix.json",
   "ec_crypto_sanity.json",
   "nvme_sanity.json",
   "ec_sanity.json",

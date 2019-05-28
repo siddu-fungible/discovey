@@ -9,14 +9,14 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 3221225472,
+      "capacity": 1073741824,
       "block_size": 4096,
       "name": "thin-block1"
     },
     "huid": 3,
     "ctlid": 2,
     "fnid": 2,
-    "iter_interval": 5,
+    "iter_interval": 2,
     "ns_id": 1,
     "transport": "PCI",
     "warm_up_traffic": true,
@@ -27,7 +27,7 @@
       "rw": "write",
       "direct": 1,
       "prio": 0,
-      "timeout": 720
+      "timeout": 360
     }
   },
   "BltPciSeqRead": {
@@ -36,8 +36,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "read",
     "fio_numjobs_iodepth": [
@@ -51,8 +51,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "randread",
     "fio_numjobs_iodepth": [
@@ -67,8 +67,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 70,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
@@ -83,8 +83,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
@@ -99,8 +99,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 70,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [
@@ -115,8 +115,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
-      "runtime": 60,
-      "timeout": 65
+      "runtime": 30,
+      "timeout": 35
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [

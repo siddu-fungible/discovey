@@ -145,9 +145,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Configuring the controller
-            command_result = self.storage_controller.command(command="enable_counters", legacy=True,
-                                                             command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
+            # enable_counters(self.storage_controller, self.command_timeout)
 
             (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
                                                                                            self.command_timeout)
