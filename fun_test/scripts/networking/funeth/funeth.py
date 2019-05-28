@@ -343,7 +343,7 @@ class Funeth:
             if ns is None or 'netns' in cmd:
                 cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
             else:
-                cmds = ['sudo ip netns exec {} {}; sudo ip netns exec {}'.format(ns, cmd, cmd_chk)]
+                cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
             output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
 
             match = re.search(r'Current hardware settings:.*RX:\s+\d+.*TX:\s+{}'.format(num_queues), output, re.DOTALL)
