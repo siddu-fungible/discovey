@@ -4,7 +4,6 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
-from lib.host.storage_controller import StorageController
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -156,7 +155,7 @@ def configure_ec_volume(storage_controller, ec_info, command_timeout):
 
 
 def unconfigure_ec_volume(storage_controller, ec_info, command_timeout):
-    # Unconfiguring LS volume based on the script config settting
+    # Unconfiguring LS volume based on the script config setting
     for num in xrange(ec_info["num_volumes"]):
         if "use_lsv" in ec_info and ec_info["use_lsv"]:
             this_uuid = ec_info["uuids"][num]["lsv"][0]
@@ -237,11 +236,11 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
+        self.f1 = self.fs.get_f1(index=self.f1_in_use)
         self.db_log_time = get_data_collection_time()
+        fun_test.log("Data collection time: {}".format(self.db_log_time))
 
-        self.come = self.fs.get_come()
-        self.storage_controller = StorageController(target_ip=self.come.host_ip,
-                                                    target_port=self.come.get_dpc_port(self.f1_in_use))
+        self.storage_controller = self.f1.get_dpc_storage_controller()
 
         # Fetching Linux host with test interface name defined
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
@@ -288,7 +287,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["numa_cpus"] = self.numa_cpus
 
         # Configuring Linux host
-        host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
+        host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout,
+                                              reboot_initiated_wait_time=self.reboot_timeout)
         fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
@@ -365,6 +365,15 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")
         except Exception as ex:
             fun_test.critical(str(ex))
+            come_reboot = True
+
+        try:
+            if come_reboot:
+                self.fs.fpga_initialize()
+                fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
+                self.fs.come_reset(max_wait_time=self.reboot_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
         self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
@@ -427,12 +436,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
-            # Configuring the controller
+            # Enabling counter, performs atomic ops for every WU dispatched and is not recommended for perf runs
+            """"# Configuring the controller
             command_result = {}
             command_result = self.storage_controller.command(command="enable_counters", legacy=True,
                                                              command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
+            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")"""
 
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
@@ -557,13 +567,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
-        self.volume_name = fun_test.shared_variables["volume_name"]
-        self.fio_filename = fun_test.shared_variables["self.fio_filename"]
-
         if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
             self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
             self.volume_name = fun_test.shared_variables["volume_name"]
+            self.fio_filename = fun_test.shared_variables["self.fio_filename"]
         else:
             fun_test.simple_assert(False, "Setup Section Status")
 

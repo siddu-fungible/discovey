@@ -13,7 +13,12 @@
     "host_ip": "poc-server-01",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
-    "test_interface_name": "enp175s0"
+    "test_interface_name": "enp175s0",
+    "ipmi_info": {
+      "host_ip": "poc-server-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "poc-server-02": {
     "host_ip": "poc-server-02",
