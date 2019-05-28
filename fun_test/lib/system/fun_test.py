@@ -180,8 +180,6 @@ class FunTest:
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
-        (frame, file_name, line_number, function_name, lines, index) = \
-            inspect.getouterframes(inspect.currentframe())[2]
 
         self.original_sig_int_handler = None
         if threading.current_thread().__class__.__name__ == '_MainThread':
@@ -195,25 +193,8 @@ class FunTest:
         self.current_test_case_id = None
         self.traces = {}
 
-        self.absolute_script_file_name = file_name
-        self.script_file_name = os.path.basename(self.absolute_script_file_name)
-        script_file_name_without_extension = self.script_file_name.replace(".py", "")
+        # self.initialize_output_files()
 
-        self.test_metrics = collections.OrderedDict()
-
-        html_log_file = "{}.html".format(script_file_name_without_extension)
-        if self.relative_path:
-            html_log_file = get_flat_html_log_file_name(self.relative_path, self.log_prefix)
-            # if self.log_prefix:
-            #    html_log_file = "{}_{}".format(self.log_prefix, html_log_file)
-        self.html_log_file = html_log_file
-
-        self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
-                                          log_directory=self.logs_dir,
-                                          log_file=html_log_file,
-                                          full_script_path=self.absolute_script_file_name)
-        reload(sys)
-        sys.setdefaultencoding('UTF8')  # Needed for xml
         self.counter = 0  # Mostly used for testing
         self.logging_selected_modules = []
         self.log_timestamps = True
@@ -233,6 +214,29 @@ class FunTest:
         self.build_parameters = {}
         self._prepare_build_parameters()
         self.closed = False
+
+    def initialize_output_files(self, absolute_script_file_name):
+        # (frame, file_name, line_number, function_name, lines, index) = \
+        #    inspect.getouterframes(inspect.currentframe())[2]
+        self.absolute_script_file_name = absolute_script_file_name
+        self.script_file_name = os.path.basename(self.absolute_script_file_name)
+        script_file_name_without_extension = self.script_file_name.replace(".py", "")
+
+        self.test_metrics = collections.OrderedDict()
+
+        html_log_file = "{}.html".format(script_file_name_without_extension)
+        if self.relative_path:
+            html_log_file = get_flat_html_log_file_name(self.relative_path, self.log_prefix)
+            # if self.log_prefix:
+            #    html_log_file = "{}_{}".format(self.log_prefix, html_log_file)
+        self.html_log_file = html_log_file
+
+        self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
+                                          log_directory=self.logs_dir,
+                                          log_file=html_log_file,
+                                          full_script_path=self.absolute_script_file_name)
+        reload(sys)
+        sys.setdefaultencoding('UTF8')  # Needed for xml
 
     def get_stored_environment_variable(self, variable_name):
         result = None
@@ -825,7 +829,8 @@ class FunTest:
         for assert_result in assert_list:
             self.log(assert_result, no_timestamp=True)
 
-    def _initialize(self):
+    def _initialize(self, script_file_name):
+        self.initialize_output_files(absolute_script_file_name=script_file_name)
         if self.initialized:
             raise FunTestSystemException("FunTest obj initialized twice")
         self.initialized = True
@@ -1151,7 +1156,9 @@ class FunTestScript(object):
     test_case_order = None
 
     def __init__(self):
-        fun_test._initialize()
+        st = inspect.stack()
+        script_file_name = st[1][1]
+        fun_test._initialize(script_file_name)
         self.test_cases = []
         self.summary = "Setup"
         self.steps = ""
