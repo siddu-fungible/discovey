@@ -81,7 +81,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
     # In case if the spread list is not equal to the num_volumes, then copy last spread to the rest of the volumes
     if len(ec_info["plex_spread_list"]) != ec_info["num_volumes"]:
-        last_spread = ec_info["plex_spread_list"]
+        last_spread = ec_info["plex_spread_list"][-1]
         ec_info["plex_spread_list"].extend([last_spread] *
                                            (ec_info["num_volumes"] - len(ec_info["plex_spread_list"])))
 
@@ -106,7 +106,11 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             ec_info['zip_effort'], ec_info['zip_filter']))
 
     # Enabling network controller to listen in the given F1 ip and port
+    print "storage controller list is: {}".format(ec_info["storage_controller_list"])
+    print "dir of storage controller list is: {}".format(dir(ec_info["storage_controller_list"]))
     for index, sc in enumerate(ec_info["storage_controller_list"]):
+        print "storage controller list is: {}".format(sc)
+        print "dir of storage controller list is: {}".format(dir(sc))
         command_result = sc.ip_cfg(ip=ec_info["f1_ips"][index], port=ec_info["transport_port"])
         fun_test.test_assert(command_result["status"], "Enabling controller to listen in {} on {} port in {} DUT".
                              format(ec_info["f1_ips"][index], ec_info["transport_port"], index))

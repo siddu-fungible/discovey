@@ -2,7 +2,6 @@
   "GlobalSetup": {
     "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --mgmt --all_100g --nofreeze",
       "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dis-stats --dpc-server --dpc-uart --mgmt --all_100g --nofreeze"],
-    //"bootargs": "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --mgmt --all_100g --nofreeze",
     "dut_start_index": 2,
     "host_start_index": 1,
     "update_workspace": false,
@@ -62,9 +61,10 @@
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_ssd": 12,
-      "num_volumes": 6
+      "num_volumes": 1,
+      "transport_port": 1099
     },
+    "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 30,
     "ns_id": 1,

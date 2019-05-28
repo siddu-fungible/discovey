@@ -267,14 +267,24 @@ class ECVolumeLevelScript(FunTestScript):
                     print("f1_obj[{}][{}] is: {}".format(curr_index, j, dir(self.f1_obj[curr_index][j])))
                 except:
                     pass
-                try:
-                    print ("storage_controller object for f1_obj[{}][{}] is: {}".format(curr_index, j, self.sc_obj))
-                except:
-                    pass
-                try:
-                    print ("F1 IP for f1_obj[{}][{}] is: {}".format(curr_index, j, self.f1_ips))
-                except:
-                    pass
+        try:
+            print ("storage_controller object list is: {}".format(self.sc_obj))
+            print ("dir of storage_controller object list is: {}".format(dir(self.sc_obj)))
+        except:
+            pass
+        try:
+            print ("F1 IP is: {}".format(self.f1_ips))
+        except:
+            pass
+
+        # Enabling network controller to listen in the given F1 ip and port
+        for index, sc in enumerate(self.sc_obj):
+            print ("storage controller list is: {}".format(sc))
+            print ("dir of storage controller list is: {}".format(dir(sc)))
+            command_result = sc.ip_cfg(ip=self.f1_ips[index], port=1099)
+            fun_test.test_assert(command_result["status"],
+                                 "Enabling controller to listen in {} on {} port in {} DUT".
+                                 format(self.f1_ips[index], 1099, index))
 
         fun_test.shared_variables["fs_obj"] = self.fs_obj
         fun_test.shared_variables["come_obj"] = self.come_obj
@@ -382,8 +392,7 @@ class ECVolumeLevelScript(FunTestScript):
         get host handles and ping both the bond
         """
 
-        exit(0)
-
+        """ Old code
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
         self.db_log_time = get_data_collection_time()
 
@@ -486,10 +495,12 @@ class ECVolumeLevelScript(FunTestScript):
         command_result = self.end_host.lsmod(module="nvme_tcp")
         fun_test.simple_assert(command_result, "Loading nvme_tcp module")
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
-                                      message="Loading nvme_tcp module")
+                                      message="Loading nvme_tcp module")"""
 
     def cleanup(self):
 
+        pass
+        """
         try:
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
@@ -516,7 +527,7 @@ class ECVolumeLevelScript(FunTestScript):
 
         self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
-        fun_test.shared_variables["topology"].cleanup()
+        fun_test.shared_variables["topology"].cleanup()"""
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -552,17 +563,19 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
-        self.fs = fun_test.shared_variables["fs"]
-        self.end_host = fun_test.shared_variables["end_host"]
-        self.test_network = fun_test.shared_variables["test_network"]
-        self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
-        self.numa_cpus = fun_test.shared_variables["numa_cpus"]
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.come_obj = fun_test.shared_variables["come_obj"]
+        self.f1_obj = fun_test.shared_variables["f1_obj"]
+        self.sc_obj = fun_test.shared_variables["sc_obj"]
+        self.f1_ips = fun_test.shared_variables["f1_ips"]
+        self.host_handles = fun_test.shared_variables["host_handles"]
+        self.host_ips = fun_test.shared_variables["host_ips"]
+        # self.syslog_level = fun_test.shared_variables["syslog_level"]
+        # self.numa_cpus = fun_test.shared_variables["numa_cpus"]
 
-        fun_test.shared_variables["attach_transport"] = self.attach_transport
-        num_ssd = self.num_ssd
-        fun_test.shared_variables["num_ssd"] = num_ssd
+        # fun_test.shared_variables["attach_transport"] = self.attach_transport
+        # num_ssd = self.num_ssd
+        # fun_test.shared_variables["num_ssd"] = num_ssd
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -575,25 +588,21 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
-            # Configuring the controller
-            command_result = {}
-            command_result = self.storage_controller.command(command="enable_counters", legacy=True,
-                                                             command_duration=self.command_timeout)
+            """command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
+            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")"""
 
-            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
-
-            (ec_config_status, self.ec_info) = configure_ec_volume(self.storage_controller, self.ec_info,
-                                                                   self.command_timeout)
+            self.ec_info["storage_controller_list"] = self.sc_obj
+            self.ec_info["f1_ips"] = self.f1_ips
+            self.ec_info["host_ips"] = self.host_ips
+            (ec_config_status, self.ec_info) = configure_ec_volume_across_f1s(self.ec_info, self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
             fun_test.log("EC details after configuring EC Volume:")
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
 
+            """
             # Attaching/Exporting all the EC/LS volumes to the external server
             self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
             fun_test.shared_variables["remote_ip"] = self.remote_ip
@@ -698,7 +707,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("FIO Command Output:\n{}".format(fio_output))
             fun_test.test_assert(fio_output, "Pre-populating the volume")
 
-            fun_test.shared_variables["ec"]["warmup_io_completed"] = True
+            fun_test.shared_variables["ec"]["warmup_io_completed"] = True"""
 
     def run(self):
 
@@ -840,7 +849,8 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).setup()
 
     def run(self):
-        super(RandReadWrite8kBlocks, self).run()
+        pass
+        # super(RandReadWrite8kBlocks, self).run()
 
     def cleanup(self):
         super(RandReadWrite8kBlocks, self).cleanup()
