@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from scripts.networking.tcp import helper
 from collections import OrderedDict
 from prettytable import PrettyTable
+import json
 import re
 
 
@@ -149,19 +150,19 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     #        fun_test.log_module_filter_disable()
     #        fun_test.simple_assert(res_result, checkpoint)
 
-    ## flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
+    # flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
-    #network_controller_objs = fun_test.shared_variables['network_controller_objs']
-    #for nc_obj in network_controller_objs:
-    #    fun_test.log_module_filter("random_module")
-    #    output = nc_obj.get_flow_list()
-    #    fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=2)
-    #    fun_test.log_module_filter_disable()
-    #    flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
-    #                                                               when)
-    #    fun_test.simple_assert(
-    #        helper.populate_flow_list_output_file(result=output['data'], filename=flowlist_temp_filename),
-    #        checkpoint)
+    for nc_obj in network_controller_objs:
+        fun_test.log_module_filter("random_module")
+        output = nc_obj.get_flow_list().get('data')
+        fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=2)
+        fun_test.log_module_filter_disable()
+        flowlist_temp_filename = '{}_F1_{}_flowlist_{}.txt'.format(str(version), network_controller_objs.index(nc_obj),
+                                                                   when)
+        file_path = fun_test.get_test_case_artifact_file_name(flowlist_temp_filename)
+        with open(file_path, 'w') as f:
+            json.dump(output, f, indent=4, separators=(',', ': '), sort_keys=True)
+        fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
 
     fpg_stats = {}
     for nc_obj in network_controller_objs:
@@ -310,14 +311,14 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
             ptable.add_row(row)
 
         funos_bld = r0.get('version')
-        lines = [
-            'FunOS: {}, FunSDK: {} {}, Driver: {} {}\n'.format(
-                funos_bld, funsdk_commit, funsdk_bld, driver_commit, driver_bld),
-            ptable.get_string()]
+        lines = ['FunOS: {}'.format(funos_bld),
+                 'FunSDK: {} {}'.format(funsdk_commit, funsdk_bld),
+                 'Driver: {} {}'.format(driver_commit, driver_bld),
+                 ptable.get_string()]
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'w') as f:
-            f.writelines(lines)
+            f.write('\n'.join(lines))
 
         fun_test.add_auxillary_file(description=filename, filename=file_path)
 

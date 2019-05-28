@@ -52,10 +52,10 @@ class FunethPerformance(sanity.FunethSanity):
 
     def setup(self):
         super(FunethPerformance, self).setup()
-        funsdk_commit = super(FunethPerformance, self).__getattribute__('funsdk_commit'),
-        funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld'),
+        funsdk_commit = super(FunethPerformance, self).__getattribute__('funsdk_commit')
+        funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld')
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
-        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld'),
+        driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
         fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
