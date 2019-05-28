@@ -233,7 +233,7 @@ class ECVolumeLevelScript(FunTestScript):
             # self.gateway_ips[curr_index] = []  # TODO: check
             for j in xrange(self.num_f1_per_fs):
                 self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
-                self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller)
+                self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
                 # self.sc_obj[curr_index].append(self.f1_obj[curr_index][j].get_dpc_storage_controller)  # TODO: Check
 
                 fpg_interfaces = self.fs_spec[curr_index].get_fpg_interfaces(f1_index=j)
@@ -267,16 +267,17 @@ class ECVolumeLevelScript(FunTestScript):
                     print("f1_obj[{}][{}] is: {}".format(curr_index, j, dir(self.f1_obj[curr_index][j])))
                 except:
                     pass
-        try:
-            print ("storage_controller object list is: {}".format(self.sc_obj))
-            print ("dir of storage_controller object list is: {}".format(dir(self.sc_obj)))
-        except:
-            pass
-        try:
-            print ("F1 IP is: {}".format(self.f1_ips))
-        except:
-            pass
+                try:
+                    print ("storage_controller object list is: {}".format(self.sc_obj[-1]))
+                    print ("dir of storage_controller object list is: {}".format(dir(self.sc_obj[-1])))
+                except:
+                    pass
+                try:
+                    print ("F1 IP is: {}".format(self.f1_ips[-1]))
+                except:
+                    pass
 
+        """
         # Enabling network controller to listen in the given F1 ip and port
         for index, sc in enumerate(self.sc_obj):
             print ("storage controller list is: {}".format(sc))
@@ -284,7 +285,7 @@ class ECVolumeLevelScript(FunTestScript):
             command_result = sc.ip_cfg(ip=self.f1_ips[index], port=1099)
             fun_test.test_assert(command_result["status"],
                                  "Enabling controller to listen in {} on {} port in {} DUT".
-                                 format(self.f1_ips[index], 1099, index))
+                                 format(self.f1_ips[index], 1099, index))"""
 
         fun_test.shared_variables["fs_obj"] = self.fs_obj
         fun_test.shared_variables["come_obj"] = self.come_obj
@@ -378,13 +379,13 @@ class ECVolumeLevelScript(FunTestScript):
                     """fun_test.test_assert_expected(
                         expected=0, actual=self.funcp_obj[index].container_info[container_name].exit_status(),
                         message="Configure static route")"""
-
-                    for ip in xrange(len(gateway_ip)):
-                        ping_status = self.host_handles[index].ping(dst=gateway_ip[ip])
-                        fun_test.test_assert(ping_status,
-                                             "Host is able to ping to {}'s bond interface".format(container_name))
                 except:
                     print ("in except: failed")
+
+        for index, ip in enumerate(self.f1_ips):
+            ping_status = self.host_handles[0].ping(dst=ip)
+            fun_test.test_assert(ping_status, "Host is able to ping to {}'s bond interface".
+                                 format(self.funcp_spec[0]["container_names"][index]))
 
         """
         before funcp code: get the host handles, reboot hosts (non blocking) - check nvme and nvme_tcp module is loaded

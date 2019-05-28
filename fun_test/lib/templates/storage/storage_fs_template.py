@@ -165,9 +165,10 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         for index, sc in enumerate(ec_info["storage_controller_list"]):
             ctrlr_uuid = utils.generate_uuid()
             ec_info["uuids"][num]["ctlr"].append(ctrlr_uuid)
-            if cur_vol_host_f1 == index:
+            if index == cur_vol_host_f1:
                 transport = "TCP"
                 remote_ip = ec_info["host_ips"][num]
+                ec_info["attach_nqn"][num] = "nqn" + str(index)
             else:
                 transport = "RDS"
                 remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
@@ -197,7 +198,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                             ec_info["volume_capacity"][num][vtype], sc_index))
                 if sc_index != cur_vol_host_f1:
                     command_result = sc.attach_volume_to_controller(ctrlr_uuid=ec_info["uuids"][num]["ctlr"][sc_index],
-                    ns_id=str(num+1) + str(plex_num), vol_uuid=this_uuid, command_duration=command_timeout)
+                    ns_id=int(str(num+1) + str(plex_num)), vol_uuid=this_uuid, command_duration=command_timeout)
                     fun_test.test_assert(command_result["status"],
                                          "Attaching {} {} {} {} bytes volume on {} DUT".
                                          format(num, i, vtype, ec_info["volume_capacity"][num][vtype], sc_index))
@@ -216,11 +217,12 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             command_result = hosting_sc.create_volume(
                 type="VOL_TYPE_BLK_RDS", capacity=ec_info["volume_capacity"][num]["ndata"],
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
-                remote_nsid=str(num+1)+ str(plex_num), remote_ip=ec_info["f1_ips"][sc_index],
+                remote_nsid=int(str(num+1)+ str(plex_num)), remote_ip=ec_info["f1_ips"][sc_index],
                 command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
                                                            "on {} DUT".format(num+ plex_num,
-                                                                              ec_info["f1_ips"][sc_index], sc_index))
+                                                                              ec_info["f1_ips"][sc_index],
+                                                                              cur_vol_host_f1))
             plex_num += 1
 
         # Configuring EC volume on top of BLT volumes
@@ -278,7 +280,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
         # Attaching the EC/LSV
         command_result = hosting_sc.attach_volume_to_controller(
-            ctrlr_uuid=ec_info["uuids"][num]["ctlr"][cur_vol_host_f1], ns_id=str(num+1) + str(plex_num),
+            ctrlr_uuid=ec_info["uuids"][num]["ctlr"][cur_vol_host_f1], ns_id=int(str(num+1) + str(plex_num)),
             vol_uuid=ec_info["attach_uuid"][num], command_duration=command_timeout)
         fun_test.test_assert(command_result["status"], "Attaching {} {} bytes EC/LS volume on {} DUT".
                              format(num, ec_info["attach_size"][num], cur_vol_host_f1))
