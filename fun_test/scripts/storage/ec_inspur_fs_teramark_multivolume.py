@@ -342,6 +342,7 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
 
+        come_reboot = False
         try:
             self.ec_info = fun_test.shared_variables["ec_info"]
             self.remote_ip = fun_test.shared_variables["remote_ip"]
