@@ -104,9 +104,9 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables['date_time'] = get_data_collection_time()
 
         # Configure Linux Host
-        '''fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout,
+        fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout,
                                                   max_wait_time=self.reboot_timeout),
-                             "End Host {} is up".format(self.end_host.host_ip))'''
+                             "End Host {} is up".format(self.end_host.host_ip))
 
         configure_endhost_interface(end_host=self.end_host,
                                     test_network=test_network,
