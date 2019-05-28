@@ -206,10 +206,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Configuring the controller
-            fun_test.test_assert(self.storage_controller.command(command="enable_counters",
-                                                                 legacy=True,
-                                                                 command_duration=self.command_timeout)["status"],
-                                 "Enabling counters on DUT")
+            # enable_counters(self.storage_controller, self.command_timeout)
 
             fun_test.test_assert(self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])["status"],
                                  "ip_cfg configured on DUT instance")

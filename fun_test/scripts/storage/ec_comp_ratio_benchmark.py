@@ -97,7 +97,6 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.test_assert(False, "Host found with Test Interface")
 
         test_network = self.csr_network[str(fpg_inteface_index)]
-        remote_ip = test_network["test_interface_ip"].split('/')[0]
         fun_test.shared_variables["end_host"] = self.end_host
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["topology"] = topology
