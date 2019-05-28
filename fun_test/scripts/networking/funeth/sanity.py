@@ -177,13 +177,6 @@ class FunethSanity(FunTestScript):
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
-        # TODO: remove below workaround after SWLINUX-729 is fixed
-        if test_bed_type == 'fs-11' and control_plane:
-            funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
-
         # NU host
         if not control_plane:
             setup_nu_host(funeth_obj)
@@ -191,6 +184,13 @@ class FunethSanity(FunTestScript):
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
+
+        # TODO: remove below workaround after SWLINUX-729 is fixed
+        if test_bed_type == 'fs-11' and control_plane:
+            funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
+            funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
+            funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
+            funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
