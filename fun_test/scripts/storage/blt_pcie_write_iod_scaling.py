@@ -221,11 +221,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.simple_assert(command_result, "Loading nvme module")
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
 
+            '''
             # Configuring Local thin block volume
             command_result = self.storage_controller.json_execute(verb="enable_counters",
                                                                   command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+            '''
 
             if not fun_test.shared_variables["sysstat_install"]:
                 install_sysstat = self.end_host.install_package("sysstat")

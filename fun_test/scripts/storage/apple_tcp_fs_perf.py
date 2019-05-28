@@ -311,12 +311,13 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.simple_assert(command_result, "Loading nvme module")
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'],
                                           message="Loading nvme module")
-
+            '''
             # Configuring Local thin block volume
             command_result = self.storage_controller.json_execute(verb="enable_counters",
                                                                   command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+            '''
 
             # Pass F1 IP to controller
             command_result = self.storage_controller.ip_cfg(ip=tb_config['dut_info'][0]['f1_ip'])
@@ -433,11 +434,11 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     fun_test.sleep("Routes added on x86", 5)
 
                 # NVME connect to volume on FS
-                end_host.sudo_command("nvme connect -t {} -a {} -s {} -n nqn.2017-05.com.fungible:nss-uuid1 -i {}".
+                end_host.sudo_command("nvme connect -t {} -a {} -s {} -n {}".
                                       format(unicode.lower(nvme_transport),
                                              tb_config['dut_info'][0]['f1_ip'],
                                              tb_config['dut_info'][0]['tcp_port'],
-                                             self.nvme_io_q))
+                                             self.nqn))
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
 
                 volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
@@ -699,7 +700,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 for x in range(1, self.host_count + 1, 1):
                     if not fio_result[combo][mode] or not internal_result[combo][mode]:
                         test_result = False
-        
+
         # fun_test.test_assert(test_result, self.summary)
         fun_test.log("Test Result: {}".format(test_result))
 
