@@ -152,9 +152,9 @@ class FunethSanity(FunTestScript):
                                                    custom_boot_args=boot_args)
 
             topology = topology_helper.deploy()
+            fun_test.shared_variables["topology"] = topology
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
-            fun_test.shared_variables["topology"] = topology
 
             come = fs.get_come()
             global DPC_PROXY_IP
