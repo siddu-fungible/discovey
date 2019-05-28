@@ -21,7 +21,7 @@ logger.setLevel(logging.DEBUG)
 TEN_MB = 1e7
 DEBUG = False
 
-if len(sys.argv > 1):
+if len(sys.argv) > 1:
     DEBUG = sys.argv[1]
 LOG_FILE_NAME = "archiver.log.txt"
 
@@ -39,7 +39,7 @@ Policies:
 2. Exclude suites used as baseline 
 """
 
-ARCHIVE_DIRECTORY = " /project/users/QA/regression/data_store/jobs_backup"
+ARCHIVE_DIRECTORY = "/project/users/QA/regression/data_store/jobs_backup"
 RECOVERY_DIRECTORY = ARCHIVE_DIRECTORY + "/recovery"
 
 if not os.path.exists(ARCHIVE_DIRECTORY):

@@ -87,13 +87,13 @@ def setup_nu_host(funeth_obj):
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
-    funsdk_bld = driver_bld = driver_commit = None
+    funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
-            funsdk_bld, driver_bld, driver_commit = update_src_result
+            funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
@@ -116,7 +116,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
 
-    return funsdk_bld, driver_bld, driver_commit
+    return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
 
 class FunethSanity(FunTestScript):
@@ -182,7 +182,8 @@ class FunethSanity(FunTestScript):
             setup_nu_host(funeth_obj)
 
         # HU host
-        self.funsdk_bld, self.driver_bld, self.driver_commit = setup_hu_host(funeth_obj, update_driver=True)
+        self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
+            funeth_obj, update_driver=update_driver)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
