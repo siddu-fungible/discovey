@@ -119,6 +119,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
     ec_info["volume_capacity"] = {}
     ec_info["attach_uuid"] = {}
     ec_info["attach_size"] = {}
+    ec_info["attach_nqn"] = {}
 
     for num in xrange(ec_info["num_volumes"]):
         ec_info["uuids"][num] = {}
