@@ -310,14 +310,14 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
             ptable.add_row(row)
 
         funos_bld = r0.get('version')
-        lines = [
-            'FunOS: {}, FunSDK: {} {}, Driver: {} {}\n'.format(
-                funos_bld, funsdk_commit, funsdk_bld, driver_commit, driver_bld),
-            ptable.get_string()]
+        lines = ['FunOS: {}'.format(funos_bld),
+                 'FunSDK: {} {}'.format(funsdk_commit, funsdk_bld),
+                 'Driver: {} {}'.format(driver_commit, driver_bld),
+                 ptable.get_string()]
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'w') as f:
-            f.writelines(lines)
+            f.write('\n'.join(lines))
 
         fun_test.add_auxillary_file(description=filename, filename=file_path)
 
