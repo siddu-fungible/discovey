@@ -154,18 +154,18 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
 
     # flow list TODO: Enable flow list for specific type after SWOS-4849 is resolved
     #checkpoint = "Get Flow list {} test".format(when)
-    for nc_obj in network_controller_objs:
-        fun_test.log_module_filter("random_module")
-        output = nc_obj.get_flow_list(timeout=180).get('data')
-        fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=5)
-        fun_test.log_module_filter_disable()
-        flowlist_temp_filename = '{}_{}_F1_{}_flowlist_{}.txt'.format(str(version), tc_id,
-                                                                      network_controller_objs.index(nc_obj), when)
-        file_path = fun_test.get_test_case_artifact_file_name(flowlist_temp_filename)
-        with open(file_path, 'w') as f:
-            json.dump(output, f, indent=4, separators=(',', ': '), sort_keys=True)
-        fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
-
+    #for nc_obj in network_controller_objs:
+    #    fun_test.log_module_filter("random_module")
+    #    output = nc_obj.get_flow_list(timeout=180).get('data')
+    #    fun_test.sleep("Waiting for flow list cmd dump to complete", seconds=10)
+    #    fun_test.log_module_filter_disable()
+    #    flowlist_temp_filename = '{}_{}_F1_{}_flowlist_{}.txt'.format(str(version), tc_id,
+    #                                                                  network_controller_objs.index(nc_obj), when)
+    #    file_path = fun_test.get_test_case_artifact_file_name(flowlist_temp_filename)
+    #    with open(file_path, 'w') as f:
+    #        json.dump(output, f, indent=4, separators=(',', ': '), sort_keys=True)
+    #    fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
+    #
     fpg_stats = {}
     for nc_obj in network_controller_objs:
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
