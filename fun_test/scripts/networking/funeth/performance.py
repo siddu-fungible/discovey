@@ -38,6 +38,12 @@ PERF_RESULT_KEYS = (nm.THROUGHPUT,
                     nm.LATENCY_P50,
                     nm.LATENCY_P90,
                     nm.LATENCY_P99,
+                    nm.LATENCY_MIN_ULOAD,
+                    nm.LATENCY_AVG_ULOAD,
+                    nm.LATENCY_MAX_ULOAD,
+                    nm.LATENCY_P50_ULOAD,
+                    nm.LATENCY_P90_ULOAD,
+                    nm.LATENCY_P99_ULOAD,
                     )
 FPG_INTERFACES = (0, 4,)
 
