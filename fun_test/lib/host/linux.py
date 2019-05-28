@@ -98,6 +98,7 @@ class Linux(object, ToDictMixin):
                  use_paramiko=False,
                  localhost=None,
                  set_term_settings=True,
+                 ipmi_info=None,
                  **kwargs):
 
         self.host_ip = host_ip
@@ -124,6 +125,10 @@ class Linux(object, ToDictMixin):
         self.telnet_username = telnet_username
         self.telnet_password = telnet_password
         self.extra_attributes = kwargs
+        self.ipmi_info = ipmi_info
+        if self.extra_attributes:
+            if "ipmi_info" in self.extra_attributes:
+                self.ipmi_info = self.extra_attributes["ipmi_info"]
         self.post_init()
 
     @staticmethod
@@ -1927,6 +1932,9 @@ class Linux(object, ToDictMixin):
                 pass
 
         reboot_initiated, power_cycled_already = (False, False)
+        if not ipmi_details:
+            if self.ipmi_info:
+                ipmi_details = self.ipmi_info
         if reboot_initiated_check:
             reboot_initiated, power_cycled_already = self._ensure_reboot_is_initiated(ipmi_details=ipmi_details,
                                                                                       reboot_initiated_wait_time=reboot_initiated_wait_time)
