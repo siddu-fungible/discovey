@@ -891,6 +891,7 @@ class InspurZipCompressionRatiosPerformance(models.Model):
     input_corpus_name = models.TextField(default="")
     output_f1_compression_ratio = models.FloatField(verbose_name="F1 Compression Ratio", default=-1)
     output_f1_compression_ratio_unit = models.TextField(default="number")
+    input_platform = models.TextField(default=FunPlatform.F1)
 
     def __str__(self):
         return str(self.__dict__)
