@@ -4,6 +4,7 @@ from datetime import datetime
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
 from django.utils import timezone
+from fun_global import PerfUnit
 
 if __name__ == "__main_s1_platform__":
     charts = MetricChart.objects.all()
@@ -790,7 +791,7 @@ if __name__ == "__main_multiple_apple__":
                     platform=FunPlatform.F1).save()
     print "added multiple reader tcp charts for apple"
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur__":
     iops_names = ["inspur_rand_read_write_", "_8k_block_"]
     fio_job_names = ["inspur_8k_random_read_write_iodepth_", "_vol_8"]
     qdepths = ["qd1", "qd8", "qd16", "qd32", "qd64", "qd128", "qd256"]
@@ -892,4 +893,47 @@ if __name__ == "__main__":
                             platform=FunPlatform.F1).save()
     print "added datasets for inspur read write multiple volumes"
 
+if __name__ == "__main__":
+    model_name = "InspurZipCompressionRatiosPerformance"
+    internal_name = "inspur_8131_compression_ratio_benchmarking_"
+    efforts = ["ZIP_EFFORT_2Gbps", "ZIP_EFFORT_64Gbps", "ZIP_EFFORT_AUTO"]
+    corpus_names= ["artificl", "cantrbry", "calgary", "large", "silesia", "misc", "enwik8"]
+    chart_name = "Effort"
+    base_line_date = datetime(year=2019, month=5, day=26, minute=0, hour=0, second=0)
+    for effort in efforts:
+        if "AUTO" in effort:
+            internal_chart_name = internal_name + "auto"
+        elif "64" in effort:
+            internal_chart_name = internal_name + "64Gbps"
+        else:
+            internal_chart_name = internal_name + "2Gbps"
+
+        data_sets = []
+        for corpus in corpus_names:
+            one_data_set = {}
+            one_data_set["name"] = corpus
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["inputs"]["input_effort_name"] = effort
+            one_data_set["inputs"]["input_corpus_name"] = corpus
+            one_data_set["output"] = {"name": "output_f1_compression_ratio", 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": PerfUnit.UNIT_NUMBER}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Aamir Shaikh (aamir.shaikh@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/ec_comp_ratio_benchmark.py",
+                    positive=True,
+                    y1_axis_title=PerfUnit.UNIT_NUMBER,
+                    visualization_unit=PerfUnit.UNIT_NUMBER,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added charts for inspur compression benchmark"
 

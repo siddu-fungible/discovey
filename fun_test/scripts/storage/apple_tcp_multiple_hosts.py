@@ -175,20 +175,20 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def setup(self):
         # Reboot hosts
-        # for host_index in range(0, 8):
-        #     end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
-        #                      ssh_username=tb_config['tg_info'][host_index]['user'],
-        #                      ssh_password=tb_config['tg_info'][host_index]['passwd']
-        #                      )
-        #     try:
-        #         end_host.sudo_command("reboot", timeout=5)
-        #     except:
-        #         fun_test.log("Reboot of {} failed".format(host_index))
+        for host_index in range(0, 10):
+            end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
+                             ssh_username=tb_config['tg_info'][host_index]['user'],
+                             ssh_password=tb_config['tg_info'][host_index]['passwd']
+                             )
+            try:
+                end_host.sudo_command("reboot", timeout=5)
+            except:
+                fun_test.log("Reboot of {} failed".format(host_index))
 
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1, disable_uart_logger=True)
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1, disable_uart_logger=False)
         fun_test.shared_variables["fs"] = fs
 
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
+        fun_test.test_assert(fs.bootup(), "FS bootup")
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
@@ -380,7 +380,8 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     container_cli.command("sudo ifconfig bond0 up")
             container_cli.command("ping 15.42.1.1 -c 10")
             container_cli.command("sudo ip route add 15.0.0.0/8 via 15.42.1.1 dev bond0")
-            container_cli.command("ping {} -c 10".format(tb_config['tg_info'][host_index]['iface_ip']))
+            for x in range(0, 10):
+                container_cli.command("ping {} -c 10".format(tb_config['tg_info'][x]['iface_ip']))
             fun_test.log("FunCP brought up")
 
             '''

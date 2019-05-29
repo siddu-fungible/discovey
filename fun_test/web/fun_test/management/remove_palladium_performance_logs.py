@@ -9,7 +9,10 @@ ARCHIVE_DIRECTORY = "/project/users/QA/regression/data_store/jobs_backup"
 RECOVERY_DIRECTORY = ARCHIVE_DIRECTORY + "/recovery"
 
 def move_directory(source):
-    shutil.move(src=source, dst=RECOVERY_DIRECTORY + "/")
+    try:
+        shutil.move(src=source, dst=RECOVERY_DIRECTORY + "/")
+    except Exception as ex:
+        print(str(ex))
 
 palladium_suites = SuiteExecution.objects.filter(suite_path="palladium_performance_master.json")
 for palladium_suite in palladium_suites:
