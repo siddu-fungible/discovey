@@ -646,6 +646,7 @@ class FunethTestReboot(FunTestCase):
         fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver.')
 
         fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
+        fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj)
 
