@@ -397,7 +397,6 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
 
-        pass
         """
         try:
             self.ec_info = fun_test.shared_variables["ec_info"]
@@ -423,9 +422,9 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        self.storage_controller.disconnect()
+        self.storage_controller.disconnect()"""
         fun_test.sleep("Allowing buffer time before clean-up", 30)
-        fun_test.shared_variables["topology"].cleanup()"""
+        fun_test.shared_variables["topology"].cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
