@@ -374,7 +374,7 @@ class Funeth:
         ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
         return self.linux_obj_dict[hu].ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1, sudo=True)
 
-    def configure_namespace_ipv4_routes(self, nu_or_hu, ns):
+    def configure_namespace_ipv4_routes(self, nu_or_hu, ns, configure_gw_arp=True):
         """Configure a namespace's IP routes to NU."""
         result = True
         for route in self.tb_config_obj.get_ipv4_routes(nu_or_hu, ns):
@@ -398,18 +398,19 @@ class Funeth:
                 p = prefix
             result &= re.search(r'{} via {}'.format(p, nexthop), output) is not None
 
-            # ARP
-            router_mac = self.tb_config_obj.get_router_mac()
-            cmds = (
-                'arp -s {} {}'.format(nexthop, router_mac),
-                'arp -na',
-            )
-            for cmd in cmds:
-                if ns is None:
-                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
-                else:
-                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
-            result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(nexthop, router_mac), output) is not None
+            # GW ARP
+            if configure_gw_arp:
+                router_mac = self.tb_config_obj.get_router_mac()
+                cmds = (
+                    'arp -s {} {}'.format(nexthop, router_mac),
+                    'arp -na',
+                )
+                for cmd in cmds:
+                    if ns is None:
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                    else:
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+                result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(nexthop, router_mac), output) is not None
 
         return result
 
