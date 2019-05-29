@@ -5,14 +5,14 @@ from scripts.networking.funeth.funeth import Funeth
 def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=True):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
     if reboot:
-        try:
-            rm_funeth = linux_obj.sudo_command(command="rmmod funeth", timeout=60)
-            fun_test.test_assert("ERROR" not in rm_funeth, message="rmmod funeth succesful")
-        except:
-            funeth_op = linux_obj.command(command="lsmod | grep funeth")
-            fun_test.test_assert(expression="funeth" not in funeth_op, message="funeth not loaded.")
-        linux_obj.command(command="echo 'funeth removed'")
-        linux_obj.reboot()
+        funeth_op=""
+        funeth_op = linux_obj.command(command="lsmod | grep funeth")
+        if "funeth" not in funeth_op:
+            linux_obj.reboot()
+        else:
+            linux_obj_host = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+            linux_obj_host.ipmi_power_cycle(host=hostname)
+            linux_obj_host.disconnect()
         count = 0
         while not linux_obj.check_ssh():
             fun_test.sleep(message="waiting for server to come back up", seconds=15)
@@ -62,3 +62,15 @@ def setup_hu_host(funeth_obj, update_driver=True, enable_tso=True):
             linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
+
+
+def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
+    linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
+    funeth_op = ""
+    funeth_op = linux_obj.command(command="lsmod | grep funeth")
+    if "funeth" not in funeth_op:
+        return True
+    else:
+        funeth_rm = linux_obj.sudo_command("rmmod funeth")
+        fun_test.test_assert(expression="ERROR" not in funeth_rm, message="Funeth removed succesfully")
+        return True
