@@ -954,7 +954,7 @@ if __name__ == "__main_num_flows__":
             ml.save_data_sets(data_sets=data_sets, chart=entry)
             print data_sets
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur_multiplef1s__":
     iops_names = ["inspur_rand_read_write_", "_2f1_8k_block_"]
     fio_job_names = ["inspur_8k_random_read_write_iodepth_", "_f1_2_vol_1"]
     qdepths = ["qd1", "qd8", "qd16", "qd32", "qd64", "qd128", "qd256"]
@@ -1026,3 +1026,14 @@ if __name__ == "__main__":
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
     print "added datasets for inspur read write multiple F1 single volume"
+
+if __name__ == "__main__":
+    internal_chart_name = "inspur_8131_compression_ratio_benchmarking_auto"
+    chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+    data_sets = json.loads(chart.data_sets)
+    for data_set in data_sets:
+        data_set["inputs"]["input_effort_name"] = "ZIP_EFFORT_7Gbps"
+        data_set["output"]["reference"] = -1
+    chart.data_sets = json.dumps(data_sets)
+    chart.save()
+    print "effort name changed for auto"
