@@ -194,7 +194,7 @@ class FunControlPlaneBringup:
         linux_obj_come.disconnect()
         return True
 
-    def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/tmp",
+    def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/scratch",
                               ssh_username=None, ssh_password=None, update_funcp_folder=False):
         if host_ip and ssh_password and ssh_username:
             linux_obj = Linux(host_ip=host_ip, ssh_username= ssh_username, ssh_password=ssh_password)
