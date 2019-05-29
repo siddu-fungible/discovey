@@ -195,18 +195,19 @@ class FunControlPlaneBringup:
         return True
 
     def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/tmp",
-                              ssh_username=None, ssh_password=None):
+                              ssh_username=None, ssh_password=None, update_funcp_folder=False):
         if host_ip and ssh_password and ssh_username:
             linux_obj = Linux(host_ip=host_ip, ssh_username= ssh_username, ssh_password=ssh_password)
         else:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        # linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
-        funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
-        fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
-        # fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
-        # Get FunControlPlane
+        if update_funcp_folder:
+            # linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
+            funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
+            fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
+            # fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
+            # Get FunControlPlane
         if abstract_config_f1_0:
             self.abstract_configs_f1_0 = fun_test.parse_file_to_json(abstract_config_f1_0)
 
