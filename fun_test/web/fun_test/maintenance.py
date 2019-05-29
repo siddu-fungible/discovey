@@ -530,7 +530,8 @@ if __name__ == "__main_funtcp_16flows__":
                 platform=FunPlatform.F1).save()
 
 if __name__ == "__main_qd128_pcie__":
-    internal_chart_names = ["read_iod128_durable_volume_ec_output_latency", "rand_read_iod128_durable_volume_ec_output_latency"]
+    internal_chart_names = ["read_iod128_durable_volume_ec_output_latency",
+                            "rand_read_iod128_durable_volume_ec_output_latency"]
     chart_name = "Latency, QDepth=128"
     for internal_chart_name in internal_chart_names:
         if "rand_read" in internal_chart_name:
@@ -710,7 +711,7 @@ if __name__ == "__main_pcie_write__":
 
 if __name__ == "__main_funtcp_cps__":
     internal_chart_names = ["funtcp_server_cps_close_reset", "funtcp_server_cps_close_fin"]
-    for internal_chart_name  in internal_chart_names:
+    for internal_chart_name in internal_chart_names:
         if "close_reset" in internal_chart_name:
             name = "close reset"
             chart_name = "Close Reset"
@@ -756,7 +757,8 @@ if __name__ == "__main_multiple_apple__":
     #              "input_fio_job_name": "fio_randread_apple_single_tcp"}, "name": "iops",
     #   "output": {"name": "output_read_iops", "reference": 88.134, "min": 0, "max": -1, "expected": 101.3,
     #              "unit": "Kops"}}]
-    internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency", "apple_rand_read_mrsw_tcp_output_iops"]
+    internal_chart_names = ["apple_rand_read_mrsw_tcp_output_bandwidth", "apple_rand_read_mrsw_tcp_output_latency",
+                            "apple_rand_read_mrsw_tcp_output_iops"]
     base_line_date = datetime(year=2019, month=5, day=24, minute=0, hour=0, second=0)
     for internal_chart_name in internal_chart_names:
         if "bandwidth" in internal_chart_name:
@@ -769,7 +771,8 @@ if __name__ == "__main_multiple_apple__":
         copy_chart = MetricChart.objects.get(internal_chart_name=copy_chart_name)
         data_sets = json.loads(copy_chart.data_sets)
         for data_set in data_sets:
-            data_set["inputs"]["input_fio_job_name"] = data_set["inputs"]["input_fio_job_name"].replace("single", "multiple")
+            data_set["inputs"]["input_fio_job_name"] = data_set["inputs"]["input_fio_job_name"].replace("single",
+                                                                                                        "multiple")
             data_set["output"]["reference"] = -1
             data_set["output"]["expected"] = -1
             data_set["output"]["unit"] = y1_axis_title
@@ -897,7 +900,7 @@ if __name__ == "__main_zip_compression__":
     model_name = "InspurZipCompressionRatiosPerformance"
     internal_name = "inspur_8131_compression_ratio_benchmarking_"
     efforts = ["ZIP_EFFORT_2Gbps", "ZIP_EFFORT_64Gbps", "ZIP_EFFORT_AUTO"]
-    corpus_names= ["artificl", "cantrbry", "calgary", "large", "silesia", "misc", "enwik8"]
+    corpus_names = ["artificl", "cantrbry", "calgary", "large", "silesia", "misc", "enwik8"]
     chart_name = "Effort"
     base_line_date = datetime(year=2019, month=5, day=26, minute=0, hour=0, second=0)
     for effort in efforts:
@@ -937,7 +940,7 @@ if __name__ == "__main_zip_compression__":
                     platform=FunPlatform.F1).save()
     print "added charts for inspur compression benchmark"
 
-if __name__ == "__main__":
+if __name__ == "__main_num_flows__":
     model_names = ["HuThroughputPerformance", "HuLatencyPerformance"]
     entries = MetricChart.objects.all()
     ml = MetricLib()
@@ -951,4 +954,75 @@ if __name__ == "__main__":
             ml.save_data_sets(data_sets=data_sets, chart=entry)
             print data_sets
 
+if __name__ == "__main__":
+    iops_names = ["inspur_rand_read_write_", "_2f1_8k_block_"]
+    fio_job_names = ["inspur_8k_random_read_write_iodepth_", "_f1_2_vol_1"]
+    qdepths = ["qd1", "qd8", "qd16", "qd32", "qd64", "qd128", "qd256"]
+    output_names = ["output_iops", "output_latency"]
+    output_iops_names = ["output_read_iops", "output_write_iops"]
+    output_latency_names = ["output_read_avg_latency", "output_write_avg_latency"]
+    base_line_date = datetime(year=2019, month=5, day=27, minute=0, hour=0, second=0)
+    for output_name in output_names:
+        for qdepth in qdepths:
+            if qdepth == "qd1":
+                fio_job_name = fio_job_names[0] + "1" + fio_job_names[1]
+            elif qdepth == "qd8":
+                fio_job_name = fio_job_names[0] + "8" + fio_job_names[1]
+            elif qdepth == "qd16":
+                fio_job_name = fio_job_names[0] + "16" + fio_job_names[1]
+            elif qdepth == "qd32":
+                fio_job_name = fio_job_names[0] + "32" + fio_job_names[1]
+            elif qdepth == "qd64":
+                fio_job_name = fio_job_names[0] + "64" + fio_job_names[1]
+            elif qdepth == "qd128":
+                fio_job_name = fio_job_names[0] + "128" + fio_job_names[1]
+            else:
+                fio_job_name = fio_job_names[0] + "256" + fio_job_names[1]
+            internal_chart_name = iops_names[0] + qdepth + iops_names[1] + output_name
+            if "iops" in output_name:
+                data_output_names = output_iops_names
+                y1_axis_title = PerfUnit.UNIT_OPS
+            else:
+                data_output_names = output_latency_names
+                y1_axis_title = PerfUnit.UNIT_USECS
+            copy = internal_chart_name.replace("_2f1", "")
 
+            copy_chart = MetricChart.objects.get(internal_chart_name=copy)
+            data_sets = []
+            for names in data_output_names:
+                if "iops" in names:
+                    if "read" in names:
+                        name = "read(1 vol)"
+                    else:
+                        name = "write(1 vol)"
+                else:
+                    if "read" in names:
+                        name = "read-avg(1 vol)"
+                    else:
+                        name = "write-avg(1 vol)"
+                one_data_set = {}
+                one_data_set["name"] = name
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                one_data_set["inputs"]["input_operation"] = "randrw"
+                one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                one_data_set["output"] = {"name": names, 'min': 0, "max": -1, "expected": -1,
+                                          "reference": -1, "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=copy_chart.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=copy_chart.description,
+                        owner_info=copy_chart.owner_info,
+                        source=copy_chart.source,
+                        positive=copy_chart.positive,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        metric_model_name=copy_chart.metric_model_name,
+                        base_line_date=base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added datasets for inspur read write multiple F1 single volume"
