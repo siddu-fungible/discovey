@@ -325,7 +325,7 @@ class StorageFsTemplate(object):
         self.come_obj = come_obj
         self.container_info = {}
 
-    def deploy_funcp_container(self, update_n_deploy=True, update_workspace=True, mode=None):
+    def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
         self.mode = mode
@@ -333,7 +333,7 @@ class StorageFsTemplate(object):
             return result
 
         # get funsdk
-        if update_n_deploy:
+        if update_deploy_script:
             if not self.update_fundsk():
                 return result
 

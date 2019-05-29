@@ -7,6 +7,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.templates.storage.storage_fs_template import *
 from ec_perf_helper import *
+from collections import OrderedDict
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -122,42 +123,43 @@ class ECVolumeLevelScript(FunTestScript):
         topology_helper.disable_duts(self.skip_dut_list)
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                           1: {"boot_args": self.bootargs[1]}})
-        topology = topology_helper.deploy()
-        fun_test.test_assert(topology, "Topology deployed")
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
 
         # Datetime required for daily Dashboard data filter
         self.db_log_time = get_data_collection_time()
         fun_test.log("Data collection time: {}".format(self.db_log_time))
 
         # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
-        hosts = topology.get_hosts()
+        hosts = self.topology.get_hosts()
         fun_test.log("Available hosts are: {}".format(hosts))
         required_host_index = []
-        required_host_names = []
+        required_hosts = OrderedDict()
         for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
             required_host_index.append(i)
         fun_test.debug("Host index required for scripts: {}".format(required_host_index))
         for j, host_name in enumerate(sorted(hosts)):
             if j in required_host_index:
-                required_host_names.append(host_name)
-        fun_test.log("Hosts that will be used for current test: {}".format(required_host_names))
+                required_hosts[host_name] = hosts[host_name]
+        fun_test.log("Hosts that will be used for current test: {}".format(required_hosts.keys()))
 
-        self.hosts_test_interfaces = []
+        self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []
         self.host_numa_cpus = {}
-        for host_name, host in hosts.items():
-            if host_name in required_host_names:
-                # Retrieving host ips
-                # test_interfaces = host.get_test_interfaces()
-                test_interface = host.get_test_interface(index=0)
-                self.hosts_test_interfaces.append(host.get_test_interface(index=0))
-                fun_test.log("Host-IP: {}".format(test_interface.ip))
-                host_ip = self.hosts_test_interfaces[-1].ip.split('/')[0]
-                self.host_ips.append(host_ip)
-                # Retrieving host handles
-                host_instance = host.get_instance()
-                self.host_handles[host_ip] = host_instance
+        for host_name, host_obj in required_hosts.items():
+            # Retrieving host ips
+            # test_interfaces = host.get_test_interfaces()
+            if host_name not in self.hosts_test_interfaces:
+                self.hosts_test_interfaces[host_name] = []
+            test_interface = host_obj.get_test_interface(index=0)
+            self.hosts_test_interfaces[host_name].append(test_interface)
+            host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
+            self.host_ips.append(host_ip)
+            fun_test.log("Host-IP: {}".format(host_ip))
+            # Retrieving host handles
+            host_instance = host_obj.get_instance()
+            self.host_handles[host_ip] = host_instance
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for key in self.host_handles:
@@ -177,36 +179,67 @@ class ECVolumeLevelScript(FunTestScript):
         self.gateway_ips = []
         for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
             curr_index = i - self.dut_start_index
-            self.fs_obj.append(topology.get_dut_instance(index=i))
-            self.fs_spec.append(topology.get_dut(index=i))
+            self.fs_obj.append(self.topology.get_dut_instance(index=i))
+            self.fs_spec.append(self.topology.get_dut(index=i))
+            print("fs_spec is: {}".format(self.fs_spec[-1]))
+            try:
+                print("dir of fs_spec is: {}".format(dir(self.fs_spec[-1])))
+            except:
+                pass
+            try:
+                print("spec of fs_spec is: {}".format(self.fs_spec[-1].spec))
+            except:
+                pass
             self.come_obj.append(self.fs_obj[curr_index].get_come())
             self.f1_obj[curr_index] = []
             for j in xrange(self.num_f1_per_fs):
                 self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
                 self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
 
-                fpg_interfaces = self.fs_spec[curr_index].get_fpg_interfaces(f1_index=j)
-                for fpg_interface_index, fpg_interface in fpg_interfaces.items():
-                    peer_end_point = fpg_interface.get_peer_instance()
-                    fun_test.log(
-                        "F1 index: {} FPG Interface: {} IP: {}".format(fpg_interface.f1_index, fpg_interface_index,
-                                                                       fpg_interface.ip))
-                fun_test.log("Bond Interfaces:")
+                """fun_test.log("Bond Interfaces:")
                 bond_interfaces = self.fs_spec[curr_index].get_bond_interfaces(f1_index=j)
                 for bond_interface_index, bond_interface in bond_interfaces.items():
                     fun_test.log("Bond interface index: {}".format(bond_interface_index))
                     fun_test.log("IP: {}".format(bond_interface.ip))
                     bond_interface_ip = bond_interface.ip
-                    self.f1_ips.append(bond_interface_ip.split('/')[0])
-                    fpg_slaves = bond_interface.fpg_slaves
-                    fun_test.log("FPG slaves: {}".format(fpg_slaves))
+                    self.f1_ips.append(bond_interface_ip.split('/')[0])"""
 
-                    for fpg_slave_index in fpg_slaves:
-                        fpg_interface = self.fs_spec[curr_index].get_fpg_interface(f1_index=j,
-                                                                                   interface_index=fpg_slave_index)
-                        fun_test.log("Slave index: {} - FPG Interface: {}".format(fpg_slave_index, fpg_interface))
+        # Bringing up of FunCP docker container if it is needed
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            self.funcp_obj = {}
+            self.funcp_spec = {}
+            for index in xrange(self.num_duts):
+                self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
+                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                    mode=self.funcp_mode)
+                fun_test.test_assert(self.funcp_spec[index]["status"],
+                                     "Starting FunCP docker container in DUT {}".format(index))
+                self.funcp_spec[index]["container_names"].sort()
+                for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                    bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                    bond_name = "bond0"
+                    bond_ip = bond_interfaces[0].ip
+                    self.f1_ips.append(bond_ip.split('/')[0])
+                    slave_interface_list = bond_interfaces[0].fpg_slaves
+                    slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
+                    self.funcp_obj[index].configure_bond_interface(container_name=container_name,
+                                                                   name=bond_name,
+                                                                   ip=bond_ip,
+                                                                   slave_interface_list=slave_interface_list)
+                    # Configuring route
+                    route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"]
+                    # self.funcp_obj[index].container_info[container_name].command("hostname")
+                    cmd = "sudo ip route add {} via {} dev {}".format(route["net"], route["gw"], bond_name)
+                    route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                    fun_test.test_assert_expected(expected=0,
+                                                  actual=self.funcp_obj[index].container_info[
+                                                      container_name].exit_status(),
+                                                  message="Configure Static route")
 
         # Forming shared variables for defined parameters
+        fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["fs_obj"] = self.fs_obj
         fun_test.shared_variables["come_obj"] = self.come_obj
         fun_test.shared_variables["f1_obj"] = self.f1_obj
@@ -220,35 +253,10 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        # Bringing up of FunCP docker container if it is needed
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            self.funcp_obj = {}
-            self.funcp_spec = {}
-            for index in xrange(self.num_duts):
-                self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                    update_n_deploy=self.update_deploy_script, update_workspace=self.update_workspace,
-                    mode=self.funcp_mode)
-                fun_test.test_assert(self.funcp_spec[index]["status"],
-                                     "Starting FunCP docker container in DUT {}".format(index))
-                self.funcp_spec[index]["container_names"].sort()
-                for f1_index, container_name in enumerate(sorted(self.funcp_spec[index]["container_names"])):
-                    bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
-                    bond_name = "bond0"
-                    bond_ip = bond_interfaces[0].ip
-                    slave_interface_list = bond_interfaces[0].fpg_slaves
-                    slave_interface_list = ["fpg" + str(i) for i in slave_interface_list]
-                    self.funcp_obj[index].configure_bond_interface(container_name=container_name,
-                                                                   name=bond_name,
-                                                                   ip=bond_ip,
-                                                                   slave_interface_list=slave_interface_list)
-        hosts_up_count = 0
         for key in self.host_handles:
             # Ensure all hosts are up after reboot
             fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host is reachable after reboot")
-            hosts_up_count += 1
+                                 message="Ensure Host {} is reachable after reboot".format(key))
 
             # TODO: enable after mpstat check is added
             """
@@ -264,24 +272,6 @@ class ECVolumeLevelScript(FunTestScript):
                     module_check = self.host_handles[key].lsmod(module)
                     fun_test.sleep("Loading {} module".format(module))
                 fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-        fun_test.test_assert_expected(expected=self.num_hosts, actual=hosts_up_count, message="Required hosts are up")
-
-        # Adding Static route and Ensuring Host is able to ping to both FunCP containers
-        # TODO: Should we add gateway IP in hosts.json or we should derive it?
-        """
-        f1_gateway_ip = []
-        f1_gateway_ip = self.f1_ips[index].replace(r'\.\d+$', '.1')
-        """
-        gateway_ip = ["15.43.1.1", "15.43.2.1"]
-        for index in xrange(self.num_duts):
-            for f1_index, container_name in enumerate(sorted(self.funcp_spec[index]["container_names"])):
-                self.funcp_obj[index].container_info[container_name].command("hostname")
-                cmd = "sudo ip route add 15.0.0.0/8 via {} dev {}".format(gateway_ip[f1_index], bond_name)
-                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
-                fun_test.test_assert_expected(expected=0,
-                                              actual=self.funcp_obj[index].container_info[container_name].exit_status(),
-                                              message="Configure Static route")
 
         # Ensuring connectivity from Host to F1's
         for key in self.host_handles:
@@ -318,8 +308,9 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.critical(str(ex))
 
         self.storage_controller.disconnect()"""
+        # TODO: Stop docker containers, and unload funeth
         fun_test.sleep("Allowing buffer time before clean-up", 30)
-        fun_test.shared_variables["topology"].cleanup()
+        self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
