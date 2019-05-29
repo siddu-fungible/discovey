@@ -81,7 +81,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
     # In case if the spread list is not equal to the num_volumes, then copy last spread to the rest of the volumes
     if len(ec_info["plex_spread_list"]) != ec_info["num_volumes"]:
-        last_spread = ec_info["plex_spread_list"]
+        last_spread = ec_info["plex_spread_list"][-1]
         ec_info["plex_spread_list"].extend([last_spread] *
                                            (ec_info["num_volumes"] - len(ec_info["plex_spread_list"])))
 
@@ -106,7 +106,11 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             ec_info['zip_effort'], ec_info['zip_filter']))
 
     # Enabling network controller to listen in the given F1 ip and port
+    print "storage controller list is: {}".format(ec_info["storage_controller_list"])
+    print "dir of storage controller list is: {}".format(dir(ec_info["storage_controller_list"]))
     for index, sc in enumerate(ec_info["storage_controller_list"]):
+        print "storage controller list is: {}".format(sc)
+        print "dir of storage controller list is: {}".format(dir(sc))
         command_result = sc.ip_cfg(ip=ec_info["f1_ips"][index], port=ec_info["transport_port"])
         fun_test.test_assert(command_result["status"], "Enabling controller to listen in {} on {} port in {} DUT".
                              format(ec_info["f1_ips"][index], ec_info["transport_port"], index))
@@ -115,6 +119,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
     ec_info["volume_capacity"] = {}
     ec_info["attach_uuid"] = {}
     ec_info["attach_size"] = {}
+    ec_info["attach_nqn"] = {}
 
     for num in xrange(ec_info["num_volumes"]):
         ec_info["uuids"][num] = {}
@@ -161,9 +166,10 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         for index, sc in enumerate(ec_info["storage_controller_list"]):
             ctrlr_uuid = utils.generate_uuid()
             ec_info["uuids"][num]["ctlr"].append(ctrlr_uuid)
-            if cur_vol_host_f1 == index:
+            if index == cur_vol_host_f1:
                 transport = "TCP"
                 remote_ip = ec_info["host_ips"][num]
+                ec_info["attach_nqn"][num] = "nqn" + str(index)
             else:
                 transport = "RDS"
                 remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
@@ -193,7 +199,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                             ec_info["volume_capacity"][num][vtype], sc_index))
                 if sc_index != cur_vol_host_f1:
                     command_result = sc.attach_volume_to_controller(ctrlr_uuid=ec_info["uuids"][num]["ctlr"][sc_index],
-                    ns_id=str(num+1) + str(plex_num), vol_uuid=this_uuid, command_duration=command_timeout)
+                    ns_id=int(str(num+1) + str(plex_num)), vol_uuid=this_uuid, command_duration=command_timeout)
                     fun_test.test_assert(command_result["status"],
                                          "Attaching {} {} {} {} bytes volume on {} DUT".
                                          format(num, i, vtype, ec_info["volume_capacity"][num][vtype], sc_index))
@@ -212,11 +218,12 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             command_result = hosting_sc.create_volume(
                 type="VOL_TYPE_BLK_RDS", capacity=ec_info["volume_capacity"][num]["ndata"],
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
-                remote_nsid=str(num+1)+ str(plex_num), remote_ip=ec_info["f1_ips"][sc_index],
+                remote_nsid=int(str(num+1)+ str(plex_num)), remote_ip=ec_info["f1_ips"][sc_index],
                 command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
                                                            "on {} DUT".format(num+ plex_num,
-                                                                              ec_info["f1_ips"][sc_index], sc_index))
+                                                                              ec_info["f1_ips"][sc_index],
+                                                                              cur_vol_host_f1))
             plex_num += 1
 
         # Configuring EC volume on top of BLT volumes
@@ -274,7 +281,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
         # Attaching the EC/LSV
         command_result = hosting_sc.attach_volume_to_controller(
-            ctrlr_uuid=ec_info["uuids"][num]["ctlr"][cur_vol_host_f1], ns_id=str(num+1) + str(plex_num),
+            ctrlr_uuid=ec_info["uuids"][num]["ctlr"][cur_vol_host_f1], ns_id=int(str(num+1) + str(plex_num)),
             vol_uuid=ec_info["attach_uuid"][num], command_duration=command_timeout)
         fun_test.test_assert(command_result["status"], "Attaching {} {} bytes EC/LS volume on {} DUT".
                              format(num, ec_info["attach_size"][num], cur_vol_host_f1))
@@ -318,7 +325,7 @@ class StorageFsTemplate(object):
         self.come_obj = come_obj
         self.container_info = {}
 
-    def deploy_funcp_container(self, update_n_deploy=True, update_workspace=True, mode=None):
+    def deploy_funcp_container(self, update_deploy_script=True, update_workspace=True, mode=None):
         # check if come is up
         result = {'status': False, 'container_info': {}, 'container_names': []}
         self.mode = mode
@@ -326,7 +333,7 @@ class StorageFsTemplate(object):
             return result
 
         # get funsdk
-        if update_n_deploy:
+        if update_deploy_script:
             if not self.update_fundsk():
                 return result
 
