@@ -196,6 +196,7 @@ class FunControlPlaneBringup:
 
     def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/scratch",
                               ssh_username=None, ssh_password=None, update_funcp_folder=False):
+        fun_test.test_assert(expression=self.mpg_ips != {}, message="MPG_IPs have been assigned")
         if host_ip and ssh_password and ssh_username:
             linux_obj = Linux(host_ip=host_ip, ssh_username= ssh_username, ssh_password=ssh_password)
         else:
