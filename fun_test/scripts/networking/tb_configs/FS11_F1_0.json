@@ -5,7 +5,7 @@
 	{
 		"name" : "fpg0",
 		"mtu": 9000,
-		"address" : "20.1.1.1",
+		"address" : "20.1.1.2",
 		"prefix length" : 24,
 		"spine_index" : 0,
 		"gph_index" : 1,
@@ -14,7 +14,7 @@
 	{
 		"name" : "fpg4",
 		"mtu": 9000,
-		"address" : "21.1.1.1",
+		"address" : "21.1.1.2",
 		"prefix length" : 24,
 		"spine_index" : 0,
 		"gph_index" : 2,
