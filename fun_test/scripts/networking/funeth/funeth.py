@@ -29,8 +29,8 @@ class Funeth:
         self.fundrv_branch = fundrv_branch
         self.funsdk_branch = funsdk_branch
         self.ws = ws
-        self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
-        self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
+        #self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
+        #self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
 
     def lspci(self, check_pcie_width=True):
         """Do lspci to check funeth controller."""

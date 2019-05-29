@@ -37,7 +37,7 @@ class TBConfigs:
         for ns in namespaces:
             if ns is None:
                 ns = 'default'
-            interfaces = self.configs['nu']['namespaces'][ns]['interfaces']
+            interfaces = self.configs[nu]['namespaces'][ns]['interfaces']
             if interfaces:
                 return interfaces[0].keys()[0]
 
@@ -59,17 +59,17 @@ class TBConfigs:
     def get_namespaces(self, nu_or_hu):
         return [n if n != 'default' else None for n in self.configs[nu_or_hu]['namespaces'].keys()]
 
-    def get_hu_pf_namespace(self):
-        for ns in self.get_namespaces('hu'):
-            if self.get_hu_pf_interface() in self.get_interfaces('hu', ns):
+    def get_hu_pf_namespace(self, hu='hu'):
+        for ns in self.get_namespaces(hu):
+            if self.get_hu_pf_interface() in self.get_interfaces(hu, ns):
                 if ns != 'default':
                     return ns
                 else:
                     return None
 
-    def get_hu_vf_namespace(self):
-        for ns in self.get_namespaces('hu'):
-            if self.get_hu_vf_interface() in self.get_interfaces('hu', ns):
+    def get_hu_vf_namespace(self, hu='hu'):
+        for ns in self.get_namespaces(hu):
+            if self.get_hu_vf_interface() in self.get_interfaces(hu, ns):
                 if ns != 'default':
                     return ns
                 else:
