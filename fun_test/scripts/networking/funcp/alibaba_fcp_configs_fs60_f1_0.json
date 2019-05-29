@@ -29,7 +29,7 @@
 	    "enable" : true
 	},
         {
-            "name" : "vlan2",
+            "name" : "vlan1",
             "address" : "43.1.1.1",
             "prefix length" : 24,
             "enable" : true
