@@ -28,7 +28,7 @@
       "(4, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "reboot_host": true,
-    "host_count": 10
+    "host_count": 8
   },
   "BLTFioRandRead": {
     "syslog": 2,
