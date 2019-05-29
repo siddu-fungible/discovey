@@ -142,11 +142,13 @@ def set_networking_chart_status(platform="F1"):
                     if value == -1:
                         status = False
                         chart.last_build_status = fun_test.FAILED
+                        chart.last_suite_execution_id = fun_test.get_suite_execution_id()
                         chart.last_build_date = get_current_time()
                         chart.save()
                         break
             if status:
                 chart.last_build_status = fun_test.PASSED
+                chart.last_suite_execution_id = fun_test.get_suite_execution_id()
                 chart.last_build_date = get_current_time()
                 chart.save()
 
@@ -1621,7 +1623,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
         metrics = collections.OrderedDict()
         metrics["input_flow_type"] = line["flow_type"]
         metrics["input_frame_size"] = line["frame_size"]
-        metrics["input_number_flows"] = line.get("num_flows", 1)
+        metrics["input_num_flows"] = line.get("num_flows", 1)
         metrics["input_offloads"] = line.get("offloads", False)
         metrics["input_protocol"] = line.get("protocol", "TCP")
         metrics["input_version"] = line.get("version", "")

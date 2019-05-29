@@ -3985,6 +3985,138 @@
                     "weight": 0,
                     "label": "8_14_1:8K_RAND_RW_COMP, F1(s)=1",
                     "children": []
+                  },
+                  {
+                    "info": "inspur_8111_8k_rand_rw_2f1",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8111_8k_rand_rw_2f1",
+                    "weight": 1,
+                    "label": "8_11_1:8K_RAND_RW, F1(s)=2",
+                    "children": [
+                      {
+                        "info": "inspur_rand_read_write_qd1_2f1_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd1_2f1_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=1"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd8_2f1_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd8_2f1_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=8"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd16_2f1_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd16_2f1_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=16"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd32_2f1_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd32_2f1_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=32"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd64_2f1_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd64_2f1_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=64"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd128_2f1_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd128_2f1_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=128"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd256_2f1_8k_block_output_iops",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd256_2f1_8k_block_output_iops",
+                        "weight": 1,
+                        "label": "IOPS, QDepth=256"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "inspur_8116_8k_rand_rw_2f1",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "inspur_8116_8k_rand_rw_2f1",
+                    "weight": 1,
+                    "label": "8_11_6:8K_RAND_RW, F1(s)=2",
+                    "children": [
+                      {
+                        "info": "inspur_rand_read_write_qd1_2f1_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd1_2f1_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=1"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd8_2f1_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd8_2f1_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=8"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd16_2f1_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd16_2f1_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=16"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd32_2f1_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd32_2f1_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=32"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd64_2f1_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd64_2f1_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=64"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd128_2f1_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd128_2f1_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=128"
+                      },
+                      {
+                        "info": "inspur_rand_read_write_qd256_2f1_8k_block_output_latency",
+                        "metric_model_name": "BltVolumePerformance",
+                        "leaf": true,
+                        "name": "inspur_rand_read_write_qd256_2f1_8k_block_output_latency",
+                        "weight": 1,
+                        "label": "Latency, QDepth=256"
+                      }
+                    ]
                   }
                 ]
               },
