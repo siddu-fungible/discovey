@@ -1621,7 +1621,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
         metrics = collections.OrderedDict()
         metrics["input_flow_type"] = line["flow_type"]
         metrics["input_frame_size"] = line["frame_size"]
-        metrics["input_number_flows"] = line.get("num_flows", 1)
+        metrics["input_num_flows"] = line.get("num_flows", 1)
         metrics["input_offloads"] = line.get("offloads", False)
         metrics["input_protocol"] = line.get("protocol", "TCP")
         metrics["input_version"] = line.get("version", "")
