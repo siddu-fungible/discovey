@@ -256,6 +256,7 @@ if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
     bltscript.add_test_case(BltPciSeqRead())
     bltscript.add_test_case(BltPciRandRead())
+    bltscript.add_test_case(BltPciSeqRWMix())
     bltscript.add_test_case(BltPciSeqWRMix())
     bltscript.add_test_case(BltPciRandRWMix())
     bltscript.add_test_case(BltPciRandWRMix())
