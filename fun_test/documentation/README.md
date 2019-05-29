@@ -53,4 +53,5 @@ from fun_settings import DATA_STORE_DIR
 data_store/storage
 data_store/networking
 data_store/web_backup (Location of the regression/performance Db backup)
+data_store/job_backup (Location of the regression jobs log that are archived via web/fun_test/management/archiver.py)
 ```

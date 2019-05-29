@@ -35,6 +35,7 @@ tb_config = {
             "bootarg": "app=mdt_test,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart syslog=2",
             "huid": 3,
             "ctlid": 2,
+            "fnid": 2,
             "interface_info": {
                 0: {
                     "vms": 0,
@@ -148,15 +149,13 @@ class MemVolPerformanceScript(FunTestScript):
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # Detach the volume
+        # Detach the volume and delete the controller and volume
         try:
             self.volume_details = fun_test.shared_variables["volume_details"]
-            command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
-                                                                    uuid=fun_test.shared_variables["thin_uuid"],
-                                                                    huid=tb_config['dut_info'][0]['huid'],
-                                                                    ctlid=tb_config['dut_info'][0]['ctlid'],
+            command_result = self.storage_controller.detach_volume_from_controller(ns_id=self.volume_details["ns_id"],
+                                                                    ctrlr_uuid=fun_test.shared_variables["ctrlr_uuid"],
                                                                     command_duration=30)
-            fun_test.test_assert(command_result["status"], "Detaching memory volume on DUT")
+            fun_test.test_assert(command_result["status"], "Detaching memory volume from controller on DUT")
 
             # Deleting the volume
             command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
@@ -166,6 +165,12 @@ class MemVolPerformanceScript(FunTestScript):
                                                                    uuid=fun_test.shared_variables["thin_uuid"],
                                                                    command_duration=10)
             fun_test.test_assert(command_result["status"], "Deleting memory volume on DUT")
+
+            # Deleting the controller
+            command_result = self.storage_controller.delete_controller(
+                ctrlr_uuid=fun_test.shared_variables["ctrlr_uuid"],
+                command_duration=10)
+            fun_test.test_assert(command_result["status"], "Deleting storage controller on DUT")
         except:
             pass
 
@@ -298,6 +303,7 @@ class MemVolPerformanceTestcase(FunTestCase):
             # self.end_host.exit_sudo()
             """
 
+            # Creating memory volume
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_volume(
@@ -310,9 +316,24 @@ class MemVolPerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create Mem volume on Dut Instance 0")
 
-            command_result = self.storage_controller.volume_attach_pcie(
-                ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, huid=tb_config['dut_info'][0]['huid'],
-                ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
+            # Creating PCIe controller
+            self.ctrlr_uuid = utils.generate_uuid()
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+            command_result = self.storage_controller.create_controller(
+                ctrlr_uuid=self.ctrlr_uuid,
+                transport="PCI",
+                huid=tb_config['dut_info'][0]['huid'],
+                ctlid=tb_config['dut_info'][0]['ctlid'],
+                fnid=tb_config['dut_info'][0]['fnid'],
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
+                                 format(self.ctrlr_uuid))
+
+            # Attaching the volume
+            command_result = self.storage_controller.attach_volume_to_controller(
+                ns_id=self.volume_details["ns_id"], ctrlr_uuid=self.ctrlr_uuid, vol_uuid=self.thin_uuid,
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching Mem volume on Dut Instance 0")
 

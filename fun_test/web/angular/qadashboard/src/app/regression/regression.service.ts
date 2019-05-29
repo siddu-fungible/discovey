@@ -8,7 +8,7 @@ import {forkJoin, observable, Observable, of} from "rxjs";
   providedIn: 'root'
 })
 export class RegressionService implements OnInit{
-  stateStringMap = { "-200": "UNKNOWN",
+  stateStringMap = { "-200": "UNKNOWN",  // TODO: fetch from the back-end
                    "-100": "ERROR",
                    "-20": "KILLED",
                    "-10": "ABORTED",
@@ -19,6 +19,19 @@ export class RegressionService implements OnInit{
                    "50": "QUEUED",
                    "60": "IN_PROGRESS"};
 
+
+  stateMap = {
+    "UNKNOWN": "-200",  // TODO: fetch from the back-end
+    "ERROR" : -100,
+    "KILLED" : -20,
+    "ABORTED" : -10,
+    "COMPLETED": 10,
+    "AUTO_SCHEDULED": 20,
+    "SUBMITTED": 30,
+    "SCHEDULED": 40,
+    "QUEUED": 50,
+    "IN_PROGRESS": 60
+  };
 
   logDir: string = null;
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }

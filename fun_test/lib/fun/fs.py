@@ -156,8 +156,9 @@ class Bmc(Linux):
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
         ipmi_details = self._get_ipmi_details()
-        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details),
-                             "Ensure ComE is reachable before reboot")
+        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=max_wait_time,
+                                                    ipmi_details=ipmi_details,
+                                                    power_cycle=power_cycle), "Ensure ComE is reachable before reboot")
 
         fun_test.log("Rebooting ComE")
         reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
@@ -529,6 +530,8 @@ class ComE(Linux):
                                           message="F1_{} funq bind device found".format(f1_index))
         '''
         fun_test.test_assert(num_pfs_detected, "At least one PF detected")
+        if self.disable_f1_index is None:
+            fun_test.test_assert_expected(actual=num_pfs_detected, expected=self.NUM_F1S, message="Number of PFs (Unassigned class)")
         return True
 
     def ensure_dpc_running(self):

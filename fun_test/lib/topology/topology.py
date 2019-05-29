@@ -4,12 +4,13 @@ from lib.system.utils import ToDictMixin
 class ExpandedTopology(ToDictMixin):
     TO_DICT_VARS = ["duts", "tgs"]
 
-    def __init__(self):
+    def __init__(self, spec):
         self.duts = {}
         self.tgs = {}
         self.active_orchestrators = []
         self.switches = {}
         self.hosts = {}
+        self.spec = spec
 
 
     def add_active_orchestrator(self, orchestrator):
@@ -54,6 +55,9 @@ class ExpandedTopology(ToDictMixin):
         for host_name, host in self.hosts.iteritems():
             result[host_name] = host.get_instance()
         return result
+
+    def get_hosts(self):
+        return self.hosts
 
     def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
         dut = self.get_dut(index=dut_index)

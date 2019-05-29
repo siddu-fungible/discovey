@@ -196,6 +196,7 @@
           <th class="text-center">Suite</th>
           <th class="text-center">Schedule</th>
           <th class="text-center">Test-bed</th>
+          <th class="text-center">Enabled</th>
 
         </tr>
         <ng-container *ngFor="let suiteExecution of items">
@@ -225,6 +226,7 @@
               </td>
             </ng-container>
             <td>{{ suiteExecution.fields.test_bed_type }}</td>
+            <td>{{ suiteExecution.fields.disable_schedule ? "No": "Yes" }}</td>
 
           </tr>
         </ng-container>

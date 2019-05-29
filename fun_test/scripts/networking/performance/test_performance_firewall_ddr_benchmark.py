@@ -164,6 +164,9 @@ class TestFirewallPerformance(FunTestCase):
 
         fun_test.log("Fetching BAM stats before test")
         network_controller_obj.peek_resource_bam_stats()
+        
+        fun_test.log("Fetching flow output")
+        network_controller_obj.show_nu_benchmark(flow_offset=0, num_flows=100, show="1")
 
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
@@ -176,6 +179,9 @@ class TestFirewallPerformance(FunTestCase):
                                     test_type=MEMORY_TYPE_DDR, single_flow=self.single_flow,
                                     half_load_latency=self.half_load_latency, test_time=self.test_time)
 
+        fun_test.log("Fetching flow output")
+        network_controller_obj.show_nu_benchmark(flow_offset=0, num_flows=100, show="1")
+        
         fun_test.log("Fetching PSW NU Global stats after test")
         network_controller_obj.peek_psw_global_stats()
 

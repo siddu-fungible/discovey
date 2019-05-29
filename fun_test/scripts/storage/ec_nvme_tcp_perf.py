@@ -222,7 +222,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # enable counters
-            enable_counters(self.storage_controller, self.command_timeout)
+            # enable_counters(self.storage_controller, self.command_timeout)
 
             # ipcfg on fs
             configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
@@ -392,7 +392,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                  *row_data_list)
 
         table_data = {"headers": fio_perf_table_header, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance stats for EC42, Compression Effort: Auto", table_name=self.summary,
+        fun_test.add_table(panel_header="Sequential and random read performance stats over NVME/TCP for EC42 Durable Vol",
+                           table_name=self.summary,
                            table_data=table_data)
 
         # Posting the final status of the test result
