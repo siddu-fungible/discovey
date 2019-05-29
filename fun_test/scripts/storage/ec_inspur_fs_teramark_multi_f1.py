@@ -229,9 +229,9 @@ class ECVolumeLevelScript(FunTestScript):
                                                                    ip=bond_ip,
                                                                    slave_interface_list=slave_interface_list)
                     # Configuring route
-                    route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"]
+                    route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
                     # self.funcp_obj[index].container_info[container_name].command("hostname")
-                    cmd = "sudo ip route add {} via {} dev {}".format(route["net"], route["gw"], bond_name)
+                    cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
                     route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
                     fun_test.test_assert_expected(expected=0,
                                                   actual=self.funcp_obj[index].container_info[
