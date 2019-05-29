@@ -189,11 +189,11 @@ class FunethSanity(FunTestScript):
             funeth_obj, update_driver=update_driver)
 
         # TODO: remove below workaround after SWLINUX-729 is fixed
-        if test_bed_type == 'fs-11' and control_plane:
-            funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
+        #if test_bed_type == 'fs-11' and control_plane:
+        #    funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
+        #    funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
+        #    funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
+        #    funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
