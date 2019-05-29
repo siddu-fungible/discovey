@@ -93,7 +93,7 @@ class BringupSetup(FunTestCase):
             abstract_json_file1 = \
                 fun_test.get_script_parent_directory() + testbed_info['fs'][fs_name]['abtract_config_f1_1']
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
-                                            abstract_config_f1_1=abstract_json_file1)
+                                            abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
     def cleanup(self):
 
