@@ -3957,7 +3957,7 @@
                         "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_auto",
                         "weight": 1,
-                        "label": "Percentage for Effort: 8"
+                        "label": "Space Saving Percentage (Effort: 8)"
                       },
                       {
                         "info": "inspur_8131_compression_ratio_benchmarking_64Gbps",
@@ -3965,7 +3965,7 @@
                         "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_64Gbps",
                         "weight": 1,
-                        "label": "Percentage for Effort: 0"
+                        "label": "Space Saving Percentage (Effort: 0)"
                       },
                       {
                         "info": "inspur_8131_compression_ratio_benchmarking_2Gbps",
@@ -3973,7 +3973,7 @@
                         "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_2Gbps",
                         "weight": 1,
-                        "label": "Percentage for Effort: 15"
+                        "label": "Space Saving Percentage (Effort: 15)"
                       }
                     ]
                   },
