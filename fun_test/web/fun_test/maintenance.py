@@ -893,7 +893,7 @@ if __name__ == "__main_inspur__":
                             platform=FunPlatform.F1).save()
     print "added datasets for inspur read write multiple volumes"
 
-if __name__ == "__main__":
+if __name__ == "__main_zip_compression__":
     model_name = "InspurZipCompressionRatiosPerformance"
     internal_name = "inspur_8131_compression_ratio_benchmarking_"
     efforts = ["ZIP_EFFORT_2Gbps", "ZIP_EFFORT_64Gbps", "ZIP_EFFORT_AUTO"]
@@ -936,4 +936,19 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added charts for inspur compression benchmark"
+
+if __name__ == "__main__":
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance"]
+    entries = MetricChart.objects.all()
+    ml = MetricLib()
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            print json.loads(entry.data_sets)
+            data_sets = json.loads(entry.data_sets)
+            for data_set in data_sets:
+                if "input_number_flows" in data_set["inputs"]:
+                    data_set["inputs"]["input_num_flows"] = data_set["inputs"].pop("input_number_flows")
+            ml.save_data_sets(data_sets=data_sets, chart=entry)
+            print data_sets
+
 
