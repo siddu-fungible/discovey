@@ -12,7 +12,7 @@
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "128k", "iodepth": 12, "fill_device": 1, "size": "512G", "rw": "write", "prio": 0,
+    "warm_up_fio_cmd_args": {"bs": "512k", "iodepth": 12, "fill_device": 1, "size": "512G", "rw": "write", "prio": 0,
                              "direct": 1, "cpus_allowed": "20-39", "timeout": 1000},
     "fio_cmd_args": {"ioengine": "mmap", "size": "512G", "numjobs": 65,  "direct": 1, "time_based": 1, "runtime": 600, "thread": 1,
                      "cpus_allowed": "20-39,60-79,1-19,41-59", "group_reporting": 1, "prio":  0, "timeout": 720},
