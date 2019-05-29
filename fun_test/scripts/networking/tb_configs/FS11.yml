@@ -84,14 +84,12 @@ hu2:
             mac_addr: 00:de:ad:be:ef:21
             ipv4_addr: 53.1.1.4
             ipv4_netmask: 255.255.255.0
-        - hu2-f8:  # TODO: Move it to namespace after SWLINUX-734 is fixed
-            mac_addr: 00:de:ad:be:ef:51
-            ipv4_addr: 53.1.9.4
-            ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 20.1.1.0/24
           nexthop: 53.1.1.254
         - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.254
+        - prefix: 53.1.9.0/24
           nexthop: 53.1.1.254
         - prefix: 54.1.1.0/24
           nexthop: 53.1.1.253
@@ -100,7 +98,7 @@ hu2:
           mac_addr: 00:de:ad:be:ef:11
         - ipv4_addr: 53.1.1.253
           mac_addr: 00:f1:1d:ad:00:3e
-# TODO: use namespace after SWLINUX-734 is fixed
+# TODO: Uncomment after SWLINUX-734 is fixed
 #    n1:
 #      interfaces:
 #        - hu2-f8:

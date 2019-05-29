@@ -642,6 +642,9 @@ class FunethTestReboot(FunTestCase):
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
 
+        # TODO: Currently have to unload driver before reboot
+        fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver.')
+
         fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj)
