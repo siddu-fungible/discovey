@@ -75,6 +75,7 @@ class ECVolumeLevelScript(FunTestScript):
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
 
+        # Declaring default values if not defined in config files
         if not hasattr(self, "dut_start_index"):
             self.dut_start_index = 0
         if not hasattr(self, "host_start_index"):
@@ -84,17 +85,15 @@ class ECVolumeLevelScript(FunTestScript):
         if not hasattr(self, "update_deploy_script"):
             self.update_deploy_script = False
 
+        # Using Parameters passed during execution, this will override global and config parameters
         job_inputs = fun_test.get_job_inputs()
-        print("job inputs is: {}".format(job_inputs))
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "dut_start_index" in job_inputs:
             self.dut_start_index = job_inputs["dut_start_index"]
-            print("inside job inputs: dut_start_index: {}".format(self.dut_start_index))
         if "host_start_index" in job_inputs:
             self.host_start_index = job_inputs["host_start_index"]
-            print("inside job inputs: host_Start_index: {}".format(self.host_start_index))
         if "update_workspace" in job_inputs:
             self.update_workspace = job_inputs["update_workspace"]
-            print("inside job inputs: prepare_fucnp: {}".format(self.update_workspace))
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
 
@@ -104,11 +103,10 @@ class ECVolumeLevelScript(FunTestScript):
         self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
         fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
         self.total_avaialble_duts = len(self.testbed_config["dut_info"])
-        print("total_avaialble_duts are: {}".format(self.total_avaialble_duts))
+        fun_test.log("Total Avaialble Duts: {}".format(self.total_avaialble_duts))
 
         self.num_duts = (self.num_f1s / self.num_f1_per_fs)
-        print("num_dut is: {}".format(self.num_duts))
-
+        fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
         fun_test.test_assert(expression=self.num_duts <= self.total_avaialble_duts, message="Testbed has enough DUTs")
 
         # Skipping DUTs not required for this test
@@ -117,36 +115,32 @@ class ECVolumeLevelScript(FunTestScript):
             self.skip_dut_list.append(index)
         for index in xrange(self.dut_start_index+self.num_duts, self.total_avaialble_duts):
             self.skip_dut_list.append(index)
-        print("skip dut list is: {}".format(self.skip_dut_list))
+        fun_test.debug("DUTs that will be skipped: {}".format(self.skip_dut_list))
 
+        # Deploying of DUTs
         topology_helper = TopologyHelper()
         topology_helper.disable_duts(self.skip_dut_list)
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                           1: {"boot_args": self.bootargs[1]}})
         topology = topology_helper.deploy()
-        print("topology output is: {}".format(topology.spec))
         fun_test.test_assert(topology, "Topology deployed")
-        try:
-            print("topology spec: {}".format(topology.spec))
-        except:
-            pass
 
+        # Datetime required for daily Dashboard data filter
         self.db_log_time = get_data_collection_time()
         fun_test.log("Data collection time: {}".format(self.db_log_time))
 
-        fun_test.log("Hosts")
+        # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
         hosts = topology.get_hosts()
-        print ("Available hosts are: {}".format(hosts))
-
+        fun_test.log("Available hosts are: {}".format(hosts))
         required_host_index = []
         required_host_names = []
         for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
             required_host_index.append(i)
-        print ("required_host_index: {}".format(required_host_index))
+        fun_test.debug("Host index required for scripts: {}".format(required_host_index))
         for j, host_name in enumerate(sorted(hosts)):
             if j in required_host_index:
                 required_host_names.append(host_name)
-        print ("required_host_names: {}".format(required_host_names))
+        fun_test.log("Hosts that will be used for current test: {}".format(required_host_names))
 
         self.hosts_test_interfaces = []
         self.host_handles = {}
@@ -154,49 +148,26 @@ class ECVolumeLevelScript(FunTestScript):
         self.host_numa_cpus = {}
         for host_name, host in hosts.items():
             if host_name in required_host_names:
-                print ("host are: {}".format(host))
-                print ("host dir: {}".format(dir(host)))
-                print ("host_name are: {}".format(host_name))
-                print ("host_name dir: {}".format(dir(host_name)))
-                test_interfaces = host.get_test_interfaces()
-                print ("test_interfaces: {}".format(test_interfaces))
-
-                test_interface_0 = host.get_test_interface(index=0)
+                # Retrieving host ips
+                # test_interfaces = host.get_test_interfaces()
+                test_interface = host.get_test_interface(index=0)
                 self.hosts_test_interfaces.append(host.get_test_interface(index=0))
-                print ("host_obj is: {}".format(self.hosts_test_interfaces))
-                print ("host_obj dir is: {}".format(dir(self.hosts_test_interfaces)))
-
-                print ("test_interface_0 : {}".format(test_interface_0))
-                print ("test_interface_0 dir : {}".format(dir(test_interface_0)))
-                print ("test_interface_0 type: {}".format(type(test_interface_0)))
-
-                fun_test.log("Host-IP: {}".format(test_interface_0.ip))
+                fun_test.log("Host-IP: {}".format(test_interface.ip))
                 host_ip = self.hosts_test_interfaces[-1].ip.split('/')[0]
-                # host_ip = test_interface_0.ip
                 self.host_ips.append(host_ip)
-
-                fun_test.log("Peer-info: {}".format(test_interface_0.peer_info))
-                fun_test.log("Switch-name: {}".format(test_interface_0.peer_info["name"]))
-                fun_test.log("Switch-port: {}".format(test_interface_0.peer_info["port"]))
-
+                # Retrieving host handles
                 host_instance = host.get_instance()
-                print ("hosts_instance: {}".format(host_instance))
-                print ("hosts_instance dir: {}".format(dir(host_instance)))
                 self.host_handles[host_ip] = host_instance
-                # host_instance.command("date")
 
-        print ("hosts_instances: {}".format(self.host_handles))
-        print ("hosts_instances dir: {}".format(dir(self.host_handles)))
-        print ("host_ips are: {}".format(self.host_ips))
-
-        # Rebooting all the hosts in non-blocking mode before the test
+        # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for key in self.host_handles:
             self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
             fun_test.log("Rebooting host: {}".format(key))
             self.host_handles[key].reboot(non_blocking=True)
-        print ("host_nma_cpus is: {}".format(self.host_numa_cpus))
+        fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
 
-        # Getting FS, F1 and COMe objects for all the DUTs going to be used in the test
+        # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
+        # for all the DUTs going to be used in the test
         self.fs_obj = []
         self.fs_spec = []
         self.come_obj = []
@@ -209,38 +180,10 @@ class ECVolumeLevelScript(FunTestScript):
             self.fs_obj.append(topology.get_dut_instance(index=i))
             self.fs_spec.append(topology.get_dut(index=i))
             self.come_obj.append(self.fs_obj[curr_index].get_come())
-            try:
-                print("fs_obj[{}] is: {}".format(curr_index, self.fs_obj[curr_index]))
-            except:
-                pass
-            try:
-                print("fs_obj[{}] is: {}".format(curr_index, dir(self.fs_obj[curr_index])))
-            except:
-                pass
-            try:
-                print("come_obj[{}] is: {}".format(curr_index, self.come_obj[curr_index]))
-            except:
-                pass
-            try:
-                print("come_obj[{}] is: {}".format(curr_index, dir(self.come_obj[curr_index])))
-            except:
-                pass
-            try:
-                print("fs_spec[{}] is: {}".format(curr_index, self.fs_spec[curr_index]))
-            except:
-                pass
-            try:
-                print("fs_spec.spec[{}] is: {}".format(curr_index, self.fs_spec[curr_index].spec))
-            except:
-                pass
             self.f1_obj[curr_index] = []
-            # self.f1_ips[curr_index] = []  # TODO: check
-            # self.sc_obj[curr_index] = []  # TODO: Check
-            # self.gateway_ips[curr_index] = []  # TODO: check
             for j in xrange(self.num_f1_per_fs):
                 self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
                 self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
-                # self.sc_obj[curr_index].append(self.f1_obj[curr_index][j].get_dpc_storage_controller)  # TODO: Check
 
                 fpg_interfaces = self.fs_spec[curr_index].get_fpg_interfaces(f1_index=j)
                 for fpg_interface_index, fpg_interface in fpg_interfaces.items():
@@ -251,13 +194,10 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.log("Bond Interfaces:")
                 bond_interfaces = self.fs_spec[curr_index].get_bond_interfaces(f1_index=j)
                 for bond_interface_index, bond_interface in bond_interfaces.items():
-                    print("Dir of bond_interface is: {}".format(dir(bond_interface)))
                     fun_test.log("Bond interface index: {}".format(bond_interface_index))
                     fun_test.log("IP: {}".format(bond_interface.ip))
                     bond_interface_ip = bond_interface.ip
                     self.f1_ips.append(bond_interface_ip.split('/')[0])
-                    # self.f1_ips[curr_index].append(bond_interface_ip.split('/')[0])  # TODO Check
-                    # self.gateway_ips[curr_index].append(self.f1_ips[curr_index].replace(r'\.\d+$', '.1'))  # TODO check
                     fpg_slaves = bond_interface.fpg_slaves
                     fun_test.log("FPG slaves: {}".format(fpg_slaves))
 
@@ -266,34 +206,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                                                    interface_index=fpg_slave_index)
                         fun_test.log("Slave index: {} - FPG Interface: {}".format(fpg_slave_index, fpg_interface))
 
-                try:
-                    print("f1_obj[{}][{}] is: {}".format(curr_index, j, self.f1_obj[curr_index][j]))
-                except:
-                    pass
-                try:
-                    print("f1_obj[{}][{}] is: {}".format(curr_index, j, dir(self.f1_obj[curr_index][j])))
-                except:
-                    pass
-                try:
-                    print ("storage_controller object list is: {}".format(self.sc_obj[-1]))
-                    print ("dir of storage_controller object list is: {}".format(dir(self.sc_obj[-1])))
-                except:
-                    pass
-                try:
-                    print ("F1 IP is: {}".format(self.f1_ips[-1]))
-                except:
-                    pass
-
-        """
-        # Enabling network controller to listen in the given F1 ip and port
-        for index, sc in enumerate(self.sc_obj):
-            print ("storage controller list is: {}".format(sc))
-            print ("dir of storage controller list is: {}".format(dir(sc)))
-            command_result = sc.ip_cfg(ip=self.f1_ips[index], port=1099)
-            fun_test.test_assert(command_result["status"],
-                                 "Enabling controller to listen in {} on {} port in {} DUT".
-                                 format(self.f1_ips[index], 1099, index))"""
-
+        # Forming shared variables for defined parameters
         fun_test.shared_variables["fs_obj"] = self.fs_obj
         fun_test.shared_variables["come_obj"] = self.come_obj
         fun_test.shared_variables["f1_obj"] = self.f1_obj
@@ -330,20 +243,9 @@ class ECVolumeLevelScript(FunTestScript):
                                                                    name=bond_name,
                                                                    ip=bond_ip,
                                                                    slave_interface_list=slave_interface_list)
-            print ("funcp_spec is: {}".format(self.funcp_spec))
-            print ("dir of funcp_spec is: {}".format(dir(self.funcp_spec)))
-            print ("type of funcp_spec is: {}".format(type(self.funcp_spec)))
-
-            print ("funcp_obj is: {}".format(self.funcp_obj))
-            print ("dir of funcp_obj is: {}".format(dir(self.funcp_obj)))
-            print ("type of funcp_obj is: {}".format(type(self.funcp_obj)))
-        else:
-            pass
-
         hosts_up_count = 0
         for key in self.host_handles:
-            # Ensure hosts are up after reboot
-            # TODO: check reboot timeout
+            # Ensure all hosts are up after reboot
             fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
                                  message="Ensure Host is reachable after reboot")
             hosts_up_count += 1
@@ -354,7 +256,6 @@ class ECVolumeLevelScript(FunTestScript):
             install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
             fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
             """
-
             # Ensure required modules are loaded on host server, if not load it
             for module in self.load_modules:
                 module_check = self.host_handles[key].lsmod(module)
@@ -364,7 +265,6 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.sleep("Loading {} module".format(module))
                 fun_test.simple_assert(module_check, "{} module is loaded".format(module))
 
-        # TODO: Assert of critical message?
         fun_test.test_assert_expected(expected=self.num_hosts, actual=hosts_up_count, message="Required hosts are up")
 
         # Adding Static route and Ensuring Host is able to ping to both FunCP containers
@@ -376,36 +276,19 @@ class ECVolumeLevelScript(FunTestScript):
         gateway_ip = ["15.43.1.1", "15.43.2.1"]
         for index in xrange(self.num_duts):
             for f1_index, container_name in enumerate(sorted(self.funcp_spec[index]["container_names"])):
-                try:
-                    self.funcp_obj[index].container_info[container_name].command("hostname")
-                    cmd = "sudo ip route add 15.0.0.0/8 via {} dev {}".format(gateway_ip[f1_index], bond_name)
-                    route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
-                    print ("static route add output is: {}".format(route_add_status))
+                self.funcp_obj[index].container_info[container_name].command("hostname")
+                cmd = "sudo ip route add 15.0.0.0/8 via {} dev {}".format(gateway_ip[f1_index], bond_name)
+                route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                fun_test.test_assert_expected(expected=0,
+                                              actual=self.funcp_obj[index].container_info[container_name].exit_status(),
+                                              message="Configure Static route")
 
-                    """
-                    # Configuring Static route
-                    self.funcp_obj[index].container_info[container_name].ip_route_add(network="15.0.0.0/8",
-                                                                                      gateway=gateway_ip[f1_index],
-                                                                                      outbound_interface=bond_name,
-                                                                                      timeout=self.command_timeout)
-                    """
-                    """fun_test.test_assert_expected(
-                        expected=0, actual=self.funcp_obj[index].container_info[container_name].exit_status(),
-                        message="Configure static route")"""
-                except:
-                    print ("in except: failed")
-
+        # Ensuring connectivity from Host to F1's
         for key in self.host_handles:
             for index, ip in enumerate(self.f1_ips):
                 ping_status = self.host_handles[key].ping(dst=ip)
                 fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
-
-        """
-        before funcp code: get the host handles, reboot hosts (non blocking) - check nvme and nvme_tcp module is loaded
-        add static route in both dockers
-        get host handles and ping both the bond
-        """
 
         """ Old code
         self.fs = topology.get_dut_instance(index=self.f1_in_use)
@@ -589,11 +472,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.num_f1s = fun_test.shared_variables["num_f1s"]
         self.num_duts = fun_test.shared_variables["num_duts"]
         self.syslog_level = fun_test.shared_variables["syslog_level"]
-        # self.numa_cpus = fun_test.shared_variables["numa_cpus"]
-
-        # fun_test.shared_variables["attach_transport"] = self.attach_transport
-        # num_ssd = self.num_ssd
-        # fun_test.shared_variables["num_ssd"] = num_ssd
+        num_ssd = self.num_ssd
+        fun_test.shared_variables["num_ssd"] = num_ssd
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -606,22 +486,17 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
-            """command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")"""
-
             self.final_host_ips = self.host_ips[:]
             if len(self.host_ips) < self.ec_info["num_volumes"]:
                 for i in range(len(self.host_ips), self.ec_info["num_volumes"]):
                     self.final_host_ips.append(self.host_ips[len(self.host_ips) % i])
 
+            # Creating EC volume
             self.ec_info["storage_controller_list"] = self.sc_obj
             self.ec_info["f1_ips"] = self.f1_ips
             self.ec_info["host_ips"] = self.final_host_ips
             (ec_config_status, self.ec_info) = configure_ec_volume_across_f1s(self.ec_info, self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
-            print ("ec_config_status output is: {}".format(ec_config_status))
-            print ("dir of ec_config_status output is: {}".format(dir(ec_config_status)))
 
             # Test - return
             fun_test.log("EC details after configuring EC Volume:")
@@ -659,7 +534,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                     nvme_connect_status = self.host_handles[host_ip].sudo_command(command=nvme_connect_cmd,
                                                                                   timeout=self.command_timeout)
-                    fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
                     fun_test.test_assert_expected(expected=0, actual=self.host_handles[host_ip].exit_status(),
                                                   message="NVME Connect Status from Host {} to F1 {}".
                                                   format(host_ip, hosting_f1_ip))
@@ -923,8 +797,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of Multiple "
-                                      "EC volume",
+                              summary="Inspur TC 8.11.1: Multi F1: 8k data block random read/write IOPS performance of "
+                                      "Single EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -949,8 +823,8 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
 class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
-                                      "of Multiple EC volume",
+                              summary="Inspur TC 8.11.2: Multi F1: 1024k data block sequential write IOPS performance "
+                                      "of Single EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -975,8 +849,8 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
 class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of Multiple "
-                                      "EC volume",
+                              summary="Inspur TC 8.11.3: Multi F1: Integrated model read/write IOPS performance of "
+                                      "Single EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -1001,7 +875,8 @@ class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
 class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of Multiple EC volume",
+                              summary="Inspur TC 8.11.4: Multi F1: OLTP Model read/read IOPS performance of Single "
+                                      "EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -1026,7 +901,8 @@ class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
 class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of Multiple EC volume",
+                              summary="Inspur TC 8.11.5: Multi F1: OLAP Model read/write IOPS performance of Single "
+                                      "EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -1051,8 +927,8 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Inspur TC 8.11.6: 8k data block random read/write latency test of Multiple "
-                                      "EC volume",
+                              summary="Inspur TC 8.11.6: Multi F1: 8k data block random read/write latency test of "
+                                      "Single EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
