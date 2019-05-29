@@ -75,7 +75,7 @@ class BringupSetup(FunTestCase):
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=True)
-        
+        #TODO : add ethtool output
         #funcp_obj.fetch_mpg_ips() #Only if not running the full script
         #execute abstract file
         
@@ -84,8 +84,8 @@ class BringupSetup(FunTestCase):
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1)
 
-        funcp_obj.add_routes_towards_f1(f1_0_outgoing=["fpg0", "1.1.1.1"], f1_0=["19.1.1.0/24", "20.1.1.0/24"],
-                                        f1_1_outgoing=["fpg0", "1.1.2.1"], f1_1=["18.1.1.0/24", "20.1.1.0/24"])
+        funcp_obj.add_routes_on_f1(f1_0_outgoing=["fpg0", "1.1.1.1"], f1_0=["19.1.1.0/24", "20.1.1.0/24"],
+                                   f1_1_outgoing=["fpg0", "1.1.2.1"], f1_1=["18.1.1.0/24", "20.1.1.0/24"])
 
 
 
@@ -98,4 +98,7 @@ if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     # ts.add_test_case(SetupVMs)
+    # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
+    # T2 : Local SSD from FIO
+    # T3 : Remote SSD FIO
     ts.run()

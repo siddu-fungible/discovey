@@ -339,7 +339,7 @@ class FunControlPlaneBringup:
             self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
             linux_obj.disconnect()
 
-    def add_routes_towards_f1(self, f1_0, f1_1, f1_0_outgoing, f1_1_outgoing):
+    def add_routes_on_f1(self, f1_0, f1_1, f1_0_outgoing, f1_1_outgoing):
         self._get_docker_names()
 
         for docker_name in self.docker_names:
