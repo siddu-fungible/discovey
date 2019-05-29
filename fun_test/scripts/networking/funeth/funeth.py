@@ -29,8 +29,8 @@ class Funeth:
         self.fundrv_branch = fundrv_branch
         self.funsdk_branch = funsdk_branch
         self.ws = ws
-        self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
-        self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
+        #self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
+        #self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
 
     def lspci(self, check_pcie_width=True):
         """Do lspci to check funeth controller."""
@@ -414,11 +414,11 @@ class Funeth:
 
         return result
 
-    def configure_ipv4_routes(self, nu_or_hu):
+    def configure_ipv4_routes(self, nu_or_hu, configure_gw_arp=True):
         """Configure IP routes to NU."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            result &= self.configure_namespace_ipv4_routes(nu_or_hu, ns)
+            result &= self.configure_namespace_ipv4_routes(nu_or_hu, ns, configure_gw_arp=configure_gw_arp)
 
         return result
 

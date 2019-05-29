@@ -23,6 +23,7 @@ try:
         else:
             TB = 'SB5'
 except (KeyError, ValueError):
+    emulation_target = 'f1'
     #DPC_PROXY_IP = '10.1.21.120'
     #DPC_PROXY_PORT = 40221
     #TB = 'SN2'
@@ -82,7 +83,8 @@ def setup_nu_host(funeth_obj):
         fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
             linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu), 'Configure NU host {} IPv4 routes'.format(
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
+                             'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
 
 
@@ -90,7 +92,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
@@ -109,7 +111,8 @@ def setup_hu_host(funeth_obj, update_driver=True):
                              'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
+                             'Configure HU host {} IPv4 routes.'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(
             linux_obj.host_ip))
@@ -188,11 +191,11 @@ class FunethSanity(FunTestScript):
             funeth_obj, update_driver=update_driver)
 
         # TODO: remove below workaround after SWLINUX-729 is fixed
-        if test_bed_type == 'fs-11' and control_plane:
-            funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
-            funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
+        #if test_bed_type == 'fs-11' and control_plane:
+        #    funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
+        #    funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
+        #    funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
+        #    funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
@@ -224,6 +227,7 @@ def collect_stats():
         network_controller_obj = fun_test.shared_variables['network_controller_obj']
         network_controller_obj.peek_fpg_port_stats(port_num=0)
         network_controller_obj.peek_fpg_port_stats(port_num=1)
+        network_controller_obj.peek_fpg_port_stats(port_num=4)
         network_controller_obj.peek_psw_global_stats()
         network_controller_obj.peek_vp_packets()
     except:
@@ -298,7 +302,7 @@ class FunethTestPacketSweep(FunTestCase):
         # NU
         linux_obj = funeth_obj.linux_obj_dict[nu]
         hostname = tb_config_obj.get_hostname(nu)
-        interface = tb_config_obj.get_a_nu_interface()
+        interface = tb_config_obj.get_a_nu_interface(nu)
         fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU),
                              'Set NU host {} interface {} MTU to {}'.format(hostname, interface, MAX_MTU))
 
@@ -339,7 +343,7 @@ class FunethTestPacketSweep(FunTestCase):
 
         if emulation_target == 'palladium':  # Use only one PF and one VF interface to save run time
             interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
-        elif emulation_target == 'f1':
+        else:
             interfaces = tb_config_obj.get_all_interfaces(hu)
         ip_addrs = [tb_config_obj.get_interface_ipv4_addr(hu, intf) for intf in interfaces]
 
@@ -379,6 +383,8 @@ class FunethTestScpBase(FunTestCase):
         else:
             file_size = '2g'
         linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
+        fun_test.test_assert(linux_obj.check_file_directory_exists(self.file_name),
+                             'Create file {} in {}'.format(self.file_name, linux_obj.host_ip))
 
         if fun_test.shared_variables["test_bed_type"] == 'fs-11':
             nu = 'nu2'
@@ -395,7 +401,7 @@ class FunethTestScpBase(FunTestCase):
             elif pf_or_vf == 'vf':
                 ns = tb_config_obj.get_hu_vf_namespace(hu)
 
-            if ns != 'default':
+            if ns:
                 linux_obj = funeth_obj.linux_obj_dict[hu]
                 linux_obj.command('sudo ip netns exec {} /usr/sbin/sshd &'.format(ns))
 
@@ -421,9 +427,9 @@ class FunethTestScpBase(FunTestCase):
 
         if nu_or_hu == nu:
             if pf_or_vf == 'pf':
-                ip_addr = tb_config_obj.get_interface_ipv4_addr(hu, funeth_obj.pf_intf)
+                ip_addr = tb_config_obj.get_interface_ipv4_addr(hu, tb_config_obj.get_hu_pf_interface(hu))
             elif pf_or_vf == 'vf':
-                ip_addr = tb_config_obj.get_interface_ipv4_addr(hu, funeth_obj.vf_intf)
+                ip_addr = tb_config_obj.get_interface_ipv4_addr(hu, tb_config_obj.get_hu_vf_interface(hu))
             username = tb_config_obj.get_username(hu)
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from NU to HU host via {}.'.format(pf_or_vf.upper())
@@ -641,9 +647,6 @@ class FunethTestReboot(FunTestCase):
             hu = 'hu'
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
-
-        # TODO: Currently have to unload driver before reboot
-        fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver.')
 
         fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))

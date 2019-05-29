@@ -80,19 +80,19 @@ tb_config = {
         },
         7: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.113",
-            "user": "localadmin",
-            "passwd": "Precious1*",
-            "iface_ip": "15.1.13.2",
-            "iface_gw": "15.1.13.1"
-        },
-        8: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
             "ip": "10.1.105.112",
             "user": "localadmin",
             "passwd": "Precious1*",
             "iface_ip": "15.1.12.2",
             "iface_gw": "15.1.12.1"
+        },
+        8: {
+            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
+            "ip": "10.1.105.113",
+            "user": "localadmin",
+            "passwd": "Precious1*",
+            "iface_ip": "15.1.13.2",
+            "iface_gw": "15.1.13.1"
         },
         9: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
@@ -115,9 +115,9 @@ def fio_parser(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 
-def get_iostat(host_thread, count, sleep_time, iostat_interval, iostat_iter):
+def get_iostat(host_thread, count, sleep_time, iostat_interval, iostat_iter, iostat_timeout):
     host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
-                             format(sleep_time, iostat_interval, iostat_iter), timeout=400)
+                             format(sleep_time, iostat_interval, iostat_iter), timeout=iostat_timeout)
     fun_test.shared_variables["iostat_output"][count] = \
         host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d")
     host_thread.disconnect()
@@ -175,20 +175,20 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def setup(self):
         # Reboot hosts
-        for host_index in range(0, 10):
-            end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
-                             ssh_username=tb_config['tg_info'][host_index]['user'],
-                             ssh_password=tb_config['tg_info'][host_index]['passwd']
-                             )
-            try:
-                end_host.sudo_command("reboot", timeout=5)
-            except:
-                fun_test.log("Reboot of {} failed".format(host_index))
+        # for host_index in range(0, 8):
+        #     end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
+        #                      ssh_username=tb_config['tg_info'][host_index]['user'],
+        #                      ssh_password=tb_config['tg_info'][host_index]['passwd']
+        #                      )
+        #     try:
+        #         end_host.sudo_command("reboot", timeout=5)
+        #     except:
+        #         fun_test.log("Reboot of {} failed".format(host_index))
 
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1, disable_uart_logger=True)
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1, disable_uart_logger=False)
         fun_test.shared_variables["fs"] = fs
 
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
+        fun_test.test_assert(fs.bootup(), "FS bootup")
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
@@ -339,9 +339,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt_details"] = self.blt_details
             fun_test.shared_variables["stripe_details"] = self.stripe_details
 
-            self.dpc_host.sudo_command("iptables -F")
-            self.dpc_host.sudo_command("ip6tables -F")
-            self.dpc_host.sudo_command("dmesg -c > /dev/null")
+            self.dpc_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
 
             self.dpc_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
@@ -380,9 +378,10 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     container_cli.command("sudo ifconfig bond0 up")
             container_cli.command("ping 15.42.1.1 -c 10")
             container_cli.command("sudo ip route add 15.0.0.0/8 via 15.42.1.1 dev bond0")
-            for x in range(0, 10):
-                container_cli.command("ping {} -c 10".format(tb_config['tg_info'][x]['iface_ip']))
+            for x in range(0, 8):
+                container_cli.command("ping {} -c 3".format(tb_config['tg_info'][x]['iface_ip']))
             fun_test.log("FunCP brought up")
+            container_cli.disconnect()
 
             '''
             # Configuring Local thin block volume
@@ -476,9 +475,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             # Checking that the above created striped volume is visible to the end host
             for host_index in range(0, self.host_count):
                 end_host = self.end_host_list[host_index]
-                end_host.sudo_command("iptables -F")
-                end_host.sudo_command("ip6tables -F")
-                end_host.sudo_command("dmesg -c > /dev/null")
+                end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
 
                 # Load nvme and nvme_tcp modules
                 command_result = end_host.command("lsmod | grep -w nvme")
@@ -611,8 +608,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                                  format(mode, fio_block_size, fio_iodepth))
 
                     # Flush cache before read test
-                    end_host.sudo_command("sync")
-                    end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
+                    end_host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
 
                     fun_test.log("Starting test from host {}".format(end_host))
                     # Get iostat results
@@ -623,12 +619,13 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         func=get_iostat,
                         host_thread=self.iostat_host_thread,
                         count=thread_count,
-                        sleep_time=self.fio_cmd_args["runtime"] / 4,
+                        sleep_time=240,
                         iostat_interval=self.iostat_details["interval"],
-                        iostat_iter=self.fio_cmd_args["runtime"] / 3)
+                        iostat_iter=170,
+                        iostat_timeout=self.fio_cmd_args["runtime"])
 
                     fun_test.log("Running FIO...")
-                    fio_job_name = "fio_6stripe_multi_" + mode + "_host_" + str(thread_count)\
+                    fio_job_name = "fio_multi_host_" + mode + "_host_" + str(thread_count)\
                                    + "_" + self.fio_job_name[mode]
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                     fio_output[combo][mode] = {}
@@ -691,13 +688,15 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         non_zero += 1
                 avg_tps[count] = total_tps / non_zero
                 avg_kbs_read[count] = total_kbs_read / non_zero
-                '''
+
                 fun_test.log("Host {} the avg TPS is : {}".format(count, avg_tps[count]))
                 fun_test.log("Host {} the avg read rate is {} KB/s".format(count, avg_kbs_read[count]))
                 fun_test.log("Host {} the IO size is {} kB".format(count, avg_kbs_read[count] / avg_tps[count]))
-                '''
+
                 collective_tps += avg_tps[count]
                 collective_kbs_read += avg_kbs_read[count]
+            fun_test.log("The collective tps is {}".format(collective_tps))
+            fun_test.log("The collective kbs is {}".format(collective_kbs_read))
 
             for x in range(1, self.host_count + 1, 1):
                 # Boosting the fio output with the testbed performance multiplier
