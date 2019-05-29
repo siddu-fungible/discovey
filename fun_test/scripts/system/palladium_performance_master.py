@@ -142,11 +142,13 @@ def set_networking_chart_status(platform="F1"):
                     if value == -1:
                         status = False
                         chart.last_build_status = fun_test.FAILED
+                        chart.last_suite_execution_id = fun_test.get_suite_execution_id()
                         chart.last_build_date = get_current_time()
                         chart.save()
                         break
             if status:
                 chart.last_build_status = fun_test.PASSED
+                chart.last_suite_execution_id = fun_test.get_suite_execution_id()
                 chart.last_build_date = get_current_time()
                 chart.save()
 
