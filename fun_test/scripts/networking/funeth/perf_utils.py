@@ -196,6 +196,9 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
         nc_obj.peek_psw_global_stats()
         fun_test.log('{} dpc: Get FCB stats'.format(f1))
         nc_obj.peek_fcp_global_stats()
+        tunnel_id = 192
+        fun_test.log('{} dpc: Get FCP tunnel {} stats'.format(f1, tunnel_id))
+        nc_obj.peek_fcp_tunnel_stats(tunnel_id)
         fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
         nc_obj.peek_vp_packets()
 
