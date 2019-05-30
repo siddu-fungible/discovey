@@ -2529,6 +2529,30 @@ class Linux(object, ToDictMixin):
         sync; echo 3 > /proc/sys/vm/drop_caches"""
         self.sudo_command(flush_cmd)
 
+    def mpstat(self, cpu_list=None, numa_node=None, interval=5, count=2, background=True,
+               output_file="/tmp/mpstat.out"):
+
+        mpstat_output = None
+        timeout = interval * (count + 1)
+
+        cmd = "mpstat"
+        if cpu_list:
+            cmd += " -P {}".format(str(cpu_list))
+        if numa_node:
+            cmd += " -N {}".format(str(numa_node))
+
+        cmd += " {} {}".format(str(interval), str(count))
+
+        if background:
+            fun_test.log("Starting command {} in backgroud".format(cmd))
+            mpstat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
+            fun_test.simple_assert(mpstat_output, "mpstat process is started n backgroud, pid is: {}".
+                                   format(mpstat_output))
+        else:
+            mpstat_output = self.command(cmd, timeout=timeout)
+
+        return mpstat_output
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
