@@ -2544,10 +2544,9 @@ class Linux(object, ToDictMixin):
         cmd += " {} {}".format(str(interval), str(count))
 
         if background:
-            fun_test.log("Starting command {} in backgroud".format(cmd))
+            fun_test.log("Starting command {} in background".format(cmd))
             mpstat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
-            fun_test.simple_assert(mpstat_output, "mpstat process is started n backgroud, pid is: {}".
-                                   format(mpstat_output))
+            fun_test.critical("mpstat process is started in background, process id is: {}".format(mpstat_output))
         else:
             mpstat_output = self.command(cmd, timeout=timeout)
 
