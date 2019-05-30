@@ -7,6 +7,7 @@ from ec_perf_helper import *
 from fun_settings import DATA_STORE_DIR
 from fun_global import PerfUnit, is_production_mode
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
+import copy
 
 '''
 Script to compare space savings achieved using Compression enabled storage engine Compression disabled ones
@@ -140,7 +141,10 @@ class ECVolumeLevelScript(FunTestScript):
                                                                                       self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume with zip effort: {}".format(effort))
             lsv_uuid = ec_info["attach_uuid"][0]
-            configured_vols[effort] = {'ns_id': ns_id, 'ec_info': ec_info, 'lsv_uuid': lsv_uuid}
+            configured_vols[effort] = {'ns_id': ns_id,
+                                       'lsv_uuid': lsv_uuid,
+                                       'capacity': ec_info["volume_capacity"][0]["lsv"]}
+            configured_vols[effort]['ec_info'] = copy.deepcopy(ec_info)
 
             fun_test.test_assert(self.storage_controller.attach_volume_to_controller(
                 ctrlr_uuid=self.ctrlr_uuid,
@@ -151,6 +155,7 @@ class ECVolumeLevelScript(FunTestScript):
                                      ns_id,
                                      self.ctrlr_uuid))
             ns_id += 1
+            self.ec_info["capacity"] += 1 << 30  # additional param to identify vol ids
 
         # disable error injection for ec-volumes
         disable_error_inject(self.storage_controller, self.command_timeout)
@@ -176,7 +181,7 @@ class ECVolumeLevelScript(FunTestScript):
         # Check all devices are visible and mount them on end host
         for effort in configured_vols:
             ns_id = configured_vols[effort]['ns_id']
-            fetch_nvme = fetch_nvme_device(self.end_host, ns_id)
+            fetch_nvme = fetch_nvme_device(self.end_host, ns_id, configured_vols[effort]['capacity'])
             fun_test.test_assert(fetch_nvme['status'], message="Check nvme device visible on end host")
             configured_vols[effort]['volume_name'] = fetch_nvme['volume_name']
             configured_vols[effort]['nvme_device'] = fetch_nvme['nvme_device']
@@ -340,7 +345,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         pass
 
 
-class EcCompBenchmarkEffortAuto(ECVolumeLevelTestcase):
+class EcCompBenchmarkEffort7Gbps(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with "
@@ -355,13 +360,13 @@ class EcCompBenchmarkEffortAuto(ECVolumeLevelTestcase):
                           """)
 
     def setup(self):
-        super(EcCompBenchmarkEffortAuto, self).setup()
+        super(EcCompBenchmarkEffort7Gbps, self).setup()
 
     def run(self):
-        super(EcCompBenchmarkEffortAuto, self).run()
+        super(EcCompBenchmarkEffort7Gbps, self).run()
 
     def cleanup(self):
-        super(EcCompBenchmarkEffortAuto, self).cleanup()
+        super(EcCompBenchmarkEffort7Gbps, self).cleanup()
 
 
 class EcCompBenchmarkEffort64Gbps(ECVolumeLevelTestcase):
@@ -414,9 +419,8 @@ class EcCompBenchmarkEffort2Gbps(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(EcCompBenchmarkEffortAuto())
+    ecscript.add_test_case(EcCompBenchmarkEffort7Gbps())
     ecscript.add_test_case(EcCompBenchmarkEffort64Gbps())
     ecscript.add_test_case(EcCompBenchmarkEffort2Gbps())
     init_time = time.time()
     ecscript.run()
-    fun_test.add_checkpoint("Script Run time: {}", time.time() - init_time)
