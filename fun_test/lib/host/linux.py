@@ -2546,7 +2546,10 @@ class Linux(object, ToDictMixin):
         if background:
             fun_test.log("Starting command {} in background".format(cmd))
             mpstat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
-            fun_test.critical("mpstat process is started in background, process id is: {}".format(mpstat_output))
+            if mpstat_output is None:
+                fun_test.critical("mpstat process is not started")
+            else:
+                fun_test.log("mpstat process is started in background, pid is: {}".format(mpstat_output))
         else:
             mpstat_output = self.command(cmd, timeout=timeout)
 
