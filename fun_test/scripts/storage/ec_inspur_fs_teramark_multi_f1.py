@@ -181,15 +181,6 @@ class ECVolumeLevelScript(FunTestScript):
             curr_index = i - self.dut_start_index
             self.fs_obj.append(self.topology.get_dut_instance(index=i))
             self.fs_spec.append(self.topology.get_dut(index=i))
-            print("fs_spec is: {}".format(self.fs_spec[-1]))
-            try:
-                print("dir of fs_spec is: {}".format(dir(self.fs_spec[-1])))
-            except:
-                pass
-            try:
-                print("spec of fs_spec is: {}".format(self.fs_spec[-1].spec))
-            except:
-                pass
             self.come_obj.append(self.fs_obj[curr_index].get_come())
             self.f1_obj[curr_index] = []
             for j in xrange(self.num_f1_per_fs):
