@@ -183,8 +183,7 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
-        if not control_plane:
-            setup_nu_host(funeth_obj)
+        setup_nu_host(funeth_obj)
 
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
