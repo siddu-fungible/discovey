@@ -257,7 +257,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output_list.append({'EQM': output})
 
         # Upload stats output file
-        dpc_stats_filename = '{}_{}_F1_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
+        dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
         file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
         with open(file_path, 'w') as f:
             json.dump(output_list, f, indent=4, separators=(',', ': '), sort_keys=True)
