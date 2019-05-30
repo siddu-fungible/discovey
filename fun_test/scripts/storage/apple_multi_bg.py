@@ -622,7 +622,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         sleep_time=480,
                         iostat_interval=self.iostat_details["interval"],
                         iostat_iter=200,
-                        iostat_timeout=self.fio_cmd_args["timeout"])
+                        iostat_timeout=920)
 
                     thread_count += 1
 
