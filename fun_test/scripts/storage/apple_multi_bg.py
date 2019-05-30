@@ -175,7 +175,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def setup(self):
         # Reboot hosts
-        for host_index in range(0, 8):
+        for host_index in range(0, 10):
             end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
                              ssh_username=tb_config['tg_info'][host_index]['user'],
                              ssh_password=tb_config['tg_info'][host_index]['passwd']
