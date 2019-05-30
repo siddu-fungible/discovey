@@ -6,7 +6,6 @@
     "huid": 7,
     "ctlid": 0,
     "syslog_level": 2,
-    "command_timeout": 5,
     "reboot_timeout": 480,
     "ethernet_adapter": "Mellanox",
     "csr_network": {
@@ -30,9 +29,7 @@
         },
         "f1_loopback_ip": "29.1.1.1"
       }
-    }
-  },
-  "EcCompBenchmarkEffortAuto": {
+    },
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -57,19 +54,34 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1,
       "compress": true,
-      "zip_effort": "ZIP_EFFORT_AUTO",
+      "zip_effort": "ZIP_EFFORT_7Gbps",
       "zip_filter": "FILTER_TYPE_DEFLATE"
     },
-    "ns_id": 1,
-    "attach_transport": "TCP",
-    "command_timeout": 30,
-    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "transport_port": 1099,
-    "nvme_device": "/dev/nvme",
+    "zip_effort_list": [
+      "ZIP_EFFORT_7Gbps",
+      "ZIP_EFFORT_64Gbps",
+      "ZIP_EFFORT_2Gbps"
+    ],
     "mount_point": "/mnt/",
+    "transport_port": 1099,
+    "attach_transport": "TCP",
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "command_timeout": 30,
     "file_system": "ext3",
+    "artifact_dir": "compression",
+    "corpus_list": [
+      "artificl",
+      "calgary",
+      "cantrbry",
+      "large",
+      "misc",
+      "silesia",
+      "enwik8"
+    ]
+  },
+  "EcCompBenchmarkEffort7Gbps": {
     "gzip_effort": 6,
-    "accelerator_effort": "ZIP_EFFORT_AUTO",
+    "accelerator_effort": "ZIP_EFFORT_7Gbps",
     "margin": 5,
     "artifact_dir": "compression",
     "test_corpus": {
@@ -104,41 +116,6 @@
     }
   },
   "EcCompBenchmarkEffort64Gbps": {
-    "ec_info": {
-      "volume_types": {
-        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-        "ec": "VOL_TYPE_BLK_EC",
-        "lsv": "VOL_TYPE_BLK_LSV",
-        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-      },
-      "volume_block": {
-        "ndata": 4096,
-        "nparity": 4096,
-        "ec": 4096,
-        "lsv": 4096,
-        "jvol": 512
-      },
-      "ndata": 4,
-      "nparity": 2,
-      "capacity": 5368709120,
-      "use_lsv": 1,
-      "lsv_pct": 0.30,
-      "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
-    },
-    "ns_id": 2,
-    "attach_transport": "TCP",
-    "command_timeout": 30,
-    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "transport_port": 1099,
-    "nvme_device": "/dev/nvme",
-    "mount_point": "/mnt/",
-    "file_system": "ext3",
     "gzip_effort": 1,
     "accelerator_effort": "ZIP_EFFORT_64Gbps",
     "margin": 5,
@@ -175,41 +152,6 @@
     }
   },
   "EcCompBenchmarkEffort2Gbps": {
-    "ec_info": {
-      "volume_types": {
-        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-        "ec": "VOL_TYPE_BLK_EC",
-        "lsv": "VOL_TYPE_BLK_LSV",
-        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-      },
-      "volume_block": {
-        "ndata": 4096,
-        "nparity": 4096,
-        "ec": 4096,
-        "lsv": 4096,
-        "jvol": 512
-      },
-      "ndata": 4,
-      "nparity": 2,
-      "capacity": 5368709120,
-      "use_lsv": 1,
-      "lsv_pct": 0.30,
-      "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_2Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
-    },
-    "ns_id": 3,
-    "attach_transport": "TCP",
-    "command_timeout": 30,
-    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "transport_port": 1099,
-    "nvme_device": "/dev/nvme",
-    "mount_point": "/mnt/",
-    "file_system": "ext3",
     "gzip_effort": 9,
     "accelerator_effort": "ZIP_EFFORT_2Gbps",
     "margin": 5,

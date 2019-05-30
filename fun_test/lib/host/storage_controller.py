@@ -202,7 +202,7 @@ class StorageController(DpcshClient):
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
 
-    def configure_ec_volume(self, ec_info, command_timeout):
+    def configure_ec_volume(self, ec_info, command_timeout=TIMEOUT):
 
         result = True
         compression_enabled = False
@@ -339,7 +339,7 @@ class StorageController(DpcshClient):
 
         return (result, ec_info)
 
-    def unconfigure_ec_volume(self, ec_info, command_timeout):
+    def unconfigure_ec_volume(self, ec_info, command_timeout=TIMEOUT):
 
         # Unconfiguring LS volume based on the script config settting
         for num in xrange(ec_info["num_volumes"]):

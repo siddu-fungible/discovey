@@ -29,12 +29,14 @@ class FunTestCase1(FunTestCase):
     def setup(self):
         fun_test.log("Testcase setup")
         fun_test.log("Version is: {}".format(fun_test.get_version()))
+        self.db_log_time = get_data_collection_time()
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        date_time = get_data_collection_time()
+        date_time = fun_test.shared_variables["db_log_time"]
         fun_test.log("date_time is {}".format(date_time))
         fun_test.log("Got the test variable with value {}".format(date_time))
 

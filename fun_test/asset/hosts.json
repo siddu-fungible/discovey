@@ -13,7 +13,12 @@
     "host_ip": "poc-server-01",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
-    "test_interface_name": "enp175s0"
+    "test_interface_name": "enp175s0",
+    "ipmi_info": {
+      "host_ip": "poc-server-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   },
   "poc-server-02": {
     "host_ip": "poc-server-02",
@@ -98,7 +103,7 @@
     "ssh_password": "Precious1*"
   },
   "mktg-server-01": {
-    "host_ip": "mktg-server-01",
+    "host_ip": "mktg01",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -113,7 +118,7 @@
     }
   },
   "mktg-server-02": {
-    "host_ip": "mktg-server-02",
+    "host_ip": "mktg02",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -128,7 +133,7 @@
     }
   },
   "mktg-server-03": {
-    "host_ip": "mktg-server-03",
+    "host_ip": "mktg03",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -143,7 +148,7 @@
     }
   },
   "mktg-server-04": {
-    "host_ip": "mktg-server-04",
+    "host_ip": "mktg04",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -158,7 +163,7 @@
     }
   },
   "mktg-server-05": {
-    "host_ip": "mktg-server-05",
+    "host_ip": "mktg05",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -173,7 +178,7 @@
     }
   },
   "mktg-server-06": {
-    "host_ip": "mktg-server-06",
+    "host_ip": "mktg06",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -188,7 +193,7 @@
     }
   },
   "mktg-server-07": {
-    "host_ip": "mktg-server-07",
+    "host_ip": "mktg07",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -203,7 +208,7 @@
     }
   },
   "mktg-server-08": {
-    "host_ip": "mktg-server-08",
+    "host_ip": "mktg08",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -218,7 +223,7 @@
     }
   },
   "mktg-server-09": {
-    "host_ip": "mktg-server-09",
+    "host_ip": "mktg09",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -233,7 +238,7 @@
     }
   },
   "mktg-server-10": {
-    "host_ip": "mktg-server-10",
+    "host_ip": "mktg10",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -248,7 +253,7 @@
     }
   },
   "mktg-server-11": {
-    "host_ip": "mktg-server-11",
+    "host_ip": "mktg11",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -258,6 +263,51 @@
         "switch_info": {
           "name": "qfx-1",
           "port": "et-0/0/10"
+        }
+      }
+    }
+  },
+  "mktg-server-12": {
+    "host_ip": "mktg12",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.12.2/24",
+        "switch_info": {
+          "name": "qfx-1",
+          "port": "et-0/0/11"
+        }
+      }
+    }
+  },
+  "mktg-server-13": {
+    "host_ip": "mktg13",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.13.2/24",
+        "switch_info": {
+          "name": "qfx-1",
+          "port": "et-0/0/12"
+        }
+      }
+    }
+  },
+  "mktg-server-14": {
+    "host_ip": "mktg14",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.14.2/24",
+        "switch_info": {
+          "name": "qfx-1",
+          "port": "et-0/0/13"
         }
       }
     }

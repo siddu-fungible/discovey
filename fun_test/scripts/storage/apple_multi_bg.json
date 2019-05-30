@@ -1,0 +1,33 @@
+{
+  "BLTFioRandReadXFS": {
+    "syslog": 2,
+    "num_ssd": 6,
+    "blt_count": 6,
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "block_size": 4096},
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "vol_size": 569083166720,
+      "block_size": 4096, "stripe_unit": 2},
+    "nvme_io_q": 8,
+    "controllers": 1,
+    "transport_type": "tcp",
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "512k", "iodepth": 12, "fill_device": 1, "size": "512G", "rw": "write", "prio": 0,
+                             "direct": 1, "cpus_allowed": "20-39", "timeout": 1000},
+    "fio_cmd_args": {"ioengine": "mmap", "size": "512G", "numjobs": 65,  "direct": 1, "time_based": 1, "runtime": 600, "thread": 1,
+                     "cpus_allowed": "20-39,60-79,1-19,41-59", "group_reporting": 1, "prio":  0, "timeout": 720},
+    "fio_modes": ["randread"],
+    "iostat_details": { "interval": 2},
+    "fio_bs_iodepth": ["(4, 2)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "tcp", "randread": "tcp"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "create_file_system": true,
+    "expected_fio_result": {
+      "(4, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "reboot_host": true,
+    "host_count": 8
+  }
+}

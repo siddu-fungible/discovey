@@ -152,6 +152,7 @@ class FunTest:
             return
         else:
             self.fun_test_disabled = False
+        self.fun_xml_obj = None
         self.logs_dir = args.logs_dir
         self.log_prefix = args.log_prefix
         self.suite_execution_id = args.suite_execution_id
@@ -163,7 +164,7 @@ class FunTest:
         self.abort_requested = False
         self.environment = args.environment
         if self.environment:
-            self.environment = self.environment.decode('utf-8','ignore').encode("utf-8")
+            self.environment = self.environment.decode('utf-8', 'ignore').encode("utf-8")
         self.inputs = args.inputs
         self.re_run_info = args.re_run_info
         self.local_settings = {}
@@ -180,8 +181,6 @@ class FunTest:
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
-        (frame, file_name, line_number, function_name, lines, index) = \
-            inspect.getouterframes(inspect.currentframe())[2]
 
         self.original_sig_int_handler = None
         if threading.current_thread().__class__.__name__ == '_MainThread':
@@ -195,25 +194,8 @@ class FunTest:
         self.current_test_case_id = None
         self.traces = {}
 
-        self.absolute_script_file_name = file_name
-        self.script_file_name = os.path.basename(self.absolute_script_file_name)
-        script_file_name_without_extension = self.script_file_name.replace(".py", "")
+        # self.initialize_output_files()
 
-        self.test_metrics = collections.OrderedDict()
-
-        html_log_file = "{}.html".format(script_file_name_without_extension)
-        if self.relative_path:
-            html_log_file = get_flat_html_log_file_name(self.relative_path, self.log_prefix)
-            # if self.log_prefix:
-            #    html_log_file = "{}_{}".format(self.log_prefix, html_log_file)
-        self.html_log_file = html_log_file
-
-        self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
-                                          log_directory=self.logs_dir,
-                                          log_file=html_log_file,
-                                          full_script_path=self.absolute_script_file_name)
-        reload(sys)
-        sys.setdefaultencoding('UTF8')  # Needed for xml
         self.counter = 0  # Mostly used for testing
         self.logging_selected_modules = []
         self.log_timestamps = True
@@ -234,15 +216,45 @@ class FunTest:
         self._prepare_build_parameters()
         self.closed = False
 
-    def get_stored_enviroment_variable(self, variable_name):
+    def initialize_output_files(self, absolute_script_file_name):
+        # (frame, file_name, line_number, function_name, lines, index) = \
+        #    inspect.getouterframes(inspect.currentframe())[2]
+        self.absolute_script_file_name = absolute_script_file_name
+        self.script_file_name = os.path.basename(self.absolute_script_file_name)
+        script_file_name_without_extension = self.script_file_name.replace(".py", "")
+
+        self.test_metrics = collections.OrderedDict()
+
+        html_log_file = "{}.html".format(script_file_name_without_extension)
+        if self.relative_path:
+            html_log_file = get_flat_html_log_file_name(self.relative_path, self.log_prefix)
+            # if self.log_prefix:
+            #    html_log_file = "{}_{}".format(self.log_prefix, html_log_file)
+        self.html_log_file = html_log_file
+
+        self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
+                                          log_directory=self.logs_dir,
+                                          log_file=html_log_file,
+                                          full_script_path=self.absolute_script_file_name)
+        reload(sys)
+        sys.setdefaultencoding('UTF8')  # Needed for xml
+
+    def get_stored_environment_variable(self, variable_name):
+        result = None
+        if self.suite_execution_id:
+            stored_environment = self.get_stored_environment()
+            if stored_environment:
+                result = stored_environment[variable_name] if variable_name in stored_environment else None
+        return result
+
+    def get_stored_environment(self):
         result = None
         if self.suite_execution_id:
             suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
             stored_environment_string = suite_execution.environment
             if stored_environment_string is not None:
                 stored_environment = self.parse_string_to_json(stored_environment_string)
-                if stored_environment:
-                    result = stored_environment[variable_name] if variable_name in stored_environment else None
+                result = stored_environment
         return result
 
     def _prepare_build_parameters(self):
@@ -251,7 +263,7 @@ class FunTest:
             self.build_parameters["tftp_image_path"] = tftp_image_path
         else:
             # Check if it was stored by a previous script
-            tftp_image_path = self.get_stored_enviroment_variable(variable_name="tftp_image_path")
+            tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
             self.build_parameters["tftp_image_path"] = tftp_image_path
         user_supplied_build_parameters = self.get_job_environment_variable("build_parameters")
         if user_supplied_build_parameters:
@@ -295,8 +307,13 @@ class FunTest:
 
     def get_job_environment(self):
         result = {}
-        if self.environment:
-            result = self.parse_string_to_json(self.environment)
+        if not self.suite_execution_id:
+            if self.environment:
+                result = self.parse_string_to_json(self.environment)
+        else:
+            stored_environment = self.get_stored_environment()
+            if stored_environment:
+                result = stored_environment
         return result
 
     def get_job_environment_variable(self, variable):
@@ -697,7 +714,8 @@ class FunTest:
         if self.log_function_name:
             module_line_info += ":{}".format(function_name)
 
-        self.fun_xml_obj.log(log=message, newline=newline)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.log(log=message, newline=newline)
 
         level_name = ""
         if level == self.LOG_LEVEL_CRITICAL:
@@ -774,7 +792,8 @@ class FunTest:
         calling_module = self._get_calling_module(outer_frames)
         message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
         self._print_log_green(message=message, calling_module=calling_module)
-        self.fun_xml_obj.log(log=message, newline=True)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.log(log=message, newline=True)
         time.sleep(seconds)
 
     def safe(self, the_function):
@@ -813,7 +832,8 @@ class FunTest:
         for assert_result in assert_list:
             self.log(assert_result, no_timestamp=True)
 
-    def _initialize(self):
+    def _initialize(self, script_file_name):
+        self.initialize_output_files(absolute_script_file_name=script_file_name)
         if self.initialized:
             raise FunTestSystemException("FunTest obj initialized twice")
         self.initialized = True
@@ -915,23 +935,24 @@ class FunTest:
         assert_message = "ASSERT PASSED: expected={} actual={}, {}".format(expected, actual, message)
         if not expected == actual:
             assert_message = "ASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
-            self._append_assert_test_metric(assert_message)
-            self.fun_xml_obj.add_checkpoint(checkpoint=message,
-                                            expected=expected,
-                                            actual=actual,
-                                            result=FunTest.FAILED)
+            if self.initialized:
+                self._append_assert_test_metric(assert_message)
+                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                                                expected=expected,
+                                                actual=actual,
+                                                result=FunTest.FAILED)
             self.critical(assert_message)
             if self.pause_on_failure:
                 pdb.set_trace()
             raise TestException(assert_message)
         if not ignore_on_success:
             self.log(assert_message)
-            self._append_assert_test_metric(assert_message)
-
-            self.fun_xml_obj.add_checkpoint(checkpoint=message,
-                                            expected=expected,
-                                            actual=actual,
-                                            result=FunTest.PASSED)
+            if self.initialized:
+                self._append_assert_test_metric(assert_message)
+                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                                                expected=expected,
+                                                actual=actual,
+                                                result=FunTest.PASSED)
 
     def add_checkpoint(self,
                        checkpoint=None,
@@ -1139,7 +1160,9 @@ class FunTestScript(object):
     test_case_order = None
 
     def __init__(self):
-        fun_test._initialize()
+        st = inspect.stack()
+        script_file_name = st[1][1]
+        fun_test._initialize(script_file_name)
         self.test_cases = []
         self.summary = "Setup"
         self.steps = ""
@@ -1378,6 +1401,9 @@ class FunTestCase:
         self.id = id
         self.summary = summary
         self.steps = steps
+        if fun_test.suite_execution_id:
+            script_relative_path = fun_test.absolute_script_file_name.replace(SCRIPTS_DIR, "")
+            models_helper.update_test_case_info(test_case_id=self.id, summary=summary, script_path=script_relative_path)
 
     @abc.abstractmethod
     def describe(self):

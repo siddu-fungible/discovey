@@ -7,6 +7,8 @@ from lib.fun.fs import *
 import json
 import random
 from scripts.networking.lib_nw import funcp
+import socket
+from lib.templates.storage.storage_fs_template import FunCpDockerContainer
 
 
 class FunControlPlaneBringup:
@@ -40,6 +42,8 @@ class FunControlPlaneBringup:
         fs_1 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_1,
                       boot_args=self.boot_args_f1_1)
         fun_test.simple_assert(fs_0, "Succesfully fetched image, credentials and bootargs")
+        if fs_0.retimer_workround:
+            fs_0._apply_retimer_workaround()
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
@@ -55,7 +59,7 @@ class FunControlPlaneBringup:
         if reboot_come:
             fun_test.test_assert(fs_0.come_reset(power_cycle=True, non_blocking=True),
                                  "ComE rebooted successfully")
-            fun_test.sleep(message="waiting for COMe", seconds=120)
+            fun_test.sleep(message="waiting for COMe", seconds=150)
             if power_cycle_come:
                 come_ping_test = False
 
@@ -168,24 +172,16 @@ class FunControlPlaneBringup:
         come_lspci = linux_obj_come.lspci(grep_filter="1dad:")
         if prepare_docker:
 
+            linux_obj_come.command(command="cd /mnt/keep/")
+            linux_obj_come.sudo_command(command="rm -rf FunSDK")
+            git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK")
             linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
-            git_pull = linux_obj_come.command("git pull")
-
             prepare_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --prepare "
                                                            "--docker", timeout=1200)
-            sections = ['Cloning into \'FunSDK\'', 'Cloning into \'fungible-host-drivers\'',
-                        'Cloning into \'FunControlPlane\'', 'Prepare End']
+            sections = ['Cloning into \'FunSDK\'', 'Cloning into \'fungible-host-drivers\'', 'Prepare End']
             for section in sections:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
-            '''
-            linux_obj_come.remove_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
-                                                 "F1_TOR.json")
-            hu_fix_file = fun_test.get_script_parent_directory() + '/F1_TOR.json'
-            json_file = fun_test.parse_file_to_json(hu_fix_file)
-            linux_obj_come.create_file(file_name="/scratch/FunControlPlane/scripts/docker/platform_profiles/"
-                                                 "F1_TOR.json", contents=json.dumps(json_file))
-            fun_test.log("Updated F1_TOR.json file")
-            '''
+
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
 
         setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
@@ -198,19 +194,23 @@ class FunControlPlaneBringup:
         linux_obj_come.disconnect()
         return True
 
-    def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/tmp",
-                              ssh_username=None, ssh_password=None):
+    def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/scratch",
+                              ssh_username=None, ssh_password=None, update_funcp_folder=False):
+        if self.mpg_ips == {}:
+            self.fetch_mpg_ips()
+        fun_test.test_assert(expression=self.mpg_ips != {}, message="MPG_IPs have been assigned")
         if host_ip and ssh_password and ssh_username:
             linux_obj = Linux(host_ip=host_ip, ssh_username= ssh_username, ssh_password=ssh_password)
         else:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
-        funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
-        fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
-        fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
-        # Get FunControlPlane
+        if update_funcp_folder:
+            # linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
+            funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
+            fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
+            # fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
+            # Get FunControlPlane
         if abstract_config_f1_0:
             self.abstract_configs_f1_0 = fun_test.parse_file_to_json(abstract_config_f1_0)
 
@@ -227,60 +227,76 @@ class FunControlPlaneBringup:
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
             linux_obj.create_file(file_name=file_name, contents=json.dumps(file_contents))
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/")
-            fun_test.test_assert(expression=linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1]
-                                                              + " --json ./abstract_cfg/" + file_name),
+            execute_abstract = linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1] +
+                                                 " --json ./abstract_cfg/" + file_name)
+            fun_test.test_assert(expression="returned non-zero exit status" not in execute_abstract,
                                  message="Execute abstract config on %s" % f1)
         linux_obj.disconnect()
 
-    def assign_mpg_ips_dhcp(self):
+    def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None):
 
-        linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                                    ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        docker_output = linux_obj_come.command(command="docker ps -a")
-        print "\n" + docker_output
-        self.docker_names = linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
-        fun_test.test_assert_expected(expected=2, actual=len(self.docker_names), message="Make sure 2 dockers are up")
-        linux_obj_come.disconnect()
+        self._get_docker_names()
         linux_containers = {}
 
         for docker_name in self.docker_names:
-            linux_containers[docker_name] = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                                                  ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                                                  ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-            linux_containers[docker_name].command(command="docker exec -it " + docker_name.rstrip() + " bash",
-                                                  timeout=300)
+            ip_check = False
+            linux_containers[docker_name] = FunCpDockerContainer(name=docker_name.rstrip(),
+                                                                 host_ip=self.fs_spec['come']['mgmt_ip'],
+                                                                 ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                                                 ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
 
-            linux_containers[docker_name].sudo_command(command="ifconfig mpg up", timeout=300)
-            random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
-                          random.randint(0x00, 0xff)]
-            mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
-            fun_test.test_assert(expression=mac, message="Generate Random MAC")
+            linux_containers[docker_name].command(command="sudo ifconfig mpg up", timeout=300)
 
-            try:
-                linux_containers[docker_name].sudo_command(command="ifconfig mpg hw ether "+mac, timeout=60)
+            if not static:
+                random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
+                              random.randint(0x00, 0xff)]
+                mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
+                fun_test.test_assert(expression=mac, message="Generate Random MAC")
 
-            except:
-                linux_containers[docker_name].command(command="ifconfig mpg")
-                op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
-                for line in op:
-                    ether = False
-                    for word in line.split():
-                        if "ether" == word:
-                            ether = True
-                            continue
-                        if ether:
-                            fun_test.test_assert_expected(expected=mac, actual=word, message="Make sure MAC is updated "
-                                                                                             "on %s" % docker_name)
-                            break
+                try:
+                    linux_containers[docker_name].command(command="sudo ifconfig mpg hw ether " + mac, timeout=60)
 
-            linux_containers[docker_name].sudo_command(command="dhclient -v -i mpg", timeout=300)
-            linux_containers[docker_name].command(command="ifconfig mpg")
-            ifconfig_output = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')[1]
-            linux_containers[docker_name].command(command="ls")
-            mpg_ip = ifconfig_output.split()[1]
-            fun_test.test_assert(expression=mpg_ip, message="Make sure MPG IP is got through DHCP on %s" % docker_name)
-            self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
+                except:
+                    linux_containers[docker_name].command(command="ifconfig mpg")
+                    op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
+                    for line in op:
+                        ether = False
+                        for word in line.split():
+                            if "ether" == word:
+                                ether = True
+                                continue
+                            if ether:
+                                fun_test.test_assert_expected(expected=mac, actual=word,
+                                                              message="Make sure MAC is updated "
+                                                                      "on %s" % docker_name)
+                                break
+                linux_containers[docker_name].sudo_command(command="dhclient -v -i mpg", timeout=300)
+
+            else:
+                try:
+                    if docker_name.strip() == "F1-0":
+                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
+                                                              f1_0_mpg, timeout=60)
+                    elif docker_name.strip() == "F1-1":
+                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
+                                                              f1_1_mpg, timeout=60)
+                except:
+                    linux_containers[docker_name].command(command="ifconfig mpg")
+                    ifconfig_output = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')[1]
+                    linux_containers[docker_name].command(command="ls")
+                    mpg_ip = ifconfig_output.split()[1]
+                    socket.inet_aton(mpg_ip)
+                    fun_test.test_assert(expression=self.is_valid_ip(mpg_ip),
+                                         message="Make sure MPG IP is assigned on %s" % docker_name)
+                    self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
+                    ip_check = True
+                if not ip_check:
+                    ifconfig_output = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')[1]
+                    mpg_ip = ifconfig_output.split()[1]
+                    socket.inet_aton(mpg_ip)
+                    fun_test.test_assert(expression=self.is_valid_ip(mpg_ip),
+                                         message="Make sure MPG IP is assigned on %s" % docker_name)
+                    self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
             linux_containers[docker_name].disconnect()
             fun_test.log(self.mpg_ips)
 
@@ -313,20 +329,12 @@ class FunControlPlaneBringup:
 
     def fetch_mpg_ips(self):
         self.mpg_ips = {}
-        linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        docker_output = linux_obj_come.command(command="docker ps -a")
-        print "\n" + docker_output
-        self.docker_names = linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
-        fun_test.test_assert_expected(expected=2, actual=len(self.docker_names), message="Make sure 2 dockers are up")
-        linux_obj_come.disconnect()
+        self._get_docker_names()
 
         for docker_name in self.docker_names:
-            linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-            linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+            linux_obj = FunCpDockerContainer(name=docker_name.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
+                                             ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                             ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
             linux_obj.command(command="ifconfig mpg")
             ifconfig_output = linux_obj.command(command="ifconfig mpg").split('\r\n')[1]
             linux_obj.command(command="ls")
@@ -334,15 +342,8 @@ class FunControlPlaneBringup:
             self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
             linux_obj.disconnect()
 
-    def add_routes_towards_f1(self, f1_0, f1_1, f1_0_outgoing, f1_1_outgoing):
-        linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        docker_output = linux_obj_come.command(command="docker ps -a")
-        print "\n" + docker_output
-        self.docker_names = linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
-        fun_test.test_assert_expected(expected=2, actual=len(self.docker_names), message="Make sure 2 dockers are up")
-        linux_obj_come.disconnect()
+    def add_routes_on_f1(self, f1_0, f1_1, f1_0_outgoing, f1_1_outgoing):
+        self._get_docker_names()
 
         for docker_name in self.docker_names:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
@@ -352,18 +353,50 @@ class FunControlPlaneBringup:
             if docker_name.rstrip().endswith("0"):
                 for ip in f1_0:
                     try:
-                        linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_0_outgoing[1],
+                        linux_obj.command(command="sudo ip route add %s via %s dev %s" % (ip, f1_0_outgoing[1],
                                                                                           f1_0_outgoing[0]))
                     except:
-                        op = linux_obj.sudo_command(command="route -n | grep %s" % ip[:-3])
+                        op = linux_obj.command(command="sudo route -n | grep %s" % ip[:-3])
                         fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
             elif docker_name.rstrip().endswith("1"):
                 for ip in f1_1:
                     try:
-                        linux_obj.sudo_command(command="ip route add %s via %s dev %s" % (ip, f1_1_outgoing[1],
+                        linux_obj.command(command="sudo ip route add %s via %s dev %s" % (ip, f1_1_outgoing[1],
                                                                                           f1_1_outgoing[0]))
                     except:
-                        op = linux_obj.sudo_command(command="route -n | grep %s" % ip[:-3])
+                        op = linux_obj.command(command="sudo route -n | grep %s" % ip[:-3])
                         fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
 
             linux_obj.disconnect()
+
+    def is_valid_ip(self, ip):
+        m = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip)
+        return bool(m) and all(map(lambda n: 0 <= int(n) <= 255, m.groups()))
+
+    def cleanup_funcp(self):
+        self._get_docker_names(verify_2_dockers=False)
+        linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                          ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                          ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        funeth_op = linux_obj.command(command="lsmod | grep funeth")
+
+        if "funeth" in funeth_op:
+            funeth_rm = linux_obj.sudo_command("rmmod funeth")
+            fun_test.test_assert(expression="ERROR" not in funeth_rm, message="Funeth removed succesfully")
+        for docker_name in self.docker_names:
+            if not re.search('[a-zA-Z]', docker_name):
+                continue
+            linux_obj.sudo_command(command="docker kill " + docker_name.rstrip(), timeout=300)
+
+    def _get_docker_names(self, verify_2_dockers=True):
+        linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        docker_output = linux_obj_come.command(command="docker ps -a")
+        print "\n" + docker_output
+
+        self.docker_names = linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
+        if verify_2_dockers:
+            fun_test.test_assert_expected(expected=2, actual=len(self.docker_names),
+                                          message="Make sure 2 dockers are up")
+        linux_obj_come.disconnect()

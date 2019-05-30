@@ -70,16 +70,25 @@ def compare(actual, expected, threshold, operation):
         return actual > (expected * (1 + threshold)) and ((actual - expected) > 2)
 
 
-def fetch_nvme_device(end_host, nsid):
+def fetch_nvme_device(end_host, nsid, size=None):
     lsblk_output = end_host.lsblk("-b")
     fun_test.simple_assert(lsblk_output, "Listing available volumes")
     result = {'status': False}
-    for volume_name in lsblk_output:
-        match = re.search(r'nvme\dn{}'.format(nsid), volume_name, re.I)
-        if match:
-            result['volume_name'] = match.group()
-            result['nvme_device'] = "/dev/{}".format(result['volume_name'])
-            result['status'] = True
+    if size:
+        for volume_name in lsblk_output:
+            if int(lsblk_output[volume_name]["size"]) == size:
+                result['volume_name'] = volume_name
+                result['nvme_device'] = "/dev/{}".format(result['volume_name'])
+                result['status'] = True
+                break
+    else:
+        for volume_name in lsblk_output:
+            match = re.search(r'nvme\dn{}'.format(nsid), volume_name, re.I)
+            if match:
+                result['volume_name'] = match.group()
+                result['nvme_device'] = "/dev/{}".format(result['volume_name'])
+                result['status'] = True
+                break
     return result
 
 
@@ -135,8 +144,71 @@ def set_syslog_level(storage_controller, log_level, timeout=30):
     fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(log_level))
 
     command_result = storage_controller.peek(props_tree="params/syslog/level",
-                                                  legacy=False,
-                                                  command_duration=timeout)
+                                             legacy=False,
+                                             command_duration=timeout)
     fun_test.test_assert_expected(expected=log_level,
                                   actual=command_result["data"],
                                   message="Checking syslog level")
+
+
+def load_nvme_module(end_host):
+    end_host.modprobe(module="nvme")
+    fun_test.sleep("Loading nvme module", 2)
+    command_result = end_host.lsmod(module="nvme")
+    fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
+
+
+def load_nvme_tcp_module(end_host):
+    end_host.modprobe(module="nvme_tcp")
+    fun_test.sleep("Loading nvme_tcp module", 2)
+    command_result = end_host.lsmod(module="nvme_tcp")
+    fun_test.simple_assert(command_result, "Loading nvme_tcp module")
+    fun_test.test_assert_expected(expected="nvme_tcp",
+                                  actual=command_result['name'],
+                                  message="Loading nvme_tcp module")
+
+
+def configure_endhost_interface(end_host, test_network, interface_name, timeout=30):
+    interface_ip_unconfig = "ip addr del {} dev {}".format(test_network["test_interface_ip"],
+                                                           interface_name)
+    interface_ip_config = "ip addr add {} dev {}".format(test_network["test_interface_ip"],
+                                                         interface_name)
+    interface_mac_config = "ip link set {} address {}".format(interface_name,
+                                                              test_network["test_interface_mac"])
+    link_up_cmd = "ip link set {} up".format(interface_name)
+    static_arp_cmd = "arp -s {} {}".format(test_network["test_net_route"]["gw"],
+                                           test_network["test_net_route"]["arp"])
+
+    end_host.sudo_command(command=interface_ip_unconfig, timeout=timeout)
+    end_host.sudo_command(command=interface_ip_config, timeout=timeout)
+    fun_test.test_assert_expected(expected=0,
+                                  actual=end_host.exit_status(),
+                                  message="Configuring test interface IP address")
+
+    end_host.sudo_command(command=interface_mac_config)
+    fun_test.test_assert_expected(expected=0,
+                                  actual=end_host.exit_status(),
+                                  message="Assigning MAC to test interface")
+
+    end_host.sudo_command(command=link_up_cmd,
+                          timeout=timeout)
+    fun_test.test_assert_expected(expected=0,
+                                  actual=end_host.exit_status(),
+                                  message="Bringing up test link")
+
+    fun_test.test_assert(end_host.ifconfig_up_down(interface=interface_name,
+                                                   action="up"), "Bringing up test interface")
+
+    end_host.ip_route_add(network=test_network["test_net_route"]["net"],
+                          gateway=test_network["test_net_route"]["gw"],
+                          outbound_interface=interface_name,
+                          timeout=timeout)
+    fun_test.test_assert_expected(expected=0,
+                                  actual=end_host.exit_status(),
+                                  message="Adding route to F1")
+
+    end_host.sudo_command(command=static_arp_cmd,
+                          timeout=timeout)
+    fun_test.test_assert_expected(expected=0,
+                                  actual=end_host.exit_status(),
+                                  message="Adding static ARP to F1 route")

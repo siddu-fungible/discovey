@@ -222,7 +222,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # enable counters
-            enable_counters(self.storage_controller, self.command_timeout)
+            # enable_counters(self.storage_controller, self.command_timeout)
 
             # ipcfg on fs
             configure_fs_ip(self.storage_controller, self.test_network["f1_loopback_ip"])
