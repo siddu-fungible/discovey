@@ -2004,7 +2004,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "MMC timings",
-            "label": "MMC timings",
+            "label": "MMC Timings",
             "children": [],
             "weight": 1
           },
@@ -2013,7 +2013,34 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "ELF load timings",
-            "label": "ELF load timings",
+            "label": "ELF Load Timings",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "module_parsing_timing",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "module_parsing_timing",
+            "label": "Module Parsing Timing",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "vps_online_timing",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "vps_online_timing",
+            "label": "VPs Online Timing",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "sbp_boot_message_timing",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "sbp_boot_message_timing",
+            "label": "SBP Boot Message Timing",
             "children": [],
             "weight": 1
           }

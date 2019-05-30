@@ -1027,7 +1027,7 @@ if __name__ == "__main_inspur_multiplef1s__":
                         platform=FunPlatform.F1).save()
     print "added datasets for inspur read write multiple F1 single volume"
 
-if __name__ == "__main__":
+if __name__ == "__main_changed_zipeffort__":
     internal_chart_name = "inspur_8131_compression_ratio_benchmarking_auto"
     chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
     data_sets = json.loads(chart.data_sets)
@@ -1037,3 +1037,24 @@ if __name__ == "__main__":
     chart.data_sets = json.dumps(data_sets)
     chart.save()
     print "effort name changed for auto"
+
+if __name__ == "__main__":
+    internal_chart_names = ["module_parsing_timing", "vps_online_timing", "sbp_boot_message_timing"]
+    for internal_chart_name in internal_chart_names:
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=copy_chart.chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=copy_chart.description,
+                    owner_info=copy_chart.owner_info,
+                    source=copy_chart.source,
+                    positive=copy_chart.positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=copy_chart.metric_model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
