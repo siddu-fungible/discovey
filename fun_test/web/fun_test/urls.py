@@ -207,7 +207,7 @@ users_urls = [
 
 api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
-    url(r'^regression/test_beds/?(\d+)?$', regression.test_beds),
+    url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
     url(r'^triages/?(\d+)?$', triaging.triagings),
