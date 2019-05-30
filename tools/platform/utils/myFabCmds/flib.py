@@ -17,7 +17,8 @@ child = None
 def signal_handler(sig, frame):
         print('You pressed Ctrl+C!')
         sys.stdout.flush()
-        child.close()
+        if child:
+            child.close()
         sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
