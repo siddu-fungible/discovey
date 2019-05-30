@@ -355,7 +355,7 @@ class FunethTestPacketSweep(FunTestCase):
             return pkt_size - 20 - 8  # IP header 20B, ICMP header 8B
 
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i %s; done' % (
+            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
             output = linux_obj.command(cmd, timeout=3000)
             fun_test.test_assert(
