@@ -18,6 +18,8 @@ from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
 from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
+from asset.asset_global import AssetType
+from web.fun_test.models import Asset
 from web.fun_test.models import TestBed, User
 from django.db import transaction
 from pytz import timezone
@@ -626,6 +628,17 @@ def send_test_bed_remove_lock(test_bed, warning=False):
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
 
 
+def lock_assets(job_id, assets):
+    if assets:
+        for asset_type, assets in assets.items():
+            for asset in assets:
+                Asset.add_update(name=asset, type=asset_type)
+                Asset.add_job_id(name=asset, type=asset_type, job_id=job_id)
+
+def un_lock_assets(job_id):
+    assets = Asset.objects.filter(job_ids__contains=[job_id])
+    for asset in assets:
+        asset.job_ids = asset.remove_job_id(job_id=job_id)
 
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):

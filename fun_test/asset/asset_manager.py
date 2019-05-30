@@ -8,7 +8,11 @@ from lib.orchestration.simulation_orchestrator import DockerHostOrchestrator
 from lib.orchestration.real_orchestrator import RealOrchestrator
 from lib.orchestration.orchestrator import OrchestratorType
 from fun_global import *
+from scheduler.scheduler_global import JobStatusType
+from asset.asset_global import AssetType
+from lib.topology.topology_helper import TopologyHelper, ExpandedTopology
 
+PSEUDO_TEST_BEDS = ["emulation", "simulation", "tasks"]
 
 class AssetManager:
     SIMPLE_HOSTS_ASSET_SPEC = ASSET_DIR + "/simple_hosts.json"
@@ -113,19 +117,63 @@ class AssetManager:
         return result
 
     @fun_test.safe
+    def check_assets_in_use(self, test_bed_type, assets_required):
+        from web.fun_test.models import Asset
+        from django.core.exceptions import ObjectDoesNotExist
+        from web.fun_test.models_helper import is_suite_in_progress
+        used_by_suite_id = None
+        in_use = False
+        error_message = ""
+        duts_required = assets_required.get(AssetType.DUT, None)
+        asset_in_use = None
+        print("Assets required for {}, : {}".format(test_bed_type, duts_required))
+        if duts_required:
+            for dut_required in duts_required:
+                try:
+                    this_asset = Asset.objects.get(type=AssetType.DUT, name=dut_required)
+                    job_ids = this_asset.job_ids
+                    print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
+                    if job_ids:
+                        for job_id in job_ids:
+                            print("Check if suite in progress: {}: {}: {}".format(test_bed_type, job_id, duts_required))
+                            in_progress = is_suite_in_progress(job_id, test_bed_type)
+                            if in_progress:
+                                in_use, error_message = True, "{} used by Suite: {}".format(dut_required, job_id)
+                                used_by_suite_id = job_id
+                                asset_in_use = dut_required
+                                break
+                except ObjectDoesNotExist:
+                    print "ObjectDoesnotExist, {}".format(test_bed_type)
+                except Exception as ex:
+                    print("Some other exception: {}".format(ex))
+        if not in_use:
+            # Check Hosts
+            pass
+        return in_use, error_message, used_by_suite_id, asset_in_use
+
+    @fun_test.safe
     def get_test_bed_availability(self, test_bed_type):
         from web.fun_test.models_helper import get_suite_executions_by_filter, is_test_bed_with_manual_lock
-
         from scheduler.scheduler_global import JobStatusType
         result = {}
         result["test_bed"] = test_bed_type
         result["status"] = False
         result["message"] = None
+        result["resources"] = None
+        result["internal_resource_in_use"] = False  # set this if any DUT or Host within the test-bed is locked (shared asset)
         in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state=JobStatusType.IN_PROGRESS).exclude(suite_path__endswith="_container.json")
+
+        in_use, error_message, used_by_suite_id, asset_in_use = False, "", -1, None
+        assets_required_for_test_bed = None
+        if test_bed_type not in PSEUDO_TEST_BEDS:
+            assets_required_for_test_bed = self.get_assets_required(test_bed_name=test_bed_type)
+            if "fs-42" in test_bed_type:
+                print ("TB: {}".format(test_bed_type))
+            in_use, error_message, used_by_suite_id, asset_in_use = self.check_assets_in_use(test_bed_type=test_bed_type, assets_required=assets_required_for_test_bed)
 
         credits = 0
         if test_bed_type.lower().startswith("fs-"):
-            credits = 1  #TODO: why are these hard-coded?
+            credits = 1  # TODO: why are these hard-coded?
         elif test_bed_type.lower().startswith("simulation"):
             credits = 3
         elif test_bed_type.lower().startswith("emulation"):
@@ -144,8 +192,16 @@ class AssetManager:
         elif in_progress_count >= credits:
             result["status"] = False
             result["message"] = "Test-bed: {} In-progress count: {}, Credit: {}".format(test_bed_type, in_progress_count, credits)
+            result["used_by_suite_id"] = in_progress_suites[0].execution_id
+        elif in_use:  # Check if the required internal resources are used by another run
+            result["status"] = False
+            result["message"] = error_message
+            result["internal_asset_in_use"] = True
+            result["internal_asset_in_use_suite_id"] = used_by_suite_id
+            result["internal_asset"] = asset_in_use
         else:
             result["status"] = True
+            result["assets_required"] = assets_required_for_test_bed
         return result
 
     @fun_test.safe
@@ -165,4 +221,49 @@ class AssetManager:
         host_spec = self.get_host_spec(name=REGRESSION_SERVICE_HOST)
         return host_spec
 
+    @fun_test.safe
+    def get_assets_required(self, test_bed_name):
+        assets_required = {}
+        test_bed_spec = self.get_test_bed_spec(name=test_bed_name)
+        fun_test.simple_assert(test_bed_spec, "Test-bed spec for: {}".format(test_bed_name))
+
+        th = TopologyHelper(spec=test_bed_spec)
+        topology = th.get_expanded_topology()
+        duts = topology.get_duts()
+        dut_names = [duts[x].name for x in duts]
+        assets_required[AssetType.DUT] = dut_names
+
+        hosts = topology.get_hosts()
+        host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
+        assets_required[AssetType.HOST] = host_names
+        return assets_required
+
+    @fun_test.safe
+    def lock_assets(self, manual_lock_user, assets):
+        from web.fun_test.models import Asset
+        if assets:
+            for asset_type, assets in assets.items():
+                for asset in assets:
+                    Asset.add_update(name=asset, type=asset_type)
+                    Asset.add_job_id(name=asset, type=asset_type, manual_lock_user=manual_lock_user)
+
+    def un_lock_assets(self, assets, user_email):
+        assets = Asset.objects.filter(job_ids__contains=[job_id])
+        for asset in assets:
+            asset.job_ids = asset.remove_job_id(job_id=job_id)
+
+
 asset_manager = AssetManager()
+
+if __name__ == "__main__":
+    spec = asset_manager.get_test_bed_spec(name="fs-inspur")
+    from lib.topology.topology_helper import TopologyHelper
+    th = TopologyHelper(spec=spec)
+    topology = th.get_expanded_topology()
+    duts = topology.get_duts()
+    dut_names = [duts[x].name for x in duts]
+    print dut_names
+
+    hosts = topology.get_hosts()
+    host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
+    print host_names
