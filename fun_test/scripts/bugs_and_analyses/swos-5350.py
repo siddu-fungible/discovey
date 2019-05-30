@@ -661,7 +661,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results("Inspur Performance Test", test_method, *row_data_list)
+                # Commenting post_results to avoid dashboard update
+                # post_results("Inspur Performance Test", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -706,140 +707,7 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).cleanup()
 
 
-class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
-                                      "of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 1024k transfer size Sequential write IOPS
-        """)
-
-    def setup(self):
-        super(SequentialReadWrite1024kBlocks, self).setup()
-
-    def run(self):
-        super(SequentialReadWrite1024kBlocks, self).run()
-
-    def cleanup(self):
-        super(SequentialReadWrite1024kBlocks, self).cleanup()
-
-
-class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of Multiple "
-                                      "EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for Integrated Model read/write IOPS
-        """)
-
-    def setup(self):
-        super(MixedRandReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(MixedRandReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(MixedRandReadWriteIOPS, self).cleanup()
-
-
-class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for OLTP model read/write IOPS
-        """)
-
-    def setup(self):
-        super(OLTPModelReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(OLTPModelReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(OLTPModelReadWriteIOPS, self).cleanup()
-
-
-class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for OLAP model Random read/write IOPS
-        """)
-
-    def setup(self):
-        super(OLAPModelReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(OLAPModelReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(OLAPModelReadWriteIOPS, self).cleanup()
-
-
-class RandReadWrite8kBlocksLatencyTest(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=6,
-                              summary="Inspur TC 8.11.6: 8k data block random read/write latency test of Multiple "
-                                      "EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 8k transfer size Random read/write latency
-        """)
-
-    def setup(self):
-        super(RandReadWrite8kBlocksLatencyTest, self).setup()
-
-    def run(self):
-        super(RandReadWrite8kBlocksLatencyTest, self).run()
-
-    def cleanup(self):
-        super(RandReadWrite8kBlocksLatencyTest, self).cleanup()
-
-
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(MixedRandReadWriteIOPS())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
-    # ecscript.add_test_case(RandReadWrite8kBlocksLatencyTest())
     ecscript.run()
