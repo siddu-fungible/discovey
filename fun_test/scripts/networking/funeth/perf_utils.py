@@ -167,6 +167,9 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     #    fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
     #
     fpg_stats = {}
+    is_vp_stuck = False
+    is_parser_stuck = False
+    is_etp_queue_stuck = False
     for nc_obj in network_controller_objs:
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
         if not fpg_stats:
@@ -187,7 +190,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
             eop_cnt = output[blk].get('eop_cnt')
             prv_sent = output[blk].get('prv_sent')
             if eop_cnt != prv_sent:
-                fun_test.test_assert(False, '{} parser is stuck'.format(blk))
+                is_parser_stuck = True
 
         fun_test.log('{} dpc: Get PSW stats'.format(f1))
         nc_obj.peek_psw_global_stats()
@@ -197,7 +200,6 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
         nc_obj.peek_vp_packets()
 
         # Check VP stuck
-        is_vp_stuck = False
         for pc_id in (1, 2):
             fun_test.log('{} dpc: Get resource PC {} stats'.format(f1, pc_id))
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
@@ -208,15 +210,18 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
                     nc_obj.debug_vp_state(vp_no=vp_no)
                     nc_obj.debug_backtrace(vp_no=vp_no)
                     is_vp_stuck = True
-        if is_vp_stuck:
-            fun_test.test_assert(False, 'VP is stuck')
         #nc_obj.peek_per_vp_stats()
         fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
         nc_obj.peek_resource_bam_stats()
         fun_test.log('{} dpc: Get EQM stats'.format(f1))
         nc_obj.peek_eqm_stats()
+
+        # Check ETP queue stuck
         fun_test.log('{} dpc: Get resource nux stats'.format(f1))
-        nc_obj.peek_resource_nux_stats()
+        output = nc_obj.peek_resource_nux_stats()
+        if output:
+            is_etp_queue_stuck = True
+
     fpg_rx_bytes = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
     )
@@ -229,6 +234,17 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     fpg_tx_pkts = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
+
+    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck:
+        messages = []
+        if is_vp_stuck:
+            messages.append('VP is stuck')
+        if is_parser_stuck:
+            messages.append('Parser is stuck')
+        if is_etp_queue_stuck:
+            messages.append('ETP queue is stuck')
+        fun_test.test_assert(False, ';'.join(messages))
+
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
