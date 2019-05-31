@@ -288,8 +288,9 @@ class ECVolumeLevelScript(FunTestScript):
         self.total_numa_cpus = 0
         for cpu_group in self.numa_cpus.split(","):
             cpu_range = cpu_group.split("-")
-            self.total_numa_cpus = len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+            self.total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
 
+        fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
         fun_test.shared_variables["numa_cpus"] = self.numa_cpus
         fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
 
@@ -598,7 +599,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_numjobs_iodepth
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
         fio_output = {}
 
@@ -610,7 +611,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_block_size = "Mixed"
                 break
 
-        for iodepth in self.fio_numjobs_iodepth:
+        for iodepth in self.fio_iodepth:
             fio_result[iodepth] = {}
             fio_output[iodepth] = {}
 
@@ -689,7 +690,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Posting the final status of the test result
         fun_test.log(fio_result)
         test_result = True
-        for iodepth in self.fio_numjobs_iodepth:
+        for iodepth in self.fio_iodepth:
             for mode in self.fio_modes:
                 if not fio_result[iodepth][mode]:
                     test_result = False
