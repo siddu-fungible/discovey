@@ -50,6 +50,7 @@ def test_beds(request, id):
 
         extension_hour = None
         extension_minute = None
+        submitter_email = None
         if "manual_lock_extension_hour" in request_json:
             extension_hour = request_json["manual_lock_extension_hour"]
         if "manual_lock_extension_minute" in request_json:
@@ -65,27 +66,26 @@ def test_beds(request, id):
         if "manual_lock" in request_json:
             test_bed.manual_lock = request_json["manual_lock"]
 
+        am = AssetManager()  # lock all associated assets
+        assets_required = am.get_assets_required(test_bed_name=test_bed.name)
         if test_bed.manual_lock:
-            am = AssetManager()  # lock all associated assets
-            assets_required = am.get_assets_required(test_bed_name=test_bed.name)
             if assets_required:
-                pass  # check if asserts are in use
-                in_use, error_message, used_by_suite_id, asset_in_use = am.check_assets_in_use(test_bed_type="Huh",
-                                                                                               assets_required=assets_required)
-                if in_use:
-                    error_message = "Asset: {} in use".format(asset_in_use)
-                    if used_by_suite_id > 0:
-                        error_message += " by suite: {}".format(used_by_suite_id)
+                manual_locked, error_message, manual_lock_user = am.check_assets_are_manual_locked(assets_required=assets_required)
+                if manual_locked:
                     raise Exception(error_message)
+                else:
+                    if submitter_email:
+                        am.manual_lock_assets(user=submitter_email, assets=assets_required)
+                    else:
+                        pass #TODO
 
         else:
-            pass  # unlock all associated assets
-
+            am = AssetManager()  # lock all associated assets
+            assets_required = am.get_assets_required(test_bed_name=test_bed.name)  # unlock all associated assets
+            if assets_required:
+                am.manual_un_lock_assets(user=test_bed.manual_lock_submitter, assets=assets_required)
 
         test_bed.save()
-
-
-
 
         if test_bed.manual_lock_submitter:
 

@@ -117,6 +117,24 @@ class AssetManager:
         return result
 
     @fun_test.safe
+    def check_assets_are_manual_locked(self, assets_required):
+        from django.core.exceptions import ObjectDoesNotExist
+        from web.fun_test.models import Asset
+        duts_required = assets_required.get(AssetType.DUT, None)
+        manual_locked, error_message, manual_lock_user = False, "", None
+        if duts_required:
+            for dut_required in duts_required:
+                try:
+                    this_asset = Asset.objects.get(type=AssetType.DUT, name=dut_required)
+                    if this_asset.manual_lock_user:
+                        manual_locked, error_message, manual_lock_user = True, "Asset: {} manual locked by: {}".format(dut_required, this_asset.manual_lock_user), this_asset.manual_lock_user
+                except ObjectDoesNotExist:
+                    print "ObjectDoesnotExist, {}".format(dut_required)
+                except Exception as ex:
+                    print("Some other exception: {}".format(ex))
+        return manual_locked, error_message, manual_lock_user
+
+    @fun_test.safe
     def check_assets_in_use(self, test_bed_type, assets_required):
         from web.fun_test.models import Asset
         from django.core.exceptions import ObjectDoesNotExist
@@ -222,6 +240,31 @@ class AssetManager:
         return host_spec
 
     @fun_test.safe
+    def manual_lock_assets(self, user, assets):
+        from web.fun_test.models import Asset
+        for asset_type, assets_for_type in assets.items():
+            for asset in assets_for_type:
+                try:
+                    Asset.add_update(name=asset, type=asset_type)
+                    a = Asset.objects.get(name=asset)
+                    a.manual_lock_user = user
+                    a.save()
+                except Exception as ex:   #TODO
+                    print(str(ex))
+
+    @fun_test.safe
+    def manual_un_lock_assets(self, user, assets):
+        from web.fun_test.models import Asset
+        for asset_type, assets_for_type in assets.items():
+            for asset in assets_for_type:
+                try:
+                    a = Asset.objects.get(name=asset, manual_lock_user=user)
+                    a.manual_lock_user = None
+                    a.save()
+                except Exception as ex:   #TODO
+                    print(str(ex))
+
+    @fun_test.safe
     def get_assets_required(self, test_bed_name):
         assets_required = {}
         test_bed_spec = self.get_test_bed_spec(name=test_bed_name)
@@ -238,6 +281,7 @@ class AssetManager:
         assets_required[AssetType.HOST] = host_names
         return assets_required
 
+    """
     @fun_test.safe
     def lock_assets(self, manual_lock_user, assets):
         from web.fun_test.models import Asset
@@ -251,7 +295,7 @@ class AssetManager:
         assets = Asset.objects.filter(job_ids__contains=[job_id])
         for asset in assets:
             asset.job_ids = asset.remove_job_id(job_id=job_id)
-
+    """
 
 asset_manager = AssetManager()
 
