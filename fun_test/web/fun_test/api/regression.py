@@ -11,22 +11,39 @@ from lib.utilities.send_mail import send_mail
 from datetime import datetime, timedelta
 from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
+from asset.asset_global import AssetType
+from asset.asset_manager import AssetManager
 
 @csrf_exempt
 @api_safe_json_response
 def test_beds(request, id):
     result = None
     if request.method == "GET":
-        all_test_beds = TestBed.objects.all().order_by('name')
-        result = []
-        for test_bed in all_test_beds:
-            t = {"name": test_bed.name,
-                 "description": test_bed.description,
-                 "id": test_bed.id,
-                 "manual_lock": test_bed.manual_lock,
-                 "manual_lock_expiry_time": str(test_bed.manual_lock_expiry_time),
-                 "manual_lock_submitter": test_bed.manual_lock_submitter}
-            result.append(t)
+        if not id:
+            all_test_beds = TestBed.objects.all().order_by('name')
+            result = []
+            for test_bed in all_test_beds:
+                t = {"name": test_bed.name,
+                     "description": test_bed.description,
+                     "id": test_bed.id,
+                     "manual_lock": test_bed.manual_lock,
+                     "manual_lock_expiry_time": str(test_bed.manual_lock_expiry_time),
+                     "manual_lock_submitter": test_bed.manual_lock_submitter}
+                result.append(t)
+
+        else:
+            t = TestBed.objects.get(name=id)
+            am = AssetManager()
+            result = {"name": t.name,
+                      "description": t.description,
+                      "id": t.id,
+                      "manual_lock": t.manual_lock,
+                      "manual_lock_expiry_time": str(t.manual_lock_expiry_time),
+                      "manual_lock_submitter": t.manual_lock_submitter}
+            test_bed_availability = am.get_test_bed_availability(test_bed_type=t.name)
+            result["automation_status"] = test_bed_availability
+
+
     if request.method == "PUT":
         test_bed = TestBed.objects.get(id=int(id))
         request_json = json.loads(request.body)
@@ -47,9 +64,31 @@ def test_beds(request, id):
             test_bed.manual_lock_expiry_time = future_time
         if "manual_lock" in request_json:
             test_bed.manual_lock = request_json["manual_lock"]
+
+        if test_bed.manual_lock:
+            am = AssetManager()  # lock all associated assets
+            assets_required = am.get_assets_required(test_bed_name=test_bed.name)
+            if assets_required:
+                pass  # check if asserts are in use
+                in_use, error_message, used_by_suite_id, asset_in_use = am.check_assets_in_use(test_bed_type="Huh",
+                                                                                               assets_required=assets_required)
+                if in_use:
+                    error_message = "Asset: {} in use".format(asset_in_use)
+                    if used_by_suite_id > 0:
+                        error_message += " by suite: {}".format(used_by_suite_id)
+                    raise Exception(error_message)
+
+        else:
+            pass  # unlock all associated assets
+
+
         test_bed.save()
 
+
+
+
         if test_bed.manual_lock_submitter:
+
             default_email_list = [x.email for x in TestbedNotificationEmails.objects.all()]
             to_addresses = [test_bed.manual_lock_submitter]
             to_addresses.extend(default_email_list)
