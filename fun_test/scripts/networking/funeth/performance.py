@@ -79,7 +79,7 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
-            # TODO: Configure irq affinity for rx
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx')
 
         netperf_manager_obj = nm.NetperfManager(linux_objs)
         fun_test.shared_variables['netperf_manager_obj'] = netperf_manager_obj
