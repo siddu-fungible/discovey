@@ -1041,7 +1041,7 @@ if __name__ == "__main_changed_zipeffort__":
 if __name__ == "__main__":
     output_names = ["output_parsing_config", "output_parsing_config_end", "output_all_vps_online",
                     "output_sending_host_booted_message"]
-    base_line_date = datetime(year=2019, month=5, day=30, minute=0, hour=0, second=0)
+    base_line_date = datetime(year=2019, month=5, day=27, minute=0, hour=0, second=0)
     data_sets = []
     for output_name in output_names:
         if "parsing_config_end" in output_name:

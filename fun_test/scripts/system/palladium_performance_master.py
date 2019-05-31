@@ -689,6 +689,8 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     metrics["output_all_vps_online"] = float(m.group("timestamp"))
                     metrics["output_all_vps_online_unit"] = PerfUnit.UNIT_SECS
+                    fun_test.log(
+                        "All VPs online: {}".format(metrics["output_all_vps_online"]))
                 m = re.search(
                     r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
                     line)
@@ -697,63 +699,65 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                     metrics["output_parsing_config_end_unit"] = PerfUnit.UNIT_SECS
                     metrics["output_parsing_config"] = float(m.group("parsing_time"))
                     metrics["output_parsing_config_unit"] = m.group("parsing_unit")
+                    fun_test.log(
+                        "Parsing config: {}, {}".format(metrics["output_parsing_config"],
+                                                        metrics["output_parsing_config_end"]))
                 m = re.search(
                     r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+SKU\s+has\s+SBP,\s+sending\s+a\s+HOST_BOOTED\s+message',
                     line)
                 if m:
                     metrics["output_sending_host_booted_message"] = float(m.group("timestamp"))
                     metrics["output_sending_host_booted_message_unit"] = PerfUnit.UNIT_SECS
+                    fun_test.log(
+                        "Sending host booted message: {}".format(metrics["output_sending_host_booted_message"]))
 
-                if "Welcome to FunOS" in line:
-                    break
-                else:
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
-                        line)
-                    if m:
-                        output_init_mmc_time = int(m.group("time")) / 1000.0
-                        output_init_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
-                                                                   output_init_mmc_cycles))
-                        metrics["output_init_mmc_time"] = output_init_mmc_time
-                        metrics["output_init_mmc_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
+                    line)
+                if m:
+                    output_init_mmc_time = int(m.group("time")) / 1000.0
+                    output_init_mmc_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
+                                                               output_init_mmc_cycles))
+                    metrics["output_init_mmc_time"] = output_init_mmc_time
+                    metrics["output_init_mmc_time_unit"] = "msecs"
 
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
-                        line)
-                    if m:
-                        output_boot_read_mmc_time = int(m.group("time")) / 1000.0
-                        output_boot_read_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
-                                                                        output_boot_read_mmc_cycles))
-                        metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
-                        metrics["output_boot_read_mmc_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
+                    line)
+                if m:
+                    output_boot_read_mmc_time = int(m.group("time")) / 1000.0
+                    output_boot_read_mmc_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
+                                                                    output_boot_read_mmc_cycles))
+                    metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
+                    metrics["output_boot_read_mmc_time_unit"] = "msecs"
 
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
-                        line)
-                    if m:
-                        output_funos_read_mmc_time = int(m.group("time")) / 1000.0
-                        output_funos_read_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
-                                                                         output_funos_read_mmc_cycles))
-                        metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
-                        metrics["output_funos_read_mmc_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
+                    line)
+                if m:
+                    output_funos_read_mmc_time = int(m.group("time")) / 1000.0
+                    output_funos_read_mmc_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
+                                                                     output_funos_read_mmc_cycles))
+                    metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
+                    metrics["output_funos_read_mmc_time_unit"] = "msecs"
 
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
-                        line)
-                    if m:
-                        output_funos_load_elf_time = int(m.group("time")) / 1000.0
-                        output_funos_load_elf_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
-                                                                         output_funos_load_elf_cycles))
-                        metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
-                        metrics["output_funos_load_elf_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
+                    line)
+                if m:
+                    output_funos_load_elf_time = int(m.group("time")) / 1000.0
+                    output_funos_load_elf_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
+                                                                     output_funos_load_elf_cycles))
+                    metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
+                    metrics["output_funos_load_elf_time_unit"] = "msecs"
 
             d = self.metrics_to_dict(metrics, fun_test.PASSED)
             MetricHelper(model=BootTimePerformance).add_entry(**d)
@@ -762,9 +766,10 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
+
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="BootTimePerformance")
+                             test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                             git_commit=self.git_commit, model_name="BootTimePerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 

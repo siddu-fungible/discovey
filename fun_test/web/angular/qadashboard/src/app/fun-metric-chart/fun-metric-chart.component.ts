@@ -956,8 +956,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         chartDataSets.push(oneChartDataSet);
         let output = {};
         output["name"] = name;
-        output["value"] = this.convertToBaseUnit(unit, expected);
-        output["value"] = this.convertToVisualizationUnit(this.visualizationUnit, output["value"]);
+        if (expected !== -1) {
+          output["value"] = this.convertToBaseUnit(unit, expected);
+          output["value"] = this.convertToVisualizationUnit(this.visualizationUnit, output["value"]);
+        } else {
+          output["value"] = expected;
+        }
         output["unit"] = this.visualizationUnit;
         output["show"] = false;
         if (!this.showSelect && output["value"] !== -1) {
