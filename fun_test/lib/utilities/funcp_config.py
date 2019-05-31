@@ -9,6 +9,7 @@ import random
 from scripts.networking.lib_nw import funcp
 import socket
 from lib.templates.storage.storage_fs_template import FunCpDockerContainer
+import os
 
 
 class FunControlPlaneBringup:
@@ -35,13 +36,17 @@ class FunControlPlaneBringup:
         self.abstract_configs_f1_1 = None
         self.mpg_ips = {}
         self.docker_names = []
+        self.vlan1_ips = []
 
-    def boot_both_f1(self, power_cycle_come=True, reboot_come=True, gatewayip=None):
+    def boot_both_f1(self, power_cycle_come=True, reboot_come=True, gatewayip=None, funcp_cleanup=False):
         fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
                       boot_args=self.boot_args_f1_0)
         fs_1 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_1,
                       boot_args=self.boot_args_f1_1)
         fun_test.simple_assert(fs_0, "Succesfully fetched image, credentials and bootargs")
+        if funcp_cleanup:
+            self.check_come_stuck(fs_obj=fs_0)
+            self.cleanup_funcp()
         if fs_0.retimer_workround:
             fs_0._apply_retimer_workaround()
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
@@ -85,10 +90,11 @@ class FunControlPlaneBringup:
             fun_test.test_assert(fs_0.come.is_dpc_ready(), "DPC ready")
         return True
 
-    def boot_f1_0(self, power_cycle_come=True, gatewayip=None):
+    def boot_f1_0(self, power_cycle_come=True, gatewayip=None, funcp_cleanup=False):
         fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
                       boot_args=self.boot_args_f1_0, disable_f1_index=1)
-
+        if funcp_cleanup:
+            self.check_come_stuck(fs_obj=fs_0)
         fun_test.simple_assert(fs_0, "Succesfully fetched image, credentials and bootargs")
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
@@ -124,10 +130,12 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.come.setup_dpc(), "Setup DPC")
         fun_test.test_assert(fs_0.come.is_dpc_ready(), "DPC ready")
 
-    def boot_f1_1(self, power_cycle_come=True, gatewayip=None):
+    def boot_f1_1(self, power_cycle_come=True, gatewayip=None, funcp_cleanup=False):
         fs = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_1,
                       boot_args=self.boot_args_f1_1, disable_f1_index=0)
-
+        if funcp_cleanup:
+            self.check_come_stuck(fs_obj=fs)
+            self.cleanup_funcp()
         fun_test.simple_assert(fs, "Succesfully fetched image, credentials and bootargs")
         fun_test.test_assert(fs.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
@@ -349,22 +357,35 @@ class FunControlPlaneBringup:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-            linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+
             if docker_name.rstrip().endswith("0"):
                 for ip in f1_0:
                     try:
+                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
                         linux_obj.command(command="sudo ip route add %s via %s dev %s" % (ip, f1_0_outgoing[1],
                                                                                           f1_0_outgoing[0]))
+                        linux_obj.command(command="route -n")
+                        linux_obj.disconnect()
                     except:
-                        op = linux_obj.command(command="sudo route -n | grep %s" % ip[:-3])
+                        linux_obj.disconnect()
+                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+                        op = linux_obj.command(command="route -n")
+                        fun_test.log(op)
                         fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
+
             elif docker_name.rstrip().endswith("1"):
                 for ip in f1_1:
                     try:
+                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
                         linux_obj.command(command="sudo ip route add %s via %s dev %s" % (ip, f1_1_outgoing[1],
                                                                                           f1_1_outgoing[0]))
+                        linux_obj.command(command="route -n")
+                        linux_obj.disconnect()
                     except:
-                        op = linux_obj.command(command="sudo route -n | grep %s" % ip[:-3])
+                        linux_obj.disconnect()
+                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+                        op = linux_obj.command(command="route -n")
+                        fun_test.log(op)
                         fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
 
             linux_obj.disconnect()
@@ -400,3 +421,114 @@ class FunControlPlaneBringup:
             fun_test.test_assert_expected(expected=2, actual=len(self.docker_names),
                                           message="Make sure 2 dockers are up")
         linux_obj_come.disconnect()
+
+    def test_cc_pings_fs(self):
+        self._get_docker_names()
+        self._get_vlan1_ips()
+        linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                          ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                          ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        for host in self.docker_names:
+
+            for docker in self.vlan1_ips:
+                result = False
+                percentage_loss = 100
+                linux_obj.command(command="docker exec -it " + host.rstrip() + " bash", timeout=300)
+                output = linux_obj.command("ping -c 1 -I %s %s " % (self.vlan1_ips[host], self.vlan1_ips[docker]))
+
+                linux_obj.disconnect()
+                m = re.search(r'(\d+)%\s+packet\s+loss', output)
+                if m:
+                    percentage_loss = int(m.group(1))
+                if percentage_loss <= 50:
+                    result = True
+                fun_test.log(str(result) + "for" + docker)
+        '''for host in self.docker_names:
+
+            for ips in self.vlan1_ips:
+                linux_obj.command(command="docker exec -it " + host.rstrip() + " bash", timeout=300)
+                count = 0
+                while True:
+                    count += 1
+                    ping_cmd = "ping -c 1 -I %s %s" % (self.vlan1_ips[host], self.vlan1_ips[ips])
+                    response = os.system(ping_cmd)
+                    if count > 5:
+                        return False
+                    if response == 0:
+                        return True
+                    else:
+                        "Cannot ping destination IP"
+                        fun_test.sleep(seconds=2, message="Trying again")
+        '''
+
+    def test_cc_pings_remote_fs(self, dest_ips):
+        self._get_docker_names()
+        self._get_vlan1_ips()
+        linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                          ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                          ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        for host in self.docker_names:
+            linux_obj.command(command="docker exec -it " + host.rstrip() + " bash", timeout=300)
+
+            for ips in dest_ips:
+                result = False
+                percentage_loss = 100
+                command = "ping -c 1 -I %s %s " % (self.vlan1_ips[host], ips)
+                output = linux_obj.command(command, timeout=30)
+                m = re.search(r'(\d+)%\s+packet\s+loss', output)
+                if m:
+                    percentage_loss = int(m.group(1))
+                if percentage_loss <= 50:
+                    result = True
+                fun_test.log(result + "for" + ips)
+                '''
+                count = 0
+                while True:
+                    count += 1
+                    response = os.system("ping -c 1 -I %s %s " % (self.vlan1_ips[host], ips))
+                    if count > 5:
+                        return False
+                    if response == 0:
+                        return True
+                    else:
+                        "Cannot ping destination IP"
+                        fun_test.sleep(seconds=2, message="Trying again")
+                '''
+
+
+    def _get_vlan1_ips(self):
+        self.vlan1_ips = {}
+        self._get_docker_names()
+
+        for docker_name in self.docker_names:
+            linux_obj = FunCpDockerContainer(name=docker_name.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
+                                             ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                             ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+            linux_obj.command(command="ifconfig vlan1")
+            ifconfig_output = linux_obj.command(command="ifconfig vlan1").split('\r\n')[1]
+            linux_obj.command(command="ls")
+            vlan1_ip = ifconfig_output.split()[1]
+            self.vlan1_ips[str(docker_name.rstrip())] = vlan1_ip
+            linux_obj.disconnect()
+
+    def check_come_stuck(self, fs_obj):
+
+        linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
+                           ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        count = 1
+        while True:
+            count += 1
+            response = os.system("ping -c 1 " + self.fs_spec['come']['mgmt_ip'])
+            if count > 10:
+                break
+            if response == 0:
+                if not linux_obj.check_ssh():
+                    fs_obj.from_bmc_reset_come()
+                    fun_test.sleep(message="Wating for COMe reset", seconds=120)
+                    break
+                else:
+                    break
+            else:
+                "Cannot ping host"
+                fun_test.sleep(seconds=10, message="waiting for host")
