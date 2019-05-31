@@ -690,9 +690,11 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                     metrics["output_all_vps_online"] = float(m.group("timestamp"))
                     metrics["output_all_vps_online_unit"] = PerfUnit.UNIT_SECS
                 m = re.search(
-                    r'Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
+                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
                     line)
                 if m:
+                    metrics["output_parsing_config_end"] = float(m.group("timestamp"))
+                    metrics["output_parsing_config_end_unit"] = PerfUnit.UNIT_SECS
                     metrics["output_parsing_config"] = float(m.group("parsing_time"))
                     metrics["output_parsing_config_unit"] = m.group("parsing_unit")
                 m = re.search(

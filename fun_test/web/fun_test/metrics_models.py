@@ -2385,10 +2385,12 @@ class BootTimePerformance(models.Model):
     output_funos_read_mmc_time_unit = models.TextField(default="msecs")
     output_funos_load_elf_time_unit = models.TextField(default="msecs")
     output_all_vps_online = models.FloatField(verbose_name="All VPs Online", default=-1)
-    output_parsing_config = models.FloatField(verbose_name="Parsing Config", default=-1)
+    output_parsing_config = models.FloatField(verbose_name="Parsing Config time", default=-1)
+    output_parsing_config_end = models.FloatField(verbose_name="Parsing Config end", default=-1)
     output_sending_host_booted_message = models.FloatField(verbose_name="Host Booted Message", default=-1)
     output_all_vps_online_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     output_parsing_config_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_parsing_config_end_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     output_sending_host_booted_message_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     input_platform = models.TextField(default=FunPlatform.F1)
     tag = "analytics"

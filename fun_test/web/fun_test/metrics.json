@@ -1968,7 +1968,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "FunOS Boot Timing",
-            "label": "FunOS Boot Timing",
+            "label": "FunOS Boot Timing (SBP view)",
             "children": [],
             "weight": 1
           },
@@ -2018,29 +2018,11 @@
             "weight": 1
           },
           {
-            "info": "module_parsing_timing",
+            "info": "f1_timings",
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
-            "name": "module_parsing_timing",
-            "label": "Module Parsing Timing",
-            "children": [],
-            "weight": 1
-          },
-          {
-            "info": "vps_online_timing",
-            "metric_model_name": "BootTimePerformance",
-            "leaf": true,
-            "name": "vps_online_timing",
-            "label": "VPs Online Timing",
-            "children": [],
-            "weight": 1
-          },
-          {
-            "info": "sbp_boot_message_timing",
-            "metric_model_name": "BootTimePerformance",
-            "leaf": true,
-            "name": "sbp_boot_message_timing",
-            "label": "SBP Boot Message Timing",
+            "name": "f1_timings",
+            "label": "F1 Timings",
             "children": [],
             "weight": 1
           }
