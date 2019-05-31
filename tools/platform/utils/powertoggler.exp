@@ -1,0 +1,36 @@
+#!/usr/bin/expect
+
+set timeout 3
+
+if {[llength $argv] == 0} {
+    send_user "Usage: APCip [outlet#] [on|off] \n"
+    exit 1
+}
+set APCIP [lindex $argv 0]
+set number [lindex $argv 1]
+set onoff [lindex $argv 2]
+if { [string compare $onoff  "on"] == 0 } {
+  set state "On"
+} elseif { [string compare $onoff  "off"] == 0 } {
+  set state "Off"
+} else {
+    send_user "Bad action !!! Usage: APCip [outlet#] [on|off] \n"
+    exit 1
+}
+
+
+spawn telnet $APCIP
+#please change the user and password below -
+expect "User Name :" { send "localadmin\r" }
+expect "Password  :" { send "apc\r" }
+
+# device manager
+expect "apc>" { send "olStatus $number\r" }
+
+# outlet number
+expect "apc>" { send "ol$state $number\r" }
+
+# device manager
+expect "apc>" { send "olStatus $number\r" }
+
+expect "apc>" { send "exit\r" }

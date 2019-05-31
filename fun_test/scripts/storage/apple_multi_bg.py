@@ -88,19 +88,19 @@ tb_config = {
         },
         8: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.113",
+            "ip": "10.1.105.103",
             "user": "localadmin",
             "passwd": "Precious1*",
-            "iface_ip": "15.1.13.2",
-            "iface_gw": "15.1.13.1"
+            "iface_ip": "15.1.3.2",
+            "iface_gw": "15.1.3.1"
         },
         9: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.114",
+            "ip": "10.1.105.104",
             "user": "localadmin",
             "passwd": "Precious1*",
-            "iface_ip": "15.1.14.2",
-            "iface_gw": "15.1.14.1"
+            "iface_ip": "15.1.4.2",
+            "iface_gw": "15.1.4.1"
         }
 
     }
@@ -175,7 +175,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def setup(self):
         # Reboot hosts
-        for host_index in range(0, 8):
+        for host_index in range(0, 10):
             end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
                              ssh_username=tb_config['tg_info'][host_index]['user'],
                              ssh_password=tb_config['tg_info'][host_index]['passwd']
@@ -710,7 +710,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     row_data_list.append(row_data_dict[i])
 
             table_data_rows.append(row_data_list)
-            # post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
+            post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Apple TCP RandRead Multi-Host Perf Table", table_name=self.summary,

@@ -20,5 +20,25 @@ hu:
       routes:
         - prefix: 19.1.1.0/24
           nexthop: 18.1.1.1
-        - prefix: 20.1.1.0/24
+        - prefix: 30.1.1.0/24
           nexthop: 18.1.1.1
+hu2:
+  hostname: cab03-qa-02
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 8
+  pf_interface: hu0-f0
+  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu0-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 19.1.1.2
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 18.1.1.0/24
+        nexthop: 19.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 19.1.1.1

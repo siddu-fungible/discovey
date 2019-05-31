@@ -792,7 +792,8 @@ class FunTest:
         calling_module = self._get_calling_module(outer_frames)
         message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
         self._print_log_green(message=message, calling_module=calling_module)
-        self.fun_xml_obj.log(log=message, newline=True)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.log(log=message, newline=True)
         time.sleep(seconds)
 
     def safe(self, the_function):

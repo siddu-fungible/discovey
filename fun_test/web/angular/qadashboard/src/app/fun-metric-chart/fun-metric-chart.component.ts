@@ -469,7 +469,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //saves the edited data back to the DB
   submit(): void {
-    this.convertExpected();
+    // this.convertExpected();
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
@@ -892,6 +892,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let thisMaximum = this.filterDataSets[j].output.max;
         let outputName = this.filterDataSets[j].output.name;
         let name = this.filterDataSets[j].name;
+        let unit = this.filterDataSets[j].output.unit;
         let expected = filterDataSets[j].output.expected;
         for (let i = 0; i < keyList.length; i++) {
           let output = null;
@@ -955,7 +956,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         chartDataSets.push(oneChartDataSet);
         let output = {};
         output["name"] = name;
-        output["value"] = expected;
+        output["value"] = this.convertToBaseUnit(unit, expected);
+        output["value"] = this.convertToVisualizationUnit(this.visualizationUnit, output["value"]);
         output["unit"] = this.visualizationUnit;
         output["show"] = false;
         if (!this.showSelect && output["value"] !== -1) {
