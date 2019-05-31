@@ -18,6 +18,7 @@ from asset.asset_manager import AssetManager
 @api_safe_json_response
 def test_beds(request, id):
     result = None
+    am = AssetManager()
     if request.method == "GET":
         if not id:
             all_test_beds = TestBed.objects.all().order_by('name')
@@ -29,11 +30,16 @@ def test_beds(request, id):
                      "manual_lock": test_bed.manual_lock,
                      "manual_lock_expiry_time": str(test_bed.manual_lock_expiry_time),
                      "manual_lock_submitter": test_bed.manual_lock_submitter}
+                if not test_bed.manual_lock:
+                    asset_level_manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
+                        test_bed_name=test_bed.name)
+                    t["asset_level_manual_lock_status"] = {"asset_level_manual_locked": asset_level_manual_locked,
+                                                           "error_message": error_message,
+                                                           "asset_level_manual_lock_user": manual_lock_user}
                 result.append(t)
 
         else:
             t = TestBed.objects.get(name=id)
-            am = AssetManager()
             result = {"name": t.name,
                       "description": t.description,
                       "id": t.id,
@@ -41,8 +47,14 @@ def test_beds(request, id):
                       "manual_lock_expiry_time": str(t.manual_lock_expiry_time),
                       "manual_lock_submitter": t.manual_lock_submitter}
             test_bed_availability = am.get_test_bed_availability(test_bed_type=t.name)
-            result["automation_status"] = test_bed_availability
+            if not t.manual_lock:
+                asset_level_manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
+                    test_bed_name=t.name)
+                result["asset_level_manual_lock_status"] = {"asset_level_manual_locked": asset_level_manual_locked,
+                                                            "error_message": error_message,
+                                                            "asset_level_manual_lock_user": manual_lock_user}
 
+            result["automation_status"] = test_bed_availability
 
     if request.method == "PUT":
         test_bed = TestBed.objects.get(id=int(id))
@@ -66,24 +78,17 @@ def test_beds(request, id):
         if "manual_lock" in request_json:
             test_bed.manual_lock = request_json["manual_lock"]
 
-        am = AssetManager()  # lock all associated assets
-        assets_required = am.get_assets_required(test_bed_name=test_bed.name)
         if test_bed.manual_lock:
-            if assets_required:
-                manual_locked, error_message, manual_lock_user = am.check_assets_are_manual_locked(assets_required=assets_required)
-                if manual_locked:
-                    raise Exception(error_message)
+            manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(test_bed_name=test_bed.name)
+            if manual_locked:
+                raise Exception(error_message)
+            else:
+                if submitter_email:
+                    am.manual_lock_assets(user=submitter_email, assets=assets_required)
                 else:
-                    if submitter_email:
-                        am.manual_lock_assets(user=submitter_email, assets=assets_required)
-                    else:
-                        pass #TODO
-
+                    pass  # TODO
         else:
-            am = AssetManager()  # lock all associated assets
-            assets_required = am.get_assets_required(test_bed_name=test_bed.name)  # unlock all associated assets
-            if assets_required:
-                am.manual_un_lock_assets(user=test_bed.manual_lock_submitter, assets=assets_required)
+            am.manual_un_lock_assets_by_test_bed(test_bed_name=test_bed.name, user=test_bed.manual_lock_submitter)
 
         test_bed.save()
 

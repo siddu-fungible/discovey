@@ -24,6 +24,7 @@ export class TestBedComponent implements OnInit {
   testBeds: any [] = null;
   automationStatus = {};
   manualStatus = {};
+  assetLevelManualLockStatus = {};
   currentEditMode: EditMode = EditMode.NONE;
   currentTestBed: any = null;
   EditMode = EditMode;
@@ -77,8 +78,10 @@ export class TestBedComponent implements OnInit {
         this.manualStatus[testBed.name] = {manualLock: testBed.manual_lock,
         manualLockExpiryTime: testBed.manual_lock_expiry_time,
         manualLockSubmitter: testBed.manual_lock_submitter};
-
-
+        this.assetLevelManualLockStatus[testBed.name] = null;
+        if (testBed.hasOwnProperty("asset_level_manual_lock_status")) {
+          this.assetLevelManualLockStatus[testBed.name] = testBed.asset_level_manual_lock_status;
+        }
       });
       this.automationStatus = {...this.automationStatus};
 
