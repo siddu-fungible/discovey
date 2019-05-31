@@ -114,13 +114,18 @@ export class RegressionService implements OnInit{
   }
 
   testBedInProgress(testBedType) {
-
+    /*
     let paramString = `?`;
     let stateStringNumber = this.stateFilterStringToNumber("IN_PROGRESS");
     if (testBedType) {
       paramString += `test_bed_type=${testBedType}&state=${stateStringNumber}`;
     }
     return this.apiService.get("/api/v1/regression/suite_executions" + paramString).pipe(switchMap (response => {
+      return of(response.data);
+    }))*/
+
+    let url = "/api/v1/regression/test_beds/" + testBedType;
+    return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }))
   }

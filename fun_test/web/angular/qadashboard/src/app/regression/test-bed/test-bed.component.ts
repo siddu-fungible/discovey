@@ -2,9 +2,10 @@ import {Component, Input, OnInit} from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
-import {ApiService} from "../../services/api/api.service";
+import {ApiResponse, ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
+import {error} from "util";
 
 enum EditMode {
   NONE = 0,
@@ -52,7 +53,11 @@ export class TestBedComponent implements OnInit {
         return this.getUsers();
       }));
 
-    o.subscribe();
+    o.subscribe(() => {
+
+    }, error => {
+      this.loggerService.error("Unable to init test-bed component");
+    })
   }
 
   refreshTestBeds() {
@@ -90,18 +95,24 @@ export class TestBedComponent implements OnInit {
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId,
           manualLock: manualLock};
-        if (response) {
-          let numExecutions = response.length;
-          let executionId = numExecutions;
-          if (numExecutions > 0) {
-            let thisResponse = response[0];
-            executionId = thisResponse.execution_id;
+          if (response && response.hasOwnProperty("automation_status")) {
+            /*
+            let numExecutions = response.length;
+            let executionId = numExecutions;
+            if (numExecutions > 0) {
+              let thisResponse = response[0];
+              executionId = thisResponse.execution_id;
+            }*/
+            let automationStatus = response.automation_status;
+            if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
+              this.automationStatus[testBed.name] = {numExecutions: 1,
+                executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
+            } else if (automationStatus.hasOwnProperty("used_by_suite_id")) {
+              this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.used_by_suite_id};
+            }
+
           }
-          this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-            executionId: executionId}
-        }
-        this.automationStatus[testBed] = response;
-          return of(null);
+        return of(null);
         }))
       })
     )
@@ -169,7 +180,12 @@ export class TestBedComponent implements OnInit {
       this.refreshTestBeds();
       this.currentEditMode = EditMode.NONE;
     }, error => {
-      this.loggerService.error("Unable to submit lock");
+      if (error.value instanceof ApiResponse) {
+        this.loggerService.error("Unable to submit lock: " + error.value.error_message);
+      } else {
+        this.loggerService.error("Unable to submit lock");
+      }
+
     })
   }
 

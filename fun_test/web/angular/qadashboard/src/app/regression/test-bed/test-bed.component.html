@@ -36,6 +36,9 @@
                   <a *ngIf="automationStatus[testBed.name].numExecutions > 0" target="_blank"
                      href="/regression/suite_detail/{{ automationStatus[testBed.name].executionId }}">Suite:
                     {{ automationStatus[testBed.name].executionId }}</a>
+                  <ng-container *ngIf="automationStatus[testBed.name].assetInUse">
+                    Asset in use: {{ automationStatus[testBed.name].assetInUse }}
+                  </ng-container>
                 </td>
                 <td>
                   <span class="badge badge-danger"
