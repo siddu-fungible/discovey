@@ -498,17 +498,54 @@ class Funeth:
                 output_dict.update({intf: output})
         return output_dict
 
-    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
-        """Configure irq affinity."""
+    def get_bus_info_from_ethtool(self, nu_or_hu):
+        """Get bus info from ethtool -i.
+
+        localadmin@poc-server-05:~$ ethtool -i hu1-f0
+        driver: funeth
+        version: 1.0.0
+        firmware-version: N/A
+        expansion-rom-version:
+        bus-info: 0000:d8:00.0
+        supports-statistics: yes
+        supports-test: no
+        supports-eeprom-access: no
+        supports-register-dump: no
+        supports-priv-flags: no
+        """
+        intf_bus_dict = {}
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                cmd = 'ethtool -i {}'.format(intf)
                 if ns is None or 'netns' in cmd:
                     cmds = ['sudo {}'.format(cmd), ]
                 else:
                     cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
                 output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
-                irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+                match = re.search(r'bus-info: (\S+)', output)
+                if match:
+                    bus = match.group(1)
+                else:
+                    bus = None
+                intf_bus_dict.update({intf: bus})
+        return intf_bus_dict
+
+    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
+        """Configure irq affinity."""
+        intf_bus_dict = self.get_bus_info_from_ethtool(nu_or_hu)
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                bus_info = intf_bus_dict.get(intf)
+                cmd = 'cat /proc/interrupts | egrep "{}|{}"'.format(intf, bus_info)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                if tx_or_rx == 'tx':
+                    irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+                elif tx_or_rx == 'rx':
+                    irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)
 
                 # cat irq affinity
                 cmds_cat = []
