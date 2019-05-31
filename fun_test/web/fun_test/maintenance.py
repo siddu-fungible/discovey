@@ -1027,7 +1027,7 @@ if __name__ == "__main_inspur_multiplef1s__":
                         platform=FunPlatform.F1).save()
     print "added datasets for inspur read write multiple F1 single volume"
 
-if __name__ == "__main__":
+if __name__ == "__main_changed_zipeffort__":
     internal_chart_name = "inspur_8131_compression_ratio_benchmarking_auto"
     chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
     data_sets = json.loads(chart.data_sets)
@@ -1037,3 +1037,46 @@ if __name__ == "__main__":
     chart.data_sets = json.dumps(data_sets)
     chart.save()
     print "effort name changed for auto"
+
+if __name__ == "__main__":
+    output_names = ["output_parsing_config", "output_parsing_config_end", "output_all_vps_online",
+                    "output_sending_host_booted_message"]
+    base_line_date = datetime(year=2019, month=5, day=27, minute=0, hour=0, second=0)
+    data_sets = []
+    for output_name in output_names:
+        if "parsing_config_end" in output_name:
+            name = "parsing config end"
+            y1_axis_title = PerfUnit.UNIT_SECS
+        elif "parsing_config" in output_name:
+            name = "parsing config time"
+            y1_axis_title = PerfUnit.UNIT_USECS
+        elif "online" in output_name:
+            name = "all VPs online"
+            y1_axis_title = PerfUnit.UNIT_SECS
+        else:
+            name = "sending HOST_BOOTED message"
+            y1_axis_title = PerfUnit.UNIT_SECS
+        one_data_set = {}
+        one_data_set["name"] = name
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                  "reference": -1, "unit": y1_axis_title}
+        data_sets.append(one_data_set)
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name="F1 Timings",
+                metric_id=metric_id,
+                internal_chart_name="f1_timings",
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description="TBD",
+                owner_info="Michael Boksanyi (michael.boksanyi@fungible.com)",
+                source="https://github.com/fungible-inc/FunOS/blob/f1cf84392b353200317449de77f3ea0a11d8cf2a/tests/wutest_test.c",
+                positive=False,
+                y1_axis_title=PerfUnit.UNIT_MSECS,
+                visualization_unit=PerfUnit.UNIT_MSECS,
+                metric_model_name="BootTimePerformance",
+                base_line_date=base_line_date,
+                work_in_progress=False,
+                platform=FunPlatform.F1).save()
+    print "added charts for extra boot timings"
