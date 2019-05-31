@@ -258,13 +258,12 @@ class AssetManager:
                 except Exception as ex:   #TODO
                     print(str(ex))
 
-
     @fun_test.safe
     def manual_un_lock_assets_by_test_bed(self, test_bed_name, user):
         test_bed_spec = self.get_test_bed_spec(name=test_bed_name)
         fun_test.simple_assert(test_bed_spec, "Test-bed spec for: {}".format(test_bed_name))
         assets_required = self.get_assets_required(test_bed_name=test_bed_name)
-        return self.manual_lock_assets(self, user=user, assets=assets_required)
+        return self.manual_un_lock_assets(user=user, assets=assets_required)
 
     @fun_test.safe
     def manual_un_lock_assets(self, user, assets):

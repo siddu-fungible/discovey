@@ -42,7 +42,7 @@
                 </td>
                 <td>
                   <span class="badge badge-danger"
-                        *ngIf="manualStatus[testBed.name].manualLock; else freeManualStatus">In use</span>
+                        *ngIf="manualStatus[testBed.name].manualLock || assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked; else freeManualStatus">In use</span>
 
                   <ng-container *ngIf="manualStatus[testBed.name].manualLock">
                     <span class="pseudo-anchor" (click)="currentTestBed = testBed; onUnLock(testBed)"> Un-lock</span>
@@ -51,9 +51,9 @@
                   <ng-template #freeManualStatus>
                     <span class="badge badge-success">Free</span>
                     <ng-container *ngIf="!manualStatus[testBed.name].manualLock">&nbsp;
-                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
+                      <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
                     &nbsp;
-                  </ng-container>
+                    </ng-container>
                   </ng-template>
                 </td>
                 <td>
@@ -75,7 +75,7 @@
                   <ng-container *ngIf="manualStatus[testBed.name].manualLock">
                   {{ manualStatus[testBed.name].manualLockSubmitter }}
                   </ng-container>
-                  <ng-container *ngIf="assetLevelManualLockStatus[testBed.name].asset_level_manual_locked">
+                  <ng-container *ngIf="assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked">
                     {{ assetLevelManualLockStatus[testBed.name].error_message }}
                   </ng-container>
                 </td>
