@@ -46,6 +46,10 @@ PERF_RESULT_KEYS = (nm.THROUGHPUT,
                     nm.LATENCY_P99_ULOAD,
                     )
 FPG_INTERFACES = (0, 4,)
+FPG_FABRIC_DICT = {
+    'F1_0': (16, 12),
+    'F1_1': (12, 20),
+}
 
 
 class FunethPerformance(sanity.FunethSanity):
@@ -75,7 +79,7 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
-            # TODO: Configure irq affinity for rx
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx')
 
         netperf_manager_obj = nm.NetperfManager(linux_objs)
         fun_test.shared_variables['netperf_manager_obj'] = netperf_manager_obj
@@ -205,11 +209,13 @@ class FunethPerformanceBase(FunTestCase):
         # Collect stats before and after test run
         network_controller_objs = fun_test.shared_variables['network_controller_objs']
         fpg_interfaces = FPG_INTERFACES[:num_hosts]
+        fpg_intf_dict = FPG_FABRIC_DICT
         funeth_obj = fun_test.shared_variables['funeth_obj']
         version = fun_test.get_version()
         fun_test.log('Collect stats before test')
         fpg_tx_pkts1, _, fpg_rx_pkts1, _ = perf_utils.collect_dpc_stats(network_controller_objs,
                                                                         fpg_interfaces,
+                                                                        fpg_intf_dict,
                                                                         version,
                                                                         when='before')
         perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration+10)
@@ -220,6 +226,7 @@ class FunethPerformanceBase(FunTestCase):
         perf_utils.collect_host_stats(funeth_obj, version, when='after')
         fpg_tx_pkts2, _, fpg_rx_pkts2, _ = perf_utils.collect_dpc_stats(network_controller_objs,
                                                                         fpg_interfaces,
+                                                                        fpg_intf_dict,
                                                                         version,
                                                                         when='after')
 
