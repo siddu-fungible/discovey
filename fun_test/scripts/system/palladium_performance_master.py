@@ -23,7 +23,7 @@ from dateutil.parser import parse
 from scripts.system.metric_parser import MetricParser
 from django.utils import timezone
 from web.fun_test.models_helper import add_jenkins_job_id_map
-from fun_global import FunPlatform
+from fun_global import FunPlatform, PerfUnit
 
 F1 = FunPlatform.F1
 
@@ -683,6 +683,25 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(log, "fetched mmc time uart log")
             log = log.split("\n")
             for line in log:
+                m = re.search(
+                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+all\s+VPs\s+online,\s+sending\s+bootstrap\s+WU',
+                    line)
+                if m:
+                    metrics["output_all_vps_online"] = float(m.group("timestamp"))
+                    metrics["output_all_vps_online_unit"] = PerfUnit.UNIT_SECS
+                m = re.search(
+                    r'Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
+                    line)
+                if m:
+                    metrics["output_parsing_config"] = float(m.group("parsing_time"))
+                    metrics["output_parsing_config_unit"] = m.group("parsing_unit")
+                m = re.search(
+                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+SKU\s+has\s+SBP,\s+sending\s+a\s+HOST_BOOTED\s+message',
+                    line)
+                if m:
+                    metrics["output_sending_host_booted_message"] = float(m.group("timestamp"))
+                    metrics["output_sending_host_booted_message_unit"] = PerfUnit.UNIT_SECS
+
                 if "Welcome to FunOS" in line:
                     break
                 else:

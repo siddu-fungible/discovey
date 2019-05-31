@@ -17,6 +17,8 @@ from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
 from web.web_global import *
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult, TriagingTypes
+from fun_global import PerfUnit
+
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -2382,6 +2384,12 @@ class BootTimePerformance(models.Model):
     output_boot_read_mmc_time_unit = models.TextField(default="msecs")
     output_funos_read_mmc_time_unit = models.TextField(default="msecs")
     output_funos_load_elf_time_unit = models.TextField(default="msecs")
+    output_all_vps_online = models.FloatField(verbose_name="All VPs Online", default=-1)
+    output_parsing_config = models.FloatField(verbose_name="Parsing Config", default=-1)
+    output_sending_host_booted_message = models.FloatField(verbose_name="Host Booted Message", default=-1)
+    output_all_vps_online_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    output_parsing_config_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_sending_host_booted_message_unit = models.TextField(default=PerfUnit.UNIT_SECS)
     input_platform = models.TextField(default=FunPlatform.F1)
     tag = "analytics"
 
