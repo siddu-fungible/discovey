@@ -436,15 +436,15 @@ class StorageFsTemplate(object):
             result['status'] = True
         return result
 
-    def stop_container(self, *container_name):
+    def stop_container(self, *container_names):
         result = True
         cmd = "docker stop"
 
         # If no container name is passed preparing the list with the container names already available in this object
-        if not container_name:
-            container_name = sorted(self.container_info)
+        if not container_names:
+            container_names = sorted(self.container_info)
 
-        for name in container_name:
+        for name in container_names:
             cmd += " " + name
 
         # Stopping the container(s)
@@ -452,8 +452,9 @@ class StorageFsTemplate(object):
         stopped_container = [name.strip("\r") for name in stopped_container]
 
         # Checking whether the container is not stopped or not. If not stopped the
-        for name in container_name:
+        for name in container_names:
             if name not in stopped_container:
+                fun_test.critical("Failed to stop the containter: {}".format(name))
                 result = False
         return result
 
