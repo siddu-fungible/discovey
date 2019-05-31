@@ -748,7 +748,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                # post_results("Inspur Performance Test", test_method, *row_data_list) #TODO: reenable it
+                post_results("Inspur Performance Test", test_method, *row_data_list) #TODO: reenable it
 
                 # Checking if mpstat process is still running
                 mpstat_pid_check = self.end_host.get_process_id("mpstat")
