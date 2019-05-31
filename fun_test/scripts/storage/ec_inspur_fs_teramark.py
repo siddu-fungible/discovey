@@ -702,8 +702,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
                 # Collecting mpstat during IO
-                mpstat_cpu_list = cpu_list=self.mpstat_args["cpu_list"]  # To collect mpstat for all CPU's: recommended
-                # mpstat_cpu_list = self.numa_cpus # To collect mpstat for NUMA CPU's only
+                mpstat_cpu_list = self.mpstat_args["cpu_list"]  # To collect mpstat for all CPU's: recommended
+                # mpstat_cpu_list = self.numa_cpus  # To collect mpstat for NUMA CPU's only
                 fun_test.log("Collecting mpstat")
                 mpstat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) / self.mpstat_args[
                     "interval"])
