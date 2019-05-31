@@ -707,8 +707,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Collecting mpstat")
                 mpstat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) / self.mpstat_args[
                     "interval"])
-                mpstat_pid = self.end_host.mpstat(cpu_list=self.mpstat_args["cpu_list"],
-                                                  output_file=self.mpstat_args["output_file"],
+                mpstat_pid = self.end_host.mpstat(cpu_list=mpstat_cpu_list, output_file=self.mpstat_args["output_file"],
                                                   interval=self.mpstat_args["interval"], count=int(mpstat_count))
 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
