@@ -105,7 +105,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result

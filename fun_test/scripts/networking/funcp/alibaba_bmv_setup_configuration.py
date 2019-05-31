@@ -99,7 +99,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs("FS45")
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True)
+        setup_hu_host(funeth_obj, update_driver=False)
         # TODO : add ethtool output
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script
         # execute abstract file
