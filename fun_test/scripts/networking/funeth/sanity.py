@@ -149,7 +149,7 @@ class FunethSanity(FunTestScript):
                                                                   1: {"boot_args": f1_1_boot_args}}
                                                    )
             else:
-                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
