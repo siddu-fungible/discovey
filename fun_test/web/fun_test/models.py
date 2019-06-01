@@ -12,7 +12,9 @@ from web.fun_test.demo1_models import *
 from rest_framework import serializers
 from datetime import datetime, timedelta
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority, JobStatusType
+from django.contrib.postgres.fields import JSONField
 import json
+from asset.asset_global import AssetType
 from rest_framework.serializers import ModelSerializer
 
 
@@ -129,6 +131,7 @@ class SuiteExecution(models.Model):
     scheduled_time = models.DateTimeField(null=True)
     queued_time = models.DateTimeField(null=True)
     completed_time = models.DateTimeField()
+    started_time = models.DateTimeField(null=True)
     requested_days = models.TextField(default="[]")  # Days of the week as an array with Monday being 0
     requested_hour = models.IntegerField(null=True)  # Hour of the day
     requested_minute = models.IntegerField(null=True)  # minute in the hour
@@ -157,6 +160,7 @@ class SuiteExecution(models.Model):
     build_done = models.BooleanField(default=False)
     auto_scheduled_execution_id = models.IntegerField(default=-1)
     disable_schedule = models.BooleanField(default=False)
+    assets_used = JSONField(default={})
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
@@ -209,6 +213,7 @@ class TestCaseExecution(models.Model):
     inputs = models.TextField(default="{}")
     re_run_history = models.TextField(default="[]")
     re_run_state = models.TextField(default="")
+
 
     class Meta:
         indexes = [
@@ -454,6 +459,66 @@ class Daemon(FunModel):
             d.save()
             result = d
         return result
+
+
+class Asset(FunModel):
+    name = models.TextField(unique=True)
+    type = models.TextField()
+    job_ids = JSONField(default=[])
+    manual_lock_user = models.TextField(default=None, null=True)
+
+    @staticmethod
+    def add_update(name, type, job_ids=None):
+        if not Asset.objects.filter(name=name).exists():
+            a = Asset(name=name, type=type)
+            if job_ids:
+                a.job_ids = job_ids
+            a.save()
+        else:
+            a = Asset.objects.get(name=name, type=type)
+            if job_ids:
+                a.job_ids = job_ids
+            a.save()
+
+    @staticmethod
+    def get(name, type):
+        result = None
+        if Asset.objects.filter(name=name, type=type).exists():
+            result = Asset.objects.get(name=name, type=type)
+        return result
+
+    @staticmethod
+    def add_job_id(name, type, job_id):
+        a = Asset.get(name=name, type=type)
+        if a:
+            job_ids = a.job_ids
+            job_ids.append(job_id)
+            a.job_ids = job_ids
+            a.save()
+        else:
+            raise Exception("Asset: {} type: {} not found".format(name, type))
+
+    def remove_job_id(self, job_id):
+        job_ids = self.job_ids
+        if job_id in job_ids:
+            job_ids.remove(job_id)
+        self.job_ids = job_ids
+        self.save()
+
+    @staticmethod
+    def add_manual_lock_user(name, type, manual_lock_user):
+        a = Asset.get(name=name, type=type)
+        if a:
+            a.manual_lock_user = manual_lock_user
+            a.save()
+        else:
+            raise Exception("Asset: {} type: {} not found".format(name, type))
+
+    def remove_manual_lock_user(self, manual_lock_user):
+        if self.manual_lock_user == manual_lock_user:
+            self.manual_lock_user = None
+            self.save()
+
 
 class TestbedNotificationEmails(FunModel):
     email = models.EmailField(max_length=30, unique=True)

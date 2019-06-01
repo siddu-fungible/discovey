@@ -9,6 +9,7 @@ export class ApiResponse {
   data: any;
   error_message: string;
   message: string;
+  trace_back: string;
   
   public constructor() {
     this.status = false;
@@ -69,6 +70,7 @@ export class ApiService {
 
     } else {
       result.error_message = error.error_message;
+      result.trace_back = `Traceback: ${error.trace_back}\n`;
     }
     let apiLog = new ApiLog(result, method, url, payload);
     let newLog = new Log(null, apiLog, LogDataType.API, AlertLevel.ERROR);
