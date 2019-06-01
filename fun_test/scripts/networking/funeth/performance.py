@@ -12,11 +12,18 @@ import pprint
 
 TB = sanity.TB
 inputs = fun_test.get_job_inputs()
-if inputs and inputs.get('debug', 0):
+if inputs:
+    debug_mode = (inputs.get('debug', 0) == 1)
+else:
+    debug_mode = False
+
+if debug_mode:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
 else:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+
 TIMESTAMP = get_current_time()
+
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
     ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
@@ -111,7 +118,8 @@ class FunethPerformance(sanity.FunethSanity):
 
     def cleanup(self):
         results = fun_test.shared_variables['results']
-        perf_utils.db_helper(results)
+        if not debug_mode:
+            perf_utils.db_helper(results)
         perf_utils.populate_result_summary(tc_ids,
                                            results,
                                            fun_test.shared_variables['funsdk_commit'],
