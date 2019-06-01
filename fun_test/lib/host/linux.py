@@ -1974,7 +1974,7 @@ class Linux(object, ToDictMixin):
         ping_result = False
         while not host_is_up and not max_reboot_timer.is_expired():
             if service_host and not ping_result:
-                ping_result = service_host.ping(dst=self.host_ip, count=20)
+                ping_result = service_host.ping(dst=self.host_ip, count=10)
                 if ping_result:
                     max_reboot_timer = FunTimer(max_time=30)
             if ping_result or not service_host:
