@@ -10,7 +10,7 @@ from lib.orchestration.orchestrator import OrchestratorType
 from fun_global import *
 from scheduler.scheduler_global import JobStatusType
 from asset.asset_global import AssetType
-from lib.topology.topology_helper import TopologyHelper, ExpandedTopology
+
 
 
 
@@ -285,6 +285,7 @@ class AssetManager:
 
     @fun_test.safe
     def get_assets_required(self, test_bed_name):
+        from lib.topology.topology_helper import TopologyHelper
         assets_required = {}
         if test_bed_name not in self.PSEUDO_TEST_BEDS:
             test_bed_spec = self.get_test_bed_spec(name=test_bed_name)
