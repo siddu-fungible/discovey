@@ -1859,7 +1859,7 @@ class Linux(object, ToDictMixin):
         while not reboot_initiated and not reboot_initiated_timer.is_expired():
             try:
                 if service_host:
-                    ping_result = service_host.ping(dst=self.host_ip, count=10)
+                    ping_result = service_host.ping(dst=self.host_ip, count=5)
                     if not ping_result:
                         reboot_initiated = True
                         fun_test.log("Reboot initiated (based on pings)")
@@ -1974,7 +1974,7 @@ class Linux(object, ToDictMixin):
         ping_result = False
         while not host_is_up and not max_reboot_timer.is_expired():
             if service_host and not ping_result:
-                ping_result = service_host.ping(dst=self.host_ip, count=20)
+                ping_result = service_host.ping(dst=self.host_ip, count=5)
                 if ping_result:
                     max_reboot_timer = FunTimer(max_time=30)
             if ping_result or not service_host:

@@ -68,7 +68,7 @@ class Fpga(Linux):
             if f1_index == self.disable_f1_index:
                 continue
             self.reset_f1(f1_index=f1_index)
-        fun_test.sleep("FPGA reset", seconds=10)
+        fun_test.sleep("FPGA reset", seconds=1)
 
         result = True
         return result
@@ -180,6 +180,7 @@ class Bmc(Linux):
         fun_test.log_section("F1_{}:{}".format(index, phase))
 
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
+        fun_test.log("Sending u-boot command: {}".format(command))
         nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc.write(command + "\n")
         output = nc.read_until(expected_data=expected, timeout=timeout)
@@ -257,7 +258,7 @@ class Bmc(Linux):
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
         fun_test.test_assert(uncompressed_size > 1000, "FunOs uncompressed size: {}".format(uncompressed_size))
 
-        fun_test.sleep("Uncompress image")
+        # fun_test.sleep("Uncompress image")
 
         output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="CRIT hw_hsu_test \"this space intentionally left blank.\"")
         m = re.search(r'Version=(\S+), Branch=(\S+)', output)
@@ -279,10 +280,10 @@ class Bmc(Linux):
         fun_test.log("Resetting microcom and minicom")
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         for process_id in process_ids:
-            self.kill_process(signal=9, process_id=process_id)
+            self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
         process_ids = self.get_process_id_by_pattern("minicom", multiple=True)
         for process_id in process_ids:
-            self.kill_process(signal=9, process_id=process_id)
+            self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
 
     def position_support_scripts(self):
         self._reset_microcom()
@@ -296,7 +297,7 @@ class Bmc(Linux):
 
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999", multiple=True)
         for serial_proxy_id in serial_proxy_ids:
-            self.kill_process(signal=9, process_id=serial_proxy_id)
+            self.kill_process(signal=9, process_id=serial_proxy_id, kill_seconds=2)
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999")
         fun_test.simple_assert(not serial_proxy_ids, "old serial proxies are alive")
 
@@ -314,13 +315,13 @@ class Bmc(Linux):
         fun_test.simple_assert(self.list_files(self.BMC_UART_LOG_LISTENER_PATH), "UART log listener copied")
         log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE, multiple=True)
         for log_listener_process in log_listener_processes:
-            self.kill_process(signal=9, process_id=log_listener_process)
+            self.kill_process(signal=9, process_id=log_listener_process, kill_seconds=2)
 
 
 
     def initialize(self, reset=False):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
-        self.command("./f1_console.sh 1")
+        # self.command("./f1_console.sh 1")
         self.position_support_scripts()
         return True
 
@@ -444,14 +445,15 @@ class ComE(Linux):
         self.command("cd {}".format(working_directory))
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
-        self.command(
-            "wget http://10.1.20.99/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
-        files = self.list_files("functrlp_palladium.tgz")
-        fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
+        # self.command(
+        #     "wget http://10.1.20.99/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
+        # files = self.list_files("functrlp_palladium.tgz")
+        # fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
         self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
-        fun_test.test_assert(self.list_files("dpcsh.tgz"), "functrlp_palladium.tgz downloaded")
-        self.command("mkdir -p FunControlPlane FunSDK")
-        self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")
+        fun_test.test_assert(self.list_files("dpcsh.tgz"), "dpcsh.tgz downloaded")
+        # self.command("mkdir -p FunControlPlane FunSDK")
+        self.command("mkdir -p FunSDK")
+        # self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")
         self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
         return True
 
@@ -459,39 +461,37 @@ class ComE(Linux):
         self.command("cd $WORKSPACE/FunControlPlane")
         self.sudo_command("pkill dpc")
         self.sudo_command("pkill dpcsh")
-        self.sudo_command("build/posix/bin/funq-setup unbind")
+        # self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
     def setup_dpc(self):
 
-        self.command("cd $WORKSPACE/FunControlPlane")
+        # self.command("cd $WORKSPACE/FunControlPlane")
+        """
         output = self.sudo_command("build/posix/bin/funq-setup bind")
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
             fun_test.test_assert("Binding {}".format(self.funq_bind_device[f1_index]) in output,
                                  "Bound to {}".format(self.funq_bind_device[f1_index]))
+        """
+        self.modprobe("nvme")
+        fun_test.sleep("After modprobe", seconds=5)
+        nvme_devices = self.list_files("/dev/nvme*")
+        fun_test.test_assert(nvme_devices, "At least one nvme device detected")
+
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            # command = "LD_LIBRARY_PATH=$PWD/build/posix/lib build/posix/bin/dpc -j -d {} &> {} &".format(
-            #    self.funq_bind_device[f1_index], self.get_dpc_log_path(f1_index=f1_index))
 
             self.command("cd $WORKSPACE/FunSDK/bin/Linux")
-            self.modprobe("nvme")
-            fun_test.sleep("After modprobe", seconds=5)
-
-            nvme_devices = self.list_files("/dev/nvme*")
-            fun_test.test_assert(nvme_devices, "At least one nvme device detected")
-            # self.command("ls /dev/nvm*")
             nvme_device_index = f1_index
             if len(nvme_devices) == 1:  # if only one nvme device was detected
                 nvme_device_index = 0
             command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout={} --tcp_proxy={} &> {} &".format(nvme_device_index, self.NVME_CMD_TIMEOUT, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
             self.sudo_command(command)
-            fun_test.sleep("dpc socket creation")
-            # output = self.command("cat {}".format(self.get_dpc_log_path(f1_index=f1_index)))
-            # fun_test.test_assert("socket creation: Success" in output, "DPC Socket creation success")
+
+        fun_test.sleep("DPC socket creation")
         self.dpc_ready = True
         return True
 

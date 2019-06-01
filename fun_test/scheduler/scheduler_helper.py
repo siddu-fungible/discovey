@@ -594,7 +594,7 @@ def get_manual_lock_test_beds():
 def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(name=test_bed_name)
 
-def un_lock_assets(test_bed_name, manual_lock_submitter):
+def manual_un_lock_assets(test_bed_name, manual_lock_submitter):
     from asset.asset_manager import AssetManager
     AssetManager().manual_un_lock_assets_by_test_bed(test_bed_name=test_bed_name, user=manual_lock_submitter)
 
