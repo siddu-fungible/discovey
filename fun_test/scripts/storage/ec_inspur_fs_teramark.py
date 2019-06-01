@@ -397,7 +397,7 @@ class ECVolumeLevelScript(FunTestScript):
         come_reboot = False
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
-            self.fs = fun_test.shared_variables["fs_obj"]
+            self.fs = self.fs_obj[0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
@@ -428,6 +428,14 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.critical(str(ex))
             come_reboot = True
 
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            for index in xrange(self.num_duts):
+                stop_containers = self.funcp_obj[index].stop_container()
+                fun_test.test_assert_expected(expected=True, actual=stop_containers,
+                                              message="Docker containers are stopped")
+                rmmod_output = self.come_obj[index].command("sudo rmmod funeth")
+                fun_test.log("rmmmod output is {}".format(rmmod_output))
         try:
             if come_reboot:
                 self.fs.fpga_initialize()
