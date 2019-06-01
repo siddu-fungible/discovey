@@ -134,7 +134,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
             fun_test.log_module_filter_disable()
 
 
-def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='before'):
+def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  version, when='before'):
 
     tc_id = fun_test.current_test_case_id
 
@@ -171,6 +171,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     is_parser_stuck = False
     is_etp_queue_stuck = False
     for nc_obj in network_controller_objs:
+        output_list = []
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
         if not fpg_stats:
             for i in fpg_interfaces:
@@ -183,29 +184,90 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
                     {i: r}
                 )
 
+        # Check FPG stats
+        for i in fpg_intf_dict.get(f1):
+            fun_test.log('{} dpc: Get FPG {} stats'.format(f1, i))
+            output = nc_obj.peek_fpg_port_stats(port_num=i)
+            output_list.append({'FPG{}'.format(i): output})
+
         # Check parser stuck
         fun_test.log('{} dpc: Get parser stats'.format(f1))
         output = nc_obj.peek_parser_stats().get('global')
+        output_list.append({'Parser': output})
         for blk in output:
             eop_cnt = output[blk].get('eop_cnt')
             prv_sent = output[blk].get('prv_sent')
             if eop_cnt != prv_sent:
                 is_parser_stuck = True
 
-        fun_test.log('{} dpc: Get PSW stats'.format(f1))
-        nc_obj.peek_psw_global_stats()
+        # VP stats
+        fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
+        output = nc_obj.peek_vp_packets()
+        output_list.append({'VP': output})
+
+        # NWQM
+        #fun_test.log('{} dpc: Get NWQM stats'.format(f1))
+        #output = nc_obj.peek_nwqm_stats()
+        #output_list.append({'WQM': output})
+
+        # ETP
+        fun_test.log('{} dpc: Get ETP stats'.format(f1))
+        output = nc_obj.peek_etp_stats()
+        output_list.append({'ETP': output})
+
+        # FCB
         fun_test.log('{} dpc: Get FCB stats'.format(f1))
-        nc_obj.peek_fcp_global_stats()
+        output = nc_obj.peek_fcp_global_stats()
+        output_list.append({'FCB': output})
+
+        # FCP tunnel 192
         tunnel_id = 192
         fun_test.log('{} dpc: Get FCP tunnel {} stats'.format(f1, tunnel_id))
-        nc_obj.peek_fcp_tunnel_stats(tunnel_id)
-        fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
-        nc_obj.peek_vp_packets()
+        output = nc_obj.peek_fcp_tunnel_stats(tunnel_id)
+        output_list.append({'FCP tunnel {}'.format(192): output})
+
+        # PSW
+        fun_test.log('{} dpc: Get PSW stats'.format(f1))
+        output = nc_obj.peek_psw_global_stats()
+        output_list.append({'PSW': output})
+
+        # ERP
+        fun_test.log('{} dpc: Get ERP stats'.format(f1))
+        output = nc_obj.peek_erp_global_stats()
+        output_list.append({'ERP': output})
+
+        # WRO
+        fun_test.log('{} dpc: Get WRO stats'.format(f1))
+        output = nc_obj.peek_wro_global_stats()
+        output_list.append({'WRO': output})
+
+        # WRO tunnel 192
+        fun_test.log('{} dpc: Get WRO tunnel {} stats'.format(f1, tunnel_id))
+        output = nc_obj.peek_wro_tunnel_stats(tunnel_id)
+        output_list.append({'WRO tunnel {}'.format(tunnel_id): output})
+
+        # BM
+        fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
+        output = nc_obj.peek_resource_bam_stats()
+        output_list.append({'BM': output})
+
+        # EQM
+        fun_test.log('{} dpc: Get EQM stats'.format(f1))
+        output = nc_obj.peek_eqm_stats()
+        output_list.append({'EQM': output})
+
+        # Upload stats output file
+        dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
+        file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
+        with open(file_path, 'w') as f:
+            json.dump(output_list, f, indent=4, separators=(',', ': '), sort_keys=True)
+            fun_test.add_auxillary_file(description=dpc_stats_filename, filename=file_path)
 
         # Check VP stuck
         for pc_id in (1, 2):
             fun_test.log('{} dpc: Get resource PC {} stats'.format(f1, pc_id))
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
+            output_list.append(output)
             for core_str, val_dict in output.items():
                 if any(val_dict.values()) != 0:  # VP stuck
                     core, vp = [int(i) for i in re.match(r'CORE:(\d+) VP:(\d+)', core_str).groups()]
@@ -213,11 +275,6 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
                     nc_obj.debug_vp_state(vp_no=vp_no)
                     nc_obj.debug_backtrace(vp_no=vp_no)
                     is_vp_stuck = True
-        #nc_obj.peek_per_vp_stats()
-        fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
-        nc_obj.peek_resource_bam_stats()
-        fun_test.log('{} dpc: Get EQM stats'.format(f1))
-        nc_obj.peek_eqm_stats()
 
         # Check ETP queue stuck
         fun_test.log('{} dpc: Get resource nux stats'.format(f1))

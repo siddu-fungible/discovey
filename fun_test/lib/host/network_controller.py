@@ -1612,6 +1612,19 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def peek_nwqm_stats(self):
+        stats = None
+        try:
+            cmd = "stats/nwqm"
+            fun_test.debug("Getting NWQM stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=120)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting NWQM stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
     def update_meter(self, index, interval, crd, commit_rate, pps_mode, excess_rate=0, commit_burst=82, excess_burst=1,
                      dir=0,len_mode=1, rate_mode=0, color_aware=0, unit=0, rsvd=0, op="FUN_NU_OP_SFG_METER_CFG_W",
                      len8=3, common={}, bank=0, erp=False):

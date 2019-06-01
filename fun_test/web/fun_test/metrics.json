@@ -1968,7 +1968,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "FunOS Boot Timing",
-            "label": "FunOS Boot Timing",
+            "label": "FunOS Boot Timing (SBP view)",
             "children": [],
             "weight": 1
           },
@@ -2004,7 +2004,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "MMC timings",
-            "label": "MMC timings",
+            "label": "MMC Timings",
             "children": [],
             "weight": 1
           },
@@ -2013,7 +2013,16 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "ELF load timings",
-            "label": "ELF load timings",
+            "label": "ELF Load Timings",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "f1_timings",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "f1_timings",
+            "label": "F1 Timings",
             "children": [],
             "weight": 1
           }
@@ -3957,7 +3966,7 @@
                         "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_auto",
                         "weight": 1,
-                        "label": "Space Saving Percentage (Effort: 8)"
+                        "label": "Compression Ratio (Effort: 8)"
                       },
                       {
                         "info": "inspur_8131_compression_ratio_benchmarking_64Gbps",
@@ -3965,7 +3974,7 @@
                         "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_64Gbps",
                         "weight": 1,
-                        "label": "Space Saving Percentage (Effort: 0)"
+                        "label": "Compression Ratio (Effort: 0)"
                       },
                       {
                         "info": "inspur_8131_compression_ratio_benchmarking_2Gbps",
@@ -3973,7 +3982,7 @@
                         "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_2Gbps",
                         "weight": 1,
-                        "label": "Space Saving Percentage (Effort: 15)"
+                        "label": "Compression Ratio (Effort: 15)"
                       }
                     ]
                   },

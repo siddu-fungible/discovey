@@ -93,6 +93,7 @@ def fetch_nvme_device(end_host, nsid, size=None):
 
 
 def fetch_numa_cpus(end_host, ethernet_adapter):
+    numa_cpus = None
     lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
     fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
     adapter_id = lspci_output[0]['id']

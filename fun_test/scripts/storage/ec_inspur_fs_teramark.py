@@ -284,8 +284,15 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(self.numa_cpus, "CPU associated to Ethernet Adapter NUMA")
         fun_test.log("Ethernet Adapter: {}, NUMA Node: {}, NUMA CPU: {}".format(self.ethernet_adapter, numa_node,
                                                                                 self.numa_cpus))
+        # Calculating the number of CPUs available in the given numa
+        self.total_numa_cpus = 0
+        for cpu_group in self.numa_cpus.split(","):
+            cpu_range = cpu_group.split("-")
+            self.total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
 
+        fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
         fun_test.shared_variables["numa_cpus"] = self.numa_cpus
+        fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
 
         # Configuring Linux host
         host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout,
@@ -424,6 +431,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.numa_cpus = fun_test.shared_variables["numa_cpus"]
+        self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"]
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         num_ssd = self.num_ssd
@@ -591,7 +599,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_numjobs_iodepth
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
         fio_output = {}
 
@@ -603,19 +611,29 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_block_size = "Mixed"
                 break
 
-        for combo in self.fio_numjobs_iodepth:
-            fio_result[combo] = {}
-            fio_output[combo] = {}
+        for iodepth in self.fio_iodepth:
+            fio_result[iodepth] = {}
+            fio_output[iodepth] = {}
 
-            fio_num_jobs = combo.split(',')[0].strip('() ')
-            fio_iodepth = combo.split(',')[1].strip('() ')
+            if iodepth <= self.total_numa_cpus:
+                fio_num_jobs = iodepth
+                fio_iodepth = 1
+            else:
+                io_factor = 2
+                while True:
+                    if (iodepth / io_factor) <= self.total_numa_cpus:
+                        fio_num_jobs = iodepth / io_factor
+                        fio_iodepth = io_factor
+                        break
+                    else:
+                        io_factor += 1
 
             for mode in self.fio_modes:
                 """if hasattr(self, self.fio_cmd_args["bs"]):
                     fio_block_size = self.fio_cmd_args["bs"]
                 else:
                     fio_block_size = "Mixed"""""
-                fio_result[combo][mode] = True
+                fio_result[iodepth][mode] = True
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
                 row_data_dict["block_size"] = fio_block_size
@@ -628,29 +646,29 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                              format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
                 fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
-                fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.fio_filename, rw=mode,
+                fio_output[iodepth][mode] = {}
+                fio_output[iodepth][mode] = self.end_host.pcie_fio(filename=self.fio_filename, rw=mode,
                                                                  numjobs=fio_num_jobs, iodepth=fio_iodepth,
                                                                  name=fio_job_name, cpus_allowed=self.numa_cpus,
                                                                  **self.fio_cmd_args)
-                fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
-                fun_test.test_assert(fio_output[combo][mode],
+                fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth][mode]))
+                fun_test.test_assert(fio_output[iodepth][mode],
                                      "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
                                      .format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
 
-                for op, stats in fio_output[combo][mode].items():
+                for op, stats in fio_output[iodepth][mode].items():
                     for field, value in stats.items():
                         if field == "iops":
-                            fio_output[combo][mode][op][field] = int(round(value))
+                            fio_output[iodepth][mode][op][field] = int(round(value))
                         if field == "bw":
                             # Converting the KBps to MBps
-                            fio_output[combo][mode][op][field] = int(round(value / 1000))
+                            fio_output[iodepth][mode][op][field] = int(round(value / 1000))
                         if field == "latency":
-                            fio_output[combo][mode][op][field] = int(round(value))
-                        row_data_dict[op + field] = fio_output[combo][mode][op][field]
+                            fio_output[iodepth][mode][op][field] = int(round(value))
+                        row_data_dict[op + field] = fio_output[iodepth][mode][op][field]
 
-                if not fio_output[combo][mode]:
-                    fio_result[combo][mode] = False
+                if not fio_output[iodepth][mode]:
+                    fio_result[iodepth][mode] = False
                     fun_test.critical("No output from FIO test, hence moving to the next variation")
                     continue
 
@@ -672,9 +690,9 @@ class ECVolumeLevelTestcase(FunTestCase):
         # Posting the final status of the test result
         fun_test.log(fio_result)
         test_result = True
-        for combo in self.fio_numjobs_iodepth:
+        for iodepth in self.fio_iodepth:
             for mode in self.fio_modes:
-                if not fio_result[combo][mode]:
+                if not fio_result[iodepth][mode]:
                     test_result = False
 
         fun_test.test_assert(test_result, self.summary)

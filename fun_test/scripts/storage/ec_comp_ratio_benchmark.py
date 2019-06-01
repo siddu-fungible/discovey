@@ -26,8 +26,8 @@ def compare_gzip(gzip_percent, accel_percent, margin):
     return result, diff
 
 
-def get_comp_percent(orig_size, comp_size):
-    return ((orig_size - comp_size) / float(orig_size)) * 100
+def get_comp_ratio(orig_size, comp_size):
+    return orig_size/float(comp_size)
 
 
 def get_lsv_write_count(storage_controller, lsv_uuid):
@@ -301,22 +301,24 @@ class ECVolumeLevelTestcase(FunTestCase):
             curr_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
             comp_size = curr_write_count - init_write_count
             fun_test.simple_assert(comp_size, "Check compressed size is non-zero value")
-            comp_pct = get_comp_percent(orig_size=test_corpuses[corpus]['orig_size'], comp_size=comp_size)
-            gzip_float_pct = float(test_corpuses[corpus]['gzip_comp_pct'])
-            compare_result, diff = compare_gzip(gzip_float_pct, comp_pct, self.margin)
-            fun_test.add_checkpoint("FunOS accelerator spacesaving percentage {0:04.2f}% {1} than gzip space"
-                                    "saving percentage: {2:04.2f}% for corpus: {3}".format(comp_pct,
+            comp_ratio = get_comp_ratio(orig_size=test_corpuses[corpus]['orig_size'], comp_size=comp_size)
+            #gzip_float_pct = float(test_corpuses[corpus]['gzip_comp_pct'])
+            #compare_result, diff = compare_gzip(gzip_float_pct, comp_ratio, self.margin)
+            '''fun_test.add_checkpoint("FunOS accelerator spacesaving percentage {0:04.2f}% {1} than gzip space"
+                                    "saving percentage: {2:04.2f}% for corpus: {3}".format(comp_ratio,
                                                                                            "GREATER" if compare_result
                                                                                            else "LESSER",
                                                                                            gzip_float_pct,
-                                                                                           corpus))
+                                                                                           corpus))'''
+            fun_test.add_checkpoint("FunOS accelerator compression-ratio: {0:04.2f}% for corpus: {1}".format(comp_ratio,
+                                                                                                             corpus))
 
             post_result_lst.append({'effort_name': self.accelerator_effort,
                                     'corpus_name': corpus,
-                                    'f1_compression_ratio': comp_pct,
+                                    'f1_compression_ratio': comp_ratio,
                                     'date_time': fun_test.shared_variables['date_time']})
             init_write_count = curr_write_count
-            table_rows.append([corpus, "{0:04.2f}".format(comp_pct), test_corpuses[corpus]['gzip_comp_pct']])
+            table_rows.append([corpus, "{0:04.2f}".format(comp_ratio), test_corpuses[corpus]['gzip_comp_pct']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
                            table_name="Accelerator Effort: {0}, Gizp Effort: {1}".format(self.accelerator_effort,
                                                                                          self.gzip_effort),
@@ -349,10 +351,10 @@ class EcCompBenchmarkEffort7Gbps(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Inspur TC 8.13.1 Test Compression ratio's for different corpus's of data with "
-                                      "F1's compression engine and compare it with Gzip. F1 Effort: Auto, Gzip Effort: 6",
+                                      "F1's compression engine and compare it with Gzip. F1 Effort: 7Gbps, Gzip Effort: 6",
                               steps="""
                           1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
-                             a Journal Volume and an LSV volume with compression enabled effort Auto.
+                             a Journal Volume and an LSV volume with compression enabled effort 7Gbps.
                           2. Attach LSV volume to the nvme controller.  
                           3. Create file system on the attached device and mount it with a directory.
                           4. Capture write count before copying data to mount point and after copying it.
@@ -376,7 +378,7 @@ class EcCompBenchmarkEffort64Gbps(ECVolumeLevelTestcase):
                                       "F1's compression engine and compare it with Gzip. F1 Effort: 64Gbps, Gzip Effort: 1",
                               steps="""
                           1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
-                             a Journal Volume and an LSV volume with compression enabled effort Auto.
+                             a Journal Volume and an LSV volume with compression enabled effort 64Gbps.
                           2. Attach LSV volume to the nvme controller.  
                           3. Create file system on the attached device and mount it with a directory.
                           4. Capture write count before copying data to mount point and after copying it.
@@ -400,7 +402,7 @@ class EcCompBenchmarkEffort2Gbps(ECVolumeLevelTestcase):
                                       " F1's compression engine and compare it with Gzip. F1 Effort: 2Gbps, Gzip Effort: 9",
                               steps="""
                           1. Create 6 BLT volumes, Configure 1 EC(4:2) on top of the BLT volume, 
-                             a Journal Volume and an LSV volume with compression enabled effort Auto.
+                             a Journal Volume and an LSV volume with compression enabled effort 2Gbps.
                           2. Attach LSV volume to the nvme controller.  
                           3. Create file system on the attached device and mount it with a directory.
                           4. Capture write count before copying data to mount point and after copying it.
