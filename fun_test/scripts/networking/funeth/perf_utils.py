@@ -1,5 +1,7 @@
+from fun_global import PerfUnit
 from lib.system.fun_test import *
 from scripts.networking.tcp import helper
+from web.fun_test.analytics_models_helper import ModelHelper
 from collections import OrderedDict
 from prettytable import PrettyTable
 import json
@@ -410,3 +412,70 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+unit = {
+    "latency_P50_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_max_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_max_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_min_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_min_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "pps_h2h_unit": PerfUnit.UNIT_PPS,
+    "pps_h2n_unit": PerfUnit.UNIT_PPS,
+    "pps_n2h_unit": PerfUnit.UNIT_PPS,
+    "throughput_h2h_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+    "throughput_h2n_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+    "throughput_n2h_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+}
+
+
+def db_helper(results):
+    """Write results to DB.
+
+    :param results: list of result dict.
+    :return:
+    """
+
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance", "HuLatencyUnderLoadPerformance"]
+    for line in results:
+        status = fun_test.PASSED
+        try:
+            for model_name in model_names:
+                generic_helper = ModelHelper(model_name=model_name)
+                generic_helper.set_units(validate=False, **unit)
+                generic_helper.add_entry(**line)
+                generic_helper.set_status(status)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        #print "used generic helper to add an entry"

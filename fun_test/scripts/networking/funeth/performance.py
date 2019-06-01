@@ -110,8 +110,10 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['results'] = results
 
     def cleanup(self):
+        results = fun_test.shared_variables['results']
+        perf_utils.db_helper(results)
         perf_utils.populate_result_summary(tc_ids,
-                                           fun_test.shared_variables['results'],
+                                           results,
                                            fun_test.shared_variables['funsdk_commit'],
                                            fun_test.shared_variables['funsdk_bld'],
                                            fun_test.shared_variables['driver_commit'],
