@@ -50,7 +50,7 @@ class TestBedWorker(Thread):
                 if get_current_time() > test_bed.manual_lock_expiry_time:
                     test_bed.manual_lock = False
                     test_bed.save()
-                    un_lock_assets(test_bed_name=test_bed.name, manual_lock_submitter=test_bed.manual_lock_submitter)
+                    manual_un_lock_assets(test_bed_name=test_bed.name, manual_lock_submitter=test_bed.manual_lock_submitter)
                     send_test_bed_remove_lock(test_bed=test_bed, warning=False)
 
                     if test_bed_name in self.test_bed_lock_timers:
