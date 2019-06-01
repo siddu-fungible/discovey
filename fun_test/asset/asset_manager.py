@@ -126,19 +126,20 @@ class AssetManager:
     def check_assets_are_manual_locked(self, assets_required):
         from django.core.exceptions import ObjectDoesNotExist
         from web.fun_test.models import Asset
-        duts_required = assets_required.get(AssetType.DUT, None)
-        manual_locked, error_message, manual_lock_user = False, "", None
-        if duts_required:
-            for dut_required in duts_required:
+
+        asset_level_manual_locked, error_message, manual_lock_user = False, "", None
+
+        for asset_type, assets_for_type in assets_required.iteritems():
+            for asset_for_type in assets_for_type:
                 try:
-                    this_asset = Asset.objects.get(type=AssetType.DUT, name=dut_required)
+                    this_asset = Asset.objects.get(name=asset_for_type)
                     if this_asset.manual_lock_user:
-                        manual_locked, error_message, manual_lock_user = True, "Asset: {} manual locked by: {}".format(dut_required, this_asset.manual_lock_user), this_asset.manual_lock_user
+                        asset_level_manual_locked, error_message, manual_lock_user = True, "Asset: {} manual locked by: {}".format(asset_for_type, this_asset.manual_lock_user), this_asset.manual_lock_user
                 except ObjectDoesNotExist:
-                    print "ObjectDoesnotExist, {}".format(dut_required)
+                    print "ObjectDoesnotExist, {}".format(asset_for_type)
                 except Exception as ex:
                     print("Some other exception: {}".format(ex))
-        return manual_locked, error_message, manual_lock_user, assets_required
+        return asset_level_manual_locked, error_message, manual_lock_user, assets_required
 
     @fun_test.safe
     def check_assets_in_use(self, test_bed_type, assets_required):
@@ -148,23 +149,22 @@ class AssetManager:
         used_by_suite_id = None
         in_use = False
         error_message = ""
-        duts_required = assets_required.get(AssetType.DUT, None)
         asset_in_use = None
-        print("Assets required for {}, : {}".format(test_bed_type, duts_required))
-        if duts_required:
-            for dut_required in duts_required:
+        # print("Assets required for {}, : {}".format(test_bed_type, assets_required))
+        for asset_type, assets_for_type in assets_required.iteritems():
+            for asset_for_type in assets_for_type:
                 try:
-                    this_asset = Asset.objects.get(type=AssetType.DUT, name=dut_required)
+                    this_asset = Asset.objects.get(name=asset_for_type)
                     job_ids = this_asset.job_ids
                     print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
                     if job_ids:
                         for job_id in job_ids:
-                            print("Check if suite in progress: {}: {}: {}".format(test_bed_type, job_id, duts_required))
+                            # print("Check if suite in progress: {}: {}: {}".format(test_bed_type, job_id, duts_required))
                             in_progress = is_suite_in_progress(job_id, test_bed_type)
                             if in_progress:
-                                in_use, error_message = True, "{} used by Suite: {}".format(dut_required, job_id)
+                                in_use, error_message = True, "{} used by Suite: {}".format(asset_for_type, job_id)
                                 used_by_suite_id = job_id
-                                asset_in_use = dut_required
+                                asset_in_use = asset_for_type
                                 break
                 except ObjectDoesNotExist:
                     print "ObjectDoesnotExist, {}".format(test_bed_type)
@@ -209,10 +209,16 @@ class AssetManager:
         in_progress_count = in_progress_suites.count()
 
         manual_lock_info = is_test_bed_with_manual_lock(test_bed_name=test_bed_type)
+        asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = False, "", None, None
+        if assets_required_for_test_bed:
+            asset_level_manuAal_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
 
         if manual_lock_info:
             result["status"] = False
             result["message"] = "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
+        elif asset_level_manual_locked:
+            result["status"] = False
+            result["message"] = asset_level_error_message
         elif in_progress_count >= credits:
             result["status"] = False
             result["message"] = "Test-bed: {} In-progress count: {}, Credit: {}".format(test_bed_type, in_progress_count, credits)
