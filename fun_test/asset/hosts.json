@@ -311,5 +311,85 @@
         }
       }
     }
+  },
+  "cab02-qa-01": {
+    "host_ip": "cab02-qa-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-02": {
+    "host_ip": "cab02-qa-02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-02-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-03": {
+    "host_ip": "cab02-qa-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-03-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-04": {
+    "host_ip": "cab02-qa-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-04-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-05": {
+    "host_ip": "cab02-qa-05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-05-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  }, 
+  "cab02-qa-06": {
+    "host_ip": "cab02-qa-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-06-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-07": {
+    "host_ip": "cab02-qa-07",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-07-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-08": {
+    "host_ip": "cab02-qa-08",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-08-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
   }
 }

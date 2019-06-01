@@ -39,30 +39,35 @@ def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*"
     return result
 
 
-def setup_hu_host(funeth_obj, update_driver=True, enable_tso=True):
+def setup_hu_host(funeth_obj, update_driver=True):
+    funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
-        fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
-        fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
-        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
+        update_src_result = funeth_obj.update_src(parallel=True)
+        if update_src_result:
+            funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
+        fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
+    fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
+    if not funeth_obj.load(sriov=4):
+        fun_test.critical(message="Could not load funeth driver")
+    else:
+        funtest.log("Driver loaded on all hosts")
+    
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
-        if enable_tso:
-            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False),
-                                 'Enable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
-        else:
-            fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
-                                 'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+
         fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
                              'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(False)),
+                             'Configure HU host {} IPv4 routes.'.format(
             linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
 
+    return funsdk_commit, funsdk_bld, driver_commit, driver_bld 
 
 def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)

@@ -506,9 +506,10 @@ class FunTest:
     def parse_string_to_json(self, string):
         result = None
         try:
+            print("My string: {}".format(string))
             result = json.loads(string)
         except Exception as ex:
-            raise Exception("{} has an invalid json format".format(string))
+            raise Exception("{} has an invalid json format {}".format(string, str(ex)))
         return result
 
     def parse_file_to_json(self, file_name):
