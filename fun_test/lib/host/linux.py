@@ -38,30 +38,31 @@ class NoLogger:
 
 
 class LinuxLogger:
-    def __init__(self):
+    def __init__(self, context=None):
         self.trace_enabled = None
         self.trace_id = None
+        self.context = context
 
     def trace(self, enable, id):
         self.trace_enabled = enable
         self.trace_id = id
 
-    def write_now(self, message, stdout=True):
-        fun_test.write(message=message)
-        fun_test.flush(trace_id=self.trace_id, stdout=stdout)
+    def write_now(self, message, stdout=True, context=None):
+        fun_test.write(message=message, context=context)
+        fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=context)
 
-    def write(self, message, stdout=True):
-        fun_test.write(message=message)
+    def write(self, message, stdout=True, context=None):
+        fun_test.write(message=message, context=context)
 
-    def flush(self):
-        fun_test.flush(trace_id=self.trace_id)
+    def flush(self, context=None):
+        fun_test.flush(trace_id=self.trace_id, context=context)
 
-    def log(self, message):
-        fun_test.log(message=message, trace_id=self.trace_id)
+    def log(self, message, context=None):
+        fun_test.log(message=message, trace_id=self.trace_id, context=context)
 
-    def critical(self, message):
+    def critical(self, message, context=None):
         message = "\nCRITICAL: {}".format(message)
-        fun_test.log(message=message, trace_id=self.trace_id)
+        fun_test.log(message=message, trace_id=self.trace_id, context=context)
 
 
 class Linux(object, ToDictMixin):
