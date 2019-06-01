@@ -180,7 +180,7 @@ class Bmc(Linux):
         fun_test.log_section("F1_{}:{}".format(index, phase))
 
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
-        fun_test.log("Sending u-boot command: {}".format(command))
+        # fun_test.log("Sending u-boot command: {}".format(command))
         nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc.write(command + "\n")
         output = nc.read_until(expected_data=expected, timeout=timeout)
@@ -458,7 +458,7 @@ class ComE(Linux):
         return True
 
     def cleanup_dpc(self):
-        self.command("cd $WORKSPACE/FunControlPlane")
+        # self.command("cd $WORKSPACE/FunControlPlane")
         self.sudo_command("pkill dpc")
         self.sudo_command("pkill dpcsh")
         # self.sudo_command("build/posix/bin/funq-setup unbind")
