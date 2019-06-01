@@ -18,7 +18,6 @@ from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
 from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
-from asset.asset_manager import AssetManager
 from asset.asset_global import AssetType
 from web.fun_test.models import Asset
 from web.fun_test.models import TestBed, User
@@ -596,6 +595,7 @@ def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(name=test_bed_name)
 
 def un_lock_assets(test_bed_name, manual_lock_submitter):
+    from asset.asset_manager import AssetManager
     AssetManager().manual_un_lock_assets_by_test_bed(test_bed_name=test_bed_name, user=manual_lock_submitter)
 
 def send_error_mail(message, submitter_email=None, job_id=None):
