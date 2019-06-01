@@ -610,7 +610,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                                                   "--output-format=json --size=512G --time_based=1 --rw=randread "
                                                   "--thread=1 --prio=0 --numjobs=65 --direct=1 "
                                                   "--cpus_allowed=20-39,60-79,1-19,41-59 --group_reporting=1 --bs=4k "
-                                                  "--ioengine=mmap --runtime=900 --iodepth=2 --do_verify=0"
+                                                  "--ioengine=mmap --runtime=900 --iodepth=2 --do_verify=0 "
                                                   "--name=fio_multi_host_randread_host_tcp", output_file="/tmp/fio_out",
                                                   timeout=960)
 
