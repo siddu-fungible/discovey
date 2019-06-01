@@ -494,18 +494,21 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
         # Create filesystem
         if hasattr(self, "create_file_system") and self.create_file_system:
+            self.end_host_list[0].sudo_command("tuned-adm profile network-throughput && tuned-adm active")
             self.end_host_list[0].sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
             self.end_host_list[0].sudo_command("mount {} /mnt".format(self.nvme_block_device))
             fun_test.log("Creating a testfile on XFS volume")
             fio_output = self.end_host_list[0].pcie_fio(filename="/mnt/testfile.dat", **self.warm_up_fio_cmd_args)
             fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
             self.end_host_list[0].sudo_command("umount /mnt")
+            self.end_host_list[0].sudo_command("tuned-adm profile balanced && tuned-adm active")
 
         # NVMe connect from rest of the host
         for host_index in range(1, self.host_count):
             end_host = self.end_host_list[host_index]
 
             end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+            end_host.sudo_command("tuned-adm profile balanced && tuned-adm active")
             # Load nvme and nvme_tcp modules
             command_result = end_host.command("lsmod | grep -w nvme")
             if "nvme" in command_result:
@@ -607,7 +610,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                                                   "--output-format=json --size=512G --time_based=1 --rw=randread "
                                                   "--thread=1 --prio=0 --numjobs=65 --direct=1 "
                                                   "--cpus_allowed=20-39,60-79,1-19,41-59 --group_reporting=1 --bs=4k "
-                                                  "--ioengine=mmap --runtime=900 --iodepth=2 "
+                                                  "--ioengine=mmap --runtime=900 --iodepth=2 --do_verify=0 "
                                                   "--name=fio_multi_host_randread_host_tcp", output_file="/tmp/fio_out",
                                                   timeout=960)
 
@@ -634,6 +637,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     if "fio" in process_name:
                         end_host.sudo_command("kill -9 {}".format(fio_job_pid[thread_count]))
                         fun_test.log("Killed fio on {}".format(thread_count))
+                        end_host.command("free -g")
             except:
                 fun_test.log("No killing today")
 

@@ -1968,7 +1968,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "FunOS Boot Timing",
-            "label": "FunOS Boot Timing",
+            "label": "FunOS Boot Timing (SBP view)",
             "children": [],
             "weight": 1
           },
@@ -2004,7 +2004,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "MMC timings",
-            "label": "MMC timings",
+            "label": "MMC Timings",
             "children": [],
             "weight": 1
           },
@@ -2013,7 +2013,16 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "ELF load timings",
-            "label": "ELF load timings",
+            "label": "ELF Load Timings",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "f1_timings",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "f1_timings",
+            "label": "F1 Timings",
             "children": [],
             "weight": 1
           }

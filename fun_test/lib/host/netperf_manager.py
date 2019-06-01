@@ -191,6 +191,7 @@ class NetperfManager:
         else:
             cmd = '/usr/bin/netserver'
         linux_obj.sudo_command(cmd)
+        return linux_obj.get_process_id_by_pattern('netserver') is not None
 
     def cleanup(self):
         result = True
@@ -261,7 +262,9 @@ class NetperfManager:
                         task_key='{}_{}_latency'.format(direction, i))
 
                 # Start netserver
-                self.start_netserver(linux_obj_dst, cpu_list=cpu_list)
+                if not self.start_netserver(linux_obj_dst, cpu_list=cpu_list):
+                    fun_test.critical('Failed to start netserver!')
+                    break
             if test == 3:  # +1 for latency under load
                 mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list))
             else:
