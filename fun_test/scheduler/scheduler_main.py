@@ -50,6 +50,7 @@ class TestBedWorker(Thread):
                 if get_current_time() > test_bed.manual_lock_expiry_time:
                     test_bed.manual_lock = False
                     test_bed.save()
+                    un_lock_assets(test_bed_name=test_bed.name, manual_lock_submitter=test_bed.manual_lock_submitter)
                     send_test_bed_remove_lock(test_bed=test_bed, warning=False)
 
                     if test_bed_name in self.test_bed_lock_timers:
@@ -66,11 +67,12 @@ class TestBedWorker(Thread):
                 if test_bed.name not in self.warn_list:
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
+                        un_lock_warning_time = 60 * 10
                         # self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
-                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(60 * 10, self.test_bed_unlock_dispatch, (test_bed.name,))
+                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(un_lock_warning_time, self.test_bed_unlock_dispatch, (test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name].start()
                         self.warn_list.append(test_bed.name)
-                        send_test_bed_remove_lock(test_bed=test_bed, warning=True)
+                        send_test_bed_remove_lock(test_bed=test_bed, warning=True, warning_time=un_lock_warning_time)
 
             time.sleep(20)
 
