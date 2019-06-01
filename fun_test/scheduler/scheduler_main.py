@@ -72,7 +72,7 @@ class TestBedWorker(Thread):
                         self.test_bed_lock_timers[test_bed.name] = threading.Timer(un_lock_warning_time, self.test_bed_unlock_dispatch, (test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name].start()
                         self.warn_list.append(test_bed.name)
-                        send_test_bed_remove_lock(test_bed=test_bed, warning=True, warning_time=un_lock_warning_time)
+                        send_test_bed_remove_lock(test_bed=test_bed, warning=True, un_lock_warning_time=un_lock_warning_time)
 
             time.sleep(20)
 
