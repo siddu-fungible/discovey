@@ -494,6 +494,12 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
         # Create filesystem
         if hasattr(self, "create_file_system") and self.create_file_system:
+            self.end_host_list[0].sudo_command("/etc/init.d/irqbalance stop")
+            irq_bal_stat = self.end_host_list[0].command("/etc/init.d/irqbalance status")
+            if "dead" in irq_bal_stat:
+                fun_test.log("IRQ balance stopped on 0")
+            else:
+                fun_test.log("IRQ balance not stopped on 0")
             self.end_host_list[0].sudo_command("tuned-adm profile network-throughput && tuned-adm active")
             self.end_host_list[0].sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
             self.end_host_list[0].sudo_command("mount {} /mnt".format(self.nvme_block_device))
@@ -501,14 +507,19 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fio_output = self.end_host_list[0].pcie_fio(filename="/mnt/testfile.dat", **self.warm_up_fio_cmd_args)
             fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
             self.end_host_list[0].sudo_command("umount /mnt")
-            self.end_host_list[0].sudo_command("tuned-adm profile balanced && tuned-adm active")
 
         # NVMe connect from rest of the host
         for host_index in range(1, self.host_count):
             end_host = self.end_host_list[host_index]
 
             end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-            end_host.sudo_command("tuned-adm profile balanced && tuned-adm active")
+            end_host.sudo_command("/etc/init.d/irqbalance stop")
+            irq_bal_stat = end_host.command("/etc/init.d/irqbalance status")
+            if "dead" in irq_bal_stat:
+                fun_test.log("IRQ balance stopped on {}".format(host_index))
+            else:
+                fun_test.log("IRQ balance not stopped on {}".format(host_index))
+            end_host.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
             # Load nvme and nvme_tcp modules
             command_result = end_host.command("lsmod | grep -w nvme")
             if "nvme" in command_result:
@@ -546,6 +557,10 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             if hasattr(self, "create_file_system") and self.create_file_system:
                 end_host.sudo_command("umount /mnt")
                 end_host.sudo_command("mount -o ro {} /mnt".format(self.nvme_block_device))
+                lsblk_output = end_host.lsblk()
+                for key, value in lsblk_output["nvme0n1"].items():
+                    if key == "mount_point" and value == "/mnt":
+                        fun_test.log("Device mounted successfully")
 
         fun_test.log("Connected from all hosts")
 
@@ -610,9 +625,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                                                   "--output-format=json --size=512G --time_based=1 --rw=randread "
                                                   "--thread=1 --prio=0 --numjobs=65 --direct=1 "
                                                   "--cpus_allowed=20-39,60-79,1-19,41-59 --group_reporting=1 --bs=4k "
-                                                  "--ioengine=mmap --runtime=900 --iodepth=2 --do_verify=0 "
+                                                  "--ioengine=mmap --runtime=1200 --iodepth=2 --do_verify=0 "
                                                   "--name=fio_multi_host_randread_host_tcp", output_file="/tmp/fio_out",
-                                                  timeout=960)
+                                                  timeout=1260)
 
                     # Get iostat results
                     self.iostat_host_thread = end_host.clone()
@@ -622,14 +637,14 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         func=get_iostat,
                         host_thread=self.iostat_host_thread,
                         count=thread_count,
-                        sleep_time=480,
+                        sleep_time=840,
                         iostat_interval=self.iostat_details["interval"],
-                        iostat_iter=200,
-                        iostat_timeout=920)
+                        iostat_iter=175,
+                        iostat_timeout=1220)
 
                     thread_count += 1
 
-            fun_test.sleep("Tests started", 960)
+            fun_test.sleep("Tests started", 1260)
             try:
                 thread_count = 1
                 for end_host in self.end_host_list:
@@ -666,9 +681,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         if round(iostat_bs) != round(plain_block_size):
                             fun_test.critical("Block size reported by iostat {} is different than {}".
                                               format(iostat_bs, plain_block_size))
-                        total_tps += tps
-                        total_kbs_read += kbs_read
-                        non_zero += 1
+                    total_tps += tps
+                    total_kbs_read += kbs_read
+                    non_zero += 1
                 avg_tps[count] = total_tps / non_zero
                 avg_kbs_read[count] = total_kbs_read / non_zero
 
