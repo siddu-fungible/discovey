@@ -24,11 +24,11 @@ class PcieHost(FunTestScript):
         # Boot up FS1600
         topology_helper = TopologyHelper()
         if fs == 'fs-11':
-            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
             topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=boot_args)
         elif fs == 'fs-45':
-            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g"
-            f1_1_boot_args = "app=hw_hsu_test retimer=3 --dpc-uart --dpc-server --csr-replay --all_100g"
+            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            f1_1_boot_args = "app=hw_hsu_test retimer=3 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
