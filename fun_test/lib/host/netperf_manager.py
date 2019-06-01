@@ -264,7 +264,14 @@ class NetperfManager:
                 # Start netserver
                 if not self.start_netserver(linux_obj_dst, cpu_list=cpu_list):
                     fun_test.critical('Failed to start netserver!')
+                    netserver_ready = False
                     break
+                else:
+                    netserver_ready = True
+
+            if not netserver_ready:
+                break
+
             if test == 3:  # +1 for latency under load
                 mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list))
             else:
