@@ -5,6 +5,7 @@ from lib.host import netperf_manager as nm
 from lib.host.network_controller import NetworkController
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity, perf_utils
+from web.fun_test.analytics_models_helper import get_data_collection_time
 from collections import OrderedDict
 import json
 import pprint
@@ -22,7 +23,7 @@ if debug_mode:
 else:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
-TIMESTAMP = get_current_time()
+TIMESTAMP = get_data_collection_time()
 
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
