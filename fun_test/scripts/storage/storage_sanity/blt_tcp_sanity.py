@@ -90,7 +90,7 @@ class BLTVolumeSanityScript(FunTestScript):
         # load nvme_tcp
         load_nvme_tcp_module(end_host)
 
-        enable_counters(storage_controller, self.command_timeout)
+        #enable_counters(storage_controller, self.command_timeout)
 
         # configure ip on fs
         fun_test.test_assert(storage_controller.ip_cfg(ip=test_network['f1_loopback_ip'])["status"],
