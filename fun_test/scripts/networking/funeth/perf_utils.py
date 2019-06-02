@@ -394,7 +394,11 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
         lines = ['FunOS: {}'.format(funos_bld),
                  'FunSDK: {} {}'.format(funsdk_commit, funsdk_bld),
                  'Driver: {} {}'.format(driver_commit, driver_bld),
-                 ptable.get_string()]
+                 ptable.get_string(),
+                 'Note:',
+                 '_h2n: HU to NU (Host to Network)',
+                 '_n2h: NU to HU (Network to Host)',
+                 '_h2h: HU to HU (Host to Host)']
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'w') as f:
