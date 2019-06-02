@@ -156,7 +156,7 @@ class AssetManager:
                 try:
                     this_asset = Asset.objects.get(name=asset_for_type)
                     job_ids = this_asset.job_ids
-                    print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
+                    # print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
                     if job_ids:
                         for job_id in job_ids:
                             # print("Check if suite in progress: {}: {}: {}".format(test_bed_type, job_id, duts_required))
@@ -167,7 +167,7 @@ class AssetManager:
                                 asset_in_use = asset_for_type
                                 break
                 except ObjectDoesNotExist:
-                    print "ObjectDoesnotExist, {}".format(test_bed_type)
+                    pass # print "ObjectDoesnotExist, {}".format(test_bed_type)
                 except Exception as ex:
                     print("Some other exception: {}".format(ex))
         if not in_use:
