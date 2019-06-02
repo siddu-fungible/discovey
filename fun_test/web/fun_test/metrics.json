@@ -3459,10 +3459,10 @@
                         "label": "Sequential Read",
                         "children": [
                           {
-                            "info": "read_4kb1vol12ssd_durable_volume_ec_nvmetcp_4_output_latency",
+                            "info": "read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
-                            "name": "read_4kb1vol12ssd_durable_volume_ec_nvmetcp_4_output_latency",
+                            "name": "read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
@@ -3485,10 +3485,10 @@
                         "label": "Random Read",
                         "children": [
                           {
-                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_nvmetcp_4_output_latency",
+                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
-                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_nvmetcp_4_output_latency",
+                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
