@@ -20,6 +20,10 @@ class NoLogger:
         self.trace_enabled = enable
         self.trace_id = id
 
+    def reset_context(self):
+        if hasattr(self, "context"):
+            self.context = None
+
     def write_now(self, message, stdout=True):
         pass
         
@@ -42,6 +46,10 @@ class LinuxLogger:
         self.trace_enabled = None
         self.trace_id = None
         self.context = context
+
+    def reset_context(self):
+        if hasattr(self, "context"):
+            self.context = None
 
     def trace(self, enable, id):
         self.trace_enabled = enable
@@ -147,6 +155,9 @@ class Linux(object, ToDictMixin):
 
         return Linux(host_ip=prop["host_ip"], ssh_username=ssh_username,
                      ssh_password=ssh_password, ssh_port=ssh_port)
+
+    def reset_context(self):
+        self.logger.reset_context()
 
     def enable_logs(self, enable=True):
         if enable:

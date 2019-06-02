@@ -1043,7 +1043,7 @@ class FunTest:
 
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
         if self.profiling:
-            checkpoint = "{} {}".format(get_current_time(), checkpoint)
+            checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
         self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
                                         result=result,
                                         expected=expected,

@@ -98,9 +98,8 @@ class AssetManager:
                     self.docker_host_orchestrator = DockerHostOrchestrator(id=dut_index, spec=docker_host_spec)
                 orchestrator = self.docker_host_orchestrator
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
-                if not self.real_orchestrator:
-                    self.real_orchestrator = RealOrchestrator.get(id=dut_index)
-                orchestrator = self.real_orchestrator
+                # if not self.real_orchestrator:
+                orchestrator = RealOrchestrator.get(id=dut_index)
         except Exception as ex:
             fun_test.critical(str(ex))
         self.orchestrators.append(orchestrator)

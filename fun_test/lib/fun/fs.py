@@ -380,7 +380,7 @@ class Bmc(Linux):
         return s
 
     def cleanup(self):
-        fun_test.critical("XXXXXX FIX_-ME  XXXXXX")
+        fun_test.critical("XXXX FIX-ME")
         # fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
 
         # fun_test.log("U-boot logs: {}: END".format(self.u_boot_logs))
@@ -722,6 +722,11 @@ class Fs(object, ToDictMixin):
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
 
+    def post_bootup(self):
+        self.get_bmc().reset_context()
+        self.get_come().reset_context()
+        self.get_fpga().reset_context()
+
     def set_boot_phase(self, boot_phase):
         self.boot_phase = boot_phase
         fun_test.add_checkpoint(checkpoint="FS boot-phase: {}".format(self.boot_phase), context=self.context)
@@ -735,8 +740,8 @@ class Fs(object, ToDictMixin):
         pass
 
     def cleanup(self):
-        self.bmc.cleanup()
-        self.come.cleanup()
+        self.get_bmc().cleanup()
+        self.get_come().cleanup()
 
     def get_f1_0(self):
         return self.get_f1(index=0)
@@ -803,7 +808,6 @@ class Fs(object, ToDictMixin):
                   setup_bmc_support_files=setup_bmc_support_files)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
-
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
         if reboot_bmc:
             fun_test.test_assert(expression=self.reboot_bmc(), message="Reboot BMC", context=self.context)

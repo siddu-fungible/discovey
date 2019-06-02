@@ -213,9 +213,10 @@ class TopologyHelper:
             dut_ready = False
             dut_ready_timer = FunTimer(max_time=300)
             while not dut_ready_timer.is_expired() and not dut_ready:
-                dut_ready = dut_obj.get_instance().is_ready()
+                dut_instance = dut_obj.get_instance()
+                dut_ready = dut_instance.is_ready()
                 fun_test.sleep("DUT: {} readiness check. Remaining time: {}".format(dut_index, dut_ready_timer.remaining_time()))
-
+                dut_instance.post_bootup()
             fun_test.test_assert(dut_ready, "DUT: {} ready".format(dut_index))
 
             for interface_index, interface_info in dut_obj.interfaces.items():
@@ -227,7 +228,10 @@ class TopologyHelper:
                         host_is_ready = False
                         while not host_is_ready and not host_ready_timer.is_expired():
                             host_is_ready = peer.is_ready()
-                        fun_test.test_assert(host_ready_timer, "Host: {} ready".format(str(peer.get_instance())))
+                            fun_test.sleep("Host: {} readiness check. Remaining time: {}".format(peer.get_instance(),
+                                                                                                 host_ready_timer.remaining_time()))
+
+                        fun_test.test_assert(not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
                         """
                         host_instance = peer_info.get_host_instance()
                         ipmi_details = None
