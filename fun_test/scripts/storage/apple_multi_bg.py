@@ -24,11 +24,11 @@ tb_config = {
     "tg_info": {
         0: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.104",
+            "ip": "10.1.105.105",
             "user": "localadmin",
             "passwd": "Precious1*",
-            "iface_ip": "15.1.4.2",
-            "iface_gw": "15.1.4.1"
+            "iface_ip": "15.1.5.2",
+            "iface_gw": "15.1.5.1"
         },
         1: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
@@ -623,7 +623,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
                     fio_job_pid[thread_count] = end_host.start_bg_process(command="sudo fio --group_reporting --filename=/mnt/testfile.dat --time_based "
                                                   "--output-format=json --size=512G --time_based=1 --rw=randread "
-                                                  "--thread=1 --prio=0 --numjobs=65 --direct=1 "
+                                                  "--thread=1 --prio=0 --numjobs=78 --direct=1 "
                                                   "--cpus_allowed=20-39,60-79,1-19,41-59 --group_reporting=1 --bs=4k "
                                                   "--ioengine=mmap --runtime=1200 --iodepth=2 --do_verify=0 "
                                                   "--name=fio_multi_host_randread_host_tcp", output_file="/tmp/fio_out",

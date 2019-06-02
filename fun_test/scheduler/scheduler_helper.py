@@ -621,7 +621,7 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
     content = "Hi {},".format(user.first_name) + "<br>"
     content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
     if warning:
-        content += "We will unlock the test-bed in {} minutes" + "<br>".format(un_lock_warning_time / 60)
+        content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
         subject = "Manual-testing lock duration for Test-bed {} has exceeded".format(test_bed.name)
     else:
         content += "Unlocking now" + "<br>"

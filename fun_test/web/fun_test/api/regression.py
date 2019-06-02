@@ -71,16 +71,19 @@ def test_beds(request, id):
             submitter_email = request_json["manual_lock_submitter_email"]
             test_bed.manual_lock_submitter = submitter_email
 
+
+        this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:
             future_time = get_current_time() + timedelta(hours=int(extension_hour),
                                                          minutes=int(extension_minute))
+            this_is_extension_request = True
             test_bed.manual_lock_expiry_time = future_time
         if "manual_lock" in request_json:
             test_bed.manual_lock = request_json["manual_lock"]
 
         if test_bed.manual_lock:
             manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(test_bed_name=test_bed.name)
-            if manual_locked:
+            if manual_locked and not this_is_extension_request:
                 raise Exception(error_message)
             else:
                 if submitter_email:
