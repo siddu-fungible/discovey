@@ -148,7 +148,7 @@ class FunethPerformanceBase(FunTestCase):
             interval = 60
         else:
             interval = 5
-        fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
+        #fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
 
     def _run(self, flow_type, tool='netperf', protocol='tcp', num_flows=1, num_hosts=1, frame_size=1500, duration=30):
         funeth_obj = fun_test.shared_variables['funeth_obj']
