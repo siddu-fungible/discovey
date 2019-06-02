@@ -24,6 +24,9 @@ class ExpandedTopology(ToDictMixin):
             fun_test.log("Dut Index: {} not found".format(index))
         return result
 
+    def get_duts(self):
+        return self.duts
+
     def get_switch(self, name):
         result = None
         if name in self.switches:
