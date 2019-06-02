@@ -211,8 +211,11 @@ class AssetManager:
         manual_lock_info = is_test_bed_with_manual_lock(test_bed_name=test_bed_type)
         asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = False, "", None, None
         if assets_required_for_test_bed:
-            asset_level_manuAal_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
+            asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
 
+        result["suite_info"] = None
+        if in_progress_count >= credits:  # TODO: Duplicate check below
+            result["suite_info"] = {"suite_execution_id": in_progress_suites[0].execution_id}
         if manual_lock_info:
             result["status"] = False
             result["message"] = "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
