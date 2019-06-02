@@ -214,7 +214,7 @@ class AssetManager:
             asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
 
         result["suite_info"] = None
-        if in_progress_count >= credits:  # TODO: Duplicate check below
+        if in_progress_count > 0:  # TODO: Duplicate check below
             result["suite_info"] = {"suite_execution_id": in_progress_suites[0].execution_id}
         if manual_lock_info:
             result["status"] = False
