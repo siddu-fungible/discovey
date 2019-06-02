@@ -1013,7 +1013,7 @@ class FunTest:
                 self._append_assert_test_metric(assert_message)
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 if self.profiling:
-                    this_checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
+                    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
                 self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
                                                 expected=expected,
                                                 actual=actual,
@@ -1028,7 +1028,7 @@ class FunTest:
                 self._append_assert_test_metric(assert_message)
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 if self.profiling:
-                    this_checkpoint = "{} {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
+                    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
                 self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
                                                 expected=expected,
                                                 actual=actual,

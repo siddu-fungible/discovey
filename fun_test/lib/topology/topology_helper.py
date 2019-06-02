@@ -74,7 +74,7 @@ class TopologyHelper:
             duts = spec["dut_info"]
             for dut_index, dut_info in duts.items():
                 dut_index = int(dut_index)
-                if dut_index in self.disabled_dut_indexes:
+                if dut_index in self.disabled_dut_indexes or ("disabled" in dut_info and dut_info["disabled"]):
                     fun_test.log("Skipping initialization for Dut-index: {}".format(dut_index))
                     continue
 
