@@ -47,22 +47,22 @@ class LinuxLogger:
         self.trace_enabled = enable
         self.trace_id = id
 
-    def write_now(self, message, stdout=True, context=None):
-        fun_test.write(message=message, context=context)
+    def write_now(self, message, stdout=True):
+        fun_test.write(message=message, context=self.context)
         fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=context)
 
-    def write(self, message, stdout=True, context=None):
-        fun_test.write(message=message, context=context)
+    def write(self, message, stdout=True):
+        fun_test.write(message=message, context=self.context)
 
-    def flush(self, context=None):
-        fun_test.flush(trace_id=self.trace_id, context=context)
+    def flush(self):
+        fun_test.flush(trace_id=self.trace_id, context=self.context)
 
-    def log(self, message, context=None):
-        fun_test.log(message=message, trace_id=self.trace_id, context=context)
+    def log(self, message):
+        fun_test.log(message=message, trace_id=self.trace_id, context=self.context)
 
-    def critical(self, message, context=None):
+    def critical(self, message):
         message = "\nCRITICAL: {}".format(message)
-        fun_test.log(message=message, trace_id=self.trace_id, context=context)
+        fun_test.log(message=message, trace_id=self.trace_id, context=self.context)
 
 
 class Linux(object, ToDictMixin):
@@ -99,6 +99,7 @@ class Linux(object, ToDictMixin):
                  use_paramiko=False,
                  localhost=None,
                  set_term_settings=True,
+                 context=None,
                  ipmi_info=None,
                  **kwargs):
 
@@ -112,7 +113,7 @@ class Linux(object, ToDictMixin):
         self.localhost = localhost
         self.use_paramiko = use_paramiko
         self.paramiko_handle = None
-        self.logger = LinuxLogger()
+        self.logger = LinuxLogger(context=context)
         self.trace_enabled = None
         self.trace_id = None
         self.tmp_dir = None
@@ -126,6 +127,7 @@ class Linux(object, ToDictMixin):
         self.telnet_username = telnet_username
         self.telnet_password = telnet_password
         self.extra_attributes = kwargs
+        self.context = context
         self.ipmi_info = ipmi_info
         if self.extra_attributes:
             if "ipmi_info" in self.extra_attributes:
@@ -455,7 +457,7 @@ class Linux(object, ToDictMixin):
                 buf = '\n'.join(buf_lines[start_line:-1])
         except Exception as ex:
             critical_str = str(ex) + " Command: {}".format(command)
-            fun_test.critical(critical_str)
+            fun_test.critical(critical_str, context=self.context)
             self.logger.critical(critical_str)
             raise ex
         return buf
