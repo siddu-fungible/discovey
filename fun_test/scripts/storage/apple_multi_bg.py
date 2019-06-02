@@ -24,11 +24,11 @@ tb_config = {
     "tg_info": {
         0: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.105",
+            "ip": "10.1.105.104",
             "user": "localadmin",
             "passwd": "Precious1*",
-            "iface_ip": "15.1.5.2",
-            "iface_gw": "15.1.5.1"
+            "iface_ip": "15.1.4.2",
+            "iface_gw": "15.1.4.1"
         },
         1: {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,

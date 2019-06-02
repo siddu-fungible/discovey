@@ -5,6 +5,7 @@ from lib.host import netperf_manager as nm
 from lib.host.network_controller import NetworkController
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity, perf_utils
+from web.fun_test.analytics_models_helper import get_data_collection_time
 from collections import OrderedDict
 import json
 import pprint
@@ -12,11 +13,18 @@ import pprint
 
 TB = sanity.TB
 inputs = fun_test.get_job_inputs()
-if inputs and inputs.get('debug', 0):
+if inputs:
+    debug_mode = (inputs.get('debug', 0) == 1)
+else:
+    debug_mode = False
+
+if debug_mode:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
 else:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
-TIMESTAMP = get_current_time()
+
+TIMESTAMP = get_data_collection_time()
+
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
     ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
@@ -110,8 +118,11 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['results'] = results
 
     def cleanup(self):
+        results = fun_test.shared_variables['results']
+        if not debug_mode:
+            perf_utils.db_helper(results)
         perf_utils.populate_result_summary(tc_ids,
-                                           fun_test.shared_variables['results'],
+                                           results,
                                            fun_test.shared_variables['funsdk_commit'],
                                            fun_test.shared_variables['funsdk_bld'],
                                            fun_test.shared_variables['driver_commit'],
@@ -137,7 +148,7 @@ class FunethPerformanceBase(FunTestCase):
             interval = 60
         else:
             interval = 5
-        fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
+        #fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
 
     def _run(self, flow_type, tool='netperf', protocol='tcp', num_flows=1, num_hosts=1, frame_size=1500, duration=30):
         funeth_obj = fun_test.shared_variables['funeth_obj']
