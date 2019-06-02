@@ -729,7 +729,8 @@ class FunTest:
             calling_module=None,
             no_timestamp=False,
             context=None,
-            ignore_context_description=None):
+            ignore_context_description=None,
+            section=False):
         current_time = get_current_time()
         if calling_module:
             module_name = calling_module[0]
@@ -775,8 +776,10 @@ class FunTest:
         else:
             final_message = str(message) + nl
         if self.log_timestamps and (not no_timestamp):
-            final_message = "[{}] {}".format(current_time, message)
+            final_message = "[{}] {}".format(current_time, final_message)
 
+        if section:
+            final_message = "\n{}\n{}\n".format(final_message, "=" * len(final_message))
         if context:
             context.write(final_message)
         if stdout:
@@ -810,8 +813,8 @@ class FunTest:
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             calling_module = self._get_calling_module(outer_frames=outer_frames)
-        s = "\n{}\n{}\n".format(message, "=" * len(message))
-        self.log(s, calling_module=calling_module, context=context)
+        # s = "\n{}\n{}\n".format(message, "=" * len(message))
+        self.log(message, calling_module=calling_module, context=context, section=True)
 
     def write(self, message, context=None):
         if context:
@@ -996,7 +999,7 @@ class FunTest:
     def _get_context_prefix(self, context, message):
         s = "{}".format(message)
         if context:
-            s = "{}: {}".format(context.description, message)
+            s = "{}: {}".format(context.description, message.lstrip("\n"))
         return s
 
     def test_assert_expected(self, expected, actual, message, ignore_on_success=False, context=None):
@@ -1010,7 +1013,7 @@ class FunTest:
                 self._append_assert_test_metric(assert_message)
                 this_checkpoint = self._get_context_prefix(context=context, message=message)
                 if self.profiling:
-                    this_checkpoint = "{} {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
+                    this_checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
                 self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
                                                 expected=expected,
                                                 actual=actual,
