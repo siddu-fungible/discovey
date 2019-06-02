@@ -380,8 +380,8 @@ class Bmc(Linux):
         return s
 
     def cleanup(self):
-        fun_test.critical("XXXX FIX-ME")
-        # fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
+        # fun_test.critical("XXXX FIX-ME")
+        fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
 
         # fun_test.log("U-boot logs: {}: END".format(self.u_boot_logs))
         """
