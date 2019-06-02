@@ -42,6 +42,8 @@ class BootPhases:
     U_BOOT_INIT = "u-boot: init"
     U_BOOT_MICROCOM_STARTED = "u-boot: microcom started"
     U_BOOT_TRAIN = "u-boot: train"
+    U_BOOT_SET_GATEWAY_IP = "u-boot: set gatewayip"
+    U_BOOT_SET_SERVER_IP = "u-boot: set serverip"
     U_BOOT_SET_BOOT_ARGS = "u-boot: set boot args"
     U_BOOT_DHCP = "u-boot: dhcp"
     U_BOOT_TFTP_DOWNLOAD = "u-boot: tftp download"
@@ -216,18 +218,17 @@ class Bmc(Linux):
                           tftp_image_path="funos-f1.stripped.gz",
                           gateway_ip=None):
         result = None
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
-
-        # self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset',
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
         self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected=self.U_BOOT_F1_PROMPT,
 
                             f1_index=index)
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
 
         if gateway_ip:
+            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_GATEWAY_IP)
             self.u_boot_command(command="setenv gatewayip {}".format(gateway_ip), timeout=10, expected=self.U_BOOT_F1_PROMPT,
                                 f1_index=index)
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_SERVER_IP)
         self.u_boot_command(command="setenv serverip {}".format(TFTP_SERVER_IP), timeout=10, expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
         self.u_boot_command(
