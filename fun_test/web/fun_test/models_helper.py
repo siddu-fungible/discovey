@@ -272,7 +272,7 @@ def set_suite_execution_banner(suite_execution_id, banner):
     suite_execution.save()
 
 
-def get_suite_execution_banner(suite_execution_id, banner):
+def get_suite_execution_banner(suite_execution_id):
     suite_execution = get_suite_execution(suite_execution_id)
     return suite_execution.banner
 

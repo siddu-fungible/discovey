@@ -775,7 +775,7 @@ class FunTest:
             final_message = self._get_context_prefix(context=context, message=str(message) + nl)
         else:
             final_message = str(message) + nl
-        if self.log_timestamps and (not no_timestamp):
+        if self.log_timestamps and (not no_timestamp) and not section:
             final_message = "[{}] {}".format(current_time, final_message)
 
         if section:
@@ -922,7 +922,6 @@ class FunTest:
                 thread_to_check.join()
         self._print_summary()
         self.closed = True
-        print "XXXXXX FUN_TEST CLOSED XXXXX"
 
     def _get_test_case_text(self,
                             id,
