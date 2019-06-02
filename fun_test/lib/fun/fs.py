@@ -49,12 +49,16 @@ class BootPhases:
     U_BOOT_TFTP_DOWNLOAD = "u-boot: tftp download"
     U_BOOT_UNCOMPRESS_IMAGE = "u-boot: uncompress image"
     U_BOOT_ELF = "u-boot: bootelf"
+    U_BOOT_COMPLETE = "u-boot: complete"
 
-    F1_BOOT_NETWORK_STARTED = "f1: network started"
-    F1_BOOT_PCI_STARTED = "f1: pci started"
-    F1_BOOT_READY = "f1: ready"
-    F1_DPC_SERVER_STARTED = "f1: dpc server started"
-    F1_BOOT_EP_CONTROLLER_READY = "f1: ep controller ready"
+    FS_BRING_UP_INIT = "FS_BRING_UP_INIT"
+    FS_BRING_UP_BMC_INITIALIZE = "FS_BRING_UP_BMC_INITIALIZE"
+    FS_BRING_UP_FPGA_INITIALIZE = "FS_BRING_UP_FPGA_INITIALIZE"
+    FS_BRING_UP_U_BOOT = "FS_BRING_UP_U_BOOT"
+    FS_BRING_UP_COME_REBOOT_INITIATE = "FS_BRING_UP_COME_REBOOT_INITIATE"
+    FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
+    FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
+
 
 
 class Fpga(Linux):
@@ -231,15 +235,16 @@ class Bmc(Linux):
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_SERVER_IP)
         self.u_boot_command(command="setenv serverip {}".format(TFTP_SERVER_IP), timeout=10, expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
+
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
         self.u_boot_command(
             command="setenv bootargs {}".format(
                 self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
-
-        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
+        self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
         output = self.u_boot_command(
             command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=15,
             f1_index=index, expected=self.U_BOOT_F1_PROMPT)
@@ -247,22 +252,21 @@ class Bmc(Linux):
         bytes_transferred = 0
         if m:
             bytes_transferred = int(m.group(1))
-            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
+
         fun_test.test_assert(bytes_transferred > 1000, "FunOs download size: {}".format(bytes_transferred))
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
         output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10,
                                      f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         m = re.search(r'Uncompressed size: (\d+) =', output)
         uncompressed_size = 0
         if m:
             uncompressed_size = int(m.group(1))
-            self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
         fun_test.test_assert(expression=uncompressed_size > 1000,
                              message="FunOs uncompressed size: {}".format(uncompressed_size),
                              context=self.context)
 
-        # fun_test.sleep("Uncompress image")
-
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_ELF)
         output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="CRIT hw_hsu_test \"this space intentionally left blank.\"")
         m = re.search(r'Version=(\S+), Branch=(\S+)', output)
         if m:
@@ -270,14 +274,13 @@ class Bmc(Linux):
             branch = m.group(2)
             fun_test.add_checkpoint(checkpoint="Version: {}, branch: {}".format(version, branch), context=self.context)
             fun_test.set_version(version=version.replace("bld_", ""))
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_ELF)
 
         sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
         for section in sections:
             fun_test.test_assert(expression=section in output,
                                  message="{} seen".format(section),
                                  context=self.context)
-
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_COMPLETE)
         result = True
         return result
 
@@ -665,6 +668,15 @@ class Fs(object, ToDictMixin):
         self.retimer_workround = retimer_workaround
         self.non_blocking = non_blocking
         self.context = context
+        self.set_boot_phase(BootPhases.FS_BRING_UP_INIT)
+
+    def set_boot_phase(self, boot_phase):
+        self.boot_phase = boot_phase
+        fun_test.add_checkpoint(checkpoint="FS boot-phase: {}".format(self.boot_phase), context=self.context)
+        fun_test.log_section(message="FS boot-phase: {}".format(self.boot_phase), context=self.context)
+
+    def get_boot_phase(self):
+        return self.boot_phase
 
     def reachability_check(self):
         # TODO
@@ -738,6 +750,7 @@ class Fs(object, ToDictMixin):
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
 
+        self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
         if reboot_bmc:
             fun_test.test_assert(expression=self.reboot_bmc(), message="Reboot BMC", context=self.context)
         fun_test.test_assert(expression=self.bmc_initialize(), message="BMC initialize", context=self.context)
@@ -746,8 +759,11 @@ class Fs(object, ToDictMixin):
             self._apply_retimer_workaround()
 
         fun_test.test_assert(expression=self.set_f1s(), message="Set F1s", context=self.context)
+
+        self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
         fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
 
+        self.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
         for f1_index, f1 in self.f1s.iteritems():
             if f1_index == self.disable_f1_index:
                 continue
@@ -764,15 +780,19 @@ class Fs(object, ToDictMixin):
 
         if True:
             self.get_come()
+            self.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
             fun_test.test_assert(expression=self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come,
                                                             non_blocking=non_blocking),
                                  message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
                                  context=self.context)
+
             if not non_blocking:
+                self.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
                 fun_test.test_assert(expression=self.come.initialize(disable_f1_index=self.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.context)
                 self.come_initialized = True
+                self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
             for f1_index, f1 in self.f1s.iteritems():
                 f1.set_dpc_port(self.come.get_dpc_port(f1_index))
 
@@ -805,6 +825,7 @@ class Fs(object, ToDictMixin):
                                  message="ComE initialized",
                                  context=self.context)
             self.come_initialized = True
+            self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
         return self.come_initialized
 
     def come_reset(self, power_cycle=None, non_blocking=None, max_wait_time=300):
