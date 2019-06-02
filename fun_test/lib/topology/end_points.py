@@ -1,5 +1,6 @@
+from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
-
+from threading import Thread
 
 class EndPoint(object, ToDictMixin):
     end_point_type = "Unknown end-point type"
@@ -45,17 +46,47 @@ class VmEndPoint(EndPoint, ToDictMixin):
 class BareMetalEndPoint(EndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_BARE_METAL
 
+    class RebootWorker(Thread):
+        def __init__(self, instance):
+            super(BareMetalEndPoint.RebootWorker, self).__init__()
+            self.instance = instance
+            self.work_complete = False
+
+        def run(self):
+            reboot_result = self.instance.reboot(non_blocking=True)
+            if reboot_result:
+                self.work_complete = True
+
+
     def __init__(self, host_info):
         super(BareMetalEndPoint, self).__init__()
         self.mode = self.MODE_SIMULATION
         self.host_info = host_info
         self.instance = None
+        self.reboot_worker = None
 
     def add_instance(self, instance):
         self.instance = instance
 
     def get_host_instance(self, host_index=None):
         return self.instance
+
+    def reboot(self):
+        self.reboot_worker = self.RebootWorker(instance=self.get_instance())
+        self.reboot_worker.start()
+
+    def is_ready(self):
+        instance_ready = False
+        if self.reboot_worker and not self.reboot_worker.work_complete:
+            host_instance = self.get_host_instance()
+            ipmi_details = None
+            if host_instance.extra_attributes:
+                if "ipmi_info" in host_instance.extra_attributes:
+                    ipmi_details = host_instance.extra_attributes["ipmi_info"]
+            instance_ready = host_instance.ensure_host_is_up(max_wait_time=240, ipmi_details=ipmi_details)
+            # fun_test.test_assert(instance_ready, "Instance: {} ready".format(str(host_instance)))
+            host_instance.lspci(grep_filter="1dad")
+        return instance_ready
 
 
 class SwitchEndPoint(EndPoint, ToDictMixin):

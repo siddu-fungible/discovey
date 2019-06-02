@@ -56,7 +56,9 @@ class BootPhases:
     FS_BRING_UP_FPGA_INITIALIZE = "FS_BRING_UP_FPGA_INITIALIZE"
     FS_BRING_UP_U_BOOT = "FS_BRING_UP_U_BOOT"
     FS_BRING_UP_COME_REBOOT_INITIATE = "FS_BRING_UP_COME_REBOOT_INITIATE"
+    FS_BRING_UP_COME_ENSURE_UP = "FS_BRING_UP_COME_ENSURE_UP"
     FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
+    FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD = "FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
 
 
@@ -433,6 +435,28 @@ class Bmc(Linux):
         return "/tmp/f1_{}_uart_log.txt".format(f1_index)
 
 
+class ComEInitializationWorker(Thread):
+    def __init__(self, fs):
+        super(ComEInitializationWorker, self).__init__()
+        self.fs = fs
+
+    def run(self):
+        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
+        come = self.fs.get_come()
+        bmc = self.fs.get_bmc()
+        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
+        fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True),
+                             message="Ensure ComE is up",
+                             context=self.fs.context)
+
+        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+        fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
+                             message="ComE initialized",
+                             context=self.fs.context)
+        self.fs.come_initialized = True
+        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+
+
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
     DEFAULT_DPC_PORT = [40220, 40221]
@@ -536,7 +560,6 @@ class ComE(Linux):
                     f1_index += 1
                 # fun_test.simple_assert(device_id in self.EXPECTED_FUNQ_DEVICE_ID, "Device-Id: {} not in expected list: {}".format(device_id, self.EXPECTED_FUNQ_DEVICE_ID))
                 self.funq_bind_device[f1_index] = device_id
-
 
                 num_pfs_detected += 1
 
@@ -778,26 +801,28 @@ class Fs(object, ToDictMixin):
             fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
             self.bmc.start_uart_log_listener(f1_index=f1_index, serial_device=self.f1s.get(f1_index).serial_device_path)
 
-        if True:
-            self.get_come()
-            self.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
-            fun_test.test_assert(expression=self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come,
-                                                            non_blocking=non_blocking),
-                                 message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
+        self.get_come()
+        self.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
+        fun_test.test_assert(expression=self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come,
+                                                        non_blocking=non_blocking),
+                             message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
+                             context=self.context)
+
+        if not non_blocking:
+            self.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+            fun_test.test_assert(expression=self.come.initialize(disable_f1_index=self.disable_f1_index),
+                                 message="ComE initialized",
                                  context=self.context)
+            self.come_initialized = True
+            self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+        else:
+            # Start thread
+            self.worker = ComEInitializationWorker(fs=self)
+            self.worker.start()
+        for f1_index, f1 in self.f1s.iteritems():
+            f1.set_dpc_port(self.come.get_dpc_port(f1_index))
 
-            if not non_blocking:
-                self.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-                fun_test.test_assert(expression=self.come.initialize(disable_f1_index=self.disable_f1_index),
-                                     message="ComE initialized",
-                                     context=self.context)
-                self.come_initialized = True
-                self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
-            for f1_index, f1 in self.f1s.iteritems():
-                f1.set_dpc_port(self.come.get_dpc_port(f1_index))
 
-        # else:
-        #    fun_test.critical("Skipping ComE initialization as retimer was used")
         try:
             self.get_bmc().disconnect()
             self.get_fpga().disconnect()
@@ -813,9 +838,13 @@ class Fs(object, ToDictMixin):
         bmc.command("sleep 2")
         bmc.command("gpiotool 57 --set-data-high")
         bmc.command("sleep 2")
-        fun_test.add_checkpoint("Retimer workarounds applied")
+        fun_test.add_checkpoint(checkpoint="Retimer workarounds applied", context=self.context)
 
     def is_ready(self):
+        fun_test.log(message="Boot-phase: {}".format(self.get_boot_phase()), context=self.context)
+        return self.boot_phase == BootPhases.FS_BRING_UP_COMPLETE
+
+    def is_ready_old(self):
         if not self.come_initialized:
             come = self.get_come()
             fun_test.test_assert(expression=self.bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True),
