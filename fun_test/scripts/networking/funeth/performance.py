@@ -210,7 +210,8 @@ class FunethPerformanceBase(FunTestCase):
                  'dip': dip,
                  'tool': tool,
                  'protocol': protocol,
-                 'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
+                 #'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
+                 'num_flows': num_flows,
                  'duration': duration,
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
