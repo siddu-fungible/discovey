@@ -187,14 +187,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
                 self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
 
-                """fun_test.log("Bond Interfaces:")
-                bond_interfaces = self.fs_spec[curr_index].get_bond_interfaces(f1_index=j)
-                for bond_interface_index, bond_interface in bond_interfaces.items():
-                    fun_test.log("Bond interface index: {}".format(bond_interface_index))
-                    fun_test.log("IP: {}".format(bond_interface.ip))
-                    bond_interface_ip = bond_interface.ip
-                    self.f1_ips.append(bond_interface_ip.split('/')[0])"""
-
         # Bringing up of FunCP docker container if it is needed
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -505,6 +497,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_output[combo][mode] = {}
                 for host_ip in self.nvme_block_device_list:
                     fio_filename = ":".join(self.nvme_block_device_list[host_ip])
+
+                    # Collecting mpstat during IO
+                    mpstat_cpu_list = self.mpstat_args["cpu_list"]
+                    fun_test.log("Collecting mpstat")
+                    mpstat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) / self.mpstat_args[
+                        "interval"])
+                    mpstat_pid = self.host_handles[host_ip].mpstat(cpu_list=mpstat_cpu_list,
+                                                                   output_file=self.mpstat_args["output_file"],
+                                                                   interval=self.mpstat_args["interval"],
+                                                                   count=int(mpstat_count))
+
                     fio_output[combo][mode] = self.host_handles[host_ip].pcie_fio(filename=fio_filename, rw=mode,
                                                                                   numjobs=fio_num_jobs,
                                                                                   iodepth=fio_iodepth,
@@ -516,6 +519,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.test_assert(fio_output[combo][mode],
                                          "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
                                          .format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
+
+                    # Checking if mpstat process is still running
+                    mpstat_pid_check = self.host_handles[host_ip].get_process_id("mpstat")
+                    if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid):
+                        self.host_handles[host_ip].kill_process(process_id=mpstat_pid)
+                    self.host_handles[host_ip].read_file(file_name=self.mpstat_args["output_file"])
 
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():
@@ -543,7 +552,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results("Inspur Performance Test", test_method, *row_data_list)
+                # post_results("Inspur Performance Test", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
