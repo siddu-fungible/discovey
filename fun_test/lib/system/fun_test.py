@@ -240,6 +240,8 @@ class FunTest:
 
         self.contexts = {}
         self.last_context_id = 0
+        self.profiling = False
+        self.profiling_timer = None
         self.closed = False
 
     def initialize_output_files(self, absolute_script_file_name):
@@ -264,6 +266,10 @@ class FunTest:
                                           full_script_path=self.absolute_script_file_name)
         reload(sys)
         sys.setdefaultencoding('UTF8')  # Needed for xml
+
+    def enable_profiling(self):
+        self.profiling = True
+        self.profiling_timer = FunTimer(max_time=10000)
 
     def add_context(self, description, output_file_path):
         self.last_context_id += 1
@@ -722,7 +728,8 @@ class FunTest:
             stdout=True,
             calling_module=None,
             no_timestamp=False,
-            context=None):
+            context=None,
+            ignore_context_description=None):
         current_time = get_current_time()
         if calling_module:
             module_name = calling_module[0]
@@ -760,16 +767,20 @@ class FunTest:
         if level is not self.LOG_LEVEL_NORMAL:
             message = "%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
-        if self.log_timestamps and (not no_timestamp):
-            message = "[{}] {}".format(current_time, message)
-
         nl = ""
         if newline:
             nl = "\n"
+        if not ignore_context_description:
+            final_message = self._get_context_prefix(context=context, message=str(message) + nl)
+        else:
+            final_message = str(message) + nl
+        if self.log_timestamps and (not no_timestamp):
+            final_message = "[{}] {}".format(current_time, message)
+
         if context:
-            context.write(str(message) + nl)
+            context.write(final_message)
         if stdout:
-            sys.stdout.write(str(message) + nl)
+            sys.stdout.write(final_message)
             sys.stdout.flush()
 
     def print_key_value(self, title, data, max_chars_per_column=50):
@@ -818,7 +829,12 @@ class FunTest:
             buf = context.buf
         if trace_id:
             self.trace(id=trace_id, log=buf)
-        self.log(buf, newline=False, stdout=stdout, calling_module=calling_module, no_timestamp=True, context=context)
+        self.log(buf, newline=False,
+                 stdout=stdout,
+                 calling_module=calling_module,
+                 no_timestamp=True,
+                 context=context,
+                 ignore_context_description=True)
         if context:
             context.buf = ""
         else:
@@ -977,6 +993,12 @@ class FunTest:
     def simple_assert(self, expression, message, context=None):
         self.test_assert(expression=expression, message=message, ignore_on_success=True, context=context)
 
+    def _get_context_prefix(self, context, message):
+        s = "{}".format(message)
+        if context:
+            s = "{}: {}".format(context.description, message)
+        return s
+
     def test_assert_expected(self, expected, actual, message, ignore_on_success=False, context=None):
         if not ((type(actual) is dict) and (type(expected) is dict)):
             expected = str(expected)
@@ -986,7 +1008,10 @@ class FunTest:
             assert_message = "ASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
             if self.initialized:
                 self._append_assert_test_metric(assert_message)
-                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                this_checkpoint = self._get_context_prefix(context=context, message=message)
+                if self.profiling:
+                    this_checkpoint = "{} {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
+                self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
                                                 expected=expected,
                                                 actual=actual,
                                                 result=FunTest.FAILED)
@@ -998,7 +1023,10 @@ class FunTest:
             self.log(assert_message, context=context)
             if self.initialized:
                 self._append_assert_test_metric(assert_message)
-                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                this_checkpoint = self._get_context_prefix(context=context, message=message)
+                if self.profiling:
+                    this_checkpoint = "{} {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
+                self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
                                                 expected=expected,
                                                 actual=actual,
                                                 result=FunTest.PASSED)
@@ -1010,7 +1038,13 @@ class FunTest:
                        actual="",
                        context=None):
 
-        self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint, result=result, expected=expected, actual=actual)
+        checkpoint = self._get_context_prefix(context=context, message=checkpoint)
+        if self.profiling:
+            checkpoint = "{} {}".format(get_current_time(), checkpoint)
+        self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
+                                        result=result,
+                                        expected=expected,
+                                        actual=actual)
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")

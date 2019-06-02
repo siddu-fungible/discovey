@@ -33,6 +33,9 @@ class TopologyHelper:
     def load(self, file_name):
         return dill.load(open(file_name, "rb"))
 
+    def get_topology(self):
+        return self.expanded_topology
+
     @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec

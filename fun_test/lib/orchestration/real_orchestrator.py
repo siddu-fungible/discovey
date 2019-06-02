@@ -28,15 +28,16 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
             boot_args = dut_obj.spec.get("custom_boot_args", None)
             f1_parameters = dut_obj.spec.get("f1_parameters", None)
 
-        artifact_file_name = fun_test.get_test_case_artifact_file_name("DUT_{}.txt".format(dut_index))
-        context = fun_test.add_context(description="dut_{}".format(dut_index), output_file_path=artifact_file_name)
+        artifact_file_name = fun_test.get_test_case_artifact_file_name("DUT_{}_{}_bring_up.txt".format(dut_index, dut_name))
+        context_description = "DUT:{}:{}".format(dut_index, dut_name)
+        context = fun_test.add_context(description=context_description, output_file_path=artifact_file_name)
         fs_obj = Fs.get(fs_spec=fs_spec,
                         disable_f1_index=disable_f1_index,
                         boot_args=boot_args,
                         f1_parameters=f1_parameters,
                         context=context)
         # Start Fs
-        fun_test.test_assert(fs_obj.bootup(non_blocking=True), "Fs bootup non-blocking initiated")
+        fun_test.test_assert(fs_obj.bootup(non_blocking=True), "FS bootup non-blocking initiated")
 
         # TODO: Just for backward compatibility with simulation scripts
         come = fs_obj.get_come()

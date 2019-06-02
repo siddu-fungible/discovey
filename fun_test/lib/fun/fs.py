@@ -94,6 +94,7 @@ class Fpga(Linux):
         self.handle.expect(self.prompt_terminator, timeout=1)
         return True
 
+
 class Bmc(Linux):
     U_BOOT_INTERFACE_PATH = "/tmp/u_boot_interface.py"
     UART_LOG_LISTENER_FILE = "uart_log_listener.py"
@@ -106,13 +107,17 @@ class Bmc(Linux):
     U_BOOT_F1_PROMPT = "f1 #"
     NUM_F1S = 2
 
-    def __init__(self, disable_f1_index=None, disable_uart_logger=False, **kwargs):
+    def __init__(self, disable_f1_index=None, disable_uart_logger=False, setup_support_files=None, **kwargs):
         super(Bmc, self).__init__(**kwargs)
         self.uart_log_threads = {}
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
         self.uart_log_listener_process_ids = []
         self.u_boot_logs = ["" for x in range(self.NUM_F1S)]  # for each F1
+        self.original_context_description = None
+        if self.context:
+            self.original_context_description = self.context.description
+        self.setup_support_files = setup_support_files
 
     @fun_test.safe
     def ping(self,
@@ -299,13 +304,15 @@ class Bmc(Linux):
         self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
-        fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.BMC_INSTALL_DIRECTORY)
-        fun_test.simple_assert(expression=self.list_files("{}/{}".format(self.BMC_INSTALL_DIRECTORY, pyserial_filename)),
-                               message="pyserial copied",
-                               context=self.context)
+        if self.setup_support_files:
+            fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.BMC_INSTALL_DIRECTORY)
+            fun_test.simple_assert(expression=self.list_files("{}/{}".format(self.BMC_INSTALL_DIRECTORY, pyserial_filename)),
+                                   message="pyserial copied",
+                                   context=self.context)
 
         self.command("cd {}".format(self.BMC_INSTALL_DIRECTORY))
-        self.command("tar -xvf {}".format(pyserial_filename))
+        if self.setup_support_files:
+            self.command("tar -xvf {}".format(pyserial_filename))
 
         serial_proxy_ids = self.get_process_id_by_pattern("python.*999", multiple=True)
         for serial_proxy_id in serial_proxy_ids:
@@ -322,22 +329,21 @@ class Bmc(Linux):
                                context=self.context)
 
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
-        fun_test.scp(source_file_path=uart_listener_script,
-                     target_ip=self.host_ip,
-                     target_username=self.ssh_username,
-                     target_password=self.ssh_password,
-                     target_file_path=self.BMC_UART_LOG_LISTENER_PATH)
+        if self.setup_support_files:
+            fun_test.scp(source_file_path=uart_listener_script,
+                         target_ip=self.host_ip,
+                         target_username=self.ssh_username,
+                         target_password=self.ssh_password,
+                         target_file_path=self.BMC_UART_LOG_LISTENER_PATH)
         fun_test.simple_assert(expression=self.list_files(self.BMC_UART_LOG_LISTENER_PATH),
-                               message="UART log listener copied",
-                               context=self.context)
+                                   message="UART log listener copied",
+                                   context=self.context)
         log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE, multiple=True)
         for log_listener_process in log_listener_processes:
             self.kill_process(signal=9, process_id=log_listener_process, kill_seconds=2)
 
-
     def initialize(self, reset=False):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
-        # self.command("./f1_console.sh 1")
         self.position_support_scripts()
         return True
 
@@ -367,6 +373,11 @@ class Bmc(Linux):
             result = True
         return result
 
+    def _get_context_prefix(self, data):
+        s = "{}".format(data)
+        if self.original_context_description:
+            s = "{} {}".format(self.original_context_description, data)
+        return s
 
     def cleanup(self):
         fun_test.critical("XXXXXX FIX_-ME  XXXXXX")
@@ -403,10 +414,10 @@ class Bmc(Linux):
                     f.seek(0, 0)
                     f.write(self.u_boot_logs[f1_index] + '\n' + content)
 
-                fun_test.add_auxillary_file(description="F1_{} UART log".format(f1_index),
+                fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
                                             filename=artifact_file_name)
         if self.context:
-            fun_test.add_auxillary_file(description="context1",
+            fun_test.add_auxillary_file(description=self._get_context_prefix("bringup"),
                                         filename=self.context.output_file_path)
 
 
@@ -464,6 +475,12 @@ class ComE(Linux):
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     NUM_F1S = 2
     NVME_CMD_TIMEOUT = 600000
+
+    def __init__(self, **kwargs):
+        super(ComE, self).__init__(**kwargs)
+        self.original_context_description = None
+        if self.context:
+            self.original_context_description = self.context.description
 
     def initialize(self, reset=False, disable_f1_index=None):
         self.disable_f1_index = disable_f1_index
@@ -596,13 +613,19 @@ class ComE(Linux):
     def get_dpc_log_path(self, f1_index):
         return self.DPC_LOG_PATH.format(f1_index)
 
+    def _get_context_prefix(self, data):
+        s = "{}".format(data)
+        if self.original_context_description:
+            s = "{} {}".format(self.original_context_description, data)
+        return s
+
     def cleanup(self):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_dpc_log.txt".format(f1_index))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
-            fun_test.add_auxillary_file(description="F1_{} DPC Log".format(f1_index),
+            fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
                                         filename=artifact_file_name)
 
 class F1InFs:
@@ -667,7 +690,8 @@ class Fs(object, ToDictMixin):
                  gateway_ip=None,
                  retimer_workaround=None,
                  non_blocking=None,
-                 context=None):
+                 context=None,
+                 setup_bmc_support_files=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -693,6 +717,10 @@ class Fs(object, ToDictMixin):
         self.non_blocking = non_blocking
         self.context = context
         self.set_boot_phase(BootPhases.FS_BRING_UP_INIT)
+        self.original_context_description = None
+        if self.context:
+            self.original_context_description = self.context.description
+        self.setup_bmc_support_files = setup_bmc_support_files
 
     def set_boot_phase(self, boot_phase):
         self.boot_phase = boot_phase
@@ -727,7 +755,8 @@ class Fs(object, ToDictMixin):
             disable_uart_logger=None,
             f1_parameters=None,
             non_blocking=None,
-            context=None):  #TODO
+            context=None,
+            setup_bmc_support_files=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -736,7 +765,7 @@ class Fs(object, ToDictMixin):
             fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_spec), context=context)
             dut_name = test_bed_spec["dut_info"]["0"]["dut"]
             fs_spec = am.get_fs_by_name(dut_name)
-            fun_test.simple_assert(fs_spec, "Fs spec for {}".format(dut_name), context=context)
+            fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
         if not tftp_image_path:
             tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
@@ -746,7 +775,7 @@ class Fs(object, ToDictMixin):
             boot_args = fun_test.get_build_parameter("BOOTARGS")
             if not boot_args:
                 boot_args = Fs.DEFAULT_BOOT_ARGS
-        fun_test.simple_assert(fs_spec, "Testbed spec available", context=context)
+        fun_test.simple_assert(fs_spec, "Test-bed spec available", context=context)
         bmc_spec = fs_spec["bmc"]
         fpga_spec = fs_spec["fpga"]
         come_spec = fs_spec["come"]
@@ -770,7 +799,8 @@ class Fs(object, ToDictMixin):
                   f1_parameters=f1_parameters,
                   retimer_workaround=retimer_workaround,
                   non_blocking=non_blocking,
-                  context=context)
+                  context=context,
+                  setup_bmc_support_files=setup_bmc_support_files)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
 
@@ -885,7 +915,8 @@ class Fs(object, ToDictMixin):
                            ssh_password=self.bmc_mgmt_ssh_password,
                            set_term_settings=True,
                            disable_uart_logger=self.disable_uart_logger,
-                           context=self.context)
+                           context=self.context,
+                           setup_support_files=self.setup_bmc_support_files)
             self.bmc.set_prompt_terminator(r'# $')
         return self.bmc
 
