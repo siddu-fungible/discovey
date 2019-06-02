@@ -903,6 +903,7 @@ class FunTest:
                 thread_to_check.join()
         self._print_summary()
         self.closed = True
+        print "XXXXXX FUN_TEST CLOSED XXXXX"
 
     def _get_test_case_text(self,
                             id,

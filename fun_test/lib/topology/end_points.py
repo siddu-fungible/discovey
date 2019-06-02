@@ -74,10 +74,11 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
     def reboot(self):
         self.reboot_worker = self.RebootWorker(instance=self.get_instance())
         self.reboot_worker.start()
+        return True
 
     def is_ready(self):
         instance_ready = False
-        if self.reboot_worker and not self.reboot_worker.work_complete:
+        if self.reboot_worker and self.reboot_worker.work_complete:
             host_instance = self.get_host_instance()
             ipmi_details = None
             if host_instance.extra_attributes:

@@ -1859,7 +1859,7 @@ class Linux(object, ToDictMixin):
         service_host = None
         if service_host_spec:
             service_host = Linux(**service_host_spec)
-        while not reboot_initiated and not reboot_initiated_timer.is_expired():
+        while not reboot_initiated and not reboot_initiated_timer.is_expired() and not fun_test.closed:
             try:
                 if service_host:
                     ping_result = service_host.ping(dst=self.host_ip, count=5)
@@ -1878,7 +1878,7 @@ class Linux(object, ToDictMixin):
                     reboot_initiated = True
         if not reboot_initiated and reboot_initiated_timer.is_expired():
             fun_test.critical("Unable to verify reboot was initiated. Wait-time: {}".format(reboot_initiated_wait_time))
-            if ipmi_details:
+            if ipmi_details and not fun_test.closed:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
@@ -1975,7 +1975,7 @@ class Linux(object, ToDictMixin):
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
         ping_result = False
-        while not host_is_up and not max_reboot_timer.is_expired():
+        while not host_is_up and not max_reboot_timer.is_expired() and not fun_test.closed:
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
                 if ping_result:
@@ -2067,7 +2067,7 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30, chassis=True):
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=10, chassis=True):
         result = True
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
                                                                                          interval))
