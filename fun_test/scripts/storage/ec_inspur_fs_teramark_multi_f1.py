@@ -291,7 +291,28 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.critical(str(ex))
 
         self.storage_controller.disconnect()"""
-        # TODO: Stop docker containers, and unload funeth
+
+        come_reboot = False
+        for index in xrange(self.num_duts):
+            try:
+                stop_containers = self.funcp_obj[index].stop_container()
+                fun_test.test_assert_expected(expected=True, actual=stop_containers,
+                                              message="Docker containers are stopped")
+                self.come_obj[index].command("sudo rmmod funeth")
+                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                              message="funeth module is unloaded")
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                come_reboot = True
+
+            try:
+                if come_reboot:
+                    self.fs_obj[index].fpga_initialize()
+                    fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
+                    self.fs_obj[index].come_reset(max_wait_time=self.reboot_timeout)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
