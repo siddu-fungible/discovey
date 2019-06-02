@@ -150,7 +150,7 @@ class QueueWorker(Thread):
         if True:
 
             queue_lock.acquire()
-            scheduler_logger.info("Lock-acquire: QueueWorker")
+            # scheduler_logger.info("Lock-acquire: QueueWorker")
 
             try:
                 de_queued_jobs = []
@@ -194,7 +194,7 @@ class QueueWorker(Thread):
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
             # scheduler_logger.info("QueueWorker: Before lock release")
-            scheduler_logger.info("Lock-release: QueueWorker")
+            # scheduler_logger.info("Lock-release: QueueWorker")
             queue_lock.release()
             time.sleep(5)
 
@@ -244,7 +244,7 @@ def get_job_string(job_id):
 
 def queue_job(job_id):
     queue_lock.acquire()
-    scheduler_logger.info("Lock-acquire: queue_job")
+    # scheduler_logger.info("Lock-acquire: queue_job")
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
     if job_spec and job_spec.state == JobStatusType.SCHEDULED:
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
@@ -259,7 +259,7 @@ def queue_job(job_id):
         if job_spec:
             scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 
-    scheduler_logger.info("Lock-release: queue_job")
+    # scheduler_logger.info("Lock-release: queue_job")
     queue_lock.release()
 
 
