@@ -208,15 +208,15 @@ class BLTVolumePerformanceScript(FunTestScript):
         #     dpc_host.sudo_command("modprobe -r funeth")
         # except:
         #     fun_test.log("Couldn't stop docker")
-        # try:
-        #     for end_host in fun_test.shared_variables["end_host_list"]:
-        #         end_host.sudo_command("for i in `pgrep fio`;do kill -9 $i;done")
-        #         end_host.sudo_command("umount /mnt")
-        #         fun_test.sleep("Unmounted vol", 1)
-        #         end_host.sudo_command("nvme disconnect -d {}".format(fun_test.shared_variables["nvme_block_device"]))
-        #         end_host.disconnect()
-        # except:
-        #     fun_test.log("Disconnect failed")
+        try:
+            for end_host in fun_test.shared_variables["end_host_list"]:
+                end_host.sudo_command("for i in `pgrep fio`;do kill -9 $i;done")
+                end_host.sudo_command("umount /mnt")
+                fun_test.sleep("Unmounted vol", 1)
+                end_host.sudo_command("nvme disconnect -d {}".format(fun_test.shared_variables["nvme_block_device"]))
+                end_host.disconnect()
+        except:
+            fun_test.log("Disconnect failed")
         try:
             dpc_host = fun_test.shared_variables["dpc_host"]
             dpc_host.command("docker stop F1-0", timeout=180)
@@ -623,8 +623,8 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
                     fio_job_pid[thread_count] = end_host.start_bg_process(command="sudo fio --group_reporting --filename=/mnt/testfile.dat --time_based "
                                                   "--output-format=json --size=512G --time_based=1 --rw=randread "
-                                                  "--thread=1 --prio=0 --numjobs=78 --direct=1 "
-                                                  "--cpus_allowed=20-39,60-79,1-19,41-59 --group_reporting=1 --bs=4k "
+                                                  "--thread=1 --prio=0 --numjobs=38 --direct=1 "
+                                                  "--cpus_allowed=1-19,41-59 --group_reporting=1 --bs=4k "
                                                   "--ioengine=mmap --runtime=1200 --iodepth=2 --do_verify=0 "
                                                   "--name=fio_multi_host_randread_host_tcp", output_file="/tmp/fio_out",
                                                   timeout=1260)

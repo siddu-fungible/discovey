@@ -44,7 +44,7 @@ class PcieHost(FunTestScript):
 
     def cleanup(self):
         fs = fun_test.get_job_environment_variable('test_bed_type')
-        if fs and fs not in fs_with_pcie_host:
+        if fs and fs in fs_with_pcie_host:
             fun_test.shared_variables["topology"].cleanup()
             fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 

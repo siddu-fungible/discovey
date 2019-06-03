@@ -59,7 +59,7 @@ class StoragePeekCommands(object):
             while True:
                 try:
                     cmd = "storage/devices/nvme/ssds"
-                    result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                    result = self.dpc_client.execute(verb="peek", arg_list=[cmd], tid=4)
                     master_table_obj = PrettyTable()
                     master_table_obj.align = 'l'
                     master_table_obj.header = False
@@ -93,6 +93,8 @@ class StoragePeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break

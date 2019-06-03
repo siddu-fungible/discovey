@@ -542,7 +542,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # ifconfig down
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='down', ns=ns),
                              'ifconfig {} down'.format(interface))
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface])
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface], nu=nu, hu=hu)
 
         # ifconfig up
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='up', ns=ns),
@@ -550,7 +550,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # Need to re-configure route/arp
         fun_test.test_assert(funeth_obj.configure_namespace_ipv4_routes(hu, ns=namespace),
                              'Configure HU host IPv4 routes.')
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[])
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu=nu, hu=hu)
 
 
 class FunethTestInterfaceFlapPF(FunethTestInterfaceFlapBase):
@@ -602,7 +602,13 @@ class FunethTestUnloadDriver(FunTestCase):
         pass
 
     def run(self):
-        verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'])
+        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
+            nu = 'nu2'
+            hu = 'hu2'
+        else:
+            nu = 'nu'
+            hu = 'hu'
+        verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'], nu=nu, hu=hu)
 
 
 class FunethTestReboot(FunTestCase):
@@ -636,7 +642,7 @@ class FunethTestReboot(FunTestCase):
         fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
-        verify_nu_hu_datapath(funeth_obj)
+        verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
 
 
 if __name__ == "__main__":
