@@ -77,7 +77,7 @@ class Fpga(Linux):
             if f1_index == self.disable_f1_index:
                 continue
             self.reset_f1(f1_index=f1_index)
-        fun_test.sleep(message="FPGA reset", seconds=1, context=self.context)
+        fun_test.sleep(message="FPGA reset", seconds=5, context=self.context)
 
         result = True
         return result
