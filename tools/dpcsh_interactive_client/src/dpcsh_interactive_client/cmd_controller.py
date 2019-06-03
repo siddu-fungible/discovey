@@ -1195,7 +1195,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.21.27", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
