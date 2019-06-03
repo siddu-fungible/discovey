@@ -10,7 +10,6 @@ from lib.system.utils import ToDictMixin
 from threading import Thread
 import re
 import os
-import socket
 
 class UartLogger(Thread):
     def __init__(self, ip, port):
@@ -148,11 +147,6 @@ class Bmc(Linux):
             result = True
         return result
 
-    def _get_fake_mac(self, f1_index):
-        ip = socket.gethostbyname(self.host_ip)
-        a, b, c, d = ip.split('.')
-        return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(f1_index)])
-
     def _set_term_settings(self):
         self.command("stty cols %d" % 1024)
         self.sendline(chr(0))
@@ -237,11 +231,6 @@ class Bmc(Linux):
         result = None
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
-        #self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
-        #self.u_boot_command(command="setenv ethaddr {}".format(self._get_fake_mac(f1_index=index)),
-        #                    timeout=15,
-        #                    expected=self.U_BOOT_F1_PROMPT,
-        #                    f1_index=index)
 
         self.u_boot_command(command="setenv autoload no",
                             timeout=15,
