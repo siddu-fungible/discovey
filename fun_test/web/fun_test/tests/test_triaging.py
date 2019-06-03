@@ -436,12 +436,13 @@ if __name__ == "__main2__":
 
 if __name__ == "__main__":
     while True:
+        Daemon.get(name=DAEMON_NAME).beat()
         triages = Triage3.objects.filter(status__gt=TriagingStates.COMPLETED)
         for triage in triages:
             try:
                 s = TriageStateMachine(triage=triage)
                 s.run()
-                Daemon.get(name=DAEMON_NAME).beat()
+
             except Exception as ex:
                 logger.exception(ex)
         time.sleep(5)

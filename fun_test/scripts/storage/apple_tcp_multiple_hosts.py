@@ -537,6 +537,12 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         for host_index in range(1, self.host_count):
             self.nqn = "nqn" + str(host_index + 1)
             end_host = self.end_host_list[host_index]
+            command_result = end_host.lsmod("nvme_tcp")
+            if "nvme_tcp" in command_result:
+                fun_test.log("nvme_tcp driver is loaded")
+            else:
+                fun_test.log("Loading nvme_tcp")
+                end_host.modprobe("nvme_tcp")
             end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
             end_host.sudo_command("/etc/init.d/irqbalance stop")
             irq_bal_stat = end_host.command("/etc/init.d/irqbalance status")

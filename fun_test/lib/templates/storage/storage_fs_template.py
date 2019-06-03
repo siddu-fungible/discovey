@@ -390,7 +390,7 @@ class StorageFsTemplate(object):
     def prepare_docker(self):
         result = False
         self.enter_funsdk()
-        response = self.come_obj.command(self.PREPARE_CMD)
+        response = self.come_obj.command(self.PREPARE_CMD, timeout=self.DEFAULT_TIMEOUT)
         sections = ["Cloning into 'FunSDK'",
                     "Cloning into 'fungible-host-drivers'",
                     "Cloning into 'FunControlPlane'",

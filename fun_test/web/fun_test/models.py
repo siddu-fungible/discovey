@@ -455,7 +455,7 @@ class Daemon(FunModel):
         if Daemon.objects.filter(name=name).exists():
             result = Daemon.objects.get(name=name)
         else:
-            d = Daemon(name=name, id=Daemon.next_id())
+            d = Daemon(name=name, daemon_id=Daemon.next_id())
             d.save()
             result = d
         return result
