@@ -800,10 +800,7 @@
           }
         }
       }
-    },
-    "host_info": [
-      "mktg-server-04"
-    ]
+    }
   },
   "fs-45": {
     "dut_info": {
