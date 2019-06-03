@@ -248,7 +248,6 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["num_duts"] = self.num_duts
             fun_test.shared_variables["syslog_level"] = self.syslog_level
             fun_test.shared_variables["db_log_time"] = self.db_log_time
-            fun_test.shared_variables["reboot_timeout"] = self.reboot_timeout
 
             for key in self.host_handles:
                 # Ensure all hosts are up after reboot
@@ -315,7 +314,6 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["syslog_level"] = self.syslog_level
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["storage_controller"] = self.storage_controller
-            fun_test.shared_variables["reboot_timeout"] = self.reboot_timeout
 
             # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
             if self.override_numa_node["override_node"]:
@@ -757,7 +755,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                # post_results("Inspur Performance Test", test_method, *row_data_list) #TODO: reenable it
+                post_results("Inspur Performance Test", test_method, *row_data_list)
 
                 # Checking if mpstat process is still running
                 mpstat_pid_check = self.end_host.get_process_id("mpstat")
