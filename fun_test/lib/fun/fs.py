@@ -96,11 +96,10 @@ class Fpga(Linux):
 
 
 class Bmc(Linux):
-    U_BOOT_INTERFACE_PATH = "/tmp/u_boot_interface.py"
     UART_LOG_LISTENER_FILE = "uart_log_listener.py"
-    BMC_UART_LOG_LISTENER_PATH = "/tmp/{}".format(UART_LOG_LISTENER_FILE)
-    BMC_SCRIPT_DIRECTORY = "/mnt/sdmmc0p1/scripts"
-    BMC_INSTALL_DIRECTORY = "/mnt/sdmmc0p1/_install"
+    UART_LOG_LISTENER_PATH = "/tmp/{}".format(UART_LOG_LISTENER_FILE)
+    SCRIPT_DIRECTORY = "/mnt/sdmmc0p1/scripts"
+    INSTALL_DIRECTORY = "/mnt/sdmmc0p1/_install"
     SERIAL_PROXY_PORTS = [9990, 9991]
     ELF_ADDRESS = "0xffffffff99000000"
     SERIAL_SPEED_DEFAULT = 1000000
@@ -168,7 +167,7 @@ class Bmc(Linux):
         return ipmi_details
 
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
-        self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
+        self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         ipmi_details = self._get_ipmi_details()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=max_wait_time,
                                                     ipmi_details=ipmi_details,
@@ -213,7 +212,7 @@ class Bmc(Linux):
 
     def start_uart_log_listener(self, f1_index, serial_device):
         output_file = self.get_f1_uart_log_filename(f1_index=f1_index)
-        process_id = self.start_bg_process("python {} --proxy_port={} --output_file={}".format(self.BMC_UART_LOG_LISTENER_PATH,
+        process_id = self.start_bg_process("python {} --proxy_port={} --output_file={}".format(self.UART_LOG_LISTENER_PATH,
                                                                                                 self.SERIAL_PROXY_PORTS[f1_index],
                                                                                                 output_file), nohup=False)
         self.uart_log_listener_process_ids.append(process_id)
@@ -314,12 +313,12 @@ class Bmc(Linux):
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
         if self.setup_support_files:
-            fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.BMC_INSTALL_DIRECTORY)
-            fun_test.simple_assert(expression=self.list_files("{}/{}".format(self.BMC_INSTALL_DIRECTORY, pyserial_filename)),
+            fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.INSTALL_DIRECTORY)
+            fun_test.simple_assert(expression=self.list_files("{}/{}".format(self.INSTALL_DIRECTORY, pyserial_filename)),
                                    message="pyserial copied",
                                    context=self.context)
 
-        self.command("cd {}".format(self.BMC_INSTALL_DIRECTORY))
+        self.command("cd {}".format(self.INSTALL_DIRECTORY))
         if self.setup_support_files:
             self.command("tar -xvf {}".format(pyserial_filename))
 
@@ -343,8 +342,8 @@ class Bmc(Linux):
                      target_ip=self.host_ip,
                      target_username=self.ssh_username,
                      target_password=self.ssh_password,
-                     target_file_path=self.BMC_UART_LOG_LISTENER_PATH)
-        fun_test.simple_assert(expression=self.list_files(self.BMC_UART_LOG_LISTENER_PATH),
+                     target_file_path=self.UART_LOG_LISTENER_PATH)
+        fun_test.simple_assert(expression=self.list_files(self.UART_LOG_LISTENER_PATH),
                                    message="UART log listener copied",
                                    context=self.context)
         log_listener_processes = self.get_process_id_by_pattern(self.UART_LOG_LISTENER_FILE, multiple=True)
@@ -352,12 +351,12 @@ class Bmc(Linux):
             self.kill_process(signal=9, process_id=log_listener_process, kill_seconds=2)
 
     def initialize(self, reset=False):
-        self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
+        self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         self.position_support_scripts()
         return True
 
     def reset_come(self):
-        self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
+        self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         bmc_files = self.command(command='ls')
         if "come.sh" in bmc_files:
             self.command(command="./come.sh 2")
@@ -431,7 +430,7 @@ class Bmc(Linux):
 
 
     def get_f1_device_paths(self):
-        self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
+        self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         output = self.command("./f1_uartmux.sh 1")
         lines = output.split("\n")
         f1_info = {}
