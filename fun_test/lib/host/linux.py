@@ -2491,7 +2491,7 @@ class Linux(object, ToDictMixin):
     def lscpu(self, grep_filter=None):
         cmd = "lscpu"
         if grep_filter:
-            cmd = cmd + ' | grep {}'.format(grep_filter)
+            cmd = cmd + " | grep '{}'".format(grep_filter)
         output = self.command(cmd)
         lines = output.split('\n')
         lscpu_dictionary = {}
