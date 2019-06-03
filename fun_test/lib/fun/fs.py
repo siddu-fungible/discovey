@@ -77,7 +77,7 @@ class Fpga(Linux):
             if f1_index == self.disable_f1_index:
                 continue
             self.reset_f1(f1_index=f1_index)
-        fun_test.sleep(message="FPGA reset", seconds=1, context=self.context)
+        fun_test.sleep(message="FPGA reset", seconds=5, context=self.context)
 
         result = True
         return result
@@ -236,11 +236,13 @@ class Bmc(Linux):
                           gateway_ip=None):
         result = None
 
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
-        self.u_boot_command(command="setenv ethaddr {}".format(self._get_fake_mac(f1_index=index)),
-                            timeout=15,
-                            expected=self.U_BOOT_F1_PROMPT,
-                            f1_index=index)
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
+        #self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
+        #self.u_boot_command(command="setenv ethaddr {}".format(self._get_fake_mac(f1_index=index)),
+        #                    timeout=15,
+        #                    expected=self.U_BOOT_F1_PROMPT,
+        #                    f1_index=index)
+
         self.u_boot_command(command="setenv autoload no",
                             timeout=15,
                             expected=self.U_BOOT_F1_PROMPT,
@@ -347,12 +349,12 @@ class Bmc(Linux):
                                context=self.context)
 
         uart_listener_script = FUN_TEST_LIB_UTILITIES_DIR + "/{}".format(self.UART_LOG_LISTENER_FILE)
-        if self.setup_support_files:
-            fun_test.scp(source_file_path=uart_listener_script,
-                         target_ip=self.host_ip,
-                         target_username=self.ssh_username,
-                         target_password=self.ssh_password,
-                         target_file_path=self.BMC_UART_LOG_LISTENER_PATH)
+
+        fun_test.scp(source_file_path=uart_listener_script,
+                     target_ip=self.host_ip,
+                     target_username=self.ssh_username,
+                     target_password=self.ssh_password,
+                     target_file_path=self.BMC_UART_LOG_LISTENER_PATH)
         fun_test.simple_assert(expression=self.list_files(self.BMC_UART_LOG_LISTENER_PATH),
                                    message="UART log listener copied",
                                    context=self.context)
