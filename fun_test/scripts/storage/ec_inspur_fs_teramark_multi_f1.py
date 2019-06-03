@@ -163,7 +163,11 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for key in self.host_handles:
-            self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+            if self.override_numa_node["override"]:
+                self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
+                self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+            else:
+                self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
             fun_test.log("Rebooting host: {}".format(key))
             self.host_handles[key].reboot(non_blocking=True)
         fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
@@ -186,14 +190,6 @@ class ECVolumeLevelScript(FunTestScript):
             for j in xrange(self.num_f1_per_fs):
                 self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
                 self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
-
-                """fun_test.log("Bond Interfaces:")
-                bond_interfaces = self.fs_spec[curr_index].get_bond_interfaces(f1_index=j)
-                for bond_interface_index, bond_interface in bond_interfaces.items():
-                    fun_test.log("Bond interface index: {}".format(bond_interface_index))
-                    fun_test.log("IP: {}".format(bond_interface.ip))
-                    bond_interface_ip = bond_interface.ip
-                    self.f1_ips.append(bond_interface_ip.split('/')[0])"""
 
         # Bringing up of FunCP docker container if it is needed
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
@@ -299,7 +295,28 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.critical(str(ex))
 
         self.storage_controller.disconnect()"""
-        # TODO: Stop docker containers, and unload funeth
+
+        come_reboot = False
+        for index in xrange(self.num_duts):
+            try:
+                stop_containers = self.funcp_obj[index].stop_container()
+                fun_test.test_assert_expected(expected=True, actual=stop_containers,
+                                              message="Docker containers are stopped")
+                self.come_obj[index].command("sudo rmmod funeth")
+                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                              message="funeth module is unloaded")
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                come_reboot = True
+
+            try:
+                if come_reboot:
+                    self.fs_obj[index].fpga_initialize()
+                    fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
+                    self.fs_obj[index].come_reset(max_wait_time=self.reboot_timeout)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
@@ -505,6 +522,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fio_output[combo][mode] = {}
                 for host_ip in self.nvme_block_device_list:
                     fio_filename = ":".join(self.nvme_block_device_list[host_ip])
+
+                    # Collecting mpstat during IO
+                    mpstat_cpu_list = self.mpstat_args["cpu_list"]
+                    fun_test.log("Collecting mpstat")
+                    mpstat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) / self.mpstat_args[
+                        "interval"])
+                    mpstat_pid = self.host_handles[host_ip].mpstat(cpu_list=mpstat_cpu_list,
+                                                                   output_file=self.mpstat_args["output_file"],
+                                                                   interval=self.mpstat_args["interval"],
+                                                                   count=int(mpstat_count))
+
                     fio_output[combo][mode] = self.host_handles[host_ip].pcie_fio(filename=fio_filename, rw=mode,
                                                                                   numjobs=fio_num_jobs,
                                                                                   iodepth=fio_iodepth,
@@ -516,6 +544,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.test_assert(fio_output[combo][mode],
                                          "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
                                          .format(mode, fio_block_size, fio_iodepth, fio_num_jobs))
+
+                    # Checking if mpstat process is still running
+                    mpstat_pid_check = self.host_handles[host_ip].get_process_id("mpstat")
+                    if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid):
+                        self.host_handles[host_ip].kill_process(process_id=mpstat_pid)
+                    self.host_handles[host_ip].read_file(file_name=self.mpstat_args["output_file"])
 
                 for op, stats in fio_output[combo][mode].items():
                     for field, value in stats.items():

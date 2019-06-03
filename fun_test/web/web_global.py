@@ -34,18 +34,8 @@ def api_safe_json_response(the_function):
             result["data"] = the_function(*args, **kwargs)
             result["status"] = True
         except Exception as ex:  # TODO: Enhance to support 404, 403 etc
-            result["error_message"] = "Exception: {}\n {}".format(str(ex), traceback.format_exc())
-        '''
-        if not result["status"]:
-            request = None
-            if len(args) > 0:
-                a0 = args[0]
-                if isinstance(a0, WSGIRequest):
-                    request = a0
-            # search for request in the args
-            session_log = SessionLog(url="a")
-            add_session_log(request=request, data=result)
-        '''
+            result["error_message"] = str(ex)
+            result["trace_back"] = "Exception: {}".format(traceback.format_exc())
         return HttpResponse(json.dumps(result, cls=DatetimeEncoder))
     return inner
 

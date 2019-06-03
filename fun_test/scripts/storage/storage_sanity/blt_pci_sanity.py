@@ -60,7 +60,7 @@ class BLTVolumeSanityScript(FunTestScript):
         # load nvme
         load_nvme_module(end_host)
 
-        enable_counters(storage_controller, self.command_timeout)
+        #enable_counters(storage_controller, self.command_timeout)
 
         # create controller
         ctrlr_uuid = utils.generate_uuid()

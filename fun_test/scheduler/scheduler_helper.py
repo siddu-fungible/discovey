@@ -18,6 +18,8 @@ from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
 from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
+from asset.asset_global import AssetType
+from web.fun_test.models import Asset
 from web.fun_test.models import TestBed, User
 from django.db import transaction
 from pytz import timezone
@@ -592,6 +594,9 @@ def get_manual_lock_test_beds():
 def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(name=test_bed_name)
 
+def manual_un_lock_assets(test_bed_name, manual_lock_submitter):
+    from asset.asset_manager import AssetManager
+    AssetManager().manual_un_lock_assets_by_test_bed(test_bed_name=test_bed_name, user=manual_lock_submitter)
 
 def send_error_mail(message, submitter_email=None, job_id=None):
     to_addresses = [TEAM_REGRESSION_EMAIL]
@@ -603,7 +608,7 @@ def send_error_mail(message, submitter_email=None, job_id=None):
     pass
 
 
-def send_test_bed_remove_lock(test_bed, warning=False):
+def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 * 10):
 
     submitter_email = test_bed.manual_lock_submitter
     expiry_time = test_bed.manual_lock_expiry_time
@@ -616,7 +621,7 @@ def send_test_bed_remove_lock(test_bed, warning=False):
     content = "Hi {},".format(user.first_name) + "<br>"
     content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
     if warning:
-        content += "We will unlock the test-bed in 1 hour" + "<br>"
+        content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
         subject = "Manual-testing lock duration for Test-bed {} has exceeded".format(test_bed.name)
     else:
         content += "Unlocking now" + "<br>"
@@ -626,6 +631,17 @@ def send_test_bed_remove_lock(test_bed, warning=False):
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
 
 
+def lock_assets(job_id, assets):
+    if assets:
+        for asset_type, assets in assets.items():
+            for asset in assets:
+                Asset.add_update(name=asset, type=asset_type)
+                Asset.add_job_id(name=asset, type=asset_type, job_id=job_id)
+
+def un_lock_assets(job_id):
+    assets = Asset.objects.filter(job_ids__contains=[job_id])
+    for asset in assets:
+        asset.job_ids = asset.remove_job_id(job_id=job_id)
 
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):

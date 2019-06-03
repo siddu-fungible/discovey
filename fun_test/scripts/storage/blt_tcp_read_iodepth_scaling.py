@@ -279,6 +279,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                      format(x, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
 
+            fun_test.sleep("Waiting for host reboot to complete", 160)
+
             self.end_host.sudo_command("iptables -F")
             self.end_host.sudo_command("ip6tables -F")
             self.end_host.sudo_command("dmesg -c > /dev/null")
