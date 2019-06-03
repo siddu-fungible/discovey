@@ -101,14 +101,16 @@ class BringupSetup(FunTestCase):
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
          
-            #print "\n\n\n Booting HU unit  Started\n\n\n"
-            #print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-            #tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))  
-            #funeth_obj = Funeth(tb_config_obj)
-            #fun_test.shared_variables['funeth_obj'] = funeth_obj
-            #setup_hu_host(funeth_obj, update_driver=True)
-            #print "\n\n\n Booting HU unit  ended\n\n\n"
-            #print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+        for fs_name in testbed_info['fs']["fs_list"]:
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            print "\n\n\n Booting HU unit  Started\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))  
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True)
+            print "\n\n\n Booting HU unit  ended\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
     def cleanup(self):
 
