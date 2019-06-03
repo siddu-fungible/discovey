@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
-from lib.fun.fs import Fs
-from asset.asset_manager import AssetManager
+from lib.host.dpcsh_client import DpcshClient
+from lib.topology.topology_helper import TopologyHelper
+fun_test.enable_profiling()
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -33,18 +34,20 @@ class FunTestCase1(FunTestCase):
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
-        fun_test.shared_variables["fs"].cleanup()
+        fun_test.shared_variables["topology"].cleanup()
 
     def run(self):
         # fs = Fs.get(disable_f1_index=1)
-        fs = Fs.get(setup_bmc_support_files=True) # (disable_f1_index=0)
+        topology_helper = TopologyHelper()
+        # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --retimer --all_100g")
+        # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay retimer=0,1 --all_100g")
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g")
+        fun_test.shared_variables["topology"] = topology_helper.get_topology()
+        topology = topology_helper.deploy()
+        fun_test.test_assert(topology, "Topology deployed")
+        fs = topology.get_dut_instance(index=0)
 
-        fun_test.shared_variables["fs"] = fs
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
-        # f1 = fs.get_f1(index=0)
-        f1 = fs.get_f1(index=1)
-
-        f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+        fs.get_come().command("lspci")
 
 
 if __name__ == "__main__":

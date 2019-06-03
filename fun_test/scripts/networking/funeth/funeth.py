@@ -205,7 +205,7 @@ class Funeth:
 
         return result
 
-    def load(self, sriov=0, cc=False, debug=False):
+    def load(self, sriov=0, num_queues=2, cc=False, debug=False):
         """Load driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         _modparams = []
@@ -218,8 +218,9 @@ class Funeth:
 
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
-                                            timeout=300)
+            self.linux_obj_dict[hu].command(
+                'cd {0}; sudo insmod funeth.ko {1} num_queues={2}'.format(drvdir, " ".join(_modparams), num_queues),
+                timeout=300)
 
             #fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
