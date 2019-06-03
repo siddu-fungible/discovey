@@ -1089,7 +1089,7 @@ if __name__ == "__main__":
         entries = metric_model.objects.all()
         print len(entries), model_name
         for entry in entries:
-            if entry.input_date_time.day >= 1 and entry.input_date_time.month >= 6 and entry.input_date_time.year >= 2019:
+            if entry.input_date_time.day >= 3 and entry.input_date_time.month >= 6 and entry.input_date_time.year >= 2019:
                 print entry.input_date_time
                 entry.delete()
     print "1st and 2nd june entries deleted for networking"
