@@ -135,8 +135,7 @@ export class PerformanceComponent implements OnInit {
   upgradeFlatNode: any = {};
   degradeFlatNode: any = {};
   tagsForId = {
-    395: ["PCIe"],
-    540: ["PCIe"], 380: ["PCIe"], 472: ["NVMe/TCP"],
+    380: ["PCIe"], 472: ["NVMe/TCP"],
     493: ["PCIe"]
   };
 
