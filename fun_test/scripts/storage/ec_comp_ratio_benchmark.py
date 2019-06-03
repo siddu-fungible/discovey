@@ -318,7 +318,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                     'f1_compression_ratio': comp_ratio,
                                     'date_time': fun_test.shared_variables['date_time']})
             init_write_count = curr_write_count
-            table_rows.append([corpus, "{0:04.2f}".format(comp_ratio), test_corpuses[corpus]['gzip_comp_pct']])
+            table_rows.append([corpus, "{0:04.2f}".format(comp_ratio), test_corpuses[corpus]['gzip_comp_ratio']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
                            table_name="Accelerator Effort: {0}, Gizp Effort: {1}".format(self.accelerator_effort,
                                                                                          self.gzip_effort),

@@ -210,7 +210,8 @@ class FunethPerformanceBase(FunTestCase):
                  'dip': dip,
                  'tool': tool,
                  'protocol': protocol,
-                 'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
+                 #'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
+                 'num_flows': num_flows,
                  'duration': duration,
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
@@ -229,7 +230,7 @@ class FunethPerformanceBase(FunTestCase):
                                                                         fpg_intf_dict,
                                                                         version,
                                                                         when='before')
-        perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration+10)
+        perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
 
         result = perf_manager_obj.run(*arg_dicts)
 
