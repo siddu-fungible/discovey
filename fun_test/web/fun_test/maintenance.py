@@ -1038,7 +1038,7 @@ if __name__ == "__main_changed_zipeffort__":
     chart.save()
     print "effort name changed for auto"
 
-if __name__ == "__main__":
+if __name__ == "__main_boot_timings__":
     output_names = ["output_parsing_config", "output_parsing_config_end", "output_all_vps_online",
                     "output_sending_host_booted_message"]
     base_line_date = datetime(year=2019, month=5, day=27, minute=0, hour=0, second=0)
@@ -1080,3 +1080,17 @@ if __name__ == "__main__":
                 work_in_progress=False,
                 platform=FunPlatform.F1).save()
     print "added charts for extra boot timings"
+
+if __name__ == "__main__":
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance", "HuLatencyUnderLoadPerformance"]
+    for model_name in model_names:
+        app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+        metric_model = app_config.get_metric_models()[model_name]
+        entries = metric_model.objects.all()
+        print len(entries), model_name
+        for entry in entries:
+            if entry.input_date_time.day >= 1 and entry.input_date_time.month >= 6 and entry.input_date_time.year >= 2019:
+                print entry.input_date_time
+                entry.delete()
+    print "1st and 2nd june entries deleted for networking"
+
