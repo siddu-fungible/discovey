@@ -1,5 +1,7 @@
+from fun_global import PerfUnit
 from lib.system.fun_test import *
 from scripts.networking.tcp import helper
+from web.fun_test.analytics_models_helper import ModelHelper
 from collections import OrderedDict
 from prettytable import PrettyTable
 import json
@@ -134,7 +136,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
             fun_test.log_module_filter_disable()
 
 
-def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='before'):
+def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  version, when='before'):
 
     tc_id = fun_test.current_test_case_id
 
@@ -167,7 +169,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     #    fun_test.add_auxillary_file(description=flowlist_temp_filename, filename=file_path)
     #
     fpg_stats = {}
+    is_vp_stuck = False
+    is_parser_stuck = False
+    is_etp_queue_stuck = False
     for nc_obj in network_controller_objs:
+        output_list = []
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
         if not fpg_stats:
             for i in fpg_interfaces:
@@ -180,27 +186,90 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
                     {i: r}
                 )
 
+        # Check FPG stats
+        for i in fpg_intf_dict.get(f1):
+            fun_test.log('{} dpc: Get FPG {} stats'.format(f1, i))
+            output = nc_obj.peek_fpg_port_stats(port_num=i)
+            output_list.append({'FPG{}'.format(i): output})
+
         # Check parser stuck
         fun_test.log('{} dpc: Get parser stats'.format(f1))
         output = nc_obj.peek_parser_stats().get('global')
+        output_list.append({'Parser': output})
         for blk in output:
             eop_cnt = output[blk].get('eop_cnt')
             prv_sent = output[blk].get('prv_sent')
             if eop_cnt != prv_sent:
-                fun_test.test_assert(False, '{} parser is stuck'.format(blk))
+                is_parser_stuck = True
 
-        fun_test.log('{} dpc: Get PSW stats'.format(f1))
-        nc_obj.peek_psw_global_stats()
-        fun_test.log('{} dpc: Get FCB stats'.format(f1))
-        nc_obj.peek_fcp_global_stats()
+        # VP stats
         fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
-        nc_obj.peek_vp_packets()
+        output = nc_obj.peek_vp_packets()
+        output_list.append({'VP': output})
+
+        # NWQM
+        #fun_test.log('{} dpc: Get NWQM stats'.format(f1))
+        #output = nc_obj.peek_nwqm_stats()
+        #output_list.append({'WQM': output})
+
+        # ETP
+        fun_test.log('{} dpc: Get ETP stats'.format(f1))
+        output = nc_obj.peek_etp_stats()
+        output_list.append({'ETP': output})
+
+        # FCB
+        fun_test.log('{} dpc: Get FCB stats'.format(f1))
+        output = nc_obj.peek_fcp_global_stats()
+        output_list.append({'FCB': output})
+
+        # FCP tunnel 192
+        tunnel_id = 192
+        fun_test.log('{} dpc: Get FCP tunnel {} stats'.format(f1, tunnel_id))
+        output = nc_obj.peek_fcp_tunnel_stats(tunnel_id)
+        output_list.append({'FCP tunnel {}'.format(192): output})
+
+        # PSW
+        fun_test.log('{} dpc: Get PSW stats'.format(f1))
+        output = nc_obj.peek_psw_global_stats()
+        output_list.append({'PSW': output})
+
+        # ERP
+        fun_test.log('{} dpc: Get ERP stats'.format(f1))
+        output = nc_obj.peek_erp_global_stats()
+        output_list.append({'ERP': output})
+
+        # WRO
+        fun_test.log('{} dpc: Get WRO stats'.format(f1))
+        output = nc_obj.peek_wro_global_stats()
+        output_list.append({'WRO': output})
+
+        # WRO tunnel 192
+        fun_test.log('{} dpc: Get WRO tunnel {} stats'.format(f1, tunnel_id))
+        output = nc_obj.peek_wro_tunnel_stats(tunnel_id)
+        output_list.append({'WRO tunnel {}'.format(tunnel_id): output})
+
+        # BM
+        fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
+        output = nc_obj.peek_resource_bam_stats()
+        output_list.append({'BM': output})
+
+        # EQM
+        fun_test.log('{} dpc: Get EQM stats'.format(f1))
+        output = nc_obj.peek_eqm_stats()
+        output_list.append({'EQM': output})
+
+        # Upload stats output file
+        dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
+        file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
+        with open(file_path, 'w') as f:
+            json.dump(output_list, f, indent=4, separators=(',', ': '), sort_keys=True)
+            fun_test.add_auxillary_file(description=dpc_stats_filename, filename=file_path)
 
         # Check VP stuck
-        is_vp_stuck = False
         for pc_id in (1, 2):
             fun_test.log('{} dpc: Get resource PC {} stats'.format(f1, pc_id))
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
+            output_list.append(output)
             for core_str, val_dict in output.items():
                 if any(val_dict.values()) != 0:  # VP stuck
                     core, vp = [int(i) for i in re.match(r'CORE:(\d+) VP:(\d+)', core_str).groups()]
@@ -208,15 +277,13 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
                     nc_obj.debug_vp_state(vp_no=vp_no)
                     nc_obj.debug_backtrace(vp_no=vp_no)
                     is_vp_stuck = True
-        if is_vp_stuck:
-            fun_test.test_assert(False, 'VP is stuck')
-        #nc_obj.peek_per_vp_stats()
-        fun_test.log('{} dpc: Get resource BAM stats'.format(f1))
-        nc_obj.peek_resource_bam_stats()
-        fun_test.log('{} dpc: Get EQM stats'.format(f1))
-        nc_obj.peek_eqm_stats()
+
+        # Check ETP queue stuck
         fun_test.log('{} dpc: Get resource nux stats'.format(f1))
-        nc_obj.peek_resource_nux_stats()
+        output = nc_obj.peek_resource_nux_stats()
+        if output:
+            is_etp_queue_stuck = True
+
     fpg_rx_bytes = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
     )
@@ -229,6 +296,17 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, version, when='be
     fpg_tx_pkts = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
+
+    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck:
+        messages = []
+        if is_vp_stuck:
+            messages.append('VP is stuck')
+        if is_parser_stuck:
+            messages.append('Parser is stuck')
+        if is_etp_queue_stuck:
+            messages.append('ETP queue is stuck')
+        fun_test.test_assert(False, ';'.join(messages))
+
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
@@ -316,7 +394,11 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
         lines = ['FunOS: {}'.format(funos_bld),
                  'FunSDK: {} {}'.format(funsdk_commit, funsdk_bld),
                  'Driver: {} {}'.format(driver_commit, driver_bld),
-                 ptable.get_string()]
+                 ptable.get_string(),
+                 'Note:',
+                 '_h2n: HU to NU (Host to Network)',
+                 '_n2h: NU to HU (Network to Host)',
+                 '_h2h: HU to HU (Host to Host)']
         file_path = fun_test.get_test_case_artifact_file_name(filename)
 
         with open(file_path, 'w') as f:
@@ -334,3 +416,70 @@ def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_c
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+unit = {
+    "latency_P50_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P50_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P90_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_P99_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_avg_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_max_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_max_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_max_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_min_n2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_uload_h2h_unit": PerfUnit.UNIT_USECS,
+    "latency_min_uload_h2n_unit": PerfUnit.UNIT_USECS,
+    "latency_min_uload_n2h_unit": PerfUnit.UNIT_USECS,
+    "pps_h2h_unit": PerfUnit.UNIT_PPS,
+    "pps_h2n_unit": PerfUnit.UNIT_PPS,
+    "pps_n2h_unit": PerfUnit.UNIT_PPS,
+    "throughput_h2h_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+    "throughput_h2n_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+    "throughput_n2h_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+}
+
+
+def db_helper(results):
+    """Write results to DB.
+
+    :param results: list of result dict.
+    :return:
+    """
+
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance", "HuLatencyUnderLoadPerformance"]
+    for line in results:
+        status = fun_test.PASSED
+        try:
+            for model_name in model_names:
+                generic_helper = ModelHelper(model_name=model_name)
+                generic_helper.set_units(validate=False, **unit)
+                generic_helper.add_entry(**line)
+                generic_helper.set_status(status)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        #print "used generic helper to add an entry"

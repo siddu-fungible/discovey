@@ -361,7 +361,7 @@
       "username": "ADMIN",
       "password": "ADMIN"
     }
-  }, 
+  },
   "cab02-qa-06": {
     "host_ip": "cab02-qa-06",
     "ssh_username": "localadmin",

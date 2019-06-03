@@ -70,20 +70,30 @@ def compare(actual, expected, threshold, operation):
         return actual > (expected * (1 + threshold)) and ((actual - expected) > 2)
 
 
-def fetch_nvme_device(end_host, nsid):
+def fetch_nvme_device(end_host, nsid, size=None):
     lsblk_output = end_host.lsblk("-b")
     fun_test.simple_assert(lsblk_output, "Listing available volumes")
     result = {'status': False}
-    for volume_name in lsblk_output:
-        match = re.search(r'nvme\dn{}'.format(nsid), volume_name, re.I)
-        if match:
-            result['volume_name'] = match.group()
-            result['nvme_device'] = "/dev/{}".format(result['volume_name'])
-            result['status'] = True
+    if size:
+        for volume_name in lsblk_output:
+            if int(lsblk_output[volume_name]["size"]) == size:
+                result['volume_name'] = volume_name
+                result['nvme_device'] = "/dev/{}".format(result['volume_name'])
+                result['status'] = True
+                break
+    else:
+        for volume_name in lsblk_output:
+            match = re.search(r'nvme\dn{}'.format(nsid), volume_name, re.I)
+            if match:
+                result['volume_name'] = match.group()
+                result['nvme_device'] = "/dev/{}".format(result['volume_name'])
+                result['status'] = True
+                break
     return result
 
 
 def fetch_numa_cpus(end_host, ethernet_adapter):
+    numa_cpus = None
     lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
     fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
     adapter_id = lspci_output[0]['id']
@@ -160,6 +170,8 @@ def load_nvme_tcp_module(end_host):
 
 
 def configure_endhost_interface(end_host, test_network, interface_name, timeout=30):
+    interface_ip_unconfig = "ip addr del {} dev {}".format(test_network["test_interface_ip"],
+                                                           interface_name)
     interface_ip_config = "ip addr add {} dev {}".format(test_network["test_interface_ip"],
                                                          interface_name)
     interface_mac_config = "ip link set {} address {}".format(interface_name,
@@ -168,6 +180,7 @@ def configure_endhost_interface(end_host, test_network, interface_name, timeout=
     static_arp_cmd = "arp -s {} {}".format(test_network["test_net_route"]["gw"],
                                            test_network["test_net_route"]["arp"])
 
+    end_host.sudo_command(command=interface_ip_unconfig, timeout=timeout)
     end_host.sudo_command(command=interface_ip_config, timeout=timeout)
     fun_test.test_assert_expected(expected=0,
                                   actual=end_host.exit_status(),

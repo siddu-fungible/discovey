@@ -165,7 +165,9 @@ def update_suite_execution(suite_execution_id,
                            state=None,
                            suite_path=None,
                            completed_time=None,
-                           environment=None):
+                           environment=None,
+                           started_time=None,
+                           assets_used=None):
     logger.debug("Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version))
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
@@ -186,6 +188,10 @@ def update_suite_execution(suite_execution_id,
         te.completed_time = completed_time
     if environment is not None:
         te.environment = json.dumps(environment)
+    if started_time:
+        te.started_time = started_time
+    if assets_used:
+        te.assets_used = assets_used
     te.save()
     te.save()
     # transaction.commit()
@@ -266,7 +272,7 @@ def set_suite_execution_banner(suite_execution_id, banner):
     suite_execution.save()
 
 
-def get_suite_execution_banner(suite_execution_id, banner):
+def get_suite_execution_banner(suite_execution_id):
     suite_execution = get_suite_execution(suite_execution_id)
     return suite_execution.banner
 
@@ -600,6 +606,18 @@ def is_test_bed_with_manual_lock(test_bed_name):
     try:
         t = TestBed.objects.get(name=test_bed_name, manual_lock=True)
         result = {"manual_lock_submitter": t.manual_lock_submitter}
+    except ObjectDoesNotExist:
+        pass
+    return result
+
+
+def is_suite_in_progress(job_id, test_bed_type):
+    result = None
+    try:
+        s = SuiteExecution.objects.get(execution_id=int(job_id))
+        print ("Checking suite in progress: {}: {}".format(job_id, s.state))
+        result = s.state >= JobStatusType.IN_PROGRESS
+        print ("Checking suite in progress: {} {}: {}: Result: {}".format(test_bed_type, job_id, s.state, result))
     except ObjectDoesNotExist:
         pass
     return result

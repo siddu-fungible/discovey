@@ -20,6 +20,10 @@ class NoLogger:
         self.trace_enabled = enable
         self.trace_id = id
 
+    def reset_context(self):
+        if hasattr(self, "context"):
+            self.context = None
+
     def write_now(self, message, stdout=True):
         pass
         
@@ -38,30 +42,35 @@ class NoLogger:
 
 
 class LinuxLogger:
-    def __init__(self):
+    def __init__(self, context=None):
         self.trace_enabled = None
         self.trace_id = None
+        self.context = context
+
+    def reset_context(self):
+        if hasattr(self, "context"):
+            self.context = None
 
     def trace(self, enable, id):
         self.trace_enabled = enable
         self.trace_id = id
 
     def write_now(self, message, stdout=True):
-        fun_test.write(message=message)
-        fun_test.flush(trace_id=self.trace_id, stdout=stdout)
+        fun_test.write(message=message, context=self.context)
+        fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=context)
 
     def write(self, message, stdout=True):
-        fun_test.write(message=message)
+        fun_test.write(message=message, context=self.context)
 
     def flush(self):
-        fun_test.flush(trace_id=self.trace_id)
+        fun_test.flush(trace_id=self.trace_id, context=self.context)
 
     def log(self, message):
-        fun_test.log(message=message, trace_id=self.trace_id)
+        fun_test.log(message=message, trace_id=self.trace_id, context=self.context)
 
     def critical(self, message):
         message = "\nCRITICAL: {}".format(message)
-        fun_test.log(message=message, trace_id=self.trace_id)
+        fun_test.log(message=message, trace_id=self.trace_id, context=self.context)
 
 
 class Linux(object, ToDictMixin):
@@ -98,6 +107,7 @@ class Linux(object, ToDictMixin):
                  use_paramiko=False,
                  localhost=None,
                  set_term_settings=True,
+                 context=None,
                  ipmi_info=None,
                  **kwargs):
 
@@ -111,7 +121,7 @@ class Linux(object, ToDictMixin):
         self.localhost = localhost
         self.use_paramiko = use_paramiko
         self.paramiko_handle = None
-        self.logger = LinuxLogger()
+        self.logger = LinuxLogger(context=context)
         self.trace_enabled = None
         self.trace_id = None
         self.tmp_dir = None
@@ -125,6 +135,7 @@ class Linux(object, ToDictMixin):
         self.telnet_username = telnet_username
         self.telnet_password = telnet_password
         self.extra_attributes = kwargs
+        self.context = context
         self.ipmi_info = ipmi_info
         if self.extra_attributes:
             if "ipmi_info" in self.extra_attributes:
@@ -144,6 +155,9 @@ class Linux(object, ToDictMixin):
 
         return Linux(host_ip=prop["host_ip"], ssh_username=ssh_username,
                      ssh_password=ssh_password, ssh_port=ssh_port)
+
+    def reset_context(self):
+        self.logger.reset_context()
 
     def enable_logs(self, enable=True):
         if enable:
@@ -454,7 +468,7 @@ class Linux(object, ToDictMixin):
                 buf = '\n'.join(buf_lines[start_line:-1])
         except Exception as ex:
             critical_str = str(ex) + " Command: {}".format(command)
-            fun_test.critical(critical_str)
+            fun_test.critical(critical_str, context=self.context)
             self.logger.critical(critical_str)
             raise ex
         return buf
@@ -1856,10 +1870,10 @@ class Linux(object, ToDictMixin):
         service_host = None
         if service_host_spec:
             service_host = Linux(**service_host_spec)
-        while not reboot_initiated and not reboot_initiated_timer.is_expired():
+        while not reboot_initiated and not reboot_initiated_timer.is_expired() and not fun_test.closed:
             try:
                 if service_host:
-                    ping_result = service_host.ping(dst=self.host_ip, count=10)
+                    ping_result = service_host.ping(dst=self.host_ip, count=5)
                     if not ping_result:
                         reboot_initiated = True
                         fun_test.log("Reboot initiated (based on pings)")
@@ -1875,7 +1889,7 @@ class Linux(object, ToDictMixin):
                     reboot_initiated = True
         if not reboot_initiated and reboot_initiated_timer.is_expired():
             fun_test.critical("Unable to verify reboot was initiated. Wait-time: {}".format(reboot_initiated_wait_time))
-            if ipmi_details:
+            if ipmi_details and not fun_test.closed:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
@@ -1972,7 +1986,7 @@ class Linux(object, ToDictMixin):
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
         ping_result = False
-        while not host_is_up and not max_reboot_timer.is_expired():
+        while not host_is_up and not max_reboot_timer.is_expired() and not fun_test.closed:
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
                 if ping_result:
@@ -2064,7 +2078,7 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30, chassis=True):
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=10, chassis=True):
         result = True
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
                                                                                          interval))
@@ -2491,7 +2505,7 @@ class Linux(object, ToDictMixin):
     def lscpu(self, grep_filter=None):
         cmd = "lscpu"
         if grep_filter:
-            cmd = cmd + ' | grep {}'.format(grep_filter)
+            cmd = cmd + " | grep '{}'".format(grep_filter)
         output = self.command(cmd)
         lines = output.split('\n')
         lscpu_dictionary = {}
@@ -2528,6 +2542,32 @@ class Linux(object, ToDictMixin):
         sync; echo 2 > /proc/sys/vm/drop_caches; 
         sync; echo 3 > /proc/sys/vm/drop_caches"""
         self.sudo_command(flush_cmd)
+
+    def mpstat(self, cpu_list=None, numa_node=None, interval=5, count=2, background=True,
+               output_file="/tmp/mpstat.out"):
+
+        mpstat_output = None
+        timeout = interval * (count + 1)
+
+        cmd = "mpstat"
+        if cpu_list:
+            cmd += " -P {}".format(str(cpu_list))
+        if numa_node:
+            cmd += " -N {}".format(str(numa_node))
+
+        cmd += " {} {}".format(str(interval), str(count))
+
+        if background:
+            fun_test.log("Starting command {} in background".format(cmd))
+            mpstat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
+            if mpstat_output is None:
+                fun_test.critical("mpstat process is not started")
+            else:
+                fun_test.log("mpstat process is started in background, pid is: {}".format(mpstat_output))
+        else:
+            mpstat_output = self.command(cmd, timeout=timeout)
+
+        return mpstat_output
 
 
 class LinuxBackup:

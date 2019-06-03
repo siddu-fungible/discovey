@@ -390,7 +390,7 @@ class StorageFsTemplate(object):
     def prepare_docker(self):
         result = False
         self.enter_funsdk()
-        response = self.come_obj.command(self.PREPARE_CMD)
+        response = self.come_obj.command(self.PREPARE_CMD, timeout=self.DEFAULT_TIMEOUT)
         sections = ["Cloning into 'FunSDK'",
                     "Cloning into 'fungible-host-drivers'",
                     "Cloning into 'FunControlPlane'",
@@ -434,6 +434,28 @@ class StorageFsTemplate(object):
             return result
         else:
             result['status'] = True
+        return result
+
+    def stop_container(self, *container_names):
+        result = True
+        cmd = "docker stop"
+
+        # If no container name is passed preparing the list with the container names already available in this object
+        if not container_names:
+            container_names = sorted(self.container_info)
+
+        for name in container_names:
+            cmd += " " + name
+
+        # Stopping the container(s)
+        stopped_container = self.come_obj.command(cmd, timeout=self.DEFAULT_TIMEOUT).split("\n")
+        stopped_container = [name.strip("\r") for name in stopped_container]
+
+        # Checking whether the container is not stopped or not. If not stopped the
+        for name in container_names:
+            if name not in stopped_container:
+                fun_test.critical("Failed to stop the containter: {}".format(name))
+                result = False
         return result
 
     """

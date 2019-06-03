@@ -36,37 +36,23 @@ except (KeyError, ValueError):
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
-# Enable LSO or not
 try:
     inputs = fun_test.get_job_inputs()
     if inputs:
-        enable_tso = (inputs.get('lso', 1) == 1)
+        enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
+        control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
+        update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
     else:
-        enable_tso = True
+        enable_tso = True  # default True
+        control_plane = False  # default False
+        update_driver = True  # default True
 except:
     enable_tso = True
-
-# Use control plane or not
-try:
-    inputs = fun_test.get_job_inputs()
-    if inputs:
-        control_plane = (inputs.get('control_plane', 0) == 1)
-    else:
-        control_plane = False
-except:
     control_plane = False
-
-# Update driver or not
-try:
-    inputs = fun_test.get_job_inputs()
-    if inputs:
-        update_driver = (inputs.get('update_driver', 1) == 1)
-    else:
-        update_driver = True
-except:
     update_driver = True
 
-
+NUM_VFs = 4
+NUM_QUEUES_TX = 8
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
@@ -98,7 +84,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if enable_tso:
@@ -107,15 +93,15 @@ def setup_hu_host(funeth_obj, update_driver=True):
         else:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
-                             'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
-            linux_obj.host_ip))
+        fun_test.test_assert(
+            funeth_obj.enable_multi_txq(hu, num_queues=NUM_QUEUES_TX),
+            'Enable HU host {} funeth interfaces multi Tx queues: {}.'.format(linux_obj.host_ip, NUM_QUEUES_TX))
+        fun_test.test_assert(
+            funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
-                             'Configure HU host {} IPv4 routes.'.format(
-            linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(
-            linux_obj.host_ip))
+                             'Configure HU host {} IPv4 routes.'.format(linux_obj.host_ip))
+        fun_test.test_assert(
+            funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
 
@@ -141,15 +127,15 @@ class FunethSanity(FunTestScript):
         if test_bed_type == 'fs-11':
 
             if control_plane:
-                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
-                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                                   1: {"boot_args": f1_1_boot_args}}
                                                    )
             else:
-                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
@@ -183,8 +169,7 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
-        if not control_plane:
-            setup_nu_host(funeth_obj)
+        setup_nu_host(funeth_obj)
 
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
@@ -356,7 +341,7 @@ class FunethTestPacketSweep(FunTestCase):
             return pkt_size - 20 - 8  # IP header 20B, ICMP header 8B
 
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i %s; done' % (
+            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
             output = linux_obj.command(cmd, timeout=3000)
             fun_test.test_assert(
@@ -557,7 +542,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # ifconfig down
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='down', ns=ns),
                              'ifconfig {} down'.format(interface))
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface])
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface], nu=nu, hu=hu)
 
         # ifconfig up
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='up', ns=ns),
@@ -565,7 +550,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # Need to re-configure route/arp
         fun_test.test_assert(funeth_obj.configure_namespace_ipv4_routes(hu, ns=namespace),
                              'Configure HU host IPv4 routes.')
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[])
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu=nu, hu=hu)
 
 
 class FunethTestInterfaceFlapPF(FunethTestInterfaceFlapBase):
@@ -617,7 +602,13 @@ class FunethTestUnloadDriver(FunTestCase):
         pass
 
     def run(self):
-        verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'])
+        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
+            nu = 'nu2'
+            hu = 'hu2'
+        else:
+            nu = 'nu'
+            hu = 'hu'
+        verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'], nu=nu, hu=hu)
 
 
 class FunethTestReboot(FunTestCase):
@@ -651,7 +642,7 @@ class FunethTestReboot(FunTestCase):
         fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
-        verify_nu_hu_datapath(funeth_obj)
+        verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
 
 
 if __name__ == "__main__":

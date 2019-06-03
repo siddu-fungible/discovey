@@ -2,9 +2,10 @@ import {Component, Input, OnInit} from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
-import {ApiService} from "../../services/api/api.service";
+import {ApiResponse, ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
+import {error} from "util";
 
 enum EditMode {
   NONE = 0,
@@ -23,6 +24,7 @@ export class TestBedComponent implements OnInit {
   testBeds: any [] = null;
   automationStatus = {};
   manualStatus = {};
+  assetLevelManualLockStatus = {};
   currentEditMode: EditMode = EditMode.NONE;
   currentTestBed: any = null;
   EditMode = EditMode;
@@ -52,7 +54,11 @@ export class TestBedComponent implements OnInit {
         return this.getUsers();
       }));
 
-    o.subscribe();
+    o.subscribe(() => {
+
+    }, error => {
+      this.loggerService.error("Unable to init test-bed component");
+    })
   }
 
   refreshTestBeds() {
@@ -72,8 +78,10 @@ export class TestBedComponent implements OnInit {
         this.manualStatus[testBed.name] = {manualLock: testBed.manual_lock,
         manualLockExpiryTime: testBed.manual_lock_expiry_time,
         manualLockSubmitter: testBed.manual_lock_submitter};
-
-
+        this.assetLevelManualLockStatus[testBed.name] = null;
+        if (testBed.hasOwnProperty("asset_level_manual_lock_status")) {
+          this.assetLevelManualLockStatus[testBed.name] = testBed.asset_level_manual_lock_status;
+        }
       });
       this.automationStatus = {...this.automationStatus};
 
@@ -87,21 +95,32 @@ export class TestBedComponent implements OnInit {
         let numExecutions = -1;
         let executionId = -1;
         let manualLock = false;
+        if (testBed.name === 'fs-42') {
+          let i = 0;
+        }
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId,
           manualLock: manualLock};
-        if (response) {
-          let numExecutions = response.length;
-          let executionId = numExecutions;
-          if (numExecutions > 0) {
-            let thisResponse = response[0];
-            executionId = thisResponse.execution_id;
+          if (response && response.hasOwnProperty("automation_status")) {
+            /*
+            let numExecutions = response.length;
+            let executionId = numExecutions;
+            if (numExecutions > 0) {
+              let thisResponse = response[0];
+              executionId = thisResponse.execution_id;
+            }*/
+            let automationStatus = response.automation_status;
+            if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
+              this.automationStatus[testBed.name] = {numExecutions: 1,
+                executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
+            } else if (automationStatus.hasOwnProperty("used_by_suite_id")) {
+              this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.used_by_suite_id};
+            } else if (automationStatus.hasOwnProperty('suite_info') && automationStatus.suite_info) {
+              this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.suite_info.suite_execution_id};
+            }
+
           }
-          this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-            executionId: executionId}
-        }
-        this.automationStatus[testBed] = response;
-          return of(null);
+        return of(null);
         }))
       })
     )
@@ -122,7 +141,8 @@ export class TestBedComponent implements OnInit {
       let payload = {manual_lock: false};
       this.apiService.put(url, payload).subscribe(response => {
         this.loggerService.success(`Unlock submitted for ${testBed.name}`);
-        this.refreshTestBeds();
+        window.location.reload();
+        //this.refreshTestBeds();
       }, error => {
         this.loggerService.error(`Unlock ${testBed.name} failed`);
       })
@@ -166,10 +186,16 @@ export class TestBedComponent implements OnInit {
       this.selectedUser = null;
       this.schedulingTime.hour = 1;
       this.schedulingTime.minute = 1;
-      this.refreshTestBeds();
+      //this.refreshTestBeds();
+      window.location.reload();
       this.currentEditMode = EditMode.NONE;
     }, error => {
-      this.loggerService.error("Unable to submit lock");
+      if (error.value instanceof ApiResponse) {
+        this.loggerService.error("Unable to submit lock: " + error.value.error_message);
+      } else {
+        this.loggerService.error("Unable to submit lock");
+      }
+
     })
   }
 

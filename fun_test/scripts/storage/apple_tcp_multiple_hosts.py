@@ -175,15 +175,15 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def setup(self):
         # Reboot hosts
-        # for host_index in range(0, 8):
-        #     end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
-        #                      ssh_username=tb_config['tg_info'][host_index]['user'],
-        #                      ssh_password=tb_config['tg_info'][host_index]['passwd']
-        #                      )
-        #     try:
-        #         end_host.sudo_command("reboot", timeout=5)
-        #     except:
-        #         fun_test.log("Reboot of {} failed".format(host_index))
+        for host_index in range(0, 8):
+            end_host = Linux(host_ip=tb_config['tg_info'][host_index]['ip'],
+                             ssh_username=tb_config['tg_info'][host_index]['user'],
+                             ssh_password=tb_config['tg_info'][host_index]['passwd']
+                             )
+            try:
+                end_host.sudo_command("reboot", timeout=5)
+            except:
+                fun_test.log("Reboot of {} failed".format(host_index))
 
         fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1, disable_uart_logger=False)
         fun_test.shared_variables["fs"] = fs
@@ -473,25 +473,22 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.log("DPC config done")
 
             # Checking that the above created striped volume is visible to the end host
-            for host_index in range(0, self.host_count):
-                end_host = self.end_host_list[host_index]
-                end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+            end_host = self.end_host_list[0]
+            end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
 
-                # Load nvme and nvme_tcp modules
-                command_result = end_host.command("lsmod | grep -w nvme")
-                if "nvme" in command_result:
-                    fun_test.log("nvme driver is loaded")
-                else:
-                    fun_test.log("Loading nvme")
-                    end_host.modprobe("nvme")
-                    end_host.modprobe("nvme_core")
-                command_result = end_host.lsmod("nvme_tcp")
-                if "nvme_tcp" in command_result:
-                    fun_test.log("nvme_tcp driver is loaded")
-                else:
-                    fun_test.log("Loading nvme_tcp")
-                    end_host.modprobe("nvme_tcp")
-                    end_host.modprobe("nvme_fabrics")
+            # Load nvme and nvme_tcp modules
+            command_result = end_host.command("lsmod | grep -w nvme")
+            if "nvme" in command_result:
+                fun_test.log("nvme driver is loaded")
+            else:
+                fun_test.log("Loading nvme")
+                end_host.modprobe("nvme")
+            command_result = end_host.lsmod("nvme_tcp")
+            if "nvme_tcp" in command_result:
+                fun_test.log("nvme_tcp driver is loaded")
+            else:
+                fun_test.log("Loading nvme_tcp")
+                end_host.modprobe("nvme_tcp")
 
             fun_test.log("Drivers loaded on hosts")
             end_host = self.end_host_list[0]
@@ -522,6 +519,13 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
         # Create filesystem
         if hasattr(self, "create_file_system") and self.create_file_system:
+            self.end_host_list[0].sudo_command("/etc/init.d/irqbalance stop")
+            irq_bal_stat = self.end_host_list[0].command("/etc/init.d/irqbalance status")
+            if "dead" in irq_bal_stat:
+                fun_test.log("IRQ balance stopped on 0")
+            else:
+                fun_test.log("IRQ balance not stopped on 0")
+            self.end_host_list[0].sudo_command("tuned-adm profile network-throughput && tuned-adm active")
             self.end_host_list[0].sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
             self.end_host_list[0].sudo_command("mount {} /mnt".format(self.nvme_block_device))
             fun_test.log("Creating a testfile on XFS volume")
@@ -533,6 +537,20 @@ class StripedVolumePerformanceTestcase(FunTestCase):
         for host_index in range(1, self.host_count):
             self.nqn = "nqn" + str(host_index + 1)
             end_host = self.end_host_list[host_index]
+            command_result = end_host.lsmod("nvme_tcp")
+            if "nvme_tcp" in command_result:
+                fun_test.log("nvme_tcp driver is loaded")
+            else:
+                fun_test.log("Loading nvme_tcp")
+                end_host.modprobe("nvme_tcp")
+            end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+            end_host.sudo_command("/etc/init.d/irqbalance stop")
+            irq_bal_stat = end_host.command("/etc/init.d/irqbalance status")
+            if "dead" in irq_bal_stat:
+                fun_test.log("IRQ balance stopped on {}".format(host_index))
+            else:
+                fun_test.log("IRQ balance not stopped on {}".format(host_index))
+            end_host.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
             end_host.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
             end_host.sudo_command("nvme connect -t tcp -a {} -s {} -n {} -q {}".
                                   format(tb_config['dut_info'][0]['f1_ip'],
@@ -619,9 +637,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         func=get_iostat,
                         host_thread=self.iostat_host_thread,
                         count=thread_count,
-                        sleep_time=240,
+                        sleep_time=860,
                         iostat_interval=self.iostat_details["interval"],
-                        iostat_iter=170,
+                        iostat_iter=160,
                         iostat_timeout=self.fio_cmd_args["runtime"])
 
                     fun_test.log("Running FIO...")
@@ -683,9 +701,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         if round(iostat_bs) != round(plain_block_size):
                             fun_test.critical("Block size reported by iostat {} is different than {}".
                                               format(iostat_bs, plain_block_size))
-                        total_tps += tps
-                        total_kbs_read += kbs_read
-                        non_zero += 1
+                    total_tps += tps
+                    total_kbs_read += kbs_read
+                    non_zero += 1
                 avg_tps[count] = total_tps / non_zero
                 avg_kbs_read[count] = total_kbs_read / non_zero
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from fun_settings import *
-from fun_global import determine_version
+from fun_global import determine_version, is_development_mode
 import re
 import subprocess
 from threading import Thread, Lock
@@ -50,6 +50,7 @@ class TestBedWorker(Thread):
                 if get_current_time() > test_bed.manual_lock_expiry_time:
                     test_bed.manual_lock = False
                     test_bed.save()
+                    manual_un_lock_assets(test_bed_name=test_bed.name, manual_lock_submitter=test_bed.manual_lock_submitter)
                     send_test_bed_remove_lock(test_bed=test_bed, warning=False)
 
                     if test_bed_name in self.test_bed_lock_timers:
@@ -66,11 +67,12 @@ class TestBedWorker(Thread):
                 if test_bed.name not in self.warn_list:
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
+                        un_lock_warning_time = 60 * 10
                         # self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
-                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(60 * 10, self.test_bed_unlock_dispatch, (test_bed.name,))
+                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(un_lock_warning_time, self.test_bed_unlock_dispatch, (test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name].start()
                         self.warn_list.append(test_bed.name)
-                        send_test_bed_remove_lock(test_bed=test_bed, warning=True)
+                        send_test_bed_remove_lock(test_bed=test_bed, warning=True, un_lock_warning_time=un_lock_warning_time)
 
             time.sleep(20)
 
@@ -148,7 +150,7 @@ class QueueWorker(Thread):
         if True:
 
             queue_lock.acquire()
-            scheduler_logger.info("Lock-acquire: QueueWorker")
+            # scheduler_logger.info("Lock-acquire: QueueWorker")
 
             try:
                 de_queued_jobs = []
@@ -170,8 +172,9 @@ class QueueWorker(Thread):
                         availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
                         if availability["status"]:
                             de_queued_jobs.append(queued_job)
+                            assets_required = availability["assets_required"]
                             # self.job_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
-                            job_id_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
+                            job_id_threads[suite_execution.execution_id] = self.execute_job(job_id=queued_job.job_id, assets_required=assets_required)
 
                         else:
                             not_available[queued_job.test_bed_type] = availability["message"]
@@ -191,7 +194,7 @@ class QueueWorker(Thread):
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
             # scheduler_logger.info("QueueWorker: Before lock release")
-            scheduler_logger.info("Lock-release: QueueWorker")
+            # scheduler_logger.info("Lock-release: QueueWorker")
             queue_lock.release()
             time.sleep(5)
 
@@ -212,11 +215,13 @@ class QueueWorker(Thread):
             invalid_job.delete()
         return valid_jobs
 
-    def execute_job(self, job_id):
+    def execute_job(self, job_id, assets_required=None):
         suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
         scheduler_logger.info("{} Executing".format(get_job_string_from_spec(job_spec=suite_execution)))
         t = SuiteWorker(job_spec=suite_execution)
-        models_helper.update_suite_execution(suite_execution_id=job_id, state=JobStatusType.IN_PROGRESS)
+        models_helper.update_suite_execution(suite_execution_id=job_id,
+                                             state=JobStatusType.IN_PROGRESS)
+        lock_assets(job_id=job_id, assets=assets_required)
         t.initialize()
         # t.start()
         # t.run()
@@ -239,7 +244,7 @@ def get_job_string(job_id):
 
 def queue_job(job_id):
     queue_lock.acquire()
-    scheduler_logger.info("Lock-acquire: queue_job")
+    # scheduler_logger.info("Lock-acquire: queue_job")
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
     if job_spec and job_spec.state == JobStatusType.SCHEDULED:
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
@@ -254,7 +259,7 @@ def queue_job(job_id):
         if job_spec:
             scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 
-    scheduler_logger.info("Lock-release: queue_job")
+    # scheduler_logger.info("Lock-release: queue_job")
     queue_lock.release()
 
 
@@ -365,7 +370,8 @@ class SuiteWorker(Thread):
             self.local_scheduler_logger = local_scheduler_logger
             models_helper.update_suite_execution(suite_execution_id=self.job_id,
                                                  result=RESULTS["IN_PROGRESS"],
-                                                 state=JobStatusType.IN_PROGRESS)
+                                                 state=JobStatusType.IN_PROGRESS,
+                                                 started_time=get_current_time())
 
             build_url = self.job_build_url
             if not build_url:
@@ -517,6 +523,7 @@ class SuiteWorker(Thread):
 
     def suite_complete(self):
         state = JobStatusType.COMPLETED
+        un_lock_assets(self.job_id)
         if self.shutdown_reason == ShutdownReason.ABORTED:
             state = JobStatusType.ABORTED
         if self.shutdown_reason == ShutdownReason.KILLED:
@@ -821,7 +828,7 @@ def graceful_shutdown(max_wait_time=ONE_HOUR):
 
 def process_auto_scheduled_jobs():
     # Get auto_scheduled_jobs
-    auto_scheduled_jobs = models_helper.get_suite_executions_by_filter(is_auto_scheduled_job=True)
+    auto_scheduled_jobs = models_helper.get_suite_executions_by_filter(is_auto_scheduled_job=True, disable_schedule=False)
     auto_scheduled_jobs = auto_scheduled_jobs.order_by('submitted_time')
 
     for auto_scheduled_job in auto_scheduled_jobs:
@@ -870,7 +877,18 @@ def clear_out_queue():
 
 
 def initialize():
-    JobQueue.objects.all().delete()
+    set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
+    test_bed_monitor.start()
+    clear_out_queue()
+    clear_out_old_jobs()
+
+    if is_development_mode():
+        auto_scheduled_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.AUTO_SCHEDULED)
+        for auto_scheduled_job in auto_scheduled_jobs:
+            auto_scheduled_job.disable_schedule = True
+            auto_scheduled_job.save()
+
+
 
 
 def join_suite_workers():
@@ -894,16 +912,30 @@ def clear_out_old_jobs():
     old_jobs = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.SUBMITTED, scheduled_time__gt=past)
     old_jobs.delete()
 
+def cleanup_unused_assets():
+    all_assets = Asset.objects.all()
+    for asset in all_assets:
+        job_ids = asset.job_ids
+
+        job_ids_to_remove = []
+        if job_ids:
+            for job_id in job_ids:
+                s = models_helper.get_suite_execution(suite_execution_id=job_id)
+                if s:
+                    if s.state <= JobStatusType.COMPLETED:
+                        job_ids_to_remove.append(job_id)
+                else:
+                    asset.remove_job_id(job_id=job_id)
+        job_ids = filter(lambda x: x not in job_ids_to_remove, job_ids)
+        asset.job_ids = job_ids
+        asset.save()
 
 if __name__ == "__main__":
     queue_lock = Lock()
     ensure_singleton()
     initialize()
     scheduler_logger.info("Started Scheduler")
-    set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
-    test_bed_monitor.start()
-    clear_out_queue()
-    clear_out_old_jobs()
+
 
     run = True
     while run:
@@ -922,6 +954,7 @@ if __name__ == "__main__":
             queue_worker.run()
             scheduler_info = get_scheduler_info()
             request = process_external_requests()
+            cleanup_unused_assets()
             join_suite_workers()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \
                     (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPED):

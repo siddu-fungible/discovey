@@ -60,7 +60,7 @@ class BLTVolumeSanityScript(FunTestScript):
         # load nvme
         load_nvme_module(end_host)
 
-        enable_counters(storage_controller, self.command_timeout)
+        #enable_counters(storage_controller, self.command_timeout)
 
         # create controller
         ctrlr_uuid = utils.generate_uuid()
@@ -256,6 +256,7 @@ if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
     bltscript.add_test_case(BltPciSeqRead())
     bltscript.add_test_case(BltPciRandRead())
+    bltscript.add_test_case(BltPciSeqRWMix())
     bltscript.add_test_case(BltPciSeqWRMix())
     bltscript.add_test_case(BltPciRandRWMix())
     bltscript.add_test_case(BltPciRandWRMix())

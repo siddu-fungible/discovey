@@ -37,7 +37,7 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         # fs = Fs.get(disable_f1_index=1)
-        fs = Fs.get() # (disable_f1_index=0)
+        fs = Fs.get(setup_bmc_support_files=True) # (disable_f1_index=0)
 
         fun_test.shared_variables["fs"] = fs
         fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
