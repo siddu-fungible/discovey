@@ -104,6 +104,9 @@
     }
   },
   "fs-6": {
+    "workarounds": {
+      "csr_replay": true
+    },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
