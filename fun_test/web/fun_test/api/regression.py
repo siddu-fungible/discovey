@@ -36,7 +36,10 @@ def test_beds(request, id):
                     t["asset_level_manual_lock_status"] = {"asset_level_manual_locked": asset_level_manual_locked,
                                                            "error_message": error_message,
                                                            "asset_level_manual_lock_user": manual_lock_user}
+                test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name)
+                t["automation_status"] = test_bed_availability
                 result.append(t)
+
 
         else:
             t = TestBed.objects.get(name=id)
@@ -70,7 +73,6 @@ def test_beds(request, id):
         if "manual_lock_submitter_email" in request_json:
             submitter_email = request_json["manual_lock_submitter_email"]
             test_bed.manual_lock_submitter = submitter_email
-
 
         this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:

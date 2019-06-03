@@ -98,9 +98,8 @@ class AssetManager:
                     self.docker_host_orchestrator = DockerHostOrchestrator(id=dut_index, spec=docker_host_spec)
                 orchestrator = self.docker_host_orchestrator
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
-                if not self.real_orchestrator:
-                    self.real_orchestrator = RealOrchestrator.get(id=dut_index)
-                orchestrator = self.real_orchestrator
+                # if not self.real_orchestrator:
+                orchestrator = RealOrchestrator.get(id=dut_index)
         except Exception as ex:
             fun_test.critical(str(ex))
         self.orchestrators.append(orchestrator)
@@ -156,7 +155,7 @@ class AssetManager:
                 try:
                     this_asset = Asset.objects.get(name=asset_for_type)
                     job_ids = this_asset.job_ids
-                    print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
+                    # print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
                     if job_ids:
                         for job_id in job_ids:
                             # print("Check if suite in progress: {}: {}: {}".format(test_bed_type, job_id, duts_required))
@@ -167,7 +166,7 @@ class AssetManager:
                                 asset_in_use = asset_for_type
                                 break
                 except ObjectDoesNotExist:
-                    print "ObjectDoesnotExist, {}".format(test_bed_type)
+                    pass # print "ObjectDoesnotExist, {}".format(test_bed_type)
                 except Exception as ex:
                     print("Some other exception: {}".format(ex))
         if not in_use:
@@ -211,8 +210,11 @@ class AssetManager:
         manual_lock_info = is_test_bed_with_manual_lock(test_bed_name=test_bed_type)
         asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = False, "", None, None
         if assets_required_for_test_bed:
-            asset_level_manuAal_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
+            asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
 
+        result["suite_info"] = None
+        if in_progress_count > 0:  # TODO: Duplicate check below
+            result["suite_info"] = {"suite_execution_id": in_progress_suites[0].execution_id}
         if manual_lock_info:
             result["status"] = False
             result["message"] = "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
