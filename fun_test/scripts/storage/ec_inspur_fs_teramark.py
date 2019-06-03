@@ -281,10 +281,10 @@ class ECVolumeLevelScript(FunTestScript):
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                               1: {"boot_args": self.bootargs[1]}})
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
+            self.topology = topology_helper.deploy()
+            fun_test.test_assert(self.topology, "Topology deployed")
 
-            self.fs = topology.get_dut_instance(index=0)
+            self.fs = self.topology.get_dut_instance(index=0)
             self.f1 = self.fs.get_f1(index=self.f1_in_use)
             self.db_log_time = get_data_collection_time()
             fun_test.log("Data collection time: {}".format(self.db_log_time))
@@ -292,7 +292,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.storage_controller = self.f1.get_dpc_storage_controller()
 
             # Fetching Linux host with test interface name defined
-            fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
+            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
             for host_ip, host_info in fpg_connected_hosts.iteritems():
                 if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
                     continue
@@ -307,7 +307,7 @@ class ECVolumeLevelScript(FunTestScript):
 
             self.test_network = self.csr_network[str(self.fpg_inteface_index)]
             fun_test.shared_variables["end_host"] = self.end_host
-            fun_test.shared_variables["topology"] = topology
+            fun_test.shared_variables["topology"] = self.topology
             fun_test.shared_variables["fs"] = self.fs
             fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["test_network"] = self.test_network
