@@ -350,6 +350,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                self.nqn))
                 fun_test.log(command_result)
 
+            fun_test.sleep("Waiting for host reboot to complete", 120)
+
             # Checking that the above created BLT volume is visible to the end host
             fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.blt_details["ns_id"])
