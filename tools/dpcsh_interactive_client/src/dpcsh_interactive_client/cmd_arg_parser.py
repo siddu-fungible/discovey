@@ -1120,6 +1120,20 @@ peek_malloc_agent_non_coh_stats_parser = peek_stats_parsers.add_parser('malloc_a
                                                                        help="Peek Malloc Agent Non coh Stats")
 peek_malloc_agent_non_coh_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+
+# Storage Peek Commands
+# Peek Stats SSDs Connected
+peek_stats_ssds_parser = peek_stats_parsers.add_parser('ssds', help="Shows the SSDs connected")
+peek_stats_ssds_parser.add_argument('-grep', help="Grep regex pattern (Grep for SSD ID)", default=None)
+
+# Peek BLT volume stats
+peek_stats_blt_vol_parser = peek_stats_parsers.add_parser('blt', help="Peek BLT volume stats")
+peek_stats_blt_vol_parser.add_argument('vol_id', type=int, help="Volume ID (For e.g if vol id is 0000000000003001)")
+
+# Peek RDS volume stats
+peek_stats_rds_vol_parser = peek_stats_parsers.add_parser('rds', help="Peek RDS volume stats")
+peek_stats_rds_vol_parser.add_argument('vol_id', type=int, help="Volume ID (For e.g if vol id is 0000000000003001)")
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 

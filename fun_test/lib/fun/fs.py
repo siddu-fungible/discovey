@@ -10,7 +10,7 @@ from lib.system.utils import ToDictMixin
 from threading import Thread
 import re
 import os
-
+import socket
 
 class UartLogger(Thread):
     def __init__(self, ip, port):
@@ -42,6 +42,7 @@ class BootPhases:
     U_BOOT_INIT = "u-boot: init"
     U_BOOT_MICROCOM_STARTED = "u-boot: microcom started"
     U_BOOT_TRAIN = "u-boot: train"
+    U_BOOT_SET_ETH_ADDR = "u-boot: set ethaddr"
     U_BOOT_SET_GATEWAY_IP = "u-boot: set gatewayip"
     U_BOOT_SET_SERVER_IP = "u-boot: set serverip"
     U_BOOT_SET_BOOT_ARGS = "u-boot: set boot args"
@@ -147,6 +148,11 @@ class Bmc(Linux):
             result = True
         return result
 
+    def _get_fake_mac(self, f1_index):
+        ip = socket.gethostbyname(self.host_ip)
+        a, b, c, d = ip.split('.')
+        return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(f1_index)])
+
     def _set_term_settings(self):
         self.command("stty cols %d" % 1024)
         self.sendline(chr(0))
@@ -229,9 +235,21 @@ class Bmc(Linux):
                           tftp_image_path="funos-f1.stripped.gz",
                           gateway_ip=None):
         result = None
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
-        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected=self.U_BOOT_F1_PROMPT,
 
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
+        self.u_boot_command(command="setenv ethaddr {}".format(self._get_fake_mac(f1_index=index)),
+                            timeout=15,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
+        self.u_boot_command(command="setenv autoload no",
+                            timeout=15,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=index)
+
+        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
+        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus",
+                            timeout=15,
+                            expected=self.U_BOOT_F1_PROMPT,
                             f1_index=index)
 
         if gateway_ip:

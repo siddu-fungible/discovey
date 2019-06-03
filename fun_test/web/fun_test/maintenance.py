@@ -1081,6 +1081,19 @@ if __name__ == "__main_boot_timings__":
                 platform=FunPlatform.F1).save()
     print "added charts for extra boot timings"
 
+if __name__ == "__main_nw_fix__":
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance"]
+    for model_name in model_names:
+        app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+        metric_model = app_config.get_metric_models()[model_name]
+        entries = metric_model.objects.all()
+        print len(entries), model_name
+        for entry in entries:
+            if entry.input_date_time.day >= 1 and entry.input_date_time.month >= 6 and entry.input_date_time.year >= 2019:
+                print entry.input_date_time
+                entry.delete()
+    print "1st and 2nd june entries deleted for networking"
+
 if __name__ == "__main__":
     internal_chart_names_compression = ["read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "read_4kb1vol12ssd_durable_volume_ec_output_iops", "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops"]
     fio_job_names_randread = ["ec_nvme_tcp_comp_randread_1pctcomp_8", "ec_nvme_tcp_comp_randread_50pctcomp_8", "ec_nvme_tcp_comp_randread_80pctcomp_8"]
@@ -1230,7 +1243,4 @@ if __name__ == "__main__":
                                 work_in_progress=False,
                                 platform=FunPlatform.F1).save()
     print "added charts for durable volume ec nvmetcp"
-
-
-
-
+    
