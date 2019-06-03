@@ -230,7 +230,7 @@ class FunethPerformanceBase(FunTestCase):
                                                                         fpg_intf_dict,
                                                                         version,
                                                                         when='before')
-        perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration+10)
+        perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
 
         result = perf_manager_obj.run(*arg_dicts)
 
