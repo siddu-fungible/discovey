@@ -72,7 +72,8 @@ nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
-                     "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance"]
+                     "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance", "HuLatencyUnderLoadPerformance",
+                     "TeraMarkFunTcpConnectionsPerSecondPerformance"]
 
 
 def get_rounded_time():
@@ -121,7 +122,7 @@ def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, j
         chart.save()
 
 
-def set_networking_chart_status(platform="F1"):
+def set_networking_chart_status(platform=FunPlatform.F1):
     for model in networking_models:
         metric_model = app_config.get_metric_models()[model]
         charts = MetricChart.objects.filter(metric_model_name=model, platform=platform)
@@ -766,14 +767,13 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                             test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                             git_commit=self.git_commit, model_name="BootTimePerformance")
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="BootTimePerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeRsaPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
@@ -815,7 +815,7 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeRsa4kPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
@@ -857,7 +857,7 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeEcdh256PerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
@@ -899,7 +899,7 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeEcdh25519PerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
@@ -941,7 +941,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkCryptoPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO
     model = "TeraMarkCryptoPerformance"
 
@@ -1031,7 +1031,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
+class TeraMarkLookupEnginePerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_LOOKUP
     model = "TeraMarkLookupEnginePerformance"
 
@@ -1041,7 +1041,7 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class FlowTestPerformanceTC(PalladiumPerformanceTc):
+class FlowTestPerformanceTc(PalladiumPerformanceTc):
     tag = FLOW_TEST_TAG
     model = "FlowTestPerformance"
 
@@ -1068,7 +1068,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_ZIP
 
     def describe(self):
@@ -1131,7 +1131,7 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkDfaPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_DFA
     model = "TeraMarkDfaPerformance"
 
@@ -1141,7 +1141,7 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
 
     def describe(self):
@@ -1227,7 +1227,7 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkNuTransitPerformanceTc(PalladiumPerformanceTc):
     model = "NuTransitPerformance"
     file_paths = ["nu_rfc2544_performance.json"]
 
@@ -1289,7 +1289,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
+class PkeX25519TlsSoakPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
@@ -1330,7 +1330,7 @@ class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
+class PkeP256TlsSoakPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
@@ -1371,7 +1371,7 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
+class SoakDmaMemcpyCohPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_COH
     model = "SoakDmaMemcpyCoherentPerformance"
 
@@ -1424,7 +1424,7 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+class SoakDmaMemcpyNonCohPerformanceTc(SoakDmaMemcpyCohPerformanceTc):
     tag = SOAK_DMA_MEMCPY_NON_COH
     model = "SoakDmaMemcpyNonCoherentPerformance"
 
@@ -1434,7 +1434,7 @@ class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
                               steps="Steps 1")
 
 
-class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+class SoakDmaMemsetPerformanceTc(SoakDmaMemcpyCohPerformanceTc):
     tag = SOAK_DMA_MEMSET
     model = "SoakDmaMemsetPerformance"
 
@@ -1444,7 +1444,7 @@ class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
+class TeraMarkMultiClusterCryptoPerformanceTc(TeraMarkCryptoPerformanceTc):
     tag = TERAMARK_CRYPTO
     model = "TeraMarkMultiClusterCryptoPerformance"
 
@@ -1454,7 +1454,7 @@ class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
                               steps="Steps 1")
 
 
-class F1FlowTestPerformanceTC(FlowTestPerformanceTC):
+class F1FlowTestPerformanceTc(FlowTestPerformanceTc):
     tag = F1_FLOW_TEST_TAG
     model = "F1FlowTestPerformance"
 
@@ -1464,7 +1464,7 @@ class F1FlowTestPerformanceTC(FlowTestPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkNfaPerformanceTC(TeraMarkDfaPerformanceTC):
+class TeraMarkNfaPerformanceTc(TeraMarkDfaPerformanceTc):
     tag = TERAMARK_NFA
     model = "TeraMarkNfaPerformance"
 
@@ -1474,7 +1474,7 @@ class TeraMarkNfaPerformanceTC(TeraMarkDfaPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkJuniperNetworkingPerformanceTC(TeraMarkNuTransitPerformanceTC):
+class TeraMarkJuniperNetworkingPerformanceTc(TeraMarkNuTransitPerformanceTc):
     file_paths = ["nu_rfc2544_fwd_performance.json"]
     model = "TeraMarkJuniperNetworkingPerformance"
 
@@ -1484,7 +1484,7 @@ class TeraMarkJuniperNetworkingPerformanceTC(TeraMarkNuTransitPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkRcnvmeReadPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkRcnvmeReadPerformanceTc(PalladiumPerformanceTc):
     tag = RCNVME_READ
     model = "TeraMarkRcnvmeReadWritePerformance"
 
@@ -1512,7 +1512,7 @@ class TeraMarkRcnvmeReadPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkRcnvmeRandomReadPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class TeraMarkRcnvmeRandomReadPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_READ
     model = "TeraMarkRcnvmeReadWritePerformance"
 
@@ -1522,7 +1522,7 @@ class TeraMarkRcnvmeRandomReadPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkRcnvmeWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class TeraMarkRcnvmeWritePerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_WRITE
     model = "TeraMarkRcnvmeReadWritePerformance"
 
@@ -1532,7 +1532,7 @@ class TeraMarkRcnvmeWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkRcnvmeRandomWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class TeraMarkRcnvmeRandomWritePerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_WRITE
     model = "TeraMarkRcnvmeReadWritePerformance"
 
@@ -1542,7 +1542,7 @@ class TeraMarkRcnvmeRandomWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkHuPerformanceTc(PalladiumPerformanceTc):
     file_paths = ["hu_funeth_performance_data.json"]
 
     def describe(self):
@@ -1699,7 +1699,7 @@ class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
             add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
 
 
-class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperCryptoSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO_SINGLE_TUNNEL
     model = "JuniperCryptoTunnelPerformance"
 
@@ -1709,7 +1709,7 @@ class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperCryptoMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO_MULTI_TUNNEL
     model = "JuniperCryptoTunnelPerformance"
 
@@ -1719,7 +1719,7 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeReadAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_READ_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1729,7 +1729,7 @@ class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class RcnvmeRandomReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeRandomReadAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_READ_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1739,7 +1739,7 @@ class RcnvmeRandomReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class RcnvmeWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeWriteAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_WRITE_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1749,7 +1749,7 @@ class RcnvmeWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeRandomWriteAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_WRITE_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1759,7 +1759,7 @@ class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperTlsSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = TLS_1_TUNNEL
     model = "JuniperTlsTunnelPerformance"
 
@@ -1769,7 +1769,7 @@ class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+class JuniperTls32TunnelPerformanceTc(JuniperTlsSingleTunnelPerformanceTc):
     tag = TLS_32_TUNNEL
     model = "JuniperTlsTunnelPerformance"
 
@@ -1779,7 +1779,7 @@ class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
                               steps="Steps 1")
 
 
-class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+class JuniperTls64TunnelPerformanceTc(JuniperTlsSingleTunnelPerformanceTc):
     tag = TLS_64_TUNNEL
     model = "JuniperTlsTunnelPerformance"
 
@@ -1789,7 +1789,7 @@ class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
                               steps="Steps 1")
 
 
-class SoakDmaMemcpyThresholdPerformanceTC(PalladiumPerformanceTc):
+class SoakDmaMemcpyThresholdPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_THRESHOLD
     model = "SoakDmaMemcpyThresholdPerformance"
 
@@ -1821,7 +1821,7 @@ class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecEncryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecEncryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_ENC_SINGLE_TUNNEL
     model = "JuniperIpsecEncryptionSingleTunnelPerformance"
 
@@ -1831,7 +1831,7 @@ class JuniperIpsecEncryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecEncryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecEncryptionMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_ENC_MULTI_TUNNEL
     model = "JuniperIpsecEncryptionMultiTunnelPerformance"
 
@@ -1841,7 +1841,7 @@ class JuniperIpsecEncryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecDecryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecDecryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_DEC_SINGLE_TUNNEL
     model = "JuniperIpsecDecryptionSingleTunnelPerformance"
 
@@ -1851,7 +1851,7 @@ class JuniperIpsecDecryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecDecryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecDecryptionMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_DEC_MULTI_TUNNEL
     model = "JuniperIpsecDecryptionMultiTunnelPerformance"
 
@@ -1859,6 +1859,16 @@ class JuniperIpsecDecryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
         self.set_test_details(id=54,
                               summary="TeraMark IPSEC decryption multi tunnel Performance Test on F1 for IMIX",
                               steps="Steps 1")
+
+
+class SetNetworkingStatusTc(PalladiumPerformanceTc):
+    def describe(self):
+        self.set_test_details(id=55,
+                              summary="Set Networking status for charts",
+                              steps="Steps 1")
+
+    def run(self):
+        set_networking_chart_status(platform=FunPlatform.F1)
 
 
 class PrepareDbTc(FunTestCase):
@@ -1895,47 +1905,48 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakFunMallocPerformanceTc())
     myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    myscript.add_test_case(FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkZipPerformanceTC())
-    myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
-    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    myscript.add_test_case(F1FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkNfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTC())
-    myscript.add_test_case(TeraMarkHuPerformanceTC())
-    myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTC())
-    myscript.add_test_case(RcnvmeReadAllPerformanceTC())
-    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTC())
-    myscript.add_test_case(RcnvmeWriteAllPerformanceTC())
-    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTC())
-    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperTls32TunnelPerformanceTC())
-    myscript.add_test_case(JuniperTls64TunnelPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTc())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
+    myscript.add_test_case(FlowTestPerformanceTc())
+    myscript.add_test_case(TeraMarkZipPerformanceTc())
+    myscript.add_test_case(TeraMarkDfaPerformanceTc())
+    myscript.add_test_case(TeraMarkJpegPerformanceTc())
+    myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTc())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTc())
+    myscript.add_test_case(F1FlowTestPerformanceTc())
+    myscript.add_test_case(TeraMarkNfaPerformanceTc())
+    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
+    # myscript.add_test_case(TeraMarkHuPerformanceTc())
+    myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTc())
+    myscript.add_test_case(RcnvmeReadAllPerformanceTc())
+    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
+    myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
+    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
+    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperTls32TunnelPerformanceTc())
+    myscript.add_test_case(JuniperTls64TunnelPerformanceTc())
+    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
     myscript.add_test_case(WuLatencyUngatedPerformanceTc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTC())
-    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTC())
+    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
+    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
+    myscript.add_test_case(SetNetworkingStatusTc())
     # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
