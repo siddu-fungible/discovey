@@ -445,7 +445,7 @@ class ECVolumeLevelScript(FunTestScript):
 
         self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
-        fun_test.shared_variables["topology"].cleanup()
+        self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
