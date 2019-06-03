@@ -43,7 +43,7 @@
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.20.27",
+      "mgmt_ip": "10.1.20.29",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
