@@ -1082,7 +1082,7 @@ if __name__ == "__main_boot_timings__":
     print "added charts for extra boot timings"
 
 if __name__ == "__main__":
-    model_names = ["HuThroughputPerformance", "HuLatencyPerformance", "HuLatencyUnderLoadPerformance"]
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance"]
     for model_name in model_names:
         app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
         metric_model = app_config.get_metric_models()[model_name]
