@@ -236,11 +236,11 @@ class Bmc(Linux):
                           gateway_ip=None):
         result = None
 
-        self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
-        self.u_boot_command(command="setenv ethaddr {}".format(self._get_fake_mac(f1_index=index)),
-                            timeout=15,
-                            expected=self.U_BOOT_F1_PROMPT,
-                            f1_index=index)
+        #self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_ETH_ADDR)
+        #self.u_boot_command(command="setenv ethaddr {}".format(self._get_fake_mac(f1_index=index)),
+        #                    timeout=15,
+        #                    expected=self.U_BOOT_F1_PROMPT,
+        #                    f1_index=index)
         self.u_boot_command(command="setenv autoload no",
                             timeout=15,
                             expected=self.U_BOOT_F1_PROMPT,
