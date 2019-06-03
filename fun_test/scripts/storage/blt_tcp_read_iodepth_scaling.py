@@ -279,6 +279,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                      format(x, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
 
+            fun_test.sleep("Waiting for host reboot to complete", 160)
+
             self.end_host.sudo_command("iptables -F")
             self.end_host.sudo_command("ip6tables -F")
             self.end_host.sudo_command("dmesg -c > /dev/null")
@@ -349,8 +351,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                tb_config['dut_info'][0]['tcp_port'],
                                self.nqn))
                 fun_test.log(command_result)
-
-            fun_test.sleep("Waiting for host reboot to complete", 120)
 
             # Checking that the above created BLT volume is visible to the end host
             fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
