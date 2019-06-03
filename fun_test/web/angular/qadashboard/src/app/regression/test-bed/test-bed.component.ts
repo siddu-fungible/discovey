@@ -95,6 +95,9 @@ export class TestBedComponent implements OnInit {
         let numExecutions = -1;
         let executionId = -1;
         let manualLock = false;
+        if (testBed.name === 'fs-42') {
+          let i = 0;
+        }
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId,
           manualLock: manualLock};
@@ -112,6 +115,8 @@ export class TestBedComponent implements OnInit {
                 executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
             } else if (automationStatus.hasOwnProperty("used_by_suite_id")) {
               this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.used_by_suite_id};
+            } else if (automationStatus.hasOwnProperty('suite_info') && automationStatus.suite_info) {
+              this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.suite_info.suite_execution_id};
             }
 
           }
@@ -136,7 +141,8 @@ export class TestBedComponent implements OnInit {
       let payload = {manual_lock: false};
       this.apiService.put(url, payload).subscribe(response => {
         this.loggerService.success(`Unlock submitted for ${testBed.name}`);
-        this.refreshTestBeds();
+        window.location.reload();
+        //this.refreshTestBeds();
       }, error => {
         this.loggerService.error(`Unlock ${testBed.name} failed`);
       })
@@ -180,7 +186,8 @@ export class TestBedComponent implements OnInit {
       this.selectedUser = null;
       this.schedulingTime.hour = 1;
       this.schedulingTime.minute = 1;
-      this.refreshTestBeds();
+      //this.refreshTestBeds();
+      window.location.reload();
       this.currentEditMode = EditMode.NONE;
     }, error => {
       if (error.value instanceof ApiResponse) {
