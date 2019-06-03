@@ -166,7 +166,11 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
             for key in self.host_handles:
-                self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+                if self.override_numa_node["override"]:
+                    self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
+                    self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                else:
+                    self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
 
                 # Calculating the number of CPUs available in the given numa
                 self.total_numa_cpus[key] = 0
@@ -312,22 +316,12 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["storage_controller"] = self.storage_controller
 
             # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
-            lspci_output = self.end_host.lspci(grep_filter=self.ethernet_adapter)
-            fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
-            adapter_id = lspci_output[0]['id']
-            fun_test.simple_assert(adapter_id, "Ethernet Adapter Bus ID Retrieved")
-            lspci_verbose_output = self.end_host.lspci(slot=adapter_id, verbose=True)
-            numa_node = lspci_verbose_output[0]['numa_node']
-            fun_test.test_assert(numa_node, "Ethernet Adapter NUMA Node Retrieved")
+            if self.override_numa_node["override_node"]:
+                self.numa_cpus_filter = self.end_host.lscpu(self.override_numa_node["override_node"])
+                self.numa_cpus = self.numa_cpus_filter[self.override_numa_node["override_node"]]
+            else:
+                self.numa_cpus = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
 
-            # Fetching NUMA CPUs for above fetched NUMA Node
-            lscpu_output = self.end_host.lscpu(grep_filter="node{}".format(numa_node))
-            fun_test.simple_assert(lscpu_output, "CPU associated to Ethernet Adapter NUMA")
-
-            self.numa_cpus = lscpu_output.values()[0]
-            fun_test.test_assert(self.numa_cpus, "CPU associated to Ethernet Adapter NUMA")
-            fun_test.log("Ethernet Adapter: {}, NUMA Node: {}, NUMA CPU: {}".format(self.ethernet_adapter, numa_node,
-                                                                                    self.numa_cpus))
             # Calculating the number of CPUs available in the given numa
             self.total_numa_cpus = 0
             for cpu_group in self.numa_cpus.split(","):
