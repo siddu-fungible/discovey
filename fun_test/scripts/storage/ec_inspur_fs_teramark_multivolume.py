@@ -387,16 +387,16 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
 
         come_reboot = False
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            self.fs = self.fs_obj[0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-            self.fs = fun_test.shared_variables["fs"]
-            self.storage_controller = fun_test.shared_variables["storage_controller"]
-        try:
-            if fun_test.shared_variables["ec"]["setup_created"]:
+        if fun_test.shared_variables["ec"]["setup_created"]:
+            if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                    self.testbed_config["workarounds"]["enable_funcp"]:
+                self.fs = self.fs_obj[0]
+                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+            elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
+                    self.testbed_config["workarounds"]["csr_replay"]:
+                self.fs = fun_test.shared_variables["fs"]
+                self.storage_controller = fun_test.shared_variables["storage_controller"]
+            try:
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.remote_ip = fun_test.shared_variables["remote_ip"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
@@ -416,9 +416,9 @@ class ECVolumeLevelScript(FunTestScript):
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")
-        except Exception as ex:
-            fun_test.critical(str(ex))
-            come_reboot = True
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                come_reboot = True
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -483,7 +483,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
-        self.num_duts = fun_test.shared_variables["num_duts"]
         fun_test.shared_variables["attach_transport"] = self.attach_transport
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
@@ -506,6 +505,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.test_network["f1_loopback_ip"] = self.f1_ips
             self.remote_ip = self.host_ips[0]
             fun_test.shared_variables["remote_ip"] = self.remote_ip
+            self.num_duts = fun_test.shared_variables["num_duts"]
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
             self.fs = fun_test.shared_variables["fs"]
