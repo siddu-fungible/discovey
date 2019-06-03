@@ -163,7 +163,11 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for key in self.host_handles:
-            self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+            if self.override_numa_node["override"]:
+                self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
+                self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+            else:
+                self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
             fun_test.log("Rebooting host: {}".format(key))
             self.host_handles[key].reboot(non_blocking=True)
         fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))

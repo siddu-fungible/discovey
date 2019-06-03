@@ -16,6 +16,7 @@
     "command_timeout": 5,
     "reboot_timeout": 600,
     "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
