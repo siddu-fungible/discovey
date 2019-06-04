@@ -6,6 +6,10 @@ from lib.utilities.funcp_config import *
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funcp.helper import *
+from lib.host.linux import Linux
+from lib.topology.topology_helper import TopologyHelper
+import time 
+import datetime
 
 class ScriptSetup(FunTestScript):
 
@@ -37,63 +41,73 @@ class BringupSetup(FunTestCase):
         pass
 
     def run(self):
-        #funos-f1.stripped_vdd_en2.gz
-        #cmukherjee/funos-f1.stripped.gz
-        # Working FunCP - cmukherjee/funos-f1.stripped.gz
-        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/alibaba_fcp_testbed.json')
-        for fs_name in testbed_info['fs']:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name,
-                                               boot_image_f1_0=testbed_info['fs'][fs_name]['boot_image_f1_0'],
-                                               boot_image_f1_1=testbed_info['fs'][fs_name]['boot_image_f1_1'],
-                                               boot_args_f1_0=testbed_info['fs'][fs_name]['bootargs_f1_0'],
-                                               boot_args_f1_1=testbed_info['fs'][fs_name]['bootargs_f1_1'])
-            #Boot both F1s and reboot COMe
-            funcp_obj.cleanup_funcp()
-            server_key = fun_test.parse_file_to_json(
-                fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
-            servers_mode = server_key["fs"][fs_name]
+        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/alibaba_fcp_testbed-1.json')
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
+        fun_test.shared_variables["test_bed_type"] = test_bed_type
 
+        # Removing any funeth driver from COMe and and all the connected server
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            funcp_obj.cleanup_funcp()
+            server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
+            servers_mode = server_key["fs"][fs_name]
             for server in servers_mode:
                 print server
-                fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+                fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")  
 
-            fun_test.test_assert(expression=funcp_obj.boot_both_f1(power_cycle_come=True,
-                                                                   gatewayip=testbed_info['fs'][fs_name]['gatewayip']),
-                                 message="Boot F1s")
 
+        print "\n\n\n Booting of FS started \n\n\n"
+        print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') 
+        
+        # Boot up FS1600
+        f1_0_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_0']
+        f1_1_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_1']
+        topology_t_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        fun_test.shared_variables["test_bed_type"] = test_bed_type
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                         1: {"boot_args": f1_1_boot_args}}
+                                          )
+        topology = topology_helper.deploy()
+        fun_test.shared_variables["topology"] = topology
+        fun_test.test_assert(topology, "Topology deployed")
+        print "\n\n\n Booting of FS ended \n\n\n"
+        print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+
+            print "\n\n\n Booting of Control Plane  Started\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(
-                prepare_docker=testbed_info['fs'][fs_name]['prepare_docker']), message="Bringup FunCP")
-
-            #reboot PCIe connected servers and verify PCIe connections
-
-            for server in servers_mode:
-                print server
-                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=True)
-                # fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s "
-                #                                                          "went up" % server)
-
-            # install drivers on PCIE connected servers
-
-            tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))
-
-            funeth_obj = Funeth(tb_config_obj)
-            fun_test.shared_variables['funeth_obj'] = funeth_obj
-            setup_hu_host(funeth_obj, update_driver=True)
-            # funcp_obj.prepare_come_for_control_plane()
+                prepare_docker=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker']), message="Bringup FunCP")
+            print "\n\n\n Booting of Control Plane  ended\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
             # Assign MPG IPs from dhcp
-            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][fs_name]['mpg1']),
-                                     f1_0_mpg=str(testbed_info['fs'][fs_name]['mpg0']))
-            # funcp_obj.fetch_mpg_ips() #Only if not running the full script
+            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']),
+                                     f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']))
+            #funcp_obj.fetch_mpg_ips() #Only if not running the full script
             #execute abstract file
 
             abstract_json_file0 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][fs_name]['abtract_config_f1_0']
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_0']
             abstract_json_file1 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][fs_name]['abtract_config_f1_1']
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_1']
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
+         
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            print "\n\n\n Booting HU unit  Started\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))  
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True)
+            print "\n\n\n Booting HU unit  ended\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
     def cleanup(self):
 

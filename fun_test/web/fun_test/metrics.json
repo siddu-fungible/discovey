@@ -318,7 +318,25 @@
                 "leaf": false,
                 "name": "HU_HU_NFCP_teramark",
                 "weight": 1,
-                "label": "Host->Host",
+                "label": "Host->Host (1 F1)",
+                "reference": true
+              },
+              {
+                "info": "HU_HU_NFCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP_2f1_teramark",
+                "weight": 0,
+                "label": "Host->Host (2 F1s)",
+                "reference": true
+              },
+              {
+                "info": "HU_HU_FCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_FCP_2f1_teramark",
+                "weight": 1,
+                "label": "Host->Host FCP (2 F1s)",
                 "reference": true
               }
             ]
@@ -2022,7 +2040,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "f1_timings",
-            "label": "F1 Timings",
+            "label": "FunOS Timings",
             "children": [],
             "weight": 1
           }
@@ -2548,7 +2566,7 @@
                 "leaf": false,
                 "name": "HU_HU_NFCP_teramark",
                 "weight": 1,
-                "label": "Host->Host",
+                "label": "Host->Host (1 F1)",
                 "children": [
                   {
                     "info": "HU_HU_NFCP",
@@ -2613,6 +2631,127 @@
                         "metric_model_name": "HuLatencyPerformance",
                         "leaf": true,
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "HU_HU_NFCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP_2f1_teramark",
+                "weight": 0,
+                "label": "Host->Host (2 F1s)",
+                "children": []
+              },
+              {
+                "info": "HU_HU_FCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_FCP_2f1_teramark",
+                "weight": 1,
+                "label": "Host->Host FCP (2 F1s)",
+                "children": [
+                  {
+                    "info": "HU_HU_FCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_FCP_8TCP_1H_offloads_enabled",
+                    "weight": 1,
+                    "label": "8 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "HU_HU_FCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_FCP_8TCP_2H_offloads_enabled",
+                    "weight": 1,
+                    "label": "8 TCP Flow(s), 4 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "HU_HU_FCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_FCP_1TCP_1H_offloads_enabled",
+                    "weight": 1,
+                    "label": "1 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       }
@@ -3119,118 +3258,254 @@
                 "label": "Durable Volume - EC",
                 "children": [
                   {
-                    "info": "Read",
+                    "info": "durable_volume_ec_pcie",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "read_iod_durable_volume_ec",
+                    "name": "durable_volume_ec_pcie",
                     "weight": 1,
-                    "label": "Sequential Read",
+                    "label": "PCIe",
                     "children": [
                       {
-                        "info": "read_iod1_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_iod1_durable_volume_ec_output_latency",
+                        "info": "Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "read_iod_durable_volume_ec",
                         "weight": 1,
-                        "label": "Latency, QDepth=1"
+                        "label": "Sequential Read",
+                        "children": [
+                          {
+                            "info": "read_iod1_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod1_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "info": "read_iod16_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod16_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "read_iod32_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod32_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "read_iod64_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod64_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "read_iod128_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod128_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=128"
+                          },
+                          {
+                            "info": "read_iod_durable_volume_ec_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod_durable_volume_ec_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       },
                       {
-                        "info": "read_iod16_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_iod16_durable_volume_ec_output_latency",
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "rand_read_iod_durable_volume_ec",
                         "weight": 1,
-                        "label": "Latency, QDepth=16"
-                      },
-                      {
-                        "info": "read_iod32_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_iod32_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=32"
-                      },
-                      {
-                        "info": "read_iod64_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_iod64_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=64"
-                      },
-                      {
-                        "info": "read_iod128_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_iod128_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=128"
-                      },
-                      {
-                        "info": "read_iod_durable_volume_ec_output_iops",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_iod_durable_volume_ec_output_iops",
-                        "weight": 1,
-                        "label": "IOPS"
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "rand_read_iod1_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod1_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "info": "rand_read_iod16_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod16_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "rand_read_iod32_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod32_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "rand_read_iod64_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod64_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "rand_read_iod128_durable_volume_ec_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod128_durable_volume_ec_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=128"
+                          },
+                          {
+                            "info": "rand_read_iod_durable_volume_ec_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod_durable_volume_ec_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       }
                     ]
                   },
                   {
-                    "info": "Random Read",
+                    "info": "durable_volume_ec_nvmetcp",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "rand_read_iod_durable_volume_ec",
+                    "name": "durable_volume_ec_nvmetcp",
                     "weight": 1,
-                    "label": "Random Read",
+                    "label": "NVMe/TCP",
                     "children": [
-                       {
-                        "info": "rand_read_iod1_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_iod1_durable_volume_ec_output_latency",
+                      {
+                        "info": "Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "read_iod_durable_volume_ec_nvmetcp",
                         "weight": 1,
-                        "label": "Latency, QDepth=1"
+                        "label": "Sequential Read",
+                        "children": [
+                          {
+                            "info": "read_iod1_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod1_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "info": "read_iod8_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod8_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=8"
+                          },
+                          {
+                            "info": "read_iod16_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod16_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "read_iod32_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod32_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "read_iod64_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod64_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "read_iod_durable_volume_ec_nvmetcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_iod_durable_volume_ec_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       },
                       {
-                        "info": "rand_read_iod16_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_iod16_durable_volume_ec_output_latency",
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "rand_read_iod_durable_volume_ec_nvmetcp",
                         "weight": 1,
-                        "label": "Latency, QDepth=16"
-                      },
-                      {
-                        "info": "rand_read_iod32_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_iod32_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=32"
-                      },
-                      {
-                        "info": "rand_read_iod64_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_iod64_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=64"
-                      },
-                      {
-                        "info": "rand_read_iod128_durable_volume_ec_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_iod128_durable_volume_ec_output_latency",
-                        "weight": 1,
-                        "label": "Latency, QDepth=128"
-                      },
-                      {
-                        "info": "rand_read_iod_durable_volume_ec_output_iops",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_iod_durable_volume_ec_output_iops",
-                        "weight": 1,
-                        "label": "IOPS"
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "rand_read_iod1_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod1_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "info": "rand_read_iod8_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod8_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=8"
+                          },
+                          {
+                            "info": "rand_read_iod16_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod16_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=16"
+                          },
+                          {
+                            "info": "rand_read_iod32_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod32_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "info": "rand_read_iod64_durable_volume_ec_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod64_durable_volume_ec_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
+                          },
+                          {
+                            "info": "rand_read_iod_durable_volume_ec_nvmetcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_iod_durable_volume_ec_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -3245,54 +3520,126 @@
                 "label": "Durable Volume - EC + Compression",
                 "children": [
                   {
-                    "info": "Read",
+                    "info": "durable_volume_ec_compression_pcie",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "read_4kb_one_volume_12_ssd_durable_volume_ec",
+                    "name": "durable_volume_ec_compression_pcie",
                     "weight": 1,
-                    "label": "Sequential Read",
+                    "label": "PCIe",
                     "children": [
                       {
-                        "info": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                        "info": "Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "read_4kb_one_volume_12_ssd_durable_volume_ec",
                         "weight": 1,
-                        "label": "Latency"
+                        "label": "Sequential Read",
+                        "children": [
+                          {
+                            "info": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       },
                       {
-                        "info": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "rand_read_4kb_one_volume_12_ssd_durable_volume_ec",
                         "weight": 1,
-                        "label": "IOPS"
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       }
                     ]
                   },
                   {
-                    "info": "Random Read",
+                    "info": "durable_volume_ec_compression_nvmetcp",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "rand_read_4kb_one_volume_12_ssd_durable_volume_ec",
+                    "name": "durable_volume_ec_compression_nvmetcp",
                     "weight": 1,
-                    "label": "Random Read",
+                    "label": "NVMe/TCP",
                     "children": [
                       {
-                        "info": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                        "info": "Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "read_4kb_one_volume_12_ssd_durable_volume_ec_nvmetcp",
                         "weight": 1,
-                        "label": "Latency"
+                        "label": "Sequential Read",
+                        "children": [
+                          {
+                            "info": "read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "read_4kb1vol12ssd_durable_volume_ec_nvmetcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol12ssd_durable_volume_ec_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       },
                       {
-                        "info": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
-                        "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
-                        "name": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "rand_read_4kb_one_volume_12_ssd_durable_volume_ec_nvmetcp",
                         "weight": 1,
-                        "label": "IOPS"
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "rand_read_4kb1vol12ssd_durable_volume_ec_nvmetcp_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb1vol12ssd_durable_volume_ec_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       }
                     ]
                   }

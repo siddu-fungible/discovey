@@ -1081,7 +1081,7 @@ if __name__ == "__main_boot_timings__":
                 platform=FunPlatform.F1).save()
     print "added charts for extra boot timings"
 
-if __name__ == "__main__":
+if __name__ == "__main_nw_fix__":
     model_names = ["HuThroughputPerformance", "HuLatencyPerformance"]
     for model_name in model_names:
         app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -1089,8 +1089,233 @@ if __name__ == "__main__":
         entries = metric_model.objects.all()
         print len(entries), model_name
         for entry in entries:
-            if entry.input_date_time.day >= 1 and entry.input_date_time.month >= 6 and entry.input_date_time.year >= 2019:
+            if entry.input_date_time.day >= 3 and entry.input_date_time.month >= 6 and entry.input_date_time.year >= 2019:
                 print entry.input_date_time
                 entry.delete()
     print "1st and 2nd june entries deleted for networking"
 
+if __name__ == "__main_durable_tcp__":
+    internal_chart_names_compression = ["read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "read_4kb1vol12ssd_durable_volume_ec_output_iops", "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops"]
+    fio_job_names_randread = ["ec_nvme_tcp_comp_randread_1pctcomp_8", "ec_nvme_tcp_comp_randread_50pctcomp_8", "ec_nvme_tcp_comp_randread_80pctcomp_8"]
+    fio_job_names_read = ["ec_nvme_tcp_comp_read_1pctcomp_8", "ec_nvme_tcp_comp_read_50pctcomp_8", "ec_nvme_tcp_comp_read_80pctcomp_8"]
+    for internal_chart_name in internal_chart_names_compression:
+        copy_chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if "rand_read" in internal_chart_name:
+            fio_job_names = fio_job_names_randread
+        else:
+            fio_job_names = fio_job_names_read
+        index = internal_chart_name.find('output')
+        internal_name = internal_chart_name[:index] + 'nvmetcp_' + internal_chart_name[index:]
+        if "iops" in internal_name:
+            output_name = "output_read_iops"
+            unit = PerfUnit.UNIT_OPS
+        else:
+            output_name = "output_read_avg_latency"
+            unit = PerfUnit.UNIT_USECS
+        data_sets = []
+        for fio_job_name in fio_job_names:
+            if "1pct" in fio_job_name:
+                name = "1%"
+            elif "50pct" in fio_job_name:
+                name = "50%"
+            else:
+                name = "80%"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": unit}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=copy_chart.chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=copy_chart.description,
+                    owner_info=copy_chart.owner_info,
+                    source=copy_chart.source,
+                    positive=copy_chart.positive,
+                    y1_axis_title=copy_chart.y1_axis_title,
+                    visualization_unit=copy_chart.y1_axis_title,
+                    metric_model_name=copy_chart.metric_model_name,
+                    base_line_date=copy_chart.base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added charts for durable volume + compression nvmetcp"
+    internal = "read_iod1_durable_volume_ec_nvmetcp_output_latency"
+    operations = ["read", "rand_read"]
+    qdepths = ["iod1", "iod8", "iod16", "iod32", "iod64"]
+    outputs = ["output_latency", "output_iops"]
+    for operation in operations:
+        for output in outputs:
+            if "iops" in output:
+                internal_chart_name = operation + "_iod_durable_volume_ec_nvmetcp_" + output
+                copy_chart_name = operation + "_iod_durable_volume_ec_" + output
+                copy_chart = MetricChart.objects.get(internal_chart_name=copy_chart_name)
+                data_sets = []
+                for qdepth in qdepths:
+                    if qdepth == "iod1":
+                        qd = 1
+                    elif qdepth == "iod8":
+                        qd = 8
+                    elif qdepth == "iod16":
+                        qd = 16
+                    elif qdepth == "iod32":
+                        qd = 32
+                    else:
+                        qd = 64
+
+                    if "rand_read" in operation:
+                        fio_job_name = "ec_nvme_tcp_randread_" + str(qd)
+                    else:
+                        fio_job_name = "ec_nvme_tcp_read_" + str(qd)
+
+                    one_data_set = {}
+                    one_data_set["name"] = str(qd)
+                    one_data_set["inputs"] = {}
+                    one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                    one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                    one_data_set["output"] = {"name": "output_read_iops", 'min': 0, "max": -1, "expected": -1,
+                                              "reference": -1, "unit": PerfUnit.UNIT_OPS}
+                    data_sets.append(one_data_set)
+                metric_id = LastMetricId.get_next_id()
+                MetricChart(chart_name=copy_chart.chart_name,
+                            metric_id=metric_id,
+                            internal_chart_name=internal_chart_name,
+                            data_sets=json.dumps(data_sets),
+                            leaf=True,
+                            description=copy_chart.description,
+                            owner_info=copy_chart.owner_info,
+                            source=copy_chart.source,
+                            positive=copy_chart.positive,
+                            y1_axis_title=copy_chart.y1_axis_title,
+                            visualization_unit=copy_chart.y1_axis_title,
+                            metric_model_name=copy_chart.metric_model_name,
+                            base_line_date=copy_chart.base_line_date,
+                            work_in_progress=False,
+                            platform=FunPlatform.F1).save()
+            else:
+                for qdepth in qdepths:
+                    internal_chart_name = operation + "_" + qdepth + "_durable_volume_ec_nvmetcp_" + output
+                    copy_chart_name = operation + "_" + qdepth + "_durable_volume_ec_" + output
+                    copy_chart = MetricChart.objects.get(internal_chart_name=copy_chart_name)
+                    if qdepth == "iod1":
+                        qd = 1
+                    elif qdepth == "iod8":
+                        qd = 8
+                    elif qdepth == "iod16":
+                        qd = 16
+                    elif qdepth == "iod32":
+                        qd = 32
+                    else:
+                        qd = 64
+
+                    if "rand_read" in operation:
+                        fio_job_name = "ec_nvme_tcp_randread_" + str(qd)
+                    else:
+                        fio_job_name = "ec_nvme_tcp_read_" + str(qd)
+
+                    data_sets = json.loads(copy_chart.data_sets)
+                    for data_set in data_sets:
+                        data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        data_set["output"]["max"] = -1
+                        data_set["output"]["expected"] = -1
+                        data_set["output"]["reference"] = -1
+                        data_set["output"]["unit"] = PerfUnit.UNIT_USECS
+
+                    metric_id = LastMetricId.get_next_id()
+                    MetricChart(chart_name=copy_chart.chart_name,
+                                metric_id=metric_id,
+                                internal_chart_name=internal_chart_name,
+                                data_sets=json.dumps(data_sets),
+                                leaf=True,
+                                description=copy_chart.description,
+                                owner_info=copy_chart.owner_info,
+                                source=copy_chart.source,
+                                positive=copy_chart.positive,
+                                y1_axis_title=copy_chart.y1_axis_title,
+                                visualization_unit=copy_chart.y1_axis_title,
+                                metric_model_name=copy_chart.metric_model_name,
+                                base_line_date=copy_chart.base_line_date,
+                                work_in_progress=False,
+                                platform=FunPlatform.F1).save()
+    print "added charts for durable volume ec nvmetcp"
+
+if __name__ == "__main__":
+    num_hosts = [1, 2]
+    num_flows = [1, 8]
+    flow_type = "HU_HU_FCP"
+    frame_size = 1500
+    offloads = True
+    output_names = ["output_throughput", "output_pps", "output_latency"]
+    base_line_date = datetime(year=2019, month=5, day=30, minute=0, hour=0, second=0)
+    for num_flow in num_flows:
+        for num_host in num_hosts:
+            if num_flow == 1 and num_host == 2:
+                break
+            for output_name in output_names:
+                internal_chart_name = "HU_HU_FCP_" + str(num_flow) + "TCP_" + str(num_host) + "H_offloads_enabled_" + output_name
+                if "throughput" in internal_chart_name:
+                    chart_name = "Throughput"
+                    positive = True
+                    model_name = "HuThroughputPerformance"
+                    y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+                    data_set_unit = PerfUnit.UNIT_MBITS_PER_SEC
+                    outputs = [""]
+                    name = "1500B"
+                    data_set_output = output_name
+                elif "pps" in internal_chart_name:
+                    chart_name = "Packets per sec"
+                    positive = True
+                    model_name = "HuThroughputPerformance"
+                    y1_axis_title = PerfUnit.UNIT_MPPS
+                    data_set_unit = PerfUnit.UNIT_PPS
+                    outputs = [""]
+                    name = "1500B"
+                    data_set_output = output_name
+                else:
+                    chart_name = "Latency"
+                    positive = False
+                    model_name = "HuLatencyPerformance"
+                    y1_axis_title = PerfUnit.UNIT_USECS
+                    data_set_unit = PerfUnit.UNIT_USECS
+                    outputs = ["min", "P50", "P90", "P99"]
+                    name = "1500B-"
+                    data_set_output = output_name + "_"
+
+                data_sets = []
+                for output in outputs:
+                    one_data_set = {}
+                    one_data_set["name"] = name + output
+                    one_data_set["inputs"] = {}
+                    one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                    one_data_set["inputs"]["input_frame_size"] = frame_size
+                    one_data_set["inputs"]["input_flow_type"] = flow_type
+                    one_data_set["inputs"]["input_num_hosts"] = num_host
+                    one_data_set["inputs"]["input_num_flows"] = num_flow
+                    one_data_set["inputs"]["input_protocol"] = "TCP"
+                    one_data_set["output"] = {"name": data_set_output + output + "_h2h", 'min': 0, "max": -1, "expected": -1,
+                                              "reference": -1, "unit": data_set_unit}
+                    data_sets.append(one_data_set)
+                metric_id = LastMetricId.get_next_id()
+                MetricChart(chart_name=chart_name,
+                            metric_id=metric_id,
+                            internal_chart_name=internal_chart_name,
+                            data_sets=json.dumps(data_sets),
+                            leaf=True,
+                            description="TBD",
+                            owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                            source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/funeth/performance.py",
+                            positive=positive,
+                            y1_axis_title=y1_axis_title,
+                            visualization_unit=y1_axis_title,
+                            metric_model_name=model_name,
+                            base_line_date=base_line_date,
+                            work_in_progress=False,
+                            platform=FunPlatform.F1).save()
+    print" added charts for HU_HU_FCP 2 F1s"
+
+    

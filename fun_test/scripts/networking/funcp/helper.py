@@ -90,10 +90,10 @@ def power_cycle_host(hostname):
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
-def test_hu_host_pings(hostnames):
+def test_host_pings(hostnames, ips):
     for host in hostnames:
         linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
-        for hosts in hostnames:
+        for hosts in ips:
             result = linux_obj.ping(dst=hosts)
             if result:
                 fun_test.log("%s can reach %s" % (host, hosts))
@@ -105,24 +105,32 @@ def setup_hu_host(funeth_obj, update_driver=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
+        critical_log(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
+
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
-        fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
-    fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+            critical_log(update_src_result, 'Update funeth driver source code.')
+    critical_log(funeth_obj.build(parallel=True), 'Build funeth driver.')
+    critical_log(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
 
-        fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
-                             'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
+        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=8),
+                     'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
+        critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(False)),
-                             'Configure HU host {} IPv4 routes.'.format(
-            linux_obj.host_ip))
-        #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
-        #                    'HU PF and VF interface loopback ping test via NU')
+        critical_log(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(False)),
+                     'Configure HU host {} IPv4 routes.'.format(
+                         linux_obj.host_ip))
 
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
+
+
+def critical_log(expression, message):
+    if expression:
+
+        fun_test.test_assert(expression=expression, message=message)
+
+    if not expression:
+        fun_test.critical(message=message)
