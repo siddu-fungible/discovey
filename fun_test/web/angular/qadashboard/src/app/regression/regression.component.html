@@ -34,7 +34,7 @@
 
       <div id="filter-div" style="padding: 10px;">
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.ALL}"
-              (click)="onStateFilterClick(stateMap.ALL)">All</span> &nbsp;
+              (click)="onStateFilterClick('ALL')">All</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.IN_PROGRESS}"
               (click)="onStateFilterClick(stateMap.IN_PROGRESS)">In-progress</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.QUEUED}"

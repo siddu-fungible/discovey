@@ -26,7 +26,9 @@ class FilterButton {
     let keyValue = this.filterValue;
     if (keyString === 'state_filter') {
       keyString = "State";
-      keyValue = this.stateStringMap[keyValue];
+      if (keyValue !== 'ALL') {
+        keyValue = this.stateStringMap[keyValue];
+      }
     }
     if (keyString === 'submitter_email') {
       keyString = "Submitter";
@@ -187,6 +189,8 @@ export class RegressionComponent implements OnInit {
       if (this.queryParameters.hasOwnProperty('state_filter')) {
         queryParams["state_filter"] = this.queryParameters["stateFilter"];
         this.stateFilterString = this.stateStringMap[this.queryParameters['state_filter']];
+      } else {
+        this.stateFilterString = "ALL";
       }
     }
     if (userSuppliedParams) {
