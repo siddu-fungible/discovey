@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 from lib.system import utils
 from lib.host.traffic_generator import TrafficGenerator
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
 from lib.host.linux import Linux
 from scripts.storage.funcp_deploy import FunCpDockerContainer
@@ -124,7 +124,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = get_current_time()
+        self.db_log_time = get_data_collection_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
