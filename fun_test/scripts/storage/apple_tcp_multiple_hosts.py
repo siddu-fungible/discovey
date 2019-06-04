@@ -632,7 +632,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         sleep_time=int(self.fio_cmd_args["runtime"]/1.5),
                         iostat_interval=self.iostat_details["interval"],
                         iostat_iter=int(self.fio_cmd_args["runtime"] - int(self.fio_cmd_args["runtime"]/1.5)) / self.iostat_details["interval"],
-                        iostat_timeout=self.fio_cmd_args["runtime"])
+                        iostat_timeout=self.fio_cmd_args["timeout"])
 
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_multi_host_" + mode + "_host_" + str(thread_count)\
