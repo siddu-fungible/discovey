@@ -1319,6 +1319,34 @@ if __name__ == "__main_hu_hu_fcp__":
     print" added charts for HU_HU_FCP 2 F1s"
 
 if __name__ == "__main__":
-
+    internal_chart_names = ["rand_read_qd_nvmetcp_output_iops", "rand_write_qd_nvmetcp_output_iops"]
+    multi_vol = "(N vols)"
+    fio_read_job_names = ["fio_tcp_randread_blt_32_4_nvols", "fio_tcp_randread_blt_32_8_nvols"]
+    fio_write_job_names = ["fio_tcp_randwrite_blt_32_4_nvols", "fio_tcp_randwrite_blt_32_8_nvols"]
+    for internal_chart_name in internal_chart_names:
+        if "rand_read" in internal_chart_name:
+            output_name = "output_read_iops"
+            fio_job_names = fio_read_job_names
+        else:
+            output_name = "output_write_iops"
+            fio_job_names = fio_write_job_names
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        data_sets = json.loads(chart.data_sets)
+        for fio_job_name in fio_job_names:
+            if "32_4" in fio_job_name:
+                name = "qd128"
+            else:
+                name = "qd256"
+            one_data_set = {}
+            one_data_set["name"] = name + multi_vol
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": PerfUnit.UNIT_OPS}
+            data_sets.append(one_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added datasets for the raw block nvme tcp charts"
 
     
