@@ -15,7 +15,7 @@ tb_config = {
     "dut_info": {
         0: {
             "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial sku=SKU_FS1600_0"
-                       "  --all_100g --dis-stats --mgmt --dpc-server --dpc-uart --nofreeze",
+                       "  --disable-wu-watchdog --all_100g --dis-stats --mgmt --dpc-server --dpc-uart --nofreeze",
             "perf_multiplier": 1,
             "f1_ip": "15.42.1.2",
             "tcp_port": 1099
@@ -116,7 +116,7 @@ def fio_parser(arg1, host_index, **kwargs):
 
 
 def get_iostat(host_thread, count, sleep_time, iostat_interval, iostat_iter, iostat_timeout):
-    host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
+    host_thread.sudo_command("sleep {} ; free -g ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
                              format(sleep_time, iostat_interval, iostat_iter), timeout=iostat_timeout)
     fun_test.shared_variables["iostat_output"][count] = \
         host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d")
@@ -383,14 +383,6 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.log("FunCP brought up")
             container_cli.disconnect()
 
-            '''
-            # Configuring Local thin block volume
-            command_result = self.storage_controller.json_execute(verb="enable_counters",
-                                                                  command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
-            '''
-
             # Pass F1 IP to controller
             command_result = self.storage_controller.ip_cfg(ip=tb_config['dut_info'][0]['f1_ip'],
                                                             port=tb_config['dut_info'][0]['tcp_port'])
@@ -637,9 +629,9 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         func=get_iostat,
                         host_thread=self.iostat_host_thread,
                         count=thread_count,
-                        sleep_time=860,
+                        sleep_time=int(self.fio_cmd_args["runtime"]/1.5),
                         iostat_interval=self.iostat_details["interval"],
-                        iostat_iter=160,
+                        iostat_iter=int(self.fio_cmd_args["runtime"] - int(self.fio_cmd_args["runtime"]/1.5)) / self.iostat_details["interval"],
                         iostat_timeout=self.fio_cmd_args["runtime"])
 
                     fun_test.log("Running FIO...")
