@@ -577,7 +577,6 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                                self.iter_interval)
 
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
-                # TODO: Put correct IOdepth in table
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
                         actual = fio_output[combo][mode][op][field]
@@ -595,7 +594,7 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                #post_results("Multi_vol_TCP", test_method, *row_data_list)
+                post_results("Multi_vol_TCP", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Multiple Volumes over TCP Perf Table", table_name=self.summary, table_data=table_data)
