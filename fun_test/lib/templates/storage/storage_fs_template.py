@@ -388,7 +388,7 @@ class StorageFsTemplate(object):
         self.come_obj.command("cd {}".format(self.FUNSDK_DIR))
 
     def prepare_docker(self):
-        result = False
+        result = True
         self.enter_funsdk()
         response = self.come_obj.command(self.PREPARE_CMD, timeout=self.DEFAULT_TIMEOUT)
         sections = ["Cloning into 'FunSDK'",
