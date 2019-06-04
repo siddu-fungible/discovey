@@ -250,11 +250,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
 
             # Configuring Local thin block volume
-            command_result = self.storage_controller.json_execute(verb="enable_counters",
-                                                                  command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
-
             """
             vol_size = self.volume_details["capacity"] / self.volume_details["block_size"]
             '''create_ns = self.end_host.nvme_create_namespace(size=vol_size, capacity=vol_size,
