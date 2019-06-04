@@ -1094,7 +1094,7 @@ if __name__ == "__main_nw_fix__":
                 entry.delete()
     print "1st and 2nd june entries deleted for networking"
 
-if __name__ == "__main__":
+if __name__ == "__main_durable_tcp__":
     internal_chart_names_compression = ["read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "read_4kb1vol12ssd_durable_volume_ec_output_iops", "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops"]
     fio_job_names_randread = ["ec_nvme_tcp_comp_randread_1pctcomp_8", "ec_nvme_tcp_comp_randread_50pctcomp_8", "ec_nvme_tcp_comp_randread_80pctcomp_8"]
     fio_job_names_read = ["ec_nvme_tcp_comp_read_1pctcomp_8", "ec_nvme_tcp_comp_read_50pctcomp_8", "ec_nvme_tcp_comp_read_80pctcomp_8"]
@@ -1243,4 +1243,79 @@ if __name__ == "__main__":
                                 work_in_progress=False,
                                 platform=FunPlatform.F1).save()
     print "added charts for durable volume ec nvmetcp"
+
+if __name__ == "__main__":
+    num_hosts = [1, 2]
+    num_flows = [1, 8]
+    flow_type = "HU_HU_FCP"
+    frame_size = 1500
+    offloads = True
+    output_names = ["output_throughput", "output_pps", "output_latency"]
+    base_line_date = datetime(year=2019, month=5, day=30, minute=0, hour=0, second=0)
+    for num_flow in num_flows:
+        for num_host in num_hosts:
+            if num_flow == 1 and num_host == 2:
+                break
+            for output_name in output_names:
+                internal_chart_name = "HU_HU_FCP_" + str(num_flow) + "TCP_" + str(num_host) + "H_offloads_enabled_" + output_name
+                if "throughput" in internal_chart_name:
+                    chart_name = "Throughput"
+                    positive = True
+                    model_name = "HuThroughputPerformance"
+                    y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+                    data_set_unit = PerfUnit.UNIT_MBITS_PER_SEC
+                    outputs = [""]
+                    name = "1500B"
+                    data_set_output = output_name
+                elif "pps" in internal_chart_name:
+                    chart_name = "Packets per sec"
+                    positive = True
+                    model_name = "HuThroughputPerformance"
+                    y1_axis_title = PerfUnit.UNIT_MPPS
+                    data_set_unit = PerfUnit.UNIT_PPS
+                    outputs = [""]
+                    name = "1500B"
+                    data_set_output = output_name
+                else:
+                    chart_name = "Latency"
+                    positive = False
+                    model_name = "HuLatencyPerformance"
+                    y1_axis_title = PerfUnit.UNIT_USECS
+                    data_set_unit = PerfUnit.UNIT_USECS
+                    outputs = ["min", "P50", "P90", "P99"]
+                    name = "1500B-"
+                    data_set_output = output_name + "_"
+
+                data_sets = []
+                for output in outputs:
+                    one_data_set = {}
+                    one_data_set["name"] = name + output
+                    one_data_set["inputs"] = {}
+                    one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                    one_data_set["inputs"]["input_frame_size"] = frame_size
+                    one_data_set["inputs"]["input_flow_type"] = flow_type
+                    one_data_set["inputs"]["input_num_hosts"] = num_host
+                    one_data_set["inputs"]["input_num_flows"] = num_flow
+                    one_data_set["inputs"]["input_protocol"] = "TCP"
+                    one_data_set["output"] = {"name": data_set_output + output + "_h2h", 'min': 0, "max": -1, "expected": -1,
+                                              "reference": -1, "unit": data_set_unit}
+                    data_sets.append(one_data_set)
+                metric_id = LastMetricId.get_next_id()
+                MetricChart(chart_name=chart_name,
+                            metric_id=metric_id,
+                            internal_chart_name=internal_chart_name,
+                            data_sets=json.dumps(data_sets),
+                            leaf=True,
+                            description="TBD",
+                            owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                            source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/funeth/performance.py",
+                            positive=positive,
+                            y1_axis_title=y1_axis_title,
+                            visualization_unit=y1_axis_title,
+                            metric_model_name=model_name,
+                            base_line_date=base_line_date,
+                            work_in_progress=False,
+                            platform=FunPlatform.F1).save()
+    print" added charts for HU_HU_FCP 2 F1s"
+
     

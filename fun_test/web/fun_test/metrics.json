@@ -318,7 +318,25 @@
                 "leaf": false,
                 "name": "HU_HU_NFCP_teramark",
                 "weight": 1,
-                "label": "Host->Host",
+                "label": "Host->Host (1 F1)",
+                "reference": true
+              },
+              {
+                "info": "HU_HU_NFCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP_2f1_teramark",
+                "weight": 0,
+                "label": "Host->Host (2 F1s)",
+                "reference": true
+              },
+              {
+                "info": "HU_HU_FCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_FCP_2f1_teramark",
+                "weight": 1,
+                "label": "Host->Host FCP (2 F1s)",
                 "reference": true
               }
             ]
@@ -2022,7 +2040,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "f1_timings",
-            "label": "F1 Timings",
+            "label": "FunOS Timings",
             "children": [],
             "weight": 1
           }
@@ -2548,7 +2566,7 @@
                 "leaf": false,
                 "name": "HU_HU_NFCP_teramark",
                 "weight": 1,
-                "label": "Host->Host",
+                "label": "Host->Host (1 F1)",
                 "children": [
                   {
                     "info": "HU_HU_NFCP",
@@ -2613,6 +2631,127 @@
                         "metric_model_name": "HuLatencyPerformance",
                         "leaf": true,
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "HU_HU_NFCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP_2f1_teramark",
+                "weight": 0,
+                "label": "Host->Host (2 F1s)",
+                "children": []
+              },
+              {
+                "info": "HU_HU_FCP_2f1",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_FCP_2f1_teramark",
+                "weight": 1,
+                "label": "Host->Host FCP (2 F1s)",
+                "children": [
+                  {
+                    "info": "HU_HU_FCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_FCP_8TCP_1H_offloads_enabled",
+                    "weight": 1,
+                    "label": "8 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "HU_HU_FCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_FCP_8TCP_2H_offloads_enabled",
+                    "weight": 1,
+                    "label": "8 TCP Flow(s), 4 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "HU_HU_FCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "HU_HU_FCP_1TCP_1H_offloads_enabled",
+                    "weight": 1,
+                    "label": "1 TCP Flow(s), 2 Host(s)",
+                    "children": [
+                      {
+                        "info": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps",
+                        "metric_model_name": "HuThroughputPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency",
+                        "metric_model_name": "HuLatencyPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       }
