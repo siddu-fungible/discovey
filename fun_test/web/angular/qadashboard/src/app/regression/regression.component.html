@@ -13,27 +13,40 @@
   </div>
 
 
+
   <!-- button ng-click="test()">Test</button -->
   <div class="card card-primary">
-    <div class="card-header"><b>Suite Executions</b></div>
+    <div class="card-header"><b>Suite Executions</b>
+      &nbsp;&nbsp;
+      <ng-container *ngIf="filterButtons.length > 0">
+        Filters:
+        <ng-container *ngFor="let filterButton of filterButtons">
+          <span class="link-span">{{ filterButton.displayString }}
+            <span class="pseudo-anchor" (click)="removeFilterButton(filterButton)">Remove</span>
+          </span>
+          &nbsp;
+        </ng-container>
+      </ng-container>
+
+    </div>
     <div class="card-body">
 
 
       <div id="filter-div" style="padding: 10px;">
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.ALL}"
-              (click)="onStateFilterClick(filter.ALL)">All</span> &nbsp;
+              (click)="onStateFilterClick(stateMap.ALL)">All</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.IN_PROGRESS}"
-              (click)="onStateFilterClick(filter.IN_PROGRESS)">In-progress</span> &nbsp;
+              (click)="onStateFilterClick(stateMap.IN_PROGRESS)">In-progress</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.QUEUED}"
-              (click)="onStateFilterClick(filter.QUEUED)">Queued</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.QUEUED)">Queued</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.COMPLETED}"
-              (click)="onStateFilterClick(filter.COMPLETED)">Completed</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.COMPLETED)">Completed</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.SCHEDULED}"
-              (click)="onStateFilterClick(filter.SCHEDULED)">Scheduled</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.SCHEDULED)">Scheduled</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.SUBMITTED}"
-              (click)="onStateFilterClick(filter.SUBMITTED)">Submitted</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.SUBMITTED)">Submitted</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.AUTO_SCHEDULED}"
-              (click)="onStateFilterClick(filter.AUTO_SCHEDULED)">Auto-scheduled</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.AUTO_SCHEDULED)">Auto-scheduled</span>&nbsp;
 
       </div>
 
