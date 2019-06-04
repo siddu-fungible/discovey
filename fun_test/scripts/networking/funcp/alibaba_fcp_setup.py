@@ -100,7 +100,6 @@ class BringupSetup(FunTestCase):
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
          
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
             print "\n\n\n Booting HU unit  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))  
