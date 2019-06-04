@@ -41,15 +41,13 @@ class BringupSetup(FunTestCase):
         pass
 
     def run(self):
-        # fun_test.update_job_environment_variable("tftp_image_path", "cmukherjee/funos-f1.stripped.gz")
-        # fun_test.update_job_environment_variable("test_bed_type", "fs-alibaba")
         testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/alibaba_fcp_testbed-1.json')
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
 
         # Removing any funeth driver from COMe and and all the connected server
-        for fs_name in testbed_info['fs']["fs_list"]:
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
             funcp_obj.cleanup_funcp()
             server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
@@ -63,8 +61,8 @@ class BringupSetup(FunTestCase):
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') 
         
         # Boot up FS1600
-        f1_0_boot_args = testbed_info['fs']['bootargs_f1_0']
-        f1_1_boot_args = testbed_info['fs']['bootargs_f1_1']
+        f1_0_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_0']
+        f1_1_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_1']
         topology_t_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         topology_helper = TopologyHelper()
@@ -77,31 +75,31 @@ class BringupSetup(FunTestCase):
         print "\n\n\n Booting of FS ended \n\n\n"
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
-        for fs_name in testbed_info['fs']["fs_list"]:
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
 
             print "\n\n\n Booting of Control Plane  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(
-                prepare_docker=testbed_info['fs'][fs_name]['prepare_docker']), message="Bringup FunCP")
+                prepare_docker=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker']), message="Bringup FunCP")
             print "\n\n\n Booting of Control Plane  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
             # Assign MPG IPs from dhcp
-            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][fs_name]['mpg1']),
-                                     f1_0_mpg=str(testbed_info['fs'][fs_name]['mpg0']))
+            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']),
+                                     f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']))
             #funcp_obj.fetch_mpg_ips() #Only if not running the full script
             #execute abstract file
 
             abstract_json_file0 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][fs_name]['abtract_config_f1_0']
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_0']
             abstract_json_file1 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][fs_name]['abtract_config_f1_1']
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_1']
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
          
-        for fs_name in testbed_info['fs']["fs_list"]:
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
             print "\n\n\n Booting HU unit  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
