@@ -184,11 +184,10 @@ class NetperfManager:
 
     def start_netserver(self, linux_obj, cpu_list=None):
         linux_obj.pkill('netserver')
-        # cmd = 'taskset -c 8-15 /usr/bin/netserver'  # NU server NIC and F1 are both in NUA 1
         if cpu_list:
-            cmd = 'taskset -c {} /usr/bin/netserver'.format(','.join([str(c) for c in cpu_list]))
+            cmd = 'taskset -c {} netserver'.format(','.join([str(c) for c in cpu_list]))
         else:
-            cmd = '/usr/bin/netserver'
+            cmd = 'netserver'
         linux_obj.sudo_command(cmd)
         return linux_obj.get_process_id_by_pattern('netserver') is not None
 
