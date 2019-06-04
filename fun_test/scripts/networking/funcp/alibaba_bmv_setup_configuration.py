@@ -98,8 +98,8 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         # reboot PCIe connected servers and verify PCIe connections
-        abstract_json_file0 = fun_test.get_script_parent_directory() + '/alibaba_bmv_configs_f1_0.json'
-        abstract_json_file1 = fun_test.get_script_parent_directory() + '/alibaba_bmv_configs_f1_1.json'
+        abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/alibaba_bmv_configs_f1_0.json'
+        abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/alibaba_bmv_configs_f1_1.json'
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
