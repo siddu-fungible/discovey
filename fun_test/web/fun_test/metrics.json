@@ -600,6 +600,82 @@
             "weight": 1
           },
           {
+            "info": "Voltest",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Voltest",
+            "label": "Voltest",
+            "weight": 1,
+            "children": [
+              {
+                "info": "voltest_lsv",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "voltest_lsv",
+                "label": "LSV",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "voltest_lsv_1instances",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "voltest_lsv_1instances",
+                    "label": "1 Instance(s)",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "BLT IOPS",
+                        "metric_model_name": "VoltestLsvPerformance",
+                        "leaf": true,
+                        "name": "voltest_lsv_1instances_blt_iops",
+                        "label": "BLT: IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "BLT Bandwidth",
+                        "metric_model_name": "VoltestLsvPerformance",
+                        "leaf": true,
+                        "name": "voltest_lsv_1instances_blt_bandwidth",
+                        "label": "BLT: Bandwidth",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "voltest_lsv_4instances",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "voltest_lsv_4instances",
+                    "label": "4 Instance(s)",
+                    "weight": 1,
+                    "children": [
+                       {
+                        "info": "BLT IOPS",
+                        "metric_model_name": "VoltestLsv4Performance",
+                        "leaf": true,
+                        "name": "voltest_lsv_4instances_blt_iops",
+                        "label": "BLT: IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "BLT Bandwidth",
+                        "metric_model_name": "VoltestLsv4Performance",
+                        "leaf": true,
+                        "name": "voltest_lsv_4instances_blt_bandwidth",
+                        "label": "BLT: Bandwidth",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "info": "rcnvme",
             "metric_model_name": "MetricContainer",
             "leaf": false,
