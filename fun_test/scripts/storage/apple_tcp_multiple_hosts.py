@@ -497,7 +497,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
                 end_host.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
                 volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
-                end_host.end_host.sudo_command("dmesg")
+                end_host.sudo_command("dmesg")
                 lsblk_output = end_host.lsblk()
                 fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
