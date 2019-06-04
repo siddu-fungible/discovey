@@ -70,7 +70,7 @@ export class RegressionComponent implements OnInit {
   logDir: any;
   status: string = "Fetching Data";
   //stateFilter: string = null; //Filter.ALL;
-  //stateFilterString: string = null; //Filter.ALL;
+  stateFilterString: string = null;
   filter = Filter;
   stateStringMap: any = null;
   stateMap: any = null;
@@ -186,6 +186,7 @@ export class RegressionComponent implements OnInit {
 
       if (this.queryParameters.hasOwnProperty('state_filter')) {
         queryParams["state_filter"] = this.queryParameters["stateFilter"];
+        this.stateFilterString = this.stateStringMap[this.queryParameters['state_filter']];
       }
     }
     if (userSuppliedParams) {
