@@ -1,5 +1,5 @@
 {
-  "BLTFioRandRead12": {
+  "MultiBLTFioRandRead12": {
     "num_ssd": 12,
     "blt_count": 12,
     "blt_details": {
@@ -57,7 +57,7 @@
       },
     "host_count": 1
   },
-  "BLTFioRandWrite12": {
+  "MultiBLTFioRandWrite12": {
     "num_ssd": 12,
     "blt_count": 12,
     "blt_details": {
