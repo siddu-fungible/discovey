@@ -187,7 +187,7 @@ export class RegressionComponent implements OnInit {
       }
 
       if (this.queryParameters.hasOwnProperty('state_filter')) {
-        queryParams["state_filter"] = this.queryParameters["stateFilter"];
+        queryParams["state_filter"] = this.queryParameters["state_filter"];
         this.stateFilterString = this.stateStringMap[this.queryParameters['state_filter']];
       } else {
         this.stateFilterString = "ALL";
