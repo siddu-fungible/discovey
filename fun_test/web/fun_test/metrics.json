@@ -4248,42 +4248,42 @@
                     "label": "8_11_2:1024K_SEQ_W, F1(s)=1",
                     "children": [
                       {
-                        "info": "inspur_seq_write_qd1_1024k_block_output_iops",
+                        "info": "inspur_seq_write_qd1_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_seq_write_qd1_1024k_block_output_iops",
+                        "name": "inspur_seq_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
-                        "info": "inspur_seq_write_qd8_1024k_block_output_iops",
+                        "info": "inspur_seq_write_qd8_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_seq_write_qd8_1024k_block_output_iops",
+                        "name": "inspur_seq_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
-                        "info": "inspur_seq_write_qd16_1024k_block_output_iops",
+                        "info": "inspur_seq_write_qd16_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_seq_write_qd16_1024k_block_output_iops",
+                        "name": "inspur_seq_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
-                        "info": "inspur_seq_write_qd32_1024k_block_output_iops",
+                        "info": "inspur_seq_write_qd32_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_seq_write_qd32_1024k_block_output_iops",
+                        "name": "inspur_seq_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
-                        "info": "inspur_seq_write_qd64_1024k_block_output_iops",
+                        "info": "inspur_seq_write_qd64_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_seq_write_qd64_1024k_block_output_iops",
+                        "name": "inspur_seq_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
                       }
@@ -4298,42 +4298,42 @@
                     "label": "8_11_3:MIXED_RW, F1(s)=1",
                     "children": [
                       {
-                        "info": "inspur_mixed_read_write_qd1_block_output_iops",
+                        "info": "inspur_mixed_read_write_qd1_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_mixed_read_write_qd1_block_output_iops",
+                        "name": "inspur_mixed_read_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
-                        "info": "inspur_mixed_read_write_qd8_block_output_iops",
+                        "info": "inspur_mixed_read_write_qd8_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_mixed_read_write_qd8_block_output_iops",
+                        "name": "inspur_mixed_read_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
-                        "info": "inspur_mixed_read_write_qd16_block_output_iops",
+                        "info": "inspur_mixed_read_write_qd16_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_mixed_read_write_qd16_block_output_iops",
+                        "name": "inspur_mixed_read_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
-                        "info": "inspur_mixed_read_write_qd32_block_output_iops",
+                        "info": "inspur_mixed_read_write_qd32_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_mixed_read_write_qd32_block_output_iops",
+                        "name": "inspur_mixed_read_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
-                        "info": "inspur_mixed_read_write_qd64_block_output_iops",
+                        "info": "inspur_mixed_read_write_qd64_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_mixed_read_write_qd64_block_output_iops",
+                        "name": "inspur_mixed_read_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
                       }
@@ -4348,42 +4348,42 @@
                     "label": "8_11_4:OLTP_RW, F1(s)=1",
                     "children": [
                       {
-                        "info": "inspur_oltp_read_write_qd1_block_output_iops",
+                        "info": "inspur_oltp_read_write_qd1_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_oltp_read_write_qd1_block_output_iops",
+                        "name": "inspur_oltp_read_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
-                        "info": "inspur_oltp_read_write_qd8_block_output_iops",
+                        "info": "inspur_oltp_read_write_qd8_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_oltp_read_write_qd8_block_output_iops",
+                        "name": "inspur_oltp_read_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
-                        "info": "inspur_oltp_read_write_qd16_block_output_iops",
+                        "info": "inspur_oltp_read_write_qd16_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_oltp_read_write_qd16_block_output_iops",
+                        "name": "inspur_oltp_read_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
-                        "info": "inspur_oltp_read_write_qd32_block_output_iops",
+                        "info": "inspur_oltp_read_write_qd32_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_oltp_read_write_qd32_block_output_iops",
+                        "name": "inspur_oltp_read_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
-                        "info": "inspur_oltp_read_write_qd64_block_output_iops",
+                        "info": "inspur_oltp_read_write_qd64_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_oltp_read_write_qd64_block_output_iops",
+                        "name": "inspur_oltp_read_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
                       }
@@ -4398,42 +4398,42 @@
                     "label": "8_11_5:OLAP_RW, F1(s)=1",
                     "children": [
                       {
-                        "info": "inspur_olap_read_write_qd1_block_output_iops",
+                        "info": "inspur_olap_read_write_qd1_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_olap_read_write_qd1_block_output_iops",
+                        "name": "inspur_olap_read_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
-                        "info": "inspur_olap_read_write_qd8_block_output_iops",
+                        "info": "inspur_olap_read_write_qd8_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_olap_read_write_qd8_block_output_iops",
+                        "name": "inspur_olap_read_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
-                        "info": "inspur_olap_read_write_qd16_block_output_iops",
+                        "info": "inspur_olap_read_write_qd16_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_olap_read_write_qd16_block_output_iops",
+                        "name": "inspur_olap_read_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
-                        "info": "inspur_olap_read_write_qd32_block_output_iops",
+                        "info": "inspur_olap_read_write_qd32_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_olap_read_write_qd32_block_output_iops",
+                        "name": "inspur_olap_read_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
-                        "info": "inspur_olap_read_write_qd64_block_output_iops",
+                        "info": "inspur_olap_read_write_qd64_output_iops",
                         "metric_model_name": "BltVolumePerformance",
                         "leaf": true,
-                        "name": "inspur_olap_read_write_qd64_block_output_iops",
+                        "name": "inspur_olap_read_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
                       }

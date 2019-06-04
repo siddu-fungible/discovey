@@ -1318,7 +1318,7 @@ if __name__ == "__main_hu_hu_fcp__":
                             platform=FunPlatform.F1).save()
     print" added charts for HU_HU_FCP 2 F1s"
 
-if __name__ == "__main__":
+if __name__ == "__main_raw_block_nvmetcp__":
     internal_chart_names = ["rand_read_qd_nvmetcp_output_iops", "rand_write_qd_nvmetcp_output_iops"]
     multi_vol = "(N vols)"
     fio_read_job_names = ["fio_tcp_randread_blt_32_4_nvols", "fio_tcp_randread_blt_32_8_nvols"]
@@ -1348,5 +1348,10 @@ if __name__ == "__main__":
         chart.data_sets = json.dumps(data_sets)
         chart.save()
     print "added datasets for the raw block nvme tcp charts"
+
+if __name__ == "__main__":
+   internal_chart_names = ["inspur_", "_write_", "_output_iops"]
+   names = ["seq", "mixed_read", ""]
+
 
     
