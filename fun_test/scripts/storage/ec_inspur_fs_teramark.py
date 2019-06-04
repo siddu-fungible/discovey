@@ -716,7 +716,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
             if isinstance(self.fio_cmd_args, list):
-                fio_cmd_args = {}
+                fio_cmd_args = OrderedDict()
                 for arg in self.fio_cmd_args:
                     key = arg.keys()[0]
                     fio_cmd_args[key] = arg[key]
