@@ -118,11 +118,11 @@ def setup_hu_host(funeth_obj, update_driver=True):
 
         critical_log(funeth_obj.enable_multi_txq(hu, num_queues=8),
                      'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
-        critical_log(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(False)),
-                     'Configure HU host {} IPv4 routes.'.format(
-            linux_obj.host_ip))
         critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
+        critical_log(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(False)),
+                     'Configure HU host {} IPv4 routes.'.format(
+                         linux_obj.host_ip))
 
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
