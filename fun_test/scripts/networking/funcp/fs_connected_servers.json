@@ -1,24 +1,98 @@
 {
-  "fs":
-  {
-    "fs-48":
-    {
-      "cab02-qa-05":"x16",
-      "cab02-qa-06":"x16",
-      "cab02-qa-07":"x8",
-      "cab02-qa-08":"x16"
+  "fs": {
+    "fs-48": {
+      "cab02-qa-05": "x16",
+      "cab02-qa-06": "x16",
+      "cab02-qa-07": "x8",
+      "cab02-qa-08": "x16"
     },
-    "fs-60":
-    {
-      "cab02-qa-01":"x16",
-      "cab02-qa-02":"x16",
-      "cab02-qa-03":"x8",
-      "cab02-qa-04":"x16"
+    "fs-60": {
+      "cab02-qa-01": "x16",
+      "cab02-qa-02": "x16",
+      "cab02-qa-03": "x8",
+      "cab02-qa-04": "x16"
     },
-    "fs-45":
-    {
-      "cab03-qa-01":"x16",
-      "cab03-qa-02":"x8"
+    "fs-45": {
+      "cab03-qa-01": "x16"
+    }
+  },
+  "LocalSSDTest": {
+    "come_ip": "10.1.105.165",
+    "dpc_p0": 40220,
+    "command_timeout": "5",
+    "num_host": 1,
+    "num_vf": 0,
+    "f1_num_vf": 0,
+    "num_namespace": 1,
+    "capacity": 5368709120,
+    "block_size": 4096,
+    "controllers": {},
+    "ip": "18.1.1.1",
+    "port": 4420,
+    "huid": 2,
+    "ctlid": 0,
+    "fnid": 2,
+    "transport": "PCI",
+    "uname": "localadmin",
+    "pwd": "Precious1*",
+    "server": "cab03-qa-01",
+    "mode": [
+      "write",
+      "read"
+    ],
+    "num_jobs": 1,
+    "iodepth": 16
+  },
+  "RemoteSSDTest": {
+    "come_ip": "10.1.105.165",
+    "dpc_p0": 40220,
+    "dpc_p1": 40221,
+    "command_timeout": "5",
+    "num_host": 1,
+    "num_vf": 0,
+    "f1_num_vf": 0,
+    "num_namespace": 1,
+    "capacity": 5368709120,
+    "block_size": 4096,
+    "controllers": {},
+    "ip": "19.1.1.1",
+    "remote_ip": "18.1.1.1",
+    "remote_ip_rds": "19.1.1.1",
+    "port": 4420,
+    "huid": 0,
+    "ctlid": 1,
+    "fnid": 2,
+    "transport": "RDS",
+    "uname": "localadmin",
+    "pwd": "Precious1*",
+    "server": "cab03-qa-01"
+  },
+  "static_routes": {
+    "fs-45": {
+      "F1-0": {
+        "1": {
+          "gateway": "1.1.1.1",
+          "port": "fpg8",
+          "route": "19.1.1.0/24"
+        },
+        "2": {
+          "gateway": "1.1.1.1",
+          "port": "fpg8",
+          "route": "30.1.1.0/24"
+        }
+      },
+      "F1-1": {
+        "1": {
+          "gateway": "1.1.2.1",
+          "port": "fpg0",
+          "route": "18.1.1.0/24"
+        },
+        "2": {
+          "gateway": "1.1.2.1",
+          "port": "fpg0",
+          "route": "30.1.1.0/24"
+        }
+      }
     }
   }
 }
