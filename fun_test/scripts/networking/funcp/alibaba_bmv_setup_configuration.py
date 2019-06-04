@@ -118,13 +118,13 @@ class NicEmulation(FunTestCase):
         funcp_obj.test_cc_pings_fs()
 
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs("FS45")
+        tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False)
 
-        # get ethtool output
-        get_ethtool_on_host(funeth_obj)
+        # get ethtool output TODO : IFCONFIG, lspci
+        get_ethtool_on_hu_host(funeth_obj)
 
         # Ping hosts
 
