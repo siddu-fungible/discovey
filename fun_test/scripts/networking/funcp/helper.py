@@ -127,6 +127,12 @@ def setup_hu_host(funeth_obj, update_driver=True):
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
 
+def get_ethtool_on_host(funeth_obj):
+    for hu in funeth_obj.hu_hosts:
+        funeth_obj.get_ethtool_stats(hu)
+        bus = funeth_obj.get_bus_info_from_ethtool(hu)
+
+
 def critical_log(expression, message):
     if expression:
 

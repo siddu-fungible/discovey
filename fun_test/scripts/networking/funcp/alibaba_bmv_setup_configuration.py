@@ -70,8 +70,9 @@ class BringupSetup(FunTestCase):
         # Bringup FunCP
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
-
         funcp_obj.assign_mpg_ips(static=True, f1_1_mpg="10.1.105.172", f1_0_mpg="10.1.105.173")
+
+        # funcp_obj.fetch_mpg_ips() #Only if not running the full script
 
     def cleanup(self):
 
@@ -122,9 +123,11 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False)
 
-        # TODO : add ethtool output
-        # funcp_obj.fetch_mpg_ips() #Only if not running the full script
-        # execute abstract file
+        # get ethtool output
+        get_ethtool_on_host(funeth_obj)
+
+        # Ping hosts
+
         test_host_pings(hostnames=servers_list, ips=["18.1.1.2", "30.1.1.2"])
 
     def cleanup(self):
