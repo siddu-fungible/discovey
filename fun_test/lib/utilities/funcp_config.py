@@ -418,7 +418,7 @@ class FunControlPlaneBringup:
                 linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                                  ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                                  ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-                output = linux_obj.command("ping -c 1 -I %s %s " % (self.vlan1_ips[host.rstrip()], self.vlan1_ips[docker]))
+                output = linux_obj.command("ping -c 5 -I %s %s " % (self.vlan1_ips[host.rstrip()], self.vlan1_ips[docker]))
 
                 linux_obj.disconnect()
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
