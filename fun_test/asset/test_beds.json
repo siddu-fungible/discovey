@@ -338,6 +338,66 @@
       }
     }
   },
+  "fs-48": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-48",
+        "pcie_interface_info": {
+          "0": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "cab02-qa-05"
+            }
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "4": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "cab02-qa-06"
+            }
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "8": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "cab02-qa-07"
+            }
+          },
+          "9": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 9
+          }
+        }
+      } 
+    }
+  },
+
   "fs-20": {
     "dut_info": {
       "0": {
