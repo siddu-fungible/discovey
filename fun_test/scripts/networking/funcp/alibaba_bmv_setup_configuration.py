@@ -103,17 +103,22 @@ class NicEmulation(FunTestCase):
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
+        server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
+        routes = server_key["static_routes"][fs_name]
+        funcp_obj.add_routes_on_f1(routes_dict=routes)
+
+        # Ping QFX from both F1s
+        # Ping vlan to vlan
+
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs("FS45")
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False)
+
         # TODO : add ethtool output
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script
         # execute abstract file
-        server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
-        routes = server_key["static_routes"][fs_name]
-        funcp_obj.add_routes_on_f1(routes_dict=routes)
         test_host_pings(hostnames=servers_list, ips=["18.1.1.2", "30.1.1.2"])
 
         # funcp_obj.test_cc_pings_fs() # TODO : check ping: -I, -L, -T flags cannot be used with unicast destination
