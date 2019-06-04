@@ -350,43 +350,27 @@ class FunControlPlaneBringup:
             self.mpg_ips[str(docker_name.rstrip())] = mpg_ip
             linux_obj.disconnect()
 
-    def add_routes_on_f1(self, f1_0, f1_1, f1_0_outgoing, f1_1_outgoing):
+    def add_routes_on_f1(self, routes_dict):
         self._get_docker_names()
-
         for docker_name in self.docker_names:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-
-            if docker_name.rstrip().endswith("0"):
-                for ip in f1_0:
-                    try:
-                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
-                        linux_obj.command(command="sudo ip route add %s via %s dev %s" % (ip, f1_0_outgoing[1],
-                                                                                          f1_0_outgoing[0]))
-                        linux_obj.command(command="route -n")
-                        linux_obj.disconnect()
-                    except:
-                        linux_obj.disconnect()
-                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
-                        op = linux_obj.command(command="route -n")
-                        fun_test.log(op)
-                        fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
-
-            elif docker_name.rstrip().endswith("1"):
-                for ip in f1_1:
-                    try:
-                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
-                        linux_obj.command(command="sudo ip route add %s via %s dev %s" % (ip, f1_1_outgoing[1],
-                                                                                          f1_1_outgoing[0]))
-                        linux_obj.command(command="route -n")
-                        linux_obj.disconnect()
-                    except:
-                        linux_obj.disconnect()
-                        linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
-                        op = linux_obj.command(command="route -n")
-                        fun_test.log(op)
-                        fun_test.test_assert(expression=ip[:-3] in op, message="Route Added")
+            routes = routes_dict[docker_name.rstrip()]
+            for num in routes:
+                try:
+                    linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+                    linux_obj.command(command="sudo ip route add %s via %s dev %s" % (routes[num]["route"],
+                                                                                      routes[num]["gateway"],
+                                                                                      routes[num]["port"]))
+                    linux_obj.command(command="route -n")
+                    linux_obj.disconnect()
+                except:
+                    linux_obj.disconnect()
+                    linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+                    op = linux_obj.command(command="route -n")
+                    fun_test.log(op)
+                    fun_test.test_assert(expression=routes[num]["route"][:-3] in op, message="Route Added")
 
             linux_obj.disconnect()
 
