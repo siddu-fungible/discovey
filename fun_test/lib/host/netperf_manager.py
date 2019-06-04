@@ -208,7 +208,8 @@ class NetperfManager:
         # Do throughput test first, and latency test last
         #for measure_latency in (False, True):
         # Test - 1: throughput only, 2: latency only, 3: latency under throughput load
-        for test in (1, 2, 3, ):
+        #for test in (1, 2, 3, ):
+        for test in (2, 3, ):
             if test == 2:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=True)
@@ -314,18 +315,18 @@ class NetperfManager:
 
                 elif test == 3:
                     # throughput
-                    #throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT, NA) != NA)
-                    #if not throughput:
-                    #    result[direction].update(
-                    #        {THROUGHPUT: NA}
-                    #    )
-                    #else:
-                    #    result[direction].update(
-                    #        {THROUGHPUT: calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
-                    #         PPS: calculate_pps(protocol, frame_size, throughput),
-                    #        }
-                    #    )
-                    #fun_test.log('NetperfManager throughput result\n{}'.format(result))
+                    throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT, NA) != NA)
+                    if not throughput:
+                        result[direction].update(
+                            {THROUGHPUT: NA}
+                        )
+                    else:
+                        result[direction].update(
+                            {THROUGHPUT: calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
+                             PPS: calculate_pps(protocol, frame_size, throughput),
+                            }
+                        )
+                    fun_test.log('NetperfManager throughput result\n{}'.format(result))
                     # latency
                     lat_dict = rdict[direction][-1]  # latency result is the last element
                     for k, v in lat_dict.items():
