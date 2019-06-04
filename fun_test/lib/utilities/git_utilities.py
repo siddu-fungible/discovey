@@ -23,6 +23,26 @@ class GitManager:
     ORG = "fungible-inc"
     TOKEN = "6e7ab48474553bbabceeefde388339204ecd6c0f"
 
+    def get_tags(self, repository_name="FunOS"):
+        url = "{}/repos/{}/{}".format(self.BASE_URL, self.ORG, repository_name)
+        url = "{}/repos/fungible-inc/FunOS/tags?since=2019-05-22T21:22:00Z".format(self.BASE_URL)
+
+        r = requests.get(url=url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
+        all_tags = []
+        for page_index in range(1, 10):
+            page_url = url + "&page={}&per_page={}".format(page_index, 100)
+            r = requests.get(url=page_url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
+            if r.status_code == 200:
+                response = r.json()
+                # response = [x for x in response if len(x["parents"]) > 1]
+                # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
+                # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
+                all_tags.extend(response)
+
+        for tag in all_tags:
+            print tag["name"], tag["commit"]["sha"]
+
+
     def get_all_commits(self, repository_name="FunOS", from_sha=None, since=None, until=None):
         results = None
         url = "{}/repos/{}/{}/commits".format(self.BASE_URL, self.ORG, repository_name)
@@ -87,7 +107,15 @@ if __name__ == "__main__":
     from_sha = "a11bab8"
     to_sha = "178b6eb"
 
+    gm.get_tags()
+
+    """
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))
     for commit in commits:
         print commit.sha, commit.date
+    """
+
+
+s1 = "2019-05-22T21:22:00Z"
+s2 = "2019-05-25T06:22:45Z"
