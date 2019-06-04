@@ -600,7 +600,6 @@
             "weight": 1
           },
           {
-            "info": "Voltest",
             "metric_model_name": "MetricContainer",
             "leaf": false,
             "name": "Voltest",
@@ -608,7 +607,6 @@
             "weight": 1,
             "children": [
               {
-                "info": "voltest_lsv",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "voltest_lsv",
@@ -616,7 +614,6 @@
                 "weight": 1,
                 "children": [
                   {
-                    "info": "voltest_lsv_1instances",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
                     "name": "voltest_lsv_1instances",
@@ -624,7 +621,6 @@
                     "weight": 1,
                     "children": [
                       {
-                        "info": "BLT IOPS",
                         "metric_model_name": "VoltestLsvPerformance",
                         "leaf": true,
                         "name": "voltest_lsv_1instances_blt_iops",
@@ -633,7 +629,6 @@
                         "weight": 1
                       },
                       {
-                        "info": "BLT Bandwidth",
                         "metric_model_name": "VoltestLsvPerformance",
                         "leaf": true,
                         "name": "voltest_lsv_1instances_blt_bandwidth",
@@ -644,7 +639,6 @@
                     ]
                   },
                   {
-                    "info": "voltest_lsv_4instances",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
                     "name": "voltest_lsv_4instances",
@@ -652,7 +646,6 @@
                     "weight": 1,
                     "children": [
                        {
-                        "info": "BLT IOPS",
                         "metric_model_name": "VoltestLsv4Performance",
                         "leaf": true,
                         "name": "voltest_lsv_4instances_blt_iops",
@@ -661,7 +654,6 @@
                         "weight": 1
                       },
                       {
-                        "info": "BLT Bandwidth",
                         "metric_model_name": "VoltestLsv4Performance",
                         "leaf": true,
                         "name": "voltest_lsv_4instances_blt_bandwidth",

@@ -103,8 +103,6 @@ class SiteState():
 
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
-            if "info" in metric:
-                description = metric["info"]
             # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
             m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
             m.chart_name = metric["label"]
@@ -170,7 +168,6 @@ class SiteState():
         with open(METRICS_BASE_DATA_FILE, "r") as f:
             metrics = json.load(f)
             all_metrics_metric = {
-                "info": "All metrics",
                 "metric_model_name": "MetricContainer",
                 "leaf": False,
                 "name": "All metrics",
