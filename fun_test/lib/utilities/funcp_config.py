@@ -36,7 +36,7 @@ class FunControlPlaneBringup:
         self.abstract_configs_f1_1 = None
         self.mpg_ips = {}
         self.docker_names = []
-        self.vlan1_ips = []
+        self.vlan1_ips = {}
 
     def boot_both_f1(self, power_cycle_come=True, reboot_come=True, gatewayip=None, funcp_cleanup=False):
         fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
@@ -409,16 +409,16 @@ class FunControlPlaneBringup:
     def test_cc_pings_fs(self):
         self._get_docker_names()
         self._get_vlan1_ips()
-        linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                          ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                          ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+
         for host in self.docker_names:
 
             for docker in self.vlan1_ips:
                 result = False
                 percentage_loss = 100
-                linux_obj.command(command="docker exec -it " + host.rstrip() + " bash", timeout=300)
-                output = linux_obj.command("ping -c 1 -I %s %s " % (self.vlan1_ips[host], self.vlan1_ips[docker]))
+                linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
+                                                 ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                                 ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+                output = linux_obj.command("ping -c 1 -I %s %s " % (self.vlan1_ips[host.rstrip()], self.vlan1_ips[docker]))
 
                 linux_obj.disconnect()
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
@@ -426,59 +426,46 @@ class FunControlPlaneBringup:
                     percentage_loss = int(m.group(1))
                 if percentage_loss <= 50:
                     result = True
-                fun_test.log(str(result) + "for" + docker)
-        '''for host in self.docker_names:
+                if result:
+                    print("#########################################")
+                    fun_test.add_checkpoint("<b>Container %s can ping %s</b>" % (host.rstrip(), self.vlan1_ips[host]))
+                    print("#########################################")
+                else:
+                    fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), self.vlan1_ips[host]))
 
-            for ips in self.vlan1_ips:
-                linux_obj.command(command="docker exec -it " + host.rstrip() + " bash", timeout=300)
-                count = 0
-                while True:
-                    count += 1
-                    ping_cmd = "ping -c 1 -I %s %s" % (self.vlan1_ips[host], self.vlan1_ips[ips])
-                    response = os.system(ping_cmd)
-                    if count > 5:
-                        return False
-                    if response == 0:
-                        return True
-                    else:
-                        "Cannot ping destination IP"
-                        fun_test.sleep(seconds=2, message="Trying again")
-        '''
 
-    def test_cc_pings_remote_fs(self, dest_ips):
-        self._get_docker_names()
+    def test_cc_pings_remote_fs(self, dest_ips, docker_name=None):
+        if not docker_name:
+            self._get_docker_names()
         self._get_vlan1_ips()
-        linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                          ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                          ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        for host in self.docker_names:
-            linux_obj.command(command="docker exec -it " + host.rstrip() + " bash", timeout=300)
 
+        docker_list = []
+        if docker_name:
+            docker_list.append(docker_name)
+        else:
+            docker_list = self.docker_names
+
+        for host in docker_list:
+            linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
+                                             ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                             ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                command = "ping -c 1 -I %s %s " % (self.vlan1_ips[host], ips)
+                command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host], ips)
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:
                     percentage_loss = int(m.group(1))
                 if percentage_loss <= 50:
                     result = True
-                fun_test.log(result + "for" + ips)
-                '''
-                count = 0
-                while True:
-                    count += 1
-                    response = os.system("ping -c 1 -I %s %s " % (self.vlan1_ips[host], ips))
-                    if count > 5:
-                        return False
-                    if response == 0:
-                        return True
-                    else:
-                        "Cannot ping destination IP"
-                        fun_test.sleep(seconds=2, message="Trying again")
-                '''
-
+                if result:
+                    print("#########################################")
+                    fun_test.log("<b>Container %s can ping %s</b>" % (host.rstrip(), ips))
+                    print("#########################################")
+                else:
+                    fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), ips))
+            linux_obj.disconnect()
 
     def _get_vlan1_ips(self):
         self.vlan1_ips = {}
