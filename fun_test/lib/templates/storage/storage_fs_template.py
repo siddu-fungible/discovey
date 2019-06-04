@@ -393,7 +393,7 @@ class StorageFsTemplate(object):
         response = self.come_obj.command(self.PREPARE_CMD, timeout=self.DEFAULT_TIMEOUT)
         sections = ["Cloning into 'FunSDK'",
                     "Cloning into 'fungible-host-drivers'",
-                    "Cloning into 'FunControlPlane'",
+                    # "Cloning into 'FunControlPlane'",
                     "Prepare End"]
         for sect in sections:
             if sect not in response:
