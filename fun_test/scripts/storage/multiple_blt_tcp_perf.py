@@ -503,11 +503,11 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                              format(mode, fio_block_size, fio_numjobs, fio_iodepth))
 
                 if int(fio_numjobs) == 1:
-                    cpus_allowed = "0"
+                    cpus_allowed = "1"
                 elif int(fio_numjobs) == 4:
-                    cpus_allowed = "0-3"
+                    cpus_allowed = "1-4"
                 elif int(fio_numjobs) >= 8:
-                    cpus_allowed = "0-19,40-59"
+                    cpus_allowed = "1-19,40-59"
 
                 # Flush cache before read test
                 self.end_host.sudo_command("sync")
