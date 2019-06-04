@@ -1244,7 +1244,7 @@ if __name__ == "__main_durable_tcp__":
                                 platform=FunPlatform.F1).save()
     print "added charts for durable volume ec nvmetcp"
 
-if __name__ == "__main__":
+if __name__ == "__main_hu_hu_fcp__":
     num_hosts = [1, 2]
     num_flows = [1, 8]
     flow_type = "HU_HU_FCP"
@@ -1317,5 +1317,8 @@ if __name__ == "__main__":
                             work_in_progress=False,
                             platform=FunPlatform.F1).save()
     print" added charts for HU_HU_FCP 2 F1s"
+
+if __name__ == "__main__":
+
 
     
