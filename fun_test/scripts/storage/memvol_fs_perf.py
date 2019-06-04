@@ -238,12 +238,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Configuring Local thin block volume
             command_result = {}
-            command_result = self.storage_controller.command(command="enable_counters", legacy=True,
-                                                             command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")
-
-            command_result = {}
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_volume(type=self.volume_details["type"],

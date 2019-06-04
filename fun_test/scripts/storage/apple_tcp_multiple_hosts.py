@@ -465,44 +465,45 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fun_test.log("DPC config done")
 
             # Checking that the above created striped volume is visible to the end host
-            end_host = self.end_host_list[0]
-            end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+            for host_index in range(0, self.host_count, 1):
+                end_host = self.end_host_list[host_index]
+                self.nqn = "nqn" + str(host_index + 1)
 
-            # Load nvme and nvme_tcp modules
-            command_result = end_host.command("lsmod | grep -w nvme")
-            if "nvme" in command_result:
-                fun_test.log("nvme driver is loaded")
-            else:
-                fun_test.log("Loading nvme")
-                end_host.modprobe("nvme")
-            command_result = end_host.lsmod("nvme_tcp")
-            if "nvme_tcp" in command_result:
-                fun_test.log("nvme_tcp driver is loaded")
-            else:
-                fun_test.log("Loading nvme_tcp")
-                end_host.modprobe("nvme_tcp")
+                end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+                end_host.sudo_command("/etc/init.d/irqbalance stop")
+                irq_bal_stat = end_host.command("/etc/init.d/irqbalance status")
+                if "dead" in irq_bal_stat:
+                    fun_test.log("IRQ balance stopped on {}".format(host_index))
+                else:
+                    fun_test.log("IRQ balance not stopped on {}".format(host_index))
+                    end_host.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
 
-            fun_test.log("Drivers loaded on hosts")
-            end_host = self.end_host_list[0]
-            end_host.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
-            end_host.sudo_command(
-                "nvme connect -t tcp -a {} -s {} -n nqn1 -q {}".
-                format(tb_config['dut_info'][0]['f1_ip'],
-                       tb_config['dut_info'][0]['tcp_port'],
-                       tb_config['tg_info'][0]['iface_ip']))
-            fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
-            end_host.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
-            volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
-            lsblk_output = end_host.lsblk()
-            fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                          message="{} device type check".format(volume_name))
+                # Load nvme_tcp module
+                command_result = end_host.lsmod("nvme_tcp")
+                if "nvme_tcp" in command_result:
+                    fun_test.log("nvme_tcp driver is loaded")
+                else:
+                    fun_test.log("Loading nvme_tcp")
+                    end_host.modprobe("nvme_tcp")
+
+                fun_test.log("Drivers loaded on host {}".format(host_index))
+                end_host.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+                end_host.sudo_command(
+                    "nvme connect -t tcp -a {} -s {} -n {} -q {}".
+                    format(tb_config['dut_info'][0]['f1_ip'],
+                           tb_config['dut_info'][0]['tcp_port'],
+                           self.nqn,
+                           tb_config['tg_info'][host_index]['iface_ip']))
+                fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
+                end_host.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
+                volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
+                end_host.sudo_command("dmesg")
+                lsblk_output = end_host.lsblk()
+                fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
+                fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
+                                              message="{} device type check".format(volume_name))
 
             fun_test.log("Connect done")
-            if self.warm_up_traffic and not self.create_file_system:
-                fun_test.log("Condition the disk")
-                # fio_output = end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
-                # fun_test.test_assert(fio_output, "Pre-populating the disk")
 
     def run(self):
 
@@ -511,52 +512,12 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
         # Create filesystem
         if hasattr(self, "create_file_system") and self.create_file_system:
-            self.end_host_list[0].sudo_command("/etc/init.d/irqbalance stop")
-            irq_bal_stat = self.end_host_list[0].command("/etc/init.d/irqbalance status")
-            if "dead" in irq_bal_stat:
-                fun_test.log("IRQ balance stopped on 0")
-            else:
-                fun_test.log("IRQ balance not stopped on 0")
-            self.end_host_list[0].sudo_command("tuned-adm profile network-throughput && tuned-adm active")
             self.end_host_list[0].sudo_command("mkfs.xfs -f {}".format(self.nvme_block_device))
             self.end_host_list[0].sudo_command("mount {} /mnt".format(self.nvme_block_device))
             fun_test.log("Creating a testfile on XFS volume")
             fio_output = self.end_host_list[0].pcie_fio(filename="/mnt/testfile.dat", **self.warm_up_fio_cmd_args)
             fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
             self.end_host_list[0].sudo_command("umount /mnt")
-
-        # NVMe connect from rest of the host
-        for host_index in range(1, self.host_count):
-            self.nqn = "nqn" + str(host_index + 1)
-            end_host = self.end_host_list[host_index]
-            command_result = end_host.lsmod("nvme_tcp")
-            if "nvme_tcp" in command_result:
-                fun_test.log("nvme_tcp driver is loaded")
-            else:
-                fun_test.log("Loading nvme_tcp")
-                end_host.modprobe("nvme_tcp")
-            end_host.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-            end_host.sudo_command("/etc/init.d/irqbalance stop")
-            irq_bal_stat = end_host.command("/etc/init.d/irqbalance status")
-            if "dead" in irq_bal_stat:
-                fun_test.log("IRQ balance stopped on {}".format(host_index))
-            else:
-                fun_test.log("IRQ balance not stopped on {}".format(host_index))
-            end_host.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
-            end_host.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
-            end_host.sudo_command("nvme connect -t tcp -a {} -s {} -n {} -q {}".
-                                  format(tb_config['dut_info'][0]['f1_ip'],
-                                         tb_config['dut_info'][0]['tcp_port'],
-                                         self.nqn,
-                                         tb_config['tg_info'][host_index]['iface_ip']))
-            fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
-            end_host.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
-            volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.stripe_details["ns_id"])
-            end_host.sudo_command("dmesg")
-            lsblk_output = end_host.lsblk()
-            fun_test.test_assert(volume_name in lsblk_output, "{} device available".format(volume_name))
-            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                          message="{} device type check".format(volume_name))
 
         # Mount NVMe disk on all hosts in Read-Only mode
         for end_host in self.end_host_list:
@@ -632,7 +593,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                         sleep_time=int(self.fio_cmd_args["runtime"]/1.5),
                         iostat_interval=self.iostat_details["interval"],
                         iostat_iter=int(self.fio_cmd_args["runtime"] - int(self.fio_cmd_args["runtime"]/1.5)) / self.iostat_details["interval"],
-                        iostat_timeout=self.fio_cmd_args["runtime"])
+                        iostat_timeout=self.fio_cmd_args["timeout"])
 
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_multi_host_" + mode + "_host_" + str(thread_count)\
