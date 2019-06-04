@@ -428,11 +428,12 @@ class FunControlPlaneBringup:
                     result = True
                 if result:
                     print("#########################################")
-                    fun_test.add_checkpoint("<b>Container %s can ping %s</b>" % (host.rstrip(), self.vlan1_ips[host]))
+                    fun_test.add_checkpoint("<b>Container %s can ping %s</b>" % (host.rstrip(),
+                                                                                 self.vlan1_ips[host.rstrip()]))
                     print("#########################################")
                 else:
-                    fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), self.vlan1_ips[host]))
-
+                    fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(),
+                                                                               self.vlan1_ips[host.rstrip()]))
 
     def test_cc_pings_remote_fs(self, dest_ips, docker_name=None):
         if not docker_name:
@@ -452,7 +453,7 @@ class FunControlPlaneBringup:
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host], ips)
+                command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host.rstrip()], ips)
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:
