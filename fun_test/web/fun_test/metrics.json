@@ -1,27 +1,23 @@
 [
   {
     "metric_model_name": "MetricContainer",
-    "leaf": false,
     "name": "Total",
     "label": "F1",
     "children": [
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "Networking",
         "label": "Networking",
         "weight": 1,
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Lookup-engine",
             "label": "Lookup-engine",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
                 "name": "HT HBM non-coherent - FP HBM non-coherent",
                 "label": "HT HBM non-coherent - FP HBM non-coherent",
                 "children": [],
@@ -29,7 +25,6 @@
               },
               {
                 "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
                 "name": "HT HBM coherent - FP HBM coherent",
                 "label": "HT HBM coherent - FP HBM coherent",
                 "children": [],
@@ -37,7 +32,6 @@
               },
               {
                 "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
                 "name": "HT DDR non-coherent - FP DDR non-coherent",
                 "label": "HT DDR non-coherent - FP DDR non-coherent",
                 "children": [],
@@ -45,7 +39,6 @@
               },
               {
                 "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
                 "name": "HT DDR coherent - FP DDR coherent",
                 "label": "HT DDR coherent - FP DDR coherent",
                 "children": [],
@@ -53,7 +46,6 @@
               },
               {
                 "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
                 "name": "TCAM",
                 "label": "TCAM",
                 "children": [],
@@ -63,49 +55,42 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "funtcp",
             "weight": 1,
             "label": "FunTCP",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "funtcp_server",
                 "weight": 1,
                 "label": "TCP Server",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "funtcp_server_throughput",
                     "weight": 1,
                     "label": "Throughput",
                     "children": [
                       {
                         "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
                         "name": "funtcp_server_throughput_1tcp",
                         "weight": 1,
                         "label": "1 TCP Flow(s)"
                       },
                       {
                         "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
                         "name": "funtcp_server_throughput_4tcp",
                         "weight": 1,
                         "label": "4 TCP Flow(s)"
                       },
                       {
                         "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
                         "name": "funtcp_server_throughput_8tcp",
                         "weight": 1,
                         "label": "8 TCP Flow(s)"
                       },
                       {
                         "metric_model_name": "TeraMarkFunTcpThroughputPerformance",
-                        "leaf": true,
                         "name": "funtcp_server_throughput_16tcp",
                         "weight": 1,
                         "label": "16 TCP Flow(s)"
@@ -114,21 +99,18 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "funtcp_server_cps",
                     "weight": 1,
                     "label": "Connections per second",
                     "children": [
                       {
                         "metric_model_name": "TeraMarkFunTcpConnectionsPerSecondPerformance",
-                        "leaf": true,
                         "name": "funtcp_server_cps_close_reset",
                         "weight": 1,
                         "label": "Close Reset"
                       },
                       {
                         "metric_model_name": "TeraMarkFunTcpConnectionsPerSecondPerformance",
-                        "leaf": true,
                         "name": "funtcp_server_cps_close_fin",
                         "weight": 1,
                         "label": "Close Fin"
@@ -137,7 +119,6 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "funtcp_server_cc",
                     "weight": 0,
                     "label": "Concurrent Connections",
@@ -149,35 +130,30 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "NU",
             "weight": 1,
             "label": "NU",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "NU_NU",
                 "weight": 1,
                 "label": "NU->NU",
                 "children": [
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "NU_NU_output_throughput",
                     "weight": 1,
                     "label": "Throughput"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "NU_NU_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "NU_NU_output_latency_avg",
                     "weight": 1,
                     "label": "Latency"
@@ -188,14 +164,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "HU",
             "weight": 1,
             "label": "HU",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_NU_NFCP_non_teramark",
                 "weight": 1,
                 "label": "Host->Network",
@@ -205,35 +179,30 @@
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_NU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
                     "label": "1 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -244,7 +213,6 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "NU_HU_NFCP_non_teramark",
                 "weight": 1,
                 "label": "Network->Host",
@@ -254,35 +222,30 @@
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "NU_HU_NFCP_1TCP_offloads_disabled",
                     "weight": 1,
                     "label": "1 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -293,7 +256,6 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_HU_NFCP_teramark",
                 "weight": 1,
                 "label": "Host->Host (1 F1)",
@@ -301,7 +263,6 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_HU_NFCP_2f1_teramark",
                 "weight": 0,
                 "label": "Host->Host (2 F1s)",
@@ -309,7 +270,6 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_HU_FCP_2f1_teramark",
                 "weight": 1,
                 "label": "Host->Host FCP (2 F1s)",
@@ -319,35 +279,30 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "HNU",
             "weight": 1,
             "label": "HNU",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "NU_HNU",
                 "weight": 1,
                 "label": "NU->HNU",
                 "children": [
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "NU_HNU_output_throughput",
                     "weight": 1,
                     "label": "Throughput"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "NU_HNU_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "NU_HNU_output_latency_avg",
                     "weight": 1,
                     "label": "Latency"
@@ -356,28 +311,24 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HNU_HNU",
                 "weight": 1,
                 "label": "HNU<->HNU",
                 "children": [
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "HNU_HNU_output_throughput",
                     "weight": 1,
                     "label": "Throughput"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "HNU_HNU_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "HNU_HNU_output_latency_avg",
                     "weight": 1,
                     "label": "Latency"
@@ -386,28 +337,24 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HNU_NU",
                 "weight": 1,
                 "label": "HNU->NU",
                 "children": [
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "HNU_NU_output_throughput",
                     "weight": 1,
                     "label": "Throughput"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "HNU_NU_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
                   },
                   {
                     "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
                     "name": "HNU_NU_output_latency_avg",
                     "weight": 1,
                     "label": "Latency"
@@ -418,14 +365,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "non_teramarks_customer",
             "weight": 1,
             "label": "Customer",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "non_teramarks_customer_juniper",
                 "weight": 1,
                 "label": "Juniper",
@@ -435,35 +380,30 @@
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "juniper_NU_VP_NU_FWD_NFCP",
                     "weight": 1,
                     "label": "Basic FWD",
                     "children": [
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
                         "weight": 1,
                         "label": "Latency - Full Load"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
                         "weight": 1,
                         "label": "Latency - Half Load"
@@ -472,35 +412,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "juniper_NU_LE_VP_NU_FW",
                     "weight": 1,
                     "label": "Flow Based Firewall, HBM",
                     "children": [
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
                         "weight": 1,
                         "label": "Latency - Full Load"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
                         "weight": 1,
                         "label": "Latency - Half Load"
@@ -511,7 +446,6 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "non_teramarks_customer_alibaba",
                 "weight": 0,
                 "label": "Alibaba",
@@ -526,13 +460,11 @@
       },
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "Storage",
         "label": "Storage",
         "children": [
           {
             "metric_model_name": "FlowTestPerformance",
-            "leaf": true,
             "name": "flow_test",
             "label": "Flowtest",
             "children": [],
@@ -540,7 +472,6 @@
           },
           {
             "metric_model_name": "F1FlowTestPerformance",
-            "leaf": true,
             "name": "flow_test_f1",
             "label": "Flowtest on F1",
             "children": [],
@@ -548,28 +479,24 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Voltest",
             "label": "Voltest",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "voltest_lsv",
                 "label": "LSV",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "voltest_lsv_1instances",
                     "label": "1 Instance(s)",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "VoltestLsvPerformance",
-                        "leaf": true,
                         "name": "voltest_lsv_1instances_blt_iops",
                         "label": "BLT: IOPS",
                         "children": [],
@@ -577,7 +504,6 @@
                       },
                       {
                         "metric_model_name": "VoltestLsvPerformance",
-                        "leaf": true,
                         "name": "voltest_lsv_1instances_blt_bandwidth",
                         "label": "BLT: Bandwidth",
                         "children": [],
@@ -587,14 +513,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "voltest_lsv_4instances",
                     "label": "4 Instance(s)",
                     "weight": 1,
                     "children": [
-                       {
+                      {
                         "metric_model_name": "VoltestLsv4Performance",
-                        "leaf": true,
                         "name": "voltest_lsv_4instances_blt_iops",
                         "label": "BLT: IOPS",
                         "children": [],
@@ -602,7 +526,6 @@
                       },
                       {
                         "metric_model_name": "VoltestLsv4Performance",
-                        "leaf": true,
                         "name": "voltest_lsv_4instances_blt_bandwidth",
                         "label": "BLT: Bandwidth",
                         "children": [],
@@ -616,28 +539,24 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "rcnvme",
             "label": "RCNVME",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "rcnvme_single_drive",
                 "label": "Single Drive",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_sequential_read",
                     "label": "Sequential Read",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_sequential_read_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -645,7 +564,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_sequential_read_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -653,7 +571,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_sequential_read_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -663,14 +580,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_random_read",
                     "label": "Random Read",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_random_read_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -678,7 +593,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_random_read_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -686,7 +600,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_random_read_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -696,14 +609,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_sequential_write",
                     "label": "Sequential Write",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_sequential_write_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -711,7 +622,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_sequential_write_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -719,7 +629,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_sequential_write_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -729,14 +638,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_random_write",
                     "label": "Random Write",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_random_write_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -744,7 +651,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_random_write_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -752,7 +658,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWritePerformance",
-                        "leaf": true,
                         "name": "rcnvme_random_write_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -764,21 +669,18 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "rcnvme_multiple_drives",
                 "label": "Multiple Drives",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_12_sequential_read",
                     "label": "Sequential Read",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_sequential_read_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -786,7 +688,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_sequential_read_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -794,7 +695,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_sequential_read_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -804,14 +704,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_12_random_read",
                     "label": "Random Read",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_random_read_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -819,7 +717,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_random_read_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -827,7 +724,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_random_read_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -837,14 +733,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_12_sequential_write",
                     "label": "Sequential Write",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_sequential_write_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -852,7 +746,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_sequential_write_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -860,7 +753,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_sequential_write_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -870,14 +762,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "rcnvme_12_random_write",
                     "label": "Random Write",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_random_write_output_bandwidth",
                         "label": "Throughput",
                         "children": [],
@@ -885,7 +775,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_random_write_output_iops",
                         "label": "IOPS",
                         "children": [],
@@ -893,7 +782,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkRcnvmeReadWriteAllPerformance",
-                        "leaf": true,
                         "name": "rcnvme_12_random_write_output_latency_avg",
                         "label": "Latency",
                         "children": [],
@@ -907,21 +795,18 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "memvol",
             "label": "MemVol",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "memvol_sequential_read",
                 "label": "Sequential Read",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_sequential_read_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
@@ -929,7 +814,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_sequential_read_output_iops",
                     "label": "IOPS",
                     "children": [],
@@ -937,7 +821,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_sequential_read_output_latency_avg",
                     "label": "Latency",
                     "children": [],
@@ -947,14 +830,12 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "memvol_random_read",
                 "label": "Random Read",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_read_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
@@ -962,7 +843,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_read_output_iops",
                     "label": "IOPS",
                     "children": [],
@@ -970,7 +850,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_read_output_latency_avg",
                     "label": "Latency",
                     "children": [],
@@ -980,14 +859,12 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "memvol_sequential_write",
                 "label": "Sequential Write",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_sequential_write_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
@@ -995,7 +872,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_sequential_write_output_iops",
                     "label": "IOPS",
                     "children": [],
@@ -1003,7 +879,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_sequential_write_output_latency_avg",
                     "label": "Latency",
                     "children": [],
@@ -1013,14 +888,12 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "memvol_random_write",
                 "label": "Random Write",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_write_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
@@ -1028,7 +901,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_write_output_iops",
                     "label": "IOPS",
                     "children": [],
@@ -1036,7 +908,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_write_output_latency_avg",
                     "label": "Latency",
                     "children": [],
@@ -1046,14 +917,12 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "memvol_seq_read_write",
                 "label": "Sequential Read Write",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_seq_read_write_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
@@ -1061,7 +930,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_seq_read_write_output_iops",
                     "label": "IOPS",
                     "children": [],
@@ -1069,7 +937,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_seq_read_write_output_latency_avg",
                     "label": "Latency",
                     "children": [],
@@ -1079,14 +946,12 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "memvol_random_read_write",
                 "label": "Random Read Write",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_read_write_output_bandwidth",
                     "label": "Throughput",
                     "children": [],
@@ -1094,7 +959,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_read_write_output_iops",
                     "label": "IOPS",
                     "children": [],
@@ -1102,7 +966,6 @@
                   },
                   {
                     "metric_model_name": "BltVolumePerformance",
-                    "leaf": true,
                     "name": "memvol_random_read_write_output_latency_avg",
                     "label": "Latency",
                     "children": [],
@@ -1114,19 +977,16 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Volume Type",
             "label": "Volume Type",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "LSV",
                 "label": "LSV",
                 "children": [
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "BLK_LSV: Latency",
                     "label": "BLK_LSV: Latency",
                     "children": [],
@@ -1134,7 +994,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "BLK_LSV: Bandwidth",
                     "label": "BLK_LSV: Bandwidth",
                     "children": [],
@@ -1142,7 +1001,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "BLK_LSV: IOPS",
                     "label": "BLK_LSV: IOPS",
                     "children": [],
@@ -1153,13 +1011,11 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "EC",
                 "label": "EC",
                 "children": [
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "BLK_EC: Latency",
                     "label": "BLK_EC: Latency",
                     "children": [],
@@ -1167,7 +1023,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "BLK_EC: Bandwidth",
                     "label": "BLK_EC: Bandwidth",
                     "children": [],
@@ -1175,7 +1030,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "BLK_EC: IOPS",
                     "label": "BLK_EC: IOPS",
                     "children": [],
@@ -1183,7 +1037,6 @@
                   },
                   {
                     "metric_model_name": "EcPerformance",
-                    "leaf": true,
                     "name": "EC 8:4 Latency",
                     "label": "EC 8:4 Latency",
                     "children": [],
@@ -1191,7 +1044,6 @@
                   },
                   {
                     "metric_model_name": "EcPerformance",
-                    "leaf": true,
                     "name": "EC 8:4 Throughput",
                     "label": "EC 8:4 Throughput",
                     "children": [],
@@ -1199,7 +1051,6 @@
                   },
                   {
                     "metric_model_name": "EcVolPerformance",
-                    "leaf": true,
                     "name": "ECVOL: Latency",
                     "label": "ECVOL: Latency",
                     "children": [],
@@ -1207,7 +1058,6 @@
                   },
                   {
                     "metric_model_name": "EcVolPerformance",
-                    "leaf": true,
                     "name": "ECVOL: IOPS",
                     "label": "ECVOL: IOPS",
                     "children": [],
@@ -1218,13 +1068,11 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "Raw Volume",
                 "label": "Raw Volume",
                 "children": [
                   {
                     "metric_model_name": "HuRawVolumePerformance",
-                    "leaf": true,
                     "name": "HU: Raw Volume Latency",
                     "label": "HU: Raw Volume Latency",
                     "children": [],
@@ -1232,7 +1080,6 @@
                   },
                   {
                     "metric_model_name": "HuRawVolumePerformance",
-                    "leaf": true,
                     "name": "HU: Raw Volume Bandwidth",
                     "label": "HU: Raw Volume Bandwidth",
                     "children": [],
@@ -1240,7 +1087,6 @@
                   },
                   {
                     "metric_model_name": "HuRawVolumePerformance",
-                    "leaf": true,
                     "name": "HU: Raw Volume IOPS",
                     "label": "HU: Raw Volume IOPS",
                     "children": [],
@@ -1253,19 +1099,16 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Filter",
             "label": "Filter",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "Block Crypto",
                 "label": "Block Crypto",
                 "children": [
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "XTS: Latency",
                     "label": "XTS: Latency",
                     "children": [],
@@ -1273,7 +1116,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "XTS: Bandwidth",
                     "label": "XTS: Bandwidth",
                     "children": [],
@@ -1281,7 +1123,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "XTS: IOPS",
                     "label": "XTS: IOPS",
                     "children": [],
@@ -1292,13 +1133,11 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "Block Compress",
                 "label": "Block Compress",
                 "children": [
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "ZIP: Latency",
                     "label": "ZIP: Latency",
                     "children": [],
@@ -1306,7 +1145,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "ZIP: Bandwidth",
                     "label": "ZIP: Bandwidth",
                     "children": [],
@@ -1314,7 +1152,6 @@
                   },
                   {
                     "metric_model_name": "VoltestPerformance",
-                    "leaf": true,
                     "name": "ZIP: IOPS",
                     "label": "ZIP: IOPS",
                     "children": [],
@@ -1331,13 +1168,11 @@
       },
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "Accelerators",
         "label": "Accelerators",
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Lookup-engine",
             "label": "Lookup-engine",
             "weight": 1,
@@ -1345,7 +1180,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "EC",
             "label": "EC",
             "weight": 1,
@@ -1353,7 +1187,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "MovingBits",
             "label": "MovingBits",
             "weight": 1,
@@ -1361,7 +1194,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Crypto api throughput",
             "label": "Crypto API Throughput",
             "weight": 1,
@@ -1369,7 +1201,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
             "weight": 1,
@@ -1377,7 +1208,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Zip",
             "label": "Zip",
             "weight": 1,
@@ -1385,7 +1215,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "JPEG",
             "label": "JPEG",
             "weight": 1,
@@ -1396,21 +1225,18 @@
       },
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "FunOS",
         "label": "FunOS",
         "weight": 1,
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Nucleus",
             "label": "Nucleus",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (WU)",
                 "label": "Best time for 1 malloc/free (WU)",
                 "children": [],
@@ -1418,7 +1244,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Threaded)",
                 "label": "Best time for 1 malloc/free (Threaded)",
                 "children": [],
@@ -1426,7 +1251,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Classic)",
                 "label": "Best time for 1 malloc/free (Classic)",
                 "children": [],
@@ -1434,7 +1258,6 @@
               },
               {
                 "metric_model_name": "WuLatencyAllocStack",
-                "leaf": true,
                 "name": "WU Latency: Alloc Stack",
                 "label": "WU Latency: Alloc Stack",
                 "children": [],
@@ -1442,7 +1265,6 @@
               },
               {
                 "metric_model_name": "WuLatencyUngated",
-                "leaf": true,
                 "name": "WU Latency: Ungated",
                 "label": "WU Latency: Ungated",
                 "children": [],
@@ -1453,7 +1275,6 @@
                 "label": "Bcopy: Plain: Avg Bandwidth",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1461,7 +1282,6 @@
                 "label": "Bcopy: Plain: Avg Latency",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1469,7 +1289,6 @@
                 "label": "Bcopy: DMA: Avg Bandwidth",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1477,7 +1296,6 @@
                 "label": "Bcopy: DMA: Avg Latency",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1485,7 +1303,6 @@
                 "label": "Bcopy: Flood DMA: Avg Bandwidth",
                 "metric_model_name": "BcopyFloodDmaPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1493,12 +1310,10 @@
                 "label": "Bcopy: Flood DMA: Avg Latency",
                 "metric_model_name": "BcopyFloodDmaPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
                 "metric_model_name": "WuDispatchTestPerformance",
-                "leaf": true,
                 "name": "Average dispatch WU cycles",
                 "label": "Average dispatch WU cycles",
                 "children": [],
@@ -1506,7 +1321,6 @@
               },
               {
                 "metric_model_name": "WuSendSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average WU send ungated cycles",
                 "label": "Average WU send ungated cycles",
                 "children": [],
@@ -1514,7 +1328,6 @@
               },
               {
                 "metric_model_name": "FunMagentPerformanceTest",
-                "leaf": true,
                 "name": "Malloc agent rate",
                 "label": "Malloc agent rate",
                 "children": [],
@@ -1522,7 +1335,6 @@
               },
               {
                 "metric_model_name": "SoakClassicMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for malloc",
                 "label": "Soak test for malloc",
                 "children": [],
@@ -1530,7 +1342,6 @@
               },
               {
                 "metric_model_name": "SoakFunMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for fun_malloc",
                 "label": "Soak test for fun_malloc",
                 "children": [],
@@ -1540,14 +1351,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Allocation",
             "label": "Allocation",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (WU)",
                 "label": "Best time for 1 malloc/free (WU)",
                 "children": [],
@@ -1555,7 +1364,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Threaded)",
                 "label": "Best time for 1 malloc/free (Threaded)",
                 "children": [],
@@ -1563,7 +1371,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Classic)",
                 "label": "Best time for 1 malloc/free (Classic)",
                 "children": [],
@@ -1571,7 +1378,6 @@
               },
               {
                 "metric_model_name": "FunMagentPerformanceTest",
-                "leaf": true,
                 "name": "Malloc agent rate",
                 "label": "Malloc agent rate",
                 "children": [],
@@ -1579,7 +1385,6 @@
               },
               {
                 "metric_model_name": "WuStackSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average wustack alloc/free cycles",
                 "label": "Average wustack alloc/free cycles",
                 "children": [],
@@ -1587,7 +1392,6 @@
               },
               {
                 "metric_model_name": "SoakClassicMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for malloc",
                 "label": "Soak test for malloc",
                 "children": [],
@@ -1595,7 +1399,6 @@
               },
               {
                 "metric_model_name": "SoakFunMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for fun_malloc",
                 "label": "Soak test for fun_malloc",
                 "children": [],
@@ -1605,14 +1408,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "WUs",
             "label": "WUs",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (WU)",
                 "label": "Best time for 1 malloc/free (WU)",
                 "children": [],
@@ -1620,7 +1421,6 @@
               },
               {
                 "metric_model_name": "WuLatencyAllocStack",
-                "leaf": true,
                 "name": "WU Latency: Alloc Stack",
                 "label": "WU Latency: Alloc Stack",
                 "children": [],
@@ -1628,7 +1428,6 @@
               },
               {
                 "metric_model_name": "WuLatencyUngated",
-                "leaf": true,
                 "name": "WU Latency: Ungated",
                 "label": "WU Latency: Ungated",
                 "children": [],
@@ -1636,7 +1435,6 @@
               },
               {
                 "metric_model_name": "WuDispatchTestPerformance",
-                "leaf": true,
                 "name": "Average dispatch WU cycles",
                 "label": "Average dispatch WU cycles",
                 "children": [],
@@ -1644,7 +1442,6 @@
               },
               {
                 "metric_model_name": "WuSendSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average WU send ungated cycles",
                 "label": "Average WU send ungated cycles",
                 "children": [],
@@ -1652,7 +1449,6 @@
               },
               {
                 "metric_model_name": "WuStackSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average wustack alloc/free cycles",
                 "label": "Average wustack alloc/free cycles",
                 "children": [],
@@ -1662,14 +1458,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "MovingBits",
             "label": "MovingBits",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_coherent_output_bandwidth_below_4k",
                 "label": "DMA soak memcpy coherent (Below 4K)",
                 "children": [],
@@ -1677,7 +1471,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_coherent_output_bandwidth_4k_1mb",
                 "label": "DMA soak memcpy coherent (4K-1MB)",
                 "children": [],
@@ -1685,7 +1478,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_coherent_output_bandwidth_above_1mb",
                 "label": "DMA soak memcpy coherent (Above 1MB)",
                 "children": [],
@@ -1693,7 +1485,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_non_coherent_output_bandwidth_64B_2048B",
                 "label": "DMA soak memcpy non coherent (Below 4K)",
                 "children": [],
@@ -1701,7 +1492,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_non_coherent_output_bandwidth_4096B_64KB",
                 "label": "DMA soak memcpy non coherent (4K-1MB)",
                 "children": [],
@@ -1709,7 +1499,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_non_coherent_output_bandwidth_128KB_512KB",
                 "label": "DMA soak memcpy non coherent (Above 1MB)",
                 "children": [],
@@ -1717,7 +1506,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyThresholdPerformance",
-                "leaf": true,
                 "name": "memcpy_threshold",
                 "label": "DMA memcpy vs. VP memcpy",
                 "children": [],
@@ -1725,7 +1513,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_output_bandwidth_64B_256B",
                 "label": "DMA soak memset coherent (Below 4K)",
                 "children": [],
@@ -1733,7 +1520,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_output_bandwidth_1024B_16KB",
                 "label": "DMA soak memset coherent (4K-1MB)",
                 "children": [],
@@ -1741,7 +1527,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_output_bandwidth_64KB_256KB",
                 "label": "DMA soak memset coherent (Above 1MB)",
                 "children": [],
@@ -1749,7 +1534,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_non_coherent_output_bandwidth_64B_256B",
                 "label": "DMA soak memset non coherent (Below 4K)",
                 "children": [],
@@ -1757,7 +1541,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_non_coherent_output_bandwidth_1024B_16KB",
                 "label": "DMA soak memset non coherent (4K-1MB)",
                 "children": [],
@@ -1765,7 +1548,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_non_coherent_output_bandwidth_64KB_256KB",
                 "label": "DMA soak memset non coherent (Above 1MB)",
                 "children": [],
@@ -1773,7 +1555,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_buffer_memory_output_bandwidth_below_4k",
                 "label": "DMA soak memset BM (Below 4K)",
                 "children": [],
@@ -1781,7 +1562,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_buffer_memory_output_bandwidth_4k_1mb",
                 "label": "DMA soak memset BM (4K-1MB)",
                 "children": [],
@@ -1792,7 +1572,6 @@
                 "label": "Bcopy: Plain: Avg Bandwidth",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1800,7 +1579,6 @@
                 "label": "Bcopy: Plain: Avg Latency",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1808,7 +1586,6 @@
                 "label": "Bcopy: DMA: Avg Bandwidth",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1816,7 +1593,6 @@
                 "label": "Bcopy: DMA: Avg Latency",
                 "metric_model_name": "BcopyPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1824,7 +1600,6 @@
                 "label": "Bcopy: Flood DMA: Avg Bandwidth",
                 "metric_model_name": "BcopyFloodDmaPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               },
               {
@@ -1832,7 +1607,6 @@
                 "label": "Bcopy: Flood DMA: Avg Latency",
                 "metric_model_name": "BcopyFloodDmaPerformance",
                 "children": [],
-                "leaf": true,
                 "weight": 1
               }
             ]
@@ -1841,14 +1615,12 @@
       },
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "System",
         "label": "System",
         "weight": 1,
         "children": [
           {
             "metric_model_name": "BootTimePerformance",
-            "leaf": true,
             "name": "FunOS Boot Timing",
             "label": "FunOS Boot Timing (SBP view)",
             "children": [],
@@ -1856,7 +1628,6 @@
           },
           {
             "metric_model_name": "BootTimePerformance",
-            "leaf": true,
             "name": "SBP Boot Timing (Main-loop)",
             "label": "SBP Boot Timing (Main-loop)",
             "children": [],
@@ -1864,7 +1635,6 @@
           },
           {
             "metric_model_name": "BootTimePerformance",
-            "leaf": true,
             "name": "SBP Boot Timing (Host-boot)",
             "label": "SBP Boot Timing (Host-boot)",
             "children": [],
@@ -1872,7 +1642,6 @@
           },
           {
             "metric_model_name": "BootTimePerformance",
-            "leaf": true,
             "name": "SBP Boot Timing (Pre-host-boot)",
             "label": "SBP Boot Timing (Pre-host-boot)",
             "children": [],
@@ -1880,7 +1649,6 @@
           },
           {
             "metric_model_name": "BootTimePerformance",
-            "leaf": true,
             "name": "MMC timings",
             "label": "MMC Timings",
             "children": [],
@@ -1888,7 +1656,6 @@
           },
           {
             "metric_model_name": "BootTimePerformance",
-            "leaf": true,
             "name": "ELF load timings",
             "label": "ELF Load Timings",
             "children": [],
@@ -1896,7 +1663,6 @@
           },
           {
             "metric_model_name": "BootTimePerformance",
-            "leaf": true,
             "name": "f1_timings",
             "label": "FunOS Timings",
             "children": [],
@@ -1906,14 +1672,12 @@
       },
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "Security",
         "label": "Security",
         "weight": 1,
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "TeraMark PKE",
             "label": "PKE",
             "weight": 1,
@@ -1921,14 +1685,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "PKE TLS",
             "label": "TLS",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "PkeX25519TlsSoakPerformance",
-                "leaf": true,
                 "name": "ECDHE_RSA X25519 RSA 2K",
                 "label": "ECDHE RSA X25519 RSA 2K",
                 "children": [],
@@ -1936,7 +1698,6 @@
               },
               {
                 "metric_model_name": "PkeP256TlsSoakPerformance",
-                "leaf": true,
                 "name": "ECDHE_RSA P256 RSA 2K",
                 "label": "ECDHE RSA P256 RSA 2K",
                 "children": [],
@@ -1946,7 +1707,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Crypto api throughput",
             "label": "Crypto API Throughput",
             "weight": 1,
@@ -1954,7 +1714,6 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Crypto raw throughput",
             "label": "Crypto Raw Throughput",
             "weight": 1,
@@ -1964,28 +1723,24 @@
       },
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "TeraMarks",
         "label": "TeraMarks",
         "weight": 1,
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "TeraMark Security",
             "label": "Security",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "TeraMark PKE",
                 "label": "PKE",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "TeraMarkPkeRsaPerformance",
-                    "leaf": true,
                     "name": "RSA CRT 2048 decryptions",
                     "label": "RSA CRT 2048 decryptions",
                     "children": [],
@@ -1993,7 +1748,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkPkeRsa4kPerformance",
-                    "leaf": true,
                     "name": "RSA CRT 4096 decryptions",
                     "label": "RSA CRT 4096 decryptions",
                     "children": [],
@@ -2001,7 +1755,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkPkeEcdh256Performance",
-                    "leaf": true,
                     "name": "ECDH P256",
                     "label": "ECDH P256",
                     "children": [],
@@ -2009,7 +1762,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkPkeEcdh25519Performance",
-                    "leaf": true,
                     "name": "ECDH 25519",
                     "label": "ECDH 25519",
                     "children": [],
@@ -2019,14 +1771,12 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "Crypto api throughput",
                 "label": "Crypto API Throughput",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "TeraMarkCryptoPerformance",
-                    "leaf": true,
                     "name": "AES_CBC Encryption Throughput",
                     "label": "AES_CBC",
                     "children": [],
@@ -2034,7 +1784,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkCryptoPerformance",
-                    "leaf": true,
                     "name": "AES_GCM Encryption Throughput",
                     "label": "AES_GCM",
                     "children": [],
@@ -2042,7 +1791,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkCryptoPerformance",
-                    "leaf": true,
                     "name": "AES_XTS Encryption Throughput",
                     "label": "AES_XTS",
                     "children": [],
@@ -2050,7 +1798,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkCryptoPerformance",
-                    "leaf": true,
                     "name": "SHA_256 Throughput",
                     "label": "SHA_256",
                     "children": [],
@@ -2060,14 +1807,12 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "Crypto raw throughput",
                 "label": "Crypto Raw Throughput",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
-                    "leaf": true,
                     "name": "AES_GCM Encryption Raw Throughput",
                     "label": "AES_GCM",
                     "children": [],
@@ -2075,7 +1820,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
-                    "leaf": true,
                     "name": "AES_XTS Encryption Raw Throughput",
                     "label": "AES_XTS",
                     "children": [],
@@ -2083,7 +1827,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
-                    "leaf": true,
                     "name": "SHA_256 Raw Throughput",
                     "label": "SHA_256",
                     "children": [],
@@ -2091,7 +1834,6 @@
                   },
                   {
                     "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
-                    "leaf": true,
                     "name": "SHA3_256 Raw Throughput",
                     "label": "SHA3_256",
                     "children": [],
@@ -2103,14 +1845,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Erasure-coding",
             "label": "Erasure-coding",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "EcPerformance",
-                "leaf": true,
                 "name": "EC 8:4 Throughput",
                 "label": "EC 8:4 Throughput",
                 "children": [],
@@ -2120,28 +1860,24 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "TeraMark Compression",
             "label": "Compression",
             "weight": 1,
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "Zip",
                 "label": "Zip",
                 "weight": 1,
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "Deflate",
                     "label": "Deflate",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkZipDeflatePerformance",
-                        "leaf": true,
                         "name": "Deflate Compression Throughput",
                         "label": "Compression Throughput",
                         "children": [],
@@ -2149,7 +1885,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkZipDeflatePerformance",
-                        "leaf": true,
                         "name": "Deflate Decompression Throughput",
                         "label": "Decompression Throughput",
                         "children": [],
@@ -2159,14 +1894,12 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "Lzma",
                     "label": "Lzma",
                     "weight": 1,
                     "children": [
                       {
                         "metric_model_name": "TeraMarkZipLzmaPerformance",
-                        "leaf": true,
                         "name": "Lzma Compression Throughput",
                         "label": "Compression Throughput",
                         "children": [],
@@ -2174,7 +1907,6 @@
                       },
                       {
                         "metric_model_name": "TeraMarkZipLzmaPerformance",
-                        "leaf": true,
                         "name": "Lzma Decompression Throughput",
                         "label": "Decompression Throughput",
                         "children": [],
@@ -2186,28 +1918,24 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "JPEG",
                 "weight": 1,
                 "label": "JPEG",
                 "children": [
                   {
                     "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
                     "name": "JPEG Compression_Compression-ratio",
                     "weight": 1,
                     "label": "Compression-ratio"
                   },
                   {
                     "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
                     "name": "JPEG Decompress_output_average_bandwidth",
                     "weight": 1,
                     "label": "Decompression Throughput"
                   },
                   {
                     "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
                     "name": "Compression throughput with Driver_output_average_bandwidth",
                     "weight": 1,
                     "label": "Compression Throughput"
@@ -2218,49 +1946,42 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Networking_Teramarks",
             "weight": 1,
             "label": "Networking",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_NU_NFCP",
                 "weight": 1,
                 "label": "Host->Network",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_NU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
                     "label": "8 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2269,35 +1990,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts",
                     "weight": 1,
                     "label": "8 TCP Flow(s), 2 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2308,42 +2024,36 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "NU_HU_NFCP",
                 "weight": 1,
                 "label": "Network->Host",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "NU_HU_NFCP_8TCP_offloads_disabled",
                     "weight": 1,
                     "label": "8 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2352,35 +2062,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts",
                     "weight": 1,
                     "label": "8 TCP Flow(s), 2 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2391,42 +2096,36 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_HU_NFCP_teramark",
                 "weight": 1,
                 "label": "Host->Host (1 F1)",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_HU_NFCP_8TCP_2H_offloads_disabled",
                     "weight": 1,
                     "label": "8 TCP Flow(s), 2 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2435,35 +2134,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_HU_NFCP_1TCP_2H_offloads_disabled",
                     "weight": 1,
                     "label": "1 TCP Flow(s), 2 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2474,7 +2168,6 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_HU_NFCP_2f1_teramark",
                 "weight": 0,
                 "label": "Host->Host (2 F1s)",
@@ -2482,42 +2175,36 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "HU_HU_FCP_2f1_teramark",
                 "weight": 1,
                 "label": "Host->Host FCP (2 F1s)",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_HU_FCP_8TCP_1H_offloads_enabled",
                     "weight": 1,
                     "label": "8 TCP Flow(s), 2 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2526,35 +2213,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_HU_FCP_8TCP_2H_offloads_enabled",
                     "weight": 1,
                     "label": "8 TCP Flow(s), 4 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2563,35 +2245,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "HU_HU_FCP_1TCP_1H_offloads_enabled",
                     "weight": 1,
                     "label": "1 TCP Flow(s), 2 Host(s)",
                     "children": [
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "HuThroughputPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "HuLatencyPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
                       },
                       {
                         "metric_model_name": "HuLatencyUnderLoadPerformance",
-                        "leaf": true,
                         "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_under_load",
                         "weight": 1,
                         "label": "Latency under load"
@@ -2604,28 +2281,24 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Regex",
             "weight": 1,
             "label": "RegEx",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "regex_100_cache_hit",
                 "weight": 1,
                 "label": "100 Percent Cache Hit",
                 "children": [
                   {
                     "metric_model_name": "TeraMarkDfaPerformance",
-                    "leaf": true,
                     "name": "dfa_teramark_output_bandwidth",
                     "weight": 1,
                     "label": "DFA Throughput"
                   },
                   {
                     "metric_model_name": "TeraMarkNfaPerformance",
-                    "leaf": true,
                     "name": "nfa_teramark_output_bandwidth",
                     "weight": 1,
                     "label": "NFA Throughput"
@@ -2636,70 +2309,60 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Storage_Teramarks",
             "weight": 1,
             "label": "Storage",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "raw_block_teramarks",
                 "weight": 1,
                 "label": "Raw Block",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "4kb_one_volume_one_ssd_raw_block",
                     "weight": 1,
                     "label": "PCIe",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "raw_block_teramarks_pcie_read",
                         "weight": 1,
                         "label": "Sequential Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd_pcie_output_iops",
                             "weight": 1,
                             "label": "IOPS"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd1_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd16_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd32_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd128_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
@@ -2708,49 +2371,42 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "raw_block_teramarks_pcie_rand_read",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd_pcie_output_iops",
                             "weight": 1,
                             "label": "IOPS"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd1_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd16_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd32_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd128_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
@@ -2759,56 +2415,48 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "raw_block_teramarks_pcie_write",
                         "weight": 1,
                         "label": "Sequential Write",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "write_qd_pcie_output_iops",
                             "weight": 1,
                             "label": "IOPS"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "write_qd1_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "write_qd4_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=4"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "write_qd8_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=8"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "write_qd16_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "write_qd32_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "write_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
@@ -2817,56 +2465,48 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "raw_block_teramarks_pcie_rand_write",
                         "weight": 1,
                         "label": "Random Write",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd_pcie_output_iops",
                             "weight": 1,
                             "label": "IOPS"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd1_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd4_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=4"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd8_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=8"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd16_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd32_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd64_pcie_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
@@ -2877,56 +2517,48 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
                     "weight": 1,
                     "label": "NVMe/TCP",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "raw_block_teramarks_nvmetcp_read",
                         "weight": 1,
                         "label": "Sequential Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd_nvmetcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd1_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd16_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd32_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd64_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_qd128_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
@@ -2935,35 +2567,30 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "raw_block_teramarks_nvmetcp_rand_read",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd_nvmetcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd1_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd64_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_qd128_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
@@ -2972,35 +2599,30 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "raw_block_teramarks_nvmetcp_rand_write",
                         "weight": 1,
                         "label": "Random Write",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd_nvmetcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd1_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd16_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_write_qd32_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
@@ -3013,63 +2635,54 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "durable_volume_ec",
                 "weight": 1,
                 "label": "Durable Volume - EC",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "durable_volume_ec_pcie",
                     "weight": 1,
                     "label": "PCIe",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "read_iod_durable_volume_ec",
                         "weight": 1,
                         "label": "Sequential Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod1_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod16_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod32_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod64_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod128_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod_durable_volume_ec_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3078,49 +2691,42 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "rand_read_iod_durable_volume_ec",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod1_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod16_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod32_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod64_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod128_durable_volume_ec_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod_durable_volume_ec_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3131,56 +2737,48 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "durable_volume_ec_nvmetcp",
                     "weight": 1,
                     "label": "NVMe/TCP",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "read_iod_durable_volume_ec_nvmetcp",
                         "weight": 1,
                         "label": "Sequential Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod1_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod8_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=8"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod16_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod32_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod64_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_iod_durable_volume_ec_nvmetcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3189,49 +2787,42 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "rand_read_iod_durable_volume_ec_nvmetcp",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod1_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod8_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=8"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod16_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=16"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod32_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=32"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod64_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_iod_durable_volume_ec_nvmetcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3244,35 +2835,30 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "durable_volume_ec_compression",
                 "weight": 1,
                 "label": "Durable Volume - EC + Compression",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "durable_volume_ec_compression_pcie",
                     "weight": 1,
                     "label": "PCIe",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "read_4kb_one_volume_12_ssd_durable_volume_ec",
                         "weight": 1,
                         "label": "Sequential Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_4kb1vol12ssd_durable_volume_ec_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3281,21 +2867,18 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "rand_read_4kb_one_volume_12_ssd_durable_volume_ec",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3306,28 +2889,24 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "durable_volume_ec_compression_nvmetcp",
                     "weight": 1,
                     "label": "NVMe/TCP",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "read_4kb_one_volume_12_ssd_durable_volume_ec_nvmetcp",
                         "weight": 1,
                         "label": "Sequential Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "read_4kb1vol12ssd_durable_volume_ec_nvmetcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3336,21 +2915,18 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "rand_read_4kb_one_volume_12_ssd_durable_volume_ec_nvmetcp",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_4kb1vol12ssd_durable_volume_ec_4_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "rand_read_4kb1vol12ssd_durable_volume_ec_nvmetcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3365,49 +2941,42 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "teramarks_customer",
             "weight": 1,
             "label": "Customer",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "teramarks_customer_juniper",
                 "weight": 1,
                 "label": "Juniper",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "juniper_NU_LE_VP_NU_FW_DDR",
                     "weight": 1,
                     "label": "Flow Based Firewall, DDR",
                     "children": [
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_DDR_output_throughput",
                         "weight": 1,
                         "label": "Throughput"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_DDR_output_pps",
                         "weight": 1,
                         "label": "Packets per sec"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_DDR_output_latency_avg",
                         "weight": 1,
                         "label": "Latency - Full Load"
                       },
                       {
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "leaf": true,
                         "name": "juniper_NU_LE_VP_NU_FW_DDR_output_half_load_latency_avg",
                         "weight": 1,
                         "label": "Latency - Half Load"
@@ -3416,28 +2985,24 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "juniper_ipsec",
                     "weight": 1,
                     "label": "Crypto",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_ipsec_crypto_single_tunnel",
                         "weight": 1,
                         "label": "Single Tunnel",
                         "children": [
                           {
                             "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_crypto_single_tunnel_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_crypto_single_tunnel_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3446,21 +3011,18 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_ipsec_crypto_multi_tunnel",
                         "weight": 1,
                         "label": "Multi Tunnel",
                         "children": [
                           {
                             "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_crypto_multi_tunnel_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_crypto_multi_tunnel_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3471,28 +3033,24 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "juniper_ipsec_encryption",
                     "weight": 1,
                     "label": "IPSEC - Encryption",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_ipsec_enc_single_tunnel",
                         "weight": 1,
                         "label": "Single Tunnel",
                         "children": [
                           {
                             "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_enc_single_tunnel_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3501,21 +3059,18 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_ipsec_enc_multi_tunnel",
                         "weight": 1,
                         "label": "Multi Tunnel",
                         "children": [
                           {
                             "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3526,28 +3081,24 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "juniper_ipsec_decryption",
                     "weight": 1,
                     "label": "IPSEC - Decryption",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_ipsec_dec_single_tunnel",
                         "weight": 1,
                         "label": "Single Tunnel",
                         "children": [
                           {
                             "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_dec_single_tunnel_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3556,21 +3107,18 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_ipsec_dec_multi_tunnel",
                         "weight": 1,
                         "label": "Multi Tunnel",
                         "children": [
                           {
                             "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3581,28 +3129,24 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "juniper_tls",
                     "weight": 1,
                     "label": "TLS",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_tls_1tunnel",
                         "weight": 1,
                         "label": "1 Tunnel(s)",
                         "children": [
                           {
                             "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_tls_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_tls_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3611,21 +3155,18 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_tls_32tunnel",
                         "weight": 1,
                         "label": "32 Tunnel(s)",
                         "children": [
                           {
                             "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_tls_32_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_tls_32_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3634,21 +3175,18 @@
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "juniper_tls_64tunnel",
                         "weight": 1,
                         "label": "64 Tunnel(s)",
                         "children": [
                           {
                             "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_tls_64_output_throughput",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "leaf": true,
                             "name": "juniper_tls_64_output_pps",
                             "weight": 1,
                             "label": "Packets per sec"
@@ -3661,42 +3199,36 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "teramarks_customer_apple",
                 "weight": 1,
                 "label": "Apple",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_reader_pcie",
                     "weight": 1,
                     "label": "Single-Reader PCIe",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "apple_rand_read_4kb_6vol_6ssd_stripe_volume",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_4kb6vol6ssd_output_bandwidth",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_4kb6vol6ssd_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_4kb6vol6ssd_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3707,35 +3239,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_reader_tcp",
                     "weight": 1,
                     "label": "Single-Reader TCP",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "apple_rand_read_srsw_tcp",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_srsw_tcp_output_bandwidth",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_srsw_tcp_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_srsw_tcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3746,35 +3273,30 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
                     "weight": 1,
                     "label": "Multiple-Reader TCP",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "leaf": false,
                         "name": "apple_rand_read_mrsw_tcp",
                         "weight": 1,
                         "label": "Random Read",
                         "children": [
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_mrsw_tcp_output_bandwidth",
                             "weight": 1,
                             "label": "Throughput"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_mrsw_tcp_output_latency",
                             "weight": 1,
                             "label": "Latency"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
                             "name": "apple_rand_read_mrsw_tcp_output_iops",
                             "weight": 1,
                             "label": "IOPS"
@@ -3787,63 +3309,54 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "teramarks_customer_inspur",
                 "weight": 1,
                 "label": "Inspur",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_single_f1_host",
                     "weight": 1,
                     "label": "8_11_1:8K_RAND_RW, F1(s)=1",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd8_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd16_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd32_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd64_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd128_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=128"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd256_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=256"
@@ -3852,56 +3365,48 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_single_f1_host_6",
                     "weight": 1,
                     "label": "8_11_6:8K_RAND_RW, F1(s)=1",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd8_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd16_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd32_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd64_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=64"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd128_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=128"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd256_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=256"
@@ -3910,42 +3415,36 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8112_1024k_seq_w",
                     "weight": 0,
                     "label": "8_11_2:1024K_SEQ_RW, F1(s)=1",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_seq_read_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_seq_read_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_seq_read_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_seq_read_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_seq_read_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
@@ -3954,42 +3453,36 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8113_mixed_rw",
                     "weight": 0,
                     "label": "8_11_3:MIXED_RW, F1(s)=1",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_mixed_read_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_mixed_read_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_mixed_read_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_mixed_read_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_mixed_read_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
@@ -3998,42 +3491,36 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8114_oltp_rw",
                     "weight": 0,
                     "label": "8_11_4:OLTP_RW, F1(s)=1",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_oltp_read_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_oltp_read_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_oltp_read_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_oltp_read_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_oltp_read_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
@@ -4042,42 +3529,36 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8115_olap_rw",
                     "weight": 0,
                     "label": "8_11_5:OLAP_RW, F1(s)=1",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_olap_read_write_qd1_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_olap_read_write_qd8_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_olap_read_write_qd16_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_olap_read_write_qd32_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_olap_read_write_qd64_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
@@ -4086,28 +3567,24 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8131_compression_ratio_benchmarking",
                     "weight": 1,
                     "label": "8_13_1:Compression_Benchmark",
                     "children": [
                       {
                         "metric_model_name": "InspurZipCompressionRatiosPerformance",
-                        "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_auto",
                         "weight": 1,
                         "label": "Compression Ratio (Effort: 8)"
                       },
                       {
                         "metric_model_name": "InspurZipCompressionRatiosPerformance",
-                        "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_64Gbps",
                         "weight": 1,
                         "label": "Compression Ratio (Effort: 0)"
                       },
                       {
                         "metric_model_name": "InspurZipCompressionRatiosPerformance",
-                        "leaf": true,
                         "name": "inspur_8131_compression_ratio_benchmarking_2Gbps",
                         "weight": 1,
                         "label": "Compression Ratio (Effort: 15)"
@@ -4116,7 +3593,6 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8132_8k_rand_rw_comp",
                     "weight": 0,
                     "label": "8_14_1:8K_RAND_RW_COMP, F1(s)=1",
@@ -4124,56 +3600,48 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8111_8k_rand_rw_2f1",
                     "weight": 1,
                     "label": "8_11_1:8K_RAND_RW, F1(s)=2",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd1_2f1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd8_2f1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd16_2f1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd32_2f1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd64_2f1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=64"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd128_2f1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=128"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd256_2f1_8k_block_output_iops",
                         "weight": 1,
                         "label": "IOPS, QDepth=256"
@@ -4182,56 +3650,48 @@
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "leaf": false,
                     "name": "inspur_8116_8k_rand_rw_2f1",
                     "weight": 1,
                     "label": "8_11_6:8K_RAND_RW, F1(s)=2",
                     "children": [
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd1_2f1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=1"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd8_2f1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=8"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd16_2f1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=16"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd32_2f1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=32"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd64_2f1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=64"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd128_2f1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=128"
                       },
                       {
                         "metric_model_name": "BltVolumePerformance",
-                        "leaf": true,
                         "name": "inspur_rand_read_write_qd256_2f1_8k_block_output_latency",
                         "weight": 1,
                         "label": "Latency, QDepth=256"
@@ -4242,7 +3702,6 @@
               },
               {
                 "metric_model_name": "MetricContainer",
-                "leaf": false,
                 "name": "teramarks_customer_alibaba",
                 "weight": 0,
                 "label": "Alibaba",
@@ -4256,27 +3715,23 @@
   },
   {
     "metric_model_name": "MetricContainer",
-    "leaf": false,
     "name": "Total_S1",
     "label": "S1",
     "children": [
       {
         "metric_model_name": "MetricContainer",
-        "leaf": false,
         "name": "FunOS_S1",
         "weight": 1,
         "label": "FunOS",
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Nucleus_S1",
             "weight": 1,
             "label": "Nucleus",
             "children": [
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (WU)_S1",
                 "weight": 1,
                 "label": "Best time for 1 malloc/free (WU)",
@@ -4284,7 +3739,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Threaded)_S1",
                 "weight": 1,
                 "label": "Best time for 1 malloc/free (Threaded)",
@@ -4292,7 +3746,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Classic)_S1",
                 "weight": 1,
                 "label": "Best time for 1 malloc/free (Classic)",
@@ -4300,7 +3753,6 @@
               },
               {
                 "metric_model_name": "WuLatencyAllocStack",
-                "leaf": true,
                 "name": "WU Latency: Alloc Stack_S1",
                 "weight": 1,
                 "label": "WU Latency: Alloc Stack",
@@ -4308,7 +3760,6 @@
               },
               {
                 "metric_model_name": "WuLatencyUngated",
-                "leaf": true,
                 "name": "WU Latency: Ungated_S1",
                 "weight": 1,
                 "label": "WU Latency: Ungated",
@@ -4316,7 +3767,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: Plain: Avg Bandwidth_S1",
                 "weight": 1,
                 "label": "Bcopy: Plain: Avg Bandwidth",
@@ -4324,7 +3774,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: Plain: Avg Latency_S1",
                 "weight": 1,
                 "label": "Bcopy: Plain: Avg Latency",
@@ -4332,7 +3781,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: DMA: Avg Bandwidth_S1",
                 "weight": 1,
                 "label": "Bcopy: DMA: Avg Bandwidth",
@@ -4340,7 +3788,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: DMA: Avg Latency_S1",
                 "weight": 1,
                 "label": "Bcopy: DMA: Avg Latency",
@@ -4348,7 +3795,6 @@
               },
               {
                 "metric_model_name": "BcopyFloodDmaPerformance",
-                "leaf": true,
                 "name": "Bcopy: Flood DMA: Avg Bandwidth_S1",
                 "weight": 1,
                 "label": "Bcopy: Flood DMA: Avg Bandwidth",
@@ -4356,7 +3802,6 @@
               },
               {
                 "metric_model_name": "BcopyFloodDmaPerformance",
-                "leaf": true,
                 "name": "Bcopy: Flood DMA: Avg Latency_S1",
                 "weight": 1,
                 "label": "Bcopy: Flood DMA: Avg Latency",
@@ -4364,7 +3809,6 @@
               },
               {
                 "metric_model_name": "WuDispatchTestPerformance",
-                "leaf": true,
                 "name": "Average dispatch WU cycles_S1",
                 "weight": 1,
                 "label": "Average dispatch WU cycles",
@@ -4372,7 +3816,6 @@
               },
               {
                 "metric_model_name": "WuSendSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average WU send ungated cycles_S1",
                 "weight": 1,
                 "label": "Average WU send ungated cycles",
@@ -4380,7 +3823,6 @@
               },
               {
                 "metric_model_name": "FunMagentPerformanceTest",
-                "leaf": true,
                 "name": "Malloc agent rate_S1",
                 "weight": 1,
                 "label": "Malloc agent rate",
@@ -4388,7 +3830,6 @@
               },
               {
                 "metric_model_name": "SoakClassicMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for malloc_S1",
                 "weight": 1,
                 "label": "Soak test for malloc",
@@ -4396,7 +3837,6 @@
               },
               {
                 "metric_model_name": "SoakFunMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for fun_malloc_S1",
                 "weight": 1,
                 "label": "Soak test for fun_malloc",
@@ -4406,14 +3846,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "Allocation_S1",
             "weight": 1,
             "label": "Allocation",
             "children": [
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (WU)_S1",
                 "weight": 1,
                 "label": "Best time for 1 malloc/free (WU)",
@@ -4421,7 +3859,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Threaded)_S1",
                 "weight": 1,
                 "label": "Best time for 1 malloc/free (Threaded)",
@@ -4429,7 +3866,6 @@
               },
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (Classic)_S1",
                 "weight": 1,
                 "label": "Best time for 1 malloc/free (Classic)",
@@ -4437,7 +3873,6 @@
               },
               {
                 "metric_model_name": "FunMagentPerformanceTest",
-                "leaf": true,
                 "name": "Malloc agent rate_S1",
                 "weight": 1,
                 "label": "Malloc agent rate",
@@ -4445,7 +3880,6 @@
               },
               {
                 "metric_model_name": "WuStackSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average wustack alloc/free cycles_S1",
                 "weight": 1,
                 "label": "Average wustack alloc/free cycles",
@@ -4453,7 +3887,6 @@
               },
               {
                 "metric_model_name": "SoakClassicMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for malloc_S1",
                 "weight": 1,
                 "label": "Soak test for malloc",
@@ -4461,7 +3894,6 @@
               },
               {
                 "metric_model_name": "SoakFunMallocPerformance",
-                "leaf": true,
                 "name": "Soak test for fun_malloc_S1",
                 "weight": 1,
                 "label": "Soak test for fun_malloc",
@@ -4471,14 +3903,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "WUs_S1",
             "weight": 1,
             "label": "WUs",
             "children": [
               {
                 "metric_model_name": "AllocSpeedPerformance",
-                "leaf": true,
                 "name": "Best time for 1 malloc/free (WU)_S1",
                 "weight": 1,
                 "label": "Best time for 1 malloc/free (WU)",
@@ -4486,7 +3916,6 @@
               },
               {
                 "metric_model_name": "WuLatencyAllocStack",
-                "leaf": true,
                 "name": "WU Latency: Alloc Stack_S1",
                 "weight": 1,
                 "label": "WU Latency: Alloc Stack",
@@ -4494,7 +3923,6 @@
               },
               {
                 "metric_model_name": "WuLatencyUngated",
-                "leaf": true,
                 "name": "WU Latency: Ungated_S1",
                 "weight": 1,
                 "label": "WU Latency: Ungated",
@@ -4502,7 +3930,6 @@
               },
               {
                 "metric_model_name": "WuDispatchTestPerformance",
-                "leaf": true,
                 "name": "Average dispatch WU cycles_S1",
                 "weight": 1,
                 "label": "Average dispatch WU cycles",
@@ -4510,7 +3937,6 @@
               },
               {
                 "metric_model_name": "WuSendSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average WU send ungated cycles_S1",
                 "weight": 1,
                 "label": "Average WU send ungated cycles",
@@ -4518,7 +3944,6 @@
               },
               {
                 "metric_model_name": "WuStackSpeedTestPerformance",
-                "leaf": true,
                 "name": "Average wustack alloc/free cycles_S1",
                 "weight": 1,
                 "label": "Average wustack alloc/free cycles",
@@ -4528,14 +3953,12 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "leaf": false,
             "name": "MovingBits_S1",
             "weight": 1,
             "label": "MovingBits",
             "children": [
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_coherent_output_bandwidth_below_4k_S1",
                 "weight": 1,
                 "label": "DMA soak memcpy coherent (Below 4K)",
@@ -4543,7 +3966,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_coherent_output_bandwidth_4k_1mb_S1",
                 "weight": 1,
                 "label": "DMA soak memcpy coherent (4K-1MB)",
@@ -4551,7 +3973,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_coherent_output_bandwidth_above_1mb_S1",
                 "weight": 1,
                 "label": "DMA soak memcpy coherent (Above 1MB)",
@@ -4559,7 +3980,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_non_coherent_output_bandwidth_64B_2048B_S1",
                 "weight": 1,
                 "label": "DMA soak memcpy non coherent (Below 4K)",
@@ -4567,7 +3987,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_non_coherent_output_bandwidth_4096B_64KB_S1",
                 "weight": 1,
                 "label": "DMA soak memcpy non coherent (4K-1MB)",
@@ -4575,7 +3994,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                "leaf": true,
                 "name": "memcpy_non_coherent_output_bandwidth_128KB_512KB_S1",
                 "weight": 1,
                 "label": "DMA soak memcpy non coherent (Above 1MB)",
@@ -4583,7 +4001,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemcpyThresholdPerformance",
-                "leaf": true,
                 "name": "memcpy_threshold_S1",
                 "weight": 1,
                 "label": "DMA memcpy vs. VP memcpy",
@@ -4591,7 +4008,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_output_bandwidth_64B_256B_S1",
                 "weight": 1,
                 "label": "DMA soak memset coherent (Below 4K)",
@@ -4599,7 +4015,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_output_bandwidth_1024B_16KB_S1",
                 "weight": 1,
                 "label": "DMA soak memset coherent (4K-1MB)",
@@ -4607,7 +4022,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_output_bandwidth_64KB_256KB_S1",
                 "weight": 1,
                 "label": "DMA soak memset coherent (Above 1MB)",
@@ -4615,7 +4029,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_non_coherent_output_bandwidth_64B_256B_S1",
                 "weight": 1,
                 "label": "DMA soak memset non coherent (Below 4K)",
@@ -4623,7 +4036,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_non_coherent_output_bandwidth_1024B_16KB_S1",
                 "weight": 1,
                 "label": "DMA soak memset non coherent (4K-1MB)",
@@ -4631,7 +4043,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_non_coherent_output_bandwidth_64KB_256KB_S1",
                 "weight": 1,
                 "label": "DMA soak memset non coherent (Above 1MB)",
@@ -4639,7 +4050,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_buffer_memory_output_bandwidth_below_4k_S1",
                 "weight": 1,
                 "label": "DMA soak memset BM (Below 4K)",
@@ -4647,7 +4057,6 @@
               },
               {
                 "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
                 "name": "memset_buffer_memory_output_bandwidth_4k_1mb_S1",
                 "weight": 1,
                 "label": "DMA soak memset BM (4K-1MB)",
@@ -4655,7 +4064,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: Plain: Avg Bandwidth_S1",
                 "weight": 1,
                 "label": "Bcopy: Plain: Avg Bandwidth",
@@ -4663,7 +4071,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: Plain: Avg Latency_S1",
                 "weight": 1,
                 "label": "Bcopy: Plain: Avg Latency",
@@ -4671,7 +4078,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: DMA: Avg Bandwidth_S1",
                 "weight": 1,
                 "label": "Bcopy: DMA: Avg Bandwidth",
@@ -4679,7 +4085,6 @@
               },
               {
                 "metric_model_name": "BcopyPerformance",
-                "leaf": true,
                 "name": "Bcopy: DMA: Avg Latency_S1",
                 "weight": 1,
                 "label": "Bcopy: DMA: Avg Latency",
@@ -4687,7 +4092,6 @@
               },
               {
                 "metric_model_name": "BcopyFloodDmaPerformance",
-                "leaf": true,
                 "name": "Bcopy: Flood DMA: Avg Bandwidth_S1",
                 "weight": 1,
                 "label": "Bcopy: Flood DMA: Avg Bandwidth",
@@ -4695,7 +4099,6 @@
               },
               {
                 "metric_model_name": "BcopyFloodDmaPerformance",
-                "leaf": true,
                 "name": "Bcopy: Flood DMA: Avg Latency_S1",
                 "weight": 1,
                 "label": "Bcopy: Flood DMA: Avg Latency",
