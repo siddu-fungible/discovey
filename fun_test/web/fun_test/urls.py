@@ -29,7 +29,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
 from django.conf import settings
-from web.fun_test.models import SiteRunTime
+import os
 
 regression_urls = [
     url(r'^$', views.angular_home),
@@ -207,8 +207,8 @@ api_v1_urls = [
 ]
 
 site_under_construction = False
-if SiteRunTime.objects.count() > 0:
-    if SiteRunTime.objects.all()[0].under_construction:
+if "SITE_UNDER_CONSTRUCTION" in os.environ:
+    if int(os.environ["SITE_UNDER_CONSTRUCTION"]):
         site_under_construction = True
 
 if not site_under_construction:
@@ -235,10 +235,8 @@ if not site_under_construction:
         url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
     ]
 else:
-    url(r'.*', common_views.site_under_construction)
-
-
-
+    urlpatterns = [url(r'^admin/', admin.site.urls),
+                   url(r'.*', common_views.site_under_construction)]
 
 urlpatterns += staticfiles_urlpatterns()
 
