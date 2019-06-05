@@ -8,6 +8,10 @@ from time import asctime
 
 
 CPU_LIST = range(8, 16)
+COALESCE_RX_USECS = 8
+COALESCE_TX_USECS = 16
+COALESCE_RX_FRAMES = 128
+COALESCE_TX_FRAMES = 32
 
 
 class Funeth:
@@ -562,6 +566,37 @@ class Funeth:
                     cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+    def interrupt_coalesce(self, nu_or_hu, disable=True):
+        """Configure interrupt coalescing."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                if disable:
+                    cmd = 'ethtool -C {} rx-usecs 0 tx-usecs 0 rx-frames 1 tx-frames 1'.format(intf)
+                else:
+                    cmd = 'ethtool -C {} rx-usecs {} tx-usecs {} rx-frames {} tx-frames {}'.format(
+                        intf, COALESCE_RX_USECS, COALESCE_TX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_FRAMES)
+                cmd_chk = 'ethtool -c {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+                else:
+                    cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+                if ns:
+                    cmds = ['sudo ip netns add {}'.format(ns), 'sudo ip link set {} netns {}'.format(intf, ns)] + cmds
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+                match = re.search(r'rx-usecs: (\d+).*rx-frames: (\d+).*tx-usecs: (\d+).*tx-frames: (\d+)', output,
+                                  re.DOTALL)
+                if match:
+                    if disable:
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) == 0, 1, 0, 1)
+                    else:
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) ==
+                                   COALESCE_RX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_USECS, COALESCE_TX_FRAMES)
+                else:
+                    result &= False
+        return result
 
     def collect_syslog(self):
         """Collect all HU hosts' syslog file and copy to job's Log directory."""

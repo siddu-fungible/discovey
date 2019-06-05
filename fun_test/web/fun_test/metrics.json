@@ -600,6 +600,74 @@
             "weight": 1
           },
           {
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Voltest",
+            "label": "Voltest",
+            "weight": 1,
+            "children": [
+              {
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "voltest_lsv",
+                "label": "LSV",
+                "weight": 1,
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "voltest_lsv_1instances",
+                    "label": "1 Instance(s)",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "metric_model_name": "VoltestLsvPerformance",
+                        "leaf": true,
+                        "name": "voltest_lsv_1instances_blt_iops",
+                        "label": "BLT: IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "metric_model_name": "VoltestLsvPerformance",
+                        "leaf": true,
+                        "name": "voltest_lsv_1instances_blt_bandwidth",
+                        "label": "BLT: Bandwidth",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "voltest_lsv_4instances",
+                    "label": "4 Instance(s)",
+                    "weight": 1,
+                    "children": [
+                       {
+                        "metric_model_name": "VoltestLsv4Performance",
+                        "leaf": true,
+                        "name": "voltest_lsv_4instances_blt_iops",
+                        "label": "BLT: IOPS",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "metric_model_name": "VoltestLsv4Performance",
+                        "leaf": true,
+                        "name": "voltest_lsv_4instances_blt_bandwidth",
+                        "label": "BLT: Bandwidth",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "info": "rcnvme",
             "metric_model_name": "MetricContainer",
             "leaf": false,
@@ -3162,22 +3230,6 @@
                             "label": "Latency, QDepth=1"
                           },
                           {
-                            "info": "rand_read_qd16_nvmetcp_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd16_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=16"
-                          },
-                          {
-                            "info": "rand_read_qd32_nvmetcp_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_read_qd32_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=32"
-                          },
-                          {
                             "info": "rand_read_qd64_nvmetcp_output_latency",
                             "metric_model_name": "BltVolumePerformance",
                             "leaf": true,
@@ -3218,14 +3270,6 @@
                             "name": "rand_write_qd1_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=1"
-                          },
-                          {
-                            "info": "rand_write_qd8_nvmetcp_output_latency",
-                            "metric_model_name": "BltVolumePerformance",
-                            "leaf": true,
-                            "name": "rand_write_qd8_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=8"
                           },
                           {
                             "info": "rand_write_qd16_nvmetcp_output_latency",
