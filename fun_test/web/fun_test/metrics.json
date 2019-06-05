@@ -230,6 +230,13 @@
                         "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   }
@@ -272,6 +279,13 @@
                         "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   }
@@ -2350,6 +2364,13 @@
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   },
@@ -2384,6 +2405,13 @@
                         "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   }
@@ -2428,6 +2456,13 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   },
@@ -2462,6 +2497,13 @@
                         "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   }
@@ -2506,6 +2548,13 @@
                         "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_8TCP_offloads_disabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   },
@@ -2540,6 +2589,13 @@
                         "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   }
@@ -2593,6 +2649,13 @@
                         "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   },
@@ -2627,6 +2690,13 @@
                         "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   },
@@ -2661,6 +2731,13 @@
                         "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency",
                         "weight": 1,
                         "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "leaf": true,
+                        "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_under_load",
+                        "weight": 1,
+                        "label": "Latency under load"
                       }
                     ]
                   }
