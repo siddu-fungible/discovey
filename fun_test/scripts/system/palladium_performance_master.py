@@ -1490,29 +1490,12 @@ class TeraMarkJuniperNetworkingPerformanceTc(TeraMarkNuTransitPerformanceTc):
 class TeraMarkRcnvmeReadPerformanceTc(PalladiumPerformanceTc):
     tag = RCNVME_READ
     model = "TeraMarkRcnvmeReadWritePerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=34,
                               summary="TeraMark rcnvme read Performance Test on F1",
                               steps="Steps 1")
-
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
-
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        if self.result == fun_test.FAILED:
-            set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                         test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                         git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class TeraMarkRcnvmeRandomReadPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
