@@ -31,7 +31,7 @@
       "cab03-qa-01": "x16"
     },
       "mpg_ips":{
-        "mode":true,
+        "static":true,
         "mpg0":"10.1.105.172",
         "mpg1":"10.1.105.173"
       },
@@ -41,7 +41,38 @@
        },
        "host_pings":{
          "cab03-qa-01":["18.1.1.2", "30.1.1.2"]
-       }}
+       },
+    "abstract_configs":{
+      "F1-0":"alibaba_bmv_configs_f1_0.json",
+      "F1-1":"alibaba_bmv_configs_f1_1.json"
+    },
+      "static_routes": {
+      "F1-0": {
+        "1": {
+          "gateway": "1.1.1.1",
+          "port": "fpg8",
+          "route": "19.1.1.0/24"
+        },
+        "2": {
+          "gateway": "1.1.1.1",
+          "port": "fpg8",
+          "route": "30.1.1.0/24"
+        }
+      },
+      "F1-1": {
+        "1": {
+          "gateway": "1.1.2.1",
+          "port": "fpg0",
+          "route": "18.1.1.0/24"
+        },
+        "2": {
+          "gateway": "1.1.2.1",
+          "port": "fpg0",
+          "route": "30.1.1.0/24"
+        }
+      }
+
+  }}
     },
 
   "LocalSSDTest": {
@@ -94,33 +125,5 @@
     "uname": "localadmin",
     "pwd": "Precious1*",
     "server": "cab03-qa-01"
-  },
-  "static_routes": {
-    "fs-alibaba_demo": {
-      "F1-0": {
-        "1": {
-          "gateway": "1.1.1.1",
-          "port": "fpg8",
-          "route": "19.1.1.0/24"
-        },
-        "2": {
-          "gateway": "1.1.1.1",
-          "port": "fpg8",
-          "route": "30.1.1.0/24"
-        }
-      },
-      "F1-1": {
-        "1": {
-          "gateway": "1.1.2.1",
-          "port": "fpg0",
-          "route": "18.1.1.0/24"
-        },
-        "2": {
-          "gateway": "1.1.2.1",
-          "port": "fpg0",
-          "route": "30.1.1.0/24"
-        }
-      }
-    }
   }
 }

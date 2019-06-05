@@ -57,7 +57,7 @@ class BringupSetup(FunTestCase):
 
         for server in servers_mode:
             print server
-            fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
             servers_list.append(server)
         
         topology_helper = TopologyHelper()
@@ -71,7 +71,7 @@ class BringupSetup(FunTestCase):
         # Bringup FunCP
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False, ep=True), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
-        funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["mode"],
+        funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
@@ -107,15 +107,18 @@ class NicEmulation(FunTestCase):
     def run(self):
         # execute abstract Configs
 
-        abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/alibaba_bmv_configs_f1_0.json'
-        abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/alibaba_bmv_configs_f1_1.json'
+        abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' +\
+                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
+        abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' +\
+                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
+
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
+
         # Add static routes on Containers
-        server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
-        routes = server_key["static_routes"][fs_name]
-        funcp_obj.add_routes_on_f1(routes_dict=routes)
+        funcp_obj.add_routes_on_f1(routes_dict=self.server_key[fs_name]["static_routes"])
         fun_test.sleep(message="Waiting before ping tests", seconds=10)
+
         # Ping QFX from both F1s
         ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
         for container in ping_dict:
