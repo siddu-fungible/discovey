@@ -223,7 +223,7 @@
     "fio_modes": ["randrw"],
     // "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
     "fio_iodepth": [2, 8, 16, 32, 64],
-    "fio_job_name": "inspur_oltp_iops",
+    "fio_job_name": "inspur_oltp_model_read_write",
     "mpstat_args": {"interval":  5, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
   },
   "OLAPModelReadWriteIOPS": {
@@ -268,7 +268,7 @@
     "fio_modes": ["randrw"],
     // "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)"],
     "fio_iodepth": [2, 8, 16, 32, 64],
-    "fio_job_name": "inspur_olap_iops",
+    "fio_job_name": "inspur_olap_model_read_write",
     "mpstat_args": {"interval":  5, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
   }
 }

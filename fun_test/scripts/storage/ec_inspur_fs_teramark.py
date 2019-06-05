@@ -709,9 +709,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         io_factor += 1
 
+            fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
+
             if "multiple_jobs" in self.fio_cmd_args:
                 num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
                 fio_num_jobs = fio_num_jobs / num_jobs
+            else:
+                num_jobs = 1
 
             fio_result[iodepth] = True
             row_data_dict = {}
@@ -765,8 +769,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             row_data_dict["block_size"] = fio_block_size
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
-                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs))
-            fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
+                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs))
+
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
                 fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus, fio_num_jobs,
@@ -779,7 +783,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                              cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
             fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth]))
             fun_test.test_assert(fio_output[iodepth], "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
-                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs))
+                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs    ))
 
             for op, stats in fio_output[iodepth].items():
                 for field, value in stats.items():
