@@ -1095,9 +1095,14 @@ if __name__ == "__main_nw_fix__":
     print "1st and 2nd june entries deleted for networking"
 
 if __name__ == "__main_durable_tcp__":
-    internal_chart_names_compression = ["read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "read_4kb1vol12ssd_durable_volume_ec_output_iops", "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops"]
-    fio_job_names_randread = ["ec_nvme_tcp_comp_randread_1pctcomp_8", "ec_nvme_tcp_comp_randread_50pctcomp_8", "ec_nvme_tcp_comp_randread_80pctcomp_8"]
-    fio_job_names_read = ["ec_nvme_tcp_comp_read_1pctcomp_8", "ec_nvme_tcp_comp_read_50pctcomp_8", "ec_nvme_tcp_comp_read_80pctcomp_8"]
+    internal_chart_names_compression = ["read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                                        "read_4kb1vol12ssd_durable_volume_ec_output_iops",
+                                        "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency",
+                                        "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops"]
+    fio_job_names_randread = ["ec_nvme_tcp_comp_randread_1pctcomp_8", "ec_nvme_tcp_comp_randread_50pctcomp_8",
+                              "ec_nvme_tcp_comp_randread_80pctcomp_8"]
+    fio_job_names_read = ["ec_nvme_tcp_comp_read_1pctcomp_8", "ec_nvme_tcp_comp_read_50pctcomp_8",
+                          "ec_nvme_tcp_comp_read_80pctcomp_8"]
     for internal_chart_name in internal_chart_names_compression:
         copy_chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         if "rand_read" in internal_chart_name:
@@ -1257,7 +1262,8 @@ if __name__ == "__main_hu_hu_fcp__":
             if num_flow == 1 and num_host == 2:
                 break
             for output_name in output_names:
-                internal_chart_name = "HU_HU_FCP_" + str(num_flow) + "TCP_" + str(num_host) + "H_offloads_enabled_" + output_name
+                internal_chart_name = "HU_HU_FCP_" + str(num_flow) + "TCP_" + str(
+                    num_host) + "H_offloads_enabled_" + output_name
                 if "throughput" in internal_chart_name:
                     chart_name = "Throughput"
                     positive = True
@@ -1297,7 +1303,8 @@ if __name__ == "__main_hu_hu_fcp__":
                     one_data_set["inputs"]["input_num_hosts"] = num_host
                     one_data_set["inputs"]["input_num_flows"] = num_flow
                     one_data_set["inputs"]["input_protocol"] = "TCP"
-                    one_data_set["output"] = {"name": data_set_output + output + "_h2h", 'min': 0, "max": -1, "expected": -1,
+                    one_data_set["output"] = {"name": data_set_output + output + "_h2h", 'min': 0, "max": -1,
+                                              "expected": -1,
                                               "reference": -1, "unit": data_set_unit}
                     data_sets.append(one_data_set)
                 metric_id = LastMetricId.get_next_id()
@@ -1318,11 +1325,7 @@ if __name__ == "__main_hu_hu_fcp__":
                             platform=FunPlatform.F1).save()
     print" added charts for HU_HU_FCP 2 F1s"
 
-<<<<<<< HEAD
 if __name__ == "__main_raw_block_nvmetcp__":
-=======
-if __name__ == "__main_multiple_tcp_raw_block__":
->>>>>>> d8e62381a1a2943c8c37ee6275a9cd48525f816f
     internal_chart_names = ["rand_read_qd_nvmetcp_output_iops", "rand_write_qd_nvmetcp_output_iops"]
     multi_vol = "(N vols)"
     fio_read_job_names = ["fio_tcp_randread_blt_32_4_nvols", "fio_tcp_randread_blt_32_8_nvols"]
@@ -1354,7 +1357,8 @@ if __name__ == "__main_multiple_tcp_raw_block__":
     print "added datasets for the raw block nvme tcp charts"
 
 if __name__ == "__main_voltest_lsv__":
-    internal_chart_names = ["voltest_lsv_1instances_blt_iops", "voltest_lsv_1instances_blt_bandwidth", "voltest_lsv_4instances_blt_iops", "voltest_lsv_4instances_blt_bandwidth"]
+    internal_chart_names = ["voltest_lsv_1instances_blt_iops", "voltest_lsv_1instances_blt_bandwidth",
+                            "voltest_lsv_4instances_blt_iops", "voltest_lsv_4instances_blt_bandwidth"]
     base_line_date = datetime(year=2019, month=6, day=1, minute=0, hour=0, second=0)
     for internal_chart_name in internal_chart_names:
         if "1instances" in internal_chart_name:
@@ -1401,7 +1405,76 @@ if __name__ == "__main_voltest_lsv__":
     print "added charts for 1 instance and 4 instance lsv voltest"
 
 if __name__ == "__main__":
-    internal_chart_names = ["inspur_", "_write_", "_output_iops"]
-    names = ["seq", "mixed_read", ""]
-    
-    
+    internal_chart_names = ["inspur_", "_read_write_", "_output_iops"]
+    names = ["seq", "mixed", "oltp", "olap"]
+    qdepths = ["qd1", "qd8", "qd16", "qd32", "qd64"]
+    chart_name = "Latency"
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=6, day=1, minute=0, hour=0, second=0)
+    y1_axis_title = PerfUnit.UNIT_OPS
+    fio_seq_job_names = ["inspur_1024k_sequential_read_write_1", "inspur_1024k_sequential_read_write_8",
+                         "inspur_1024k_sequential_read_write_16", "inspur_1024k_sequential_read_write_32",
+                         "inspur_1024k_sequential_read_write_64"]
+    fio_mixed_job_names = ["inspur_mixed_random_read_write_1", "inspur_mixed_random_read_write_8",
+                           "inspur_mixed_random_read_write_16", "inspur_mixed_random_read_write_32",
+                           "inspur_mixed_random_read_write_64"]
+    fio_oltp_job_names = ["inspur_oltp_model_read_write_2", "inspur_oltp_model_read_write_8",
+                          "inspur_oltp_model_read_write_16", "inspur_oltp_model_read_write_32",
+                          "inspur_oltp_model_read_write_64"]
+    fio_olap_job_names = ["inspur_olap_model_read_write_2", "inspur_olap_model_read_write_8",
+                          "inspur_olap_model_read_write_16", "inspur_olap_model_read_write_32",
+                          "inspur_olap_model_read_write_64"]
+    output_names = ["output_read_iops", "output_write_iops"]
+    for name in names:
+        if name == "seq":
+            fio_job_names = fio_seq_job_names
+        elif name == "mixed":
+            fio_job_names = fio_mixed_job_names
+        elif name == "oltp":
+            fio_job_names = fio_oltp_job_names
+        else:
+            fio_job_names = fio_olap_job_names
+        for fio_job_name in fio_job_names:
+            if "_64" in fio_job_name:
+                qdepth = "qd64"
+            elif "_32" in fio_job_name:
+                qdepth = "qd32"
+            elif "_16" in fio_job_name:
+                qdepth = "qd16"
+            elif "_8" in fio_job_name:
+                qdepth = "qd8"
+            else:
+                qdepth = "qd1"
+
+            internal_chart_name = internal_chart_names[0] + name + internal_chart_names[1] + qdepth + internal_chart_names[2]
+            data_sets = []
+            for output_name in output_names:
+                if "read" in output_name:
+                    data_set_name = "read(1 vol)"
+                else:
+                    data_set_name = "write(1 vol)"
+                one_data_set = {}
+                one_data_set["name"] = data_set_name
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": y1_axis_title}
+                data_sets.append(one_data_set)
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                        source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/ec_inspur_fs_teramark.py",
+                        positive=True,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added charts for inspur containers"
