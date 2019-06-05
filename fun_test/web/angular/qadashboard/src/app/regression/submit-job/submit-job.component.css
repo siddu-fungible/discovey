@@ -28,3 +28,9 @@ input.disabled {
   color:#AAA;
   background:#F5F5F5;
 }
+
+.required-label:after {
+  content:" *";
+  color: red;
+  font-weight: bold;
+}

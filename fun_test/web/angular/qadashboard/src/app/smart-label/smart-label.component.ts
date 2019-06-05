@@ -28,6 +28,8 @@ export class SmartLabelComponent implements OnInit, OnChanges {
           this.type = "passed";
         } else if (this.value.toLowerCase() === "failed" || this.value.toLowerCase() === "error") {
           this.type = "failed";
+        } else {
+          this.type = "info";
         }
       }
 
