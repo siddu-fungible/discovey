@@ -62,6 +62,8 @@ IPSEC_ENC_SINGLE_TUNNEL = "ipsec_enc_single_tunnel_teramark"
 IPSEC_ENC_MULTI_TUNNEL = "ipsec_enc_multi_tunnel_teramark"
 IPSEC_DEC_SINGLE_TUNNEL = "ipsec_dec_single_tunnel_teramark"
 IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
+VOLTEST_LSV = "qa_voltest_lsv_performance"
+VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -186,7 +188,8 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
-                IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL]
+                IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
+                VOLTEST_LSV, VOLTEST_LSV_4]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1824,6 +1827,7 @@ class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
 class JuniperIpsecEncryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_ENC_SINGLE_TUNNEL
     model = "JuniperIpsecEncryptionSingleTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=51,
@@ -1834,6 +1838,7 @@ class JuniperIpsecEncryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
 class JuniperIpsecEncryptionMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_ENC_MULTI_TUNNEL
     model = "JuniperIpsecEncryptionMultiTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=52,
@@ -1844,6 +1849,7 @@ class JuniperIpsecEncryptionMultiTunnelPerformanceTc(PalladiumPerformanceTc):
 class JuniperIpsecDecryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_DEC_SINGLE_TUNNEL
     model = "JuniperIpsecDecryptionSingleTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=53,
@@ -1854,6 +1860,7 @@ class JuniperIpsecDecryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
 class JuniperIpsecDecryptionMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_DEC_MULTI_TUNNEL
     model = "JuniperIpsecDecryptionMultiTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=54,
@@ -1869,6 +1876,27 @@ class SetNetworkingStatusTc(PalladiumPerformanceTc):
 
     def run(self):
         set_networking_chart_status(platform=FunPlatform.F1)
+
+
+class VoltestLsvPerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_LSV
+    model = "VoltestLsvPerformance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=56,
+                              summary="Voltest LSV Performance with numinstance 1",
+                              steps="Steps 1")
+
+class VoltestLsv4PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_LSV_4
+    model = "VoltestLsv4Performance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=57,
+                              summary="Voltest LSV Performance with numinstance 4",
+                              steps="Steps 1")
 
 
 class PrepareDbTc(FunTestCase):
@@ -1947,6 +1975,8 @@ if __name__ == "__main__":
     myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
     myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
     myscript.add_test_case(SetNetworkingStatusTc())
+    myscript.add_test_case(VoltestLsvPerformanceTc())
+    myscript.add_test_case(VoltestLsv4PerformanceTc())
     # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

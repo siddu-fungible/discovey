@@ -135,7 +135,8 @@ class AssetManager:
                     if this_asset.manual_lock_user:
                         asset_level_manual_locked, error_message, manual_lock_user = True, "Asset: {} manual locked by: {}".format(asset_for_type, this_asset.manual_lock_user), this_asset.manual_lock_user
                 except ObjectDoesNotExist:
-                    print "ObjectDoesnotExist, {}".format(asset_for_type)
+                    pass
+                    #print "ObjectDoesnotExist, {}".format(asset_for_type)
                 except Exception as ex:
                     print("Some other exception: {}".format(ex))
         return asset_level_manual_locked, error_message, manual_lock_user, assets_required

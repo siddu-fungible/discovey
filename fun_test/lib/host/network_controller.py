@@ -1342,9 +1342,9 @@ class NetworkController(DpcshClient):
         stats = None
         try:
             if blocked_only:
-                cmd = "list"
-            else:
                 cmd = "blocked"
+            else:
+                cmd = "list"
             fun_test.debug("Getting flow list")
             result = self.json_execute(verb="flow", data=cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)

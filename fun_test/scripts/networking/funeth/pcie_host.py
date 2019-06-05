@@ -5,7 +5,7 @@ from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 
 
-fs_with_pcie_host = ('fs-11', 'fs-45',)
+fs_with_pcie_host = ('fs-11', 'fs-45', 'fs-66',)
 
 
 class PcieHost(FunTestScript):
@@ -32,7 +32,12 @@ class PcieHost(FunTestScript):
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
-
+        elif fs == 'fs-66':
+            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            f1_1_boot_args = "app=hw_hsu_test retimer=3 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            topology_helper.set_dut_parameters(dut_index=0,
+                                               f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                              1: {"boot_args": f1_1_boot_args}})
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
         fun_test.shared_variables["topology"] = topology

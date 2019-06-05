@@ -61,6 +61,7 @@ import { JsonInputComponent } from './ui-elements/json-input/json-input.componen
 import { Triage2Component } from './regression/triage2/triage2.component';
 import { JenkinsFormComponent } from './jenkins-form/jenkins-form.component';
 import { TriageDetailComponent } from './regression/triage2/triage-detail/triage-detail.component';
+import { SmartButtonComponent } from './ui-elements/smart-button/smart-button.component';
 
 @NgModule({
   declarations: [
@@ -106,7 +107,8 @@ import { TriageDetailComponent } from './regression/triage2/triage-detail/triage
     JsonInputComponent,
     Triage2Component,
     JenkinsFormComponent,
-    TriageDetailComponent
+    TriageDetailComponent,
+    SmartButtonComponent
   ],
   imports: [
     BsDropdownModule,

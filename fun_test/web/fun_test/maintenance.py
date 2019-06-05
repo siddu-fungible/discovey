@@ -1318,7 +1318,11 @@ if __name__ == "__main_hu_hu_fcp__":
                             platform=FunPlatform.F1).save()
     print" added charts for HU_HU_FCP 2 F1s"
 
+<<<<<<< HEAD
 if __name__ == "__main_raw_block_nvmetcp__":
+=======
+if __name__ == "__main_multiple_tcp_raw_block__":
+>>>>>>> d8e62381a1a2943c8c37ee6275a9cd48525f816f
     internal_chart_names = ["rand_read_qd_nvmetcp_output_iops", "rand_write_qd_nvmetcp_output_iops"]
     multi_vol = "(N vols)"
     fio_read_job_names = ["fio_tcp_randread_blt_32_4_nvols", "fio_tcp_randread_blt_32_8_nvols"]
@@ -1349,9 +1353,55 @@ if __name__ == "__main_raw_block_nvmetcp__":
         chart.save()
     print "added datasets for the raw block nvme tcp charts"
 
+if __name__ == "__main_voltest_lsv__":
+    internal_chart_names = ["voltest_lsv_1instances_blt_iops", "voltest_lsv_1instances_blt_bandwidth", "voltest_lsv_4instances_blt_iops", "voltest_lsv_4instances_blt_bandwidth"]
+    base_line_date = datetime(year=2019, month=6, day=1, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "1instances" in internal_chart_name:
+            model_name = "VoltestLsvPerformance"
+        else:
+            model_name = "VoltestLsv4Performance"
+        if "iops" in internal_chart_name:
+            chart_name = "BLT: IOPS"
+            y1_axis_title = PerfUnit.UNIT_OPS
+            output_names = ["output_read_iops", "output_write_iops"]
+        else:
+            chart_name = "BLT: Bandwidth"
+            y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
+            output_names = ["output_read_bandwidth", "output_write_bandwidth"]
+        data_sets = []
+        for output_name in output_names:
+            if "read" in output_name:
+                name = "read"
+            else:
+                name = "write"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": y1_axis_title}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Xiaoqin Ma (xiaoqin.ma@fungible.com)",
+                    source="https://github.com/fungible-inc/FunOS/blob/master/apps/voltest.c",
+                    positive=True,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added charts for 1 instance and 4 instance lsv voltest"
+
 if __name__ == "__main__":
-   internal_chart_names = ["inspur_", "_write_", "_output_iops"]
-   names = ["seq", "mixed_read", ""]
-
-
+    internal_chart_names = ["inspur_", "_write_", "_output_iops"]
+    names = ["seq", "mixed_read", ""]
+    
     

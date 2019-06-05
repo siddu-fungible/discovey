@@ -171,7 +171,7 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs.come.setup_dpc(), "Setup DPC")
         fun_test.test_assert(fs.come.is_dpc_ready(), "DPC ready")
 
-    def bringup_funcp(self, prepare_docker=True):
+    def bringup_funcp(self, prepare_docker=True, ep=False):
         linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                                ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
@@ -191,15 +191,34 @@ class FunControlPlaneBringup:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
 
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
+        if ep:
+            setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker "
+                                                         "--ep", timeout=1200)
+            linux_obj_come.command("docker exec F1-0 sudo ip link add link irb name vlan1 type vlan id 1")
+            linux_obj_come.command("docker exec F1-0 sudo ip link set vlan1 up")
+            linux_obj_come.command("docker exec F1-1 sudo ip link add link irb name vlan1 type vlan id 1")
+            linux_obj_come.command("docker exec F1-1 sudo ip link set vlan1 up")
 
-        setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
-                                                     timeout=1200)
+        else:
+            setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
+                                                         timeout=1200)
         sections = ['Bring up Control Plane', 'Device 1dad:', 'move fpg interface to f0 docker',
                     'libfunq bind  End', 'move fpg interface to f1 docker', 'Bring up Control Plane dockers']
         for section in sections:
             fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
-
         linux_obj_come.disconnect()
+
+        f1_0_container = FunCpDockerContainer(name="F1-0", host_ip=self.fs_spec['come']['mgmt_ip'],
+                                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        f1_0_op = f1_0_container.command("ifconfig vlan1")
+        fun_test.test_assert(expression="vlan1" in f1_0_op, message="Make sure vlan1 is present on F1-0")
+
+        f1_1_container = FunCpDockerContainer(name="F1-1", host_ip=self.fs_spec['come']['mgmt_ip'],
+                                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        f1_1_op = f1_1_container.command("ifconfig vlan1")
+        fun_test.test_assert(expression="vlan1" in f1_1_op, message="Make sure vlan1 is present on F1-1")
         return True
 
     def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/scratch",
@@ -233,6 +252,7 @@ class FunControlPlaneBringup:
             if f1 == "F1-1":
                 file_contents = self.abstract_configs_f1_1
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
+            linux_obj.command("rm %s" % file_name)
             linux_obj.create_file(file_name=file_name, contents=json.dumps(file_contents))
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/")
             execute_abstract = linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1] +
@@ -428,11 +448,12 @@ class FunControlPlaneBringup:
                     result = True
                 if result:
                     print("#########################################")
-                    fun_test.add_checkpoint("<b>Container %s can ping %s</b>" % (host.rstrip(), self.vlan1_ips[host]))
+                    fun_test.add_checkpoint("<b>Container %s can ping %s</b>" % (host.rstrip(),
+                                                                                 self.vlan1_ips[host.rstrip()]))
                     print("#########################################")
                 else:
-                    fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), self.vlan1_ips[host]))
-
+                    fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(),
+                                                                               self.vlan1_ips[host.rstrip()]))
 
     def test_cc_pings_remote_fs(self, dest_ips, docker_name=None):
         if not docker_name:
@@ -452,7 +473,7 @@ class FunControlPlaneBringup:
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host], ips)
+                command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host.rstrip()], ips)
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:

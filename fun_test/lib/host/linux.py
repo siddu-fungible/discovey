@@ -1661,7 +1661,7 @@ class Linux(object, ToDictMixin):
         # Add group reporting option (in case numjobs > 1)
         fio_command += " --group_reporting"
 
-        if 'name' not in kwargs:
+        if "multiple_jobs" not in kwargs and 'name' not in kwargs:
             fio_command += " --name=nvme_pcie"
 
         if 'ioengine' not in kwargs:
@@ -1680,7 +1680,10 @@ class Linux(object, ToDictMixin):
 
         if kwargs:
             for key in kwargs:
-                fio_command += " --" + key + "=" + str(kwargs[key])
+                if key == "multiple_jobs":
+                    fio_command += " " + str(kwargs[key])
+                else:
+                    fio_command += " --" + key + "=" + str(kwargs[key])
 
         fun_test.debug(fio_command)
 
