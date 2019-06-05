@@ -272,6 +272,10 @@
   },
     {
     "name": "fs-66",
+    "workarounds": {
+      "retimer_workaround": true
+    },
+    "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "10.1.105.53",
       "mgmt_ssh_username": "sysadmin",
