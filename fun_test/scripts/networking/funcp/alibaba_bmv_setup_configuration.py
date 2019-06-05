@@ -24,6 +24,7 @@ class ScriptSetup(FunTestScript):
 
 
 class BringupSetup(FunTestCase):
+    server_key={}
     def describe(self):
         self.set_test_details(id=1,
                               summary="Bringup FS-45 with control plane",
@@ -35,7 +36,8 @@ class BringupSetup(FunTestCase):
 
     def setup(self):
 
-        pass
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
 
     def run(self):
         # boot_image_f1_0 = "divya_funos-f1.stripped_june3.gz"
@@ -45,13 +47,12 @@ class BringupSetup(FunTestCase):
                          "--dis-stats retimer=0 --mgmt syslog=6 --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=3 --mgmt syslog=6 --disable-wu-watchdog"
-        fs_name = "fs-45"
-        funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+
+        # fs_name = "fs-45"
+        funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
 
         funcp_obj.cleanup_funcp()
-
-        server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
-        servers_mode = server_key["fs"][fs_name]
+        servers_mode = self.server_key["fs"][fs_name]["hosts"]
         servers_list = []
 
         for server in servers_mode:
@@ -70,7 +71,9 @@ class BringupSetup(FunTestCase):
         # Bringup FunCP
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False, ep=True), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
-        funcp_obj.assign_mpg_ips(static=True, f1_1_mpg="10.1.105.172", f1_0_mpg="10.1.105.173")
+        funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["mode"],
+                                 f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
+                                 f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script
 
@@ -122,7 +125,7 @@ class NicEmulation(FunTestCase):
             fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                      % server)
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))
+        tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False)
