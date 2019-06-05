@@ -62,16 +62,17 @@ def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
         count += 1
         response = os.system("ping -c 1 " + hostname)
         if count > 10:
+            fun_test.critical("Cannot reach host")
             break
         if response == 0:
             if not linux_obj.check_ssh():
                 power_cycle_host(hostname)
-                break
+                fun_test.sleep(message="Waiting for host after power cycle", seconds=90)
             else:
                 break
         else:
             "Cannot ping host"
-            fun_test.sleep(seconds=10, message="waiting for host")
+            fun_test.sleep(seconds=15, message="waiting for host")
     funeth_op = ""
     funeth_op = linux_obj.command(command="lsmod | grep funeth")
     if "funeth" not in funeth_op:
