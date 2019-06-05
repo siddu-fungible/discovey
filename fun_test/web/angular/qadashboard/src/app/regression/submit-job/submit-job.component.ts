@@ -12,6 +12,7 @@ import {Validators} from "@angular/forms";
   styleUrls: ['./submit-job.component.css']
 })
 export class SubmitJobComponent implements OnInit {
+  DEFAULT_TEST_BED: string = "fs-6";
   scheduleInMinutes: number;
   scheduleInMinutesRadio: boolean;
   buildUrl: string;
@@ -37,13 +38,13 @@ export class SubmitJobComponent implements OnInit {
   schedulingTimeTimezone = "IST";
   daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   selectedDays: string[] = [];
-  selectedTestBedType: string = null;
+  selectedTestBedType: string = this.DEFAULT_TEST_BED;
   testBedTypes: any = null;
   testBedNames: string[] = [];
   submitting: string = null;
   tftpImagePath: string = "funos-f1.stripped.gz";
   bootArgs: string = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
-  withJenkinsBuild: boolean = false;
+  withJenkinsBuild: boolean = true;
 
   disableAssertions: boolean = true;
   funOsMakeFlags: string = null;
@@ -51,6 +52,7 @@ export class SubmitJobComponent implements OnInit {
   branchFunSdk: string = null;
   branchFunControlPlane: string = null;
   skipDasmC: boolean = true;
+  branchFunTools: string = null;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -60,6 +62,7 @@ export class SubmitJobComponent implements OnInit {
   selectedUser: any = null;
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
+
 
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
@@ -133,7 +136,7 @@ export class SubmitJobComponent implements OnInit {
       Object.keys(this.testBedTypes).map(key => {
         this.testBedNames.push(key);
         this.testBedNames.sort();
-        this.selectedTestBedType = "simulation";
+        this.selectedTestBedType = this.DEFAULT_TEST_BED;
       })
 
     })
@@ -270,6 +273,7 @@ export class SubmitJobComponent implements OnInit {
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
         payload["environment"]["build_parameters"]["BRANCH_FunControlPlane"] = this.branchFunControlPlane;
         payload["environment"]["build_parameters"]["SKIP_DASM_C"] = this.skipDasmC;
+        payload["environment"]["build_parameters"]["BRANCH_FunTools"] = this.branchFunTools;
       }
     }
 
@@ -285,9 +289,9 @@ export class SubmitJobComponent implements OnInit {
     let ctrl = this;
     this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
       self.jobId = parseInt(result.data);
-      window.location.href = "/regression";
-
-      console.log("Job " + self.jobId + " Submitted");
+      window.location.href = "/regression/suite_detail/" + self.jobId;
+      ctrl.logger.success(`Job: ${self.jobId} Submitted`);
+      console.log("Job: " + self.jobId + " Submitted");
       ctrl.submitting = null;
     }, error => {
       self.logger.error("Unable to submit job");
