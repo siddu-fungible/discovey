@@ -156,7 +156,7 @@
       }
     }
   },
-   "fs-alibaba_bmv": {
+  "fs-alibaba_bmv": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
@@ -397,7 +397,6 @@
       }
     }
   },
-
   "fs-20": {
     "dut_info": {
       "0": {
@@ -1202,7 +1201,7 @@
       "mktg-server-14"
     ]
   },
-    "fs-66": {
+  "fs-66": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
@@ -1242,5 +1241,4 @@
       }
     }
   }
-
 }
