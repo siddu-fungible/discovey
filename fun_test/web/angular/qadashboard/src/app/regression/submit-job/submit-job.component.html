@@ -39,10 +39,7 @@
                 &nbsp;&nbsp;<input (change)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With Jenkins build
               </td>
             </tr>
-            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
-              <td><label for="boot-args">BOOTARGS (For Jenkins build)</label></td>
-              <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
-            </tr>
+
 
             <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
               <td class="no-wrap">
@@ -71,6 +68,10 @@
                 <td colspan="2">
                   <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
                 </td>
+              </tr>
+              <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
+                <td><label for="boot-args">BOOTARGS</label></td>
+                <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
               </tr>
               <tr>
                   <td><input (change)="disableAssertions = !disableAssertions" type="checkbox" name="disable-assertions" [checked]="disableAssertions"> DISABLE_ASSERTIONS </td>
