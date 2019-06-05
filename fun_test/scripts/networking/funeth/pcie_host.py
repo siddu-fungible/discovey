@@ -5,7 +5,7 @@ from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 
 
-fs_with_pcie_host = ('fs-11', 'fs-45',)
+fs_with_pcie_host = ('fs-11', 'fs-45', 'fs-66',)
 
 
 class PcieHost(FunTestScript):
