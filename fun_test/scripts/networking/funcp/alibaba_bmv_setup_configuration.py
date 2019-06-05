@@ -68,7 +68,7 @@ class BringupSetup(FunTestCase):
         fun_test.test_assert(topology, "Topology deployed")
 
         # Bringup FunCP
-        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False, ep=True), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
         funcp_obj.assign_mpg_ips(static=True, f1_1_mpg="10.1.105.172", f1_0_mpg="10.1.105.173")
 
@@ -116,7 +116,11 @@ class NicEmulation(FunTestCase):
 
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
-
+        # Check PICe Link on host
+        for server in servers_mode:
+            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=True)
+            fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
+                                                                     % server)
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))
         funeth_obj = Funeth(tb_config_obj)
@@ -640,7 +644,7 @@ class LocalSSDTest(StorageConfiguration):
         device = self.host.command("sudo nvme list | grep nvme | sed -n 1p | awk {'print $1'}").strip()
         fun_test.test_assert(device, message="nvme device visible on host")
         super(LocalSSDTest, self).runio(device)
-
+        self.storage_controller.disconnect()
     def cleanup(self):
         pass
 
