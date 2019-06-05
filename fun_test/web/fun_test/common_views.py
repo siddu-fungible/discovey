@@ -10,6 +10,9 @@ from web.fun_test.metrics_views import validate_jira
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
+def site_under_construction(request):
+    return render(request, 'qa_dashboard/site_under_construction.html')
+
 def alerts_page(request):
     return render(request, 'qa_dashboard/alerts_page.html', locals())
 

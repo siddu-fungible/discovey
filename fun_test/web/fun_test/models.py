@@ -24,6 +24,11 @@ RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 
 TAG_LENGTH = 50
 
+
+class SiteRunTime(models.Model):
+    under_construction = models.BooleanField(default=False)
+
+
 class FunModel(models.Model):
     def to_dict(self):
         result = {}
