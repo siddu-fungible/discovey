@@ -252,7 +252,7 @@ class FunControlPlaneBringup:
             if f1 == "F1-1":
                 file_contents = self.abstract_configs_f1_1
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
-            linux_obj.command("rm &s" % file_name)
+            linux_obj.command("rm %s" % file_name)
             linux_obj.create_file(file_name=file_name, contents=json.dumps(file_contents))
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/")
             execute_abstract = linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1] +
