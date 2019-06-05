@@ -172,6 +172,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     is_vp_stuck = False
     is_parser_stuck = False
     is_etp_queue_stuck = False
+    is_flow_blocked = False
     for nc_obj in network_controller_objs:
         output_list = []
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -258,18 +259,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_eqm_stats()
         output_list.append({'EQM': output})
 
-        # Upload stats output file
-        dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
-        file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
-        with open(file_path, 'w') as f:
-            json.dump(output_list, f, indent=4, separators=(',', ': '), sort_keys=True)
-            fun_test.add_auxillary_file(description=dpc_stats_filename, filename=file_path)
-
         # Check VP stuck
         for pc_id in (1, 2):
             fun_test.log('{} dpc: Get resource PC {} stats'.format(f1, pc_id))
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
-            output_list.append(output)
+            output_list.append({'resource pc {}'.format(pc_id): output})
             for core_str, val_dict in output.items():
                 if any(val_dict.values()) != 0:  # VP stuck
                     core, vp = [int(i) for i in re.match(r'CORE:(\d+) VP:(\d+)', core_str).groups()]
@@ -281,8 +275,23 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         # Check ETP queue stuck
         fun_test.log('{} dpc: Get resource nux stats'.format(f1))
         output = nc_obj.peek_resource_nux_stats()
+        output_list.append({'resource nux': output})
         if output:
             is_etp_queue_stuck = True
+
+        # Check flow blocked
+        fun_test.log('{} dpc: flow blocked'.format(f1))
+        output = nc_obj.flow_list(blocked_only=True)
+        output_list.append({'flow blocked': output})
+        if output:
+            is_flow_blocked = True
+
+        # Upload stats output file
+        dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
+        file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
+        with open(file_path, 'w') as f:
+            json.dump(output_list, f, indent=4, separators=(',', ': '), sort_keys=True)
+            fun_test.add_auxillary_file(description=dpc_stats_filename, filename=file_path)
 
     fpg_rx_bytes = sum(
         [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
@@ -297,7 +306,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
 
-    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck:
+    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked:
         messages = []
         if is_vp_stuck:
             messages.append('VP is stuck')
@@ -305,6 +314,8 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             messages.append('Parser is stuck')
         if is_etp_queue_stuck:
             messages.append('ETP queue is stuck')
+        if is_flow_blocked:
+            messages.append('Flow blocked')
         fun_test.test_assert(False, ';'.join(messages))
 
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes

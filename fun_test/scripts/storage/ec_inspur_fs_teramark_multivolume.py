@@ -120,6 +120,9 @@ class ECVolumeLevelScript(FunTestScript):
                 self.skip_dut_list.append(index)
             fun_test.debug("DUTs that will be skipped: {}".format(self.skip_dut_list))
 
+            for i in range(len(self.bootargs)):
+                self.bootargs[i] += " --mgmt"
+
             # Deploying of DUTs
             topology_helper = TopologyHelper()
             topology_helper.disable_duts(self.skip_dut_list)
@@ -278,6 +281,10 @@ class ECVolumeLevelScript(FunTestScript):
 
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
+
+            for i in range(len(self.bootargs)):
+                self.bootargs[i] += " --csr-replay"
+
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                               1: {"boot_args": self.bootargs[1]}})

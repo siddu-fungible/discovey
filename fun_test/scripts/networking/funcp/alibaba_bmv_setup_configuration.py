@@ -47,6 +47,7 @@ class BringupSetup(FunTestCase):
                          "--dis-stats retimer=3 --mgmt syslog=6 --disable-wu-watchdog"
         fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+
         funcp_obj.cleanup_funcp()
 
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
@@ -67,10 +68,11 @@ class BringupSetup(FunTestCase):
         fun_test.test_assert(topology, "Topology deployed")
 
         # Bringup FunCP
-        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False, ep=True), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
-
         funcp_obj.assign_mpg_ips(static=True, f1_1_mpg="10.1.105.172", f1_0_mpg="10.1.105.173")
+
+        # funcp_obj.fetch_mpg_ips() #Only if not running the full script
 
     def cleanup(self):
 
@@ -97,27 +99,40 @@ class NicEmulation(FunTestCase):
         pass
 
     def run(self):
-        # reboot PCIe connected servers and verify PCIe connections
+        # execute abstract Configs
+
         abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/alibaba_bmv_configs_f1_0.json'
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/alibaba_bmv_configs_f1_1.json'
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
-
-        # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs("FS45")
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False)
-        # TODO : add ethtool output
-        # funcp_obj.fetch_mpg_ips() #Only if not running the full script
-        # execute abstract file
+        # Add static routes on Containers
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
         routes = server_key["static_routes"][fs_name]
         funcp_obj.add_routes_on_f1(routes_dict=routes)
-        test_host_pings(hostnames=servers_list, ips=["18.1.1.2", "30.1.1.2"])
 
-        # funcp_obj.test_cc_pings_fs() # TODO : check ping: -I, -L, -T flags cannot be used with unicast destination
-        # funcp_obj.test_cc_pings_remote_fs(dest_ips=["", ""])
+        # Ping QFX from both F1s
+        funcp_obj.test_cc_pings_remote_fs(dest_ips=["1.1.1.1"], docker_name="F1-0")
+        funcp_obj.test_cc_pings_remote_fs(dest_ips=["1.1.2.1"], docker_name="F1-1")
+
+        # Ping vlan to vlan
+        funcp_obj.test_cc_pings_fs()
+        # Check PICe Link on host
+        for server in servers_mode:
+            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=True)
+            fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
+                                                                     % server)
+        # install drivers on PCIE connected servers
+        tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))
+        funeth_obj = Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
+        setup_hu_host(funeth_obj, update_driver=False)
+
+        # get ethtool output TODO : IFCONFIG, lspci
+        get_ethtool_on_hu_host(funeth_obj)
+
+        # Ping hosts
+
+        test_host_pings(hostnames=servers_list, ips=["18.1.1.2", "30.1.1.2"])
 
     def cleanup(self):
         pass
@@ -629,7 +644,7 @@ class LocalSSDTest(StorageConfiguration):
         device = self.host.command("sudo nvme list | grep nvme | sed -n 1p | awk {'print $1'}").strip()
         fun_test.test_assert(device, message="nvme device visible on host")
         super(LocalSSDTest, self).runio(device)
-
+        self.storage_controller.disconnect()
     def cleanup(self):
         pass
 
