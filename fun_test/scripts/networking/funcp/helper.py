@@ -62,16 +62,17 @@ def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
         count += 1
         response = os.system("ping -c 1 " + hostname)
         if count > 10:
+            fun_test.critical("Cannot reach host")
             break
         if response == 0:
             if not linux_obj.check_ssh():
                 power_cycle_host(hostname)
-                break
+                fun_test.sleep(message="Waiting for host after power cycle", seconds=90)
             else:
                 break
         else:
             "Cannot ping host"
-            fun_test.sleep(seconds=10, message="waiting for host")
+            fun_test.sleep(seconds=15, message="waiting for host")
     funeth_op = ""
     funeth_op = linux_obj.command(command="lsmod | grep funeth")
     if "funeth" not in funeth_op:
@@ -90,15 +91,15 @@ def power_cycle_host(hostname):
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
-def test_host_pings(hostnames, ips):
-    for host in hostnames:
-        linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
-        for hosts in ips:
-            result = linux_obj.ping(dst=hosts)
-            if result:
-                fun_test.log("%s can reach %s" % (host, hosts))
-            else:
-                fun_test.critical("%s cannot reach %s" % (host, hosts))
+def test_host_pings(host, ips):
+
+    linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+    for hosts in ips:
+        result = linux_obj.ping(dst=hosts)
+        if result:
+            fun_test.log("%s can reach %s" % (host, hosts))
+        else:
+            fun_test.critical("%s cannot reach %s" % (host, hosts))
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
