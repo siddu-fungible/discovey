@@ -79,7 +79,7 @@ def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
         return True
     else:
         funeth_rm = linux_obj.sudo_command("rmmod funeth")
-        fun_test.test_assert(expression="ERROR" not in funeth_rm, message="Funeth removed succesfully")
+        critical_log(expression="ERROR" not in funeth_rm, message="Funeth removed succesfully")
         return True
 
 
