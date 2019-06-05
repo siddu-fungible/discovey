@@ -25,6 +25,7 @@ class ScriptSetup(FunTestScript):
 
 class BringupSetup(FunTestCase):
     server_key={}
+
     def describe(self):
         self.set_test_details(id=1,
                               summary="Bringup FS-45 with control plane",
@@ -50,7 +51,6 @@ class BringupSetup(FunTestCase):
 
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
-
         funcp_obj.cleanup_funcp()
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         servers_list = []
@@ -59,7 +59,7 @@ class BringupSetup(FunTestCase):
             print server
             fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
             servers_list.append(server)
-
+        
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                           1: {"boot_args": f1_1_boot_args}}
@@ -83,6 +83,8 @@ class BringupSetup(FunTestCase):
 
 
 class NicEmulation(FunTestCase):
+    server_key = {}
+
     def describe(self):
         self.set_test_details(id=2,
                               summary="Bringup PCIe Connceted Hosts and test traffic",
@@ -99,7 +101,8 @@ class NicEmulation(FunTestCase):
 
     def setup(self):
 
-        pass
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
 
     def run(self):
         # execute abstract Configs
@@ -112,16 +115,17 @@ class NicEmulation(FunTestCase):
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
         routes = server_key["static_routes"][fs_name]
         funcp_obj.add_routes_on_f1(routes_dict=routes)
-
+        fun_test.sleep(message="Waiting before ping tests", seconds=10)
         # Ping QFX from both F1s
-        funcp_obj.test_cc_pings_remote_fs(dest_ips=["1.1.1.1"], docker_name="F1-0")
-        funcp_obj.test_cc_pings_remote_fs(dest_ips=["1.1.2.1"], docker_name="F1-1")
+        ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
+        for container in ping_dict:
+            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
         # Check PICe Link on host
         for server in servers_mode:
-            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=True)
+            result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
             fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                      % server)
         # install drivers on PCIE connected servers
@@ -134,8 +138,9 @@ class NicEmulation(FunTestCase):
         get_ethtool_on_hu_host(funeth_obj)
 
         # Ping hosts
-
-        test_host_pings(hostnames=servers_list, ips=["18.1.1.2", "30.1.1.2"])
+        ping_dict = self.server_key["fs"][fs_name]["host_pings"]
+        for host in ping_dict:
+            test_host_pings(host=host, ips=ping_dict[host])
 
     def cleanup(self):
         pass

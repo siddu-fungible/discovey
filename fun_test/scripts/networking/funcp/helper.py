@@ -90,15 +90,15 @@ def power_cycle_host(hostname):
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
-def test_host_pings(hostnames, ips):
-    for host in hostnames:
-        linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
-        for hosts in ips:
-            result = linux_obj.ping(dst=hosts)
-            if result:
-                fun_test.log("%s can reach %s" % (host, hosts))
-            else:
-                fun_test.critical("%s cannot reach %s" % (host, hosts))
+def test_host_pings(host, ips):
+
+    linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+    for hosts in ips:
+        result = linux_obj.ping(dst=hosts)
+        if result:
+            fun_test.log("%s can reach %s" % (host, hosts))
+        else:
+            fun_test.critical("%s cannot reach %s" % (host, hosts))
 
 
 def setup_hu_host(funeth_obj, update_driver=True):

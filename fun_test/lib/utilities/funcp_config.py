@@ -37,6 +37,8 @@ class FunControlPlaneBringup:
         self.mpg_ips = {}
         self.docker_names = []
         self.vlan1_ips = {}
+        self.vlan_ips_got = False
+        self.docker_names_got = False
 
     def boot_both_f1(self, power_cycle_come=True, reboot_come=True, gatewayip=None, funcp_cleanup=False):
         fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
@@ -252,7 +254,7 @@ class FunControlPlaneBringup:
             if f1 == "F1-1":
                 file_contents = self.abstract_configs_f1_1
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
-            linux_obj.command("rm &s" % file_name)
+            linux_obj.command("rm %s" % file_name)
             linux_obj.create_file(file_name=file_name, contents=json.dumps(file_contents))
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/")
             execute_abstract = linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1] +
@@ -414,6 +416,8 @@ class FunControlPlaneBringup:
             linux_obj.sudo_command(command="docker kill " + docker_name.rstrip(), timeout=300)
 
     def _get_docker_names(self, verify_2_dockers=True):
+        if self.docker_names_got:
+            return
         linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                                ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
@@ -424,6 +428,7 @@ class FunControlPlaneBringup:
         if verify_2_dockers:
             fun_test.test_assert_expected(expected=2, actual=len(self.docker_names),
                                           message="Make sure 2 dockers are up")
+        self.docker_names_got = True
         linux_obj_come.disconnect()
 
     def test_cc_pings_fs(self):
@@ -433,6 +438,8 @@ class FunControlPlaneBringup:
         for host in self.docker_names:
 
             for docker in self.vlan1_ips:
+                if host.rstrip() == docker.rstrip():
+                    continue
                 result = False
                 percentage_loss = 100
                 linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
@@ -489,6 +496,8 @@ class FunControlPlaneBringup:
             linux_obj.disconnect()
 
     def _get_vlan1_ips(self):
+        if self.vlan_ips_got:
+            return
         self.vlan1_ips = {}
         self._get_docker_names()
 
@@ -501,6 +510,7 @@ class FunControlPlaneBringup:
             linux_obj.command(command="ls")
             vlan1_ip = ifconfig_output.split()[1]
             self.vlan1_ips[str(docker_name.rstrip())] = vlan1_ip
+            self.vlan_ips_got = True
             linux_obj.disconnect()
 
     def check_come_stuck(self, fs_obj):
