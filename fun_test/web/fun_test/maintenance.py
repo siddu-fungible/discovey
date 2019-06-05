@@ -1404,7 +1404,7 @@ if __name__ == "__main_voltest_lsv__":
                     platform=FunPlatform.F1).save()
     print "added charts for 1 instance and 4 instance lsv voltest"
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur__":
     internal_chart_names = ["inspur_", "_read_write_", "_output_iops"]
     names = ["seq", "mixed", "oltp", "olap"]
     qdepths = ["qd1", "qd8", "qd16", "qd32", "qd64"]
@@ -1478,3 +1478,34 @@ if __name__ == "__main__":
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
     print "added charts for inspur containers"
+
+if __name__ == "__main__":
+    model_name = "HuLatencyUnderLoadPerformance"
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.metric_model_name == "HuLatencyPerformance":
+            print "adding clone for {}".format(entry.internal_chart_name)
+            internal_chart_name = entry.internal_chart_name + "_under_load"
+            data_sets = json.loads(entry.data_sets)
+            for data_set in data_sets:
+                index = data_set["output"]["name"].rfind('_')
+                output_name = data_set["output"]["name"][:index] + '_uload' + data_set["output"]["name"][index:]
+                data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": PerfUnit.UNIT_USECS}
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name=entry.chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=entry.description,
+                        owner_info=entry.owner_info,
+                        source=entry.source,
+                        positive=entry.positive,
+                        y1_axis_title=entry.y1_axis_title,
+                        visualization_unit=entry.y1_axis_title,
+                        metric_model_name=model_name,
+                        base_line_date=entry.base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added charts for latency under load"
