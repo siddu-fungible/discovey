@@ -807,7 +807,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            # post_results("Inspur Performance Test", test_method, *row_data_list)
+            post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running
             if start_mpstat:
@@ -960,9 +960,9 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    # ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(MixedRandReadWriteIOPS())
+    ecscript.add_test_case(RandReadWrite8kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(MixedRandReadWriteIOPS())
     ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWriteIOPS())
+    ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.run()
