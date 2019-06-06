@@ -134,6 +134,12 @@
     "transport": "RDS",
     "uname": "localadmin",
     "pwd": "Precious1*",
-    "server": "cab03-qa-01"
+    "server": "cab03-qa-01",
+    "mode": [
+      "write",
+      "read"
+    ],
+    "num_jobs": 1,
+    "iodepth": 16
   }
 }

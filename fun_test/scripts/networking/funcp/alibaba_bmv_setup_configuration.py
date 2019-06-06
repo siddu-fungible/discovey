@@ -19,6 +19,7 @@ class ScriptSetup(FunTestScript):
     def setup(self):
         pass
 
+
     def cleanup(self):
         pass
 
@@ -47,9 +48,9 @@ class BringupSetup(FunTestCase):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=3 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=3 --mgmt --disable-wu-watchdog syslog=2"
 
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -151,282 +152,6 @@ class NicEmulation(FunTestCase):
         pass
 
 
-class StorageConfiguration(FunTestCase):
-    def describe(self):
-        self.set_test_details(id=3, summary="Storage tests", steps="1. Configure volumes")
-
-    def setup(self, config):
-        testcase = self.__class__.__name__
-        benchmark_parsing = True
-        benchmark_file = ""
-        benchmark_file = fun_test.get_script_parent_directory() + '/fs_connected_servers.json'
-        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
-
-        benchmark_dict = {}
-        benchmark_dict = utils.parse_file_to_json(benchmark_file)
-
-        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
-            benchmark_parsing = False
-            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
-                              format(testcase, benchmark_file))
-            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-
-        for k, v in benchmark_dict[testcase].iteritems():
-            setattr(self, k, v)
-
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
-        self.storage_config = self.server_key[config]
-        server = self.storage_config['server']
-        self.host = Linux(host_ip=server, ssh_username=self.uname, ssh_password=self.pwd)
-
-        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-        for service in udev_services:
-            service_status = self.host.systemctl(service_name=service, action="stop")
-            # fun_test.test_assert(service_status, "Stopping {} service".format(service))
-
-    def run(self):
-        self.blt_create_count = 0
-        self.blt_attach_count = 0
-        self.blt_detach_count = 0
-        self.blt_delete_count = 0
-
-        # self.storage_controller_0 = StorageController(target_ip="10.1.105.165", target_port=40220)
-        # self.storage_controller_1 = StorageController(target_ip="10.1.105.165", target_port=40221)
-        # command_result = self.storage_controller_0.poke(props_tree=["params/syslog/level", 2], legacy=False)
-        # fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
-        # command_result = self.storage_controller_1.poke(props_tree=["params/syslog/level", 2], legacy=False)
-        # fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
-
-        if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
-            fun_test.shared_variables["blt"] = {}
-            fun_test.shared_variables["blt"]["setup_created"] = False
-
-        # Create namespace
-        # self.storage_controller = fun_test.shared_variables["storage_controller"]
-        self.total_num_ns = self.storage_config['num_namespace']
-        self.thin_uuid = {}
-        if self.vol_type == "RDS":
-            for i in range(1, self.total_num_ns + 1, 1):
-                self.thin_uuid[i] = utils.generate_uuid()
-                command_result = {}
-                command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_RDS",
-                                                                       capacity=self.capacity,
-                                                                       block_size=self.block_size,
-                                                                       uuid=self.thin_uuid[i],
-                                                                       name="rds-block1",
-                                                                       remote_nsid = 1,
-                                                                       remote_ip = self.remote_ip_rds,
-                                                                       port=self.port,
-                                                                       command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Creating volume with uuid {}".
-                                    format(self.thin_uuid))
-                fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-        else:
-
-            for i in range(1, self.total_num_ns + 1, 1):
-                self.thin_uuid[i] = utils.generate_uuid()
-                command_result = {}
-                command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                         capacity=self.capacity,
-                                                                         block_size=self.block_size,
-                                                                         uuid=self.thin_uuid[i],
-                                                                         name="thin_blk" + str(i),
-                                                                         command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Creating volume with uuid {}".
-                                     format(self.thin_uuid))
-                fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-                if command_result["status"]:
-                    self.blt_create_count += 1
-                else:
-                    fun_test.test_assert(command_result["status"],
-                                         "Thin Block volume {} creation with capacity {}".
-                                         format(i, self.capacity))
-
-        # Create the controller
-        if self.vol_type != "RDS":
-            self.num_ctrl = self.num_vf + 1
-            self.ctrlr_uuid = {}
-            if self.transport == "PCI":
-                for i in range(1, self.num_ctrl + 1, 1):
-                    self.ctrlr_uuid[i] = utils.generate_uuid()
-                    if i == 2:
-                        self.f0_fnid = 40
-                    elif i > 2:
-                        self.f0_fnid += 1
-                    command_result = {}
-                    command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                                 transport=self.transport,
-                                                                                 fnid=self.fnid,
-                                                                                 ctlid=self.ctlid,
-                                                                                 huid=self.huid,
-                                                                                 command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
-                                         format(self.ctrlr_uuid))
-                    fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-                    fun_test.shared_variables["blt"]["ctrlr_uuid"] = self.ctrlr_uuid
-            else:
-                for i in range(1, self.num_ctrl + 1, 1):
-                    command_result = {}
-                    self.ctrlr_uuid[i] = utils.generate_uuid()
-                    command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                                 transport=self.transport,
-                                                                                 remote_ip=self.remote_ip,
-                                                                                 nqn="nqn-1",
-                                                                                 port=self.port,
-                                                                                 command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
-                                         format(self.ctrlr_uuid))
-                    fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-                    fun_test.shared_variables["blt"]["ctrlr_uuid"] = self.ctrlr_uuid
-
-
-        # Attach namespace
-        if self.vol_type == "RDS":
-            self.nsid = 2
-        else:
-            self.nsid = 1
-
-        if self.num_vf > 0:
-            self.count = self.num_namespace * self.num_vf
-        else:
-            self.count = self.num_namespace
-
-        self.ctlid_count = 1
-
-        for i in range(1, self.count + 1, 1):
-            cur_uuid = self.thin_uuid[i]
-            print("*************")
-            print(self.thin_uuid)
-            print(cur_uuid)
-            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                                vol_uuid = cur_uuid,
-                                                                                ns_id = self.nsid,
-                                                                                command_duration = self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
-                                 format(self.thin_uuid[i], self.ctrlr_uuid))
-            if i == self.num_namespace:
-                # self.num_namespace = self.num_namespace
-                self.nsid = 1
-                self.ctlid_count += 1
-            else:
-                pass
-
-    def runio(self, device):
-        initial_volume_stats = {}
-        for i in range(1, self.num_namespace + 1, 1):
-            command_result = {}
-            initial_volume_stats[i] = {}
-            self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
-                                                              "volumes",
-                                                              "VOL_TYPE_BLK_LOCAL_THIN",
-                                                              self.thin_uuid[i],
-                                                              "stats")
-            command_result = self.storage_controller.peek(self.storage_props_tree)
-            """fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT")
-            initial_volume_stats[i] = command_result["data"]
-            fun_test.log("Volume Stats at the beginning of the test:")
-            fun_test.log(initial_volume_stats[i])"""
-
-        for i in self.storage_config['mode']:
-            fio_result = self.host.pcie_fio(filename=device, rw=i,
-                                             numjobs=self.num_jobs,
-                                             iodepth=self.iodepth,
-                                             name="fio_" + str(i), fill_device=1, prio=0, direct=1)
-
-        for i in range(1, self.num_namespace + 1, 1):
-            command_result = {}
-            print("thin_uuid")
-            print(self.thin_uuid)
-            print("***********")
-            initial_volume_stats[i] = {}
-            self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
-                                                              "volumes",
-                                                              "VOL_TYPE_BLK_LOCAL_THIN",
-                                                              self.thin_uuid[i],
-                                                              "stats")
-            command_result = self.storage_controller.peek(self.storage_props_tree)
-
-        self.host.command(command="sudo iostat")
-
-    def cleanup(self):
-        pass
-
-
-class LocalSSDTest(StorageConfiguration):
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Run fio traffic on locally attached SSD",
-                              steps="""
-                                      1. Create BLT volume
-                                      2. Create PCI controller
-                                      3. Attach volume to the controller
-                                      4. Check if nvme device is present on host
-                                      5. Run fio write
-                                      6. Run fio read
-                                      """)
-
-    def setup(self):
-        config = "LocalSSDTest"
-        super(LocalSSDTest, self).setup(config)
-
-    def run(self):
-        self.vol_type = "PCI"
-        self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p0)
-        super(LocalSSDTest, self).run()
-        self.host.command("sudo nvme list")
-        device = self.host.command("sudo nvme list | grep nvme | sed -n 1p | awk {'print $1'}").strip()
-        fun_test.test_assert(device, message="nvme device visible on host")
-        super(LocalSSDTest, self).runio(device)
-        self.storage_controller.disconnect()
-
-    def cleanup(self):
-        pass
-
-
-class RemoteSSDTest(StorageConfiguration):
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Run fio traffic on remotely attached SSD",
-                              steps="""
-                                              1. Assign IP to remote F1
-                                              2. Create BLT volume
-                                              3. Create RDS controller
-                                              4. Attach volume to RDS controller on remote F1
-                                              5. Assign IP to local F1
-                                              6. Create RDS volume pointing to the BLT configured on remote F1
-                                              7. Attach volume to the previously configured PCI conytroller 
-                                              8. Check if nvme device is present on host
-                                              9. Run fio write
-                                              7. Run fio read
-                                              """)
-
-    def setup(self):
-        config = "RemoteSSDTest"
-        super(RemoteSSDTest, self).setup(config)
-
-    def run(self):
-        self.vol_type = "PCI"
-        self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p1)
-        command_result = self.storage_controller.ip_cfg(ip=self.ip, port=self.port)
-        fun_test.log(command_result)
-        super(RemoteSSDTest, self).run()
-        fun_test.sleep(message="delay before configuring f1_0")
-        self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p0)
-        command_result = self.storage_controller.ip_cfg(ip=self.remote_ip, port=self.port)
-        fun_test.log(command_result)
-        self.vol_type = "RDS"
-        super(RemoteSSDTest, self).run()
-        self.host.command("sudo nvme list")
-        device = self.host.command("sudo nvme list | grep nvme | sed -n 2p | awk {'print $1'}").strip()
-        fun_test.test_assert(device, message="nvme device visible on host")
-        super(RemoteSSDTest, self).runio(device)
-
-    def cleanup(self):
-        pass
-
 
 class StorageConfiguration(FunTestCase):
     def describe(self):
@@ -456,16 +181,17 @@ class StorageConfiguration(FunTestCase):
         server = self.storage_config['server']
         self.host = Linux(host_ip=server, ssh_username=self.uname, ssh_password=self.pwd)
 
-        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        """udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
         for service in udev_services:
             service_status = self.host.systemctl(service_name=service, action="stop")
-            # fun_test.test_assert(service_status, "Stopping {} service".format(service))
+            # fun_test.test_assert(service_status, "Stopping {} service".format(service))"""
 
     def run(self):
         self.blt_create_count = 0
         self.blt_attach_count = 0
         self.blt_detach_count = 0
         self.blt_delete_count = 0
+
 
         # self.storage_controller_0 = StorageController(target_ip="10.1.105.165", target_port=40220)
         # self.storage_controller_1 = StorageController(target_ip="10.1.105.165", target_port=40221)
@@ -480,6 +206,10 @@ class StorageConfiguration(FunTestCase):
 
         # Create namespace
         # self.storage_controller = fun_test.shared_variables["storage_controller"]
+        fun_test.log("===================")
+        fun_test.log("Creating namespace")
+        fun_test.log("===================")
+
         self.total_num_ns = self.storage_config['num_namespace']
         self.thin_uuid = {}
         if self.vol_type == "RDS":
@@ -496,7 +226,7 @@ class StorageConfiguration(FunTestCase):
                                                                        port=self.port,
                                                                        command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Creating volume with uuid {}".
-                                    format(self.thin_uuid))
+                                    format(self.thin_uuid[i]))
                 fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
         else:
 
@@ -510,7 +240,7 @@ class StorageConfiguration(FunTestCase):
                                                                          name="thin_blk" + str(i),
                                                                          command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Creating volume with uuid {}".
-                                     format(self.thin_uuid))
+                                     format(self.thin_uuid[i]))
                 fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
                 if command_result["status"]:
                     self.blt_create_count += 1
@@ -519,11 +249,15 @@ class StorageConfiguration(FunTestCase):
                                          "Thin Block volume {} creation with capacity {}".
                                          format(i, self.capacity))
 
+        fun_test.log("===================")
+        fun_test.log("Creating Controller")
+        fun_test.log("===================")
+
         # Create the controller
         if self.vol_type != "RDS":
             self.num_ctrl = self.num_vf + 1
-            self.ctrlr_uuid = {}
             if self.transport == "PCI":
+                self.ctrlr_uuid = {}
                 for i in range(1, self.num_ctrl + 1, 1):
                     self.ctrlr_uuid[i] = utils.generate_uuid()
                     if i == 2:
@@ -539,14 +273,14 @@ class StorageConfiguration(FunTestCase):
                                                                                  command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
-                                         format(self.ctrlr_uuid))
+                                         format(self.ctrlr_uuid[i]))
                     fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-                    fun_test.shared_variables["blt"]["ctrlr_uuid"] = self.ctrlr_uuid
+                    fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
             else:
                 for i in range(1, self.num_ctrl + 1, 1):
-                    command_result = {}
-                    self.ctrlr_uuid[i] = utils.generate_uuid()
-                    command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[i],
+                    self.rds_ctrlr_uuid = {}
+                    self.rds_ctrlr_uuid[i] = utils.generate_uuid()
+                    command_result = self.storage_controller.create_controller(ctrlr_uuid=self.rds_ctrlr_uuid[i],
                                                                                  transport=self.transport,
                                                                                  remote_ip=self.remote_ip,
                                                                                  nqn="nqn-1",
@@ -554,17 +288,15 @@ class StorageConfiguration(FunTestCase):
                                                                                  command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
-                                         format(self.ctrlr_uuid))
+                                         format(self.rds_ctrlr_uuid[i]))
                     fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-                    fun_test.shared_variables["blt"]["ctrlr_uuid"] = self.ctrlr_uuid
+                    fun_test.shared_variables["blt"]["rds_ctrlr_uuid"] = self.rds_ctrlr_uuid[i]
 
+        fun_test.log("===================")
+        fun_test.log("Attaching namespace")
+        fun_test.log("===================")
 
         # Attach namespace
-        if self.vol_type == "RDS":
-            self.nsid = 2
-        else:
-            self.nsid = 1
-
         if self.num_vf > 0:
             self.count = self.num_namespace * self.num_vf
         else:
@@ -572,26 +304,56 @@ class StorageConfiguration(FunTestCase):
 
         self.ctlid_count = 1
 
-        for i in range(1, self.count + 1, 1):
-            cur_uuid = self.thin_uuid[i]
-            print("*************")
-            print(self.thin_uuid)
-            print(cur_uuid)
-            command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                                vol_uuid = cur_uuid,
-                                                                                ns_id = self.nsid,
-                                                                                command_duration = self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
-                                 format(self.thin_uuid[i], self.ctrlr_uuid))
-            if i == self.num_namespace:
-                # self.num_namespace = self.num_namespace
-                self.nsid = 1
-                self.ctlid_count += 1
+        if self.ctrl_type == "RDS":
+            self.nsid = 1
+            # cur_ctrlid = {}
+            cur_ctrlid = fun_test.shared_variables["blt"]["rds_ctrlr_uuid"]
+            #cur_ctrlid = fun_test.shared_variables["rds_ctrlr_uuid"]
+            for i in range(1, self.count + 1, 1):
+                cur_uuid = self.thin_uuid[i]
+                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_ctrlid,
+                                                                                     vol_uuid=cur_uuid,
+                                                                                     ns_id=self.nsid,
+                                                                                     command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
+                                     format(self.thin_uuid[i], cur_ctrlid))
+                if i == self.num_namespace:
+                    # self.num_namespace = self.num_namespace
+                    self.nsid = 1
+                    self.ctlid_count += 1
+                else:
+                    pass
+        else:
+
+            if self.vol_attach_type == "remote":
+                self.nsid = 2
             else:
-                pass
+                self.nsid = 1
+
+            self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+
+            for i in range(1, self.count + 1, 1):
+                cur_uuid = self.thin_uuid[i]
+                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid[i],
+                                                                                    vol_uuid = cur_uuid,
+                                                                                    ns_id = self.nsid,
+                                                                                    command_duration = self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
+                                     format(self.thin_uuid[i], self.ctrlr_uuid[i]))
+                if i == self.num_namespace:
+                    # self.num_namespace = self.num_namespace
+                    self.nsid = 1
+                    self.ctlid_count += 1
+                else:
+                    pass
 
     def runio(self, device):
+        fun_test.log("============================================")
+        fun_test.log("F1 volume stats at the beginning of the test")
+        fun_test.log("============================================")
+
         initial_volume_stats = {}
         for i in range(1, self.num_namespace + 1, 1):
             command_result = {}
@@ -613,11 +375,11 @@ class StorageConfiguration(FunTestCase):
                                              iodepth=self.iodepth,
                                              name="fio_" + str(i), fill_device=1, prio=0, direct=1)
 
+        fun_test.log("=========================================")
+        fun_test.log("F1 volume stats at the end  of the test")
+        fun_test.log("=========================================")
+
         for i in range(1, self.num_namespace + 1, 1):
-            command_result = {}
-            print("thin_uuid")
-            print(self.thin_uuid)
-            print("***********")
             initial_volume_stats[i] = {}
             self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
                                                               "volumes",
@@ -625,6 +387,99 @@ class StorageConfiguration(FunTestCase):
                                                               self.thin_uuid[i],
                                                               "stats")
             command_result = self.storage_controller.peek(self.storage_props_tree)
+
+        self.host.command(command="sudo iostat")
+
+
+
+    def runio(self, device):
+        fun_test.log("============================================")
+        fun_test.log("F1 volume stats at the beginning of the test")
+        fun_test.log("============================================")
+
+        initial_volume_stats = {}
+        for i in range(1, self.num_namespace + 1, 1):
+            command_result = {}
+            initial_volume_stats[i] = {}
+            self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
+                                                              "volumes",
+                                                              "VOL_TYPE_BLK_LOCAL_THIN",
+                                                              self.thin_uuid[i],
+                                                              "stats")
+            command_result = self.storage_controller.peek(self.storage_props_tree)
+            """fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT")
+            initial_volume_stats[i] = command_result["data"]
+            fun_test.log("Volume Stats at the beginning of the test:")
+            fun_test.log(initial_volume_stats[i])"""
+
+        for i in self.storage_config['mode']:
+            fio_result = self.host.pcie_fio(filename=device, rw=i,
+                                             numjobs=self.num_jobs,
+                                             iodepth=self.iodepth,
+                                             name="fio_" + str(i), fill_device=1, prio=0, direct=1)
+
+        fun_test.log("======================================")
+        fun_test.log("F1 volume stats at the end of the test")
+        fun_test.log("======================================")
+
+        for i in range(1, self.num_namespace + 1, 1):
+            initial_volume_stats[i] = {}
+            self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
+                                                              "volumes",
+                                                              "VOL_TYPE_BLK_LOCAL_THIN",
+                                                              self.thin_uuid[i],
+                                                              "stats")
+            command_result = self.storage_controller.peek(self.storage_props_tree)
+
+        fun_test.log("====================================")
+        fun_test.log("iostat on host at the end of the test")
+        fun_test.log("====================================")
+
+        self.host.command(command="sudo iostat")
+
+
+    def runio_remote(self, device):
+        fun_test.log("============================================")
+        fun_test.log("F1 volume stats at the beginning of the test")
+        fun_test.log("============================================")
+
+        initial_volume_stats = {}
+        for i in range(1, self.num_namespace + 1, 1):
+            command_result = {}
+            initial_volume_stats[i] = {}
+            self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
+                                                              "volumes",
+                                                              "VOL_TYPE_BLK_RDS",
+                                                              self.thin_uuid[i],
+                                                              "stats")
+            command_result = self.storage_controller.peek(self.storage_props_tree)
+            """fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT")
+            initial_volume_stats[i] = command_result["data"]
+            fun_test.log("Volume Stats at the beginning of the test:")
+            fun_test.log(initial_volume_stats[i])"""
+
+        for i in self.storage_config['mode']:
+            fio_result = self.host.pcie_fio(filename=device, rw=i,
+                                             numjobs=self.num_jobs,
+                                             iodepth=self.iodepth,
+                                             name="fio_" + str(i), fill_device=1, prio=0, direct=1)
+
+        fun_test.log("======================================")
+        fun_test.log("F1 volume stats at the end of the test")
+        fun_test.log("======================================")
+
+        for i in range(1, self.num_namespace + 1, 1):
+            initial_volume_stats[i] = {}
+            self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
+                                                              "volumes",
+                                                              "VOL_TYPE_BLK_RDS",
+                                                              self.thin_uuid[i],
+                                                              "stats")
+            command_result = self.storage_controller.peek(self.storage_props_tree)
+
+        fun_test.log("=====================================")
+        fun_test.log("iostat on host at the end of the test")
+        fun_test.log("========-============================")
 
         self.host.command(command="sudo iostat")
 
@@ -651,6 +506,8 @@ class LocalSSDTest(StorageConfiguration):
 
     def run(self):
         self.vol_type = "PCI"
+        self.ctrl_type = "PCI"
+        self.vol_attach_type = "local"
         self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p0)
         super(LocalSSDTest, self).run()
         self.host.command("sudo nvme list")
@@ -685,6 +542,7 @@ class RemoteSSDTest(StorageConfiguration):
 
     def run(self):
         self.vol_type = "PCI"
+        self.ctrl_type = "RDS"
         self.storage_controller = StorageController(target_ip=self.come_ip, target_port=self.dpc_p1)
         command_result = self.storage_controller.ip_cfg(ip=self.ip, port=self.port)
         fun_test.log(command_result)
@@ -694,11 +552,13 @@ class RemoteSSDTest(StorageConfiguration):
         command_result = self.storage_controller.ip_cfg(ip=self.remote_ip, port=self.port)
         fun_test.log(command_result)
         self.vol_type = "RDS"
+        self.ctrl_type = "PCI"
+        self.vol_attach_type = "remote"
         super(RemoteSSDTest, self).run()
         self.host.command("sudo nvme list")
         device = self.host.command("sudo nvme list | grep nvme | sed -n 2p | awk {'print $1'}").strip()
         fun_test.test_assert(device, message="nvme device visible on host")
-        super(RemoteSSDTest, self).runio(device)
+        super(RemoteSSDTest, self).runio_remote(device)
 
     def cleanup(self):
         pass
