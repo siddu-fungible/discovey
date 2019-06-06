@@ -48,7 +48,7 @@ class VerifySetup(FunTestCase):
                          "--dis-stats retimer=3 --mgmt --disable-wu-watchdog"
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                  '/fs_connected_servers.json')
-        servers_mode = server_key["fs"][fs_name]
+        servers_mode = server_key["fs"][fs_name]["hosts"]
         final_result = {}
         t_end = time.time() + 60 * 120
         for server in servers_mode:
@@ -62,7 +62,6 @@ class VerifySetup(FunTestCase):
             fun_test.shared_variables["topology"] = topology
             fun_test.test_assert(topology, "Topology deployed")
 
-            servers_mode = server_key["fs"][fs_name]["hosts"]
             for server in servers_mode:
                 result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
                 critical_log(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
