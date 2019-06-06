@@ -26,7 +26,7 @@
     // timeout used for the storage controller
     "command_timeout": 10,
     "min_timeout": 60,
-    "f1_fs_timeout_ratio": [1073741824, 3],
+    "f1_fs_timeout_ratio": [1073741824, 5],
     "fs_cp_timeout_ratio": [1073741824, 15],
     "status_interval": 10,
     "ns_id": 1,
