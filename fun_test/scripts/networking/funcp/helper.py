@@ -2,7 +2,7 @@ from lib.host.linux import *
 from scripts.networking.funeth.funeth import Funeth
 
 
-def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=True):
+def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
     if reboot:
         count = 1
@@ -87,7 +87,7 @@ def power_cycle_host(hostname):
     linux_obj = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
     fun_test.log("Preparing to power cycle host %s " % hostname)
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power off" % hostname)
-    fun_test.sleep(message="Waiting for host to go down")
+    fun_test.sleep(message="Waiting for host to go down", seconds=15)
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
