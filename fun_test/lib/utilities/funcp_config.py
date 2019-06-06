@@ -405,11 +405,18 @@ class FunControlPlaneBringup:
         linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                           ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                           ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        if not linux_obj.check_ssh():
+            fun_test.critical("Cannot ssh into COMe, skipping FunCP Cleanup")
+            return False
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
 
         if "funeth" in funeth_op:
             funeth_rm = linux_obj.sudo_command("rmmod funeth")
-            fun_test.test_assert(expression="ERROR" not in funeth_rm, message="Funeth removed succesfully")
+            if "ERROR" not in funeth_rm:
+                fun_test.log("Funeth removed succesfully")
+            else:
+                fun_test.critical(message="Funeth Remove error")
+
         for docker_name in self.docker_names:
             if not re.search('[a-zA-Z]', docker_name):
                 continue
@@ -462,7 +469,7 @@ class FunControlPlaneBringup:
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(),
                                                                                self.vlan1_ips[host.rstrip()]))
 
-    def test_cc_pings_remote_fs(self, dest_ips, docker_name=None):
+    def test_cc_pings_remote_fs(self, dest_ips, docker_name=None, from_vlan=False):
         if not docker_name:
             self._get_docker_names()
         self._get_vlan1_ips()
@@ -480,7 +487,10 @@ class FunControlPlaneBringup:
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host.rstrip()], ips)
+                if from_vlan:
+                    command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host.rstrip()], ips)
+                else:
+                    command = "ping -c 5 %s " % ips
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:
@@ -488,9 +498,9 @@ class FunControlPlaneBringup:
                 if percentage_loss <= 50:
                     result = True
                 if result:
-                    print("#########################################")
+                    fun_test.log("#########################################")
                     fun_test.log("<b>Container %s can ping %s</b>" % (host.rstrip(), ips))
-                    print("#########################################")
+                    fun_test.log("#########################################")
                 else:
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), ips))
             linux_obj.disconnect()

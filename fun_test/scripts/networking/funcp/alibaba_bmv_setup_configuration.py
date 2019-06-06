@@ -41,7 +41,7 @@ class BringupSetup(FunTestCase):
                                                       '/fs_connected_servers.json')
 
     def run(self):
-        # boot_image_f1_0 = "divya_funos-f1.stripped_june3.gz"
+        # boot_image_f1_0 = "divya_funos-f1.stripped_june4.gz"
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
@@ -106,7 +106,6 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         # execute abstract Configs
-
         abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' +\
                               self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' +\
@@ -116,7 +115,7 @@ class NicEmulation(FunTestCase):
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
         # Add static routes on Containers
-        funcp_obj.add_routes_on_f1(routes_dict=self.server_key[fs_name]["static_routes"])
+        funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
         fun_test.sleep(message="Waiting before ping tests", seconds=10)
 
         # Ping QFX from both F1s
@@ -127,6 +126,7 @@ class NicEmulation(FunTestCase):
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
         # Check PICe Link on host
+        servers_mode = self.server_key["fs"][fs_name]["hosts"]
         for server in servers_mode:
             result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
             fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
