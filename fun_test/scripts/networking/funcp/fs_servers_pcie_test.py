@@ -9,7 +9,7 @@ from scripts.networking.funeth.sanity import Funeth
 from lib.host.storage_controller import StorageController
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
-
+import pprint
 
 class ScriptSetup(FunTestScript):
 
@@ -78,7 +78,8 @@ class VerifySetup(FunTestCase):
             fun_test.log(final_result)
             pprint.pprint(final_result)
             print("#####################################################################################")
-
+            fun_test.add_checkpoint(checkpoint="final_result")
+            
     def cleanup(self):
 
         pass
