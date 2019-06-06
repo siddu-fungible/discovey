@@ -169,7 +169,7 @@ class FunTest:
         parser.add_argument('--environment', dest="environment", default=None)
         parser.add_argument('--inputs', dest="inputs", default=None)
         parser.add_argument('--re_run_info', dest="re_run_info", default=None)
-        args = parser.parse_args()
+        args, unknown = parser.parse_known_args()
         if args.disable_fun_test:
             self.fun_test_disabled = True
             return

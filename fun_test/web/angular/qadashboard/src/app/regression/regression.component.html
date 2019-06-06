@@ -21,7 +21,7 @@
       <ng-container *ngIf="filterButtons.length > 0">
         Filters:
         <ng-container *ngFor="let filterButton of filterButtons">
-          <span class="link-span">{{ filterButton.displayString }}
+          <span class="link-span-danger">{{ filterButton.displayString }}
             <span class="pseudo-anchor" (click)="removeFilterButton(filterButton)">Remove</span>
           </span>
           &nbsp;

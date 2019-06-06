@@ -190,6 +190,7 @@ class FunethPerformanceBase(FunTestCase):
 
         suffixes = ('n2h', 'h2n', 'h2h')
         arg_dicts = []
+        pingable = True
         for shost, dhost in host_pairs:
             linux_obj_src = funeth_obj.linux_obj_dict[shost]
             linux_obj_dst = funeth_obj.linux_obj_dict[dhost]
@@ -198,10 +199,13 @@ class FunethPerformanceBase(FunTestCase):
 
             # Check dip pingable - IP header 20B, ICMP header 8B
             # Allow up to 2 ping miss due to resolve ARP
-            ping_result = linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
+            pingable &= linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
 
-            fun_test.test_assert(ping_result, '{} ping {} with packet size {}'.format(
-                linux_obj_src.host_ip, dip, frame_size))
+            if pingable:
+                fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
+                    linux_obj_src.host_ip, dip, frame_size))
+            else:
+                break
 
             suffix = '{}2{}'.format(shost[0], dhost[0])
             arg_dicts.append(
@@ -230,6 +234,12 @@ class FunethPerformanceBase(FunTestCase):
                                                                         fpg_intf_dict,
                                                                         version,
                                                                         when='before')
+
+        # If ping check fails, assert here, so that dpc stats is collected for debugging
+        if not pingable:
+            fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
+                linux_obj_src.host_ip, dip, frame_size))
+
         perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
 
         result = perf_manager_obj.run(*arg_dicts)
