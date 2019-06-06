@@ -62,6 +62,7 @@ import { Triage2Component } from './regression/triage2/triage2.component';
 import { JenkinsFormComponent } from './jenkins-form/jenkins-form.component';
 import { TriageDetailComponent } from './regression/triage2/triage-detail/triage-detail.component';
 import { SmartButtonComponent } from './ui-elements/smart-button/smart-button.component';
+import { AdminComponent } from "./admin/admin.component";
 
 @NgModule({
   declarations: [
@@ -108,7 +109,8 @@ import { SmartButtonComponent } from './ui-elements/smart-button/smart-button.co
     Triage2Component,
     JenkinsFormComponent,
     TriageDetailComponent,
-    SmartButtonComponent
+    SmartButtonComponent,
+    AdminComponent
   ],
   imports: [
     BsDropdownModule,
