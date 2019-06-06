@@ -402,6 +402,7 @@ class FunControlPlaneBringup:
 
     def cleanup_funcp(self):
         self._get_docker_names(verify_2_dockers=False)
+        self.docker_names_got = False
         linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                           ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                           ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
