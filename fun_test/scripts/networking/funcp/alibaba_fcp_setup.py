@@ -11,14 +11,19 @@ from lib.topology.topology_helper import TopologyHelper
 import time 
 import datetime
 
+
 class ScriptSetup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="1. Make sure correct FS system is selected")
 
     def setup(self):
-
-        pass
+        testbed_info = fun_test.parse_file_to_json(
+            fun_test.get_script_parent_directory() + '/alibaba_fcp_testbed-1.json')
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
+        fun_test.shared_variables["test_bed_type"] = test_bed_type
+        fun_test.shared_variables['testbed_info'] = testbed_info
 
     def cleanup(self):
         pass
@@ -55,7 +60,6 @@ class BringupSetup(FunTestCase):
             for server in servers_mode:
                 print server
                 fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")  
-
 
         print "\n\n\n Booting of FS started \n\n\n"
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') 
@@ -110,12 +114,113 @@ class BringupSetup(FunTestCase):
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
     def cleanup(self):
+        pass
 
+
+class TestHuHuPing(FunTestCase):
+    hosts_info = {}
+    host_username = "localadmin"
+    host_password = "Precious1*"
+
+    def describe(self):
+        self.set_test_details(id=2, summary="Test HU --> HU Ping",
+                              steps="""
+                              1. Fetch all hosts attached to each FS
+                              2. Find the HU interface ip of each host
+                              3. Do full mesh ping between hosts
+                              4. Ensure ping is working 
+                              """)
+
+    def setup(self):
+        test_bed_type = fun_test.shared_variables['test_bed_type']
+        testbed_info = fun_test.shared_variables['testbed_info']
+        servers = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            hosts = servers["fs"][fs_name]
+            for server in hosts:
+                server_ip = fetch_host_interface_ip(host_name=server, host_username=self.host_username,
+                                                    host_password=self.host_password)
+                if server_ip:
+                    self.hosts_info[server] = server_ip
+
+    def run(self):
+        fun_test.log(self.hosts_info)
+
+        checkpoint = "Ensure all hosts can ping each other"
+        for server in self.hosts_info:
+            linux_obj = Linux(host_ip=server, ssh_username=self.host_username, ssh_password=self.host_password)
+            for host, server_ip in self.hosts_info.items():
+                if host == server:
+                    continue
+                same_network = ensure_same_network(network1=get_network_by_ip(ip=server_ip),
+                                                   network2=get_network_by_ip(self.hosts_info[server]))
+                if not same_network:
+                    is_route_present = ensure_route_exists(network=get_network_by_ip(server_ip),
+                                                           gateway=get_gateway_by_ip(server_ip),
+                                                           interface=get_hu_interface_on_host(linux_obj=linux_obj),
+                                                           linux_obj=linux_obj)
+                    fun_test.simple_assert(is_route_present, "Ensure Route present or else create one")
+                res = linux_obj.ping(dst=server_ip, count=2)
+                fun_test.simple_assert(res, "Ensure ping from %s to %s. From %s to %s" % (
+                    self.hosts_info[server], server_ip, server, host))
+        fun_test.add_checkpoint(checkpoint)
+
+    def cleanup(self):
+        pass
+
+
+class TestCcCcPing(FunTestCase):
+    hosts_info = {}
+    host_username = "localadmin"
+    host_password = "Precious1*"
+
+    def describe(self):
+        self.set_test_details(id=3, summary="Test CC --> CC Ping",
+                              steps="""
+                              1. Fetch all vlan ips from each docker container
+                              2. Ensure all vlans can ping each other 
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        test_bed_type = fun_test.shared_variables['test_bed_type']
+        testbed_info = fun_test.shared_variables['testbed_info']
+        '''
+        checkpoint = "Ensure all vlans can ping its neighbour vlan"
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            res = funcp_obj.test_cc_pings_fs()
+            fun_test.simple_assert(res, checkpoint)
+        fun_test.add_checkpoint(checkpoint)
+        '''
+        funcp1_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][0])
+        funcp2_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][1])
+
+        funcp1_obj._get_docker_names(verify_2_dockers=False)
+        funcp1_obj._get_vlan1_ips()
+
+        funcp2_obj._get_docker_names(verify_2_dockers=False)
+        funcp2_obj._get_vlan1_ips()
+
+        checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp1_obj.fs_name, funcp2_obj.fs_name)
+        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips)
+        fun_test.test_assert(res, checkpoint)
+
+        checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp2_obj.fs_name, funcp1_obj.fs_name)
+        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips)
+        fun_test.test_assert(res, checkpoint)
+
+        fun_test.add_checkpoint("Ensure all vlans can ping its neighbour FS vlans")
+
+    def cleanup(self):
         pass
 
 
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
-    # ts.add_test_case(SetupVMs)
+    ts.add_test_case(TestHuHuPing())
+    ts.add_test_case(TestCcCcPing())
     ts.run()

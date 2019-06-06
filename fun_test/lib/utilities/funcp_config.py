@@ -459,6 +459,7 @@ class FunControlPlaneBringup:
     def test_cc_pings_fs(self):
         self._get_docker_names()
         self._get_vlan1_ips()
+        ping_success = False
 
         for host in self.docker_names:
 
@@ -479,21 +480,24 @@ class FunControlPlaneBringup:
                 if percentage_loss <= 50:
                     result = True
                 if result:
+                    ping_success = True
                     fun_test.log("=============================")
                     fun_test.add_checkpoint("Container %s can ping %s" % (host.rstrip(),
                                                                           self.vlan1_ips[host.rstrip()]))
                     fun_test.log("=============================")
                 else:
+                    ping_success = False
                     fun_test.log("=================================")
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(),
                                                                                self.vlan1_ips[host.rstrip()]))
                     fun_test.log("=================================")
+        return ping_success
 
     def test_cc_pings_remote_fs(self, dest_ips, docker_name=None, from_vlan=False):
         if not docker_name:
             self._get_docker_names()
         self._get_vlan1_ips()
-
+        ping_success = False
         docker_list = []
         if docker_name:
             docker_list.append(docker_name)
@@ -504,7 +508,7 @@ class FunControlPlaneBringup:
             linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-            for ips in dest_ips:
+            for ips in dest_ips.values():
                 result = False
                 percentage_loss = 100
                 if from_vlan:
@@ -518,13 +522,17 @@ class FunControlPlaneBringup:
                 if percentage_loss <= 50:
                     result = True
                 if result:
+                    ping_success = True
                     fun_test.log("")
                     fun_test.log("=============================")
                     fun_test.log("Container %s can ping %s" % (host.rstrip(), ips))
                     fun_test.log("=============================")
                 else:
+                    ping_success = False
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), ips))
+                    break
             linux_obj.disconnect()
+        return ping_success
 
     def _get_vlan1_ips(self):
         if self.vlan_ips_got:
@@ -565,3 +573,20 @@ class FunControlPlaneBringup:
             else:
                 "Cannot ping host"
                 fun_test.sleep(seconds=10, message="waiting for host")
+
+    def get_vlan_ips(self, come_dict, vlan_interface="vlan1"):
+        vlan_list = []
+        try:
+            for come in come_dict:
+                docker_obj = FunCpDockerContainer(name="F1-0", host_ip=come['come_ip'],
+                                                  ssh_username=come['come_username'],
+                                                  ssh_password=come['come_password'])
+
+                contents = docker_obj.command('ifconfig %s' % vlan_interface)
+                m = re.search(r'inet\s+(\d+.\d+.\d+.\d+)', contents.strip(), re.DOTALL)
+                if m:
+                    vlan_list.append(m.group(1))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return vlan_list
+
