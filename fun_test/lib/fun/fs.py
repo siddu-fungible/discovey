@@ -871,6 +871,7 @@ class Fs(object, ToDictMixin):
 
         try:
             self.get_bmc().disconnect()
+            fun_test.log(message="BMC disconnect", context=self.context)
             self.get_fpga().disconnect()
             self.get_come().disconnect()
         except:
