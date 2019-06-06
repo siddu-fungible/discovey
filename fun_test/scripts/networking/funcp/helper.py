@@ -15,11 +15,12 @@ def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*"
             if response == 0:
                 if not linux_obj.check_ssh():
                     power_cycle_host(hostname)
+                    fun_test.sleep(message="Waiting for host after power cycle", seconds=90)
                     break
                 else:
                     break
             else:
-                "Cannot ping host"
+                fun_test.log("Cannot ping host")
                 fun_test.sleep(seconds=10, message="waiting for host")
         funeth_op=""
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
@@ -71,7 +72,7 @@ def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
             else:
                 break
         else:
-            "Cannot ping host"
+            fun_test.log("Cannot ping host")
             fun_test.sleep(seconds=15, message="waiting for host")
     funeth_op = ""
     funeth_op = linux_obj.command(command="lsmod | grep funeth")
