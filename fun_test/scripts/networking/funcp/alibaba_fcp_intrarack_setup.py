@@ -50,6 +50,12 @@ class BringupSetup(FunTestCase):
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
             funcp_obj.cleanup_funcp()
+            server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
+            servers_mode = server_key["fs"][fs_name]
+            for server in servers_mode:
+                print server
+                fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")  
+
 
         print "\n\n\n Booting of FS started \n\n\n"
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') 
@@ -81,19 +87,28 @@ class BringupSetup(FunTestCase):
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
             # Assign MPG IPs from dhcp
-            #funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']),
-            #                         f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']))
-            funcp_obj.assign_mpg_ips(static=False)
+            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']),
+                                     f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']))
             #funcp_obj.fetch_mpg_ips() #Only if not running the full script
             #execute abstract file
 
             abstract_json_file0 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_0']
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_intra_f1_0']
             abstract_json_file1 = \
-                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_1']
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_intra_f1_1']
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
          
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            print "\n\n\n Booting HU unit  Started\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))  
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True)
+            print "\n\n\n Booting HU unit  ended\n\n\n"
+            print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
     def cleanup(self):
 
         pass

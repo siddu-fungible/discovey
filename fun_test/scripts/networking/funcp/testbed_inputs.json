@@ -7,16 +7,20 @@
               "fs-48": {
                   "gatewayip": "10.1.105.1",
                   "abtract_config_f1_0": "/abstract_config/alibaba_fcp_configs_fs48_f1_0.json",
+                  "abtract_config_intra_f1_0": "/abstract_config/alibaba_fcp_configs_fs48_intra_f1_0.json",
                   "abtract_config_f1_1": "/abstract_config/alibaba_fcp_configs_fs48_f1_1.json",
-                  "prepare_docker":true,
+                  "abtract_config_intra_f1_1": "/abstract_config/alibaba_fcp_configs_fs48_intra__f1_1.json",
+                  "prepare_docker":false,
                   "mpg0":"10.1.105.174",
                   "mpg1":"10.1.105.175"
               },
               "fs-60": {
                   "gatewayip": "10.1.105.1",
                   "abtract_config_f1_0": "/abstract_config/alibaba_fcp_configs_fs60_f1_0.json",
+                  "abtract_config_intra_f1_0": "/abstract_config/alibaba_fcp_configs_fs60_intra_f1_0.json",
                   "abtract_config_f1_1": "/abstract_config/alibaba_fcp_configs_fs60_f1_1.json",
-                  "prepare_docker":true,
+                  "abtract_config_intra_f1_1": "/abstract_config/alibaba_fcp_configs_fs60_intra_f1_1.json",
+                  "prepare_docker":false,
                   "mpg0":"10.1.105.176",
                   "mpg1":"10.1.105.177"
               }
@@ -29,7 +33,7 @@
                   "gatewayip": "10.1.20.1",
                   "abtract_config_f1_0": "/abstract_config/FS-15-F1-0_abstract_cfg.json",
                   "abtract_config_f1_1": "/abstract_config/FS-15-F1-1_abstract_cfg.json",
-                  "prepare_docker":true,
+                  "prepare_docker":false,
                   "mpg0":"10.1.23.34",
                   "mpg1":"10.1.23.35"
               }
