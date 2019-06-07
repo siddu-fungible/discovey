@@ -17,7 +17,7 @@ tb_config = {
             "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial sku=SKU_FS1600_0"
                        "  --disable-wu-watchdog --all_100g --dis-stats --mgmt --dpc-server --dpc-uart --nofreeze",
             "perf_multiplier": 1,
-            "f1_ip": "15.42.1.2",
+            "f1_ip": "15.43.1.2",
             "tcp_port": 1099
         },
     },
@@ -280,12 +280,12 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
-        # Setting the syslog level to 2
-        command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
-        fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+        # Setting the syslog level to 6 then change according to user requirement
+        command_result = self.storage_controller.poke("params/syslog/level 6")
+        fun_test.test_assert(command_result["status"], "Setting syslog level to 6")
         command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
                                                       command_duration=5)
-        fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+        fun_test.test_assert_expected(expected=6, actual=command_result["data"],
                                       message="Checking syslog level")
         if not hasattr(self, "num_ssd"):
             self.num_ssd = 6
@@ -356,7 +356,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 "./integration_test/emulation/test_system.py --setup --docker --ep", timeout=1600)
             fun_test.log(setup_docker_output)
 
-            container_cli = FunCpDockerContainer(host_ip="10.1.105.156", ssh_password="123", ssh_username="fun",
+            container_cli = FunCpDockerContainer(host_ip="10.1.105.159", ssh_password="123", ssh_username="fun",
                                                  f1_index=0)
 
             container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ifconfig $i down;sleep 1;done")
@@ -365,20 +365,20 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ip link set $i master bond0;sleep 1;done")
             container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ifconfig $i up;sleep 1;done")
             container_cli.command("sudo ifconfig bond0 down")
-            fun_test.sleep("Assign IP to bond0", 5)
-            container_cli.command("sudo ifconfig bond0 15.42.1.2 netmask 255.255.255.0 up")
+            fun_test.sleep("Assign IP to bond0", 2)
+            container_cli.command("sudo ifconfig bond0 15.43.1.2 netmask 255.255.255.0 up")
             while True:
                 check_int_running = container_cli.command("ifconfig bond0")
                 if "RUNNING" in check_int_running:
-                    fun_test.sleep("Interface bond0 is up", 5)
+                    fun_test.sleep("Interface bond0 is up", 2)
                     break
                 else:
                     container_cli.command("sudo ifconfig bond0 down")
-                    fun_test.sleep("Interface brought down", 10)
+                    fun_test.sleep("Interface brought down", 2)
                     container_cli.command("sudo ifconfig bond0 up")
-            container_cli.command("ping 15.42.1.1 -c 10")
-            container_cli.command("sudo ip route add 15.0.0.0/8 via 15.42.1.1 dev bond0")
-            for x in range(0, 8):
+            container_cli.command("ping 15.43.1.1 -c 10")
+            container_cli.command("sudo ip route add 15.0.0.0/8 via 15.43.1.1 dev bond0")
+            for x in range(0, 10):
                 container_cli.command("ping {} -c 3".format(tb_config['tg_info'][x]['iface_ip']))
             fun_test.log("FunCP brought up")
             container_cli.disconnect()
@@ -503,12 +503,23 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
                                               message="{} device type check".format(volume_name))
 
+            # Set syslog to user specified level
+            command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
+            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                          command_duration=5)
+            fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                          message="Checking syslog level")
+
             fun_test.log("Connect done")
 
     def run(self):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
+
+        before_write_eqm = {}
+        before_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
 
         # Create filesystem
         if hasattr(self, "create_file_system") and self.create_file_system:
@@ -518,12 +529,23 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             fio_output = self.end_host_list[0].pcie_fio(filename="/mnt/testfile.dat", **self.warm_up_fio_cmd_args)
             fun_test.test_assert(fio_output, "Pre-populating the file on XFS volume")
             self.end_host_list[0].sudo_command("umount /mnt")
+            self.end_host_list[0].disconnect()
+
+        after_write_eqm = {}
+        after_write_eqm = self.storage_controller.peek(props_tree="stats/eqm")
+
+        for field, value in before_write_eqm["data"].items():
+            current_value = after_write_eqm["data"][field]
+            if (value != current_value) and (field != "incoming BN msg valid"):
+                stats_delta = current_value - value
+                fun_test.log("Write test : there is a mismatch in {} stat, delta : {}".format(field, stats_delta))
 
         # Mount NVMe disk on all hosts in Read-Only mode
         for end_host in self.end_host_list:
             if hasattr(self, "create_file_system") and self.create_file_system:
                 end_host.sudo_command("umount /mnt")
                 end_host.sudo_command("mount -o ro {} /mnt".format(self.nvme_block_device))
+                end_host.disconnect()
 
         fun_test.log("Connected from all hosts")
 
@@ -552,6 +574,10 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             end_host_thread = {}
             iostat_thread = {}
             thread_count = 1
+
+            # Read EQM stats
+            before_read_eqm = {}
+            before_read_eqm = self.storage_controller.peek(props_tree="stats/eqm")
 
             for end_host in self.end_host_list:
                 fio_result[combo] = {}
@@ -628,6 +654,15 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
                 fio_output[combo][mode][x] = {}
                 fio_output[combo][mode][x] = fun_test.shared_variables["fio"][x]
+
+            after_read_eqm = {}
+            after_read_eqm = self.storage_controller.peek(props_tree="stats/eqm")
+
+            for field, value in before_read_eqm["data"].items():
+                current_value = after_read_eqm["data"][field]
+                if (value != current_value) and (field != "incoming BN msg valid"):
+                    stats_delta = current_value - value
+                    fun_test.log("Read test : there is a mismatch in {} stat, delta : {}".format(field, stats_delta))
 
             self.iostat_output = {}
             for x in range(1, self.host_count + 1, 1):
