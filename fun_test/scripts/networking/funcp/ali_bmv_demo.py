@@ -12,20 +12,23 @@ from lib.topology.topology_helper import TopologyHelper
 
 
 class ScriptSetup(FunTestScript):
+    server_key = {}
 
     def describe(self):
         self.set_test_details(steps="1. Make sure correct FS system is selected")
 
     def setup(self):
-        pass
-
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
 
     def cleanup(self):
-        pass
+        funcp_obj.cleanup_funcp()
+        for server in servers_mode:
+            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
 
 class BringupSetup(FunTestCase):
-    server_key={}
+    server_key = {}
 
     def describe(self):
         self.set_test_details(id=1,
@@ -37,7 +40,6 @@ class BringupSetup(FunTestCase):
                               """)
 
     def setup(self):
-
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                       '/fs_connected_servers.json')
 
@@ -62,7 +64,7 @@ class BringupSetup(FunTestCase):
             print server
             critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
             servers_list.append(server)
-        
+
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                           1: {"boot_args": f1_1_boot_args}}
@@ -108,9 +110,9 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         # execute abstract Configs
-        abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' +\
+        abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
                               self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
-        abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' +\
+        abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
                               self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
 
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
@@ -127,24 +129,22 @@ class NicEmulation(FunTestCase):
 
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
-        print("")
-        print("============================================")
-        raw_input("Press any key to continue to NIC Emulation:")
-        print("============================================")
         # Check PICe Link on host
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         for server in servers_mode:
             result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
             fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                      % server)
-            # TODO : reboot/power cycle host if link doesnt come up
+            if result == "2":
+                fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
+                                        % servers_mode[server])
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False)
 
-        # get ethtool output TODO : IFCONFIG, lspci
+        # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
 
         # Ping hosts
@@ -153,11 +153,7 @@ class NicEmulation(FunTestCase):
             test_host_pings(host=host, ips=ping_dict[host])
 
     def cleanup(self):
-        print()
-        print("============================================")
-        raw_input("Press any Key to continue to Local SSD Test:")
-        print("============================================")
-
+        pass
 
 
 class StorageConfiguration(FunTestCase):
@@ -183,7 +179,8 @@ class StorageConfiguration(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
+        self.server_key = fun_test.parse_file_to_json(
+            fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
         self.storage_config = self.server_key[config]
         server = self.storage_config['server']
         self.host = Linux(host_ip=server, ssh_username=self.uname, ssh_password=self.pwd)
@@ -192,14 +189,13 @@ class StorageConfiguration(FunTestCase):
         for service in udev_services:
             service_status = self.host.systemctl(service_name=service, action="stop")
         self.host.command(command="echo 4 | sudo tee /sys/module/nvme/parameters/io_queue_depth ")
-            # fun_test.test_assert(service_status, "Stopping {} service".format(service))
+        # fun_test.test_assert(service_status, "Stopping {} service".format(service))
 
     def run(self):
         self.blt_create_count = 0
         self.blt_attach_count = 0
         self.blt_detach_count = 0
         self.blt_delete_count = 0
-
 
         # self.storage_controller_0 = StorageController(target_ip="10.1.105.165", target_port=40220)
         # self.storage_controller_1 = StorageController(target_ip="10.1.105.165", target_port=40221)
@@ -231,12 +227,12 @@ class StorageConfiguration(FunTestCase):
                                                                        block_size=self.block_size,
                                                                        uuid=self.thin_uuid[i],
                                                                        name="rds-block1",
-                                                                       remote_nsid = 1,
-                                                                       remote_ip = self.remote_ip_rds,
+                                                                       remote_nsid=1,
+                                                                       remote_ip=self.remote_ip_rds,
                                                                        port=self.port,
                                                                        command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Creating volume with uuid {}".
-                                    format(self.thin_uuid[i]))
+                                     format(self.thin_uuid[i]))
                 fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
         else:
 
@@ -244,11 +240,11 @@ class StorageConfiguration(FunTestCase):
                 self.thin_uuid[i] = utils.generate_uuid()
                 command_result = {}
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                         capacity=self.capacity,
-                                                                         block_size=self.block_size,
-                                                                         uuid=self.thin_uuid[i],
-                                                                         name="thin_blk" + str(i),
-                                                                         command_duration=self.command_timeout)
+                                                                       capacity=self.capacity,
+                                                                       block_size=self.block_size,
+                                                                       uuid=self.thin_uuid[i],
+                                                                       name="thin_blk" + str(i),
+                                                                       command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Creating volume with uuid {}".
                                      format(self.thin_uuid[i]))
                 fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
@@ -258,7 +254,6 @@ class StorageConfiguration(FunTestCase):
                     fun_test.test_assert(command_result["status"],
                                          "Thin Block volume {} creation with capacity {}".
                                          format(i, self.capacity))
-
 
         # Create the controller
         if self.vol_type != "RDS":
@@ -278,11 +273,11 @@ class StorageConfiguration(FunTestCase):
                         self.f0_fnid += 1
                     command_result = {}
                     command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                                 transport=self.transport,
-                                                                                 fnid=self.fnid,
-                                                                                 ctlid=self.ctlid,
-                                                                                 huid=self.huid,
-                                                                                 command_duration=self.command_timeout)
+                                                                               transport=self.transport,
+                                                                               fnid=self.fnid,
+                                                                               ctlid=self.ctlid,
+                                                                               huid=self.huid,
+                                                                               command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
                                          format(self.ctrlr_uuid[i]))
@@ -298,11 +293,11 @@ class StorageConfiguration(FunTestCase):
                     self.rds_ctrlr_uuid = {}
                     self.rds_ctrlr_uuid[i] = utils.generate_uuid()
                     command_result = self.storage_controller.create_controller(ctrlr_uuid=self.rds_ctrlr_uuid[i],
-                                                                                 transport=self.transport,
-                                                                                 remote_ip=self.remote_ip,
-                                                                                 nqn="nqn-1",
-                                                                                 port=self.port,
-                                                                                 command_duration=self.command_timeout)
+                                                                               transport=self.transport,
+                                                                               remote_ip=self.remote_ip,
+                                                                               nqn="nqn-1",
+                                                                               port=self.port,
+                                                                               command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
                                          format(self.rds_ctrlr_uuid[i]))
@@ -325,7 +320,7 @@ class StorageConfiguration(FunTestCase):
             self.nsid = 1
             # cur_ctrlid = {}
             cur_ctrlid = fun_test.shared_variables["blt"]["rds_ctrlr_uuid"]
-            #cur_ctrlid = fun_test.shared_variables["rds_ctrlr_uuid"]
+            # cur_ctrlid = fun_test.shared_variables["rds_ctrlr_uuid"]
             for i in range(1, self.count + 1, 1):
                 cur_uuid = self.thin_uuid[i]
                 command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_ctrlid,
@@ -353,9 +348,9 @@ class StorageConfiguration(FunTestCase):
             for i in range(1, self.count + 1, 1):
                 cur_uuid = self.thin_uuid[i]
                 command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                                    vol_uuid = cur_uuid,
-                                                                                    ns_id = self.nsid,
-                                                                                    command_duration = self.command_timeout)
+                                                                                     vol_uuid=cur_uuid,
+                                                                                     ns_id=self.nsid,
+                                                                                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
                                      format(self.thin_uuid[i], self.ctrlr_uuid[i]))
@@ -365,7 +360,6 @@ class StorageConfiguration(FunTestCase):
                     self.ctlid_count += 1
                 else:
                     pass
-
 
     def runio(self, device):
         print("\n")
@@ -390,9 +384,9 @@ class StorageConfiguration(FunTestCase):
 
         for i in self.storage_config['mode']:
             fio_result = self.host.pcie_fio(filename=device, rw=i,
-                                             numjobs=self.num_jobs,
-                                             iodepth=self.iodepth,
-                                             name="fio_" + str(i), fill_device=1, prio=0, direct=1)
+                                            numjobs=self.num_jobs,
+                                            iodepth=self.iodepth,
+                                            name="fio_" + str(i), fill_device=1, prio=0, direct=1)
 
         fun_test.log("======================================")
         fun_test.log("F1 volume stats at the end of the test")
@@ -413,7 +407,6 @@ class StorageConfiguration(FunTestCase):
         print("====================================\n")
 
         self.host.command(command="sudo iostat")
-
 
     def runio_remote(self, device):
 
@@ -439,9 +432,9 @@ class StorageConfiguration(FunTestCase):
 
         for i in self.storage_config['mode']:
             fio_result = self.host.pcie_fio(filename=device, rw=i,
-                                             numjobs=self.num_jobs,
-                                             iodepth=self.iodepth,
-                                             name="fio_" + str(i), fill_device=1, prio=0, direct=1)
+                                            numjobs=self.num_jobs,
+                                            iodepth=self.iodepth,
+                                            name="fio_" + str(i), fill_device=1, prio=0, direct=1)
 
         print("\n")
         print("======================================")
@@ -498,10 +491,7 @@ class LocalSSDTest(StorageConfiguration):
         self.storage_controller.disconnect()
 
     def cleanup(self):
-        print("")
-        print("=============================================")
-        raw_input("Press any Key to continue to Remote SSD Test:")
-        print("=============================================")
+        pass
 
 
 class RemoteSSDTest(StorageConfiguration):
