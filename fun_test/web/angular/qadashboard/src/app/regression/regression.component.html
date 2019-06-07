@@ -133,16 +133,16 @@
             <td>{{ suiteExecution.fields.version === 'UNKNOWN'? '-': suiteExecution.fields.version }}</td>
             <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
             <td>
-              <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({submitter_email: suiteExecution.fields.submitter_email})" >{{ suiteExecution.fields.submitter_email }}
-              </a>
+              <span class="pseudo-anchor" (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})" >{{ suiteExecution.fields.submitter_email }}
+              </span>
             </td>
 
             <td>
               <ng-container *ngIf="suiteExecution.fields.suite_path === 'dynamic'; else regularSuitePath">
-                <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({suite_path: 'Re(' + suiteExecution.fields.suite_path}) + ')'" >Re({{ getReRunOriginalSuitePath(suiteExecution)}})</a>
+                <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: 'Re(' + suiteExecution.fields.suite_path})" >Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
               </ng-container>
               <ng-template #regularSuitePath>
-                <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({suite_path: suiteExecution.fields.suite_path})" >{{ suiteExecution.fields.suite_path }}</a>
+                <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})" >{{ suiteExecution.fields.suite_path }}</span>
               </ng-template>
 
             </td>
@@ -185,11 +185,12 @@
               </ng-container>
             </td>
             <td>
-              <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({test_bed_type: suiteExecution.fields.test_bed_type})"  >{{ suiteExecution.fields.test_bed_type }}</a>
+              <span class="pseudo-anchor" (click)="navigateByQueryParams({test_bed_type: suiteExecution.fields.test_bed_type})" >{{ suiteExecution.fields.test_bed_type }}</span>
             </td>
             <td>
               <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">
-                <a class="tag-link" target="_blank" href="/regression?tag={{ tag }}">{{ tag }}</a></label>
+                <span style="cursor: pointer" (click)="navigateByQueryParams({tag: tag})" >{{ tag }}</span>
+              </label>
             </td>
           </tr>
           <tr *ngIf="suiteExecution.showingDetails">

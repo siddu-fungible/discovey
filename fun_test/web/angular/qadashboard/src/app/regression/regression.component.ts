@@ -132,6 +132,9 @@ export class RegressionComponent implements OnInit {
         if (response.hasOwnProperty('suite_path')) {
           payload["suite_path"] = response.suite_path;
         }
+        if (response.hasOwnProperty('tag')) {
+          payload["tags"] = [response.tag];
+        }
 
         let url = "/regression/suite_executions_count";
         if (!this.queryParameters.hasOwnProperty("state_filter")) {
@@ -188,6 +191,10 @@ export class RegressionComponent implements OnInit {
         queryParams["suite_path"] = this.queryParameters["suite_path"]
       }
 
+      if (this.queryParameters.hasOwnProperty('tag')) {
+        queryParams["tag"] = this.queryParameters["tag"]
+      }
+
       /*if (this.queryParameters.hasOwnProperty('state_filter')) {
         queryParams["state_filter"] = this.queryParameters["state_filter"];
         //this.stateFilterString = this.stateStringMap[this.queryParameters['state_filter']];
@@ -240,7 +247,8 @@ export class RegressionComponent implements OnInit {
   }
 
   navigateByQueryParams(userParams) {
-
+    let queryParams = this.prepareBaseQueryParams(userParams);
+    this.router.navigate(['/regression'], {queryParams: queryParams});
   }
 
   navigateByQuery(state) {
