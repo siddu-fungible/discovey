@@ -1,0 +1,33 @@
+{
+    "Description": "F1-1-FS-60_Intrarack_abstract",
+    "F1Index" : 2,
+    "Interfaces" : [
+	{ 
+	    "name" : "fpg8",
+            "mtu": 9000, 
+	    "enable" : true
+	},
+        {
+            "name" : "fpg12",
+            "mtu": 9000,
+            "enable" : true
+        },
+        {
+            "name" : "fpg20",
+            "mtu": 9000,
+            "enable" : true
+        }, 
+	{ 
+	    "name" : "lo:0", 
+	    "address" : "10.10.10.10",
+	    "prefix length" : 32,	    
+	    "enable" : true
+	},
+        {
+            "name" : "vlan1",
+            "address" : "44.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ]
+}
