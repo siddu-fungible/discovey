@@ -81,10 +81,7 @@ class BringupSetup(FunTestCase):
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script
 
     def cleanup(self):
-        print("")
-        print("============================================")
-        raw_input("Press any Key to continue to NIC Enulation:")
-        print("============================================")
+        pass
 
 
 class NicEmulation(FunTestCase):
@@ -130,6 +127,10 @@ class NicEmulation(FunTestCase):
 
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
+        print("")
+        print("============================================")
+        raw_input("Press any key to continue to NIC Emulation:")
+        print("============================================")
         # Check PICe Link on host
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         for server in servers_mode:
@@ -542,7 +543,7 @@ class RemoteSSDTest(StorageConfiguration):
         self.host.command("sudo nvme list")
         device = self.host.command("sudo nvme list | grep nvme | sed -n 2p | awk {'print $1'}").strip()
         fun_test.test_assert(device, message="nvme device visible on host")
-        # super(RemoteSSDTest, self).runio_remote(device)
+        super(RemoteSSDTest, self).runio_remote(device)
 
     def cleanup(self):
         pass
