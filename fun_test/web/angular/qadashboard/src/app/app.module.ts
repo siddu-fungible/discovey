@@ -62,7 +62,9 @@ import { Triage2Component } from './regression/triage2/triage2.component';
 import { JenkinsFormComponent } from './jenkins-form/jenkins-form.component';
 import { TriageDetailComponent } from './regression/triage2/triage-detail/triage-detail.component';
 import { SmartButtonComponent } from './ui-elements/smart-button/smart-button.component';
-import { AdminComponent } from "./admin/admin.component";
+import { AdminComponent } from "./performance/admin/admin.component";
+import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
+import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 
 @NgModule({
   declarations: [
@@ -110,7 +112,9 @@ import { AdminComponent } from "./admin/admin.component";
     JenkinsFormComponent,
     TriageDetailComponent,
     SmartButtonComponent,
-    AdminComponent
+    AdminComponent,
+    ScoresTableComponent,
+    PerformanceTableComponent
   ],
   imports: [
     BsDropdownModule,

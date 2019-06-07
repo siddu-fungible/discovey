@@ -1,6 +1,7 @@
 import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
+import {ActivatedRoute} from "@angular/router";
 
 @Component({
   selector: 'create-chart',
@@ -11,9 +12,9 @@ export class CreateChartComponent implements OnInit, OnChanges {
   xValues: any = [];
   title: string;
   xAxisLabel: string;
-  @Input() chartName: string;
-  @Input() modelName: string;
-  @Input() mode: string;
+  // @Input() chartName: string;
+  // @Input() modelName: string;
+  // @Input() mode: string;
   y1AxisTitle: string = null;
   y2AxisTitle: string = null;
   chartInfo: any = null;
@@ -22,31 +23,43 @@ export class CreateChartComponent implements OnInit, OnChanges {
   addDataSet: any = null;
   outputOptions: any = [];
   tableInfo: any = null;
-  dummyChartInfo: any;
   showOutputSelection: boolean;
   negativeGradient: boolean = false;
   inputNames: any;//name headers
   selectedOutput: any;
-  metricId: any;
+  mode: string = null;
+  chartName: string = null;
+  modelName: string = null;
+  metricId: number = null;
+  internalChartName: string = null;
 
 
-  constructor(private apiService: ApiService, private logger: LoggerService) {
+  constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute) {
   }
 
   ngOnInit() {
-    this.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
+    this.route.params.subscribe(params => {
+      if (params['mode']) {
+        this.mode = params['mode'];
+      }
+      if (params['metricId']) {
+        this.metricId = params['metricId']
+      }
+      if (params['modelName']) {
+        this.modelName = params['modelName']
+      }
+    });
     this.showOutputSelection = false;
 
-    if (this.chartName) {
+    if (this.metricId) {
       let payload = {};
-      payload["metric_model_name"] = this.modelName;
-      payload["chart_name"] = this.chartName;
+      payload["metric_id"] = this.metricId;
       this.apiService.post("/metrics/chart_info", payload).subscribe((chartInfo) => {
         this.chartInfo = chartInfo.data;
         //this.copyChartInfo = angular.copy(this.chartInfo);
         this.previewDataSets = this.chartInfo.data_sets;
         this.negativeGradient = !this.chartInfo.positive;
-        this.metricId = this.chartInfo.metric_id;
+        this.chartName = this.chartInfo.chart_name;
         this.y1AxisTitle = this.chartInfo.y1_axis_title;
 
       }, error => {
@@ -82,12 +95,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
     }, error => {
       this.logger.error("describe table create chart");
     });
-  };
-
-  outputChange = () => {
-    if (this.selectedOutput) {
-      this.dummyChartInfo.output.name = this.selectedOutput;
-    }
   };
 
   addDataSetClick = () => {
@@ -181,7 +188,7 @@ export class CreateChartComponent implements OnInit, OnChanges {
   }
 
   dismiss() {
-    window.history.back();
+    window.close();
   }
   
 }

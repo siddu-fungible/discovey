@@ -1,13 +1,14 @@
 <div class="component container-fluid">
-  <label>Select module</label>
+  <label>Select module</label>&nbsp;
   <select [(ngModel)]="selectedModule" style="width: 100px" (change)="moduleChange()">
     <option [ngValue]="key.name" *ngFor="let key of modules">{{ key.name }}</option>
   </select>
   <!--<select ng-options="module.name as module.verbose_name for module in modules" [(ngModel)]="selectedModule" (change)="moduleChange()"></select>-->
   <div *ngIf="selectedModule">
-    <a target="_blank" href="/metrics/view_all_storage_charts">View all storage charts</a>
+    <!--<a target="_blank" href="/metrics/view_all_storage_charts">View all storage charts</a>-->
+    <!--<br>-->
+    <!--<a target="_blank" href="/metrics/view_all_system_charts">View all system charts</a>-->
     <br>
-    <a target="_blank" href="/metrics/view_all_system_charts">View all system charts</a>
 
     <div *ngFor=" let modelInfo of modelsInfo[selectedModule] | keyvalue">
       <h4>{{ modelInfo.key }}</h4>
@@ -16,19 +17,20 @@
           <th>
           </th>
           <th>
-            Charts <a href="#" (click)="addChartClick(modelInfo.key)">+ Add chart</a>
+            Charts <a [routerLink]="" (click)="addChartClick(modelInfo.key)">+ Add chart</a>
           </th>
         </tr>
-        <tr *ngFor="let chartInfo of modelInfo.value.charts">
+        <tr *ngFor="let chartInfo of modelInfo.value.charts, index as i">
           <td class="fun-center">
-            <button class="btn btn-sm" (click)="removeClick()"><i class="fa fa-trash-o"
+            <button class="btn btn-sm" (click)="removeClick(i)"><i class="fa fa-trash-o"
                                                                   style="font-size:15px; color: red"></i></button>
           </td>
           <td class="fun-center">
             {{ chartInfo.chart_name }},&nbsp;{{ chartInfo.internal_chart_name }}&nbsp;
-            <a [routerLink]="" (click)="editChartClick(chartInfo, modelInfo.key)">Edit</a>&nbsp;
+            <a [routerLink]="" (click)="editChartClick(chartInfo.metric_id, modelInfo.key)">Edit</a>&nbsp;
             <a target="_blank"
                href="/metrics/tables/{{ chartInfo.metric_model_name }}/{{ chartInfo.metric_id }}">Tables</a>&nbsp;
+            <a [routerLink]="" (click)="showData(chartInfo.metric_id)">Tables</a>&nbsp;
             <a [routerLink]="" (click)="showScores(chartInfo.metric_id)">Scores</a>
           </td>
         </tr>

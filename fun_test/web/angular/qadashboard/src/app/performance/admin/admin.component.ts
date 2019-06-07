@@ -1,8 +1,8 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
-import {CommonService} from "../services/common/common.service";
+import {CommonService} from "../../services/common/common.service";
 import {ActivatedRoute, Router} from "@angular/router";
 
 @Component({
@@ -18,6 +18,7 @@ export class AdminComponent implements OnInit {
   modelsInfo: any;
   selectedModule: any = null;
   previewDataSets: any;
+  ADMIN_URL: string = "/performance/admin";
 
   constructor(
     private apiService: ApiService,
@@ -50,16 +51,24 @@ export class AdminComponent implements OnInit {
     })
   }
 
-  addChartClick(): void {
-
+  addChartClick(modelName): void {
+    let url = this.ADMIN_URL + "/create/" + modelName;
+    window.open(url, '_blank');
   }
 
-  editChartClick(): void {
+  editChartClick(metricId, modelName): void {
+    let url = this.ADMIN_URL + "/edit/" + modelName + "/" + metricId;
+    window.open(url, '_blank');
     
   }
   
   showScores(metricId): void {
-    let url = "/metrics/score_table/" + metricId;
+    let url = this.ADMIN_URL + "/scores/" + metricId;
+    window.open(url, '_blank');
+  }
+
+  showData(metricId): void {
+    let url = this.ADMIN_URL + "/data/" + metricId;
     window.open(url, '_blank');
   }
 
