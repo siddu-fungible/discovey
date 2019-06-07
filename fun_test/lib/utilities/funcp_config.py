@@ -425,18 +425,20 @@ class FunControlPlaneBringup:
             fun_test.critical("Cannot ssh into COMe, skipping FunCP Cleanup")
             return False
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
+        try:
+            if "funeth" in funeth_op:
+                funeth_rm = linux_obj.sudo_command("rmmod funeth")
+                if "ERROR" not in funeth_rm:
+                    fun_test.log("Funeth removed succesfully")
+                else:
+                    fun_test.critical(message="Funeth Remove error")
 
-        if "funeth" in funeth_op:
-            funeth_rm = linux_obj.sudo_command("rmmod funeth")
-            if "ERROR" not in funeth_rm:
-                fun_test.log("Funeth removed succesfully")
-            else:
-                fun_test.critical(message="Funeth Remove error")
-
-        for docker_name in self.docker_names:
-            if not re.search('[a-zA-Z]', docker_name):
-                continue
-            linux_obj.sudo_command(command="docker kill " + docker_name.rstrip(), timeout=300)
+            for docker_name in self.docker_names:
+                if not re.search('[a-zA-Z]', docker_name):
+                    continue
+                linux_obj.sudo_command(command="docker kill " + docker_name.rstrip(), timeout=300)
+        except:
+            fun_test.critical(message="Cannot cleanup FunCP")
 
     def _get_docker_names(self, verify_2_dockers=True):
         if self.docker_names_got:
