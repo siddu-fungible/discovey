@@ -879,6 +879,14 @@
       }
     }
   },
+  "fs-56": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-56"
+      }
+    }
+  },
   "fs-inspur": {
     "workarounds": {
       "enable_funcp": true

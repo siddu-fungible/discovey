@@ -2,7 +2,7 @@ from lib.host.linux import *
 from scripts.networking.funeth.funeth import Funeth
 
 
-def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=True):
+def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
     if reboot:
         count = 1
@@ -15,11 +15,12 @@ def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*"
             if response == 0:
                 if not linux_obj.check_ssh():
                     power_cycle_host(hostname)
+                    fun_test.sleep(message="Waiting for host after power cycle", seconds=90)
                     break
                 else:
                     break
             else:
-                "Cannot ping host"
+                fun_test.log("Cannot ping host")
                 fun_test.sleep(seconds=10, message="waiting for host")
         funeth_op=""
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
@@ -71,7 +72,7 @@ def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
             else:
                 break
         else:
-            "Cannot ping host"
+            fun_test.log("Cannot ping host")
             fun_test.sleep(seconds=15, message="waiting for host")
     funeth_op = ""
     funeth_op = linux_obj.command(command="lsmod | grep funeth")
@@ -87,7 +88,7 @@ def power_cycle_host(hostname):
     linux_obj = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
     fun_test.log("Preparing to power cycle host %s " % hostname)
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power off" % hostname)
-    fun_test.sleep(message="Waiting for host to go down")
+    fun_test.sleep(message="Waiting for host to go down", seconds=15)
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 

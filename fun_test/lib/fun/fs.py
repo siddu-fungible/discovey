@@ -256,6 +256,7 @@ class Bmc(Linux):
             command="setenv bootargs {}".format(
                 self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
 
+        fun_test.add_checkpoint("BOOTARGS: {}".format(boot_args), context=self.context)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
         self.u_boot_command(command="dhcp", timeout=15, expected=self.U_BOOT_F1_PROMPT, f1_index=index)
 
@@ -388,20 +389,7 @@ class Bmc(Linux):
         return s
 
     def cleanup(self):
-        # fun_test.critical("XXXX FIX-ME")
         fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
-
-        # fun_test.log("U-boot logs: {}: END".format(self.u_boot_logs))
-        """
-        for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
-            artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
-            uart_log_thread.close()
-            log = uart_log_thread.get_log()
-            with open(artifact_file_name, "w") as f:
-                f.write(log)
-            fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
-                                        filename=artifact_file_name)
-        """
 
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
@@ -734,6 +722,10 @@ class Fs(object, ToDictMixin):
         self.get_bmc().reset_context()
         self.get_come().reset_context()
         self.get_fpga().reset_context()
+        self.reset_context()
+
+    def reset_context(self):
+        self.context = None
 
     def set_boot_phase(self, boot_phase):
         self.boot_phase = boot_phase
@@ -750,6 +742,17 @@ class Fs(object, ToDictMixin):
     def cleanup(self):
         self.get_bmc().cleanup()
         self.get_come().cleanup()
+
+        try:
+            self.get_bmc().disconnect()
+            fun_test.log(message="BMC disconnect", context=self.context)
+            self.get_fpga().disconnect()
+            fun_test.log(message="FPGA disconnect", context=self.context)
+            self.get_come().disconnect()
+            fun_test.log(message="ComE disconnect", context=self.context)
+        except:
+            pass
+        return True
 
     def get_f1_0(self):
         return self.get_f1(index=0)
@@ -868,6 +871,7 @@ class Fs(object, ToDictMixin):
 
         try:
             self.get_bmc().disconnect()
+            fun_test.log(message="BMC disconnect", context=self.context)
             self.get_fpga().disconnect()
             self.get_come().disconnect()
         except:

@@ -568,7 +568,8 @@ class StorageFsTemplate(object):
             bond_output = container_obj.command("ifconfig {}".format(bond_dict["name"]))
             match = re.search(r'UP.*RUNNING', bond_output)
             if not match:
-                fun_test.critical("{} interface is still not in running state...So going to flip it")
+                fun_test.critical("{} interface is still not in running state...So going to flip it".
+                                  format(bond_dict["name"]))
                 bond_status = container_obj.ifconfig_up_down(interface=bond_dict["name"], action="down")
                 fun_test.sleep("Disabling {} interface".format(bond_dict["name"]), 2)
                 bond_status = container_obj.ifconfig_up_down(interface=bond_dict["name"], action="up")
