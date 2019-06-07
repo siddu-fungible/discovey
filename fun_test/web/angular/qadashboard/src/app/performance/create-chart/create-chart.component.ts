@@ -101,7 +101,7 @@ export class CreateChartComponent implements OnInit, OnChanges {
     }
     this.addDataSet = {};
     this.addDataSet["inputs"] = this.inputNames;
-    this.addDataSet["output"] = {min: 0, max: 99999};
+    this.addDataSet["output"] = {min: 0, max: 999999, expected: -1, reference: -1};
   };
 
   addClick = () => {
@@ -119,7 +119,8 @@ export class CreateChartComponent implements OnInit, OnChanges {
           error = true;
           return this.logger.error(message);
         } else {
-          validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
+          if (oneField.selectedChoice !== 'any')
+            validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
         }
       });
       if (!error) {
@@ -138,6 +139,8 @@ export class CreateChartComponent implements OnInit, OnChanges {
           validDataSet["output"]["name"] = this.addDataSet["output"].name;
           validDataSet["output"]["min"] = this.addDataSet["output"].min;
           validDataSet["output"]["max"] = this.addDataSet["output"].max;
+          validDataSet["output"]["expected"] = this.addDataSet["output"].expected;
+          validDataSet["output"]["reference"] = this.addDataSet["output"].reference;
         }
 
       }
@@ -169,7 +172,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
     payload["data_sets"] = this.previewDataSets;
     payload["negative_gradient"] = this.negativeGradient;
     payload["y1_axis_title"] = this.y1AxisTitle;
-    payload["y2_axis_title"] = this.y2AxisTitle;
     payload["leaf"] = true;
 
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
