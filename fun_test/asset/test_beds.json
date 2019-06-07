@@ -211,25 +211,6 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-          "4": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1,
-            "host_info": {
-              "name": "cab02-qa-06"
-            }
-          },
-          "5": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "6": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "7": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
           "8": {
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
