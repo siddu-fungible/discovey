@@ -14,7 +14,6 @@ hu:
     default:
       interfaces:
         - hu2-f0:
-            mac_addr: 00:de:ad:be:ef:21
             ipv4_addr: 18.1.1.2
             ipv4_netmask: 255.255.255.0
       routes:
