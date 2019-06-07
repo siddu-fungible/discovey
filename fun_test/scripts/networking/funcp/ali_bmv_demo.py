@@ -12,15 +12,19 @@ from lib.topology.topology_helper import TopologyHelper
 
 
 class ScriptSetup(FunTestScript):
+    server_key = {}
 
     def describe(self):
         self.set_test_details(steps="1. Make sure correct FS system is selected")
 
     def setup(self):
-        pass
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
 
     def cleanup(self):
-        pass
+        funcp_obj.cleanup_funcp()
+        for server in servers_mode:
+            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
 
 class BringupSetup(FunTestCase):
