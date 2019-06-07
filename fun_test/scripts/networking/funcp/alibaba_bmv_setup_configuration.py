@@ -43,7 +43,7 @@ class BringupSetup(FunTestCase):
 
     def run(self):
         # Last working parameter:
-        #  --environment={\"test_bed_type\":\"fs-alibaba_demo\",\"tftp_image_path\":\"divya_funos-f1.stripped_june4.gz\"}
+        # --environment={\"test_bed_type\":\"fs-alibaba_demo\",\"tftp_image_path\":\"divya_funos-f1.stripped_june5.gz\"}
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
@@ -72,7 +72,7 @@ class BringupSetup(FunTestCase):
         fun_test.test_assert(topology, "Topology deployed")
 
         # Bringup FunCP
-        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False, ep=True), message="Bringup FunCP")
+        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
@@ -134,6 +134,7 @@ class NicEmulation(FunTestCase):
             result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
             fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                      % server)
+            # TODO : reboot/power cycle host if link doesnt come up
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
@@ -155,7 +156,7 @@ class NicEmulation(FunTestCase):
 
 class StorageConfiguration(FunTestCase):
     def describe(self):
-        self.set_test_details(id=3, summary="Storage tests", steps="1. Configure volumes")
+        self.set_test_details(id=5, summary="Storage tests", steps="1. Configure volumes")
 
     def setup(self, config):
         testcase = self.__class__.__name__
@@ -489,7 +490,7 @@ class StorageConfiguration(FunTestCase):
 
 class LocalSSDTest(StorageConfiguration):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=3,
                               summary="Run fio traffic on locally attached SSD",
                               steps="""
                                       1. Create BLT volume
@@ -521,7 +522,7 @@ class LocalSSDTest(StorageConfiguration):
 
 class RemoteSSDTest(StorageConfiguration):
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=4,
                               summary="Run fio traffic on remotely attached SSD",
                               steps="""
                                               1. Assign IP to remote F1

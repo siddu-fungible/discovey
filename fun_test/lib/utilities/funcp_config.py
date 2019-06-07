@@ -193,6 +193,10 @@ class FunControlPlaneBringup:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
 
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
+        fun_test.log("")
+        fun_test.log("=========================")
+        fun_test.log("Fun Control Plane Bringup")
+        fun_test.log("=========================")
         if ep:
             setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker "
                                                          "--ep", timeout=1200)
@@ -257,6 +261,10 @@ class FunControlPlaneBringup:
             linux_obj.command("rm %s" % file_name)
             linux_obj.create_file(file_name=file_name, contents=json.dumps(file_contents))
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/")
+            fun_test.log("")
+            fun_test.log("=======================")
+            fun_test.log("Execute Abstract Config")
+            fun_test.log("=======================")
             execute_abstract = linux_obj.command("./apply_abstract_config.py --server " + self.mpg_ips[f1] +
                                                  " --json ./abstract_cfg/" + file_name)
             fun_test.test_assert(expression="returned non-zero exit status" not in execute_abstract,
@@ -382,6 +390,10 @@ class FunControlPlaneBringup:
             for num in routes:
                 try:
                     linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+                    fun_test.log("")
+                    fun_test.log("======================")
+                    fun_test.log("Add static route on %s" % docker_name)
+                    fun_test.log("======================")
                     linux_obj.command(command="sudo ip route add %s via %s dev %s" % (routes[num]["route"],
                                                                                       routes[num]["gateway"],
                                                                                       routes[num]["port"]))
@@ -401,6 +413,9 @@ class FunControlPlaneBringup:
         return bool(m) and all(map(lambda n: 0 <= int(n) <= 255, m.groups()))
 
     def cleanup_funcp(self):
+        fun_test.log("=====================")
+        fun_test.log("Control Plane Cleanup")
+        fun_test.log("=====================")
         self._get_docker_names(verify_2_dockers=False)
         self.docker_names_got = False
         linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
@@ -462,13 +477,15 @@ class FunControlPlaneBringup:
                 if percentage_loss <= 50:
                     result = True
                 if result:
-                    print("#########################################")
-                    fun_test.add_checkpoint("<b>Container %s can ping %s</b>" % (host.rstrip(),
-                                                                                 self.vlan1_ips[host.rstrip()]))
-                    print("#########################################")
+                    fun_test.log("=============================")
+                    fun_test.add_checkpoint("Container %s can ping %s" % (host.rstrip(),
+                                                                          self.vlan1_ips[host.rstrip()]))
+                    fun_test.log("=============================")
                 else:
+                    fun_test.log("=================================")
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(),
                                                                                self.vlan1_ips[host.rstrip()]))
+                    fun_test.log("=================================")
 
     def test_cc_pings_remote_fs(self, dest_ips, docker_name=None, from_vlan=False):
         if not docker_name:
@@ -499,9 +516,10 @@ class FunControlPlaneBringup:
                 if percentage_loss <= 50:
                     result = True
                 if result:
-                    fun_test.log("#########################################")
-                    fun_test.log("<b>Container %s can ping %s</b>" % (host.rstrip(), ips))
-                    fun_test.log("#########################################")
+                    fun_test.log("")
+                    fun_test.log("=============================")
+                    fun_test.log("Container %s can ping %s" % (host.rstrip(), ips))
+                    fun_test.log("=============================")
                 else:
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), ips))
             linux_obj.disconnect()
