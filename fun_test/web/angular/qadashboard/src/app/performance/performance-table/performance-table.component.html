@@ -1,0 +1,7 @@
+<div class="component container-fluid">
+  <h4>Chartname: {{ chartName }}</h4>
+  <h4>Modelname: {{ modelName }}</h4>
+  <div *ngIf="showingTable">
+    <fun-table [data]="data"></fun-table>
+  </div>
+</div>

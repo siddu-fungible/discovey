@@ -142,11 +142,11 @@ class StoragePeekCommands(object):
             self.dpc_client.disconnect()
 
     def peek_blt_vol_stats(self, vol_id):
-        cmd = "storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/%d" % vol_id
+        cmd = "storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/%s" % vol_id
         self._peek_vol_stats(cmd=cmd)
 
     def peek_rds_vol_stats(self, vol_id):
-        cmd = "storage/volumes/VOL_TYPE_BLK_RDS/%d" % vol_id
+        cmd = "storage/volumes/VOL_TYPE_BLK_RDS/%s" % vol_id
         self._peek_vol_stats(cmd=cmd)
 
 
