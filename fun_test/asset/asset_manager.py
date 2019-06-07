@@ -306,6 +306,23 @@ class AssetManager:
             assets_required[AssetType.HOST] = host_names
         return assets_required
 
+    @fun_test.safe
+    def check_custom_test_bed_availability(self, custom_spec):
+        base_test_bed_name = custom_spec.get("base_test_bed", None)
+        fun_test.simple_assert(base_test_bed_name, "Base test-bed available in custom-spec")
+
+        test_bed_spec = self.get_test_bed_spec(name=base_test_bed_name)
+        fun_test.simple_assert(test_bed_spec, "Test-bed spec for: {}".format(base_test_bed_name))
+
+        asset_request = custom_spec.get("asset_request", None)
+        fun_test.simple_assert(asset_request, "asset_request in custom_spec")
+
+        num_duts = asset_request.get(AssetType.DUT, None)
+        num_hosts = asset_request.get(AssetType.HOST, None)
+
+        if num_duts is not None:
+            pass
+
     """
     @fun_test.safe
     def lock_assets(self, manual_lock_user, assets):
@@ -322,9 +339,10 @@ class AssetManager:
             asset.job_ids = asset.remove_job_id(job_id=job_id)
     """
 
+
 asset_manager = AssetManager()
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     spec = asset_manager.get_test_bed_spec(name="fs-inspur")
     from lib.topology.topology_helper import TopologyHelper
     th = TopologyHelper(spec=spec)
@@ -336,3 +354,19 @@ if __name__ == "__main__":
     hosts = topology.get_hosts()
     host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
     print host_names
+
+
+if __name__ == "__main__":
+    print "Hi"
+    # get base test-bed
+    custom_spec = {"base_test_bed": "fs-inspur", "asset_request": {"DUT": ["fs-41"]}}
+    spec = asset_manager.check_custom_test_bed_availability(custom_spec=custom_spec)
+
+    # get requested DUT count
+    # get requested host count
+    # if num DUTs matches, gather DUTs allotted
+    # if num Hosts matched, gather Hosts allotted
+
+    spec = fun_test.get_asset_manager().get_host_spec(name="js")
+    Linux(**spec)
+    # pass TopologyHelper with pool selection
