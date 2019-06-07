@@ -7,6 +7,12 @@ import {LoggerService} from '../../services/logger/logger.service';
 import {RegressionService} from "../regression.service";
 import {CommonService} from "../../services/common/common.service";
 
+
+class Environment {
+  BRANCH_FunOS: string = null;
+  DISABLE_ASSERTIONS: boolean = true;
+}
+
 @Component({
   selector: 'app-suite-detail',
   templateUrl: './suite-detail.component.html',
@@ -28,6 +34,7 @@ export class SuiteDetailComponent implements OnInit {
   scriptInfo: any = {};
   stateStringMap: any = null;
   stateMap: any = null;
+  environment = new Environment();
 
   constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService, private commonService: CommonService) {
     this.stateStringMap = this.regressionService.stateStringMap;
@@ -67,6 +74,24 @@ export class SuiteDetailComponent implements OnInit {
       let suiteFields = self.suiteExecution.fields;
       let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
 
+      if (self.suiteExecution.fields.hasOwnProperty("environment")) {
+        let environment = JSON.parse(self.suiteExecution.fields.environment);
+        //ctrl.environment.branchFunOs =
+        if (environment.hasOwnProperty("build_parameters")) {
+          let buildParameters = environment.build_parameters;
+          if (buildParameters.hasOwnProperty('BRANCH_FunOS')) {
+            if (!buildParameters.BRANCH_FunOS) {
+              ctrl.environment.BRANCH_FunOS = "master"
+            } else {
+              ctrl.environment.BRANCH_FunOS = buildParameters.BRANCH_FunOS;
+            }
+          }
+          if (buildParameters.hasOwnProperty('DISABLE_ASSERTIONS')) {
+            ctrl.environment.DISABLE_ASSERTIONS = buildParameters.DISABLE_ASSERTIONS;
+          }
+
+        }
+      }
       for(let testCaseExecutionId of testCaseExecutionIds) {
         self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
           //self.testCaseExecutions.push(JSON.parse(result.data)[0]);

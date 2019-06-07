@@ -17,10 +17,12 @@ export class RegressionService implements OnInit{
                    "30": "SUBMITTED",
                    "40": "SCHEDULED",
                    "50": "QUEUED",
-                   "60": "IN_PROGRESS"};
+                   "60": "IN_PROGRESS",
+                   "ALL": "ALL"};
 
 
   stateMap = {
+    "ALL": "ALL",
     "UNKNOWN": "-200",  // TODO: fetch from the back-end
     "ERROR" : -100,
     "KILLED" : -20,
