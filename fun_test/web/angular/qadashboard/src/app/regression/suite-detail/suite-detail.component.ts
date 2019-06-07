@@ -10,7 +10,7 @@ import {CommonService} from "../../services/common/common.service";
 
 class Environment {
   BRANCH_FunOS: string = null;
-  DISABLE_ASSERTIONS: boolean = true;
+  DISABLE_ASSERTIONS: boolean = null;
 }
 
 @Component({
