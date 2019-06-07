@@ -328,7 +328,7 @@ def suite_executions_count(request, state_filter_string):
             request_json = json.loads(request.body)
             if "tags" in request_json:
                 tags = request_json["tags"]
-                tags = json.loads(tags)
+                # tags = json.loads(tags)
             submitter_email = request_json.get('submitter_email', None)
             test_bed_type = request_json.get('test_bed_type', None)
             suite_path = request_json.get('suite_path', None)

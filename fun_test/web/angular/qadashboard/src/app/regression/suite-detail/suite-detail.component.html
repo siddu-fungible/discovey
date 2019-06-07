@@ -52,6 +52,15 @@
               <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log
                 directory</a>
             </tr>
+            <tr *ngIf="environment">
+              <td>Branch_FunOS</td>
+              <td>{{ environment.BRANCH_FunOS }}</td>
+            </tr>
+            <tr *ngIf="environment">
+              <td>DISABLE_ASSERTIONS</td>
+              <td>{{ environment.DISABLE_ASSERTIONS }}</td>
+            </tr>
+
           </table>
         </div>
       </div>
