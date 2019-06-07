@@ -743,6 +743,17 @@ class Fs(object, ToDictMixin):
         self.get_bmc().cleanup()
         self.get_come().cleanup()
 
+        try:
+            self.get_bmc().disconnect()
+            fun_test.log(message="BMC disconnect", context=self.context)
+            self.get_fpga().disconnect()
+            fun_test.log(message="FPGA disconnect", context=self.context)
+            self.get_come().disconnect()
+            fun_test.log(message="ComE disconnect", context=self.context)
+        except:
+            pass
+        return True
+
     def get_f1_0(self):
         return self.get_f1(index=0)
 
@@ -860,6 +871,7 @@ class Fs(object, ToDictMixin):
 
         try:
             self.get_bmc().disconnect()
+            fun_test.log(message="BMC disconnect", context=self.context)
             self.get_fpga().disconnect()
             self.get_come().disconnect()
         except:

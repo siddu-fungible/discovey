@@ -18,14 +18,14 @@
                      "cpus_allowed": "1-19,41-59", "group_reporting": 1, "prio":  0, "timeout": 1400},
     "fio_modes": ["randread"],
     "iostat_details": { "interval": 2},
-    "fio_bs_iodepth": ["(4, 8)"],
+    "fio_bs_iodepth": ["(4, 1)"],
     "fio_pass_threshold": 0.05,
     "fio_job_name": {"read": "tcp", "randread": "tcp"},
     "volume_pass_threshold": 0,
     "nvme_device": "/dev/nvme0",
     "create_file_system": true,
     "expected_fio_result": {
-      "(4, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(4, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "reboot_host": true,
     "host_count": 8

@@ -2,6 +2,22 @@
 	"Description": "FS11 F1_1 abstract cfg",
 	"F1Index" : 2,
 	"Interfaces" : [
+		{
+		"name" : "fpg0",
+		"address" : "9.1.0.2",
+		"prefix length" : 30,
+		"spine_index" : 0,
+		"gph_index" : 1,
+		"enable" : true
+	},
+		{
+		"name" : "fpg8",
+		"address" : "9.1.8.2",
+		"prefix length" : 30,
+		"spine_index" : 0,
+		"gph_index" : 6,
+		"enable" : true
+	},
 	{
 		"name" : "fpg12",
 		"mtu": 9000,
