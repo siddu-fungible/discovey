@@ -156,6 +156,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
+    if (!this.id) {
+      this.status = null;
+    }
   }
 
   ngOnChanges() {
@@ -204,10 +207,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.paddingNeeded = true;
         this.id = params['id'];
         this.fetchMetricsById();
-      }
-      else if (this.id) {
+      } else if (this.id) {
         this.fetchMetricsById();
+      } else {
+        this.status = null;
       }
+
     });
   }
 
@@ -1315,7 +1320,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (this.modelName !== 'MetricContainer') {
       return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
         self.tableInfo = response.data;
-        self.fetchData(this.id, chartInfo, previewDataSets, self.tableInfo);
+        self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
         this.loggerService.error("fetchMetricsData");
       })

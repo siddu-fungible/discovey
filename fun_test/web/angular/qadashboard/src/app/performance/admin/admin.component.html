@@ -1,0 +1,27 @@
+<div class="component container-fluid">
+  <label>Select module</label>&nbsp;
+  <select [(ngModel)]="selectedModule" style="width: 100px" (change)="moduleChange()">
+    <option [ngValue]="key.name" *ngFor="let key of modules">{{ key.name }}</option>
+  </select>
+  <div *ngIf="selectedModule">
+    <br>
+    <div *ngFor=" let modelInfo of modelsInfo[selectedModule] | keyvalue">
+      <h4>{{ modelInfo.key }}</h4>
+      <table class="table table-bordered table-nonfluid" style="padding-left: 10px">
+        <tr>
+          <th>
+            Charts <a [routerLink]="" (click)="addChartClick(modelInfo.key)">+ Add chart</a>
+          </th>
+        </tr>
+        <tr *ngFor="let chartInfo of modelInfo.value.charts, index as i">
+          <td class="fun-center">
+            {{ chartInfo.chart_name }},&nbsp;{{ chartInfo.internal_chart_name }}&nbsp;
+            <a [routerLink]="" (click)="editChartClick(chartInfo.metric_id, modelInfo.key)">Edit</a>&nbsp;
+            <a [routerLink]="" (click)="showData(chartInfo.metric_id)">Tables</a>&nbsp;
+            <a [routerLink]="" (click)="showScores(chartInfo.metric_id)">Scores</a>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
