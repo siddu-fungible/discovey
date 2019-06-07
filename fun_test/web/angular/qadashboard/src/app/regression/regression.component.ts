@@ -14,10 +14,10 @@ class FilterButton {
   filterKey: string = null;
   filterValue: string = null;
   stateStringMap = null;
-  constructor(filterKey, filterValue, stateFilterString) {
+  constructor(filterKey, filterValue, stateStringMap) {
     this.filterKey = filterKey;
     this.filterValue = filterValue;
-    this.stateStringMap = stateFilterString;
+    this.stateStringMap = stateStringMap;
     this._setDisplayString();
   }
 
@@ -72,7 +72,7 @@ export class RegressionComponent implements OnInit {
   logDir: any;
   status: string = "Fetching Data";
   //stateFilter: string = null; //Filter.ALL;
-  stateFilterString: string = null;
+  stateFilterString: string = "ALL";
   filter = Filter;
   stateStringMap: any = null;
   stateMap: any = null;
@@ -136,8 +136,10 @@ export class RegressionComponent implements OnInit {
         let url = "/regression/suite_executions_count";
         if (!this.queryParameters.hasOwnProperty("state_filter")) {
           url += "/ALL";
+          this.stateFilterString = this.stateStringMap.ALL;
         } else {
           url += "/" + this.queryParameters.state_filter;
+          this.stateFilterString = this.stateStringMap[this.queryParameters.state_filter];
         }
         return this.apiService.post(url, payload).pipe(switchMap((result) => {
           this.suiteExecutionsCount = (parseInt(result.data));
@@ -186,12 +188,12 @@ export class RegressionComponent implements OnInit {
         queryParams["suite_path"] = this.queryParameters["suite_path"]
       }
 
-      if (this.queryParameters.hasOwnProperty('state_filter')) {
+      /*if (this.queryParameters.hasOwnProperty('state_filter')) {
         queryParams["state_filter"] = this.queryParameters["state_filter"];
-        this.stateFilterString = this.stateStringMap[this.queryParameters['state_filter']];
+        //this.stateFilterString = this.stateStringMap[this.queryParameters['state_filter']];
       } else {
         this.stateFilterString = "ALL";
-      }
+      }*/
     }
     if (userSuppliedParams) {
       for (let key in userSuppliedParams) {
@@ -229,11 +231,16 @@ export class RegressionComponent implements OnInit {
 
   onStateFilterClick(state) {
     let userParams = {state_filter: state};
+    this.stateFilterString = this.stateStringMap[state];
     this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(userParams)});
     /*
     this.stateFilterString = state;
     this.stateFilter = this.stateFilterStringToNumber(state);
     this.navigateByQuery(this.stateFilter);*/
+  }
+
+  navigateByQueryParams(userParams) {
+
   }
 
   navigateByQuery(state) {
