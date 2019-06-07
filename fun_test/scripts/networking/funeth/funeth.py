@@ -164,6 +164,7 @@ class Funeth:
         result = result_list[0]
         if not all(r == result for r in result_list):
             fun_test.critical('Different FunSDK/Driver commit/bld in hosts')
+            fun_test.log('result_list: {}'.format(result_list))
             return False
         elif len(result) != 4:
             fun_test.critical('Failed to update FunSDK/Driver source')
