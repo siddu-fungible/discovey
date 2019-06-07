@@ -52,7 +52,6 @@ export class PerformanceTableComponent implements OnInit {
               let index = 0;
               for (let oneDataSet of allDataSet) {
                 for (let oneData of oneDataSet) {
-
                   if (!self.headers) {
                     self.headers = oneData;
                     Object.keys(self.headers).forEach((key) => {
@@ -78,71 +77,4 @@ export class PerformanceTableComponent implements OnInit {
       });
     }
   }
-
-  describeTable(): void {
-    this.inputs = [];
-    this.outputList = [];
-    let self = this;
-    this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (tableInfo) {
-      self.tableInfo = tableInfo.data;
-      self.tableInfo.forEach((fieldInfo, field) => {
-        let oneField = {};
-        oneField["name"] = field;
-        if ('choices' in fieldInfo && oneField["name"].startsWith("input")) {
-          oneField["choices"] = fieldInfo.choices.map((choice) => {
-            return choice[1]
-          });
-          self.inputs.push(oneField);
-        }
-        if (oneField["name"].startsWith("output")) {
-          self.outputList.push(oneField["name"]);
-        }
-      });
-    });
-  }
-
-  filterHeaders(headers, input): any {
-    if (!headers) {
-      return;
-    } else {
-      return headers.filter((header) => {
-        if (input === "input") {
-          return header.startsWith("input");
-        } else {
-          return header.startsWith("output");
-        }
-      });
-    }
-
-  }
-
-  getVerboseName(name): string {
-    return this.tableInfo[name].verbose_name;
-  }
-
-
-  prepareKey(valueList): string {
-    let s = "";
-    valueList.forEach((value) => {
-      s += value;
-    });
-    return s;
-  }
-
-  //
-  // getOutputHeaders(): any[] {
-  //   let result = [];
-  //   if (this.headers) {
-  //     let outputHeaders = this.filterHeaders(this.headers, "output");
-  //     if (outputHeaders.length > 0) {
-  //       outputHeaders.forEach((outputHeader) => {
-  //         this.uniqueKeys.forEach((uniqueKey) => {
-  //           result.push(uniqueKey);
-  //         })
-  //       });
-  //     }
-  //
-  //   }
-  //   return result;
-  // }
 }

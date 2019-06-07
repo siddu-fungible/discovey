@@ -25,7 +25,7 @@ import {Triage2Component} from "./regression/triage2/triage2.component";
 import {JenkinsFormComponent} from "./jenkins-form/jenkins-form.component";
 import {TriageDetailComponent} from "./regression/triage2/triage-detail/triage-detail.component";
 import {AdminComponent} from "./performance/admin/admin.component";
-import {CreateChartComponent} from "./create-chart/create-chart.component";
+import {CreateChartComponent} from "./performance/create-chart/create-chart.component";
 import {ScoresTableComponent} from "./performance/scores-table/scores-table.component";
 import {PerformanceTableComponent} from "./performance/performance-table/performance-table.component";
 

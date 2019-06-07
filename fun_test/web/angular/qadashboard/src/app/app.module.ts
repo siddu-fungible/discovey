@@ -23,7 +23,7 @@ import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawe
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
 import { Demo1Component } from './demo1/demo1.component';
-import { CreateChartComponent } from './create-chart/create-chart.component';
+import { CreateChartComponent } from './performance/create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
 import { ScrollToDirective } from './scroll-to.directive';
 import { RegressionComponent } from './regression/regression.component';

@@ -1,6 +1,6 @@
 import {Component, OnInit, Input, OnChanges} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 
 @Component({
@@ -12,9 +12,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
   xValues: any = [];
   title: string;
   xAxisLabel: string;
-  // @Input() chartName: string;
-  // @Input() modelName: string;
-  // @Input() mode: string;
   y1AxisTitle: string = null;
   y2AxisTitle: string = null;
   chartInfo: any = null;
