@@ -93,7 +93,10 @@ def power_cycle_host(hostname):
 
 
 def test_host_pings(host, ips):
-
+    fun_test.log("")
+    fun_test.log("================")
+    fun_test.log("Pings from Hosts")
+    fun_test.log("================")
     linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
     for hosts in ips:
         result = linux_obj.ping(dst=hosts)
@@ -104,6 +107,9 @@ def test_host_pings(host, ips):
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
+    fun_test.log("===================")
+    fun_test.log("Configuring HU host")
+    fun_test.log("===================")
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
@@ -113,7 +119,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
             critical_log(update_src_result, 'Update funeth driver source code.')
-    critical_log(funeth_obj.build(parallel=True), 'Build funeth driver.')
+        critical_log(funeth_obj.build(parallel=True), 'Build funeth driver.')
     critical_log(funeth_obj.load(sriov=4), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
@@ -122,16 +128,22 @@ def setup_hu_host(funeth_obj, update_driver=True):
                      'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
-        critical_log(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(False)),
+        critical_log(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=False),
                      'Configure HU host {} IPv4 routes.'.format(
                          linux_obj.host_ip))
+        fun_test.log("==================================")
+        fun_test.log("Configuration of HU host completed")
+        fun_test.log("==================================")
 
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
 
 def get_ethtool_on_hu_host(funeth_obj):
     for hu in funeth_obj.hu_hosts:
-        funeth_obj.get_ethtool_stats(hu)
+        fun_test.log("====================================")
+        fun_test.log("Ethtool Stats after HU Configuration")
+        fun_test.log("====================================")
+        # funeth_obj.get_ethtool_stats(hu)
         bus = funeth_obj.get_bus_info_from_ethtool(hu)
 
 
