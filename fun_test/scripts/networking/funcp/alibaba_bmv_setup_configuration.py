@@ -542,11 +542,20 @@ class RemoteSSDTest(StorageConfiguration):
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
+    print("")
+    print("============================================")
     raw_input("Press any Key to continue to NIC Enulation:")
+    print("")
+    print("============================================")
     ts.add_test_case(NicEmulation())
+    print("============================================")
     raw_input("Press any Key to continue to Local SSD Test:")
+    print("============================================")
     ts.add_test_case(LocalSSDTest())
+    print("")
+    print("=============================================")
     raw_input("Press any Key to continue to Remote SSD Test:")
+    print("=============================================")
     ts.add_test_case(RemoteSSDTest())
     # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
     # T2 : Local SSD from FIO
