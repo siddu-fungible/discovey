@@ -118,19 +118,16 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['results'] = results
 
     def cleanup(self):
-        try:
-            results = fun_test.shared_variables['results']
-            if not debug_mode:
-                perf_utils.db_helper(results)
-            perf_utils.populate_result_summary(tc_ids,
-                                               results,
-                                               fun_test.shared_variables['funsdk_commit'],
-                                               fun_test.shared_variables['funsdk_bld'],
-                                               fun_test.shared_variables['driver_commit'],
-                                               fun_test.shared_variables['driver_bld'],
-                                               '00_summary_of_results.txt')
-        except:
-            pass
+        results = fun_test.shared_variables['results']
+        if not debug_mode:
+            perf_utils.db_helper(results)
+        perf_utils.populate_result_summary(tc_ids,
+                                           results,
+                                           fun_test.shared_variables['funsdk_commit'],
+                                           fun_test.shared_variables['funsdk_bld'],
+                                           fun_test.shared_variables['driver_commit'],
+                                           fun_test.shared_variables['driver_bld'],
+                                           '00_summary_of_results.txt')
         super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(fun_test.shared_variables['netperf_manager_obj'].cleanup(), 'Clean up')

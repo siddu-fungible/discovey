@@ -191,16 +191,13 @@ class FunethSanity(FunTestScript):
             fun_test.shared_variables["fs"].cleanup()
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             fun_test.shared_variables["topology"].cleanup()
-        try:
-            funeth_obj = fun_test.shared_variables['funeth_obj']
-            funeth_obj.cleanup_workspace()
-            fun_test.log("Collect syslog from HU hosts")
-            funeth_obj.collect_syslog()
-            fun_test.log("Collect dmesg from HU hosts")
-            funeth_obj.collect_dmesg()
-            fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
-        except:
-            pass
+        funeth_obj = fun_test.shared_variables['funeth_obj']
+        funeth_obj.cleanup_workspace()
+        fun_test.log("Collect syslog from HU hosts")
+        funeth_obj.collect_syslog()
+        fun_test.log("Collect dmesg from HU hosts")
+        funeth_obj.collect_dmesg()
+        fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
 
         # TODO: Clean up control plane
         if control_plane:
