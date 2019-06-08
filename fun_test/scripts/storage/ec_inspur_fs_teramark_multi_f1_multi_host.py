@@ -298,8 +298,6 @@ class ECVolumeLevelScript(FunTestScript):
 
         self.storage_controller.disconnect()"""
 
-        pass
-        """
         come_reboot = False
         for index in xrange(self.num_duts):
             try:
@@ -322,7 +320,7 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.critical(str(ex))
 
         fun_test.sleep("Allowing buffer time before clean-up", 30)
-        self.topology.cleanup()"""
+        self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
