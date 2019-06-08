@@ -35,6 +35,7 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/docu
 ### Keeping the integration/review branch up-to-date
 ~~~~
 cd Integration/
+git pull origin master
 cd fun_test/
 export PYTHONPATH=`pwd`
 export DEVELOPMENT_MODE=1
