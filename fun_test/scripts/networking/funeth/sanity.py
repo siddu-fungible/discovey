@@ -190,21 +190,40 @@ class FunethSanity(FunTestScript):
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fun_test.shared_variables["fs"].cleanup()
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
-            fun_test.shared_variables["topology"].cleanup()
-        funeth_obj = fun_test.shared_variables['funeth_obj']
-        funeth_obj.cleanup_workspace()
-        fun_test.log("Collect syslog from HU hosts")
-        funeth_obj.collect_syslog()
-        fun_test.log("Collect dmesg from HU hosts")
-        funeth_obj.collect_dmesg()
-        fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
+            topology = fun_test.shared_variables["topology"]
+            topology.cleanup()
+            try:
+                funeth_obj = fun_test.shared_variables['funeth_obj']
+                funeth_obj.cleanup_workspace()
+                fun_test.log("Collect syslog from HU hosts")
+                funeth_obj.collect_syslog()
+                fun_test.log("Collect dmesg from HU hosts")
+                funeth_obj.collect_dmesg()
+                fun_test.log("Unload funeth driver")
+                funeth_obj.unload()
+            except:
+                hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
+                for host_ip, host_info in hu_hosts.iteritems():
+                    fun_test.log('Power off {}'.format(host_ip))
+                    host_info["host_obj"].ipmi_power_off()
+                fun_test.sleep("Wait for power off", seconds=10)
+                for host_ip, host_info in hu_hosts.iteritems():
+                    fun_test.log('Power on {}'.format(host_ip))
+                    host_info["host_obj"].ipmi_power_on()
+                for host_ip, host_info in hu_hosts.iteritems():
+                    host_info["host_obj"].is_host_up()
 
-        # TODO: Clean up control plane
-        if control_plane:
-            linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
-            linux_obj.sudo_command('rmmod funeth')
-            linux_obj.sudo_command('docker kill F1-0 F1-1')
-            linux_obj.sudo_command('rm -fr /tmp/*')
+            if control_plane:
+                linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
+                try:
+                    linux_obj.sudo_command('rmmod funeth')
+                    linux_obj.sudo_command('docker kill F1-0 F1-1')
+                    linux_obj.sudo_command('rm -fr /tmp/*')
+                except:
+                    fun_test.log('Power off COMe')
+                    linux_obj.ipmi_power_off()
+                    fun_test.sleep("Wait for power off", seconds=10)
+                    linux_obj.ipmi_power_on()
 
 
 def collect_stats():
