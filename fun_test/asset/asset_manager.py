@@ -317,8 +317,15 @@ class AssetManager:
         asset_request = custom_spec.get("asset_request", None)
         fun_test.simple_assert(asset_request, "asset_request in custom_spec")
 
-        num_duts = asset_request.get(AssetType.DUT, None)
-        num_hosts = asset_request.get(AssetType.HOST, None)
+        num_duts = None
+        if AssetType.DUT in asset_request:
+            dut_info = asset_request[AssetType.DUT]
+            num_duts = dut_info.get("num", None)
+
+        num_hosts = None
+        if AssetType.HOST in asset_request:
+            host_info = asset_request[AssetType.HOST]
+            num_hosts = dut_info.get("num", None)
 
         if num_duts is not None:
             pass
@@ -359,7 +366,7 @@ if __name__ == "__main2__":
 if __name__ == "__main__":
     print "Hi"
     # get base test-bed
-    custom_spec = {"base_test_bed": "fs-inspur", "asset_request": {"DUT": ["fs-41"]}}
+    custom_spec = {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}}}
     spec = asset_manager.check_custom_test_bed_availability(custom_spec=custom_spec)
 
     # get requested DUT count
