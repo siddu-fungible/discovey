@@ -173,6 +173,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     is_parser_stuck = False
     is_etp_queue_stuck = False
     is_flow_blocked = False
+    is_eqm_not_dequeued = False
     for nc_obj in network_controller_objs:
         output_list = []
         f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
@@ -258,6 +259,8 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         fun_test.log('{} dpc: Get EQM stats'.format(f1))
         output = nc_obj.peek_eqm_stats()
         output_list.append({'EQM': output})
+        if output.get("EFI->EQC Enqueue Interface valid", None) != output.get("EQC->EFI Dequeue Interface valid", None):
+            is_eqm_not_dequeued = True
 
         # Check VP stuck
         for pc_id in (1, 2):
@@ -306,7 +309,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     )
 
-    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked:
+    if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked or is_eqm_not_dequeued:
         messages = []
         if is_vp_stuck:
             messages.append('VP is stuck')
@@ -316,6 +319,8 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             messages.append('ETP queue is stuck')
         if is_flow_blocked:
             messages.append('Flow blocked')
+        if is_eqm_not_dequeued:
+            messages.append('EQM not dequeued')
         fun_test.test_assert(False, ';'.join(messages))
 
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
