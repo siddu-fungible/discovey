@@ -1172,6 +1172,214 @@
             }
           }
         }
+      },
+      "2": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs43",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.43.1.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.43.1.1"
+                }
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.43.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.43.2.1"
+                }
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/58"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/59"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/56"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/57"
+              }
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/46"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/47"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/44"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/45"
+              }
+            }
+          }
+        }
+      },
+      "3": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs44",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.44.1.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.44.1.1"
+                }
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ],
+              "ip": "15.44.2.2/24",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.44.2.1"
+                }
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/62"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/63"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/60"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/61"
+              }
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/42"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/43"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/40"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx1",
+                "port": "et0/0/41"
+              }
+            }
+          }
+        }
       }
     },
     "switch_info": {
