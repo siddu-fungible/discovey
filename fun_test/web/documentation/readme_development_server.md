@@ -30,3 +30,13 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/docu
 # scheduler/restart_scheduler.sh
 ~~~~
 - Ensure that ps -ef | grep scheduler_main does not show any entry
+
+
+### Keeping the integration/review branch up-to-date
+~~~~
+cd Integration/
+cd fun_test/
+export PYTHONPATH=`pwd`
+export DEVELOPMENT_MODE=1
+python web/manage.py migrate --database=default
+ ~~~~
