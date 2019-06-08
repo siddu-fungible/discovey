@@ -211,8 +211,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 ctlr_id = match.group(1)
                 ns_id = match.group(2)
                 self.nvme_block_device_list.append(self.nvme_device + ctlr_id + "n" + ns_id)
-                self.volume_name_list.append(self.nvme_block_device.replace("/dev/", ""))
-                fun_test.test_assert_expected(expected=self.nvme_block_device_list[-1],
+                self.volume_name_list.append(self.self.nvme_block_device_list[-1].replace("/dev/", ""))
+                fun_test.test_assert_expected(expected=self.volume_name_list[-1],
                                               actual=lsblk_output[volume_name]["name"],
                                               message="{} device available".format(self.volume_name_list[-1]))
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
