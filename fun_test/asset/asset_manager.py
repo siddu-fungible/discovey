@@ -158,6 +158,7 @@ class AssetManager:
                     job_ids = this_asset.job_ids
                     # print "Asset job-ids: {}, TB: {}".format(job_ids, test_bed_type)
                     if job_ids:
+                        marked_for_deletion = []
                         for job_id in job_ids:
                             # print("Check if suite in progress: {}: {}: {}".format(test_bed_type, job_id, duts_required))
                             in_progress = is_suite_in_progress(job_id, test_bed_type)
@@ -166,6 +167,11 @@ class AssetManager:
                                 used_by_suite_id = job_id
                                 asset_in_use = asset_for_type
                                 break
+                            else:
+                                marked_for_deletion.append(job_id)
+                        job_ids = [x for x in job_ids if x not in marked_for_deletion]
+                        this_asset.job_ids = job_ids
+                        this_asset.save()
                 except ObjectDoesNotExist:
                     pass # print "ObjectDoesnotExist, {}".format(test_bed_type)
                 except Exception as ex:
@@ -306,8 +312,29 @@ class AssetManager:
             assets_required[AssetType.HOST] = host_names
         return assets_required
 
+
+    @fun_test.safe
+    def is_asset_available(self, asset):
+        pass
+
+
+    @fun_test.safe
+    def _disable_assets_in_test_bed_spec(self, test_bed_spec, duts_to_disable=None):
+        if duts_to_disable:
+            for dut_to_disable in duts_to_disable:
+                if "dut_info" in test_bed_spec:
+                    dut_info = test_bed_spec["dut_info"]
+                    for dut_index, dut_spec in dut_info.iteritems():
+                        if "dut" in dut_spec:
+                            if dut_spec["dut"] == dut_to_disable:
+                                dut_spec["disabled"] = True
+
+        return test_bed_spec
+
     @fun_test.safe
     def check_custom_test_bed_availability(self, custom_spec):
+        from web.fun_test.models import Asset
+        from web.fun_test.models_helper import is_suite_in_progress
         base_test_bed_name = custom_spec.get("base_test_bed", None)
         fun_test.simple_assert(base_test_bed_name, "Base test-bed available in custom-spec")
 
@@ -325,10 +352,29 @@ class AssetManager:
         num_hosts = None
         if AssetType.HOST in asset_request:
             host_info = asset_request[AssetType.HOST]
-            num_hosts = dut_info.get("num", None)
+            num_hosts = host_info.get("num", None)
 
         if num_duts is not None:
-            pass
+            print "Num Duts: {}".format(num_duts)
+
+            assets_in_test_bed = self.get_assets_required(test_bed_name=base_test_bed_name)
+            duts_in_test_bed = assets_in_test_bed.get(AssetType.DUT)
+            un_available_assets = []
+            for dut_in_test_bed in duts_in_test_bed:
+                asset = Asset.objects.get(name=dut_in_test_bed)
+                job_ids = asset.job_ids
+                if job_ids:
+                    for job_id in job_ids:
+                        in_progress = is_suite_in_progress(job_id=job_id, test_bed_type="")
+                        if in_progress:
+                            un_available_assets.append(dut_in_test_bed)
+                else:
+                    is_manual_locked = asset.manual_lock_user
+                    if is_manual_locked:
+                        un_available_assets.append(dut_in_test_bed)
+
+            self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec, duts_to_disable=un_available_assets)
+
 
     """
     @fun_test.safe
@@ -374,6 +420,4 @@ if __name__ == "__main__":
     # if num DUTs matches, gather DUTs allotted
     # if num Hosts matched, gather Hosts allotted
 
-    spec = fun_test.get_asset_manager().get_host_spec(name="js")
-    Linux(**spec)
     # pass TopologyHelper with pool selection
