@@ -196,7 +196,7 @@
       }
     }
   },
-   "fs-alibaba_demo": {
+   "fs-alibaba-demo": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
