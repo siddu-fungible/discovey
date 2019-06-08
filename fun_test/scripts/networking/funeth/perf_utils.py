@@ -321,7 +321,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             messages.append('Flow blocked')
         if is_eqm_not_dequeued:
             messages.append('EQM not dequeued')
-        fun_test.test_assert(False, ';'.join(messages))
+        fun_test.test_assert(False, '; '.join(messages))
 
     return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
