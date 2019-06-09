@@ -316,6 +316,7 @@ class AssetManager:
         from web.fun_test.models import TestBed
         all_test_beds = self.get_all_test_beds_specs()
         all_test_bed_names = all_test_beds.keys()
+        all_test_bed_names.extend(self.PSEUDO_TEST_BEDS)
         return all_test_bed_names
 
 
