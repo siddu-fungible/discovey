@@ -204,14 +204,7 @@ class FunethSanity(FunTestScript):
             except:
                 hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                 for host_ip, host_info in hu_hosts.iteritems():
-                    fun_test.log('Power off {}'.format(host_ip))
-                    host_info["host_obj"].ipmi_power_off()
-                fun_test.sleep("Wait for power off", seconds=10)
-                for host_ip, host_info in hu_hosts.iteritems():
-                    fun_test.log('Power on {}'.format(host_ip))
-                    host_info["host_obj"].ipmi_power_on()
-                for host_ip, host_info in hu_hosts.iteritems():
-                    host_info["host_obj"].is_host_up()
+                    host_info["host_obj"].ensure_host_is_up()
 
             if control_plane:
                 linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
@@ -220,10 +213,7 @@ class FunethSanity(FunTestScript):
                     linux_obj.sudo_command('docker kill F1-0 F1-1')
                     linux_obj.sudo_command('rm -fr /tmp/*')
                 except:
-                    fun_test.log('Power off COMe')
-                    linux_obj.ipmi_power_off()
-                    fun_test.sleep("Wait for power off", seconds=10)
-                    linux_obj.ipmi_power_on()
+                    linux_obj.ensure_host_is_up()
 
 
 def collect_stats():
