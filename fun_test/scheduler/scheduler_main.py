@@ -169,12 +169,17 @@ class QueueWorker(Thread):
                         continue
 
                     if queued_job.test_bed_type not in not_available:
-                        availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
+                        suite_based_spec = None
+                        if queued_job.test_bed_type.startswith("suite-based"):
+                            suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
+                        availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type,
+                                                                               suite_base_test_bed_spec=suite_based_spec)
                         if availability["status"]:
                             de_queued_jobs.append(queued_job)
                             assets_required = availability["assets_required"]
                             # self.job_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
-                            job_id_threads[suite_execution.execution_id] = self.execute_job(job_id=queued_job.job_id, assets_required=assets_required)
+                            job_id_threads[suite_execution.execution_id] = self.execute_job(job_id=queued_job.job_id,
+                                                                                            assets_required=assets_required)
 
                         else:
                             not_available[queued_job.test_bed_type] = availability["message"]
