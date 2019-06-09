@@ -207,7 +207,7 @@ class FunethSanity(FunTestScript):
             except:
                 hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                 for host_ip, host_info in hu_hosts.iteritems():
-                    host_info["host_obj"].ensure_host_is_up()
+                    host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
             if control_plane:
                 linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
@@ -216,7 +216,7 @@ class FunethSanity(FunTestScript):
                     linux_obj.sudo_command('docker kill F1-0 F1-1')
                     linux_obj.sudo_command('rm -fr /tmp/*')
                 except:
-                    linux_obj.ensure_host_is_up()
+                    linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
 def collect_stats(when='before'):
