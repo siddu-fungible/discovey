@@ -224,7 +224,9 @@ def collect_stats(when='before'):
     fpg_interfaces = (4, )
     fpg_intf_dict = {'F1_0': (4, )}
     version = fun_test.get_version()
+    fun_test.log_module_filter("random_module")
     perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+    fun_test.log_module_filter_disable()
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu='nu', hu='hu'):
@@ -431,7 +433,7 @@ class FunethTestScpBase(FunTestCase):
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from NU to HU host via {}.'.format(pf_or_vf.upper())
         elif nu_or_hu == hu:
-            ip_addr = tb_config_obj.get_interface_ipv4_addr(nu, tb_config_obj.get_a_nu_interface())
+            ip_addr = tb_config_obj.get_interface_ipv4_addr(nu, tb_config_obj.get_a_nu_interface(nu))
             username = tb_config_obj.get_username(hu)
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from HU to NU host.'
