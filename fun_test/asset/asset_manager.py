@@ -333,6 +333,8 @@ class AssetManager:
 
     @fun_test.safe
     def check_custom_test_bed_availability(self, custom_spec):
+        error_message = ""
+        all_duts_available = False
         from web.fun_test.models import Asset
         from web.fun_test.models_helper import is_suite_in_progress
         base_test_bed_name = custom_spec.get("base_test_bed", None)
@@ -344,37 +346,59 @@ class AssetManager:
         asset_request = custom_spec.get("asset_request", None)
         fun_test.simple_assert(asset_request, "asset_request in custom_spec")
 
-        num_duts = None
+        num_duts_required = None
         if AssetType.DUT in asset_request:
             dut_info = asset_request[AssetType.DUT]
-            num_duts = dut_info.get("num", None)
+            num_duts_required = dut_info.get("num", None)
 
-        num_hosts = None
+        num_hosts_required = None
         if AssetType.HOST in asset_request:
             host_info = asset_request[AssetType.HOST]
-            num_hosts = host_info.get("num", None)
+            num_hosts_required = host_info.get("num", None)
 
-        if num_duts is not None:
-            print "Num Duts: {}".format(num_duts)
+        asset_category_unavailable = False
+        for asset_type in [AssetType.DUT, AssetType.HOST]:
+            if asset_category_unavailable:
+                break
+            num_assets_available = 0
+            num_assets_required = None
+            if asset_type == AssetType.DUT:
+                num_assets_required = num_duts_required
+            if asset_type == AssetType.HOST:
+                num_assets_required = num_hosts_required
+            if num_assets_required is not None:
+                # print "Num Duts: {}".format(num_duts_required)
 
-            assets_in_test_bed = self.get_assets_required(test_bed_name=base_test_bed_name)
-            duts_in_test_bed = assets_in_test_bed.get(AssetType.DUT)
-            un_available_assets = []
-            for dut_in_test_bed in duts_in_test_bed:
-                asset = Asset.objects.get(name=dut_in_test_bed)
-                job_ids = asset.job_ids
-                if job_ids:
-                    for job_id in job_ids:
-                        in_progress = is_suite_in_progress(job_id=job_id, test_bed_type="")
-                        if in_progress:
-                            un_available_assets.append(dut_in_test_bed)
-                else:
+                assets_in_test_bed = self.get_assets_required(test_bed_name=base_test_bed_name)
+
+                assets_in_test_bed = assets_in_test_bed.get(asset_type)
+                unavailable_assets = []
+                for asset_in_test_bed in assets_in_test_bed:
+                    asset = Asset.objects.get(name=asset_in_test_bed)
                     is_manual_locked = asset.manual_lock_user
-                    if is_manual_locked:
-                        un_available_assets.append(dut_in_test_bed)
+                    job_ids = asset.job_ids
+                    if job_ids:
+                        for job_id in job_ids:
+                            in_progress = is_suite_in_progress(job_id=job_id, test_bed_type="")
+                            if in_progress:
+                                unavailable_assets.append(asset_in_test_bed)
+                    elif is_manual_locked:
+                        unavailable_assets.append(asset_in_test_bed)
+                    else:
+                        num_assets_available += 1
 
-            self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec, duts_to_disable=un_available_assets)
+                if num_assets_required > num_assets_available:
+                    error_message = "Asset: {} required: {}, available: {}".format(asset_type,
+                                                                                   num_assets_required,
+                                                                                   num_duts_required)
+                    asset_category_unavailable = True
+                if asset_type == AssetType.DUT:
+                    self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
+                                                          duts_to_disable=unavailable_assets)
 
+
+
+        return test_bed_spec
 
     """
     @fun_test.safe
@@ -414,7 +438,7 @@ if __name__ == "__main__":
     # get base test-bed
     custom_spec = {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}}}
     spec = asset_manager.check_custom_test_bed_availability(custom_spec=custom_spec)
-
+    i = 0
     # get requested DUT count
     # get requested host count
     # if num DUTs matches, gather DUTs allotted
