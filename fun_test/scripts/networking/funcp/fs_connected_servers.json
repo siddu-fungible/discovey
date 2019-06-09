@@ -24,7 +24,7 @@
         "mpg1":""
       }
   },
-    "fs-alibaba_demo": {
+    "fs-alibaba-demo": {
             "fs-name":"fs-45",
     "hosts" : {
       "cab03-qa-01": "x16"
