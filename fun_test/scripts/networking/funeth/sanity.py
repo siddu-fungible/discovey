@@ -6,6 +6,8 @@ from lib.host.network_controller import NetworkController
 from lib.utilities.funcp_config import FunControlPlaneBringup
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
+from scripts.networking.funeth import perf_utils
+
 
 import re
 
@@ -175,16 +177,17 @@ class FunethSanity(FunTestScript):
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
 
-        # TODO: remove below workaround after SWLINUX-729 is fixed
-        #if test_bed_type == 'fs-11' and control_plane:
-        #    funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
-        #    funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
-        #    funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
-        #    funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
-
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
+        if test_bed_type == 'fs-11':
+            nu = 'nu2'
+            hu = 'hu2'
+        else:
+            nu = 'nu'
+            hu = 'hu'
+        fun_test.shared_variables['sanity_nu'] = nu
+        fun_test.shared_variables['sanity_hu'] = hu
 
     def cleanup(self):
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
@@ -204,14 +207,7 @@ class FunethSanity(FunTestScript):
             except:
                 hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                 for host_ip, host_info in hu_hosts.iteritems():
-                    fun_test.log('Power off {}'.format(host_ip))
-                    host_info["host_obj"].ipmi_power_off()
-                fun_test.sleep("Wait for power off", seconds=10)
-                for host_ip, host_info in hu_hosts.iteritems():
-                    fun_test.log('Power on {}'.format(host_ip))
-                    host_info["host_obj"].ipmi_power_on()
-                for host_ip, host_info in hu_hosts.iteritems():
-                    host_info["host_obj"].is_host_up()
+                    host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
             if control_plane:
                 linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
@@ -220,22 +216,15 @@ class FunethSanity(FunTestScript):
                     linux_obj.sudo_command('docker kill F1-0 F1-1')
                     linux_obj.sudo_command('rm -fr /tmp/*')
                 except:
-                    fun_test.log('Power off COMe')
-                    linux_obj.ipmi_power_off()
-                    fun_test.sleep("Wait for power off", seconds=10)
-                    linux_obj.ipmi_power_on()
+                    linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
-def collect_stats():
-    try:
-        network_controller_obj = fun_test.shared_variables['network_controller_obj']
-        network_controller_obj.peek_fpg_port_stats(port_num=0)
-        network_controller_obj.peek_fpg_port_stats(port_num=1)
-        network_controller_obj.peek_fpg_port_stats(port_num=4)
-        network_controller_obj.peek_psw_global_stats()
-        network_controller_obj.peek_vp_packets()
-    except:
-        pass
+def collect_stats(when='before'):
+    network_controller_objs = [fun_test.shared_variables['network_controller_obj'], ]
+    fpg_interfaces = (4, )
+    fpg_intf_dict = {'F1_0': (4, )}
+    version = fun_test.get_version()
+    perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu='nu', hu='hu'):
@@ -245,15 +234,15 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
     interfaces = [i for i in tb_config_obj.get_all_interfaces(hu) if i not in interfaces_excludes]
     ip_addrs = [tb_config_obj.get_interface_ipv4_addr(hu, intf) for intf in interfaces]
 
-    # Collect fpg, psw, vp stats before and after
-    collect_stats()
+    # Collect dpc stats before and after the test
+    collect_stats(when='before')
 
     result = True
     for intf, ip_addr in zip(interfaces, ip_addrs):
         result &= linux_obj.ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
                                  size=packet_size-20-8,  # IP header 20B, ICMP header 8B
                                  sudo=True)
-        collect_stats()
+    collect_stats(when='after')
 
     fun_test.shared_variables['nu_hu_pingable'] = result
     fun_test.test_assert(
@@ -282,12 +271,8 @@ class FunethTestNUPingHU(FunTestCase):
         pass
 
     def run(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'], nu=nu, hu=hu)
 
 
@@ -305,12 +290,8 @@ class FunethTestPacketSweep(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         # NU
         linux_obj = funeth_obj.linux_obj_dict[nu]
@@ -343,16 +324,10 @@ class FunethTestPacketSweep(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         #for i in range(46, MAX_MTU+1):  # 64 - 14 - 4 = 46
         #    verify_nu_hu_datapath(funeth_obj, packet_count=2, packet_size=i)
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         linux_obj = funeth_obj.linux_obj_dict[nu]
         tb_config_obj = funeth_obj.tb_config_obj
-
-
 
         if emulation_target == 'palladium':  # Use only one PF and one VF interface to save run time
             interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
@@ -368,13 +343,30 @@ class FunethTestPacketSweep(FunTestCase):
         def get_icmp_payload_size(pkt_size):
             return pkt_size - 20 - 8  # IP header 20B, ICMP header 8B
 
+        # Collect dpc stats before and after the test
+        collect_stats(when='before')
+
+        result = True
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
+            script_name = '/tmp/packet_sweep.sh'
+            timeout_str = """
+            #!/bin/bash
+            {
+                sleep 600
+                kill $$
+            } &
+            """
+            cmd_str = "for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done" % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
-            output = linux_obj.command(cmd, timeout=3000)
-            fun_test.test_assert(
-                re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None,
-                'NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
+
+            linux_obj.command('echo {}\n{} > {}'.format(timeout_str, cmd_str, script_name))
+            linux_obj.command('chmod +x {}'.format(script_name))
+            fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
+            output = linux_obj.command(script_name, timeout=600)
+            result &= re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None
+
+        collect_stats(when='after')
+        fun_test.test_assert(result, 'Packet sweep test')
 
 
 class FunethTestScpBase(FunTestCase):
@@ -399,12 +391,8 @@ class FunethTestScpBase(FunTestCase):
         fun_test.test_assert(linux_obj.check_file_directory_exists(self.file_name),
                              'Create file {} in {}'.format(self.file_name, linux_obj.host_ip))
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         # Start sshd in namespace if needed
         if nu_or_hu == nu:
@@ -431,12 +419,8 @@ class FunethTestScpBase(FunTestCase):
         linux_obj = funeth_obj.linux_obj_dict[nu_or_hu]
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         if nu_or_hu == nu:
             if pf_or_vf == 'pf':
@@ -452,7 +436,7 @@ class FunethTestScpBase(FunTestCase):
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from HU to NU host.'
 
-        collect_stats()
+        collect_stats(when='before')
         result = linux_obj.scp(source_file_path=self.file_name,
                                            target_ip=ip_addr,
                                            target_file_path='{}{}'.format(
@@ -460,7 +444,7 @@ class FunethTestScpBase(FunTestCase):
                                            target_username=username,
                                            target_password=password,
                                            timeout=300),
-        collect_stats()
+        collect_stats(when='after')
         fun_test.test_assert(result, desc)
 
 
@@ -473,21 +457,13 @@ class FunethTestScpNU2HUPF(FunethTestScpBase):
         """)
 
     def setup(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._setup(self, nu, 'pf')
 
     def run(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._run(self, nu, 'pf')
 
 
@@ -500,15 +476,13 @@ class FunethTestScpNU2HUVF(FunethTestScpBase):
         """)
 
     def setup(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._setup(self, nu, 'vf')
 
     def run(self):
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._run(self, nu, 'vf')
 
 
@@ -521,21 +495,13 @@ class FunethTestScpHU2NU(FunethTestScpBase):
         """)
 
     def setup(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._setup(self, hu)
 
     def run(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._run(self, hu)
 
 
@@ -551,12 +517,8 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if pf_or_vf == 'pf':
@@ -630,12 +592,8 @@ class FunethTestUnloadDriver(FunTestCase):
         pass
 
     def run(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'], nu=nu, hu=hu)
 
 
@@ -658,12 +616,8 @@ class FunethTestReboot(FunTestCase):
     def run(self):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         tb_config_obj = funeth_obj.tb_config_obj
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
 
