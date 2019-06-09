@@ -248,14 +248,22 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
     # Collect fpg, psw, vp stats before and after
     collect_stats()
 
+    result = True
     for intf, ip_addr in zip(interfaces, ip_addrs):
-        result = linux_obj.ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
-                                size=packet_size-20-8,  # IP header 20B, ICMP header 8B
-                                sudo=True)
+        result &= linux_obj.ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
+                                 size=packet_size-20-8,  # IP header 20B, ICMP header 8B
+                                 sudo=True)
         collect_stats()
-        fun_test.test_assert(
-            result,
-            'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
+
+    fun_test.shared_variables['nu_hu_pingable'] = result
+    fun_test.test_assert(
+        result,
+        'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
+
+
+def check_nu_hu_pingable():
+    if not fun_test.shared_variables['nu_hu_pingable']:
+        fun_test.test_assert(False, 'NU ping HU unsuccessful, stop further testing')
 
 
 class FunethTestNUPingHU(FunTestCase):
@@ -293,6 +301,7 @@ class FunethTestPacketSweep(FunTestCase):
         """)
 
     def setup(self):
+        check_nu_hu_pingable()
         funeth_obj = fun_test.shared_variables['funeth_obj']
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
 
@@ -376,7 +385,7 @@ class FunethTestScpBase(FunTestCase):
         :param nu_or_hu: host to execute scp cmd, 'nu' or 'hu', i.e. scp source host
         :param pf_or_vf: if scp destination is 'hu', whether to use 'pf' or 'vf' interface IP
         """
-
+        check_nu_hu_pingable()
         funeth_obj = fun_test.shared_variables['funeth_obj']
         linux_obj = funeth_obj.linux_obj_dict[nu_or_hu]
         self.file_name = '/tmp/{}file'.format(nu_or_hu)
@@ -533,7 +542,7 @@ class FunethTestScpHU2NU(FunethTestScpBase):
 class FunethTestInterfaceFlapBase(FunTestCase):
 
     def setup(self):
-        pass
+        check_nu_hu_pingable()
 
     def cleanup(self):
         pass
