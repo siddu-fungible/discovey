@@ -631,6 +631,23 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
 
 
+def get_suite_based_test_bed_spec(job_id):
+    spec = None
+    s = models_helper.get_suite_execution(suite_execution_id=job_id)
+    suite_path = s.suite_path
+    if suite_path:
+        suite_spec = parse_suite(suite_name=suite_path)
+        if suite_spec:
+            for item in suite_spec:
+                if "info" in item:
+                    info = item["info"]
+                    if "custom_test_bed_spec" in info:
+                        spec = info["custom_test_bed_spec"]
+                    else:
+                        print("Job: {} no custom_test_bed_spec in {}".format(job_id, suite_path))
+                    break
+    return spec
+
 def lock_assets(job_id, assets):
     if assets:
         for asset_type, assets in assets.items():
