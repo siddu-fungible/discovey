@@ -536,7 +536,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # ifconfig down
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='down', ns=ns),
                              'ifconfig {} down'.format(interface))
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface], nu=nu, hu=hu)
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface, ], nu=nu, hu=hu)
 
         # ifconfig up
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='up', ns=ns),
