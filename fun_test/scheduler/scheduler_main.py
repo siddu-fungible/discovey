@@ -177,9 +177,11 @@ class QueueWorker(Thread):
                         if availability["status"]:
                             de_queued_jobs.append(queued_job)
                             assets_required = availability["assets_required"]
+                            custom_test_bed_spec = availability.get("custom_test_bed_spec", None)
                             # self.job_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
                             job_id_threads[suite_execution.execution_id] = self.execute_job(job_id=queued_job.job_id,
-                                                                                            assets_required=assets_required)
+                                                                                            assets_required=assets_required,
+                                                                                            custom_test_bed_spec=custom_test_bed_spec)
 
                         else:
                             not_available[queued_job.test_bed_type] = availability["message"]
@@ -220,12 +222,15 @@ class QueueWorker(Thread):
             invalid_job.delete()
         return valid_jobs
 
-    def execute_job(self, job_id, assets_required=None):
+    def execute_job(self, job_id, assets_required=None, custom_test_bed_spec=None):
         suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+        if custom_test_bed_spec:
+            suite_execution.add_run_time_variable("custom_test_bed_spec", custom_test_bed_spec)
         scheduler_logger.info("{} Executing".format(get_job_string_from_spec(job_spec=suite_execution)))
         t = SuiteWorker(job_spec=suite_execution)
         models_helper.update_suite_execution(suite_execution_id=job_id,
                                              state=JobStatusType.IN_PROGRESS)
+
         lock_assets(job_id=job_id, assets=assets_required)
         t.initialize()
         # t.start()
