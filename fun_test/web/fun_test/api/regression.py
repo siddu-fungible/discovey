@@ -21,7 +21,9 @@ def test_beds(request, id):
     am = AssetManager()
     if request.method == "GET":
         if not id:
+            valid_test_beds = am.get_valid_test_beds()
             all_test_beds = TestBed.objects.all().order_by('name')
+            all_test_beds = [x for x in all_test_beds if x.name in valid_test_beds]
             result = []
             for test_bed in all_test_beds:
                 t = {"name": test_bed.name,

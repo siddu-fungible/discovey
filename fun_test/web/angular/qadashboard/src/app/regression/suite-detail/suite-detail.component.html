@@ -88,6 +88,12 @@
         </ng-container>
       </div>
 
+      <ng-container *ngIf="suiteExecution.fields.state == stateMap.QUEUED">
+        <br>
+        <span class="h6">Queue occupancy:</span>
+        <app-queue-viewer></app-queue-viewer>
+      </ng-container>
+
 
       <div class="card" *ngFor="let scriptExecutionInfo of scriptExecutionsMap | keyvalue">
         <div class="card card-primary">
@@ -112,11 +118,7 @@
                          [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].pk">
             </jira-info>
 
-            <ng-container *ngIf="suiteExecution.fields.state == stateMap.QUEUED">
-              <br>
-              <span class="h6">Queue occupancy:</span>
-              <app-queue-viewer></app-queue-viewer>
-            </ng-container>
+
             <br>
             <table *ngIf="getKeys(scriptExecutionInfo.value).length > 0"
                    class="table table-hover table-responsive table-bordered">

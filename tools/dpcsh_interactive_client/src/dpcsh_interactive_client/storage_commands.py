@@ -30,13 +30,19 @@ class StoragePeekCommands(object):
                             diff_result[key][_key] = {}
                             for inner_key in result[key][_key]:
                                 if inner_key in prev_result[key][_key]:
-                                    diff_value = result[key][_key][inner_key] - prev_result[key][_key][inner_key]
-                                    diff_result[key][_key][inner_key] = diff_value
+                                    if type(result[key][_key][inner_key]) == unicode:
+                                        diff_result[key][_key][inner_key] = result[key][_key][inner_key]
+                                    else:
+                                        diff_value = result[key][_key][inner_key] - prev_result[key][_key][inner_key]
+                                        diff_result[key][_key][inner_key] = diff_value
                                 else:
                                     diff_result[key][_key][inner_key] = 0
                         else:
-                            diff_value = result[key][_key] - prev_result[key][_key]
-                            diff_result[key][_key] = diff_value
+                            if type(result[key][_key]) == unicode:
+                                diff_result[key][_key] = result[key][_key]
+                            else:
+                                diff_value = result[key][_key] - prev_result[key][_key]
+                                diff_result[key][_key] = diff_value
                     else:
                         diff_result[key][_key] = 0
             elif type(result[key]) == str:
@@ -133,6 +139,8 @@ class StoragePeekCommands(object):
                         print master_table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty result"
 
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
@@ -142,11 +150,11 @@ class StoragePeekCommands(object):
             self.dpc_client.disconnect()
 
     def peek_blt_vol_stats(self, vol_id):
-        cmd = "storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/%d" % vol_id
+        cmd = "storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/%s" % vol_id
         self._peek_vol_stats(cmd=cmd)
 
     def peek_rds_vol_stats(self, vol_id):
-        cmd = "storage/volumes/VOL_TYPE_BLK_RDS/%d" % vol_id
+        cmd = "storage/volumes/VOL_TYPE_BLK_RDS/%s" % vol_id
         self._peek_vol_stats(cmd=cmd)
 
 

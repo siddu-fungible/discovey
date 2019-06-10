@@ -88,6 +88,8 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Using Parameters passed during execution, this will override global and config parameters
         job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
         fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "dut_start_index" in job_inputs:
             self.dut_start_index = job_inputs["dut_start_index"]

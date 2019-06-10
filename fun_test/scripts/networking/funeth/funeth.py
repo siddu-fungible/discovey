@@ -268,10 +268,14 @@ class Funeth:
 
             # ip alias, e.g. hu3-f0:1, has no mac/mtu config
             if not self.tb_config_obj.is_alias(nu_or_hu, intf):
+                if mac_addr:
+                    cmds.extend(
+                        ['ifconfig {} hw ether {}'.format(intf, mac_addr),
+                         ]
+                    )
                 cmds.extend(
-                    ['ifconfig {} hw ether {}'.format(intf, mac_addr),
-                     'ifconfig {} mtu {}'.format(intf, mtu),
-                    ]
+                    ['ifconfig {} mtu {}'.format(intf, mtu),
+                     ]
                 )
 
             cmds.extend(
@@ -290,15 +294,21 @@ class Funeth:
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
                 match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
-            else:
+            elif mac_addr:
                 match = re.search(r'UP.*RUNNING.*HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
                                   output, re.DOTALL)
+            else:
+                match = re.search(
+                    r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
             if not match:
                 # Ubuntu 18.04
                 if self.tb_config_obj.is_alias(nu_or_hu, intf):
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
-                else:
+                elif mac_addr:
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                                      output, re.DOTALL)
+                else:
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask),
                                       output, re.DOTALL)
             result &= match is not None
 
@@ -344,6 +354,9 @@ class Funeth:
         """Enable interfaces multi tx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            # VF interface, TODO: have a better way to tell it's VF interface
+            if not intf.endswith('f0'):
+                continue
             cmd = 'ethtool -L {} tx {}'.format(intf, num_queues)
             cmd_chk = 'ethtool -l {}'.format(intf)
             if ns is None or 'netns' in cmd:

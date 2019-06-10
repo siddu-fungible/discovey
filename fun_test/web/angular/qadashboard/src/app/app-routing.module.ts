@@ -24,6 +24,10 @@ import {JobSpecComponent} from "./regression/job-spec/job-spec.component";
 import {Triage2Component} from "./regression/triage2/triage2.component";
 import {JenkinsFormComponent} from "./jenkins-form/jenkins-form.component";
 import {TriageDetailComponent} from "./regression/triage2/triage-detail/triage-detail.component";
+import {AdminComponent} from "./performance/admin/admin.component";
+import {CreateChartComponent} from "./performance/create-chart/create-chart.component";
+import {ScoresTableComponent} from "./performance/scores-table/scores-table.component";
+import {PerformanceTableComponent} from "./performance/performance-table/performance-table.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -56,7 +60,12 @@ const routes: Routes = [
   {path: '*', component: NotFoundComponent},
   { path: 'performance/atomic/:id/triage', component: TriageComponent},
   { path: 'regression/triaging/:id', component: TriageDetailComponent},
-  { path: 'regression/triaging', component: Triage2Component}
+  { path: 'regression/triaging', component: Triage2Component},
+  { path: 'performance/admin/scores/:metricId', component: ScoresTableComponent},
+  { path: 'performance/admin/data/:metricId', component: PerformanceTableComponent},
+  { path: 'performance/admin/:mode/:modelName/:metricId', component: CreateChartComponent},
+  { path: 'performance/admin/:mode/:modelName', component: CreateChartComponent},
+  { path: 'performance/admin', component: AdminComponent}
 ];
 
 @NgModule({
