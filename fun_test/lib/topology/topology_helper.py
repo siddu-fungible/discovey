@@ -49,6 +49,7 @@ class TopologyHelper:
                 am = fun_test.get_asset_manager()
                 spec = am.get_test_bed_spec(name=test_bed_name)
                 fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
+                self.spec = spec
 
         self.expanded_topology = ExpandedTopology(spec=self.spec)
         spec = self.spec
