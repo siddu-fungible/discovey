@@ -88,9 +88,9 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Using Parameters passed during execution, this will override global and config parameters
         job_inputs = fun_test.get_job_inputs()
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
         if not job_inputs:
             job_inputs = {}
-        fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "dut_start_index" in job_inputs:
             self.dut_start_index = job_inputs["dut_start_index"]
         if "host_start_index" in job_inputs:
@@ -381,10 +381,12 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
+            # If the number of hosts is less than the number of volumes then expand the host_ips list to equal to
+            # number of volumes by repeating the existing entries for the required number of times
             self.final_host_ips = self.host_ips[:]
             if len(self.host_ips) < self.ec_info["num_volumes"]:
                 for i in range(len(self.host_ips), self.ec_info["num_volumes"]):
-                    self.final_host_ips.append(self.host_ips[len(self.host_ips) % i])
+                    self.final_host_ips.append(self.host_ips[i % len(self.host_ips)])
 
             # Creating EC volume
             self.ec_info["storage_controller_list"] = self.sc_obj

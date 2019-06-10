@@ -409,7 +409,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 # Detaching all the EC/LS volumes to the external server
-                for num in xrange(self.ec_info["num_volumes"]):
+                """for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
                         ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -422,7 +422,7 @@ class ECVolumeLevelScript(FunTestScript):
                 command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
@@ -729,7 +729,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             mpstat_cpu_list = self.mpstat_args["cpu_list"]  # To collect mpstat for all CPU's: recommended
             # mpstat_cpu_list = self.numa_cpus  # To collect mpstat for NUMA CPU's only
             fun_test.log("Collecting mpstat")
-            if "runtime" in self.fio_cmd_args and "ramp_time" in self.fio_cmd_args:
+            if "runtime" not in self.fio_cmd_args:
+                mpstat_count = self.fio_cmd_args["timeout"] / self.mpstat_args["interval"]
+            elif "runtime" in self.fio_cmd_args and "ramp_time" in self.fio_cmd_args:
                 mpstat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) /
                                 self.mpstat_args["interval"])
             elif "multiple_jobs" in self.fio_cmd_args:
