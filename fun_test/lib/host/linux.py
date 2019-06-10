@@ -2011,6 +2011,11 @@ class Linux(object, ToDictMixin):
 
         if not host_is_up and service_host:
             result = False
+
+            if not ipmi_details:
+                if self.ipmi_info:
+                    ipmi_details = self.ipmi_info
+                    
             if not result and ipmi_details and power_cycle:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
