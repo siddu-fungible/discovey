@@ -356,6 +356,11 @@ class FunTest:
                 result = stored_environment
         return result
 
+    def get_suite_run_time_environment_variable(self, name):
+        run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
+        result = run_time.get(name, None)
+        return result
+
     def get_job_environment_variable(self, variable):
         result = None
         job_environment = self.get_job_environment()

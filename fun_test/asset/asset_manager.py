@@ -324,18 +324,29 @@ class AssetManager:
 
 
     @fun_test.safe
-    def _disable_assets_in_test_bed_spec(self, test_bed_spec, duts_to_disable=None, hosts_to_disable=None):
-        if duts_to_disable:
-            for dut_to_disable in duts_to_disable:
-                if "dut_info" in test_bed_spec:
-                    dut_info = test_bed_spec["dut_info"]
-                    for dut_index, dut_spec in dut_info.iteritems():
-                        if "dut" in dut_spec:
-                            if dut_spec["dut"] == dut_to_disable:
-                                dut_spec["disabled"] = True
+    def _disable_assets_in_test_bed_spec(self,
+                                         test_bed_spec,
+                                         duts_to_disable=None,
+                                         duts_to_enable=None,
+                                         hosts_to_disable=None,
+                                         hosts_to_enable=None):
+        if "dut_info" in test_bed_spec:
+            dut_info = test_bed_spec["dut_info"]
+            for dut_index, dut_spec in dut_info.iteritems():
+                if "dut" in dut_spec:
+                    if duts_to_enable and dut_spec["dut"] not in duts_to_enable:
+                        dut_spec["disabled"] = True
+                    if duts_to_disable and dut_spec["dut"] in duts_to_disable:
+                        dut_spec["disabled"] = True
 
-        if hosts_to_disable:
-            test_bed_spec["disabled_hosts"] = hosts_to_disable
+        disabled_hosts = []
+        if "host_info" in test_bed_spec:
+            for host in test_bed_spec["host_info"]:
+                if hosts_to_disable and host in hosts_to_disable:
+                    disabled_hosts.append(host)
+                if hosts_to_enable and host not in hosts_to_enable:
+                    disabled_hosts.append(host)
+        test_bed_spec["disabled_hosts"] = disabled_hosts
         return test_bed_spec
 
     @fun_test.safe
@@ -406,21 +417,24 @@ class AssetManager:
                     if not is_manual_locked and not in_progress:
                         num_assets_available += 1
                         available_assets.append(asset_in_test_bed)
+                    if num_assets_required == num_assets_available:
+                        break
 
                 if num_assets_required > num_assets_available:
                     error_message = "Asset: {} required: {}, available: {}".format(asset_type,
                                                                                    num_assets_required,
-                                                                                   num_duts_required)
+                                                                                   num_assets_available)
                     asset_category_unavailable = True
                     break
                 elif num_assets_required <= num_assets_available:
                     if asset_type == AssetType.DUT:
                         self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
-                                                              duts_to_disable=unavailable_assets)
+                                                              duts_to_disable=unavailable_assets, duts_to_enable=available_assets)
                         result["assets_required"][AssetType.DUT].extend(available_assets)
                     if asset_type == AssetType.HOST:
                         self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
-                                                              hosts_to_disable=unavailable_assets)
+                                                              hosts_to_disable=unavailable_assets,
+                                                              hosts_to_enable=available_assets)
                         result["assets_required"][AssetType.HOST].extend(available_assets)
 
         if asset_category_unavailable:
