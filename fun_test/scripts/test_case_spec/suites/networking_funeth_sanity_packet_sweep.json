@@ -1,4 +1,4 @@
 [
   {"info": {"tags": ["networking-funeth-sanity"]}},
-  {"path": "networking/funeth/sanity.py", "inputs": {"test_case_ids": [1, 2], {"control_plane": 1}}
+  {"path": "networking/funeth/sanity.py", "inputs": {"test_case_ids": [1, 2]}, {"control_plane": 1}}
 ]
