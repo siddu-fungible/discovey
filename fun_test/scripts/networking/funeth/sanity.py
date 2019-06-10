@@ -447,7 +447,7 @@ class FunethTestScpBase(FunTestCase):
                                                self.file_name, '' if not pf_or_vf else pf_or_vf),
                                            target_username=username,
                                            target_password=password,
-                                           timeout=300),
+                                           timeout=60),
         collect_stats(when='after')
         fun_test.test_assert(result, desc)
 
