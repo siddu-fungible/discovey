@@ -42,16 +42,24 @@ class TopologyHelper:
 
         if not self.spec:
             test_bed_name = fun_test.get_job_environment_variable(variable="test_bed_type")
-            am = fun_test.get_asset_manager()
-            spec = am.get_test_bed_spec(name=test_bed_name)
-
-            fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
+            if test_bed_name == "suite-based":
+                custom_test_bed_spec = fun_test.get_suite_run_time_environment_variable(name="custom_test_bed_spec")
+                self.spec = custom_test_bed_spec
+            else:
+                am = fun_test.get_asset_manager()
+                spec = am.get_test_bed_spec(name=test_bed_name)
+                fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
 
         self.expanded_topology = ExpandedTopology(spec=self.spec)
+        spec = self.spec
 
+        disabled_hosts = spec.get("disabled_hosts", [])
         if "host_info" in spec:
             hosts = spec["host_info"]
             for host_name in hosts:
+                if host_name in disabled_hosts:
+                    fun_test.log("Disabling Host: {}".format(host_name))
+                    continue
                 host_spec = fun_test.get_asset_manager().get_host_spec(name=host_name)
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
                 self.expanded_topology.hosts[host_name] = Host(name=host_name, spec=host_spec)

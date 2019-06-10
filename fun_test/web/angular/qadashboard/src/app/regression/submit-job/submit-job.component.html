@@ -64,12 +64,14 @@
 
 
             <ng-container *ngIf="withJenkinsBuild">
+
+              <ng-container *ngIf="selectedTestBedType && (selectedTestBedType.indexOf('fs') > -1 || selectedTestBedType.indexOf('suite-based')) > -1">
               <tr>
-                <td colspan="2">
-                  <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
-                </td>
-              </tr>
-              <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
+                  <td colspan="2">
+                    <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
+                  </td>
+                </tr>
+                <tr>
                 <td><label for="boot-args">BOOTARGS</label></td>
                 <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
               </tr>
@@ -99,6 +101,9 @@
                 <td><label for="branch-funtools">BRANCH_FunTools</label></td>
                 <td><input style='width:100%' id="branch-funtools" name="branch-funtools" [(ngModel)]="branchFunTools" type="text"/></td>
               </tr>
+
+              </ng-container>
+
 
             </ng-container>
 
