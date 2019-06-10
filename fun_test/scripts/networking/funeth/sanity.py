@@ -361,7 +361,7 @@ class FunethTestPacketSweep(FunTestCase):
             cmd_str = "for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done" % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
 
-            linux_obj.command('echo {}\n{} > {}'.format(timeout_str, cmd_str, script_name))
+            linux_obj.command('echo "{}\n{}" > {}'.format(timeout_str, cmd_str, script_name))
             linux_obj.command('chmod +x {}'.format(script_name))
             fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
             output = linux_obj.command(script_name, timeout=600)
