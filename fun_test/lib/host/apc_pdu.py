@@ -1,5 +1,6 @@
 from lib.system.fun_test import fun_test
 import telnetlib
+import re
 
 
 class ApcPdu():
@@ -42,6 +43,7 @@ class ApcPdu():
         self.handle.write(command + "\r\n")
         output = self.handle.read_until(self.PROMPT)
         fun_test.log(message=output, context=self.context, no_timestamp=True)
+        return output
 
     def read_until(self, until_string):
         if not self.logged_in:
@@ -62,6 +64,7 @@ class ApcPdu():
         return self.command("oloff {}".format(outlet_number))
 
     def power_cycle(self, outlet_number):
+        result = None
         try:
             self.outlet_on(outlet_number=outlet_number)
         except Exception as ex:
@@ -70,4 +73,7 @@ class ApcPdu():
             self.outlet_off(outlet_number=outlet_number)
         except Exception as ex:
             fun_test.critical(message=str(ex), context=self.context)
-        return self.outlet_status(outlet_number=outlet_number)
+        status = self.outlet_status(outlet_number=outlet_number)
+        if re.search(r'Outlet\s+' + outlet_number + r'.*On', status):
+            result = True
+        return result
