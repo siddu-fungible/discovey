@@ -64,6 +64,7 @@ IPSEC_DEC_SINGLE_TUNNEL = "ipsec_dec_single_tunnel_teramark"
 IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 VOLTEST_LSV = "qa_voltest_lsv_performance"
 VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
+CHANNEL_PARALL = "qa_channel_parall"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -189,7 +190,7 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4]
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1882,6 +1883,16 @@ class VoltestLsv4PerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
+class ChannelParallPerformanceTc(PalladiumPerformanceTc):
+    tag = CHANNEL_PARALL
+    model = "ChannelParallPerformance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=58,
+                              summary="Channel parall Performance on F1",
+                              steps="Steps 1")
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1960,6 +1971,7 @@ if __name__ == "__main__":
     myscript.add_test_case(SetNetworkingStatusTc())
     myscript.add_test_case(VoltestLsvPerformanceTc())
     myscript.add_test_case(VoltestLsv4PerformanceTc())
+    myscript.add_test_case(ChannelParallPerformanceTc())
     # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
