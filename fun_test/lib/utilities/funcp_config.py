@@ -590,3 +590,111 @@ class FunControlPlaneBringup:
             fun_test.critical(str(ex))
         return vlan_list
 
+    def fetch_host_interface_ip(self, host_name, host_username, host_password):
+        hu_ip = None
+        try:
+            linux_obj = Linux(host_ip=host_name, ssh_username=host_username, ssh_password=host_password)
+
+            contents = linux_obj.command(command="ip address")
+            m = re.search(r'hu\d+-f\d+.*.inet\s+(\d+.\d+.\d+.\d+)', contents.strip(), re.DOTALL)
+            if m:
+                hu_ip = m.group(1).strip()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return hu_ip
+
+    def _ensure_route_exists(self, linux_obj, network, interface, gateway):
+        result = False
+        try:
+            ip_route = linux_obj.get_ip_route()
+            if network in ip_route:
+                fun_test.test_assert_expected(expected=interface, actual=ip_route[network][gateway])
+            else:
+                linux_obj.ip_route_add(network=network, gateway=gateway, interface=interface)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _get_network_by_ip(self, ip, subnet=24):
+        return '.'.join(ip.split('.')[:3]) + '.0' + '/%s' % subnet
+
+    def _get_gateway_by_ip(self, ip):
+        x = ip.split('.')
+        x[3] = '1'
+        return '.'.join(x)
+
+    def get_hu_interface_on_host(self, linux_obj):
+        interface_name = None
+        try:
+            contents = linux_obj.command(command="ip address")
+            m = re.search(r'(hu\d+-f\d+)', contents.strip(), re.DOTALL)
+            if m:
+                interface_name = m.group(1).strip()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return interface_name
+
+    def _ensure_same_network(self, network1, network2):
+        return network1 == network2
+
+    @staticmethod
+    def get_list_of_hosts_connected_each_f1(topology_info):
+        hosts = []
+        try:
+            for fs in topology_info['racks']:
+                fs_f1_dict = {fs['name']: {}}
+                for f1 in fs['F1s']:
+                    if len(f1['Hosts']) > 1:
+                        fs_f1_dict[fs['name']].update({f1['id']: f1['Hosts']})
+                hosts.append(fs_f1_dict)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return hosts
+
+    def _validate_ping(self, network_controller_obj, hosts):
+        result = False
+        try:
+            for host in hosts:
+                linux_obj = Linux(host_ip=host['name'], ssh_username=host['ssh_username'],
+                                  ssh_password=host['ssh_password'])
+                for index in range(len(hosts)):
+                    checkpoint = "Ping from %s to %s" % (host['ip'], hosts[index]['ip'])
+                    res = linux_obj.ping(dst=hosts[index]['ip'], count=2)
+                    fun_test.simple_assert(res, checkpoint)
+
+                    checkpoint = "hping from %s to %s" % (host['ip'], hosts[index]['ip'])
+                    res = linux_obj.hping(dst=hosts[index]['ip'], count=1000, mode='faster', protocol_mode='icmp',
+                                          timeout=10)
+                    fun_test.simple_assert(res, checkpoint)
+
+                    checkpoint = "Validate FCB stats"
+                    # TODO: Validate FCB stats
+                    fcp_stats = network_controller_obj.peek_fcp_global_stats(mode='nu')
+
+                    checkpoint = "Validate vppkts stats"
+                    # TODO: Validate vppkts stats
+                    vp_stats = network_controller_obj.peek_vp_packets()
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_intra_f1_ping(self, network_controller_obj, hosts):
+        result = False
+        try:
+            for fs_name in hosts:
+                for f1 in hosts[fs_name]:
+                    checkpoint = "Test ping between hosts connected to F1_%s of %s" % (f1, fs_name)
+                    fun_test.log_section(checkpoint)
+
+                    res = self._validate_ping(network_controller_obj=network_controller_obj, hosts=hosts[fs_name][f1])
+                    fun_test.test_assert(res, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+
+
+

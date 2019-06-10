@@ -19,7 +19,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
         testbed_info = fun_test.parse_file_to_json(
-            fun_test.get_script_parent_directory() + '/alibaba_fcp_testbed-1.json')
+            fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
@@ -117,53 +117,32 @@ class BringupSetup(FunTestCase):
         pass
 
 
-class TestHuHuPing(FunTestCase):
-    hosts_info = {}
-    host_username = "localadmin"
-    host_password = "Precious1*"
+class TestIntraF1Pings(FunTestCase):
+    hosts = []
 
     def describe(self):
-        self.set_test_details(id=2, summary="Test HU --> HU Ping",
+        self.set_test_details(id=3, summary="Test Intra F1 Ping",
                               steps="""
-                              1. Fetch all hosts attached to each FS
+                              1. Fetch all hosts attached to each F1 of each FS
                               2. Find the HU interface ip of each host
-                              3. Do full mesh ping between hosts
-                              4. Ensure ping is working 
+                              3. Do full mesh ping between hosts which are connected to single F1
+                              4. Ensure ping is working
+                              5. Validate FCB stats and vppkts 
                               """)
 
     def setup(self):
-        test_bed_type = fun_test.shared_variables['test_bed_type']
-        testbed_info = fun_test.shared_variables['testbed_info']
-        servers = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
-        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            hosts = servers["fs"][fs_name]
-            for server in hosts:
-                server_ip = fetch_host_interface_ip(host_name=server, host_username=self.host_username,
-                                                    host_password=self.host_password)
-                if server_ip:
-                    self.hosts_info[server] = server_ip
+        topology_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/topo_description.json')
+        self.hosts = FunControlPlaneBringup.get_list_of_hosts_connected_each_f1(topology_info=topology_info)
+
+        fun_test.log("Hosts connected to each F1 in topology: %s" % self.hosts)
 
     def run(self):
-        fun_test.log(self.hosts_info)
-
-        checkpoint = "Ensure all hosts can ping each other"
-        for server in self.hosts_info:
-            linux_obj = Linux(host_ip=server, ssh_username=self.host_username, ssh_password=self.host_password)
-            for host, server_ip in self.hosts_info.items():
-                if host == server:
-                    continue
-                same_network = ensure_same_network(network1=get_network_by_ip(ip=server_ip),
-                                                   network2=get_network_by_ip(self.hosts_info[server]))
-                if not same_network:
-                    is_route_present = ensure_route_exists(network=get_network_by_ip(server_ip),
-                                                           gateway=get_gateway_by_ip(server_ip),
-                                                           interface=get_hu_interface_on_host(linux_obj=linux_obj),
-                                                           linux_obj=linux_obj)
-                    fun_test.simple_assert(is_route_present, "Ensure Route present or else create one")
-                res = linux_obj.ping(dst=server_ip, count=2)
-                fun_test.simple_assert(res, "Ensure ping from %s to %s. From %s to %s" % (
-                    self.hosts_info[server], server_ip, server, host))
-        fun_test.add_checkpoint(checkpoint)
+        checkpoint = "Ensure Intra F1 ping works"
+        # network_controller_obj = NetworkController(dpc_server_ip=)
+        network_controller_obj = None
+        funcp_obj = FunControlPlaneBringup(fs_name='FS-48')
+        result = funcp_obj.validate_intra_f1_ping(network_controller_obj=network_controller_obj, hosts=self.hosts)
+        fun_test.test_assert(result, checkpoint)
 
     def cleanup(self):
         pass
@@ -175,7 +154,7 @@ class TestCcCcPing(FunTestCase):
     host_password = "Precious1*"
 
     def describe(self):
-        self.set_test_details(id=3, summary="Test CC --> CC Ping",
+        self.set_test_details(id=2, summary="Test CC --> CC Ping",
                               steps="""
                               1. Fetch all vlan ips from each docker container
                               2. Ensure all vlans can ping each other 
@@ -221,6 +200,6 @@ class TestCcCcPing(FunTestCase):
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
-    ts.add_test_case(TestHuHuPing())
     ts.add_test_case(TestCcCcPing())
+    ts.add_test_case(TestHuHuPing())
     ts.run()
