@@ -1,10 +1,11 @@
 {
   "fs": {
     "fs-48": {
+
       "cab02-qa-05": "x16",
-      "cab02-qa-06": "x16",
       "cab02-qa-07": "x8",
       "cab02-qa-08": "x16"
+
     },
     "fs-60": {
       "cab02-qa-01": "x16",
@@ -12,16 +13,77 @@
       "cab02-qa-03": "x8",
       "cab02-qa-04": "x16"
     },
-    "fs-45": {
-      "cab02-qa-02": "x16",
-      "cab03-qa-02": "x8"
+     "fs-11_alibaba_demo": {
+       "fs-name":"fs-11",
+    "hosts" : {
+      "poc-server-10": "x16"
     },
-     "fs-66": {
-       "hosts" : {
-      "cab03-qa-01": "x16"
-    }
-  }
+      "mpg_ips":{
+        "mode":false,
+        "mpg0":"",
+        "mpg1":""
+      }
   },
+    "fs-alibaba-demo": {
+            "fs-name":"fs-45",
+    "hosts" : {
+      "cab03-qa-01": "x16"
+    },
+      "mpg_ips":{
+        "static":true,
+        "mpg0":"10.1.105.172",
+        "mpg1":"10.1.105.173"
+      },
+       "cc_pings":{
+          "F1-0":["1.1.1.1"],
+          "F1-1":["1.1.2.1"]
+       },
+       "host_pings":{
+         "cab03-qa-01":["18.1.1.1", "30.1.1.2"]
+       },
+    "abstract_configs":{
+      "F1-0":"alibaba_bmv_configs_f1_0.json",
+      "F1-1":"alibaba_bmv_configs_f1_1.json"
+    },
+      "static_routes": {
+      "F1-0": {
+        "1": {
+          "gateway": "1.1.1.1",
+          "port": "fpg0",
+          "route": "19.1.1.0/24"
+        },
+        "2": {
+          "gateway": "1.1.1.1",
+          "port": "fpg0",
+          "route": "30.1.1.0/24"
+        },
+        "3": {
+          "gateway": "1.1.1.1",
+          "port": "fpg0",
+          "route": "1.1.2.0/24"
+        }
+      },
+      "F1-1": {
+        "1": {
+          "gateway": "1.1.2.1",
+          "port": "fpg0",
+          "route": "18.1.1.0/24"
+        },
+        "2": {
+          "gateway": "1.1.2.1",
+          "port": "fpg0",
+          "route": "30.1.1.0/24"
+        },
+        "3": {
+          "gateway": "1.1.2.1",
+          "port": "fpg0",
+          "route": "1.1.1.0/24"
+        }
+      }
+
+  }}
+    },
+
   "LocalSSDTest": {
     "come_ip": "10.1.105.165",
     "dpc_p0": 40220,
@@ -71,34 +133,12 @@
     "transport": "RDS",
     "uname": "localadmin",
     "pwd": "Precious1*",
-    "server": "cab03-qa-01"
-  },
-  "static_routes": {
-    "fs-45": {
-      "F1-0": {
-        "1": {
-          "gateway": "1.1.1.1",
-          "port": "fpg8",
-          "route": "19.1.1.0/24"
-        },
-        "2": {
-          "gateway": "1.1.1.1",
-          "port": "fpg8",
-          "route": "30.1.1.0/24"
-        }
-      },
-      "F1-1": {
-        "1": {
-          "gateway": "1.1.2.1",
-          "port": "fpg0",
-          "route": "18.1.1.0/24"
-        },
-        "2": {
-          "gateway": "1.1.2.1",
-          "port": "fpg0",
-          "route": "30.1.1.0/24"
-        }
-      }
-    }
+    "server": "cab03-qa-01",
+    "mode": [
+      "write",
+      "read"
+    ],
+    "num_jobs": 1,
+    "iodepth": 16
   }
 }

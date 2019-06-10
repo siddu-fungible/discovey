@@ -250,9 +250,14 @@ class AssetManager:
 
     @fun_test.safe
     def get_test_bed_spec(self, name):
-        all_test_bed_specs = parse_file_to_json(file_name=self.TEST_BED_SPEC)
+        all_test_bed_specs = self.get_all_test_beds_specs()
         result = all_test_bed_specs[name] if name in all_test_bed_specs else None
         return result
+
+    @fun_test.safe
+    def get_all_test_beds_specs(self):
+        all_test_bed_specs = parse_file_to_json(file_name=self.TEST_BED_SPEC)
+        return all_test_bed_specs
 
     @fun_test.safe
     def get_host_spec(self, name):
@@ -316,7 +321,6 @@ class AssetManager:
             host_names = [host_obj.name for name, host_obj in hosts.iteritems()]
             assets_required[AssetType.HOST] = host_names
         return assets_required
-
 
     @fun_test.safe
     def is_asset_available(self, asset):
@@ -443,6 +447,15 @@ class AssetManager:
         else:
             result["custom_test_bed_spec"] = test_bed_spec
         return result
+
+    @fun_test.safe
+    def get_valid_test_beds(self):
+        from web.fun_test.models import TestBed
+        all_test_beds = self.get_all_test_beds_specs()
+        all_test_bed_names = all_test_beds.keys()
+        all_test_bed_names.extend(self.PSEUDO_TEST_BEDS)
+        return all_test_bed_names
+
 
     """
     @fun_test.safe

@@ -23,7 +23,7 @@ class ScriptSetup(FunTestScript):
         if fun_test.get_job_environment_variable('test_bed_type'):
             test_bed_name = fun_test.get_job_environment_variable('test_bed_type')
         else:
-            test_bed_name = "fs-15"
+            test_bed_name = "fs-48"
 
     def cleanup(self):
         pass
@@ -44,23 +44,25 @@ class BootFS(FunTestCase):
     def run(self):
         global fs
         test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
-        img_path = "funos-f1.stripped_7may_funcp.gz"
+        img_path = "divya_funos-f1.stripped_june4.gz"
+        f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
+                         "--dis-stats retimer=0,1,2 --mgmt syslog=6 --disable-wu-watchdog"
+        f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
+                         "--dis-stats retimer=0 --mgmt syslog=6 --disable-wu-watchdog"
         fs = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path,
-                    boot_args="app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 --all_100g --dis-stats "
-                              "--dpc-server --dpc-uart --mgmt --serdesinit")
+                    boot_args=f1_0_boot_args)
         fs_1 = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path,
-                      boot_args="app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 --all_100g --dis-stats "
-                                "--dpc-server --dpc-uart --mgmt  --serdesinit")
+                      boot_args=f1_1_boot_args)
         fun_test.simple_assert(fs, "Succesfully fetched image, credentials and bootargs")
         fun_test.test_assert(fs.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
         fun_test.test_assert(fs.fpga_initialize(), "FPGA initiaize")
         fun_test.test_assert(fs.bmc.u_boot_load_image(index=0, tftp_image_path=fs.tftp_image_path,
-                                                      boot_args=fs.boot_args),
+                                                      boot_args=fs.boot_args, gateway_ip="10.1.105.1"),
                              "U-Bootup f1: {} complete".format(0))
-        fs.bmc.start_uart_log_listener(f1_index=0)
+        fs.bmc.start_uart_log_listener(f1_index=0, serial_device="")
         fun_test.test_assert(
-            fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args),
+            fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args, gateway_ip="10.1.105.1"),
             "U-Bootup f1: {} complete".format(1))
         fs.bmc.start_uart_log_listener(f1_index=1)
         fun_test.test_assert(fs.come_reset(power_cycle=True, non_blocking=True),
