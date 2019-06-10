@@ -224,7 +224,10 @@ def collect_stats(when='before'):
     fpg_interfaces = (4, )
     fpg_intf_dict = {'F1_0': (4, )}
     version = fun_test.get_version()
+    fun_test.log('Collect stats via DPC and save to file {} test'.format(when))
+    fun_test.log_module_filter("random_module")
     perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+    fun_test.log_module_filter_disable()
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu='nu', hu='hu'):
@@ -359,7 +362,8 @@ class FunethTestPacketSweep(FunTestCase):
             cmd_str = "for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done" % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
 
-            linux_obj.command('echo {}\n{} > {}'.format(timeout_str, cmd_str, script_name))
+            linux_obj.command('echo "{}\n{}\n" > {}'.format(timeout_str, cmd_str, script_name))
+            linux_obj.command('cat {}'.format(script_name))
             linux_obj.command('chmod +x {}'.format(script_name))
             fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
             output = linux_obj.command(script_name, timeout=600)
@@ -431,7 +435,7 @@ class FunethTestScpBase(FunTestCase):
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from NU to HU host via {}.'.format(pf_or_vf.upper())
         elif nu_or_hu == hu:
-            ip_addr = tb_config_obj.get_interface_ipv4_addr(nu, tb_config_obj.get_a_nu_interface())
+            ip_addr = tb_config_obj.get_interface_ipv4_addr(nu, tb_config_obj.get_a_nu_interface(nu))
             username = tb_config_obj.get_username(hu)
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from HU to NU host.'
@@ -443,7 +447,7 @@ class FunethTestScpBase(FunTestCase):
                                                self.file_name, '' if not pf_or_vf else pf_or_vf),
                                            target_username=username,
                                            target_password=password,
-                                           timeout=300),
+                                           timeout=60)
         collect_stats(when='after')
         fun_test.test_assert(result, desc)
 
@@ -532,7 +536,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # ifconfig down
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='down', ns=ns),
                              'ifconfig {} down'.format(interface))
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface], nu=nu, hu=hu)
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface, ], nu=nu, hu=hu)
 
         # ifconfig up
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='up', ns=ns),
