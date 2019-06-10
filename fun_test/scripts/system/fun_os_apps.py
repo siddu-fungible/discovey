@@ -39,7 +39,7 @@ class ChannelParallTC(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Starting the jenkins build")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=channel_parall_speed --test-exit-fast"
+        boot_args = "app=channel_parall_speed"
         max_duration = 5
         tags = "qa_channel_parall"
         params = {"BOOTARGS": boot_args,
