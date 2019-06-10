@@ -87,7 +87,7 @@ class Dut(ToDictMixin):
         self.start_mode = start_mode
 
     def __repr__(self):
-        return str(self.index) + " : " + str(self.type)
+        return str(self.index) + " : " + str(self.type) + " : " + self.name
 
     def set_instance(self, instance):
         self.instance = instance
