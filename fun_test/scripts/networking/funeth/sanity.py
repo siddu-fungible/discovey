@@ -224,6 +224,7 @@ def collect_stats(when='before'):
     fpg_interfaces = (4, )
     fpg_intf_dict = {'F1_0': (4, )}
     version = fun_test.get_version()
+    fun_test.log('Collect stats via DPC and save to file {} test'.format(when))
     fun_test.log_module_filter("random_module")
     perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
     fun_test.log_module_filter_disable()
