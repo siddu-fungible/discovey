@@ -352,17 +352,17 @@ class FunethTestPacketSweep(FunTestCase):
         result = True
         for intf, ip_addr in zip(interfaces, ip_addrs):
             script_name = '/tmp/packet_sweep.sh'
-            timeout_str = """
-            #!/bin/bash
-            {
-                sleep 600
-                kill $$
-            } &
-            """
-            cmd_str = "for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done" % (
-                get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
+            cmd_str_list = ['#!/bin/bash',
+                            '{',
+                            '    sleep 600',
+                            '    kill $$',
+                            '} &'
+                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
+                                get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count,
+                                interval, ip_addr)
+                            ]
 
-            linux_obj.command('echo "{}\n{}\n" > {}'.format(timeout_str, cmd_str, script_name))
+            linux_obj.command('echo """{}""" > {}'.format('\n'.join(cmd_str_list), script_name))
             linux_obj.command('cat {}'.format(script_name))
             linux_obj.command('chmod +x {}'.format(script_name))
             fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
