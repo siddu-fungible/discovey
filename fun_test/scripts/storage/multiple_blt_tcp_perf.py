@@ -14,35 +14,6 @@ from collections import OrderedDict
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
 
-# As of now the dictionary variable containing the setup/testbed info used in this script
-
-tb_config = {
-    "name": "Storage over TCP",
-    "dut_info": {
-        0: {
-            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial sku=SKU_FS1600_0"
-                       "  --all_100g --dis-stats --mgmt --dpc-server --dpc-uart --nofreeze",
-            "perf_multiplier": 1,
-            "f1_bond_ip": "15.44.1.2",
-            "f1_bond_gw": "15.44.1.1",
-            "f1_bond_netmask": "255.255.255.0",
-            "tcp_port": 1099,
-            "come_ip": "10.1.105.162"
-        }
-    },
-    "tg_info": {
-        0: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.104",
-            "user": "localadmin",
-            "passwd": "Precious1*",
-            "iface_ip": "15.1.4.2",
-            "iface_gw": "15.1.4.1"
-        }
-    }
-}
-
-
 def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
     host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
                              format(sleep_time, iostat_interval, iostat_iter), timeout=400)
@@ -859,7 +830,7 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                if self.test_blt_count == 1:
+                if hasattr(self, "test_blt_count") and self.test_blt_count == 1:
                     fio_filename = fun_test.shared_variables["nvme_block_device_list"][0]
                 else:
                     fio_filename = fun_test.shared_variables["nvme_block_device_str"]
