@@ -30,6 +30,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() minimal: boolean = false;
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
+  @Input() buildInfo: any = null;
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
@@ -58,7 +59,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   width: any;
   height: any;
   tableInfo: any;
-  buildInfo: any;
   timeMode: string;
   negativeGradient: boolean;
   leaf: boolean;
@@ -151,8 +151,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
-    this.buildInfo = null;
-    this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
@@ -503,15 +501,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("EditChart: Submit");
     });
 
-  }
-
-  //populates buildInfo
-  fetchBuildInfo(): void {
-    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = response.data;
-    }, error => {
-      this.loggerService.error("regression/build_to_date_map");
-    });
   }
 
   // enterTriaging(): void {
