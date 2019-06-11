@@ -1892,7 +1892,7 @@ class ChannelParallPerformance(models.Model):
     input_data_pool_count = models.IntegerField(default=-1)
     input_metric_name = models.TextField(default="")
     output_channel_parall_speed = models.BigIntegerField(default=-1)
-    output_channel_parall_speed_unit = models.TextField(deafult=PerfUnit.UNIT_USECS)
+    output_channel_parall_speed_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     tag = "analytics"
 
     def __str__(self):

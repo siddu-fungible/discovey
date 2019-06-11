@@ -1346,6 +1346,18 @@
                 "label": "Soak test for fun_malloc",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_4_8_16",
+                "label": "Channel Parall Speed, N=4,8,16",
+                "weight": 1
+              },
+              {
+                "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_1000",
+                "label": "Channel Parall Speed, N=1000",
+                "weight": 1
               }
             ]
           },
