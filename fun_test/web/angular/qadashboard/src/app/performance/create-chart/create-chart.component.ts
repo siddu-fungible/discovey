@@ -29,6 +29,7 @@ export class CreateChartComponent implements OnInit, OnChanges {
   modelName: string = null;
   metricId: number = null;
   internalChartName: string = null;
+  buildInfo: any = null;
 
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute) {
@@ -64,10 +65,21 @@ export class CreateChartComponent implements OnInit, OnChanges {
       });
     }
     this.describeTable();
+    this.buildInfo = null;
+    this.fetchBuildInfo();
 
   }
 
   ngOnChanges(){
+  }
+
+  //populates buildInfo
+  fetchBuildInfo(): void {
+    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
+      this.buildInfo = response.data;
+    }, error => {
+      this.logger.error("regression/build_to_date_map");
+    });
   }
 
   describeTable = () => {
