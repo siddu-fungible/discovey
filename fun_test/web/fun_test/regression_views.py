@@ -980,6 +980,8 @@ def job_spec(request, job_id):
     result["emails"] = json.loads(suite_execution.emails)
     result["test_bed_type"] = suite_execution.test_bed_type
     result["environment"] = json.loads(suite_execution.environment)
+    result["suite_path"] = suite_execution.suite_path
+    result["script_path"] = suite_execution.script_path
 
     result["inputs"] = json.loads(suite_execution.inputs) if suite_execution.inputs else "{}"
     return result
