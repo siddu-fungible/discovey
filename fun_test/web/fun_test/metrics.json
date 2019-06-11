@@ -1346,6 +1346,18 @@
                 "label": "Soak test for fun_malloc",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_4_8_16",
+                "label": "Channel Parall Speed, N=4,8,16",
+                "weight": 1
+              },
+              {
+                "metric_model_name": "ChannelParallPerformance",
+                "name": "channel_parall_performance_1000",
+                "label": "Channel Parall Speed, N=1000",
+                "weight": 1
               }
             ]
           },
@@ -2936,6 +2948,48 @@
                     ]
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "storage_teramarks_apple",
+                "weight": 1,
+                "label": "Apple",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "teramarks_customer_apple_single_writer_reader_pcie",
+                    "weight": 1,
+                    "label": "Single-Reader PCIe",
+                    "children": [
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "apple_rand_read_4kb_6vol_6ssd_stripe_volume",
+                        "weight": 1,
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "apple_rand_read_4kb6vol6ssd_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "apple_rand_read_4kb6vol6ssd_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "apple_rand_read_4kb6vol6ssd_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
@@ -3205,40 +3259,6 @@
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "teramarks_customer_apple_single_writer_reader_pcie",
-                    "weight": 1,
-                    "label": "Single-Reader PCIe",
-                    "children": [
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "apple_rand_read_4kb_6vol_6ssd_stripe_volume",
-                        "weight": 1,
-                        "label": "Random Read",
-                        "children": [
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "apple_rand_read_4kb6vol6ssd_output_bandwidth",
-                            "weight": 1,
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "apple_rand_read_4kb6vol6ssd_output_latency",
-                            "weight": 1,
-                            "label": "Latency"
-                          },
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "apple_rand_read_4kb6vol6ssd_output_iops",
-                            "weight": 1,
-                            "label": "IOPS"
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "metric_model_name": "MetricContainer",
                     "name": "teramarks_customer_apple_single_writer_reader_tcp",
                     "weight": 1,
                     "label": "Single-Reader TCP",
@@ -3416,7 +3436,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8112_1024k_seq_w",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_2:1024K_SEQ_RW, F1(s)=1",
                     "children": [
                       {
@@ -3454,7 +3474,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8113_mixed_rw",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_3:MIXED_RW, F1(s)=1",
                     "children": [
                       {
@@ -3492,7 +3512,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8114_oltp_rw",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_4:OLTP_RW, F1(s)=1",
                     "children": [
                       {
@@ -3530,7 +3550,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8115_olap_rw",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_5:OLAP_RW, F1(s)=1",
                     "children": [
                       {
