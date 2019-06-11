@@ -6,6 +6,7 @@ from lib.host.linux import Linux
 from fun_settings import TFTP_SERVER_IP, FUN_TEST_LIB_UTILITIES_DIR, INTEGRATION_DIR
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
+from lib.host.apc_pdu import ApcPdu
 
 from threading import Thread
 import re
@@ -687,7 +688,8 @@ class Fs(object, ToDictMixin):
                  retimer_workaround=None,
                  non_blocking=None,
                  context=None,
-                 setup_bmc_support_files=None):
+                 setup_bmc_support_files=None,
+                 apc_info=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -713,6 +715,7 @@ class Fs(object, ToDictMixin):
         self.non_blocking = non_blocking
         self.context = context
         self.set_boot_phase(BootPhases.FS_BRING_UP_INIT)
+        self.apc_info = apc_info
         self.original_context_description = None
         if self.context:
             self.original_context_description = self.context.description
@@ -798,6 +801,7 @@ class Fs(object, ToDictMixin):
         gateway_ip = fs_spec.get("gateway_ip", None)
         workarounds = fs_spec.get("workarounds", {})
         retimer_workaround = workarounds.get("retimer_workaround", None)
+        apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
@@ -816,7 +820,8 @@ class Fs(object, ToDictMixin):
                   retimer_workaround=retimer_workaround,
                   non_blocking=non_blocking,
                   context=context,
-                  setup_bmc_support_files=setup_bmc_support_files)
+                  setup_bmc_support_files=setup_bmc_support_files,
+                  apc_info=apc_info)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
@@ -1032,6 +1037,26 @@ class Fs(object, ToDictMixin):
         fun_test.add_checkpoint("Reboot procedure completed")
         result = True
         return result
+
+    def apc_power_cycle(self):
+        fun_test.simple_assert(expression=self.apc_info, context=self.context)
+        apc_pdu = ApcPdu(**self.apc_info)
+        power_cycle_result = apc_pdu.power_cycle(self.apc_info["outlet_number"])
+        fun_test.simple_assert(expression=power_cycle_result,
+                               context=self.context,
+                               message="APC power-cycle result")
+        try:
+            apc_pdu.disconnect()
+        except:
+            pass
+        fun_test.test_assert(expression=self.get_fpga().ensure_host_is_up(max_wait_time=120),
+                             context=self.context, message="FPGA reachable after APC power-cycle")
+        fun_test.test_assert(expression=self.get_bmc().ensure_host_is_up(max_wait_time=120),
+                             context=self.context, message="BMC reachable after APC power-cycle")
+        fun_test.test_assert(expression=self.get_come().ensure_host_is_up(max_wait_time=120,
+                                                                          power_cycle=True),
+                                                                          message="ComE reachable after APC power-cycle")
+        return True
 
 
 if __name__ == "__main__":
