@@ -59,14 +59,20 @@ export class ReRunService {
   }
 
   fetchSuiteContents(suiteExecutionId, suitePath) {
-    let payload = {suite_path: suitePath};
-    return this.apiService.post("/regression/suites", payload).pipe(switchMap((response) => {
-      if (!suitePath.endsWith(".json")) {
-        suitePath = suitePath + ".json";
-      }
-      this.suiteContents = response.data[suitePath];
+    if (!suitePath.endsWith(".py")) {
+      let payload = {suite_path: suitePath};
+      return this.apiService.post("/regression/suites", payload).pipe(switchMap((response) => {
+        if (!suitePath.endsWith(".json")) {
+          suitePath = suitePath + ".json";
+        }
+        this.suiteContents = response.data[suitePath];
+        return of(null);
+      }));
+    } else {
+      this.suiteContents = [{path: this.archivedJobSpec.script_path}];  // Not a suite, but an individual script
       return of(null);
-    }));
+    }
+
   }
 
   fetchSuiteExecutionApplyFilter(suiteExecutionId, resultFilter=null, scriptFilter=null) {
