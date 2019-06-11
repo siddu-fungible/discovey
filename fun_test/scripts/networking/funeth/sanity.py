@@ -357,7 +357,7 @@ class FunethTestPacketSweep(FunTestCase):
                             '    sleep %s' % timeout,
                             '    kill \$\$',
                             '} &'
-                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
+                            '\nfor i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
                                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count,
                                 interval, ip_addr)
                             ]
