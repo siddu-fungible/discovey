@@ -1979,6 +1979,7 @@ class Linux(object, ToDictMixin):
         :param max_wait_time: total time to wait before giving
         :return: True, if the host is pingable and ssh'able, else False
         """
+        fun_test.log("Ensuring the host is up: ipmi_details={}, power_cycle={}".format(ipmi_details, power_cycle))
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         service_host = None
         if service_host_spec:
@@ -2028,7 +2029,7 @@ class Linux(object, ToDictMixin):
                     fun_test.critical(str(ex))
                     service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                 finally:
-                    return self.ensure_host_is_up(max_wait_time=max_wait_time)
+                    return self.ensure_host_is_up(max_wait_time=max_wait_time, power_cycle=False)
         return result
 
     @fun_test.safe
