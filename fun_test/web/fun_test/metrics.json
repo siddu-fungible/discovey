@@ -2948,6 +2948,48 @@
                     ]
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "storage_teramarks_apple",
+                "weight": 1,
+                "label": "Apple",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "teramarks_customer_apple_single_writer_reader_pcie",
+                    "weight": 1,
+                    "label": "Single-Reader PCIe",
+                    "children": [
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "apple_rand_read_4kb_6vol_6ssd_stripe_volume",
+                        "weight": 1,
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "apple_rand_read_4kb6vol6ssd_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "apple_rand_read_4kb6vol6ssd_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "apple_rand_read_4kb6vol6ssd_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
@@ -3215,40 +3257,6 @@
                 "weight": 1,
                 "label": "Apple",
                 "children": [
-                  {
-                    "metric_model_name": "MetricContainer",
-                    "name": "teramarks_customer_apple_single_writer_reader_pcie",
-                    "weight": 1,
-                    "label": "Single-Reader PCIe",
-                    "children": [
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "apple_rand_read_4kb_6vol_6ssd_stripe_volume",
-                        "weight": 1,
-                        "label": "Random Read",
-                        "children": [
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "apple_rand_read_4kb6vol6ssd_output_bandwidth",
-                            "weight": 1,
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "apple_rand_read_4kb6vol6ssd_output_latency",
-                            "weight": 1,
-                            "label": "Latency"
-                          },
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "apple_rand_read_4kb6vol6ssd_output_iops",
-                            "weight": 1,
-                            "label": "IOPS"
-                          }
-                        ]
-                      }
-                    ]
-                  },
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "teramarks_customer_apple_single_writer_reader_tcp",
