@@ -34,7 +34,7 @@ class FunTestCase1(FunTestCase):
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
-        fun_test.shared_variables["fs"].cleanup()
+        # fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
         fs = Fs.get(setup_bmc_support_files=True, boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog") # (disable_f1_index=0)
@@ -43,7 +43,7 @@ class FunTestCase1(FunTestCase):
         f1 = fs.get_f1(index=0)
 
         f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
-
+        fs.cleanup()
 
 class FunTestCase2(FunTestCase):
     def describe(self):
@@ -61,7 +61,7 @@ class FunTestCase2(FunTestCase):
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
-        fun_test.shared_variables["fs"].cleanup()
+        # fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
         topology_helper = TopologyHelper()
@@ -69,7 +69,8 @@ class FunTestCase2(FunTestCase):
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
         fs = topology.get_dut_instance(index=0)
-        fun_test.shared_variables["fs"] = fs
+        #mfun_test.shared_variables["fs"] = fs
+        fs.cleanup()
 
 if __name__ == "__main__":
     myscript = MyScript()
