@@ -119,6 +119,7 @@ class BringupSetup(FunTestCase):
 
 class TestIntraF1Pings(FunTestCase):
     hosts = []
+    dpc_info = None
 
     def describe(self):
         self.set_test_details(id=3, summary="Test Intra F1 Ping",
@@ -133,15 +134,20 @@ class TestIntraF1Pings(FunTestCase):
     def setup(self):
         topology_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/topo_description.json')
         self.hosts = FunControlPlaneBringup.get_list_of_hosts_connected_each_f1(topology_info=topology_info)
+        self.dpc_info = FunControlPlaneBringup.get_dpc_ip_port_for_each_f1(topology_info=topology_info)
+
+        all_hosts = FunControlPlaneBringup.get_list_of_all_hosts(topology_info=topology_info)
+        for host in all_hosts:
+            hping_installed = ensure_hping_install(host_ip=host['name'], host_username=host['ssh_username'],
+                                                   host_password=host['ssh_password'])
+            fun_test.simple_assert(hping_installed, "Ensure Hping3 is installed on host: %s" % host['name'])
 
         fun_test.log("Hosts connected to each F1 in topology: %s" % self.hosts)
 
     def run(self):
         checkpoint = "Ensure Intra F1 ping works"
-        # network_controller_obj = NetworkController(dpc_server_ip=)
-        network_controller_obj = None
         funcp_obj = FunControlPlaneBringup(fs_name='FS-48')
-        result = funcp_obj.validate_intra_f1_ping(network_controller_obj=network_controller_obj, hosts=self.hosts)
+        result = funcp_obj.validate_intra_f1_ping(dpc_info=self.dpc_info, hosts=self.hosts)
         fun_test.test_assert(result, checkpoint)
 
     def cleanup(self):
@@ -166,14 +172,14 @@ class TestCcCcPing(FunTestCase):
     def run(self):
         test_bed_type = fun_test.shared_variables['test_bed_type']
         testbed_info = fun_test.shared_variables['testbed_info']
-        '''
+
         checkpoint = "Ensure all vlans can ping its neighbour vlan"
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
             res = funcp_obj.test_cc_pings_fs()
             fun_test.simple_assert(res, checkpoint)
         fun_test.add_checkpoint(checkpoint)
-        '''
+
         funcp1_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][0])
         funcp2_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][1])
 
@@ -199,7 +205,7 @@ class TestCcCcPing(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BringupSetup())
-    ts.add_test_case(TestCcCcPing())
-    ts.add_test_case(TestHuHuPing())
+    # ts.add_test_case(BringupSetup())
+    # ts.add_test_case(TestCcCcPing())
+    ts.add_test_case(TestIntraF1Pings())
     ts.run()

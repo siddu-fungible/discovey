@@ -645,8 +645,7 @@ class FunControlPlaneBringup:
             for fs in topology_info['racks']:
                 fs_f1_dict = {fs['name']: {}}
                 for f1 in fs['F1s']:
-                    if len(f1['Hosts']) > 1:
-                        fs_f1_dict[fs['name']].update({f1['id']: f1['Hosts']})
+                    fs_f1_dict[fs['name']].update({f1['id']: f1['Hosts']})
                 hosts.append(fs_f1_dict)
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -663,37 +662,83 @@ class FunControlPlaneBringup:
                     res = linux_obj.ping(dst=hosts[index]['ip'], count=2)
                     fun_test.simple_assert(res, checkpoint)
 
+                    fcp_stats_before = network_controller_obj.peek_fcp_global_stats()
+                    vppkts_before = network_controller_obj.peek_vp_packets()
+
                     checkpoint = "hping from %s to %s" % (host['ip'], hosts[index]['ip'])
                     res = linux_obj.hping(dst=hosts[index]['ip'], count=1000, mode='faster', protocol_mode='icmp',
                                           timeout=10)
-                    fun_test.simple_assert(res, checkpoint)
+                    # fun_test.simple_assert(res, checkpoint)
 
                     checkpoint = "Validate FCB stats"
-                    # TODO: Validate FCB stats
-                    fcp_stats = network_controller_obj.peek_fcp_global_stats(mode='nu')
+                    fcp_stats = network_controller_obj.peek_fcp_global_stats()
+                    diff_stats = get_diff_stats(old_stats=fcp_stats_before, new_stats=fcp_stats)
+                    fun_test.log("FCP Diff stats: %s" % diff_stats)
+
+                    # TODO: Add assert for FCB stats
 
                     checkpoint = "Validate vppkts stats"
-                    # TODO: Validate vppkts stats
                     vp_stats = network_controller_obj.peek_vp_packets()
+                    diff_stats = get_diff_stats(old_stats=vppkts_before, new_stats=vp_stats)
+                    fun_test.log("VP packets Diff: %s" % diff_stats)
 
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return result
-
-    def validate_intra_f1_ping(self, network_controller_obj, hosts):
-        result = False
-        try:
-            for fs_name in hosts:
-                for f1 in hosts[fs_name]:
-                    checkpoint = "Test ping between hosts connected to F1_%s of %s" % (f1, fs_name)
-                    fun_test.log_section(checkpoint)
-
-                    res = self._validate_ping(network_controller_obj=network_controller_obj, hosts=hosts[fs_name][f1])
-                    fun_test.test_assert(res, checkpoint)
+                    # TODO: Add assert for VP packets
+                linux_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def validate_intra_f1_ping(self, dpc_info, hosts):
+        result = False
+        try:
+            for fs in hosts:
+                for fs_name in fs:
+                    for f1 in fs[fs_name]:
+                        checkpoint = "Test ping between hosts connected to F1_%s of %s" % (f1, fs_name)
+                        fun_test.log_section(checkpoint)
+                        dpc_server_ip = dpc_info[fs_name]['F1_%s_dpc' % f1][0]
+                        dpc_server_port = dpc_info[fs_name]['F1_%s_dpc' % f1][1]
+                        network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip,
+                                                                   dpc_server_port=dpc_server_port)
+
+                        res = self._validate_ping(network_controller_obj=network_controller_obj,
+                                                  hosts=fs[fs_name][f1])
+                        fun_test.test_assert(res, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    @staticmethod
+    def get_dpc_ip_port_for_each_f1(topology_info):
+        info = {}
+        try:
+            for fs in topology_info['racks']:
+                dpc_info = {fs['name']: {}}
+                for f1 in fs['F1s']:
+                    key = "F1_%s_dpc" % f1['id']
+                    val = tuple(f1[key])
+                    dpc_info[fs['name']].update({key: val})
+                info.update(dpc_info)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return info
+
+    @staticmethod
+    def get_list_of_all_hosts(topology_info):
+        hosts = []
+        try:
+            hosts = []
+            for fs in topology_info['racks']:
+                for f1 in fs['F1s']:
+                    hosts.extend(f1['Hosts'])
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return hosts
+
+
+
 
 
 

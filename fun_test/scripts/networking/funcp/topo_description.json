@@ -43,7 +43,8 @@
               "ssh_password": "Precious1*",
               "ip": "41.1.1.4"
             }
-          ]
+          ],
+          "F1_0_dpc": ["10.1.105.168", 40220]
         },
         {
           "id": 1,
@@ -71,7 +72,8 @@
               "ssh_password": "Precious1*",
               "ip": "42.1.1.2"
             }
-          ]
+          ],
+          "F1_1_dpc": ["10.1.105.168", 40221]
         }
       ]
     },
@@ -103,7 +105,7 @@
               "name": "cab02-qa-01",
               "ssh_username": "localadmin",
               "ssh_password": "Precious1*",
-              "ip": "43.1.1.2"
+              "ip": "43.1.1.4"
             },
             {
               "name": "cab02-qa-02",
@@ -115,9 +117,10 @@
               "name": "cab02-qa-03",
               "ssh_username": "localadmin",
               "ssh_password": "Precious1*",
-              "ip": "43.1.1.4"
+              "ip": "43.1.1.2"
             }
-          ]
+          ],
+          "F1_0_dpc": ["10.1.105.171", 40220]
         },
         {
           "id": 1,
@@ -145,7 +148,8 @@
               "ssh_password": "Precious1*",
               "ip": "44.1.1.2"
             }
-          ]
+          ],
+          "F1_1_dpc": ["10.1.105.171", 40221]
         }
       ]
     }
