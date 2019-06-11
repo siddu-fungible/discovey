@@ -1040,7 +1040,7 @@ class Fs(object, ToDictMixin):
 
     def apc_power_cycle(self):
         fun_test.simple_assert(expression=self.apc_info, context=self.context)
-        apc_pdu = ApcPdu(**self.apc_info)
+        apc_pdu = ApcPdu(context=self.context, **self.apc_info)
         power_cycle_result = apc_pdu.power_cycle(self.apc_info["outlet_number"])
         fun_test.simple_assert(expression=power_cycle_result,
                                context=self.context,
