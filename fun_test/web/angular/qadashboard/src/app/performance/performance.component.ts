@@ -151,6 +151,8 @@ export class PerformanceComponent implements OnInit {
   s1Node: FlatNode = null;
   allMetricsNode: FlatNode = null;
 
+  buildInfo: any = null;
+
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService,
@@ -175,6 +177,8 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxHeight = '25%';
     }
     this.status = null;
+    this.buildInfo = null;
+    this.fetchBuildInfo();
     this.fetchDag();
 
     /*
@@ -183,6 +187,15 @@ export class PerformanceComponent implements OnInit {
     console.log(e, 'back button: ' + this.location.path());
   });*/
 
+  }
+
+  //populates buildInfo
+  fetchBuildInfo(): void {
+    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
+      this.buildInfo = response.data;
+    }, error => {
+      this.loggerService.error("regression/build_to_date_map");
+    });
   }
 
   getDefaultQueryPath() {
