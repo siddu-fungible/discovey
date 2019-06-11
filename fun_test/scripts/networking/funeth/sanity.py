@@ -86,7 +86,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs, num_queues=1), 'Load funeth driver.')
+    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs, num_queues=8), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if enable_tso:
@@ -357,13 +357,13 @@ class FunethTestPacketSweep(FunTestCase):
             cmd_str_list = ['{',
                             '    sleep %s' % timeout,
                             '    kill \$\$',
-                            '} &'
-                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
+                            '} &',
+                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s \$i -M do %s; done' % (
                                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count,
-                                interval, ip_addr)
+                                interval, ip_addr),
                             ]
             for cmd_str in cmd_str_list:
-                linux_obj.command('echo "{}\n" > {}'.format(cmd_str, script_file))
+                linux_obj.command('echo "{}" >> {}'.format(cmd_str, script_file))
             linux_obj.command('cat {}'.format(script_file))
             linux_obj.command('chmod +x {}'.format(script_file))
             fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
