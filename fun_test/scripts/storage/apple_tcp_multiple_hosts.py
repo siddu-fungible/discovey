@@ -17,7 +17,7 @@ tb_config = {
             "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial sku=SKU_FS1600_0"
                        "  --disable-wu-watchdog --all_100g --dis-stats --mgmt --dpc-server --dpc-uart --nofreeze",
             "perf_multiplier": 1,
-            "f1_ip": "15.43.1.2",
+            "f1_ip": "15.42.1.2",
             "tcp_port": 1099
         },
     },
@@ -356,7 +356,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                 "./integration_test/emulation/test_system.py --setup --docker --ep", timeout=1600)
             fun_test.log(setup_docker_output)
 
-            container_cli = FunCpDockerContainer(host_ip="10.1.105.159", ssh_password="123", ssh_username="fun",
+            container_cli = FunCpDockerContainer(host_ip="10.1.105.156", ssh_password="123", ssh_username="fun",
                                                  f1_index=0)
 
             container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ifconfig $i down;sleep 1;done")
@@ -366,7 +366,7 @@ class StripedVolumePerformanceTestcase(FunTestCase):
             container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ifconfig $i up;sleep 1;done")
             container_cli.command("sudo ifconfig bond0 down")
             fun_test.sleep("Assign IP to bond0", 2)
-            container_cli.command("sudo ifconfig bond0 15.43.1.2 netmask 255.255.255.0 up")
+            container_cli.command("sudo ifconfig bond0 15.42.1.2 netmask 255.255.255.0 up")
             while True:
                 check_int_running = container_cli.command("ifconfig bond0")
                 if "RUNNING" in check_int_running:
@@ -376,8 +376,8 @@ class StripedVolumePerformanceTestcase(FunTestCase):
                     container_cli.command("sudo ifconfig bond0 down")
                     fun_test.sleep("Interface brought down", 2)
                     container_cli.command("sudo ifconfig bond0 up")
-            container_cli.command("ping 15.43.1.1 -c 10")
-            container_cli.command("sudo ip route add 15.0.0.0/8 via 15.43.1.1 dev bond0")
+            container_cli.command("ping 15.42.1.1 -c 10")
+            container_cli.command("sudo ip route add 15.0.0.0/8 via 15.42.1.1 dev bond0")
             for x in range(0, 10):
                 container_cli.command("ping {} -c 3".format(tb_config['tg_info'][x]['iface_ip']))
             fun_test.log("FunCP brought up")
