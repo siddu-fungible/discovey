@@ -363,7 +363,7 @@ class FunethTestPacketSweep(FunTestCase):
                                 interval, ip_addr)
                             ]
             for cmd_str in cmd_str_list:
-                linux_obj.command('echo "{}\n" > {}'.format(cmd_str, script_file))
+                linux_obj.command('echo "{}" > {}'.format(cmd_str, script_file))
             linux_obj.command('cat {}'.format(script_file))
             linux_obj.command('chmod +x {}'.format(script_file))
             fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
