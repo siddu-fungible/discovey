@@ -3428,7 +3428,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8112_1024k_seq_w",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_2:1024K_SEQ_RW, F1(s)=1",
                     "children": [
                       {
@@ -3466,7 +3466,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8113_mixed_rw",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_3:MIXED_RW, F1(s)=1",
                     "children": [
                       {
@@ -3504,7 +3504,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8114_oltp_rw",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_4:OLTP_RW, F1(s)=1",
                     "children": [
                       {
@@ -3542,7 +3542,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "inspur_8115_olap_rw",
-                    "weight": 0,
+                    "weight": 1,
                     "label": "8_11_5:OLAP_RW, F1(s)=1",
                     "children": [
                       {
