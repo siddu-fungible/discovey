@@ -58,10 +58,10 @@ class ApcPdu():
         return self.command("olStatus {}".format(outlet_number))
 
     def outlet_on(self, outlet_number):
-        return self.command("olon {}".format(outlet_number))
+        return self.command("olOn {}".format(outlet_number))
 
     def outlet_off(self, outlet_number):
-        return self.command("oloff {}".format(outlet_number))
+        return self.command("olOff {}".format(outlet_number))
 
     def power_cycle(self, outlet_number):
         result = None
