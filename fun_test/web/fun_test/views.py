@@ -6,6 +6,8 @@ from lib.utilities.jira_manager import JiraManager
 from lib.utilities.script_fixup import fix
 from fun_global import *
 from fun_settings import TCMS_PROJECT
+from web.fun_test.models import SiteConfig
+
 
 @csrf_exempt
 def publish(request):
@@ -64,6 +66,7 @@ def get_script_content(request):
 @csrf_exempt
 def angular_home(request):
     angular_home = 'qa_dashboard/angular_home_development.html'
+    site_version = SiteConfig.get_version()
     if is_production_mode() and not is_triaging_mode():
         angular_home = 'qa_dashboard/angular_home_production.html'
     return render(request, angular_home, locals())
