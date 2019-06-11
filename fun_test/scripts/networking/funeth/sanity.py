@@ -357,10 +357,10 @@ class FunethTestPacketSweep(FunTestCase):
             cmd_str_list = ['{',
                             '    sleep %s' % timeout,
                             '    kill \$\$',
-                            '} &'
-                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
+                            '} &',
+                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s \$i -M do %s; done' % (
                                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count,
-                                interval, ip_addr)
+                                interval, ip_addr),
                             ]
             for cmd_str in cmd_str_list:
                 linux_obj.command('echo "{}" >> {}'.format(cmd_str, script_file))
