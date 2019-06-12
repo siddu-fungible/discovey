@@ -516,9 +516,9 @@ def build_to_date_map(request):
     end_date = get_current_time()
     start_date = end_date - timedelta(days=30)
     date_range = [start_date, end_date]
-    all_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range)
+    filtered_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range)
     build_info = {}
-    for entry in all_entries:
+    for entry in filtered_entries:
         try:
             key = str(entry.build_date)
             key = key.split('+')[0]
