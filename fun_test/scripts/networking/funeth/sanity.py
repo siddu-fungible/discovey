@@ -353,7 +353,7 @@ class FunethTestPacketSweep(FunTestCase):
         result = True
         for intf, ip_addr in zip(interfaces, ip_addrs):
             script_file = '/tmp/packet_sweep.sh'
-            linux_obj.command('touch {}'.format(script_file))
+            linux_obj.command('rm {0}; touch {0}'.format(script_file))
             cmd_str_list = ['{',
                             '    sleep %s' % timeout,
                             '    kill \$\$',
