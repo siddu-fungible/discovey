@@ -50,8 +50,7 @@ class ChannelParallTC(FunTestCase):
                   "DISABLE_ASSERTIONS": "true"}
 
         build_result = jenkins_manager.build(params=params, extra_emails=[
-            "team-regression@fungible.com"],
-                                             wait_time_for_build_complete=30)
+            "team-regression@fungible.com"])
         fun_test.test_assert(build_result, "Build completed normally")
 
 
