@@ -70,6 +70,8 @@ class MetricParser():
             return self.bcopy_flood(logs=logs, date_time=date_time, platform=platform)
         elif "VoltestLsv" in model_name:
             return self.voltest_lsv(logs=logs, date_time=date_time, platform=platform)
+        elif "ChannelParallPerformance" in model_name:
+            return self.channel_parall(logs=logs, date_time=date_time, platform=platform)
         else:
             return {}
 
@@ -800,6 +802,31 @@ class MetricParser():
                     self.status = RESULTS["PASSED"]
         d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
         self.result["data"].append(d)
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def channel_parall(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'Channel\s+parall\s+speed\s+test\s+(?P<value_json>{.*})\s+\[(?P<metric_name>\S+)\]',
+                line)
+            if m:
+                self.match_found = True
+                value_json = json.loads(m.group("value_json"))
+                key = "output_channel_parall_speed"
+                self.set_value_metrics(value_json=value_json, key=key, default=-1)
+                input_metric_name = m.group("metric_name")
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["input_platform"] = platform
+                self.metrics["input_busy_loop_usecs"] = value_json["busy_loop_usecs"]
+                self.metrics["input_data_pool_count"] = value_json["data_pool_count"]
+                self.metrics["input_number_channels"] = value_json["N"]
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]
         return self.result

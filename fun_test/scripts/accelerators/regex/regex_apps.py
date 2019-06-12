@@ -42,7 +42,7 @@ class FunTestCase1(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=pm_test_bootstrap param-file=nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --test-exit-fast"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_nfa_H_dflt_h_dflt_nfa.json rbm-size=1m --disable-wu-watchdog"
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_nfa_runtime_sanity"
@@ -50,10 +50,12 @@ class FunTestCase1(FunTestCase):
                   "FUNOS_MAKEFLAGS": funos_makeflags,
                   "MAX_DURATION": max_duration,
                   "RUN_MODE": "Batch",
+		  "NOTE": "RGX NFA strategy",
+                  "FAST_EXIT": "False",
                   "TAGS": tags}
 
         build_result = jenkins_manager.build(params=params, extra_emails=[
-            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com"],
+            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com"],
                                              wait_time_for_build_complete=25 * 60)
         fun_test.test_assert(build_result, "Build completed normally")
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
@@ -78,7 +80,7 @@ class FunTestCase2(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=pm_test_bootstrap param-file=nightly_dfa_B_dflt_b_dflt_dfa.json rbm-size=1m --test-exit-fast"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_dfa_B_dflt_b_dflt_dfa.json rbm-size=1m --disable-wu-watchdog"
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_dfa_runtime_sanity"
@@ -86,10 +88,12 @@ class FunTestCase2(FunTestCase):
                   "FUNOS_MAKEFLAGS": funos_makeflags,
                   "MAX_DURATION": max_duration,
                   "RUN_MODE": "Batch",
+		  "NOTE": "RGX DFA strategy",
+                  "FAST_EXIT": "False",
                   "TAGS": tags}
 
         build_result = jenkins_manager.build(params=params, extra_emails=[
-            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com"],
+            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com"],
                                              wait_time_for_build_complete=25 * 60)
         fun_test.test_assert(build_result, "Build completed normally")
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
@@ -114,7 +118,7 @@ class FunTestCase3(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Some checkpoint")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=pm_test_bootstrap param-file=nightly_combined_H_dflt_h_dflt_combined.json rbm-size=1m --test-exit-fast"
+        boot_args = "app=pm_test_bootstrap param-file=nightly_combined_H_dflt_h_dflt_combined.json rbm-size=1m --disable-wu-watchdog"
         funos_makeflags = "PM_TESTS=1 XDATA_LISTS=/project/users/jlulla/sanity_runtime/jenkins.list"
         max_duration = 5
         tags = "qa_rgx_software_runtime_sanity"
@@ -122,10 +126,12 @@ class FunTestCase3(FunTestCase):
                   "FUNOS_MAKEFLAGS": funos_makeflags,
                   "MAX_DURATION": max_duration,
                   "RUN_MODE": "Batch",
+		  "NOTE": "RGX FFA strategy",
+                  "FAST_EXIT": "False",
                   "TAGS": tags}
 
         build_result = jenkins_manager.build(params=params, extra_emails=[
-            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com"],
+            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com"],
                                              wait_time_for_build_complete=25 * 60)
         fun_test.test_assert(build_result, "Build completed normally")
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
