@@ -1682,6 +1682,9 @@ class Linux(object, ToDictMixin):
             for key in kwargs:
                 if key == "multiple_jobs":
                     fio_command += " " + str(kwargs[key])
+                    # In case of multiple jobs scenario if global filename exists, removing it
+                    if fio_command.count("filename") >= 2:
+                        fio_command = re.sub(r"--filename=\S+", "", fio_command, 1)
                 else:
                     fio_command += " --" + key + "=" + str(kwargs[key])
 
