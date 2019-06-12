@@ -7,6 +7,7 @@ from lib.utilities.script_fixup import fix
 from fun_global import *
 from fun_settings import TCMS_PROJECT
 from web.fun_test.models import SiteConfig
+from django.views.decorators.cache import never_cache
 
 
 @csrf_exempt
@@ -63,7 +64,9 @@ def get_script_content(request):
             contents = str(ex)
     return HttpResponse(contents)
 
+
 @csrf_exempt
+@never_cache
 def angular_home(request):
     angular_home = 'qa_dashboard/angular_home_development.html'
     site_version = SiteConfig.get_version()
