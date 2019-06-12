@@ -55,6 +55,7 @@ except:
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
+NUM_QUEUES_RX = 8
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
@@ -86,7 +87,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs, num_queues=8), 'Load funeth driver.')
+    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs, num_queues=NUM_QUEUES_RX), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if enable_tso:
