@@ -717,8 +717,8 @@ class FunControlPlaneBringup:
                 for fs_name in fs:
                     checkpoint = "Test ping from hosts connected to F1_0 of %s to F1_1 hosts of %s" % (fs_name,
                                                                                                        fs_name)
-                    f1_0_hosts = fs[0]
-                    f1_1_hosts = fs[1]
+                    f1_0_hosts = fs[fs_name][0]
+                    f1_1_hosts = fs[fs_name][1]
                     f1_0_dpc_obj = NetworkController(dpc_server_ip=dpc_info[fs_name]['F1_0_dpc'][0],
                                                      dpc_server_port=dpc_info[fs_name]['F1_0_dpc'][1])
                     f1_1_dpc_obj = NetworkController(dpc_server_ip=dpc_info[fs_name]['F1_1_dpc'][0],
