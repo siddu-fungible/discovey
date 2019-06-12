@@ -88,7 +88,7 @@
         </ng-container>
       </div>
 
-      <ng-container *ngIf="suiteExecution.fields.state == stateMap.QUEUED">
+      <ng-container *ngIf="suiteExecution?.fields.state == stateMap.QUEUED">
         <br>
         <span class="h6">Queue occupancy:</span>
         <app-queue-viewer></app-queue-viewer>

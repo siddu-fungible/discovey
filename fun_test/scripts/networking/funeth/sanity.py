@@ -55,6 +55,7 @@ except:
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
+NUM_QUEUES_RX = 8
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
@@ -86,7 +87,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs, num_queues=1), 'Load funeth driver.')
+    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs, num_queues=NUM_QUEUES_RX), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if enable_tso:
@@ -349,25 +350,27 @@ class FunethTestPacketSweep(FunTestCase):
         # Collect dpc stats before and after the test
         collect_stats(when='before')
 
+        timeout = 600
         result = True
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            script_name = '/tmp/packet_sweep.sh'
-            cmd_str_list = ['#!/bin/bash',
-                            '{',
-                            '    sleep 600',
-                            '    kill $$',
-                            '} &'
-                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i -M do %s; done' % (
+            script_file = '/tmp/packet_sweep.sh'
+            linux_obj.command('rm {0}; touch {0}'.format(script_file))
+            cmd_str_list = ['{',
+                            '    sleep %s' % timeout,
+                            '    kill \$\$',
+                            '} &',
+                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s \$i -M do %s; done' % (
                                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count,
-                                interval, ip_addr)
+                                interval, ip_addr),
                             ]
-
-            linux_obj.command('echo """{}""" > {}'.format('\n'.join(cmd_str_list), script_name))
-            linux_obj.command('cat {}'.format(script_name))
-            linux_obj.command('chmod +x {}'.format(script_name))
+            for cmd_str in cmd_str_list:
+                linux_obj.command('echo "{}" >> {}'.format(cmd_str, script_file))
+            linux_obj.command('cat {}'.format(script_file))
+            linux_obj.command('chmod +x {}'.format(script_file))
             fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
-            output = linux_obj.command(script_name, timeout=600)
-            result &= re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None
+            output = linux_obj.command('bash {}'.format(script_file), timeout=timeout+2)
+            #result &= re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None
+            result &= len(re.findall(r' (0% packet loss)', output)) == (max_pkt_size - min_pkt_size + 1)
 
         collect_stats(when='after')
         fun_test.test_assert(result, 'Packet sweep test')
