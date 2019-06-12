@@ -73,7 +73,7 @@ class MetricParser():
             return self.voltest_lsv(logs=logs, date_time=date_time, platform=platform)
         elif "ChannelParallPerformance" in model_name:
             return self.channel_parall(logs=logs, date_time=date_time, platform=platform)
-        elif "TeraMarkPkeRsaPerformanceTc" in model_name:
+        elif "TeraMarkPkeRsaPerformance" in model_name:
             return self.pke_rsa(logs=logs, date_time=date_time, platform=platform)
         elif "TeraMarkPkeRsa4kPerformance" in model_name:
             return self.pke_rsa_4k(logs=logs, date_time=date_time, platform=platform)
