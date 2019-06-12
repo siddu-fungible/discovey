@@ -513,7 +513,7 @@ def scripts_by_module(request, module):
 @csrf_exempt
 @api_safe_json_response
 def build_to_date_map(request):
-    end_date = datetime.now()
+    end_date = get_current_time()
     start_date = end_date - timedelta(days=30)
     date_range = [start_date, end_date]
     all_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range)
