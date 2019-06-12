@@ -62,7 +62,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 1099511627776,
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
@@ -81,12 +81,15 @@
     "nvme_device": "/dev/nvme",
     "io_queues": 0,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 12000},
-    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --runtime=120 --cpus_allowed_policy=split --cpus_allowed={} --numjobs={} --iodepth={} --bs=8k --size=100%", "timeout": 150},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 12000},
+    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --cpus_allowed={} --numjobs={} --iodepth={} --bs=8k --size=100%", "timeout": 150},
+    "fio_runtime": 120,
+    "fio_run_timeout": 150,
+    "fio_size_timeout": 5400,
     "fio_modes": ["randrw"],
     "fio_iodepth": [8, 16, 32, 64, 128, 256],
     "fio_job_name": "inspur_8k_random_read_write",
-    "mpstat_args": {"interval":  5, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
+    "mpstat_args": {"interval": 60, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
   },
   "SequentialReadWrite1024kBlocks": {
     "ec_info": {
