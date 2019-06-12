@@ -7,7 +7,7 @@ from django.utils import timezone
 from fun_global import PerfUnit
 
 
-if __name__ == "__main__":
+if __name__ == "__main_channel_parall__":
     internal_chart_names = ["channel_parall_performance_4_8_16", "channel_parall_performance_1000"]
     base_line_date = datetime(year=2019, month=6, day=8, minute=0, hour=0, second=0)
     for internal_chart_name in internal_chart_names:
@@ -42,3 +42,36 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added charts for channel parall speed performance"
+
+if __name__ == "__main__":
+    internal_chart_names = ["read_4kb1vol12ssd_durable_volume_ec_output_iops", "read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "rand_read_4kb1vol12ssd_durable_volume_ec_4_output_latency", "rand_read_4kb1vol12ssd_durable_volume_ec_output_iops"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if "rand_read" in internal_chart_name:
+            operation = "randread"
+            fio_job_name = "ec_fio_25G_comp_disabled_randread_50"
+        else:
+            operation = "read"
+            fio_job_name = "ec_fio_25G_comp_disabled_read_50"
+        if "iops" in internal_chart_name:
+            y1_axis_title = PerfUnit.UNIT_KOPS
+            output_name = "output_read_iops"
+            name = "0%"
+        else:
+            y1_axis_title = PerfUnit.UNIT_USECS
+            output_name = "output_read_avg_latency"
+            name = "0%-avg"
+        if chart:
+            data_sets = json.loads(chart.data_sets)
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": y1_axis_title}
+            data_sets.append(one_data_set)
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+    print "added 0 compression dataset for durable volume EC + compression"
