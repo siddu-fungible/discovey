@@ -369,7 +369,8 @@ class FunethTestPacketSweep(FunTestCase):
             linux_obj.command('chmod +x {}'.format(script_file))
             fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
             output = linux_obj.command('bash {}'.format(script_file), timeout=timeout+2)
-            result &= re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None
+            #result &= re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None
+            result &= len(re.findall(r' (0% packet loss)', output)) == (max_pkt_size - min_pkt_size + 1)
 
         collect_stats(when='after')
         fun_test.test_assert(result, 'Packet sweep test')
