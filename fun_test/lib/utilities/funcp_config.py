@@ -651,7 +651,7 @@ class FunControlPlaneBringup:
             fun_test.critical(str(ex))
         return hosts
 
-    def _validate_ping(self, network_controller_obj, hosts):
+    def _test_intra_f1_ping(self, network_controller_obj, hosts):
         result = False
         try:
             for host in hosts:
@@ -702,9 +702,80 @@ class FunControlPlaneBringup:
                         network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip,
                                                                    dpc_server_port=dpc_server_port)
 
-                        res = self._validate_ping(network_controller_obj=network_controller_obj,
-                                                  hosts=fs[fs_name][f1])
+                        res = self._test_intra_f1_ping(network_controller_obj=network_controller_obj,
+                                                       hosts=fs[fs_name][f1])
                         fun_test.test_assert(res, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_intra_fs_ping(self, hosts, dpc_info):
+        result = False
+        try:
+            for fs in hosts:
+                for fs_name in fs:
+                    checkpoint = "Test ping from hosts connected to F1_0 of %s to F1_1 hosts of %s" % (fs_name,
+                                                                                                       fs_name)
+                    f1_0_hosts = fs[0]
+                    f1_1_hosts = fs[1]
+                    f1_0_dpc_obj = NetworkController(dpc_server_ip=dpc_info[fs_name]['F1_0_dpc'][0],
+                                                     dpc_server_port=dpc_info[fs_name]['F1_0_dpc'][1])
+                    f1_1_dpc_obj = NetworkController(dpc_server_ip=dpc_info[fs_name]['F1_1_dpc'][0],
+                                                     dpc_server_port=dpc_info[fs_name]['F1_1_dpc'][1])
+                    res = self._test_intra_fs_ping(f1_0_hosts=f1_0_hosts, f1_1_hosts=f1_1_hosts,
+                                                   f1_0_dpc_obj=f1_0_dpc_obj, f1_1_dpc_obj=f1_1_dpc_obj)
+                    fun_test.test_assert(res, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_inter_rack_ping(self, fs_per_rack):
+        result = False
+        try:
+            for rack in fs_per_rack:
+                source_fs = fs_per_rack[rack]
+                pass
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _test_intra_fs_ping(self, f1_0_hosts, f1_1_hosts, f1_0_dpc_obj, f1_1_dpc_obj):
+        result = False
+        try:
+            for f1_0_host in f1_0_hosts:
+                linux_obj = Linux(host_ip=f1_0_host['name'], ssh_username=f1_0_host['ssh_username'],
+                                  ssh_password=f1_0_host['ssh_password'])
+                for f1_1_host in f1_1_hosts:
+                    hu_interface_ip = f1_1_host['ip']
+                    checkpoint = "Ping from %s to %s" % (f1_0_host['ip'], hu_interface_ip)
+                    res = linux_obj.ping(dst=hu_interface_ip, count=2)
+                    fun_test.simple_assert(res, checkpoint)
+
+                    fcp_stats_before = f1_0_dpc_obj.peek_fcp_global_stats()
+                    vppkts_before = f1_0_dpc_obj.peek_vp_packets()
+
+                    checkpoint = "hping from %s to %s" % (f1_0_host['ip'], hu_interface_ip)
+                    res = linux_obj.hping(dst=hu_interface_ip, count=1000, mode='faster', protocol_mode='icmp',
+                                          timeout=10)
+                    # fun_test.simple_assert(res, checkpoint)
+
+                    checkpoint = "Validate FCB stats"
+                    fcp_stats = f1_0_dpc_obj.peek_fcp_global_stats()
+                    diff_stats = get_diff_stats(old_stats=fcp_stats_before, new_stats=fcp_stats)
+                    fun_test.log("FCP Diff stats: %s" % diff_stats)
+
+                    # TODO: Add assert for FCB stats
+
+                    checkpoint = "Validate vppkts stats"
+                    vp_stats = f1_0_dpc_obj.peek_vp_packets()
+                    diff_stats = get_diff_stats(old_stats=vppkts_before, new_stats=vp_stats)
+                    fun_test.log("VP packets Diff: %s" % diff_stats)
+
+                    # TODO: Add assert for VP packets
+
+                linux_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -736,6 +807,17 @@ class FunControlPlaneBringup:
         except Exception as ex:
             fun_test.critical(str(ex))
         return hosts
+
+    @staticmethod
+    def get_list_of_fs_per_rack(topology_info):
+        fs_per_rack = {}
+        try:
+            for index in range(topology_info['no_of_racks']):
+                fs_per_rack['rack_%d' % index] = topology_info['racks'][index]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return fs_per_rack
+
 
 
 

@@ -1,5 +1,7 @@
 {
   "description": "Topology description for Alibaba ping test",
+  "no_of_racks": 2,
+  "fs_per_rack": 1,
   "racks": [
     {
       "id": 1,
