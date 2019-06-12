@@ -513,15 +513,12 @@ def scripts_by_module(request, module):
 @csrf_exempt
 @api_safe_json_response
 def build_to_date_map(request):
-    all_entries = JenkinsJobIdMap.objects.all()
+    end_date = get_current_time()
+    start_date = end_date - timedelta(days=30)
+    date_range = [start_date, end_date]
+    filtered_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range)
     build_info = {}
-    for entry in all_entries:
-        sdk_branch = entry.fun_sdk_branch
-        m = re.search(r'refs/tags/bld_(\d+)', sdk_branch)
-        key = 0
-        if m:
-            key = int(m.group(1))
-        # print "Completion date:" + entry.completion_date
+    for entry in filtered_entries:
         try:
             key = str(entry.build_date)
             key = key.split('+')[0]
