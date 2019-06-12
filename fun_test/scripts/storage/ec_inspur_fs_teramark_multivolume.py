@@ -646,6 +646,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.shared_variables["volume_name"] = self.volume_name
                 fun_test.shared_variables["ec"]["nvme_connect"] = True
 
+                self.nvme_block_device_list.sort()
                 self.fio_filename = ":".join(self.nvme_block_device_list)
                 fun_test.shared_variables["self.fio_filename"] = self.fio_filename
 
@@ -690,27 +691,27 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         start_mpstat = True
 
-        volume_list = self.fio_filename.split(":")
         fio_job_args = ""
-        for index, volume_name in enumerate(volume_list):
+        for index, volume_name in enumerate(self.nvme_block_device_list):
             fio_job_args += " --name=job{} --filename={}".format(index, volume_name)
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = {}
             fio_output[iodepth] = {}
             fio_cmd_args = {}
-            fio_iodepth = iodepth / len(volume_list)
+            fio_iodepth = iodepth / len(self.nvme_block_device_list)
 
-            if "multiple_jobs" in self.fio_cmd_args:
+            if "multiple_jobs" in self.fio_cmd_args and self.fio_cmd_args["multiple_jobs"].count("name") > 0:
                 num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
                 fio_num_jobs = fio_num_jobs / num_jobs
             else:
                 num_jobs = 1
+                fio_num_jobs = len(self.nvme_block_device_list)
 
             fio_result[iodepth] = True
             row_data_dict = {}
             row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_num_jobs)
             size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
-            row_data_dict["size"] = str(size) + "T"
+            row_data_dict["size"] = str(size) + "G"
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
@@ -765,8 +766,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(int(fio_iodepth) * int(fio_num_jobs)))
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus, fio_num_jobs,
+                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus, num_jobs,
                                                                                           fio_iodepth)
+                fio_cmd_args["multiple_jobs"] += fio_job_args
                 fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
                                                              timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
             else:
