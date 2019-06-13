@@ -53,7 +53,7 @@ def get_data_collection_time(tag=None):
             current_time = get_current_time()
             value = {tag: {"data_collection_time": str(current_time)}}
             MetricsRunTime(name="data_collection_time", value=value).save()
-            data_collection_time = current_time
+            data_collection_time = get_data_collection_time(tag=tag)
         return data_collection_time
     else:
         result = get_current_time()
@@ -76,7 +76,7 @@ def _update_run_time(date_time_details, value, tag):
     value[tag]["data_collection_time"] = str(current_time)
     date_time_details.value = value
     date_time_details.save()
-    return current_time
+    return get_data_collection_time(tag=tag)
 
 
 class MetricHelper(object):
