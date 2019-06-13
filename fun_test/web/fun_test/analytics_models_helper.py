@@ -42,17 +42,12 @@ def get_data_collection_time(tag=None):
         try:
             date_time_details = MetricsRunTime.objects.get(name="data_collection_time")
             value = date_time_details.value
-            if tag in value:
-                tag_details = value[tag]
-                if "data_collection_time" in tag_details:
-                    data_collection_time = parser.parse(tag_details["data_collection_time"])
-                    current_time = get_current_time()
-                    if not is_same_day(current_time=current_time, data_collection_time=data_collection_time):
-                        data_collection_time = _update_run_time(date_time_details=date_time_details,
-                                                         value=value, tag=tag)
-                else:
+            if tag in value and value[tag] and "data_collection_time" in value[tag]:
+                data_collection_time = parser.parse(value[tag]["data_collection_time"])
+                current_time = get_current_time()
+                if not is_same_day(current_time=current_time, data_collection_time=data_collection_time):
                     data_collection_time = _update_run_time(date_time_details=date_time_details,
-                                                     value=value, tag=tag)
+                                                        value=value, tag=tag)
             else:
                 data_collection_time = _update_run_time(date_time_details=date_time_details,
                                                  value=value, tag=tag)
