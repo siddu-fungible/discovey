@@ -142,7 +142,7 @@
                 <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: 'Re(' + suiteExecution.fields.suite_path})" >Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
               </ng-container>
               <ng-template #regularSuitePath>
-                <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})" >{{ suiteExecution.fields.suite_path }}</span>
+                <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})" >{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}</span>
               </ng-template>
 
             </td>

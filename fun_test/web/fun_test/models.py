@@ -25,6 +25,22 @@ RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 TAG_LENGTH = 50
 
 
+class SiteConfig(models.Model):
+    version = models.IntegerField(default=101)
+
+    def bump_version(self):
+        self.version += 1
+        self.save()
+
+    @staticmethod
+    def get_version():
+        result = 100
+        try:
+            result = SiteConfig.objects.all()[0].version
+        except:
+            pass
+        return result
+
 class FunModel(models.Model):
     def to_dict(self):
         result = {}

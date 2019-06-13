@@ -12,7 +12,8 @@ app_config = apps.get_app_config(app_label='fun_test')
 
 
 class MetricParser():
-    def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None, platform=FunPlatform.F1):
+    def parse_it(self, logs, metric_id=None, model_name=None, auto_add_to_db=False, date_time=None,
+                 platform=FunPlatform.F1):
         result = {}
         if model_name:
             result = self.regex_by_model(model_name=model_name, logs=logs, date_time=date_time, platform=platform)
@@ -70,6 +71,22 @@ class MetricParser():
             return self.bcopy_flood(logs=logs, date_time=date_time, platform=platform)
         elif "VoltestLsv" in model_name:
             return self.voltest_lsv(logs=logs, date_time=date_time, platform=platform)
+        elif "ChannelParallPerformance" in model_name:
+            return self.channel_parall(logs=logs, date_time=date_time, platform=platform)
+        elif "TeraMarkPkeRsaPerformance" in model_name:
+            return self.pke_rsa(logs=logs, date_time=date_time, platform=platform)
+        elif "TeraMarkPkeRsa4kPerformance" in model_name:
+            return self.pke_rsa_4k(logs=logs, date_time=date_time, platform=platform)
+        elif "TeraMarkPkeEcdh256Performance" in model_name:
+            return self.pke_ecdh_256(logs=logs, date_time=date_time, platform=platform)
+        elif "TeraMarkPkeEcdh25519Performance" in model_name:
+            return self.pke_ecdh_25519(logs=logs, date_time=date_time, platform=platform)
+        elif "PkeX25519TlsSoakPerformance" in model_name:
+            return self.pke_x25519_tls(logs=logs, date_time=date_time, platform=platform)
+        elif "PkeP256TlsSoakPerformance" in model_name:
+            return self.pke_p256_tls(logs=logs, date_time=date_time, platform=platform)
+        elif "SoakDmaMem" in model_name:
+            return self.soak_dma_memcpy_memset(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         else:
             return {}
 
@@ -383,7 +400,9 @@ class MetricParser():
     def memcpy_threshold(self, logs, date_time):
         self.initialize()
         for line in logs:
-            m = re.search(r'DMA\s+memcpy\s+threshold\s+VP\s+vs.\s+DMA:\s+(?P<threshold_json>{.*})\s+\[(?P<metric_name>.*)\]', line)
+            m = re.search(
+                r'DMA\s+memcpy\s+threshold\s+VP\s+vs.\s+DMA:\s+(?P<threshold_json>{.*})\s+\[(?P<metric_name>.*)\]',
+                line)
             if m:
                 self.match_found = True
                 threshold_json = json.loads(m.group("threshold_json"))
@@ -407,7 +426,9 @@ class MetricParser():
     def wu_dispatch(self, logs, date_time, platform):
         self.initialize()
         for line in logs:
-            m = re.search(r'Average\s+dispatch\s+WU\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]', line)
+            m = re.search(
+                r'Average\s+dispatch\s+WU\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
+                line)
             if m:
                 self.match_found = True
                 average_json = json.loads(m.group("average_json"))
@@ -800,6 +821,163 @@ class MetricParser():
                     self.status = RESULTS["PASSED"]
         d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
         self.result["data"].append(d)
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def channel_parall(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'Channel\s+parall\s+speed\s+test\s+(?P<value_json>{.*})\s+\[(?P<metric_name>\S+)\]',
+                line)
+            if m:
+                self.match_found = True
+                value_json = json.loads(m.group("value_json"))
+                key = "output_channel_parall_speed"
+                self.set_value_metrics(value_json=value_json, key=key, default=-1)
+                input_metric_name = m.group("metric_name")
+                self.metrics["input_metric_name"] = input_metric_name
+                self.metrics["input_platform"] = platform
+                self.metrics["input_busy_loop_usecs"] = value_json["busy_loop_usecs"]
+                self.metrics["input_data_pool_count"] = value_json["data_pool_count"]
+                self.metrics["input_number_channels"] = value_json["N"]
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def set_pke_metrics(self, m, input_app, platform, date_time):
+        self.match_found = True
+        value_json = json.loads(m.group("value_json"))
+        output_ops_per_sec = float(value_json["value"])
+        unit = value_json["unit"]
+        input_metric_name = m.group("metric_name").replace(" ", "_")
+        self.metrics["input_app"] = input_app
+        self.metrics["input_metric_name"] = input_metric_name
+        self.metrics["output_ops_per_sec"] = output_ops_per_sec
+        self.metrics["output_ops_per_sec_unit"] = unit
+        self.metrics["input_platform"] = platform
+        self.status = RESULTS["PASSED"]
+        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+        self.result["data"].append(d)
+
+    def pke_rsa(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>RSA\s+CRT\s+2048\s+decryptions)\]',
+                line)
+            if m:
+                self.set_pke_metrics(m=m, input_app="pke_rsa_crt_dec_no_pad_soak", platform=platform,
+                                     date_time=date_time)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def pke_rsa_4k(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>RSA\s+CRT\s+4096\s+decryptions)\]',
+                line)
+            if m:
+                self.set_pke_metrics(m=m, input_app="pke_rsa_crt_dec_no_pad_4096_soak", platform=platform,
+                                     date_time=date_time)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def pke_ecdh_256(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>ECDH\s+P256)\]',
+                line)
+            if m:
+                self.set_pke_metrics(m=m, input_app="pke_ecdh_soak_256", platform=platform,
+                                     date_time=date_time)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def pke_ecdh_25519(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>ECDH\s+25519)\]',
+                line)
+            if m:
+                self.set_pke_metrics(m=m, input_app="pke_ecdh_soak_25519", platform=platform,
+                                     date_time=date_time)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def pke_x25519_tls(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\)\]',
+                line)
+            if m:
+                self.set_pke_metrics(m=m, input_app="pke_x25519_2k_tls_soak", platform=platform,
+                                     date_time=date_time)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def pke_p256_tls(self, logs, date_time, platform):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\)\]',
+                line)
+            if m:
+                self.set_pke_metrics(m=m, input_app="pke_p256_2k_tls_soak", platform=platform,
+                                     date_time=date_time)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def soak_dma_memcpy_memset(self, logs, date_time, platform, model_name):
+        self.initialize()
+        for line in logs:
+            m = re.search(
+                r'Bandwidth\s+for\s+DMA\s+(?P<operation>\S+)\s+for\s+size\s+(?P<size>\S+):\s+(?P<bandwidth_json>.*)\s+\[(?P<metric_name>\S+)\]',
+                line)
+            if m:
+                self.match_found = True
+                bandwidth_json = json.loads(m.group("bandwidth_json"))
+                output_bandwidth = float(bandwidth_json["value"])
+                unit = bandwidth_json["unit"]
+                if model_name == "SoakDmaMemsetPerformance":
+                    if "non_coh" in bandwidth_json:
+                        input_non_coherent = bandwidth_json["non_coh"]
+                        self.metrics["input_coherent"] = False if input_non_coherent == 1 else True
+                    elif "bm" in bandwidth_json:
+                        input_bm = bandwidth_json["bm"]
+                        self.metrics["input_buffer_memory"] = True if input_bm == 1 else False
+                self.metrics["input_size"] = m.group("size")
+                self.metrics["input_operation"] = m.group("operation")
+                self.metrics["output_bandwidth"] = output_bandwidth
+                self.metrics["output_bandwidth_unit"] = unit
+                self.metrics["input_log_size"] = bandwidth_json["log_size"]
+                self.metrics["input_metric_name"] = m.group("metric_name")
+                self.metrics["input_platform"] = platform
+                self.status = RESULTS["PASSED"]
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]
         return self.result

@@ -16,7 +16,7 @@ class FunControlPlaneBringup:
 
     def __init__(self, fs_name, boot_image_f1_0="funos-f1.stripped_retimer_test_vdd_delay.gz",
                  boot_image_f1_1="funos-f1.stripped_retimer_test_vdd_delay.gz", boot_args_f1_0=None,
-                 boot_args_f1_1=None):
+                 boot_args_f1_1=None, hostprefix=None):
         self.fs_name = fs_name
         self.boot_image_f1_0 = boot_image_f1_0
         self.boot_image_f1_1 = boot_image_f1_1
@@ -39,6 +39,7 @@ class FunControlPlaneBringup:
         self.vlan1_ips = {}
         self.vlan_ips_got = False
         self.docker_names_got = False
+        self.hostprefix = hostprefix
 
     def boot_both_f1(self, power_cycle_come=True, reboot_come=True, gatewayip=None, funcp_cleanup=False):
         fs_0 = Fs.get(fs_spec=self.fs_spec, tftp_image_path=self.boot_image_f1_0,
@@ -197,34 +198,29 @@ class FunControlPlaneBringup:
         fun_test.log("=========================")
         fun_test.log("Fun Control Plane Bringup")
         fun_test.log("=========================")
+        setup_docker_command = "./integration_test/emulation/test_system.py --setup --docker"
+        if self.hostprefix:
+            setup_docker_command += " --hostprefix %s" % self.hostprefix
         if ep:
-            setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker "
-                                                         "--ep", timeout=1200)
-            linux_obj_come.command("docker exec F1-0 sudo ip link add link irb name vlan1 type vlan id 1")
-            linux_obj_come.command("docker exec F1-0 sudo ip link set vlan1 up")
-            linux_obj_come.command("docker exec F1-1 sudo ip link add link irb name vlan1 type vlan id 1")
-            linux_obj_come.command("docker exec F1-1 sudo ip link set vlan1 up")
-
+            setup_docker_output = linux_obj_come.command(command=(setup_docker_command + " --ep"), timeout=1200)
         else:
-            setup_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --setup --docker",
-                                                         timeout=1200)
+            setup_docker_output = linux_obj_come.command(command=setup_docker_command, timeout=1200)
         sections = ['Bring up Control Plane', 'Device 1dad:', 'move fpg interface to f0 docker',
                     'libfunq bind  End', 'move fpg interface to f1 docker', 'Bring up Control Plane dockers']
         for section in sections:
             fun_test.test_assert(section in setup_docker_output, "{} seen".format(section))
         linux_obj_come.disconnect()
-
-        f1_0_container = FunCpDockerContainer(name="F1-0", host_ip=self.fs_spec['come']['mgmt_ip'],
+        self._get_docker_names()
+        if ep:
+            for docker in self.docker_names:
+                linux_obj_come.command("docker exec %s sudo ip link add link irb name vlan1 type vlan id 1" % docker)
+                linux_obj_come.command("docker exec %s sudo ip link set vlan1 up" % docker)
+        for docker in self.docker_names:
+            container = FunCpDockerContainer(name=docker, host_ip=self.fs_spec['come']['mgmt_ip'],
                                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        f1_0_op = f1_0_container.command("ifconfig vlan1")
-        fun_test.test_assert(expression="vlan1" in f1_0_op, message="Make sure vlan1 is present on F1-0")
-
-        f1_1_container = FunCpDockerContainer(name="F1-1", host_ip=self.fs_spec['come']['mgmt_ip'],
-                                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-        f1_1_op = f1_1_container.command("ifconfig vlan1")
-        fun_test.test_assert(expression="vlan1" in f1_1_op, message="Make sure vlan1 is present on F1-1")
+            op = container.command("ifconfig vlan1")
+            fun_test.test_assert(expression="vlan1" in op, message="Make sure vlan1 is present on %s" % docker)
         return True
 
     def funcp_abstract_config(self, abstract_config_f1_0, abstract_config_f1_1, host_ip=None, workspace="/scratch",
@@ -251,11 +247,13 @@ class FunControlPlaneBringup:
             self.abstract_configs_f1_1 = fun_test.parse_file_to_json(abstract_config_f1_1)
 
         for f1 in self.mpg_ips:
-            file_name = f1 + "_abstract.json"
             file_contents = None
-            if f1 == "F1-0":
+            file_name = str(f1).strip() + "_abstract.json"
+            if str(f1.split("-")[-1]) == "0":
+                self.abstract_configs_f1_0 = fun_test.parse_file_to_json(abstract_config_f1_0)
                 file_contents = self.abstract_configs_f1_0
-            if f1 == "F1-1":
+            if str(f1.split("-")[-1]) == "1":
+                self.abstract_configs_f1_1 = fun_test.parse_file_to_json(abstract_config_f1_1)
                 file_contents = self.abstract_configs_f1_1
             linux_obj.command("cd " + workspace + "/FunControlPlane/scripts/docker/combined_cfg/abstract_cfg")
             linux_obj.command("rm %s" % file_name)
@@ -269,6 +267,7 @@ class FunControlPlaneBringup:
                                                  " --json ./abstract_cfg/" + file_name)
             fun_test.test_assert(expression="returned non-zero exit status" not in execute_abstract,
                                  message="Execute abstract config on %s" % f1)
+
         linux_obj.disconnect()
 
     def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None):
@@ -448,8 +447,8 @@ class FunControlPlaneBringup:
                                ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
         docker_output = linux_obj_come.command(command="docker ps -a")
         print "\n" + docker_output
-
-        self.docker_names = linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n")
+        self.docker_names = map(lambda s: s.strip(),
+                                linux_obj_come.command(command="docker ps --format '{{.Names}}'").split("\r\n"))
         if verify_2_dockers:
             fun_test.test_assert_expected(expected=2, actual=len(self.docker_names),
                                           message="Make sure 2 dockers are up")

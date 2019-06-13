@@ -251,6 +251,25 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
+          "4": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "cab02-qa-06"
+            }
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
           "8": {
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
@@ -413,6 +432,25 @@
           "9": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 9
+          },
+          "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "cab02-qa-08"
+            }
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         }
       }

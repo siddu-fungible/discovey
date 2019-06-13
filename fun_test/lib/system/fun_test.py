@@ -1297,6 +1297,7 @@ class FunTestScript(object):
                                                                  log_prefix=fun_test.log_prefix,
                                                                  tags=suite_execution_tags,
                                                                  inputs=fun_test.get_job_inputs())
+
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
                 new_order = []
@@ -1423,6 +1424,7 @@ class FunTestScript(object):
                             models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
                                                                      suite_execution_id=fun_test.suite_execution_id,
                                                                      result=fun_test.IN_PROGRESS)
+                            fun_test.current_test_case_execution_id = test_case.execution_id
                         test_case.setup()
                         test_case.run()
 

@@ -21,7 +21,7 @@ class ScriptSetup(FunTestScript):
         """)
 
     def setup(self):
-        global dut_config, network_controller_obj, spirent_config, TIMESTAMP, publish_results, branch_name
+        global dut_config, network_controller_obj, spirent_config, TIMESTAMP, publish_results, branch_name, use_new_tcc
 
         nu_config_obj = NuConfigManager()
         f1_index = nu_config_obj.get_f1_index()
@@ -50,9 +50,13 @@ class ScriptSetup(FunTestScript):
         publish_results = False
         branch_name = None
         publish_results = True
+        use_new_tcc = False
         if inputs:
             if 'publish_results' in inputs:
-                publish_results = inputs['publish_results']
+                publish_results = bool(inputs['publish_results'])
+
+            if 'use_new_tcc' in inputs:
+                use_new_tcc = bool(inputs['use_new_tcc'])
 
         if 'funos_branch' in fun_test.shared_variables:
             branch_name = fun_test.shared_variables['funos_branch']
@@ -90,7 +94,8 @@ class TestFirewallPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
     flow_direction = FLOW_TYPE_NU_LE_VP_NU_FW
-    tcc_file_name = "nu_le_benchmark_ddr_throughput.tcc"  # Uni-directional
+    tcc_file_name = "nu_le_benchmark_ddr_throughput.tcc"
+    new_tcc_file_name = "new_nu_le_benchmark_ddr_throughput.tcc"
     spray = True
     half_load_latency = False
     num_flows = 128000000
@@ -108,6 +113,10 @@ class TestFirewallPerformance(FunTestCase):
         dut_type = fun_test.shared_variables['dut_type']
         if dut_type == NuConfigManager.DUT_TYPE_F1:
             config_type = "f1_configs"
+
+        if use_new_tcc:
+            if self.new_tcc_file_name:
+                self.tcc_file_name = self.new_tcc_file_name
 
         tcc_config_path = fun_test.get_helper_dir_path() + '/%s/%s/%s' % (
             config_type, dir_name, self.tcc_file_name)
@@ -247,7 +256,8 @@ class TestFirewallPerformance(FunTestCase):
 
 class TestFirewallLatency(TestFirewallPerformance):
     tc_id = 2
-    tcc_file_name = "nu_le_benchmark_ddr_latency.tcc"  # Uni-directional
+    tcc_file_name = "nu_le_benchmark_ddr_latency.tcc"
+    new_tcc_file_name = None
     spray = True
     half_load_latency = True
     num_flows = 128000000
@@ -269,9 +279,11 @@ class TestFirewallLatency(TestFirewallPerformance):
                               5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
                               """)
 
+
 class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
     tc_id = 3
     tcc_file_name = "nu_le_benchmark_ddr_single_flow_full_load.tcc"  # Uni-directional
+    new_tcc_file_name = None
     spray = False
     half_load_latency = False
     num_flows = 1
@@ -293,9 +305,11 @@ class TestFirewallSingleFlowFullLoad(TestFirewallPerformance):
                               5. Fetch Results and validate that test result for each frame size [64, 1500, IMIX]
                               """)
 
+
 class TestFirewallSingleFlowHalfLoad(TestFirewallPerformance):
     tc_id = 4
     tcc_file_name = "nu_le_benchmark_ddr_single_flow_half_load.tcc"  # Uni-directional
+    new_tcc_file_name = None
     spray = False
     half_load_latency = True
     num_flows = 1
