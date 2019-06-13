@@ -772,6 +772,7 @@ class FunControlPlaneBringup:
     def _test_intra_fs_ping(self, f1_0_hosts, f1_1_hosts, f1_0_dpc_obj, f1_1_dpc_obj):
         result = False
         try:
+            count = 10000
             for f1_0_host in f1_0_hosts:
                 linux_obj = Linux(host_ip=f1_0_host['name'], ssh_username=f1_0_host['ssh_username'],
                                   ssh_password=f1_0_host['ssh_password'])
@@ -782,27 +783,54 @@ class FunControlPlaneBringup:
                     fun_test.simple_assert(res, checkpoint)
 
                     fcp_stats_before = f1_0_dpc_obj.peek_fcp_global_stats()
-                    vppkts_before = f1_0_dpc_obj.peek_vp_packets()
+                    vppkts_before = get_vp_pkts_stats_values(network_controller_obj=f1_0_dpc_obj)
+                    hu_interface = self.get_hu_interface_on_host(linux_obj=linux_obj)
+                    ifconfig_stats_before = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
 
                     checkpoint = "hping from %s to %s" % (f1_0_host['ip'], hu_interface_ip)
-                    res = linux_obj.hping(dst=hu_interface_ip, count=1000, mode='faster', protocol_mode='icmp',
+                    res = linux_obj.hping(dst=hu_interface_ip, count=count, mode='faster', protocol_mode='icmp',
                                           timeout=10)
                     # fun_test.simple_assert(res, checkpoint)
+                    ifconfig_stats = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
+                    diff_stats = get_diff_stats(old_stats=ifconfig_stats_before, new_stats=ifconfig_stats)
+                    fun_test.log("Diff stats for Ifconfig %s interface: %s" % (hu_interface, diff_stats))
+                    fun_test.simple_assert(
+                        expression=(diff_stats['rx_packets'] >= count and diff_stats['tx_packets'] >= count),
+                        message=checkpoint)
 
                     checkpoint = "Validate FCB stats"
                     fcp_stats = f1_0_dpc_obj.peek_fcp_global_stats()
                     diff_stats = get_diff_stats(old_stats=fcp_stats_before, new_stats=fcp_stats)
                     fun_test.log("FCP Diff stats: %s" % diff_stats)
-
-                    # TODO: Add assert for FCB stats
+                    '''
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_TDP0_DATA]) + int(diff_stats[FCB_TDP0_GNT]) +
+                                    int(diff_stats[FCB_TDP0_REQ])) >= count, message="Ensure TDP0 packets")
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_TDP1_DATA]) + int(diff_stats[FCB_TDP1_GNT]) +
+                                    int(diff_stats[FCB_TDP1_REQ])) >= count, message="Ensure TDP1 packets")
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_TDP2_DATA]) + int(diff_stats[FCB_TDP2_GNT]) +
+                                    int(diff_stats[FCB_TDP2_REQ])) >= count, message="Ensure TDP2 packets")
+                    fun_test.add_checkpoint(checkpoint)
+                    '''
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_DST_FCP_PKT_RCVD]) >= count and
+                                    int(diff_stats[FCB_DST_REQ_MSG_RCVD]) >= count and
+                                    int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count), message=checkpoint
+                    )
 
                     checkpoint = "Validate vppkts stats"
-                    vp_stats = f1_0_dpc_obj.peek_vp_packets()
+                    vp_stats = get_vp_pkts_stats_values(network_controller_obj=f1_0_dpc_obj)
                     diff_stats = get_diff_stats(old_stats=vppkts_before, new_stats=vp_stats)
                     fun_test.log("VP packets Diff: %s" % diff_stats)
-
-                    # TODO: Add assert for VP packets
-
+                    fun_test.test_assert_expected(expected=diff_stats[VP_FAE_REQUESTS_SENT],
+                                                  actual=diff_stats[VP_FAE_RESPONSES_RECEIVED],
+                                                  message="Ensure FAE req equal to sent ", ignore_on_success=True)
+                    fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
+                                                                          diff_stats[VP_PACKETS_OUT_NU_ETP]))
+                    fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                                                       diff_stats[VP_PACKETS_OUT_NU_ETP] >= count), message=checkpoint)
                 linux_obj.disconnect()
             result = True
         except Exception as ex:

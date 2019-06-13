@@ -72,6 +72,15 @@ SFG_SAMPLE_COPY = "SAMPLE_COPY"
 FCB_TDP0_NONFCP = "tdp0_nonfcp"
 FCB_TDP1_NONFCP = "tdp1_nonfcp"
 FCB_TDP2_NONFCP = "tdp2_nonfcp"
+FCB_TDP0_DATA = "tdp0_data"
+FCB_TDP1_DATA = "tdp1_data"
+FCB_TDP2_DATA = "tdp2_data"
+FCB_TDP0_GNT = "tdp0_gnt"
+FCB_TDP1_GNT = "tdp1_gnt"
+FCB_TDP2_GNT = "tdp2_gnt"
+FCB_TDP0_REQ = "tdp0_req"
+FCB_TDP1_REQ = "tdp1_req"
+FCB_TDP2_REQ = "tdp2_req"
 FCB_DST_FCP_PKT_RCVD = "FCB_DST_FCP_PKT_RCVD"
 FCB_DST_REQ_MSG_RCVD = "FCB_DST_REQ_MSG_RCVD"
 FCB_SRC_GNT_MSG_RCVD = "FCB_SRC_GNT_MSG_RCVD"
@@ -1043,16 +1052,3 @@ def populate_resource_bam_output_file(network_controller_obj, filename, display_
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
-
-
-def validate_fcb_stats(diff_stats, expected_pkt_count, fields):
-    result = False
-    try:
-        for key in diff_stats:
-            if key in fields:
-                fun_test.simple_assert(int(diff_stats[key]) >= expected_pkt_count,
-                                       "%s count Actual: %s Expected: %s" % (key, diff_stats[key], expected_pkt_count))
-        result = True
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return result
