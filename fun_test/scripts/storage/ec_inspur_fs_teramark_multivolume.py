@@ -423,6 +423,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
+                self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
@@ -448,7 +449,6 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
