@@ -762,9 +762,161 @@ class FunControlPlaneBringup:
     def validate_inter_rack_ping(self, fs_per_rack):
         result = False
         try:
-            for rack in fs_per_rack:
-                source_fs = fs_per_rack[rack]
-                pass
+            for fs in fs_per_rack:
+                fs_name = fs['name']
+                for _fs in fs_per_rack:
+                    if fs['name'] == _fs['name']:
+                        continue
+                    checkpoint = "Test ping from source %s of one rack to dest %s of other rack" % (fs_name, _fs['name'])
+                    result = self._test_inter_rack_ping(remote_fs=_fs, local_fs=fs)
+                    fun_test.test_assert(result, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _fetch_spine_links(self, cx_links):
+        spine_links = []
+        for link in cx_links:
+            spine_links.extend([int(re.search(r'(\d+)', k).group(1)) for k in link['interfaces'].keys()])
+        return spine_links
+
+    def _fetch_fabric_links(self, fab_links):
+        fabric_links = []
+        for key in fab_links:
+            fabric_links.append(int(re.search(r'(\d+)', key).group(1)))
+        return fabric_links
+
+    def _test_inter_rack_ping(self, remote_fs, local_fs):
+        result = False
+        try:
+            count = 10000
+            for f1 in local_fs['F1s']:
+                spine_links = self._fetch_spine_links(cx_links=f1['CxLinks'])
+                fab_links = self._fetch_fabric_links(fab_links=f1['FabLinks'])
+                source_dpc_obj = NetworkController(dpc_server_ip=f1['F1_%s_dpc' % f1['id']][0],
+                                                   dpc_server_port=f1['F1_%s_dpc' % f1['id']][1])
+                f1_index = 0
+                for host in f1['Hosts']:
+                    linux_obj = Linux(host_ip=host['name'], ssh_username=host['ssh_username'],
+                                      ssh_password=host['ssh_password'])
+                    for remote_f1 in remote_fs['F1s']:
+                        remote_spine_links = self._fetch_spine_links(cx_links=remote_f1['CxLinks'])
+                        remote_fabric_links = self._fetch_fabric_links(fab_links=remote_f1['FabLinks'])
+                        remote_dpc_obj = NetworkController(dpc_server_ip=remote_f1['F1_%s_dpc' % remote_f1['id']][0],
+                                                           dpc_server_port=remote_f1['F1_%s_dpc' % remote_f1['id']][1])
+                        for remote_host in remote_f1['Hosts']:
+                            hu_interface_ip = remote_host['ip']
+                            checkpoint = "Ping from %s to %s" % (host['ip'], hu_interface_ip)
+                            res = linux_obj.ping(dst=hu_interface_ip, count=2)
+                            fun_test.simple_assert(res, checkpoint)
+
+                            src_fcp_stats_before = source_dpc_obj.peek_fcp_global_stats()
+                            remote_fcp_stats_before = remote_dpc_obj.peek_fcp_global_stats()
+                            remote_vppkts_before = get_vp_pkts_stats_values(network_controller_obj=remote_dpc_obj)
+                            src_vppkts_before = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
+                            hu_interface = self.get_hu_interface_on_host(linux_obj=linux_obj)
+                            ifconfig_stats_before = self.get_rx_tx_ifconfig(interface_name=hu_interface,
+                                                                            linux_obj=linux_obj)
+                            checkpoint = "Clear stats on Source Spine and Fabric links"
+                            for fpg in spine_links + fab_links:
+                                source_dpc_obj.clear_port_stats(port_num=fpg, shape=0)
+
+                            checkpoint = "Clear stats on Dest Spine and Fabric links"
+                            for fpg in remote_spine_links + remote_fabric_links:
+                                remote_dpc_obj.clear_port_stats(port_num=fpg, shape=0)
+
+                            checkpoint = "hping from %s to %s" % (host['ip'], hu_interface_ip)
+                            res = linux_obj.hping(dst=hu_interface_ip, count=count, mode='faster', protocol_mode='icmp',
+                                                  timeout=10)
+                            # fun_test.simple_assert(res, checkpoint)
+                            ifconfig_stats = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
+                            diff_stats = get_diff_stats(old_stats=ifconfig_stats_before, new_stats=ifconfig_stats)
+                            fun_test.log("Diff stats for Ifconfig %s interface: %s" % (hu_interface, diff_stats))
+                            fun_test.simple_assert(
+                                expression=(diff_stats['rx_packets'] >= count and diff_stats['tx_packets'] >= count),
+                                message=checkpoint)
+
+                            checkpoint = "Validate FCB stats on source F1"
+                            src_fcp_stats = source_dpc_obj.peek_fcp_global_stats()
+                            diff_stats = get_diff_stats(old_stats=src_fcp_stats_before, new_stats=src_fcp_stats)
+                            fun_test.log("Source F1 FCP Diff stats: %s" % diff_stats)
+
+                            fun_test.simple_assert(
+                                expression=(int(diff_stats[FCB_DST_FCP_PKT_RCVD]) >= count and
+                                            int(diff_stats[FCB_DST_REQ_MSG_RCVD]) >= count and
+                                            int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count), message=checkpoint
+                            )
+
+                            checkpoint = "Validate Source F1 vppkts stats"
+                            src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
+                            diff_stats = get_diff_stats(old_stats=src_vppkts_before, new_stats=src_vp_stats)
+                            fun_test.log("Source F1 VP packets Diff: %s" % diff_stats)
+                            fun_test.test_assert_expected(expected=diff_stats[VP_FAE_REQUESTS_SENT],
+                                                          actual=diff_stats[VP_FAE_RESPONSES_RECEIVED],
+                                                          message="Ensure FAE req equal to sent ",
+                                                          ignore_on_success=True)
+                            fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
+                                                                                  diff_stats[VP_PACKETS_OUT_NU_ETP]))
+                            fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                                                               diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
+                                                   message=checkpoint)
+
+                            checkpoint = "Validate Source FPG spine links Tx stats."
+                            for spine in spine_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=spine),
+                                    stat_type=FRAMES_TRANSMITTED_OK)
+                                fun_test.simple_assert(stats >= count, checkpoint)
+
+                            checkpoint = "Validate Source FPG fabric links Rx stats."
+                            for fab in fab_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=fab),
+                                    stat_type=FRAMES_RECEIVED_OK, tx=False)
+                                fun_test.simple_assert(stats >= (count * len(spine_links)), checkpoint)
+
+                            checkpoint = "Validate Remote FPG spine links Rx stats."
+                            for spine in remote_spine_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=spine),
+                                    stat_type=FRAMES_RECEIVED_OK, tx=False)
+                                fun_test.simple_assert(stats >= count, checkpoint)
+
+                            checkpoint = "Validate Remote FPG fabric links Tx stats."
+                            for fab in remote_fabric_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=fab),
+                                    stat_type=FRAMES_TRANSMITTED_OK)
+                                fun_test.simple_assert(stats >= (count * len(spine_links)), checkpoint)
+
+                            checkpoint = "Validate FCB stats on remote F1"
+                            fcp_stats = remote_dpc_obj.peek_fcp_global_stats()
+                            diff_stats = get_diff_stats(old_stats=remote_fcp_stats_before, new_stats=fcp_stats)
+                            fun_test.log("Source F1 FCP Diff stats: %s" % diff_stats)
+
+                            fun_test.simple_assert(
+                                expression=(int(diff_stats[FCB_DST_FCP_PKT_RCVD]) >= count and
+                                            int(diff_stats[FCB_DST_REQ_MSG_RCVD]) >= count and
+                                            int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count), message=checkpoint
+                            )
+
+                            checkpoint = "Validate Source F1 vppkts stats"
+                            src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
+                            diff_stats = get_diff_stats(old_stats=remote_vppkts_before, new_stats=src_vp_stats)
+                            fun_test.log("Source F1 VP packets Diff: %s" % diff_stats)
+                            fun_test.test_assert_expected(expected=diff_stats[VP_FAE_REQUESTS_SENT],
+                                                          actual=diff_stats[VP_FAE_RESPONSES_RECEIVED],
+                                                          message="Ensure FAE req equal to sent ",
+                                                          ignore_on_success=True)
+                            fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
+                                                                                  diff_stats[VP_PACKETS_OUT_NU_ETP]))
+                            fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                                                               diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
+                                                   message=checkpoint)
+
+                    linux_obj.disconnect()
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -866,10 +1018,10 @@ class FunControlPlaneBringup:
 
     @staticmethod
     def get_list_of_fs_per_rack(topology_info):
-        fs_per_rack = {}
+        fs_per_rack = []
         try:
             for index in range(topology_info['no_of_racks']):
-                fs_per_rack['rack_%d' % index] = topology_info['racks'][index]
+                fs_per_rack.append(topology_info['racks'][index])
         except Exception as ex:
             fun_test.critical(str(ex))
         return fs_per_rack
