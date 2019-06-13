@@ -249,31 +249,6 @@ export class AdminDagComponent implements OnInit {
     });
   }
 
-  updateUpDownSincePrevious(upgrade: boolean): void {
-    let statusNode = null;
-    let statusFlatNode = null;
-    let node = new Node();
-    if (upgrade) {
-      node.chartName = "Up Since Previous";
-      node.numLeaves = Object.keys(this.upgradeFlatNode).length;
-      statusFlatNode = this.upgradeFlatNode;
-    } else {
-      node.chartName = "Down Since Previous";
-      node.numLeaves = Object.keys(this.degradeFlatNode).length;
-      statusFlatNode = this.degradeFlatNode;
-    }
-    statusNode = this.getNewFlatNode(node, 0);
-    statusNode.hide = false;
-    statusNode.special = true;
-    this.flatNodes.push(statusNode);
-    for (let child in statusFlatNode) {
-      let statusChild = statusFlatNode[child];
-      statusChild.indent = 1;
-      statusNode.addChild(statusChild);
-      this.flatNodes.push(statusChild);
-    }
-  }
-
   getNodeFromEntry(metricId: number, dagEntry: any): Node {
     let node = new Node();
     node.metricId = metricId;
@@ -663,17 +638,6 @@ export class AdminDagComponent implements OnInit {
     })
   };
 
-  setValues(pageNumber): void {
-  }
-
-  getLastStatusUpdateTime() {
-    this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe((data) => {
-      this.lastStatusUpdateTime = data;
-    }, error => {
-
-    });
-  }
-
   populateNodeInfoCache(data) {
     if (!(data.metric_id in this.cachedNodeInfo)) {
       this.cachedNodeInfo[data.metric_id] = data;
@@ -697,11 +661,6 @@ export class AdminDagComponent implements OnInit {
     }
 
     return s;
-  };
-
-  editingWeightClick = (info) => {
-    info.weightEditing = true;
-    info.weightBeingEdited = info.weight;
   };
 
 
