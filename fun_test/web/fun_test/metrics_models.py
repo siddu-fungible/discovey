@@ -158,7 +158,6 @@ class MetricChart(models.Model):
     last_build_date = models.DateTimeField(verbose_name="last_build_date", default=datetime.now)
     data_sets = models.TextField(default="[]")
     chart_name = models.TextField()
-    internal_chart_name = models.TextField(default="UNKNOWN", unique=True)
     metric_model_name = models.TextField(default="Performance1")
     description = models.TextField(default="TBD")
     metric_id = models.IntegerField(default=10)
@@ -196,7 +195,7 @@ class MetricChart(models.Model):
     platform = models.TextField(default=FunPlatform.F1)
 
     def __str__(self):
-        return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
+        return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
 
     def get_children(self):
         return json.loads(self.children)

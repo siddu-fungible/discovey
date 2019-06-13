@@ -119,7 +119,6 @@ def chart_info(request):
                   "children": json.loads(chart.children),
                   "metric_id": chart.metric_id,
                   "chart_name": chart.chart_name,
-                  "internal_chart_name": chart.internal_chart_name,
                   "metric_model_name": chart.metric_model_name,
                   "y1_axis_title": chart.y1_axis_title,
                   "y2_axis_title": chart.y2_axis_title,
@@ -524,7 +523,7 @@ def update_chart(request):
     request_json = json.loads(request.body)
     model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
-    internal_chart_name = request_json["internal_chart_name"]
+    metric_id = request_json["metric_id"]
 
     leaf = None
     data_sets = None
@@ -546,7 +545,7 @@ def update_chart(request):
         base_line_date = request_json["base_line_date"]
         base_line_date = get_time_from_timestamp(base_line_date)
     try:
-        c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
+        c = MetricChart.objects.get(metric_model_name=model_name, metric_id=metric_id)
         if "set_expected" in request_json:
             expected_operation = request_json["set_expected"]
             if expected_operation:
@@ -579,11 +578,16 @@ def update_chart(request):
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,
                         chart_name=chart_name,
-                        internal_chart_name=internal_chart_name,
                         data_sets=json.dumps(data_sets),
                         metric_id=LastMetricId.get_next_id())
         if leaf:
             c.leaf = leaf
+        if owner_info:
+            c.owner_info = owner_info
+        if source:
+            c.source = source
+        if base_line_date:
+            c.base_line_date = base_line_date
         c.save()
         invalidate_goodness_cache()
     return "Ok"
@@ -646,7 +650,6 @@ def models_by_module(request):
         result[model] = {"charts": model_charts}
         for chart in charts:
             model_charts.append({"chart_name": chart.chart_name,
-                                 "internal_chart_name": chart.internal_chart_name,
                                  "metric_id": chart.metric_id,
                                  "metric_model_name": chart.metric_model_name})
     return result
@@ -677,7 +680,6 @@ def metric_by_id(request):
     result = {}
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
-    result["internal_chart_name"] = chart.internal_chart_name
     result["platform"] = chart.platform
     return result
 

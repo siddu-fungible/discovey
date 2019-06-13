@@ -22,7 +22,6 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
-import { Demo1Component } from './demo1/demo1.component';
 import { CreateChartComponent } from './performance/create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
 import { ScrollToDirective } from './scroll-to.directive';
@@ -65,6 +64,7 @@ import { SmartButtonComponent } from './ui-elements/smart-button/smart-button.co
 import { AdminComponent } from "./performance/admin/admin.component";
 import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
+import { AdminDagComponent } from './performance/admin/admin-dag/admin-dag.component';
 
 @NgModule({
   declarations: [
@@ -78,7 +78,6 @@ import { PerformanceTableComponent } from './performance/performance-table/perfo
     FunMetricChartComponent,
     SafeHtmlPipe,
     CreateChartComponent,
-    Demo1Component,
     PreviewFunMetricComponent,
     ScrollToDirective,
     RegressionComponent,
@@ -114,7 +113,8 @@ import { PerformanceTableComponent } from './performance/performance-table/perfo
     SmartButtonComponent,
     AdminComponent,
     ScoresTableComponent,
-    PerformanceTableComponent
+    PerformanceTableComponent,
+    AdminDagComponent
   ],
   imports: [
     BsDropdownModule,

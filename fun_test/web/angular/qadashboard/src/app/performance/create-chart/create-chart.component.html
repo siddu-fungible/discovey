@@ -12,25 +12,49 @@
           <td><label>Chart display name: </label></td>
           <td>
             <input type="text" required
-                   [(ngModel)]="chartName"/>
+                   [(ngModel)]="chartName" style="width: 250px"/>
           </td>
-
-          <td><label>Internal chart name: </label></td>
+        </tr>
+        <tr>
+          <td><label>Metric Model Name: </label></td>
           <td>
             <input type="text" required
-                   [(ngModel)]="internalChartName"/>
+                   [(ngModel)]="modelName" style="width: 250px"/>
           </td>
         </tr>
         <tr>
           <td><label>Y1 axis title: </label></td>
           <td>
             <input type="text" required
-                   [(ngModel)]="y1AxisTitle"/>
+                   [(ngModel)]="y1AxisTitle" style="width: 250px"/>
+          </td>
+        </tr>
+        <tr>
+          <td><label>Source: </label></td>
+          <td>
+            <input type="text" required
+                   [(ngModel)]="source" style="width: 250px"/>
+          </td>
+        </tr>
+        <tr>
+          <td><label>Owner: </label></td>
+          <td>
+            <input type="text" required
+                   [(ngModel)]="owner" style="width: 250px"/>
+          </td>
+        </tr>
+        <tr>
+          <td><label>Description: </label></td>
+          <td>
+            <textarea rows="10" [(ngModel)]="description" style="width: 100%;"></textarea>
           </td>
         </tr>
         <tr>
           <td>
-            Negative gradient&nbsp;<input type="checkbox" [(ngModel)]="negativeGradient"/>
+            <label>Negative gradient: </label>
+          </td>
+          <td>
+            <input type="checkbox" [(ngModel)]="negativeGradient"/>
           </td>
         </tr>
       </table>

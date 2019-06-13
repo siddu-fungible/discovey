@@ -112,8 +112,8 @@ def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenki
 
 
 def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit,
-                     internal_chart_name):
-    charts = MetricChart.objects.filter(internal_chart_name=internal_chart_name)
+                     metric_id):
+    charts = MetricChart.objects.filter(metric_id=metric_id)
     for chart in charts:
         chart.last_build_status = result
         chart.last_build_date = get_current_time()

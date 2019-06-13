@@ -28,9 +28,10 @@ export class CreateChartComponent implements OnInit, OnChanges {
   chartName: string = null;
   modelName: string = null;
   metricId: number = null;
-  internalChartName: string = null;
   buildInfo: any = null;
-
+  description: string = "TBD";
+  owner: string = "unknown";
+  source: string = "unknown";
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute) {
   }
@@ -181,9 +182,13 @@ export class CreateChartComponent implements OnInit, OnChanges {
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
+    payload["metric_id"] = this.metricId;
     payload["data_sets"] = this.previewDataSets;
     payload["negative_gradient"] = this.negativeGradient;
     payload["y1_axis_title"] = this.y1AxisTitle;
+    payload["description"] = this.description;
+    payload["source"] = this.source;
+    payload["owner_info"] = this.owner;
     payload["leaf"] = true;
 
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
