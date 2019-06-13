@@ -1,3 +1,4 @@
+from lib.system.fun_test import *
 from web.fun_test.analytics_models_helper import get_data_collection_time
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
