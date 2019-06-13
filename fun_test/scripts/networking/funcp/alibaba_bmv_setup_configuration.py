@@ -215,9 +215,9 @@ class StorageConfiguration(FunTestCase):
         # Create namespace
         # self.storage_controller = fun_test.shared_variables["storage_controller"]
         print("\n")
-        print("====================")
-        print("|Creating namespace|")
-        print("====================")
+        print("===============")
+        print("Creating Volume")
+        print("===============")
         print("\n")
 
         self.total_num_ns = self.storage_config['num_namespace']
