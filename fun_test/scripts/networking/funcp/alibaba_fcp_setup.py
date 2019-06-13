@@ -130,7 +130,7 @@ class TestIntraF1Pings(FunTestCase):
                               2. Find the HU interface ip of each host
                               3. Do full mesh ping between hosts which are connected to single F1
                               4. Ensure ping is working
-                              5. Validate FCB stats and vppkts 
+                              5. Validate ERP stats and vppkts 
                               """)
 
     def setup(self):
@@ -286,9 +286,9 @@ class TestInterRackPings(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BringupSetup())
-    ts.add_test_case(TestCcCcPing())
+    # ts.add_test_case(BringupSetup())
+    # ts.add_test_case(TestCcCcPing())
     ts.add_test_case(TestIntraF1Pings())
-    ts.add_test_case(TestIntraFsPings())
+    # ts.add_test_case(TestIntraFsPings())
     # ts.add_test_case(TestInterRackPings())
     ts.run()

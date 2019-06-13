@@ -69,6 +69,12 @@ SFG_OUT_FFE_DESC = "OUT_FFE_DESC"
 SFG_OUT_PSW_DESC = "OUT_PSW_DESC"
 SFG_SAMPLER_COPY = "SAMPLER_COPY"
 SFG_SAMPLE_COPY = "SAMPLE_COPY"
+FCB_TDP0_NONFCP = "tdp0_nonfcp"
+FCB_TDP1_NONFCP = "tdp1_nonfcp"
+FCB_TDP2_NONFCP = "tdp2_nonfcp"
+FCB_DST_FCP_PKT_RCVD = "FCB_DST_FCP_PKT_RCVD"
+FCB_DST_REQ_MSG_RCVD = "FCB_DST_REQ_MSG_RCVD"
+FCB_SRC_GNT_MSG_RCVD = "FCB_SRC_GNT_MSG_RCVD"
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
@@ -1037,3 +1043,16 @@ def populate_resource_bam_output_file(network_controller_obj, filename, display_
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+def validate_fcb_stats(diff_stats, expected_pkt_count, fields):
+    result = False
+    try:
+        for key in diff_stats:
+            if key in fields:
+                fun_test.simple_assert(int(diff_stats[key]) >= expected_pkt_count,
+                                       "%s count Actual: %s Expected: %s" % (key, diff_stats[key], expected_pkt_count))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result

@@ -523,11 +523,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def hping(self, dst, count=5, mode='faster', protocol_mode='icmp', max_percentage_loss=50, timeout=10):
+    def hping(self, dst, count=5, mode='faster', protocol_mode='icmp', max_percentage_loss=50, timeout=10,
+              data_bytes=80):
         result = False
         percentage_loss = 100
         try:
-            cmd = "hping3 %s --%s --%s -c %d" % (dst, protocol_mode, mode, count)
+            cmd = "hping3 %s --%s -d %d --%s -c %d" % (dst, protocol_mode, data_bytes, mode, count)
             output = self.sudo_command(command=cmd, timeout=timeout)
             m = re.search(r'(\d+)%\s+packet\s+loss', output)
             if m:
