@@ -184,19 +184,19 @@ class StripeVolumeLevelScript(FunTestScript):
             self.host_ips = []
             # self.host_numa_cpus = {}
             # self.total_numa_cpus = {}
-            # for host_name, host_obj in required_hosts.items():
-            #     # Retrieving host ips
-            #     # test_interfaces = host.get_test_interfaces()
-            #     if host_name not in self.hosts_test_interfaces:
-            #         self.hosts_test_interfaces[host_name] = []
-            #     test_interface = host_obj.get_test_interface(index=0)
-            #     self.hosts_test_interfaces[host_name].append(test_interface)
-            #     host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
-            #     self.host_ips.append(host_ip)
-            #     fun_test.log("Host-IP: {}".format(host_ip))
-            #     # Retrieving host handles
-            #     host_instance = host_obj.get_instance()
-            #     self.host_handles[host_ip] = host_instance
+            for host_name, host_obj in required_hosts.items():
+                # Retrieving host ips
+                # test_interfaces = host.get_test_interfaces()
+                if host_name not in self.hosts_test_interfaces:
+                    self.hosts_test_interfaces[host_name] = []
+                test_interface = host_obj.get_test_interface(index=0)
+                self.hosts_test_interfaces[host_name].append(test_interface)
+                host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
+                self.host_ips.append(host_ip)
+                fun_test.log("Host-IP: {}".format(host_ip))
+                # Retrieving host handles
+                host_instance = host_obj.get_instance()
+                self.host_handles[host_ip] = host_instance
 
             # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
             for key in self.host_handles:
