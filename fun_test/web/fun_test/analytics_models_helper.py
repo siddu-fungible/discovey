@@ -11,7 +11,7 @@ from web.fun_test.metrics_models import VolumePerformanceEmulation, BltVolumePer
     TeraMarkFunTcpThroughputPerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart
+from web.fun_test.metrics_models import MetricChart, MetricsRunTime
 from web.fun_test.db_fixup import prepare_status
 from fun_global import RESULTS
 from dateutil.parser import parse
@@ -37,17 +37,52 @@ def invalidate_goodness_cache():
         chart.save()
 
 
-def get_data_collection_time():
-    result = get_current_time()
-    if fun_test.suite_execution_id:
-        result = fun_test.get_stored_environment_variable("data_collection_time")
-        if not result:
-            date_time = get_current_time()
-            fun_test.update_job_environment_variable("data_collection_time", str(date_time))
-            result = date_time
-        else:
-            result = parser.parse(result)
-    return result
+def get_data_collection_time(tag=None):
+    if tag:
+        try:
+            date_time_details = MetricsRunTime.objects.filter(name="Data Collection Time")
+            details_json = date_time_details.details_json
+            if tag in details_json:
+                tag_details = details_json[tag]
+                if "data_collection_time" in tag_details:
+                    data_collection_time = parser.parse(tag_details["data_collection_time"])
+                    current_time = get_current_time()
+                    if not same_day(current_time=current_time, data_collection_time=data_collection_time):
+                        data_collection_time = update_db(date_time_details=date_time_details,
+                                                         details_json=details_json, tag=tag)
+                else:
+                    data_collection_time = update_db(date_time_details=date_time_details,
+                                                     details_json=details_json, tag=tag)
+            else:
+                data_collection_time = update_db(date_time_details=date_time_details,
+                                                 details_json=details_json, tag=tag)
+
+        except ObjectDoesNotExist:
+            details_json = {tag: {"data_collection_time": str(get_current_time())}}
+            MetricsRunTime(name="Data Collection Time", details_json=details_json).save()
+            data_collection_time = get_data_collection_time(tag=tag)
+        return data_collection_time
+    else:
+        result = get_current_time()
+        if fun_test.suite_execution_id:
+            result = fun_test.get_stored_environment_variable("data_collection_time")
+            if not result:
+                date_time = get_current_time()
+                fun_test.update_job_environment_variable("data_collection_time", str(date_time))
+                result = date_time
+            else:
+                result = parser.parse(result)
+        return result
+
+def same_day(current_time, data_collection_time):
+    return current_time.day == data_collection_time.day and current_time.month == data_collection_time.month and \
+            current_time.year == data_collection_time.year
+
+def update_db(date_time_details, details_json, tag):
+    details_json[tag]["data_collection_time"] = str(get_current_time())
+    date_time_details.details_json = details_json
+    date_time_details.save()
+    return get_data_collection_time(tag)
 
 
 class MetricHelper(object):
