@@ -40,26 +40,26 @@ def invalidate_goodness_cache():
 def get_data_collection_time(tag=None):
     if tag:
         try:
-            date_time_details = MetricsRunTime.objects.filter(name="Data Collection Time")
-            details_json = date_time_details.details_json
-            if tag in details_json:
-                tag_details = details_json[tag]
+            date_time_details = MetricsRunTime.objects.get(name="data_collection_time")
+            value = date_time_details.value
+            if tag in value:
+                tag_details = value[tag]
                 if "data_collection_time" in tag_details:
                     data_collection_time = parser.parse(tag_details["data_collection_time"])
                     current_time = get_current_time()
-                    if not same_day(current_time=current_time, data_collection_time=data_collection_time):
-                        data_collection_time = update_db(date_time_details=date_time_details,
-                                                         details_json=details_json, tag=tag)
+                    if not is_same_day(current_time=current_time, data_collection_time=data_collection_time):
+                        data_collection_time = _update_run_time(date_time_details=date_time_details,
+                                                         value=value, tag=tag)
                 else:
-                    data_collection_time = update_db(date_time_details=date_time_details,
-                                                     details_json=details_json, tag=tag)
+                    data_collection_time = _update_run_time(date_time_details=date_time_details,
+                                                     value=value, tag=tag)
             else:
-                data_collection_time = update_db(date_time_details=date_time_details,
-                                                 details_json=details_json, tag=tag)
+                data_collection_time = _update_run_time(date_time_details=date_time_details,
+                                                 value=value, tag=tag)
 
         except ObjectDoesNotExist:
-            details_json = {tag: {"data_collection_time": str(get_current_time())}}
-            MetricsRunTime(name="Data Collection Time", details_json=details_json).save()
+            value = {tag: {"data_collection_time": str(get_current_time())}}
+            MetricsRunTime(name="data_collection_time", value=value).save()
             data_collection_time = get_data_collection_time(tag=tag)
         return data_collection_time
     else:
@@ -74,13 +74,13 @@ def get_data_collection_time(tag=None):
                 result = parser.parse(result)
         return result
 
-def same_day(current_time, data_collection_time):
+def is_same_day(current_time, data_collection_time):
     return current_time.day == data_collection_time.day and current_time.month == data_collection_time.month and \
             current_time.year == data_collection_time.year
 
-def update_db(date_time_details, details_json, tag):
-    details_json[tag]["data_collection_time"] = str(get_current_time())
-    date_time_details.details_json = details_json
+def _update_run_time(date_time_details, value, tag):
+    value[tag]["data_collection_time"] = str(get_current_time())
+    date_time_details.value = value
     date_time_details.save()
     return get_data_collection_time(tag)
 
