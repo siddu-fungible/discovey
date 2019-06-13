@@ -42,16 +42,13 @@ def get_data_collection_time(tag=None):
         try:
             date_time_details = MetricsRunTime.objects.get(name="data_collection_time")
             value = date_time_details.value
-            if tag in value and value[tag] and "data_collection_time" in value[tag]:
+            if tag in value and value[tag] and "data_collection_time" in value[tag] and is_same_day(
+                    current_time=get_current_time(), data_collection_time=parser.parse(value[tag][
+                                                                                         "data_collection_time"])):
                 data_collection_time = parser.parse(value[tag]["data_collection_time"])
-                current_time = get_current_time()
-                if not is_same_day(current_time=current_time, data_collection_time=data_collection_time):
-                    data_collection_time = _update_run_time(date_time_details=date_time_details,
-                                                        value=value, tag=tag)
             else:
                 data_collection_time = _update_run_time(date_time_details=date_time_details,
                                                  value=value, tag=tag)
-
         except ObjectDoesNotExist:
             value = {tag: {"data_collection_time": str(get_current_time())}}
             MetricsRunTime(name="data_collection_time", value=value).save()
