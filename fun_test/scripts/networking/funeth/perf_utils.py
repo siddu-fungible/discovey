@@ -286,6 +286,15 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output_list.append({'flow blocked': output})
         if output:
             is_flow_blocked = True
+            for hu_fn in output:
+                for flow_t in output.get(hu_fn):
+                    for blocked_dict in output.get(hu_fn).get(flow_t):
+                        if 'callee_dest' in blocked_dict:
+                            fabric_addr = blocked_dict.get('callee_dest')
+                            pc_id, vp = [int(i) for i in re.match(r'FA:(\d+):(\d+):\d+', fabric_addr).groups()]
+                            vp_no = pc_id * 24 + (vp - 8)
+                            nc_obj.debug_vp_state(vp_no=vp_no)
+                            nc_obj.debug_backtrace(vp_no=vp_no)
 
         # Upload stats output file
         dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
