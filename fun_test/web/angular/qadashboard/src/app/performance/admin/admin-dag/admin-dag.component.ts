@@ -1,11 +1,7 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../../services/api/api.service";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
-import {CommonService} from "../../../services/common/common.service";
-import {ActivatedRoute, Router} from "@angular/router";
-import {of} from "rxjs";
-import {switchMap} from "rxjs/operators";
 
 
 class ChildInfo {
@@ -98,68 +94,18 @@ export class AdminDagComponent implements OnInit {
   currentNode: Node = null;
   modeType = Mode;
   currentNodeInfo: string;
-  showScoreInfo: boolean = false;
-  miniGridMaxWidth: string;
-  miniGridMaxHeight: string;
   status: string = null;
 
-  currentRegressionUrl: string = null;
-  currentJenkinsUrl: string = null;
-  currentLsfUrl: string = null;
-  currentGitCommit: string = null;
-  passedRegressionUrl: string = null;
-  passedJenkinsUrl: string = null;
-  passedLsfUrl: string = null;
-  passedGitCommit: string = null;
-  failedRegressionUrl: string = null;
-  failedJenkinsUrl: string = null;
-  failedLsfUrl: string = null;
-  failedGitCommit: string = null;
-
-  failedDateTime: string = null;
-  passedDateTime: string = null;
-  gitDiagnose: boolean = false;
-
-  lsfUrl: string = "http://palladium-jobs.fungible.local:8080/job/";
-  jenkinsUrl: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
-  regressionUrl: string = "/regression/suite_detail/";
-
-  globalSettings: any = null;
-  toolTipMessage: string = null;
-  @ViewChild('copyUrlTooltip') copyUrlTooltip;
   chartReady: boolean = false;
-  lastScore: number;
-  penultimateScore: number;
-  deviation: any;
-
-  upgradeFlatNode: any = {};
-  degradeFlatNode: any = {};
-  tagsForId = {
-    380: ["PCIe"], 472: ["NVMe/TCP"],
-    493: ["PCIe"]
-  };
-
-  jiraList: any = {};
-  showBugPanel: boolean = false;
-
-  gotoQueryBaseUrl: string = "/performance?goto=";
-  queryPath: string = null;  // includes gotoQueryBaseUrl and a query
-
-  slashReplacement: string = "_fsl"; //forward slash
 
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
   allMetricsNode: FlatNode = null;
 
-  buildInfo: any = null;
-
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService,
-    private title: Title,
-    private commonService: CommonService,
-    private activatedRoute: ActivatedRoute,
-    private router: Router
+    private title: Title
   ) {
   }
 
@@ -172,41 +118,9 @@ export class AdminDagComponent implements OnInit {
 
   }
 
-
-  getDefaultQueryPath() {
-    return "F1";
-  }
-
-  getQueryPath() {
-    return this.activatedRoute.queryParams.pipe(switchMap(params => {
-      if (params.hasOwnProperty('goto')) {
-        let queryPath = params['goto'];
-        // console.log("QueryPath: " + this.queryPath);
-        return of(queryPath);
-      }
-      else {
-        return of(null);
-      }
-    }))
-  }
-
-  getRoutablePathByGuid(guid) {
-    let flatNode = this.getFlatNodeByGuid(guid);
-    return this.gotoQueryBaseUrl + this.lineageToPath(flatNode.lineage[0]);
-
-  }
-
   getGuid(): number {
     this.lastGuid++;
     return this.lastGuid;
-  }
-
-  getJiraListLength(jiraList): number {
-    return Object.keys(jiraList).length;
-  }
-
-  gitIdentify(): void {
-    this.gitDiagnose = !this.gitDiagnose
   }
 
 
@@ -221,29 +135,8 @@ export class AdminDagComponent implements OnInit {
       //total container should always appear
       this.f1Node = this.flatNodes[0];
       this.f1Node.hide = false;
-      this.getQueryPath().subscribe(queryPath => {
-        let queryExists = false;
-        if (!queryPath) {
-          queryPath = this.getDefaultQueryPath();
-        } else {
-          queryExists = true;
-        }
-        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
-          this.queryPath = this.gotoQueryBaseUrl + queryPath;
-          let pathGuid = this.pathToGuid(this.queryPath);
-          let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
-          this.expandNode(targetFlatNode);
-
-          if (queryExists) {
-            if (targetFlatNode.node.leaf) {
-              this.showAtomicMetric(targetFlatNode);
-            } else {
-              this.showNonAtomicMetric(targetFlatNode);
-            }
-          }
-
-        }
-      })
+      this.expandNode(this.f1Node);
+      this.expandNode(this.s1Node);
     }, error => {
       this.loggerService.error("fetchDag");
     });
@@ -267,10 +160,6 @@ export class AdminDagComponent implements OnInit {
     node.showAddJira = false;
     node.positive = dagEntry.positive;
     node.workInProgress = dagEntry.work_in_progress;
-    if (metricId in this.tagsForId) {
-      node.tags = this.tagsForId[metricId];
-    }
-
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
       childInfo.weight = dagEntry.children_weights[Number(key)];
@@ -278,169 +167,14 @@ export class AdminDagComponent implements OnInit {
       childInfo.lastScore = dagEntry.children_info[Number(key)].last_two_scores[0];
       node.childrenInfo.set(Number(key), childInfo);
     });
-    this.fetchScores(node);
     let keys = Array.from(node.childrenInfo.keys());
     return node;
   }
 
-  getNameForParent(parent): string {
-    for (let key in parent) {
-      return parent[key];
-    }
-
-  }
-
-  lineageToPath(lineage) {
-    let s = "";
-    lineage.forEach(part => {
-      let name = part.chartName.replace("/", this.slashReplacement);
-      s += "/" + encodeURIComponent(name);
-    });
-    s = s.slice(1, s.length); // Remove leading slash
-    return s;
-  }
-
-  getQueuryPathByMetricId(metricId) {
-
-  }
-
-  expandFromLineage(parent): void {
-    this.chartReady = false;
-    for (let flatNode of this.flatNodes) {
-      let node = flatNode.node;
-      if (Number(parent.guid) === flatNode.gUid) {
-        this.expandNode(flatNode);
-        if (node.metricModelName === 'MetricContainer') {
-          this.showNonAtomicMetric(flatNode);
-          break;
-        } else {
-          this.showAtomicMetric(flatNode);
-          break;
-        }
-      }
-    }
-    this.chartReady = true;
-  }
-
-  getKeys(map) {
-    //console.log(map.keys());
-    let a = Array.from(map.keys());
-    return a;
-  }
-
-  getSumChildWeights = (currentNode) => {
-    let sumOfWeights = 0;
-    currentNode.childrenInfo.forEach((childInfo, key) => {
-      sumOfWeights += childInfo.weight;
-    });
-    return sumOfWeights;
-  };
-
-  getScoreTotal = (currentNode) => {
-    let children = currentNode.children;
-    let scoreTotal = 0;
-    currentNode.childrenInfo.forEach((childInfo, key) => {
-      scoreTotal += childInfo.weight * (childInfo.lastScore || 0);
-    });
-    return scoreTotal;
-  };
-
-  fetchScores(node) {
-    let dateRange = this.getDateRange();
-    let fromDate = dateRange[0];
-    let toDate = dateRange[1];
-    let payload = {metric_id: node.metricId, date_range: [fromDate.toISOString(), toDate.toISOString()]};
-    payload.metric_id = node.metricId;
-    this.evaluateScores(node);
-    return node;
-  }
 
   getNode = (id) => {
     let node = this.nodeMap.get(id);
     return node;
-  };
-
-  calculateScores(node): void {
-    let [lastScore, penultimateScore] = node.last_two_scores;
-    this.lastScore = lastScore.toFixed(1);
-    this.penultimateScore = penultimateScore.toFixed(1);
-    let deviation = ((lastScore - penultimateScore) / (Math.min(lastScore, penultimateScore))) * 100;
-    this.deviation = deviation.toFixed(1);
-  }
-
-  evaluateScores = (node) => {
-    let [lastScore, penultimateScore] = node.last_two_scores;
-    //lastScore = lastScore;
-    node.lastScore = lastScore;
-    try {
-
-      node.trend = 0;
-      let tolerancePercentage = 0;
-      if (this.globalSettings) {
-        tolerancePercentage = this.globalSettings.tolerance_percentage / 100;
-      }
-      if (lastScore < (penultimateScore * (1 - tolerancePercentage))) {
-        node.trend = -1;
-      }
-      if (lastScore > (penultimateScore * (1 + tolerancePercentage))) {
-        node.trend = 1;
-      }
-      node.lastScore = lastScore;
-    } catch (e) {
-    }
-    if (node.copiedScore) {
-      if (node.copiedScoreDisposition > 0) {
-        node.trend = 1;
-      } else if (node.copiedScoreDisposition < 0) {
-        node.trend = -1;
-      }
-    }
-
-  };
-
-  prepareGridNodes = (node) => {
-    node.grid = [];
-    let maxRowsInMiniChartGrid = 10;
-    let maxColumns = this.numGridColumns;
-    // console.log("Prepare Grid nodes");
-    let tempGrid = [];
-    let rowIndex = 0;
-    let childNodes = [];
-    node.childrenInfo.forEach((childInfo, childId) => {
-      childNodes.push(this.nodeMap.get(Number(childId)));
-    });
-
-    let oneRow = [];
-    childNodes.forEach((childNode) => {
-      oneRow.push(childNode);
-      if (oneRow.length === maxColumns) {
-        node.grid.push(oneRow);
-        oneRow = [];
-      }
-    });
-    if (oneRow.length) {
-      node.grid.push(oneRow);
-    }
-  };
-
-  getCurrentNodeScoreInfo = (node) => {
-    this.currentNodeInfo = null;
-    if (node.metricModelName !== 'MetricContainer') {
-      //$scope.showingContainerNodeInfo = !$scope.showingContainerNodeInfo;
-      if (node.positive) {
-        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/reference value) * 100&nbsp)/n";
-      } else {
-        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(reference value/last actual value) * 100&nbsp)/n";
-      }
-      this.currentNodeInfo += "&nbsp, where n is the number of data-sets";
-    }
-    return this.currentNodeInfo;
-  };
-
-  showScoreInfoClick = (node) => {
-    this.showScoreInfo = !this.showScoreInfo;
-
-
   };
 
   addNodeToMap(metricId: number, node: Node): void {
@@ -467,16 +201,6 @@ export class AdminDagComponent implements OnInit {
     let newNode = this.getNodeFromEntry(numMetricId, dagEntry);
     this.addNodeToMap(numMetricId, newNode);
     thisFlatNode = this.getNewFlatNode(newNode, indent);
-    if (newNode.chartName === "All metrics") {
-      thisFlatNode.hide = false;
-      lineage = [];
-      this.allMetricsNode = thisFlatNode;
-      if (!this.queryPath) {
-        this.updateUpDownSincePrevious(true);
-        this.updateUpDownSincePrevious(false);
-      }
-
-    }
     if (newNode.chartName === "S1") {
       thisFlatNode.hide = false;
       this.s1Node = thisFlatNode;
@@ -484,7 +208,6 @@ export class AdminDagComponent implements OnInit {
     }
     this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
     this.flatNodes.push(thisFlatNode);
-    //this.loggerService.log('Node:' + nodeInfo.chart_name);
     let parentsGuid = {};
     parentsGuid["guid"] = thisFlatNode.gUid;
     parentsGuid["chartName"] = newNode.chartName;
@@ -494,122 +217,14 @@ export class AdminDagComponent implements OnInit {
       let children = nodeInfo.children;
 
       children.forEach((cId) => {
-        //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
         let childEntry = nodeInfo.children_info[Number(cId)];
         let childFlatNode = this.walkDag(childEntry, lineage.slice(), indent + 1);
-        this.addUpDownStatusNumbers(childFlatNode, thisFlatNode);
-
         thisFlatNode.addChild(childFlatNode);
       });
-    } else {
-      this.addUpgradeDegradeNodes(thisFlatNode, dagEntry);
     }
     return thisFlatNode;
   }
 
-  addUpDownStatusNumbers(childFlatNode, thisFlatNode): void {
-    let childNode = childFlatNode["node"];
-    if (childNode.upgrades.size != 0) {
-      childNode.upgrades.forEach(childMetricId => {
-        thisFlatNode.node.upgrades.add(childMetricId);
-      });
-    }
-    if (childNode.degrades.size != 0) {
-      childNode.degrades.forEach(childMetricId => {
-        thisFlatNode.node.degrades.add(childMetricId);
-      });
-    }
-    if (childNode.failures.size != 0) {
-      childNode.failures.forEach(childMetricId => {
-        thisFlatNode.node.failures.add(childMetricId);
-      });
-    }
-    if (childNode.bugs.size != 0) {
-      Object.keys(childNode.bugs).forEach((function (key) {
-        thisFlatNode.node.bugs[key] = childNode.bugs[key];
-      }));
-    }
-    if (Object.keys(thisFlatNode.node.bugs).length != 0) {
-      Object.keys(thisFlatNode.node.bugs).forEach(k => {
-        let bugObj = thisFlatNode.node.bugs[k];
-        let context = "";
-        if (bugObj.context) {
-          for (let el of bugObj.context) {
-            for (let child of el) {
-              let path = this.getRoutablePathByGuid(child.guid);
-              context += `<a href="${path}"> ${child.chartName}</a>`;
-              context += "->";
-            }
-          }
-
-          context = context.replace(/->$/, "<br>");
-
-        }
-        if (bugObj.jiraIds) {
-          for (let id of bugObj.jiraIds) {
-            if (thisFlatNode.jiraList[id]) {
-              thisFlatNode.jiraList[id].context += context;
-
-            } else {
-              thisFlatNode.jiraList[id] = {context: context}
-            }
-          }
-        }
-
-
-      });
-    }
-  }
-
-  getFlatNodeByGuid(guId) {
-    let result = null;
-    if (this.guIdFlatNodeMap.hasOwnProperty(guId)) {
-      result = this.guIdFlatNodeMap[guId];
-    }
-    return result;
-  }
-
-  addUpgradeDegradeNodes(thisFlatNode, dagEntry): void {
-    let leafNode = thisFlatNode.node;
-    if (leafNode.trend > 0) {
-      leafNode.upgrades.add(leafNode.metricId);
-      this.addLineagesForUpgradesDegrades(true, leafNode, dagEntry, thisFlatNode);
-    } else if (leafNode.trend < 0) {
-      leafNode.degrades.add(leafNode.metricId);
-      this.addLineagesForUpgradesDegrades(false, leafNode, dagEntry, thisFlatNode);
-    }
-    if (leafNode.lastNumBuildFailed == 1) {
-      leafNode.failures.add(leafNode.metricId);
-    }
-    if (leafNode.numBugs > 0) {
-      let value = {};
-      value["jiraIds"] = leafNode.jiraIds;
-      value["context"] = thisFlatNode.lineage;
-      leafNode.bugs[leafNode.metricId] = value;
-    }
-  }
-
-  addLineagesForUpgradesDegrades(upgrade: boolean, leafNode: Node, dagEntry: any, thisFlatNode: any): void {
-    let newLeafNode = this.getNodeFromEntry(leafNode.metricId, dagEntry);
-    let flatNode = this.getNewFlatNode(newLeafNode, 1);
-    let statusNode = null;
-    for (let p of thisFlatNode.lineage) {
-      flatNode.lineage.push(p);
-    }
-    if (upgrade) {
-      statusNode = this.upgradeFlatNode;
-    } else {
-      statusNode = this.degradeFlatNode;
-    }
-    if (statusNode[newLeafNode.metricId]) {
-      let tempNode = statusNode[newLeafNode.metricId];
-      for (let p of thisFlatNode.lineage) {
-        tempNode.lineage.push(p);
-      }
-    } else {
-      statusNode[newLeafNode.metricId] = flatNode;
-    }
-  }
 
   collapseBranch = (flatNode) => {
     flatNode.children.forEach((child) => {
@@ -622,14 +237,6 @@ export class AdminDagComponent implements OnInit {
   collapseNode = (flatNode) => {
     flatNode.collapsed = true;
     this.collapseBranch(flatNode);
-  };
-
-  space = (number) => {
-    let s = "";
-    for (let i = 0; i < number; i++) {
-      s += "&nbsp";
-    }
-    return s;
   };
 
   getVisibleNodes = () => {
@@ -663,167 +270,9 @@ export class AdminDagComponent implements OnInit {
     return s;
   };
 
-
-  getDateBound = (dt, lower) => {
-    let newDay = new Date(dt);
-    if (lower) {
-      newDay.setHours(0, 0, 1);
-    } else {
-      newDay.setHours(23, 59, 59);
-    }
-
-    return newDay;
-  };
-
-  isSameDay(d1, d2) {
-    return d1.getFullYear() === d2.getUTCFullYear() &&
-      d1.getUTCMonth() === d2.getUTCMonth() &&
-      d1.getUTCDate() === d2.getUTCDate();
-  }
-
-  getYesterday = (today) => {
-    let yesterday: Date = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday;
-  };
-
-
-  getDateRange = () => {
-    let today = new Date();
-    let startMonth = 4 - 1;
-    let startDay = 1;
-    let startMinute = 59;
-    let startHour = 23;
-    let startSecond = 1;
-    let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
-    fromDate = this.getDateBound(fromDate, true);
-    let yesterday = this.getYesterday(today);
-    let toDate = new Date(yesterday);
-    toDate = this.getDateBound(toDate, false);
-    return [fromDate, toDate];
-
-  };
-
-  getStatusHtml = (flatNode) => {
-    let s = "";
-    if (flatNode.node.degrades.size != 0) {
-      s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + flatNode.node.degrades.size + "";
-    }
-    if (flatNode.node.failures.size != 0) {
-      if (flatNode.node.degrades.size != 0) {
-        s += "&nbsp";
-      }
-      s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + flatNode.node.failures.size + "</span>";
-    }
-    return s;
-  };
-
-  openBugPanel(flatNode): void {
-    this.mode = Mode.ShowingBugPanel;
-    this.chartReady = false;
-    this.showBugPanel = !this.showBugPanel;
-    this.jiraList = flatNode.jiraList;
-  }
-
-  setDefaultUrls(): void {
-    this.currentRegressionUrl = null;
-    this.currentJenkinsUrl = null;
-    this.currentLsfUrl = null;
-    this.currentGitCommit = null;
-    this.passedRegressionUrl = null;
-    this.passedJenkinsUrl = null;
-    this.passedLsfUrl = null;
-    this.passedGitCommit = null;
-    this.failedRegressionUrl = null;
-    this.failedJenkinsUrl = null;
-    this.failedLsfUrl = null;
-    this.failedGitCommit = null;
-    this.failedDateTime = null;
-    this.passedDateTime = null;
-  }
-
-  openTooltip(node): void {
-    this.setDefaultUrls();
-    //let payload = {"metric_model_name": node.metricModelName, chart_name: node.chartName};
-    let payload = {"metric_id": node.metricId};
-    this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
-      let result = data.data;
-      if (result.last_suite_execution_id && result.last_suite_execution_id !== -1) {
-        this.currentRegressionUrl = this.regressionUrl + result.last_suite_execution_id;
-      }
-      if (result.last_jenkins_job_id && result.last_jenkins_job_id !== -1) {
-        this.currentJenkinsUrl = this.jenkinsUrl + result.last_jenkins_job_id;
-      }
-      if (result.last_lsf_job_id && result.last_lsf_job_id !== -1) {
-        this.currentLsfUrl = this.lsfUrl + result.last_lsf_job_id;
-      }
-      if (result.last_git_commit && result.last_git_commit !== "") {
-        this.currentGitCommit = result.last_git_commit;
-      }
-    }, error => {
-      this.loggerService.error("Current Failed Urls");
-    });
-
-    let payload1 = {"metric_id": node.metricId};
-    this.apiService.post('/metrics/past_status', payload1).subscribe((data) => {
-      let result = data.data;
-      if (result.failed_date_time) {
-        this.failedDateTime = result.failed_date_time;
-      }
-      if (result.failed_suite_execution_id && result.failed_suite_execution_id !== -1) {
-        this.failedRegressionUrl = this.regressionUrl + result.failed_suite_execution_id;
-      }
-      if (result.failed_jenkins_job_id && result.failed_jenkins_job_id !== -1) {
-        this.failedJenkinsUrl = this.jenkinsUrl + result.failed_jenkins_job_id;
-      }
-      if (result.failed_lsf_job_id && result.failed_lsf_job_id !== -1) {
-        this.failedLsfUrl = this.lsfUrl + result.failed_lsf_job_id;
-      }
-      if (result.failed_git_commit && result.failed_git_commit !== "") {
-        this.failedGitCommit = result.failed_git_commit;
-      }
-      if (result.passed_date_time) {
-        this.passedDateTime = result.passed_date_time;
-      }
-      if (result.passed_suite_execution_id && result.passed_suite_execution_id !== -1) {
-        this.passedRegressionUrl = this.regressionUrl + result.passed_suite_execution_id;
-      }
-      if (result.passed_jenkins_job_id && result.passed_jenkins_job_id !== -1) {
-        this.passedJenkinsUrl = this.jenkinsUrl + result.passed_jenkins_job_id;
-      }
-      if (result.passed_lsf_job_id && result.passed_lsf_job_id !== -1) {
-        this.passedLsfUrl = this.lsfUrl + result.passed_lsf_job_id;
-      }
-      if (result.passed_git_commit && result.passed_git_commit !== "") {
-        this.passedGitCommit = result.passed_git_commit;
-      }
-    }, error => {
-      this.loggerService.error("Past Status Urls");
-    });
-
-  }
-
   openUrl(url): void {
     window.open(url, '_blank');
   }
-
-  getTrendHtml = (node) => {
-    let s = "";
-    if (node.hasOwnProperty("trend")) {
-      if (node.chartName === "All metrics") {
-        node.trend = 0;
-      }
-      if (node.trend > 0) {
-        s = "<span style='color: green'><icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon></span>&nbsp";
-      } else if (node.trend < 0) {
-        s = "<span style='color: red'><icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon></span>&nbsp;";
-      }
-      else if (node.trend === 0) {
-        s = "<icon class=\"fa fa-arrow-down aspect-trend-icon\" style=\"visibility: hidden;\"></icon>&nbsp;";
-      }
-    }
-    return s;
-  };
 
   guid = () => {
     function s4() {
@@ -861,115 +310,15 @@ export class AdminDagComponent implements OnInit {
 
   showAtomicMetric = (flatNode) => {
     this.expandNode(flatNode);
-
   };
 
 
   showNonAtomicMetric = (flatNode) => {
-    if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
-      this.chartReady = false;
-      if (this.currentNode && this.currentNode.showAddJira) {
-        this.currentNode.showAddJira = false;
-      }
-      if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
-        this.currentFlatNode.showJiraInfo = false;
-      }
-      if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
-        this.currentFlatNode.showGitInfo = false;
-      }
-      this.showBugPanel = false;
-      this.currentNode = flatNode.node;
-      this.currentFlatNode = flatNode;
       this.mode = Mode.ShowingNonAtomicMetric;
       this.expandNode(flatNode);
-
-      this.expandNode(flatNode);
   };
 
-  navigateByQuery(flatNode) {
-    let path = this.lineageToPath(flatNode.lineage[0]);
-    let queryPath = this.gotoQueryBaseUrl + path;
-    this.router.navigateByUrl(queryPath);
-  }
-
-  pathToGuid(path) {
-    let result = null;
-    try {
-      path = path.replace(this.gotoQueryBaseUrl, "");
-      let parts = path.split("/");
-      result = this._doPathToGuid(this.f1Node, parts);
-      if (!result) {
-        result = this._doPathToGuid(this.s1Node, parts);
-      }
-      if (!result) {
-        result = this._doPathToGuid(this.allMetricsNode, parts);
-      }
-      // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
-
-    } catch (e) {
-
-    }
-    return result;
-  }
-
-  _doPathToGuid(flatNode, remainingParts) {
-    let result = null;
-    if (remainingParts.length > 0) {
-      let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");
-      if (remainingPart === "Total") {
-        remainingPart = "F1";
-      }
-      if (flatNode.node.chartName === decodeURIComponent(remainingPart)) {
-        // match found
-
-        if (remainingParts.length > 1) {
-          remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
-          let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");
-          for (let index = 0; index < flatNode.children.length; index++) {
-            let childFlatNode = flatNode.children[index];
-            if (decodeURIComponent(remainingPart) === childFlatNode.node.chartName) {
-              return this._doPathToGuid(childFlatNode, remainingParts);
-            }
-          }
-        } else {
-          result = flatNode.gUid;
-        }
-      }
-    }
-    return result;
-  }
-
-
-  submitWeightClick = (node, childId, info) => {
-    let payload: { [i: string]: string } = {
-      metric_id: node.metricId,
-      child_id: childId,
-      weight: info.weightBeingEdited
-    };
-    this.apiService.post('/metrics/update_child_weight', payload).subscribe((response) => {
-      info.weight = info.weightBeingEdited;
-    });
-    info.weightEditing = false;
-  };
-
-  closeEditingWeightClick = (info) => {
-    info.weightEditing = false;
-  };
-
-  updateNumBug(numBugs, node): void {
-    node.numBugs = numBugs;
-  }
-
-  closeLeafPanel(value, flatNode): void {
-    if (value) {
-      flatNode.showJiraInfo = false;
-    }
-  }
-
-  closeSummaryPanel(value): void {
-    if (value) {
-      this.showBugPanel = false;
-    }
+  addChart(): void {
 
   }
 
