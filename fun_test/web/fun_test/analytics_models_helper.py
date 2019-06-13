@@ -50,9 +50,10 @@ def get_data_collection_time(tag=None):
                 data_collection_time = _update_run_time(date_time_details=date_time_details,
                                                  value=value, tag=tag)
         except ObjectDoesNotExist:
-            value = {tag: {"data_collection_time": str(get_current_time())}}
+            current_time = get_current_time()
+            value = {tag: {"data_collection_time": str(current_time)}}
             MetricsRunTime(name="data_collection_time", value=value).save()
-            data_collection_time = get_data_collection_time(tag=tag)
+            data_collection_time = current_time
         return data_collection_time
     else:
         result = get_current_time()
@@ -71,10 +72,11 @@ def is_same_day(current_time, data_collection_time):
             current_time.year == data_collection_time.year
 
 def _update_run_time(date_time_details, value, tag):
-    value[tag]["data_collection_time"] = str(get_current_time())
+    current_time = get_current_time()
+    value[tag]["data_collection_time"] = str(current_time)
     date_time_details.value = value
     date_time_details.save()
-    return get_data_collection_time(tag)
+    return current_time
 
 
 class MetricHelper(object):
