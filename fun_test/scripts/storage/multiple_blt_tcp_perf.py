@@ -152,6 +152,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             topology_helper.disable_duts(self.skip_dut_list)
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                               1: {"boot_args": self.bootargs[1]}})
+            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
             self.topology = topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -312,6 +313,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                               1: {"boot_args": self.bootargs[1]}})
+            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
             self.topology = topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -418,7 +420,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
 
     def cleanup(self):
         come_reboot = False
-        if fun_test.shared_variables["blt"]["setup_created"]:
+        if hasattr(fun_test.shared_variables, "blt") and fun_test.shared_variables["blt"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_objs[0]
@@ -727,19 +729,28 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                                 message="{} device type check".format(self.volume_name))
 
+            fun_test.shared_variables["blt"]["setup_created"] = True
+
             # Pre-conditioning the volume (one time task)
             self.nvme_block_device_str = ':'.join(self.nvme_block_device)
             fun_test.shared_variables["nvme_block_device_str"] = self.nvme_block_device_str
             if self.warm_up_traffic:
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
-                if not hasattr(self, "create_file_system"):
+                warm_up_fio_cmd_args = {}
+                jobs = ""
+                if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                    for i in range(0, len(self.nvme_block_device)):
+                         jobs += " --name=pre-cond-job-{} --filename={}".format(i + 1, self.nvme_block_device[i])
+                    warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
+                    fio_output = self.end_host.pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
+                                                        **warm_up_fio_cmd_args)
+                else:
                     fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
-                    fun_test.test_assert(fio_output, "Pre-populating the volume")
+                fun_test.test_assert(fio_output, "Pre-populating the volume")
                 fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
 
-            fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
 

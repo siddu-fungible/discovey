@@ -1,7 +1,9 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"],
+    "bootargs": [
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"
+    ],
     "dut_start_index": 2,
     "host_start_index": 1,
     "update_workspace": false,
@@ -13,14 +15,20 @@
     "fpg_int_prefix": "fpg",
     "disable_f1_index": 1,
     "f1_in_use": 0,
-    "load_modules": ["nvme", "nvme_tcp"],
+    "load_modules": [
+      "nvme",
+      "nvme_tcp"
+    ],
     "huid": 7,
     "ctlid": 0,
     "syslog": 2,
     "command_timeout": 5,
     "reboot_timeout": 600,
     "ethernet_adapter": "Mellanox",
-    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "override_numa_node": {
+      "override": true,
+      "override_node": "NUMA node0 CPU(s)"
+    },
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -63,24 +71,17 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "name": "tcp_condition_disk",
-      "bs": "128k",
-      "numjobs": 1,
-      "iodepth": 1,
-      "filesize": 1000000000000,
-      "rw": "write",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --filesize=1000000000000 --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
       "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
       "direct": 1,
       "prio": 0,
-      "runtime": 120,
+      "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
-      "timeout": 300
+      "timeout": 1200
     },
     "fio_modes": [
       "randread"
@@ -97,11 +98,59 @@
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(1, 1)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
       },
+      "(32, 2)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 4)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 8)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      }
+    },
     "host_count": 1
   },
   "SingleBLTFioRandWrite": {
@@ -123,24 +172,17 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "name": "tcp_condition_disk",
-      "bs": "128k",
-      "numjobs": 1,
-      "iodepth": 1,
-      "filesize": 1000000000000,
-      "rw": "write",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --filesize=1000000000000 --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
       "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
       "direct": 1,
       "prio": 0,
-      "runtime": 120,
+      "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
-      "timeout": 300
+      "timeout": 1200
     },
     "fio_modes": [
       "randwrite"
@@ -157,11 +199,59 @@
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 2)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 4)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(1, 1)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
       },
+      "(32, 2)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 4)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 8)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      }
+    },
     "host_count": 1
   },
   "MultiBLTFioRandRead12": {
@@ -182,24 +272,17 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "name": "tcp_condition_disk",
-      "bs": "128k",
-      "numjobs": 1,
-      "iodepth": 1,
-      "filesize": 1000000000000,
-      "rw": "write",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --filesize=1000000000000 --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
       "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
       "direct": 1,
       "prio": 0,
-      "runtime": 120,
+      "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
-      "timeout": 300
+      "timeout": 1200
     },
     "fio_modes": [
       "randread"
@@ -216,11 +299,59 @@
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(1, 1)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
       },
+      "(32, 2)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 4)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 8)": {
+        "randread": {
+          "read": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      }
+    },
     "host_count": 1
   },
   "MultiBLTFioRandWrite12": {
@@ -241,24 +372,17 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "name": "tcp_condition_disk",
-      "bs": "128k",
-      "numjobs": 1,
-      "iodepth": 1,
-      "filesize": 1000000000000,
-      "rw": "write",
-      "direct": 1,
-      "prio": 0,
+      "multiple_jobs": "--ioengine=libaio --filesize=1000000000000 --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
       "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
       "direct": 1,
       "prio": 0,
-      "runtime": 120,
+      "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
-      "timeout": 300
+      "timeout": 1200
     },
     "fio_modes": [
       "randwrite"
@@ -269,17 +393,65 @@
       "(32, 2)",
       "(32, 4)",
       "(32, 8)"
-      ],
+    ],
     "fio_job_name": {
       "randwrite": "nvols"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 2)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 4)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(1, 1)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
       },
+      "(32, 2)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 4)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      },
+      "(32, 8)": {
+        "randwrite": {
+          "write": {
+            "bw": 732,
+            "iops": 187,
+            "clatency": 63,
+            "latency90": 107,
+            "latency95": 119,
+            "latency99": 160,
+            "latency9999": 1893
+          }
+        }
+      }
+    },
     "host_count": 1
   }
 }
