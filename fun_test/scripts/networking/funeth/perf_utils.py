@@ -290,11 +290,14 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
                 for flow_t in output.get(hu_fn):
                     for blocked_dict in output.get(hu_fn).get(flow_t):
                         if 'callee_dest' in blocked_dict:
+                            fun_test.log('{} dpc: flow blocked {} {} has callee_dest'.format(f1, hu_fn, flow_t))
                             fabric_addr = blocked_dict.get('callee_dest')
                             pc_id, vp = [int(i) for i in re.match(r'FA:(\d+):(\d+):\d+', fabric_addr).groups()]
                             vp_no = pc_id * 24 + (vp - 8)
                             nc_obj.debug_vp_state(vp_no=vp_no)
                             nc_obj.debug_backtrace(vp_no=vp_no)
+                        else:
+                            fun_test.log('{} dpc: flow blocked {} {} has no callee_dest'.format(f1, hu_fn, flow_t))
 
         # Upload stats output file
         dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
