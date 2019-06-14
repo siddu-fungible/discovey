@@ -4,8 +4,8 @@
       "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
       "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"
     ],
-    "dut_start_index": 2,
-    "host_start_index": 1,
+    "dut_start_index": 0,
+    "host_start_index": 0,
     "update_workspace": false,
     "update_deploy_script": false,
     "funcp_mode": "ep",
@@ -87,69 +87,14 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": [
-      "(1, 1)",
-      "(32, 2)",
-      "(32, 4)",
-      "(32, 8)"
-    ],
+    "fio_jobs_iodepth": ["(1, 1)", "(16, 8)"],
     "fio_job_name": {
       "randread": "scaling"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 2)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 4)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 8)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      }
+      "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(16, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1
   },
@@ -188,70 +133,15 @@
       "randwrite"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": [
-      "(1, 1)",
-      "(32, 2)",
-      "(32, 4)",
-      "(32, 8)"
-    ],
+    "fio_jobs_iodepth": ["(1, 1)", "(16, 4)"],
     "fio_job_name": {
       "randwrite": "scaling"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
+      "(1, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(16, 4)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
       },
-      "(32, 2)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 4)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 8)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      }
-    },
     "host_count": 1
   },
   "MultiBLTFioRandRead12": {
@@ -288,69 +178,14 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": [
-      "(1, 1)",
-      "(32, 2)",
-      "(32, 4)",
-      "(32, 8)"
-    ],
+    "fio_jobs_iodepth": ["(32, 4)", "(32, 8)"],
     "fio_job_name": {
       "randread": "nvols"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 2)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 4)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 8)": {
-        "randread": {
-          "read": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      }
+      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1
   },
@@ -388,69 +223,14 @@
       "randwrite"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": [
-      "(1, 1)",
-      "(32, 2)",
-      "(32, 4)",
-      "(32, 8)"
-    ],
+    "fio_jobs_iodepth": ["(32, 2)", "(32, 4)"],
     "fio_job_name": {
       "randwrite": "nvols"
     },
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(1, 1)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 2)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 4)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      },
-      "(32, 8)": {
-        "randwrite": {
-          "write": {
-            "bw": 732,
-            "iops": 187,
-            "clatency": 63,
-            "latency90": 107,
-            "latency95": 119,
-            "latency99": 160,
-            "latency9999": 1893
-          }
-        }
-      }
+      "(32, 2)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 4)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1
   }
