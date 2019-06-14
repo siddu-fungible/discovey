@@ -484,7 +484,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
         else:
             fun_test.shared_variables["fs"].cleanup()
 
-        fun_test.shared_variables["storage_controller"].disconnect()
+        self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()     # Why is this needed?
 
