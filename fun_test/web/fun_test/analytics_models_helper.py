@@ -44,16 +44,13 @@ def get_data_collection_time(tag=None):
             value = date_time_details.value
             if tag in value and value[tag] and "data_collection_time" in value[tag] and is_same_day(
                     current_time=get_current_time(), data_collection_time=parser.parse(value[tag][
-                                                                                         "data_collection_time"])):
+                                                                                           "data_collection_time"])):
                 data_collection_time = parser.parse(value[tag]["data_collection_time"])
             else:
                 data_collection_time = _update_run_time(date_time_details=date_time_details,
-                                                 value=value, tag=tag)
+                                                        value=value, tag=tag)
         except ObjectDoesNotExist:
-            current_time = get_current_time()
-            value = {tag: {"data_collection_time": str(current_time)}}
-            MetricsRunTime(name="data_collection_time", value=value).save()
-            data_collection_time = get_data_collection_time(tag=tag)
+            data_collection_time = _update_run_time(tag=tag)
         return data_collection_time
     else:
         result = get_current_time()
@@ -67,15 +64,21 @@ def get_data_collection_time(tag=None):
                 result = parser.parse(result)
         return result
 
+
 def is_same_day(current_time, data_collection_time):
     return current_time.day == data_collection_time.day and current_time.month == data_collection_time.month and \
-            current_time.year == data_collection_time.year
+           current_time.year == data_collection_time.year
 
-def _update_run_time(date_time_details, value, tag):
+
+def _update_run_time(tag, value=None, date_time_details=None):
     current_time = get_current_time()
-    value[tag]["data_collection_time"] = str(current_time)
-    date_time_details.value = value
-    date_time_details.save()
+    if date_time_details and value:
+        value[tag]["data_collection_time"] = str(current_time)
+        date_time_details.value = value
+        date_time_details.save()
+    else:
+        value = {tag: {"data_collection_time": str(current_time)}}
+        MetricsRunTime(name="data_collection_time", value=value).save()
     return get_data_collection_time(tag=tag)
 
 
