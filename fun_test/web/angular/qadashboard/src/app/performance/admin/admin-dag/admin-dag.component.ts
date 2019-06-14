@@ -16,31 +16,12 @@ class Node {
   leaf: boolean;
   chartName: string;
   metricModelName: string;
-  numChildrenFailed: number;
-  numChildrenDegrades: number;
-  lastNumBuildFailed: number;
   numLeaves: number;
-  scores: any;
   childrenInfo: Map<number, ChildInfo> = new Map<number, ChildInfo>();
   childrenScoreMap: Map<number, number> = new Map();
   childrenWeights: Map<number, number> = new Map();
-  trend: number;
-  lastScore: number = null;
   children: number[] = [];
-  last_two_scores: number[] = [];
-  grid: any[];
-  copiedScore: boolean = false;
-  copiedScoreDisposition: number = null;
-  numBugs: number = 0;
-  jiraIds: any = [];
-  showAddJira: boolean = false;
-  degrades: any = new Set();
-  upgrades: any = new Set();
-  failures: any = new Set();
-  bugs: any = {};
-  positive: boolean = true;
-  workInProgress: boolean = false;
-  tags: string = null;
+  showAddChart: boolean = false;
 }
 
 class FlatNode {
@@ -49,13 +30,8 @@ class FlatNode {
   collapsed: boolean;
   hide: boolean;
   indent: number;
-  showJiraInfo: boolean = false;
-  showGitInfo: boolean = false;
-  jiraList: any = {};
-  context: any = new Set();
   children: FlatNode[] = [];
   lineage: any = [];
-  special: boolean = false;
 
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
@@ -76,8 +52,6 @@ enum Mode {
 })
 
 export class AdminDagComponent implements OnInit {
-  numGridColumns: number;
-  lastStatusUpdateTime: any;
   mode: Mode = Mode.None;
   metricMap: any;
   cachedNodeInfo: any;
@@ -132,7 +106,6 @@ export class AdminDagComponent implements OnInit {
       for (let dag of this.dag) {
         this.walkDag(dag, lineage);
       }
-      //total container should always appear
       this.f1Node = this.flatNodes[0];
       this.f1Node.hide = false;
       this.expandNode(this.f1Node);
@@ -149,17 +122,8 @@ export class AdminDagComponent implements OnInit {
     node.chartName = dagEntry.chart_name;
     node.metricModelName = dagEntry.metric_model_name;
     node.numLeaves = dagEntry.num_leaves;
-    node.numChildrenDegrades = dagEntry.last_num_degrades;
-    node.lastNumBuildFailed = dagEntry.last_num_build_failed;
     node.children = dagEntry.children;
-    node.last_two_scores = dagEntry.last_two_scores;
-    node.copiedScore = dagEntry.copied_score;
-    node.copiedScoreDisposition = dagEntry.copied_score_disposition;
-    node.numBugs = dagEntry.jira_ids.length;
-    node.jiraIds = dagEntry.jira_ids;
-    node.showAddJira = false;
-    node.positive = dagEntry.positive;
-    node.workInProgress = dagEntry.work_in_progress;
+    node.showAddChart = false;
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
       childInfo.weight = dagEntry.children_weights[Number(key)];
@@ -188,8 +152,6 @@ export class AdminDagComponent implements OnInit {
     newFlatNode.hide = true;
     newFlatNode.collapsed = true;
     newFlatNode.indent = indent;
-    newFlatNode.showJiraInfo = false;
-    newFlatNode.showGitInfo = false;
     return newFlatNode;
   }
 
@@ -245,18 +207,6 @@ export class AdminDagComponent implements OnInit {
     })
   };
 
-  populateNodeInfoCache(data) {
-    if (!(data.metric_id in this.cachedNodeInfo)) {
-      this.cachedNodeInfo[data.metric_id] = data;
-    }
-    data.children_info.forEach((value, key) => {
-      this.cachedNodeInfo[key] = value;
-      value.children_info.forEach((v2, key2) => {
-        this.populateNodeInfoCache(v2);
-      });
-    });
-  }
-
   getIndentHtml = (node) => {
     let s = "";
     if (node.hasOwnProperty("indent")) {
@@ -309,16 +259,23 @@ export class AdminDagComponent implements OnInit {
   };
 
   showAtomicMetric = (flatNode) => {
-    this.expandNode(flatNode);
+    this.mode = Mode.ShowingAtomicMetric;
+    if (this.currentFlatNode)
+      this.currentFlatNode.node.showAddChart = false;
   };
 
 
   showNonAtomicMetric = (flatNode) => {
       this.mode = Mode.ShowingNonAtomicMetric;
       this.expandNode(flatNode);
+      if (this.currentFlatNode)
+        this.currentFlatNode.node.showAddChart = false;
+      this.currentFlatNode = flatNode;
+      flatNode.node.showAddChart = true;
   };
 
-  addChart(): void {
+  addChart(flatNode): void {
+    console.log();
 
   }
 

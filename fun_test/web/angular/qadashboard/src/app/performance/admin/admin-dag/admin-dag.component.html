@@ -15,11 +15,11 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <ng-container *ngIf="flatNode.node.leaf">
-                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                <a [ngClass]="{highlight:flatNode.node.showAddChart}" [routerLink]=""
                    (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
               </ng-container>
               <ng-container *ngIf="!flatNode.node.leaf">
-                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
+                <a [ngClass]="{highlight:flatNode.node.showAddChart}" [routerLink]=""
                    (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
               </ng-container>
               <span *ngIf="!flatNode.node.leaf">
@@ -36,7 +36,8 @@
               <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
             </td>
             <td class="text-center">
-              <span *ngIf="!flatNode.node.leaf" (click)="addChart()" class="plus-minus">+</span>
+              <span *ngIf="!flatNode.node.leaf && flatNode.node.showAddChart" (click)="addChart(flatNode)"
+                    class="plus-minus">+</span>
             </td>
           </tr>
         </ng-container>
