@@ -683,6 +683,7 @@ class StripeVolumeTestCase(FunTestCase):
                                                                             host_index=thread_count,
                                                                             filename=test_filename,
                                                                             rw=mode,
+                                                                            numjobs=fio_numjobs,
                                                                             bs=fio_block_size,
                                                                             iodepth=fio_iodepth,
                                                                             name=fio_job_name,
