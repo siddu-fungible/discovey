@@ -539,6 +539,39 @@ class RemoteSSDTest(StorageConfiguration):
         pass
 
 
+class ConfigureVMs(FunTestCase):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Bringup FS-45 with control plane",
+                              steps="""
+                              1. BringUP both F1s
+                              2. Bringup FunCP
+                              3. Create MPG Interfaces and assign static IPs
+                              """)
+
+    def setup(self):
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+
+    def run(self):
+        servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
+
+        for server in servers_with_vms:
+            print server
+            configure_vms(server_name=server, vm_dict=servers_with_vms[server], yml="FS-ALIBABA-DEMO-VM")
+            for vm in servers_with_vms[server]:
+                if servers_with_vms[server][vm]["vm_pings"]:
+                    test_host_pings(host=vm, ips=servers_with_vms[server][vm]["vm_pings"],
+                                    username=servers_with_vms[server][vm]["user"],
+                                    password=servers_with_vms[server][vm]["password"])
+
+
+    def cleanup(self):
+        pass
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())

@@ -1,6 +1,8 @@
 from lib.host.linux import *
 from scripts.networking.funeth.funeth import Funeth
-
+from lib.system.fun_test import *
+from scripts.networking.tb_configs import tb_configs
+from scripts.networking.funeth.sanity import Funeth
 
 def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
@@ -120,12 +122,12 @@ def power_cycle_host(hostname):
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
-def test_host_pings(host, ips):
+def test_host_pings(host, ips, username="localadmin", password="Precious1*"):
     fun_test.log("")
     fun_test.log("================")
     fun_test.log("Pings from Hosts")
     fun_test.log("================")
-    linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+    linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
     for hosts in ips:
         linux_obj.command(command="ifconfig -a")
         result = linux_obj.ping(dst=hosts)
@@ -213,3 +215,31 @@ def critical_log(expression, message):
 
     if not expression:
         fun_test.critical(message=message)
+
+
+def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
+    host_file = ASSET_DIR + "/hosts.json"
+    all_hosts_specs = parse_file_to_json(file_name=host_file)
+    host_spec = all_hosts_specs[server_name]
+    linux_obj = Linux(host_ip=host_spec["host_ip"], ssh_username=host_spec["ssh_username"],
+                      ssh_password=host_spec["ssh_password"])
+    all_vms = map(lambda s: s.strip(), linux_obj.command(command="virsh list --all --name").split())
+    for vm in vm_dict:
+        if vm in all_vms:
+            pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
+            if vm_dict[vm]["ethernet_pci_device"] in pci_device:
+                fun_test.critical(message="%s device not present on server" % vm_dict[vm]["ethernet_pci_device"])
+                fun_test.log("Skipping VM: %s" % vm)
+                continue
+            linux_obj.command(command="virsh shutdown %s" % vm)
+            linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["ethernet_pci_device"])
+            linux_obj.command(command="virsh start %s" % vm)
+        else:
+            fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
+    fun_test.sleep(message="Waiting for VMs to come up", seconds=60)
+
+    tb_config_obj = tb_configs.TBConfigs(yml)
+    funeth_obj = Funeth(tb_config_obj)
+    fun_test.shared_variables['funeth_obj'] = funeth_obj
+    setup_hu_vm(funeth_obj, update_driver=update_funeth_driver)
+
