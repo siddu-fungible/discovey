@@ -5,39 +5,14 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get
 from lib.fun.fs import Fs
 from lib.host.linux import Linux
 from scripts.storage.funcp_deploy import FunCpDockerContainer
+from lib.topology.topology_helper import TopologyHelper
+from lib.templates.storage.storage_fs_template import *
+from ec_perf_helper import *
+from collections import OrderedDict
 
 '''
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
-
-# As of now the dictionary variable containing the setup/testbed info used in this script
-
-tb_config = {
-    "name": "Storage over TCP",
-    "dut_info": {
-        0: {
-            "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial sku=SKU_FS1600_0"
-                       "  --all_100g --dis-stats --mgmt --dpc-server --dpc-uart --nofreeze",
-            "perf_multiplier": 1,
-            "f1_bond_ip": "15.44.1.2",
-            "f1_bond_gw": "15.44.1.1",
-            "f1_bond_netmask": "255.255.255.0",
-            "tcp_port": 1099,
-            "come_ip": "10.1.105.162"
-        }
-    },
-    "tg_info": {
-        0: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.105.104",
-            "user": "localadmin",
-            "passwd": "Precious1*",
-            "iface_ip": "15.1.4.2",
-            "iface_gw": "15.1.4.1"
-        }
-    }
-}
-
 
 def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
     host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
@@ -105,65 +80,413 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
         """)
 
     def setup(self):
-        # Rebooting host
-        # end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
-        #                  ssh_username=tb_config["tg_info"][0]["user"],
-        #                  ssh_password=tb_config["tg_info"][0]["passwd"])
-        # fun_test.shared_variables["end_host_inst"] = end_host
-        # try:
-        #     end_host.reboot(non_blocking=True)
-        #     fun_test.sleep("Host is rebooted", 20)
-        #     # TODO: Ping and check if host is up
-        # except:
-        #     fun_test.log("Reboot of host failed")
 
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], disable_f1_index=1, disable_uart_logger=True)
-        fun_test.shared_variables["fs"] = fs
+        # Parsing the global config and assign them as object members
+        config_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Config file being used: {}".format(config_file))
+        config_dict = utils.parse_file_to_json(config_file)
 
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
-        f1 = fs.get_f1(index=0)
-        fun_test.shared_variables["f1"] = f1
+        if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
+            fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
+            fun_test.log("Going to use the script level defaults")
+            self.bootargs = Fs.DEFAULT_BOOT_ARGS
+            self.disable_f1_index = None
+            self.f1_in_use = 0
+            self.syslog = 2
+            self.command_timeout = 30
+            self.reboot_timeout = 600
+        else:
+            for k, v in config_dict["GlobalSetup"].items():
+                setattr(self, k, v)
 
-        self.db_log_time = get_data_collection_time()
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
+        fun_test.log("Global Config: {}".format(self.__dict__))
 
-        self.storage_controller = f1.get_dpc_storage_controller()
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
+        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
+        self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
+        fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
+        self.total_avaialble_duts = len(self.testbed_config["dut_info"])
+        fun_test.log("Total Avaialble Duts: {}".format(self.total_avaialble_duts))
 
-        fun_test.shared_variables["fio"] = {}
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            # Declaring default values if not defined in config files
+            if not hasattr(self, "dut_start_index"):
+                self.dut_start_index = 0
+            if not hasattr(self, "host_start_index"):
+                self.host_start_index = 0
+            if not hasattr(self, "update_workspace"):
+                self.update_workspace = False
+            if not hasattr(self, "update_deploy_script"):
+                self.update_deploy_script = False
+
+            # Using Parameters passed during execution, this will override global and config parameters
+            job_inputs = fun_test.get_job_inputs()
+            fun_test.log("Provided job inputs: {}".format(job_inputs))
+            if "dut_start_index" in job_inputs:
+                self.dut_start_index = job_inputs["dut_start_index"]
+            if "host_start_index" in job_inputs:
+                self.host_start_index = job_inputs["host_start_index"]
+            if "update_workspace" in job_inputs:
+                self.update_workspace = job_inputs["update_workspace"]
+            if "update_deploy_script" in job_inputs:
+                self.update_deploy_script = job_inputs["update_deploy_script"]
+
+            self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
+            fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
+            fun_test.test_assert(expression=self.num_duts <= self.total_avaialble_duts,
+                                 message="Testbed has enough DUTs")
+
+            # Skipping DUTs not required for this test
+            self.skip_dut_list = []
+            for index in xrange(0, self.dut_start_index):
+                self.skip_dut_list.append(index)
+            for index in xrange(self.dut_start_index + self.num_duts, self.total_avaialble_duts):
+                self.skip_dut_list.append(index)
+            fun_test.debug("DUTs that will be skipped: {}".format(self.skip_dut_list))
+
+            for i in range(len(self.bootargs)):
+                self.bootargs[i] += " --mgmt"
+
+            # Deploying of DUTs
+            topology_helper = TopologyHelper()
+            topology_helper.disable_duts(self.skip_dut_list)
+            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                              1: {"boot_args": self.bootargs[1]}})
+            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
+            self.topology = topology_helper.deploy()
+            fun_test.test_assert(self.topology, "Topology deployed")
+
+            # Datetime required for daily Dashboard data filter
+            self.db_log_time = get_data_collection_time()
+            fun_test.log("Data collection time: {}".format(self.db_log_time))
+
+            # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
+            hosts = self.topology.get_hosts()
+            fun_test.log("Available hosts are: {}".format(hosts))
+            required_host_index = []
+            required_hosts = OrderedDict()
+            for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
+                required_host_index.append(i)
+            fun_test.debug("Host index required for scripts: {}".format(required_host_index))
+            for j, host_name in enumerate(sorted(hosts)):
+                if j in required_host_index:
+                    required_hosts[host_name] = hosts[host_name]
+            fun_test.log("Hosts that will be used for current test: {}".format(required_hosts.keys()))
+
+            self.hosts_test_interfaces = {}
+            self.host_handles = {}
+            self.host_ips = []
+            self.host_numa_cpus = {}
+            self.total_numa_cpus = {}
+            for host_name, host_obj in required_hosts.items():
+                # Retrieving host ips
+                # test_interfaces = host.get_test_interfaces()
+                if host_name not in self.hosts_test_interfaces:
+                    self.hosts_test_interfaces[host_name] = []
+                test_interface = host_obj.get_test_interface(index=0)
+                self.hosts_test_interfaces[host_name].append(test_interface)
+                host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
+                self.host_ips.append(host_ip)
+                fun_test.log("Host-IP: {}".format(host_ip))
+                # Retrieving host handles
+                host_instance = host_obj.get_instance()
+                self.host_handles[host_ip] = host_instance
+
+            # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
+            for key in self.host_handles:
+                if self.override_numa_node["override"]:
+                    self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
+                    self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                else:
+                    self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+
+                # Calculating the number of CPUs available in the given numa
+                self.total_numa_cpus[key] = 0
+                for cpu_group in self.host_numa_cpus[key].split(","):
+                    cpu_range = cpu_group.split("-")
+                    self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+                fun_test.log("Rebooting host: {}".format(key))
+                self.host_handles[key].reboot(non_blocking=True)
+            fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
+            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+
+            # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
+            # for all the DUTs going to be used in the test
+            self.fs_objs = []
+            self.fs_spec = []
+            self.come_obj = []
+            self.f1_objs = {}
+            self.sc_objs = []
+            self.f1_ips = []
+            self.gateway_ips = []
+            for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
+                curr_index = i - self.dut_start_index
+                self.fs_objs.append(self.topology.get_dut_instance(index=i))
+                self.fs_spec.append(self.topology.get_dut(index=i))
+                self.come_obj.append(self.fs_objs[curr_index].get_come())
+                self.f1_objs[curr_index] = []
+                for j in xrange(self.num_f1_per_fs):
+                    self.f1_objs[curr_index].append(self.fs_objs[curr_index].get_f1(index=j))
+                    self.sc_objs.append(self.f1_objs[curr_index][j].get_dpc_storage_controller())
+
+            # Bringing up of FunCP docker container if it is needed
+            self.funcp_obj = {}
+            self.funcp_spec = {}
+            for index in xrange(self.num_duts):
+                self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
+                self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
+                    update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
+                    mode=self.funcp_mode)
+                fun_test.test_assert(self.funcp_spec[index]["status"],
+                                     "Starting FunCP docker container in DUT {}".format(index))
+                self.funcp_spec[index]["container_names"].sort()
+                for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
+                    bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                    bond_name = "bond0"
+                    bond_ip = bond_interfaces[0].ip
+                    self.f1_ips.append(bond_ip.split('/')[0])
+                    slave_interface_list = bond_interfaces[0].fpg_slaves
+                    slave_interface_list = [self.fpg_int_prefix + str(i) for i in slave_interface_list]
+                    self.funcp_obj[index].configure_bond_interface(container_name=container_name,
+                                                                   name=bond_name,
+                                                                   ip=bond_ip,
+                                                                   slave_interface_list=slave_interface_list)
+                    # Configuring route
+                    route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
+                    # self.funcp_obj[index].container_info[container_name].command("hostname")
+                    cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
+                    route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
+                    fun_test.test_assert_expected(expected=0,
+                                                  actual=self.funcp_obj[index].container_info[
+                                                      container_name].exit_status(),
+                                                  message="Configure Static route")
+
+            # Forming shared variables for defined parameters
+            fun_test.shared_variables["topology"] = self.topology
+            fun_test.shared_variables["fs_objs"] = self.fs_objs
+            fun_test.shared_variables["come_obj"] = self.come_obj
+            fun_test.shared_variables["f1_objs"] = self.f1_objs
+            fun_test.shared_variables["sc_obj"] = self.sc_objs
+            fun_test.shared_variables["f1_ips"] = self.f1_ips
+            fun_test.shared_variables["host_handles"] = self.host_handles
+            fun_test.shared_variables["host_ips"] = self.host_ips
+            fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
+            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
+            fun_test.shared_variables["num_f1s"] = self.num_f1s
+            fun_test.shared_variables["num_duts"] = self.num_duts
+            fun_test.shared_variables["syslog_level"] = self.syslog
+            fun_test.shared_variables["db_log_time"] = self.db_log_time
+
+            for key in self.host_handles:
+                # Ensure all hosts are up after reboot
+                fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                                     message="Ensure Host {} is reachable after reboot".format(key))
+
+                # TODO: enable after mpstat check is added
+                """
+                # Check and install systat package
+                install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+                fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+                """
+                # Ensure required modules are loaded on host server, if not load it
+                for module in self.load_modules:
+                    module_check = self.host_handles[key].lsmod(module)
+                    if not module_check:
+                        self.host_handles[key].modprobe(module)
+                        module_check = self.host_handles[key].lsmod(module)
+                        fun_test.sleep("Loading {} module".format(module))
+                    fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+
+            # Ensuring connectivity from Host to F1's
+            for key in self.host_handles:
+                for index, ip in enumerate(self.f1_ips):
+                    ping_status = self.host_handles[key].ping(dst=ip)
+                    fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                                         format(key, self.funcp_spec[0]["container_names"][index], ip))
+
+        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["csr_replay"]:
+
+            for i in range(len(self.bootargs)):
+                self.bootargs[i] += " --csr-replay"
+
+            topology_helper = TopologyHelper()
+            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                              1: {"boot_args": self.bootargs[1]}})
+            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
+            self.topology = topology_helper.deploy()
+            fun_test.test_assert(self.topology, "Topology deployed")
+
+            self.fs = self.topology.get_dut_instance(index=0)
+            self.f1 = self.fs.get_f1(index=self.f1_in_use)
+            self.db_log_time = get_data_collection_time()
+            fun_test.log("Data collection time: {}".format(self.db_log_time))
+
+            self.storage_controller = self.f1.get_dpc_storage_controller()
+
+            # Fetching Linux host with test interface name defined
+            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0,
+                                                                                     f1_index=self.f1_in_use)
+            for host_ip, host_info in fpg_connected_hosts.iteritems():
+                if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
+                    continue
+                if "test_interface_name" in host_info["host_obj"].extra_attributes:
+                    self.end_host = host_info["host_obj"]
+                    self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
+                    self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
+                    fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
+                    break
+            else:
+                fun_test.test_assert(False, "Host found with Test Interface")
+
+            self.test_network = self.csr_network[str(self.fpg_inteface_index)]
+            fun_test.shared_variables["end_host"] = self.end_host
+            fun_test.shared_variables["topology"] = self.topology
+            fun_test.shared_variables["fs"] = self.fs
+            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
+            fun_test.shared_variables["test_network"] = self.test_network
+            fun_test.shared_variables["syslog_level"] = self.syslog
+            fun_test.shared_variables["db_log_time"] = self.db_log_time
+            fun_test.shared_variables["storage_controller"] = self.storage_controller
+
+            # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
+            if self.override_numa_node["override_node"]:
+                self.numa_cpus_filter = self.end_host.lscpu(self.override_numa_node["override_node"])
+                self.numa_cpus = self.numa_cpus_filter[self.override_numa_node["override_node"]]
+            else:
+                self.numa_cpus = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
+
+            # Calculating the number of CPUs available in the given numa
+            self.total_numa_cpus = 0
+            for cpu_group in self.numa_cpus.split(","):
+                cpu_range = cpu_group.split("-")
+                self.total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+
+            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+            fun_test.shared_variables["numa_cpus"] = self.numa_cpus
+            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
+
+            # Configuring Linux host
+            host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout,
+                                                  reboot_initiated_wait_time=self.reboot_timeout)
+            fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
+
+            interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
+                                                                 self.test_interface_name)
+            interface_mac_config = "ip link set {} address {}".format(self.test_interface_name,
+                                                                      self.test_network["test_interface_mac"])
+            link_up_cmd = "ip link set {} up".format(self.test_interface_name)
+            static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
+                                                   self.test_network["test_net_route"]["arp"])
+
+            interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
+                                                                    timeout=self.command_timeout)
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                          message="Configuring test interface IP address")
+
+            interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
+                                                              timeout=self.command_timeout)
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                          message="Assigning MAC to test interface")
+
+            link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                          message="Bringing up test link")
+
+            interface_up_status = self.end_host.ifconfig_up_down(interface=self.test_interface_name,
+                                                                 action="up")
+            fun_test.test_assert(interface_up_status, "Bringing up test interface")
+
+            route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
+                                                          gateway=self.test_network["test_net_route"]["gw"],
+                                                          outbound_interface=self.test_interface_name,
+                                                          timeout=self.command_timeout)
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
+
+            arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
+            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
+                                          message="Adding static ARP to F1 route")
+
+            # Loading the nvme and nvme_tcp modules
+            for module in self.load_modules:
+                module_check = self.end_host.lsmod(module)
+                if not module_check:
+                    self.end_host.modprobe(module)
+                    module_check = self.end_host.lsmod(module)
+                    fun_test.sleep("Loading {} module".format(module))
+                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+
+        fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
-        try:
-            self.blt_details = fun_test.shared_variables["blt_details"]
+        come_reboot = False
+        if hasattr(fun_test.shared_variables, "blt") and fun_test.shared_variables["blt"]["setup_created"]:
+            if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                    self.testbed_config["workarounds"]["enable_funcp"]:
+                self.fs = self.fs_objs[0]
+                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+            elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
+                    self.testbed_config["workarounds"]["csr_replay"]:
+                self.fs = fun_test.shared_variables["fs"]
+                self.storage_controller = fun_test.shared_variables["storage_controller"]
+            try:
+                self.blt_details = fun_test.shared_variables["blt_details"]
+                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
 
-            # Deleting the volumes
-            for i in range(0, fun_test.shared_variables["blt_count"], 1):
-                cur_uuid = fun_test.shared_variables["thin_uuid"][i]
-                command_result = self.storage_controller.volume_detach_remote(ns_id=i + 1,
-                                                                            uuid=cur_uuid,
-                                                                            huid=tb_config['dut_info'][0]['huid'],
-                                                                            ctlid=tb_config['dut_info'][0]['ctlid'],
-                                                                            command_duration=30)
-                fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
-                command_result = self.storage_controller.delete_volume(type=self.blt_details["type"],
-                                                                       name="thin_block" + str(i + 1),
-                                                                       uuid=cur_uuid,
-                                                                       command_duration=10)
-                fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
-                                     format(i + 1, cur_uuid))
-        except:
-            fun_test.log("Clean-up of volumes failed.")
+                # Deleting the volumes
+                for i in range(0, fun_test.shared_variables["blt_count"], 1):
+                    cur_uuid = fun_test.shared_variables["thin_uuid"][i]
+                    command_result = self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid, ns_id=i + 1, command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+
+                    command_result = self.storage_controller.delete_volume(uuid=cur_uuid,
+                                                                           command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                         format(i + 1, cur_uuid))
+
+                # Deleting the controller
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                           command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+
+            except:
+                fun_test.log("Clean-up of volumes failed.")
+
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            try:
+                for index in xrange(self.num_duts):
+                    stop_containers = self.funcp_obj[index].stop_container()
+                    fun_test.test_assert_expected(expected=True, actual=stop_containers,
+                                                  message="Docker containers are stopped")
+                    self.come_obj[index].command("sudo rmmod funeth")
+                    fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                                  message="funeth module is unloaded")
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                come_reboot = True
 
         try:
-            dpc_host = fun_test.shared_variables["dpc_host"]
-            dpc_host.command("docker stop F1-0", timeout=180)
-            dpc_host.sudo_command("rmmod funeth", timeout=180)
-        except:
-            fun_test.log("COMe clean-up failed")
+            if come_reboot:
+                self.fs.fpga_initialize()
+                fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
+                self.fs.come_reset(max_wait_time=self.reboot_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
         fun_test.log("FS cleanup")
-        fun_test.shared_variables["fs"].cleanup()
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            for fs in fun_test.shared_variables["fs_objs"]:
+                fs.cleanup()
+        else:
+            fun_test.shared_variables["fs"].cleanup()
 
+        fun_test.shared_variables["storage_controller"].disconnect()
+        fun_test.sleep("Allowing buffer time before clean-up", 30)
+        self.topology.cleanup()     # Why is this needed?
 
 class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def describe(self):
@@ -229,81 +552,52 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                      format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
 
+        self.testbed_config = fun_test.shared_variables["testbed_config"]
+        self.syslog = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["blt_count"] = self.blt_count
 
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
+        # New changes
+        fun_test.shared_variables["transport_type"] = self.transport_type
 
-        # Setting the syslog level to 2
-        command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
-        fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+        self.nvme_block_device = self.nvme_device + "0n" + str(self.blt_details["ns_id"])
+        self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
-        command_result = self.storage_controller.peek("params/syslog/level")
-        fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
-                                      message="Checking syslog level")
-
-        fs = fun_test.shared_variables["fs"]
-        self.dpc_host = fs.get_come()
-
-        # Create Linux objects for end hosts
-        host_index = 0
-        self.end_host = Linux(host_ip=tb_config["tg_info"][host_index]["ip"],
-                    ssh_username=tb_config['tg_info'][host_index]['user'],
-                    ssh_password=tb_config['tg_info'][host_index]['passwd']
-                    )
-
-        f1 = fun_test.shared_variables["f1"]
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            self.fs = fun_test.shared_variables["fs_objs"]
+            self.come_obj = fun_test.shared_variables["come_obj"]
+            self.f1 = fun_test.shared_variables["f1_objs"][0][0]
+            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+            self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+            self.host_handles = fun_test.shared_variables["host_handles"]
+            self.host_ips = fun_test.shared_variables["host_ips"]
+            self.end_host = self.host_handles[self.host_ips[0]]
+            self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
+            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
+            self.num_f1s = fun_test.shared_variables["num_f1s"]
+            self.test_network = {}
+            self.test_network["f1_loopback_ip"] = self.f1_ips
+            self.remote_ip = self.host_ips[0]
+            fun_test.shared_variables["remote_ip"] = self.remote_ip
+            self.num_duts = fun_test.shared_variables["num_duts"]
+        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["csr_replay"]:
+            self.fs = fun_test.shared_variables["fs"]
+            self.end_host = fun_test.shared_variables["end_host"]
+            self.test_network = fun_test.shared_variables["test_network"]
+            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
+            self.storage_controller = fun_test.shared_variables["storage_controller"]
+            self.numa_cpus = fun_test.shared_variables["numa_cpus"]
+            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"]
+            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
+            fun_test.shared_variables["remote_ip"] = self.remote_ip
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt_details"] = self.blt_details
-
-            self.dpc_host.modprobe(module="nvme")
-            self.dpc_host.sudo_command("iptables -F")
-            self.dpc_host.sudo_command("ip6tables -F")
-            fun_test.sleep("Loading nvme module", 2)
-            command_result = self.dpc_host.lsmod(module="nvme")
-            fun_test.simple_assert(command_result, "Loading nvme module")
-            fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
-
-            fun_test.log("Configure FunCP")
-            self.dpc_host.rmmod("funeth")
-            self.dpc_host.command("cd /mnt/keep/FunSDK")
-            setup_docker_output = self.dpc_host.command(
-                "export WORKSPACE=/home/fun/workspace && "
-                "./integration_test/emulation/test_system.py --setup --docker --ep", timeout=1600)
-            fun_test.log(setup_docker_output)
-
-            container_cli = FunCpDockerContainer(host_ip=tb_config["dut_info"][0]["come_ip"],
-                                                 ssh_password="123", ssh_username="fun",
-                                                 f1_index=0)
-
-            container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ifconfig $i down;sleep 1;done")
-            container_cli.command(
-                "sudo ip link add bond0 type bond mode 802.3ad miimon 0 xmit_hash_policy layer3+4 min_links 1")
-            container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ip link set $i master bond0;sleep 1;done")
-            container_cli.command("for i in fpg0 fpg4 fpg8 fpg12;do sudo ifconfig $i up;sleep 1;done")
-            container_cli.command("sudo ifconfig bond0 down")
-            fun_test.sleep("Assign IP to bond0", 5)
-            container_cli.command("sudo ifconfig bond0 {} netmask {} up"
-                                  "".format(tb_config["dut_info"][0]["f1_bond_ip"],
-                                            tb_config["dut_info"][0]["f1_bond_netmask"]))
-            while True:
-                check_int_running = container_cli.command("ifconfig bond0")
-                if "RUNNING" in check_int_running:
-                    fun_test.sleep("Interface bond0 is up", 5)
-                    break
-                else:
-                    container_cli.command("sudo ifconfig bond0 down")
-                    fun_test.sleep("Interface brought down", 10)
-                    container_cli.command("sudo ifconfig bond0 up")
-            container_cli.command("ping {} -c 10".format(tb_config["dut_info"][0]["f1_bond_ip"]))
-            container_cli.command("sudo ip route add 15.0.0.0/8 via {} dev bond0"
-                                  "".format(tb_config["dut_info"][0]["f1_bond_gw"]))
-            container_cli.command("ping {} -c 10".format(tb_config['tg_info'][host_index]['iface_ip']))
-            fun_test.log("FunCP brought up")
 
             # Enabling counters
             """
@@ -314,10 +608,9 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             """
 
             # Configuring controller IP
-            command_result = self.storage_controller.ip_cfg(ip=tb_config['dut_info'][0]['f1_bond_ip'],
-                                                            port=tb_config['dut_info'][0]['tcp_port'])
+            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg on COMe")
+            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
 
             # Create BLT's
             self.nvme_block_device = []
@@ -338,18 +631,17 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
 
             # Create TCP controller
-            nvme_transport = self.transport_type
             self.ctrlr_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_controller(
                 ctrlr_uuid=self.ctrlr_uuid,
-                transport=unicode.upper(nvme_transport),
-                remote_ip=tb_config['tg_info'][0]['iface_ip'],
+                transport=unicode.upper(self.transport_type),
+                remote_ip=self.remote_ip,
                 nqn=self.nqn,
-                port=tb_config['dut_info'][0]['tcp_port'],
+                port=self.transport_port,
                 command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Creating controller For TCP with uuid {} on DUT".
-                                 format(self.ctrlr_uuid))
+            fun_test.test_assert(command_result["status"], "Creating controller for {} with uuid {} on DUT".
+                                 format(self.transport_type, self.ctrlr_uuid))
 
             # Attach controller to all BLTs
             for i in range(0, self.blt_count, 1):
@@ -399,25 +691,33 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 self.end_host.modprobe("nvme_tcp")
                 self.end_host.modprobe("nvme_fabrics")
 
+            # Setting the syslog level to 2
+            command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
+            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+
+            command_result = self.storage_controller.peek("params/syslog/level")
+            fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                          message="Checking syslog level")
+
             fun_test.sleep("x86 Config done", seconds=10)
             if hasattr(self, "nvme_io_q"):
                 command_result = self.end_host.sudo_command(
                     "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".
-                        format(unicode.lower(nvme_transport),
-                               tb_config['dut_info'][0]['f1_bond_ip'],
-                               tb_config['dut_info'][0]['tcp_port'],
+                        format(unicode.lower(self.transport_type),
+                               self.test_network["f1_loopback_ip"],
+                               str(self.transport_port),
                                self.nqn,
                                self.nvme_io_q,
-                               tb_config['tg_info'][0]['iface_ip']))
+                               self.remote_ip))
                 fun_test.log(command_result)
             else:
                 command_result = self.end_host.sudo_command(
                     "nvme connect -t {} -a {} -s {} -n {} -q {}".
-                        format(unicode.lower(nvme_transport),
-                               tb_config['dut_info'][0]['f1_bond_ip'],
-                               tb_config['dut_info'][0]['tcp_port'],
+                        format(unicode.lower(self.transport_type),
+                               self.test_network["f1_loopback_ip"],
+                               str(self.transport_port),
                                self.nqn,
-                               tb_config['tg_info'][0]['iface_ip']))
+                               self.remote_ip))
                 fun_test.log(command_result)
 
             # Checking that the above created BLT volume is visible to the end host
@@ -429,19 +729,28 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                                 message="{} device type check".format(self.volume_name))
 
+            fun_test.shared_variables["blt"]["setup_created"] = True
+
             # Pre-conditioning the volume (one time task)
             self.nvme_block_device_str = ':'.join(self.nvme_block_device)
             fun_test.shared_variables["nvme_block_device_str"] = self.nvme_block_device_str
             if self.warm_up_traffic:
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
-                if not hasattr(self, "create_file_system"):
+                warm_up_fio_cmd_args = {}
+                jobs = ""
+                if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                    for i in range(0, len(self.nvme_block_device)):
+                         jobs += " --name=pre-cond-job-{} --filename={}".format(i + 1, self.nvme_block_device[i])
+                    warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
+                    fio_output = self.end_host.pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
+                                                        **warm_up_fio_cmd_args)
+                else:
                     fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
-                    fun_test.test_assert(fio_output, "Pre-populating the volume")
+                fun_test.test_assert(fio_output, "Pre-populating the volume")
                 fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
 
-            fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
 
@@ -506,7 +815,7 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                     cpus_allowed = "1"
                 elif int(fio_numjobs) == 4:
                     cpus_allowed = "1-4"
-                elif int(fio_numjobs) >= 8:
+                elif int(fio_numjobs) > 4:
                     cpus_allowed = "1-19,40-59"
 
                 # Flush cache before read test
@@ -532,7 +841,11 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                 fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=fun_test.shared_variables["nvme_block_device_str"],
+                if hasattr(self, "test_blt_count") and self.test_blt_count == 1:
+                    fio_filename = fun_test.shared_variables["nvme_block_device_list"][0]
+                else:
+                    fio_filename = fun_test.shared_variables["nvme_block_device_str"]
+                fio_output[combo][mode] = self.end_host.pcie_fio(filename=fio_filename,
                                                                  numjobs=fio_numjobs,
                                                                  rw=mode,
                                                                  bs=fio_block_size,
@@ -559,6 +872,7 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                                           format(field, stat_delta))
                 """
 
+                """
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = tb_config["dut_info"][0]["perf_multiplier"]
                 for op, stats in fio_output[combo][mode].items():
@@ -571,6 +885,7 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value / multiplier))
                 fun_test.log("FIO Command Output after multiplication:")
+                """
                 fun_test.log(fio_output[combo][mode])
 
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
@@ -594,10 +909,10 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                post_results("Multi_vol_TCP", test_method, *row_data_list)
+                #post_results("Multi_vol_TCP", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Multiple Volumes over TCP Perf Table", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="Single/Multiple Volume(s) over TCP Perf Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -613,10 +928,38 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def cleanup(self):
         pass
 
-class MultiBLTFioRead12(MultiBLTVolumePerformanceTestcase):
+class SingleBLTFioRandRead(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
+                              summary="Random Read performance for 1 volumes on TCP "
+                                      "with different levels of numjobs & iodepth & block size 4K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+class SingleBLTFioRandWrite(MultiBLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Random Write performance for 1 volumes on TCP "
+                                      "with different levels of numjobs & iodepth & block size 4K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+class MultiBLTFioRead12(MultiBLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=3,
                               summary="Sequential Read performance for 12 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
@@ -630,7 +973,7 @@ class MultiBLTFioRead12(MultiBLTVolumePerformanceTestcase):
 class MultiBLTFioRandRead12(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=4,
                               summary="Random Read performance for 12 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size of 4K",
                               steps='''
@@ -644,7 +987,7 @@ class MultiBLTFioRandRead12(MultiBLTVolumePerformanceTestcase):
 class MultiBLTFioWrite12(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=5,
                               summary="Sequential Read performance for 12 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size of 4K",
                               steps='''
@@ -658,7 +1001,7 @@ class MultiBLTFioWrite12(MultiBLTVolumePerformanceTestcase):
 class MultiBLTFioRandWrite12(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=6,
                               summary="Random Write performance for 12 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size of 4K",
                               steps='''
@@ -673,6 +1016,8 @@ class MultiBLTFioRandWrite12(MultiBLTVolumePerformanceTestcase):
 if __name__ == "__main__":
 
     bltscript = MultiBLTVolumePerformanceScript()
+    bltscript.add_test_case(SingleBLTFioRandRead())
+    bltscript.add_test_case(SingleBLTFioRandWrite())
     bltscript.add_test_case(MultiBLTFioRandRead12())
     bltscript.add_test_case(MultiBLTFioRandWrite12())
     bltscript.run()
