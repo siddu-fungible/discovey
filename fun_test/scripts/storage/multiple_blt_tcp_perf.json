@@ -178,7 +178,7 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(32, 2)", "(32, 4)"],
+    "fio_jobs_iodepth": ["(32, 4)", "(32, 8)"],
     "fio_job_name": {
       "randread": "nvols"
     },
