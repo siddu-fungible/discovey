@@ -22,6 +22,7 @@ class Node {
   childrenWeights: Map<number, number> = new Map();
   children: number[] = [];
   showAddChart: boolean = false;
+  showAddChartPanel: boolean = false;
 }
 
 class FlatNode {
@@ -260,22 +261,27 @@ export class AdminDagComponent implements OnInit {
 
   showAtomicMetric = (flatNode) => {
     this.mode = Mode.ShowingAtomicMetric;
-    if (this.currentFlatNode)
+    if (this.currentFlatNode) {
       this.currentFlatNode.node.showAddChart = false;
+      this.currentFlatNode.node.showAddChartPanel = false;
+    }
   };
 
 
   showNonAtomicMetric = (flatNode) => {
       this.mode = Mode.ShowingNonAtomicMetric;
       this.expandNode(flatNode);
-      if (this.currentFlatNode)
+      if (this.currentFlatNode) {
         this.currentFlatNode.node.showAddChart = false;
+        this.currentFlatNode.node.showAddChartPanel = false;
+      }
       this.currentFlatNode = flatNode;
       flatNode.node.showAddChart = true;
   };
 
   addChart(flatNode): void {
-    console.log();
+    console.log(flatNode);
+    flatNode.node.showAddChartPanel = true;
 
   }
 

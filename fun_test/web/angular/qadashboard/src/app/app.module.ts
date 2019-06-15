@@ -65,6 +65,7 @@ import { AdminComponent } from "./performance/admin/admin.component";
 import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { AdminDagComponent } from './performance/admin/admin-dag/admin-dag.component';
+import { ChartsListComponent } from './performance/admin/charts-list/charts-list.component';
 
 @NgModule({
   declarations: [
@@ -114,7 +115,8 @@ import { AdminDagComponent } from './performance/admin/admin-dag/admin-dag.compo
     AdminComponent,
     ScoresTableComponent,
     PerformanceTableComponent,
-    AdminDagComponent
+    AdminDagComponent,
+    ChartsListComponent
   ],
   imports: [
     BsDropdownModule,

@@ -163,7 +163,10 @@ metric_urls = [
     url(r'^get_triage_info$', metrics_views.get_triage_info),
     url(r'^get_triage_info_from_commits$', metrics_views.get_triage_info_from_commits),
     url(r'^global_settings', metrics_views.global_settings),
-    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras)
+    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras),
+    url(r'^fetch_models$', metrics_views.fetch_models),
+    url(r'^fetch_owners$', metrics_views.fetch_owners),
+    url(r'^fetch_charts$', metrics_views.fetch_charts)
 ]
 
 test_urls = [

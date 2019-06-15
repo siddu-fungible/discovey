@@ -248,3 +248,7 @@ sup {
 * {
   -ms-overflow-style: none !important;
 }
+
+a {
+cursor: pointer !important;
+}
