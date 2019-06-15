@@ -137,6 +137,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
 
 
 def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  version, when='before'):
+    """Collect DPC stats and return if something is stuck."""
 
     tc_id = fun_test.current_test_case_id
 
@@ -306,18 +307,18 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             json.dump(output_list, f, indent=4, separators=(',', ': '), sort_keys=True)
             fun_test.add_auxillary_file(description=dpc_stats_filename, filename=file_path)
 
-    fpg_rx_bytes = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
-    )
-    fpg_rx_pkts = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_aFramesReceivedOK'.format(i), 0) for i in fpg_interfaces]
-    )
-    fpg_tx_bytes = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_OctetsTransmittedOK'.format(i), 0) for i in fpg_interfaces]
-    )
-    fpg_tx_pkts = sum(
-        [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
-    )
+    #fpg_rx_bytes = sum(
+    #    [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_OctetsReceivedOK'.format(i), 0) for i in fpg_interfaces]
+    #)
+    #fpg_rx_pkts = sum(
+    #    [fpg_stats[i][0].get('port_{}-PORT_MAC_RX_aFramesReceivedOK'.format(i), 0) for i in fpg_interfaces]
+    #)
+    #fpg_tx_bytes = sum(
+    #    [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_OctetsTransmittedOK'.format(i), 0) for i in fpg_interfaces]
+    #)
+    #fpg_tx_pkts = sum(
+    #    [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
+    #)
 
     if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked:
         if eqm_output.get(
@@ -334,9 +335,12 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             messages.append('Flow blocked')
         if is_eqm_not_dequeued:
             messages.append('EQM not dequeued')
-        fun_test.test_assert(False, '; '.join(messages))
+        fun_test.critical('; '.join(messages))
 
-    return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
+        return True
+    else:
+        return False
+    #return fpg_tx_pkts, fpg_tx_bytes, fpg_rx_pkts, fpg_rx_bytes
 
 
 def populate_result_summary(tc_ids, results, funsdk_commit, funsdk_bld, driver_commit, driver_bld, filename):
