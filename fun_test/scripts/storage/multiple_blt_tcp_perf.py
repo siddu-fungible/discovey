@@ -420,7 +420,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
 
     def cleanup(self):
         come_reboot = False
-        if hasattr(fun_test.shared_variables, "blt") and fun_test.shared_variables["blt"]["setup_created"]:
+        if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_objs[0]
