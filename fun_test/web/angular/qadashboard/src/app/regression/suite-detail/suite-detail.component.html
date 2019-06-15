@@ -12,6 +12,11 @@
                   (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
                   class="anchor-button pseudo-anchor">
     / Re-run failed</span>)
+            <ng-container *ngIf="suiteExecution.fields.state > stateMap.COMPLETED">
+              <span style="color:red" class="anchor-button pseudo-anchor" (click)="killClick()">Kill</span>
+            </ng-container>
+
+
           </ng-container>
         </div>
         <div class="card-body">

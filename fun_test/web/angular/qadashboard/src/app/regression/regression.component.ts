@@ -1,4 +1,8 @@
-import {Component, OnInit, Input} from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input
+} from '@angular/core';
 import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -377,10 +381,11 @@ export class RegressionComponent implements OnInit {
   }
 
   killClick(suiteId) {
-    this.apiService.get("/regression/kill_job/" + suiteId).subscribe(function (result) {
-      let jobId = parseInt(result.data);
-      alert("Killed Successfully");
-      window.location.href = "/regression/";
+    this.regressionService.killSuite(suiteId).subscribe((result) => {
+      this.logger.success(`Killed job: ${result}`);
+      window.location.reload()
+    }, error => {
+      this.logger.error(`Unable kill ${suiteId}`);
     });
   }
 
