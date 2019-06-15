@@ -142,4 +142,13 @@ export class RegressionService implements OnInit{
     }))
   }
 
+  killSuite(suiteId) {
+    return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap( (response) => {
+      let jobId = parseInt(response.data);
+      return of(jobId);
+      //window.location.href = "/regression/";
+    }));
+  }
+
+
 }

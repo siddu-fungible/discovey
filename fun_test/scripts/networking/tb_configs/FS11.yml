@@ -20,25 +20,25 @@ nu:
         - prefix: 21.1.1.0/24
           nexthop: 20.1.1.2
 
-nu2:
-  hostname: poc-server-07
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno1
-  namespaces:
-    default:
-      interfaces:
-        - fpg4:
-            mac_addr: fe:dc:ba:44:66:31
-            ipv4_addr: 21.1.1.1
-            ipv4_netmask: 255.255.255.0
-      routes:
-        - prefix: 53.1.1.0/24
-          nexthop: 21.1.1.2
-        - prefix: 53.1.9.0/24
-          nexthop: 21.1.1.2
-        - prefix: 20.1.1.0/24
-          nexthop: 21.1.1.2
+#nu2:
+#  hostname: poc-server-07
+#  username: localadmin
+#  password: Precious1*
+#  mgmt_interface: eno1
+#  namespaces:
+#    default:
+#      interfaces:
+#        - fpg4:
+#            mac_addr: fe:dc:ba:44:66:31
+#            ipv4_addr: 21.1.1.1
+#            ipv4_netmask: 255.255.255.0
+#      routes:
+#        - prefix: 53.1.1.0/24
+#          nexthop: 21.1.1.2
+#        - prefix: 53.1.9.0/24
+#          nexthop: 21.1.1.2
+#        - prefix: 20.1.1.0/24
+#          nexthop: 21.1.1.2
 
 # HU host - the keyword must start with "hu"
 hu:
