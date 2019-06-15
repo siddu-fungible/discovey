@@ -319,9 +319,9 @@ class FunethPerformanceBase(FunTestCase):
         with open(RESULT_FILE, 'w') as f:
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
-        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
         fun_test.shared_variables['results'].append(result)
         tc_ids.append(fun_test.current_test_case_id)
+        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
         fun_test.simple_assert(not sth_stuck_after,'Something is stuck after test')
 
 
