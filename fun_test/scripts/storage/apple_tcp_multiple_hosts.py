@@ -1,3 +1,4 @@
+from lib.system.fun_test import *
 from web.fun_test.analytics_models_helper import get_data_collection_time
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
@@ -183,19 +184,19 @@ class StripeVolumeLevelScript(FunTestScript):
             self.host_ips = []
             # self.host_numa_cpus = {}
             # self.total_numa_cpus = {}
-            # for host_name, host_obj in required_hosts.items():
-            #     # Retrieving host ips
-            #     # test_interfaces = host.get_test_interfaces()
-            #     if host_name not in self.hosts_test_interfaces:
-            #         self.hosts_test_interfaces[host_name] = []
-            #     test_interface = host_obj.get_test_interface(index=0)
-            #     self.hosts_test_interfaces[host_name].append(test_interface)
-            #     host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
-            #     self.host_ips.append(host_ip)
-            #     fun_test.log("Host-IP: {}".format(host_ip))
-            #     # Retrieving host handles
-            #     host_instance = host_obj.get_instance()
-            #     self.host_handles[host_ip] = host_instance
+            for host_name, host_obj in required_hosts.items():
+                # Retrieving host ips
+                # test_interfaces = host.get_test_interfaces()
+                if host_name not in self.hosts_test_interfaces:
+                    self.hosts_test_interfaces[host_name] = []
+                test_interface = host_obj.get_test_interface(index=0)
+                self.hosts_test_interfaces[host_name].append(test_interface)
+                host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
+                self.host_ips.append(host_ip)
+                fun_test.log("Host-IP: {}".format(host_ip))
+                # Retrieving host handles
+                host_instance = host_obj.get_instance()
+                self.host_handles[host_ip] = host_instance
 
             # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
             for key in self.host_handles:
@@ -682,6 +683,7 @@ class StripeVolumeTestCase(FunTestCase):
                                                                             host_index=thread_count,
                                                                             filename=test_filename,
                                                                             rw=mode,
+                                                                            numjobs=fio_numjobs,
                                                                             bs=fio_block_size,
                                                                             iodepth=fio_iodepth,
                                                                             name=fio_job_name,
@@ -781,7 +783,7 @@ class StripeVolumeTestCase(FunTestCase):
                     row_data_list.append(row_data_dict[i])
 
             table_data_rows.append(row_data_list)
-            # post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
+            post_results("Apple_TCP_Multiple_Host_Perf", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Apple TCP RandRead Multi-Host Perf Table", table_name=self.summary,
