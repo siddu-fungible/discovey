@@ -251,6 +251,8 @@ class FunethPerformanceBase(FunTestCase):
                                                            fpg_intf_dict,
                                                            version,
                                                            when='after')
+            if sth_stuck_after:
+                result = {}
         else:
             result = {}
 
