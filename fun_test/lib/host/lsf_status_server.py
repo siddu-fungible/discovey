@@ -1,5 +1,6 @@
 from lib.system.fun_test import fun_test
 from fun_global import get_localized_time
+from fun_settings import JENKINS_USERNAME, JENKINS_PASSWORD
 from web.fun_test.models_helper import add_jenkins_job_id_map
 import requests
 import json
@@ -39,8 +40,8 @@ class LsfStatusServer:
 
     def _get(self, url):
         data = None
-        username = "jenkins.service"
-        password = "117071d3cb2cae6c964099664b271e4011"
+        username = JENKINS_USERNAME
+        password = JENKINS_PASSWORD
         response = requests.get(url, auth=(username, password))
         if response.status_code == 200:
             data = response.text
