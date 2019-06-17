@@ -43,25 +43,6 @@ class ECVolumeSanityScript(FunTestScript):
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
 
-        expanded_topology = TopologyHelper().expanded_topology
-
-        end_host = None
-        test_interface_name = None
-        fpg_connected_hosts = expanded_topology.get_host_instances_on_fpg_interfaces(dut_index=0,
-                                                                                     f1_index=self.f1_in_use)
-        for host_ip, host_info in fpg_connected_hosts.iteritems():
-            if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                if testbed_type == "fs-6" and host_ip != "poc-server-01":
-                    continue
-                end_host = host_info["host_obj"]
-                test_interface_name = self.end_host.extra_attributes["test_interface_name"]
-                fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
-                fun_test.log("Test Interface is connected to FPG Index: {}".format(fpg_inteface_index))
-                break
-        else:
-            fun_test.test_assert(False, "Host found with Test Interface")
-        fun_test.test_assert(self.end_host.reboot(non_blocking=True), message="Initiate reboot on End host")
-
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -70,6 +51,21 @@ class ECVolumeSanityScript(FunTestScript):
         storage_controller = StorageController(target_ip=come.host_ip,
                                                target_port=come.get_dpc_port(self.f1_in_use))
 
+        end_host = None
+        test_interface_name = None
+        fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
+        for host_ip, host_info in fpg_connected_hosts.iteritems():
+            if "test_interface_name" in host_info["host_obj"].extra_attributes:
+                if testbed_type == "fs-6" and host_ip != "poc-server-01":
+                    continue
+                end_host = host_info["host_obj"]
+                test_interface_name = end_host.extra_attributes["test_interface_name"]
+                fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
+                fun_test.log("Test Interface is connected to FPG Index: {}".format(fpg_inteface_index))
+                break
+        else:
+            fun_test.test_assert(end_host, "Fetch host with required test interface for configuration")
+            
         test_network = self.csr_network[str(fpg_inteface_index)]
         remote_ip = test_network["test_interface_ip"].split('/')[0]
 

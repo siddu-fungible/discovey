@@ -47,7 +47,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 26843545600,
+      "capacity": 1073741824,
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
