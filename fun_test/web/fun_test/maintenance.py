@@ -140,6 +140,15 @@ if __name__ == "__main_inspur_8k_comp__":
                     platform=FunPlatform.F1).save()
     print "added charts for inspur random read write compression"
 
+if __name__ == "__main_changed_owner__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if "Tahsin" in entry.owner_info:
+            print entry.owner_info
+            entry.owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"
+            entry.save()
+    print "changed owner to Bertrand"
+
 if __name__ == "__main__":
     random_read_qdepths = ["qd128", "qd256"]
     random_write_qdepths = ["qd1", "qd64", "qd128"]
