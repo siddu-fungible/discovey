@@ -733,6 +733,7 @@ class FunControlPlaneBringup:
                         res = self._test_intra_f1_ping(network_controller_obj=network_controller_obj,
                                                        hosts=fs[fs_name][f1])
                         fun_test.test_assert(res, checkpoint)
+                        network_controller_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -745,6 +746,7 @@ class FunControlPlaneBringup:
                 for fs_name in fs:
                     checkpoint = "Test ping from hosts connected to F1_0 of %s to F1_1 hosts of %s" % (fs_name,
                                                                                                        fs_name)
+                    fun_test.log_section(checkpoint)
                     f1_0_hosts = fs[fs_name][0]
                     f1_1_hosts = fs[fs_name][1]
                     f1_0_dpc_obj = NetworkController(dpc_server_ip=dpc_info[fs_name]['F1_0_dpc'][0],
@@ -754,6 +756,8 @@ class FunControlPlaneBringup:
                     res = self._test_intra_fs_ping(f1_0_hosts=f1_0_hosts, f1_1_hosts=f1_1_hosts,
                                                    f1_0_dpc_obj=f1_0_dpc_obj, f1_1_dpc_obj=f1_1_dpc_obj)
                     fun_test.test_assert(res, checkpoint)
+                    f1_0_dpc_obj.disconnect()
+                    f1_1_dpc_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -767,8 +771,25 @@ class FunControlPlaneBringup:
                 for _fs in fs_per_rack:
                     if fs['name'] == _fs['name']:
                         continue
-                    checkpoint = "Test ping from source %s of one rack to dest %s of other rack" % (fs_name, _fs['name'])
-                    result = self._test_inter_rack_ping(remote_fs=_fs, local_fs=fs)
+                    checkpoint = "Test ping from source %s of one rack to dest %s of other rack" % (fs_name,
+                                                                                                    _fs['name'])
+                    result = self._test_ping_within_racks(remote_fs=_fs, local_fs=fs)
+                    fun_test.test_assert(result, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_intra_rack_ping(self, all_fs):
+        result = False
+        try:
+            for fs in all_fs:
+                fs_name = fs['name']
+                for _fs in all_fs:
+                    if fs['name'] == _fs['name']:
+                        continue
+                    checkpoint = "Test ping from source %s to dest %s of same rack" % (fs_name, _fs['name'])
+                    result = self._test_ping_within_racks(remote_fs=_fs, local_fs=fs)
                     fun_test.test_assert(result, checkpoint)
             result = True
         except Exception as ex:
@@ -787,7 +808,7 @@ class FunControlPlaneBringup:
             fabric_links.append(int(re.search(r'(\d+)', key).group(1)))
         return fabric_links
 
-    def _test_inter_rack_ping(self, remote_fs, local_fs):
+    def _test_ping_within_racks(self, remote_fs, local_fs):
         result = False
         try:
             count = 10000
@@ -916,6 +937,8 @@ class FunControlPlaneBringup:
                                                    message=checkpoint)
 
                     linux_obj.disconnect()
+                    source_dpc_obj.disconnect()
+                    remote_dpc_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

@@ -184,7 +184,7 @@ class TestCcCcPing(FunTestCase):
             res = funcp_obj.test_cc_pings_fs()
             fun_test.simple_assert(res, checkpoint)
         fun_test.add_checkpoint(checkpoint)
-
+        '''
         funcp1_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][0])
         funcp2_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][1])
 
@@ -195,15 +195,15 @@ class TestCcCcPing(FunTestCase):
         funcp2_obj._get_vlan1_ips()
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp1_obj.fs_name, funcp2_obj.fs_name)
-        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips)
+        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips, from_vlan=True)
         fun_test.test_assert(res, checkpoint)
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp2_obj.fs_name, funcp1_obj.fs_name)
-        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips)
+        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips, from_vlan=True)
         fun_test.test_assert(res, checkpoint)
 
         fun_test.add_checkpoint("Ensure all vlans can ping its neighbour FS vlans")
-
+        '''
     def cleanup(self):
         pass
 
