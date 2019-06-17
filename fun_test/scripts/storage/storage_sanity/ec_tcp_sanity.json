@@ -70,21 +70,6 @@
       "timeout": 360
     }
   },
-  "ECTcpSeqRead": {
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "runtime": 30,
-      "timeout": 35
-    },
-    "fio_mode": "read",
-    "fio_numjobs_iodepth": [
-      "(16, 4)"
-    ],
-    "fio_job_name": "ec_tcp_sanity"
-  },
   "ECTcpRandRead": {
     "fio_cmd_args": {
       "bs": "4k",

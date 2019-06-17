@@ -214,15 +214,6 @@ class ECTcpSanityTestcase(FunTestCase):
         pass
 
 
-class ECTcpSeqRead(ECTcpSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Test sequential read queries on EC volume over nvme-tcp fabric",
-                              steps='''
-        1. Execute sequential read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
-
-
 class ECTcpRandRead(ECTcpSanityTestcase):
 
     def describe(self):
@@ -234,6 +225,5 @@ class ECTcpRandRead(ECTcpSanityTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeSanityScript()
-    ecscript.add_test_case(ECTcpSeqRead())
     ecscript.add_test_case(ECTcpRandRead())
     ecscript.run()
