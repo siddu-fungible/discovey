@@ -869,11 +869,11 @@ class FunControlPlaneBringup:
                                     stat_type=FRAMES_TRANSMITTED_OK)
                                 fun_test.simple_assert(stats >= count, checkpoint)
 
-                            checkpoint = "Validate Source FPG fabric links Rx stats."
+                            checkpoint = "Validate Source FPG fabric links Tx stats."
                             for fab in fab_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=fab),
-                                    stat_type=FRAMES_RECEIVED_OK, tx=False)
+                                    stat_type=FRAMES_TRANSMITTED_OK, tx=True)
                                 fun_test.simple_assert(stats >= (count * len(spine_links)), checkpoint)
 
                             checkpoint = "Validate Remote FPG spine links Rx stats."
@@ -883,11 +883,11 @@ class FunControlPlaneBringup:
                                     stat_type=FRAMES_RECEIVED_OK, tx=False)
                                 fun_test.simple_assert(stats >= count, checkpoint)
 
-                            checkpoint = "Validate Remote FPG fabric links Tx stats."
+                            checkpoint = "Validate Remote FPG fabric links Rx stats."
                             for fab in remote_fabric_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=fab),
-                                    stat_type=FRAMES_TRANSMITTED_OK)
+                                    stat_type=FRAMES_RECEIVED_OK, tx=False)
                                 fun_test.simple_assert(stats >= (count * len(spine_links)), checkpoint)
 
                             checkpoint = "Validate FCB stats on remote F1"
