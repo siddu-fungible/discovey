@@ -2582,9 +2582,10 @@ class Linux(object, ToDictMixin):
         return mpstat_output
 
     def iostat(self, device=None, interval=5, count=2, background=True, extended_stats=False,
-               output_file="/tmp/iostat.out"):
+               output_file="/tmp/iostat.out", timeout=None):
         iostat_output = None
-        timeout = interval * (count + 1)
+        if timeout is None:
+            timeout = interval * (count + 1)
 
         cmd = "iostat"
         if device:
