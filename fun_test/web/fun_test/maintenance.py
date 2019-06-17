@@ -76,7 +76,7 @@ if __name__ == "__main_0%_compression__":
             chart.save()
     print "added 0 compression dataset for durable volume EC + compression"
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur_8k_comp__":
     internal_chart_names = ["inspur_8132_8k_rand_rw_comp_output_latency", "inspur_8132_8k_rand_rw_comp_output_iops"]
     model_name = "BltVolumePerformance"
     base_line_date = datetime(year=2019, month=6, day=10, minute=0, hour=0, second=0)
@@ -136,3 +136,12 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added charts for inspur random read write compression"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if "Tahsin" in entry.owner_info:
+            print entry.owner_info
+            entry.owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"
+            entry.save()
+    print "changed owner to Bertrand"
