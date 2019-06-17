@@ -5,7 +5,7 @@ from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''

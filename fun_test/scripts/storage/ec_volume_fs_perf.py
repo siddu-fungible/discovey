@@ -3,7 +3,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
 from lib.system import utils
-from ec_perf_helper import *
+from storage_helper import *
 import fun_global
 
 
