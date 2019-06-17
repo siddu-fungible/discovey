@@ -9,12 +9,21 @@
 ### Install Postgres database
 Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/postgres_notes.md
 
-### Backing up database
+### Backing up database from qa-ubuntu-01
 ~~~~
 # ssh qa-admin@qa-ubuntu-01
 # cd /project/users/QA/regression/Integration/fun_test/web
 # ./backup_db.sh
-# copy the 'fileName' to scp it locally
+~~~~
+The output should look like:
+~~~~
+qa-admin@qa-ubuntu-01:~$ cd /project/users/QA/regression/Integration/fun_test/web/
+qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test/web$ ./backup_db.sh
+perf_db_backup.json 
+Backup moved to: /project/users/QA/regression/data_store/web_backup/perf_db_backup.json.06-17-2019-13-13.bkp.tgz
+~~~~
+~~~~
+# copy the 'file name' to scp it locally (In the example output, the file name is perf_db_backup.json.06-17-2019-13-13.bkp.tgz)
 # exit
 ~~~~
 
@@ -24,7 +33,7 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/docu
 # export PYTHONPATH=`pwd`
 # export DEVELOPMENT_MODE=1
 # cd /Desktop/Integration/fun_test/web (your local directory)
-# scp qa-admin@qa-ubuntu-01:/project/users/QA/regression/data_store/web_backup/'fileName' .
+# scp qa-admin@qa-ubuntu-01:/project/users/QA/regression/data_store/web_backup/'file name' . (file name from the previous step)
 # cd ./restore_db.sh 'fileName'
 ~~~~
 
