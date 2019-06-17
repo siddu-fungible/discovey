@@ -7,7 +7,7 @@ from lib.host.linux import Linux
 from scripts.storage.funcp_deploy import FunCpDockerContainer
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''
