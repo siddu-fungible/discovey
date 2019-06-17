@@ -25,7 +25,7 @@ Backup moved to: /project/users/QA/regression/data_store/web_backup/perf_db_back
 ~~~~
 
 ### Restore database locally
-Please ensure that the web-server and scheduler are stopped before restoring DB.
+Please ensure that the web-server and scheduler are stopped before restoring the database.
 ~~~~
 # cd /Desktop/Integration/fun_test (your local directory)
 # export PYTHONPATH=`pwd`
