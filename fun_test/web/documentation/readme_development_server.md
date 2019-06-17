@@ -14,6 +14,7 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/docu
 # ssh qa-admin@qa-ubuntu-01
 # cd /project/users/QA/regression/Integration/fun_test/web
 # ./backup_db.sh
+# exit
 ~~~~
 The output should look like:
 ~~~~
@@ -22,19 +23,20 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test/web$ ./b
 perf_db_backup.json 
 Backup moved to: /project/users/QA/regression/data_store/web_backup/perf_db_backup.json.06-17-2019-13-13.bkp.tgz
 ~~~~
-~~~~
-# copy the 'file name' to scp it locally (In the example output, the file name is perf_db_backup.json.06-17-2019-13-13.bkp.tgz)
-# exit
-~~~~
 
 ### Restore database locally
+Please ensure that the web-server and scheduler are stopped before restoring DB.
 ~~~~
 # cd /Desktop/Integration/fun_test (your local directory)
 # export PYTHONPATH=`pwd`
 # export DEVELOPMENT_MODE=1
-# cd /Desktop/Integration/fun_test/web (your local directory)
+# cd web
 # scp qa-admin@qa-ubuntu-01:/project/users/QA/regression/data_store/web_backup/'file name' . (file name from the previous step)
-# cd ./restore_db.sh 'fileName'
+# ./restore_db.sh 'file name' (In the example output shown above, the file name is perf_db_backup.json.06-17-2019-13-13.bkp.tgz)
+~~~~
+Example:
+~~~~
+# Ashwins-MacBook-Pro-2:web ash$ ./restore_db.sh perf_db_backup.json.06-17-2019-13-13.bkp.tgz
 ~~~~
 
 ### Starting the web-server
