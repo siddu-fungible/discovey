@@ -15,14 +15,15 @@ Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/docu
 # cd /project/users/QA/regression/Integration/fun_test/web
 # ./backup_db.sh
 # copy the 'fileName' to scp it locally
+# exit
 ~~~~
 
 ### Restore database locally
 ~~~~
-# cd /project/users/QA/regression/Integration/fun_test
+# cd /Desktop/Integration/fun_test (your local directory)
 # export PYTHONPATH=`pwd`
 # export DEVELOPMENT_MODE=1
-# cd /project/users/QA/regression/Integration/fun_test/web
+# cd /Desktop/Integration/fun_test/web (your local directory)
 # scp qa-admin@qa-ubuntu-01:/project/users/QA/regression/data_store/web_backup/'fileName' .
 # cd ./restore_db.sh 'fileName'
 ~~~~
