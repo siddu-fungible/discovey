@@ -6,7 +6,7 @@ from lib.fun.fs import Fs
 from scripts.storage.ec_perf_helper import *
 
 '''
-Sanity Script for BLT Volume via PCI
+Sanity Script for EC Volume via NVME/TCP
 '''
 
 
@@ -15,7 +15,9 @@ class ECVolumeSanityScript(FunTestScript):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Bring up FS
         2. Setup COMe, launch DPC cli
-        3. 
+        3. Configure Network interface between F1 and remote host.
+        4. Create 4:2 EC volume and attach it to remote host.
+        5. Execute write traffic to populate the EC volume.
         """)
 
     def setup(self):
@@ -65,7 +67,7 @@ class ECVolumeSanityScript(FunTestScript):
                 break
         else:
             fun_test.test_assert(end_host, "Fetch host with required test interface for configuration")
-            
+
         test_network = self.csr_network[str(fpg_inteface_index)]
         remote_ip = test_network["test_interface_ip"].split('/')[0]
 
@@ -79,8 +81,8 @@ class ECVolumeSanityScript(FunTestScript):
 
         # configure end host
         # Ensure host is up
-        fun_test.test_assert(self.end_host.ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                             message="End Host is up")
+        # fun_test.test_assert(self.end_host.reboot(max_wait_time=self.reboot_timeout),
+        #                     message="End Host is up")
 
         # end host network interface
         configure_endhost_interface(end_host=end_host, test_network=test_network,
@@ -109,15 +111,16 @@ class ECVolumeSanityScript(FunTestScript):
                              format(self.attach_transport, ctrlr_uuid))
         fun_test.shared_variables["ctrlr_uuid"] = ctrlr_uuid
 
-        # Create thin BLT volume
+        # Create EC volume
         (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
-                                                                                       self.command_timeout)
+                                                                                       self.command_timeout)  # ToDo Assert it
+        fun_test.test_assert(ec_config_status, message="Configure EC volume on F1")
         # attach volume to controller
         ec_uuid = self.ec_info["attach_uuid"][0]
         fun_test.test_assert(self.storage_controller.attach_volume_to_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                  ns_id=self.ns_id,
-                                                                                 vol_uuid=ec_uuid, ),
-                             message="Attaching EC Vol {} with uuid {} to controller".format(self.ns_id, ec_uuid))
+                                                                                 vol_uuid=ec_uuid),
+                             message="Attaching EC Vol nsid: {} with uuid {} to controller".format(self.ns_id, ec_uuid))
 
         # Set syslog level
         set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
@@ -215,24 +218,18 @@ class ECTcpSeqRead(ECTcpSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test sequential read queries on BLT volume over nvme fabric",
+                              summary="Test sequential read queries on EC volume over nvme-tcp fabric",
                               steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Seq Read test(without verify) from the end host.''')
+        1. Execute sequential read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
 
 
 class ECTcpRandRead(ECTcpSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test random read queries on BLT volume over nvme fabric",
+                              summary="Test random read queries on 4:2 EC volume over nvme-tcp fabric",
                               steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Rand Read test(without verify) from the end host.''')
+        1. Execute random read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
 
 
 if __name__ == "__main__":

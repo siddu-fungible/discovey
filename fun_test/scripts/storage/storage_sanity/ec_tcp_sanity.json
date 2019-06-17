@@ -5,7 +5,7 @@
     "f1_in_use": 0,
     "huid": 7,
     "ctlid": 0,
-    "syslog_level": 2,
+    "syslog_level": 6,
     "command_timeout": 30,
     "reboot_timeout": 400,
     "csr_network": {
