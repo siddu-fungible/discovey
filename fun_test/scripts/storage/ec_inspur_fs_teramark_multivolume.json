@@ -79,7 +79,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 12000},
     "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --cpus_allowed={} --numjobs={} --iodepth={} --bs=8k --size=100%", "timeout": 150},
@@ -126,7 +126,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
     "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
@@ -170,7 +170,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
     "fio_cmd_args": {"bssplit": "8k/50:1024k/50", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 80, "percentage_random": "100%", "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
@@ -225,7 +225,7 @@
     "perf_run_config_file": "inspur_oltp_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 16
   },
   "OLAPModelReadWriteIOPS": {
     "ec_info": {
@@ -273,6 +273,6 @@
     "perf_run_config_file": "inspur_olap_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 16
   }
 }
