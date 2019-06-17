@@ -9,6 +9,24 @@
 ### Install Postgres database
 Refer: https://github.com/fungible-inc/Integration/blob/master/fun_test/web/documentation/postgres_notes.md
 
+### Backing up database
+~~~~
+# ssh qa-admin@qa-ubuntu-01
+# cd /project/users/QA/regression/Integration/fun_test/web
+# ./backup_db.sh
+# copy the 'fileName' to scp it locally
+~~~~
+
+### Restore database locally
+~~~~
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# export DEVELOPMENT_MODE=1
+# cd /project/users/QA/regression/Integration/fun_test/web
+# scp qa-admin@qa-ubuntu-01:/project/users/QA/regression/data_store/web_backup/'fileName' .
+# cd ./restore_db.sh 'fileName'
+~~~~
+
 ### Starting the web-server
 ~~~~
 # cd /project/users/QA/regression/Integration/fun_test
