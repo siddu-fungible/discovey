@@ -2584,7 +2584,7 @@ class Linux(object, ToDictMixin):
     def iostat(self, device=None, interval=5, count=2, background=True, extended_stats=False,
                output_file="/tmp/iostat.out", timeout=None):
         iostat_output = None
-        if timeout is None:
+        if not timeout:
             timeout = interval * (count + 1)
 
         cmd = "iostat"
