@@ -168,6 +168,37 @@ def setup_hu_host(funeth_obj, update_driver=True):
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
 
+def setup_hu_vm(funeth_obj, update_driver=True, sriov=0, num_queues=1):
+    fun_test.log("==========================")
+    fun_test.log("Configuring VM on HU Host")
+    fun_test.log("==========================")
+    funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
+    if update_driver:
+        funeth_obj.setup_workspace()
+        critical_log(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
+        update_src_result = funeth_obj.update_src(parallel=True)
+        if update_src_result:
+            funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
+            critical_log(update_src_result, 'Update funeth driver source code.')
+        fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
+    critical_log(funeth_obj.load(sriov=sriov, num_queues=num_queues), 'Load funeth driver.')
+    for hu in funeth_obj.hu_hosts:
+        linux_obj = funeth_obj.linux_obj_dict[hu]
+
+        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=8),
+                     'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
+        critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
+            linux_obj.host_ip))
+        critical_log(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=False),
+                     'Configure HU host {} IPv4 routes.'.format(
+                         linux_obj.host_ip))
+        fun_test.log("=============================")
+        fun_test.log("Configuration of VM completed")
+        fun_test.log("=============================")
+
+    return funsdk_commit, funsdk_bld, driver_commit, driver_bld
+
+
 def get_ethtool_on_hu_host(funeth_obj):
     for hu in funeth_obj.hu_hosts:
         fun_test.log("====================================")

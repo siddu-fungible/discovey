@@ -65,6 +65,7 @@ import { SmartButtonComponent } from './ui-elements/smart-button/smart-button.co
 import { AdminComponent } from "./performance/admin/admin.component";
 import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
+import { TooltipDirective } from './ui-elements/tooltip.directive';
 
 @NgModule({
   declarations: [
@@ -114,7 +115,8 @@ import { PerformanceTableComponent } from './performance/performance-table/perfo
     SmartButtonComponent,
     AdminComponent,
     ScoresTableComponent,
-    PerformanceTableComponent
+    PerformanceTableComponent,
+    TooltipDirective
   ],
   imports: [
     BsDropdownModule,

@@ -215,9 +215,9 @@ class StorageConfiguration(FunTestCase):
         # Create namespace
         # self.storage_controller = fun_test.shared_variables["storage_controller"]
         print("\n")
-        print("====================")
-        print("|Creating namespace|")
-        print("====================")
+        print("===============")
+        print("Creating Volume")
+        print("===============")
         print("\n")
 
         self.total_num_ns = self.storage_config['num_namespace']
@@ -494,7 +494,7 @@ class LocalSSDTest(StorageConfiguration):
         self.host.command("sudo nvme list")
         device = self.host.command("sudo nvme list | grep nvme | sed -n 1p | awk {'print $1'}").strip()
         fun_test.test_assert(device, message="nvme device visible on host")
-        super(LocalSSDTest, self).runio(device)
+        #super(LocalSSDTest, self).runio(device)
         self.storage_controller.disconnect()
 
     def cleanup(self):
@@ -543,7 +543,7 @@ class RemoteSSDTest(StorageConfiguration):
         self.host.command("sudo nvme list")
         device = self.host.command("sudo nvme list | grep nvme | sed -n 2p | awk {'print $1'}").strip()
         fun_test.test_assert(device, message="nvme device visible on host")
-        super(RemoteSSDTest, self).runio_remote(device)
+        #super(RemoteSSDTest, self).runio_remote(device)
 
     def cleanup(self):
         pass

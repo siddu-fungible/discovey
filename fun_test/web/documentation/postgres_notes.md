@@ -23,6 +23,9 @@ postgres-# \q
 
 ## Mac installation:
 ```
+Install Xcode via the Appstore
+
+In a terminal execute the below:
 # brew install postgres
 # brew services start postgresql
 

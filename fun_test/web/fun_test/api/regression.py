@@ -1,7 +1,7 @@
 from fun_global import get_current_time
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.models import TestBed
+from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
 from web.fun_test.models import ScriptInfo, RegresssionScripts
@@ -185,4 +185,37 @@ def script_infos(request, pk):
                            "bug": script_info.bug,
                            "pk": script_info.pk,
                            "script_path": regression_script.script_path})
+    return result
+
+
+"""
+    name = models.TextField(unique=True)
+    type = models.TextField()
+    job_ids = JSONField(default=[])
+    manual_lock_user = models.TextField(default=None, null=True)
+"""
+
+@csrf_exempt
+@api_safe_json_response
+def assets(request, name):
+    result = None
+    if request.method == "GET":
+        if not name:
+            all_assets = Asset.objects.all()
+            result = []
+            for one_asset in all_assets:
+                one_record = {"name": one_asset.name,
+                              "type": one_asset.type,
+                              "manual_lock_user": one_asset.manual_lock_user}
+                result.append(one_record)
+    elif request.method == "PUT":
+        request_json = json.loads(request.body)
+        try:
+            asset = Asset.objects.get(name=name)
+            if "manual_lock_user" in request_json:
+                asset.manual_lock_user = request_json.get("manual_lock_user")
+            asset.save()
+            result = True
+        except:
+            pass #TODO
     return result

@@ -25,6 +25,22 @@ RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 TAG_LENGTH = 50
 
 
+class SiteConfig(models.Model):
+    version = models.IntegerField(default=101)
+
+    def bump_version(self):
+        self.version += 1
+        self.save()
+
+    @staticmethod
+    def get_version():
+        result = 100
+        try:
+            result = SiteConfig.objects.all()[0].version
+        except:
+            pass
+        return result
+
 class FunModel(models.Model):
     def to_dict(self):
         result = {}
@@ -162,6 +178,7 @@ class SuiteExecution(models.Model):
     auto_scheduled_execution_id = models.IntegerField(default=-1)
     disable_schedule = models.BooleanField(default=False)
     assets_used = JSONField(default={})
+    run_time = JSONField(default={})
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
@@ -181,6 +198,16 @@ class SuiteExecution(models.Model):
             setattr(self, key, value)
             self.save()
 
+    def add_run_time_variable(self, name, value):
+        run_time = self.run_time
+        run_time[name] = value
+        self.save()
+
+    def get_run_time_variable(self, name):
+        result = None
+        if name in self.run_time:
+            result = self.run_time[name]
+        return result
 
 class SuiteExecutionSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=50)

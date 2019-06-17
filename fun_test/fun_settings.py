@@ -66,3 +66,5 @@ TFTP_SERVER_SSH_PASSWORD = "fun123"
 TFTP_DIRECTORY = "/tftpboot"
 
 REGRESSION_SERVICE_HOST = "regression_service_host"
+JENKINS_USERNAME = "regression"
+JENKINS_PASSWORD = "11b1bcc7ac9f43aee95ed4af0917bf5852"
