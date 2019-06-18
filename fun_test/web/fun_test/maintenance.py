@@ -203,6 +203,7 @@ if __name__ == "__main__":
                         base_line_date=base_line_date,
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
+    print "added charts for random write latency"
 
 if __name__ == "__main__":
     internal_chart_names = ["rand_read_qd1_nvmetcp_output_latency",
