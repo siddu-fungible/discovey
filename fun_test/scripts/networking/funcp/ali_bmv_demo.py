@@ -22,9 +22,10 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        funcp_obj.cleanup_funcp()
-        for server in servers_mode:
-            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+        # funcp_obj.cleanup_funcp()
+        # for server in servers_mode:
+        #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+        pass
 
 
 class BringupSetup(FunTestCase):
@@ -142,7 +143,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=32)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -543,7 +544,7 @@ class ConfigureVMs(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=6,
                               summary="Bringup FS-45 with control plane",
                               steps="""
                               1. BringUP both F1s
@@ -555,7 +556,10 @@ class ConfigureVMs(FunTestCase):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                       '/fs_connected_servers.json')
 
+
     def run(self):
+
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
         servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
 
         for server in servers_with_vms:
@@ -564,7 +568,8 @@ class ConfigureVMs(FunTestCase):
                           update_funeth_driver=True)
             for vm in servers_with_vms[server]:
                 if servers_with_vms[server][vm]["vm_pings"]:
-                    test_host_pings(host=vm, ips=servers_with_vms[server][vm]["vm_pings"],
+                    test_host_pings(host=servers_with_vms[server][vm]["hostname"],
+                                    ips=servers_with_vms[server][vm]["vm_pings"],
                                     username=servers_with_vms[server][vm]["user"],
                                     password=servers_with_vms[server][vm]["password"])
 
@@ -578,6 +583,10 @@ if __name__ == '__main__':
     ts.add_test_case(BringupSetup())
 
     ts.add_test_case(NicEmulation())
+
+    # ts.add_test_case(LocalSSDTest())
+    #
+    # ts.add_test_case(RemoteSSDTest())
 
     ts.add_test_case(ConfigureVMs())
     # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump

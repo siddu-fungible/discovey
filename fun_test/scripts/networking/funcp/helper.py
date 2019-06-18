@@ -137,7 +137,7 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*"):
             fun_test.critical("%s cannot reach %s" % (host, hosts))
 
 
-def setup_hu_host(funeth_obj, update_driver=True):
+def setup_hu_host(funeth_obj, update_driver=True, sriov=4):
     fun_test.log("===================")
     fun_test.log("Configuring HU host")
     fun_test.log("===================")
@@ -151,7 +151,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
             critical_log(update_src_result, 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    critical_log(funeth_obj.load(sriov=4), 'Load funeth driver.')
+    critical_log(funeth_obj.load(sriov=sriov), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
 
@@ -177,7 +177,7 @@ def setup_hu_vm(funeth_obj, update_driver=True, sriov=0, num_queues=1):
     if update_driver:
         funeth_obj.setup_workspace()
         critical_log(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
-        update_src_result = funeth_obj.update_src(parallel=True)
+        update_src_result = funeth_obj.update_src(parallel=False)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
             critical_log(update_src_result, 'Update funeth driver source code.')
@@ -224,6 +224,7 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
     linux_obj = Linux(host_ip=host_spec["host_ip"], ssh_username=host_spec["ssh_username"],
                       ssh_password=host_spec["ssh_password"])
     all_vms = map(lambda s: s.strip(), linux_obj.command(command="virsh list --all --name").split())
+    linux_obj.command(command="sudo chmod 777 /dev/vfio/vfio")
     for vm in vm_dict:
         if vm in all_vms:
             pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
@@ -231,8 +232,9 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
                 fun_test.critical(message="%s device not present on server" % vm_dict[vm]["ethernet_pci_device"])
                 fun_test.log("Skipping VM: %s" % vm)
                 continue
-            linux_obj.command(command="virsh shutdown %s" % vm)
-            fun_test.sleep(message="Waiting for VM to shutdown", seconds=7)
+            shut_op = linux_obj.command(command="virsh shutdown %s" % vm)
+            if not "domain is not running" in shut_op:
+                fun_test.sleep(message="Waiting for VM to shutdown", seconds=7)
             linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["ethernet_pci_device"])
             fun_test.sleep(message="Waiting for VF detach")
             start_op = linux_obj.command(command="virsh start %s" % vm)
