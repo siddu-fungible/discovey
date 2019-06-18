@@ -164,9 +164,9 @@
     ],
     "read_fio_cmd_args": {
       "bs": "4k",
-      "numjobs": 1,
+      "numjobs": 8,
       "cpumask": 1,
-      "iodepth": 19,
+      "iodepth": 16,
       "size": "25G",
       "rw": "read",
       "name": "ec_fio_25G_comp_disabled",

@@ -1595,16 +1595,43 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-66",
         "pcie_interface_info": {
-          "18": {
+           "0": {
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "cab03-qa-02"
+              "name": "mktg15"
             }
           },
-          "19": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 18
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+         "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "mktg16"
+            }
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         }
       }
