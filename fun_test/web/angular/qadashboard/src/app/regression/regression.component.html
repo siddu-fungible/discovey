@@ -100,6 +100,7 @@
           <th>Actions</th>
           <th>Re-runs</th>
           <th>Test-bed</th>
+          <th>Jenkins params</th>
           <th>Tags</th>
 
         </tr>
@@ -122,7 +123,7 @@
               </a>
             </td>
             <td>
-                <app-smart-label [value]="suiteExecution.suite_result"
+                <app-smart-label *ngIf="suiteExecution.suite_result != 'UNKNOWN'" [value]="suiteExecution.suite_result"
                                  [type]="suiteExecution.suite_result"></app-smart-label>
             </td>
             <td>
@@ -149,7 +150,7 @@
                   <img width="20" height="20" src="/static/media/progress_bar.jpg">
                 </span>
                 <span *ngSwitchCase="stateMap.QUEUED" tooltip placement="right" [tooltipContentString]="'Queued'">
-                  <i class="fa fa-hourglass"> </i>
+                  <i class="fa fa-hourglass-half"> </i>
                 </span>
 
                 <div *ngSwitchDefault tooltip placement="right" [tooltipContentString]="stateStringMap[suiteExecution.fields.state]">{{ stateStringMap[suiteExecution.fields.state] }}</div>
@@ -174,7 +175,7 @@
               </ng-container>
               <ng-template #regularSuitePath>
                 <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})" >{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}</span>
-                <p><small>Copyright 1999-2050 by Refsnes Data</small></p>
+                <p><small>{{ suiteExecution.fields.description }}</small></p>
               </ng-template>
 
             </td>
@@ -222,6 +223,10 @@
             </td>
             <td>
               <span class="pseudo-anchor" (click)="navigateByQueryParams({test_bed_type: suiteExecution.fields.test_bed_type})" >{{ suiteExecution.fields.test_bed_type }}</span>
+            </td>
+            <td>
+              <span *ngIf="suiteExecution?.BRANCH_FunOS" style="font-size: 0.75em">{{ 'BRANCH_FunOS:' + suiteExecution?.BRANCH_FunOS }}</span>
+
             </td>
             <td>
               <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">
