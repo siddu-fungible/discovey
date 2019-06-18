@@ -5,12 +5,12 @@ import { Directive, Input, ElementRef, HostListener, Renderer2 } from '@angular/
 })
 export class TooltipDirective {
   @Input() placement: string;
-  @Input() hideDelay: number = 500;
+  @Input() hideDelay: number = 1;
   @Input() tooltipContentString: any;
   @Input() tooltipContentCallback: Function = null;
   @Input() tooltipContentCallbackArg = null;
   tooltip: HTMLElement;
-  offset = 10;
+  offset = 0;
 
   constructor(private el: ElementRef, private renderer: Renderer2) { }
 
@@ -58,7 +58,7 @@ export class TooltipDirective {
     this.renderer.setStyle(this.tooltip, 'line-height', 1.6);
 
     this.renderer.setStyle(this.tooltip, 'position', 'fixed');
-    this.renderer.setStyle(this.tooltip, 'margin', '10px');
+    //this.renderer.setStyle(this.tooltip, 'margin', '10px');
     this.renderer.setStyle(this.tooltip, 'font-size', '14px');
     this.renderer.setStyle(this.tooltip, 'font-weight', '1');
 
@@ -80,7 +80,7 @@ export class TooltipDirective {
     let top, left;
     if (this.placement === 'top') {
       top = hostPos.top - tooltipPos.height - this.offset;
-      left = hostPos.left + (hostPos.width - tooltipPos.width) / 2;
+      left = hostPos.left + (hostPos.width - tooltipPos.width)/2;
     }
 
     if (this.placement === 'bottom') {
@@ -94,23 +94,10 @@ export class TooltipDirective {
     }
 
     if (this.placement === 'right') {
-      //top = hostPos.top + (hostPos.height - tooltipPos.height) / 2;
-      //top = hostPos.top;// + (hostPos.height/2);// - (tooltipPos.height/2);
       top = hostPos.top + (hostPos.height - tooltipPos.height) / 2;
-
-      console.log(hostPos.top);
-      console.log(top);
-      console.log(tooltipPos.height/2);
-      //top = hostPos.top;
-      //top = this.el.nativeElement.offsetTop - 500;
-      //top = top + 50;
-      left = hostPos.right + this.offset;
+      left = hostPos.right + 10;
     }
 
-    //let e = document.getElementById("john2");
-    //top = this.getAbsoluteBoundingRect(e).top;
-    //let oft = e.offsetTop;
-    //this.renderer.setStyle(this.tooltip, 'top', `${top + scrollPos}px`);
     this.renderer.setStyle(this.tooltip, 'top', `${top}px`);
     this.renderer.setStyle(this.tooltip, 'left', `${left}px`);
   }

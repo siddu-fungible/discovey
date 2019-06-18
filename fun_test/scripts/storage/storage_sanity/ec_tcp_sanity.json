@@ -67,7 +67,7 @@
       "rw": "write",
       "direct": 1,
       "prio": 0,
-      "timeout": 360
+      "timeout": 600
     }
   },
   "ECTcpRandRead": {
