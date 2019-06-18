@@ -398,9 +398,9 @@ class FunethTestScpBase(FunTestCase):
         #linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
         # Create file with pattern of sequential 32-bit
         if TB == 'SN2':
-            file_size = 2000000  # 2MB
+            file_size = 2000  # 2MB
         else:
-            file_size = 2000000000  # 2GB
+            file_size = 2000000  # 2GB
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
