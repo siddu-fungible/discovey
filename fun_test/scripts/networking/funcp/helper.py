@@ -227,19 +227,23 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
     for vm in vm_dict:
         if vm in all_vms:
             pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
-            if vm_dict[vm]["ethernet_pci_device"] in pci_device:
+            if vm_dict[vm]["ethernet_pci_device"] not in pci_device:
                 fun_test.critical(message="%s device not present on server" % vm_dict[vm]["ethernet_pci_device"])
                 fun_test.log("Skipping VM: %s" % vm)
                 continue
             linux_obj.command(command="virsh shutdown %s" % vm)
+            fun_test.sleep(message="Waiting for VM to shutdown", seconds=7)
             linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["ethernet_pci_device"])
-            linux_obj.command(command="virsh start %s" % vm)
+            fun_test.sleep(message="Waiting for VF detach")
+            start_op = linux_obj.command(command="virsh start %s" % vm)
+            if ("%s started" % vm) not in start_op:
+                fun_test.critical("%s not started" % vm)
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
     fun_test.sleep(message="Waiting for VMs to come up", seconds=60)
 
     tb_config_obj = tb_configs.TBConfigs(yml)
-    funeth_obj = Funeth(tb_config_obj)
+    funeth_obj = Funeth(tb_config_obj, ws='/home/localadmin/ws')
     fun_test.shared_variables['funeth_obj'] = funeth_obj
     setup_hu_vm(funeth_obj, update_driver=update_funeth_driver)
 
