@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from lib.fun.fs import Fs
-from asset.asset_manager import AssetManager
+from lib.topology.topology_helper import TopologyHelper
+
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -20,7 +21,7 @@ class MyScript(FunTestScript):
 class FunTestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Setup FS1600",
+                              summary="Setup FS standalone without TopologyHelper",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -33,21 +34,46 @@ class FunTestCase1(FunTestCase):
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
-        fun_test.shared_variables["fs"].cleanup()
+        # fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
-        # fs = Fs.get(disable_f1_index=1)
-        fs = Fs.get() # (disable_f1_index=0)
-
+        fs = Fs.get(setup_bmc_support_files=True, boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog") # (disable_f1_index=0)
         fun_test.shared_variables["fs"] = fs
-        fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
-        # f1 = fs.get_f1(index=0)
-        f1 = fs.get_f1(index=1)
+        fun_test.test_assert(fs.bootup(), "FS bootup")
+        f1 = fs.get_f1(index=0)
 
         f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+        fs.cleanup()
 
+class FunTestCase2(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Setup FS standalone with TopologyHelper",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+    def setup(self):
+        fun_test.log("Testcase setup")
+        fun_test.sleep("demo", seconds=1)
+
+    def cleanup(self):
+        fun_test.log("Testcase cleanup")
+        # fun_test.shared_variables["fs"].cleanup()
+
+    def run(self):
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog")
+        topology = topology_helper.deploy()
+        fun_test.test_assert(topology, "Topology deployed")
+        fs = topology.get_dut_instance(index=0)
+        #mfun_test.shared_variables["fs"] = fs
+        fs.cleanup()
 
 if __name__ == "__main__":
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())
+    myscript.add_test_case(FunTestCase2())
     myscript.run()

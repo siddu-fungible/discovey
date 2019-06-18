@@ -20,7 +20,7 @@ hu:
       routes:
         - prefix: 19.1.1.0/24
           nexthop: 18.1.1.1
-        - prefix: 30.1.1.0/24
+        - prefix: 20.1.1.0/24
           nexthop: 18.1.1.1
 hu2:
   hostname: cab03-qa-02
@@ -40,5 +40,5 @@ hu2:
       routes:
       - prefix: 18.1.1.0/24
         nexthop: 19.1.1.1
-      - prefix: 30.1.1.0/24
+      - prefix: 20.1.1.0/24
         nexthop: 19.1.1.1

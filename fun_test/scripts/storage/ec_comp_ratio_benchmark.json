@@ -85,33 +85,33 @@
     "margin": 5,
     "artifact_dir": "compression",
     "test_corpus": {
-      "artificl": {
-        "orig_size": 311296,
-        "gzip_comp_pct": 71.88
-      },
-      "calgary": {
-        "orig_size": 3262788,
-        "gzip_comp_pct": 66.94
-      },
-      "cantrbry": {
-        "orig_size": 2822079,
-        "gzip_comp_pct": 73.69
-      },
-      "large": {
-        "orig_size": 11170777,
-        "gzip_comp_pct": 70.72
+      "enwik8": {
+        "orig_size": 100270080,
+        "gzip_comp_ratio": 2.73
       },
       "misc": {
-        "orig_size": 1019491,
-        "gzip_comp_pct": 52.62
+        "orig_size": 1085440,
+        "gzip_comp_ratio": 1.99
+      },
+      "cantrbry": {
+        "orig_size": 2969600,
+        "gzip_comp_ratio": 3.66
+      },
+      "large": {
+        "orig_size": 11288576,
+        "gzip_comp_ratio": 3.39
+      },
+      "calgary": {
+        "orig_size": 3481600,
+        "gzip_comp_ratio": 3.04
       },
       "silesia": {
-        "orig_size": 178396430,
-        "gzip_comp_pct": 61.75
+        "orig_size": 212619264,
+        "gzip_comp_ratio": 3.11
       },
-      "enwik8": {
-        "orig_size": 100000000,
-        "gzip_comp_pct": 63.45
+      "artificl": {
+        "orig_size": 417792,
+        "gzip_comp_ratio": 2.76
       }
     }
   },
@@ -121,33 +121,33 @@
     "margin": 5,
     "artifact_dir": "compression",
     "test_corpus": {
-      "artificl": {
-        "orig_size": 417792,
-        "gzip_comp_pct": 71.18
+      "enwik8": {
+        "orig_size": 100270080,
+        "gzip_comp_ratio": 2.36
       },
-      "calgary": {
-        "orig_size": 3485696,
-        "gzip_comp_pct": 61.67
+      "misc": {
+        "orig_size": 1085440,
+        "gzip_comp_ratio": 1.92
       },
       "cantrbry": {
         "orig_size": 2969600,
-        "gzip_comp_pct": 69.02
+        "gzip_comp_ratio": 3.18
       },
       "large": {
-        "orig_size": 11296768,
-        "gzip_comp_pct": 64.66
+        "orig_size": 11288576,
+        "gzip_comp_ratio": 2.83
       },
-      "misc": {
-        "orig_size": 1093632,
-        "gzip_comp_pct": 52.62
+      "calgary": {
+        "orig_size": 3481600,
+        "gzip_comp_ratio": 2.64
       },
       "silesia": {
         "orig_size": 212619264,
-        "gzip_comp_pct": 56.69
+        "gzip_comp_ratio": 2.74
       },
-      "enwik8": {
-        "orig_size": 100274176,
-        "gzip_comp_pct": 63.45
+      "artificl": {
+        "orig_size": 417792,
+        "gzip_comp_ratio": 1.79
       }
     }
   },
@@ -157,33 +157,33 @@
     "margin": 5,
     "artifact_dir": "compression",
     "test_corpus": {
-      "artificl": {
-        "orig_size": 311296,
-        "gzip_comp_pct": 71.88
-      },
-      "calgary": {
-        "orig_size": 3262788,
-        "gzip_comp_pct": 67.17
-      },
-      "cantrbry": {
-        "orig_size": 2822079,
-        "gzip_comp_pct": 73.8
-      },
-      "large": {
-        "orig_size": 11170777,
-        "gzip_comp_pct": 71.26
+      "enwik8": {
+        "orig_size": 100270080,
+        "gzip_comp_ratio": 1.37
       },
       "misc": {
-        "orig_size": 1019491,
-        "gzip_comp_pct": 52.74
+        "orig_size": 1085440,
+        "gzip_comp_ratio": 1.99
+      },
+      "cantrbry": {
+        "orig_size": 2969600,
+        "gzip_comp_ratio": 3.66
+      },
+      "large": {
+        "orig_size": 11288576,
+        "gzip_comp_ratio": 3.45
+      },
+      "calgary": {
+        "orig_size": 3481600,
+        "gzip_comp_ratio": 3.06
       },
       "silesia": {
-        "orig_size": 178396430,
-        "gzip_comp_pct": 62.08
+        "orig_size": 212619264,
+        "gzip_comp_ratio": 3.13
       },
-      "enwik8": {
-        "orig_size": 100000000,
-        "gzip_comp_pct": 63.52
+      "artificl": {
+        "orig_size": 417792,
+        "gzip_comp_ratio": 2.76
       }
     }
   }

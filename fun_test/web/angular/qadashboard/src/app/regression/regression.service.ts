@@ -17,10 +17,12 @@ export class RegressionService implements OnInit{
                    "30": "SUBMITTED",
                    "40": "SCHEDULED",
                    "50": "QUEUED",
-                   "60": "IN_PROGRESS"};
+                   "60": "IN_PROGRESS",
+                   "ALL": "ALL"};
 
 
   stateMap = {
+    "ALL": "ALL",
     "UNKNOWN": "-200",  // TODO: fetch from the back-end
     "ERROR" : -100,
     "KILLED" : -20,
@@ -79,7 +81,10 @@ export class RegressionService implements OnInit{
   }
 
   getPrettyLocalizeTime(t) {
-    return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    let localTime = this.convertToLocalTimezone(t);
+    let s = `${localTime.getDay()}/${localTime.getMonth()} ${localTime.getHours()}:${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
 
   getTestCaseExecution(executionId) {
@@ -139,5 +144,14 @@ export class RegressionService implements OnInit{
       return of(response.data);
     }))
   }
+
+  killSuite(suiteId) {
+    return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap( (response) => {
+      let jobId = parseInt(response.data);
+      return of(jobId);
+      //window.location.href = "/regression/";
+    }));
+  }
+
 
 }

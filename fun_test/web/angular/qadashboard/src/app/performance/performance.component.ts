@@ -135,8 +135,7 @@ export class PerformanceComponent implements OnInit {
   upgradeFlatNode: any = {};
   degradeFlatNode: any = {};
   tagsForId = {
-    395: ["PCIe"],
-    540: ["PCIe"], 380: ["PCIe"], 472: ["NVMe/TCP"],
+    380: ["PCIe"], 472: ["NVMe/TCP"],
     493: ["PCIe"]
   };
 
@@ -151,6 +150,8 @@ export class PerformanceComponent implements OnInit {
   f1Node: FlatNode = null;
   s1Node: FlatNode = null;
   allMetricsNode: FlatNode = null;
+
+  buildInfo: any = null;
 
   constructor(
     private apiService: ApiService,
@@ -176,6 +177,8 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxHeight = '25%';
     }
     this.status = null;
+    this.buildInfo = null;
+    this.fetchBuildInfo();
     this.fetchDag();
 
     /*
@@ -184,6 +187,15 @@ export class PerformanceComponent implements OnInit {
     console.log(e, 'back button: ' + this.location.path());
   });*/
 
+  }
+
+  //populates buildInfo
+  fetchBuildInfo(): void {
+    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
+      this.buildInfo = response.data;
+    }, error => {
+      this.loggerService.error("regression/build_to_date_map");
+    });
   }
 
   getDefaultQueryPath() {

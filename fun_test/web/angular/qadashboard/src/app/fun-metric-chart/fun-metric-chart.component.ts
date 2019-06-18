@@ -30,6 +30,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() minimal: boolean = false;
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
+  @Input() buildInfo: any = null;
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
@@ -58,7 +59,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   width: any;
   height: any;
   tableInfo: any;
-  buildInfo: any;
   timeMode: string;
   negativeGradient: boolean;
   leaf: boolean;
@@ -151,11 +151,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
-    this.buildInfo = null;
-    this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
+    if (!this.id) {
+      this.status = null;
+    }
   }
 
   ngOnChanges() {
@@ -204,10 +205,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.paddingNeeded = true;
         this.id = params['id'];
         this.fetchMetricsById();
-      }
-      else if (this.id) {
+      } else if (this.id) {
         this.fetchMetricsById();
+      } else {
+        this.status = null;
       }
+
     });
   }
 
@@ -498,15 +501,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("EditChart: Submit");
     });
 
-  }
-
-  //populates buildInfo
-  fetchBuildInfo(): void {
-    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = response.data;
-    }, error => {
-      this.loggerService.error("regression/build_to_date_map");
-    });
   }
 
   // enterTriaging(): void {
@@ -826,11 +820,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
     let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
     let localYearString = String(localDate.getFullYear());
-    let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
-    let timeString = keySplitString[1].split(":");
-    let hour = ((Number(timeString[0]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[0] + ":";
-    let minutes = ((Number(timeString[1]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[1] + ":";
-    let seconds = ((Number(timeString[2]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[2];
+    // let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
+    // let timeString = keySplitString[1].split(":");
+    let localHour = (localDate.getHours());
+    let localMinutes = (localDate.getMinutes());
+    let localSeconds = (localDate.getSeconds());
+    let hour = ((Number(localHour) < 10) ? '0' : '') + localHour + ":";
+    let minutes = ((Number(localMinutes) < 10) ? '0' : '') + localMinutes + ":";
+    let seconds = ((Number(localSeconds) < 10) ? '0' : '') + localSeconds;
     let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " + hour + minutes + seconds;
     return keyString;
   }
@@ -1315,7 +1312,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (this.modelName !== 'MetricContainer') {
       return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
         self.tableInfo = response.data;
-        self.fetchData(this.id, chartInfo, previewDataSets, self.tableInfo);
+        self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
         this.loggerService.error("fetchMetricsData");
       })

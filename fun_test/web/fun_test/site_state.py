@@ -93,18 +93,11 @@ class SiteState():
             children = metric["children"]
 
         description = "TBD"
-
-        if "Erasure" in metric["name"]:
-            i = 0
-        if "JPEG Compression_Compression-ratio" in metric["name"]:
-            i = 0
         try:
             metric_model_name = "MetricContainer"
 
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
-            if "info" in metric:
-                description = metric["info"]
             # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
             m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
             m.chart_name = metric["label"]
@@ -112,14 +105,6 @@ class SiteState():
             if description and not m.description:
                 m.description = description
                 m.save()
-            '''
-            if metric_model_name == "MetricContainer":
-                m.leaf = False
-                m.save()
-            else:
-                m.leaf = True
-                m.save()
-            '''
 
         except ObjectDoesNotExist:
             m = MetricChart(metric_model_name="MetricContainer",
@@ -145,7 +130,7 @@ class SiteState():
                     if "weight" in child:
                         child_weight = child["weight"]
                     m.add_child_weight(child_id=c.metric_id, weight=child_weight)
-                    if "leaf" in child and child["leaf"]:
+                    if "metric_model_name" in child and child["metric_model_name"] != "MetricContainer":
                         all_metrics_chart.add_child(child_id=c.metric_id)
                         all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
         if "extensible_references" in metric:
@@ -161,7 +146,7 @@ class SiteState():
                         for child_weight in reference_weights:
                             m.add_child_weight(child_id=child_weight, weight=reference_weights[child_weight])
                         m.save()
-                    except:
+                    except Exception as ex:
                         pass
 
         return m
@@ -170,9 +155,7 @@ class SiteState():
         with open(METRICS_BASE_DATA_FILE, "r") as f:
             metrics = json.load(f)
             all_metrics_metric = {
-                "info": "All metrics",
                 "metric_model_name": "MetricContainer",
-                "leaf": False,
                 "name": "All metrics",
                 "label": "All metrics",
                 "children": [],

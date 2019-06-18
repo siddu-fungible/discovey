@@ -594,7 +594,7 @@ def get_manual_lock_test_beds():
 def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(name=test_bed_name)
 
-def un_lock_assets(test_bed_name, manual_lock_submitter):
+def manual_un_lock_assets(test_bed_name, manual_lock_submitter):
     from asset.asset_manager import AssetManager
     AssetManager().manual_un_lock_assets_by_test_bed(test_bed_name=test_bed_name, user=manual_lock_submitter)
 
@@ -621,7 +621,7 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
     content = "Hi {},".format(user.first_name) + "<br>"
     content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
     if warning:
-        content += "We will unlock the test-bed in {} minutes" + "<br>".format(un_lock_warning_time / 60)
+        content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
         subject = "Manual-testing lock duration for Test-bed {} has exceeded".format(test_bed.name)
     else:
         content += "Unlocking now" + "<br>"
@@ -630,6 +630,23 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
 
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
 
+
+def get_suite_based_test_bed_spec(job_id):
+    spec = None
+    s = models_helper.get_suite_execution(suite_execution_id=job_id)
+    suite_path = s.suite_path
+    if suite_path:
+        suite_spec = parse_suite(suite_name=suite_path)
+        if suite_spec:
+            for item in suite_spec:
+                if "info" in item:
+                    info = item["info"]
+                    if "custom_test_bed_spec" in info:
+                        spec = info["custom_test_bed_spec"]
+                    else:
+                        print("Job: {} no custom_test_bed_spec in {}".format(job_id, suite_path))
+                    break
+    return spec
 
 def lock_assets(job_id, assets):
     if assets:

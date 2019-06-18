@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 
 from lib.fun.fs import Fs
-from scripts.storage.ec_perf_helper import *
+from scripts.storage.storage_helper import *
 
 '''
 Sanity Script for BLT Volume via PCI
@@ -60,7 +60,7 @@ class BLTVolumeSanityScript(FunTestScript):
         # load nvme
         load_nvme_module(end_host)
 
-        enable_counters(storage_controller, self.command_timeout)
+        #enable_counters(storage_controller, self.command_timeout)
 
         # create controller
         ctrlr_uuid = utils.generate_uuid()

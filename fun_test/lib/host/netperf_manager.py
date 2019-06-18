@@ -72,7 +72,6 @@ class PerformanceTuning:
         )
         self.linux_obj.sudo_command(';'.join(cmds))
 
-
     def iptables(self):
         cmds = (
             'sudo ufw disable',
@@ -111,7 +110,7 @@ class PerformanceTuning:
         self.linux_obj.sudo_command(';'.join(cmds))
 
     def irq_affinity(self):
-        # TODO: Add
+        # Set in performance.py
         pass
 
 
@@ -185,11 +184,10 @@ class NetperfManager:
 
     def start_netserver(self, linux_obj, cpu_list=None):
         linux_obj.pkill('netserver')
-        # cmd = 'taskset -c 8-15 /usr/bin/netserver'  # NU server NIC and F1 are both in NUA 1
         if cpu_list:
-            cmd = 'taskset -c {} /usr/bin/netserver'.format(','.join([str(c) for c in cpu_list]))
+            cmd = 'taskset -c {} netserver'.format(','.join([str(c) for c in cpu_list]))
         else:
-            cmd = '/usr/bin/netserver'
+            cmd = 'netserver'
         linux_obj.sudo_command(cmd)
         return linux_obj.get_process_id_by_pattern('netserver') is not None
 
@@ -209,7 +207,8 @@ class NetperfManager:
         # Do throughput test first, and latency test last
         #for measure_latency in (False, True):
         # Test - 1: throughput only, 2: latency only, 3: latency under throughput load
-        for test in (1, 2, 3, ):
+        #for test in (1, 2, 3, ):
+        for test in (2, 3, ):
             if test == 2:
                 for perf_tuning_obj in self.perf_tuning_objs:
                     perf_tuning_obj.cpu_governor(lock_freq=True)
@@ -245,7 +244,7 @@ class NetperfManager:
                     measure_latency = False
                 cpu_list = []
                 for i in range(0, num_processes):
-                    cpu = 15 -i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
+                    cpu = 15 - i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
                     cpu_list.append(cpu)
                     mp_task_obj.add_task(
                         func=do_test,
@@ -264,7 +263,14 @@ class NetperfManager:
                 # Start netserver
                 if not self.start_netserver(linux_obj_dst, cpu_list=cpu_list):
                     fun_test.critical('Failed to start netserver!')
+                    netserver_ready = False
                     break
+                else:
+                    netserver_ready = True
+
+            if not netserver_ready:
+                break
+
             if test == 3:  # +1 for latency under load
                 mp_task_obj.run(max_parallel_processes=(num_processes+1)*len(direction_list))
             else:
@@ -291,6 +297,7 @@ class NetperfManager:
                             {k: round(v, 1) if v != NA else v}
                         )
                     fun_test.log('NetperfManager latency result\n{}'.format(result))
+
                 elif test == 1:
                     throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT) != NA)
                     if not throughput:
@@ -304,14 +311,28 @@ class NetperfManager:
                             }
                         )
                     fun_test.log('NetperfManager throughput result\n{}'.format(result))
+
                 elif test == 3:
+                    # throughput
+                    throughput = sum(r.get(THROUGHPUT) for r in rdict[direction] if r.get(THROUGHPUT, NA) != NA)
+                    if not throughput:
+                        result[direction].update(
+                            {THROUGHPUT: NA}
+                        )
+                    else:
+                        result[direction].update(
+                            {THROUGHPUT: calculate_ethernet_throughput(protocol, frame_size, round(throughput, 3)),
+                             PPS: calculate_pps(protocol, frame_size, throughput),
+                            }
+                        )
+                    fun_test.log('NetperfManager throughput result\n{}'.format(result))
+                    # latency
                     lat_dict = rdict[direction][-1]  # latency result is the last element
                     for k, v in lat_dict.items():
                         result[direction].update(
                             {'{}_uload'.format(k): round(v, 1) if v != NA else v}
                         )
                     fun_test.log('NetperfManager latency under load result\n{}'.format(result))
-
 
         result_cooked = {}
         for direction in result:
@@ -326,10 +347,8 @@ class NetperfManager:
 def get_send_size(protocol, frame_size):
     """Get Netperf send_size"""
     if protocol.lower() == 'udp':
-        t = 'UDP_STREAM'
         send_size = frame_size-18-20-8
     elif protocol.lower() == 'tcp':
-        t = 'TCP_STREAM'
         send_size = frame_size-18-20-20
     return send_size
 
@@ -353,7 +372,7 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 21.1.1.1 () port 0 AF_INET : demo
     THROUGHPUT=3180.24
 
-    fun@FunServer04:~$ netperf -t TCP_RR -H 21.1.1.1 -v 2 -l 5 -f m -j -- -k "MIN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT,MEAN_LATENCY" -r 742,1
+    fun@FunServer04:~$ netperf -t TCP_RR -H 21.1.1.1 -v 2 -l 5 -w 100 -b 1 -f m -j -- -k "MIN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT,MEAN_LATENCY" -r 742,1
     MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 21.1.1.1 () port 0 AF_INET : demo : first burst 0
     MIN_LATENCY=49
     P50_LATENCY=77
@@ -402,7 +421,8 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
         pat = r'THROUGHPUT=(\d+\.\d+|\d+)'
     else:
         #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
-        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1'.format(t, dip, duration)
+        # 1 request per 100 msec
+        cmd = 'netperf -t {} -H {} -v 2 -l {} -w 10 -b 100 -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1'.format(t, dip, duration)
         pat = r'MIN_LATENCY=(\d+\.\d+|\d+).*?MEAN_LATENCY=(\d+\.\d+|\d+).*?P50_LATENCY=(\d+\.\d+|\d+).*?P90_LATENCY=(\d+\.\d+|\d+).*?P99_LATENCY=(\d+\.\d+|\d+).*?MAX_LATENCY=(\d+\.\d+|\d+)'
     if sip:
         cmd = '{} -L {}'.format(cmd, sip)

@@ -5,6 +5,7 @@ from lib.host import netperf_manager as nm
 from lib.host.network_controller import NetworkController
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity, perf_utils
+from web.fun_test.analytics_models_helper import get_data_collection_time
 from collections import OrderedDict
 import json
 import pprint
@@ -12,11 +13,18 @@ import pprint
 
 TB = sanity.TB
 inputs = fun_test.get_job_inputs()
-if inputs and inputs.get('debug', 0):
+if inputs:
+    debug_mode = (inputs.get('debug', 0) == 1)
+else:
+    debug_mode = False
+
+if debug_mode:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
 else:
     RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
-TIMESTAMP = get_current_time()
+
+TIMESTAMP = get_data_collection_time()
+
 FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
     ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
     ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
@@ -110,13 +118,19 @@ class FunethPerformance(sanity.FunethSanity):
         fun_test.shared_variables['results'] = results
 
     def cleanup(self):
-        perf_utils.populate_result_summary(tc_ids,
-                                           fun_test.shared_variables['results'],
-                                           fun_test.shared_variables['funsdk_commit'],
-                                           fun_test.shared_variables['funsdk_bld'],
-                                           fun_test.shared_variables['driver_commit'],
-                                           fun_test.shared_variables['driver_bld'],
-                                           '00_summary_of_results.txt')
+        try:
+            results = fun_test.shared_variables['results']
+            if not debug_mode:
+                perf_utils.db_helper(results)
+            perf_utils.populate_result_summary(tc_ids,
+                                               results,
+                                               fun_test.shared_variables['funsdk_commit'],
+                                               fun_test.shared_variables['funsdk_bld'],
+                                               fun_test.shared_variables['driver_commit'],
+                                               fun_test.shared_variables['driver_bld'],
+                                               '00_summary_of_results.txt')
+        except:
+            pass
         super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(fun_test.shared_variables['netperf_manager_obj'].cleanup(), 'Clean up')
@@ -137,7 +151,7 @@ class FunethPerformanceBase(FunTestCase):
             interval = 60
         else:
             interval = 5
-        fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
+        #fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
 
     def _run(self, flow_type, tool='netperf', protocol='tcp', num_flows=1, num_hosts=1, frame_size=1500, duration=30):
         funeth_obj = fun_test.shared_variables['funeth_obj']
@@ -179,6 +193,7 @@ class FunethPerformanceBase(FunTestCase):
 
         suffixes = ('n2h', 'h2n', 'h2h')
         arg_dicts = []
+        pingable = True
         for shost, dhost in host_pairs:
             linux_obj_src = funeth_obj.linux_obj_dict[shost]
             linux_obj_dst = funeth_obj.linux_obj_dict[dhost]
@@ -187,10 +202,13 @@ class FunethPerformanceBase(FunTestCase):
 
             # Check dip pingable - IP header 20B, ICMP header 8B
             # Allow up to 2 ping miss due to resolve ARP
-            ping_result = linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
+            pingable &= linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
 
-            fun_test.test_assert(ping_result, '{} ping {} with packet size {}'.format(
-                linux_obj_src.host_ip, dip, frame_size))
+            if pingable:
+                fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
+                    linux_obj_src.host_ip, dip, frame_size))
+            else:
+                break
 
             suffix = '{}2{}'.format(shost[0], dhost[0])
             arg_dicts.append(
@@ -199,7 +217,8 @@ class FunethPerformanceBase(FunTestCase):
                  'dip': dip,
                  'tool': tool,
                  'protocol': protocol,
-                 'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
+                 #'num_flows': num_flows/len(host_pairs) if not bi_dir else num_flows/(len(host_pairs)/2),
+                 'num_flows': num_flows,
                  'duration': duration,
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
@@ -213,22 +232,29 @@ class FunethPerformanceBase(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         version = fun_test.get_version()
         fun_test.log('Collect stats before test')
-        fpg_tx_pkts1, _, fpg_rx_pkts1, _ = perf_utils.collect_dpc_stats(network_controller_objs,
-                                                                        fpg_interfaces,
-                                                                        fpg_intf_dict,
-                                                                        version,
-                                                                        when='before')
-        perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration+10)
+        sth_stuck_before = perf_utils.collect_dpc_stats(network_controller_objs,
+                                                        fpg_interfaces,
+                                                        fpg_intf_dict,
+                                                        version,
+                                                        when='before')
 
-        result = perf_manager_obj.run(*arg_dicts)
+        if pingable and not sth_stuck_before:
 
-        fun_test.log('Collect stats after test')
-        perf_utils.collect_host_stats(funeth_obj, version, when='after')
-        fpg_tx_pkts2, _, fpg_rx_pkts2, _ = perf_utils.collect_dpc_stats(network_controller_objs,
-                                                                        fpg_interfaces,
-                                                                        fpg_intf_dict,
-                                                                        version,
-                                                                        when='after')
+            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
+
+            result = perf_manager_obj.run(*arg_dicts)
+
+            fun_test.log('Collect stats after test')
+            perf_utils.collect_host_stats(funeth_obj, version, when='after')
+            sth_stuck_after = perf_utils.collect_dpc_stats(network_controller_objs,
+                                                           fpg_interfaces,
+                                                           fpg_intf_dict,
+                                                           version,
+                                                           when='after')
+            if sth_stuck_after:
+                result = {}
+        else:
+            result = {}
 
         #if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
         #    if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
@@ -295,9 +321,10 @@ class FunethPerformanceBase(FunTestCase):
         with open(RESULT_FILE, 'w') as f:
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
-        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
         fun_test.shared_variables['results'].append(result)
         tc_ids.append(fun_test.current_test_case_id)
+        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
+        fun_test.simple_assert(not sth_stuck_after,'Something is stuck after test')
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):

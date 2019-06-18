@@ -3,7 +3,7 @@ from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
-from ec_perf_helper import *
+from storage_helper import *
 from fun_settings import DATA_STORE_DIR
 from fun_global import PerfUnit, is_production_mode
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
@@ -27,7 +27,7 @@ def compare_gzip(gzip_percent, accel_percent, margin):
 
 
 def get_comp_ratio(orig_size, comp_size):
-    return orig_size/float(comp_size)
+    return orig_size / float(comp_size)
 
 
 def get_lsv_write_count(storage_controller, lsv_uuid):
@@ -61,7 +61,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.command_timeout = 5
+            self.command_timeout = 30
             self.reboot_timeout = 480
         else:
             for k, v in config_dict["GlobalSetup"].items():
@@ -302,23 +302,23 @@ class ECVolumeLevelTestcase(FunTestCase):
             comp_size = curr_write_count - init_write_count
             fun_test.simple_assert(comp_size, "Check compressed size is non-zero value")
             comp_ratio = get_comp_ratio(orig_size=test_corpuses[corpus]['orig_size'], comp_size=comp_size)
-            #gzip_float_pct = float(test_corpuses[corpus]['gzip_comp_pct'])
-            #compare_result, diff = compare_gzip(gzip_float_pct, comp_ratio, self.margin)
+            # gzip_float_pct = float(test_corpuses[corpus]['gzip_comp_pct'])
+            # compare_result, diff = compare_gzip(gzip_float_pct, comp_ratio, self.margin)
             '''fun_test.add_checkpoint("FunOS accelerator spacesaving percentage {0:04.2f}% {1} than gzip space"
                                     "saving percentage: {2:04.2f}% for corpus: {3}".format(comp_ratio,
                                                                                            "GREATER" if compare_result
                                                                                            else "LESSER",
                                                                                            gzip_float_pct,
                                                                                            corpus))'''
-            fun_test.add_checkpoint("FunOS accelerator compression-ratio: {0:04.2f}% for corpus: {1}".format(comp_ratio,
-                                                                                                             corpus))
+            fun_test.add_checkpoint("FunOS accelerator compression-ratio: {0:04.2f}%, compressed size: {1}"
+                                    " for corpus: {2}".format(comp_ratio, comp_size, corpus))
 
             post_result_lst.append({'effort_name': self.accelerator_effort,
                                     'corpus_name': corpus,
                                     'f1_compression_ratio': comp_ratio,
                                     'date_time': fun_test.shared_variables['date_time']})
             init_write_count = curr_write_count
-            table_rows.append([corpus, "{0:04.2f}".format(comp_ratio), test_corpuses[corpus]['gzip_comp_pct']])
+            table_rows.append([corpus, "{0:04.2f}".format(comp_ratio), test_corpuses[corpus]['gzip_comp_ratio']])
         fun_test.add_table(panel_header="Compression ratio benchmarking",
                            table_name="Accelerator Effort: {0}, Gizp Effort: {1}".format(self.accelerator_effort,
                                                                                          self.gzip_effort),

@@ -1,0 +1,42 @@
+{
+    "Description": "FS-15-F1-1 abstract cfg",
+    "F1Index" : 2,
+    "Interfaces" : [
+	{ 
+	    "name" : "fpg0", 
+	    "address" : "14.1.1.1",
+	    "prefix length" : 30,
+	    "spine_index" : 0,
+	    "gph_index" : 7,	    
+	    "enable" : true
+	},
+        {
+            "name" : "fpg4",
+            "address" : "16.1.1.1",
+            "prefix length" : 30,
+            "spine_index" : 1,
+            "gph_index" : 8,
+            "enable" : true
+        },
+	{ 
+	    "name" : "lo:0", 
+	    "address" : "8.8.8.8",
+	    "prefix length" : 32,	    
+	    "enable" : true
+	},
+        {
+            "name" : "vlan1",
+            "address" : "81.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ],
+    "BGP" : {
+	"Local AS": 62002,
+	"Neighbors" : [
+	    { "peer" : "14.1.1.2", "peer-as": 62001},
+	    { "peer" : "16.1.1.2", "peer-as": 62001}
+
+	]
+    }	
+}

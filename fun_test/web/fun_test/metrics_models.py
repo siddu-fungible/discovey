@@ -36,6 +36,13 @@ class MetricsGlobalSettingsSerializer(ModelSerializer):
         fields = "__all__"
 
 
+class MetricsRunTime(models.Model):
+    name = models.TextField(default="", unique=True)
+    value = JSONField(default={})
+
+    def __str__(self):
+        return "{}: {}".format(self.name, self.value)
+
 class SchedulingStates:
     ACTIVE = "Active"
     COMPLETED = "Completed"
@@ -1880,6 +1887,28 @@ class SoakDmaMemsetPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+
+class ChannelParallPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_number_channels = models.BigIntegerField(default=-1)
+    input_busy_loop_usecs = models.IntegerField(default=-1)
+    input_data_pool_count = models.IntegerField(default=-1)
+    input_metric_name = models.TextField(default="")
+    output_channel_parall_speed = models.BigIntegerField(default=-1)
+    output_channel_parall_speed_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+
 class TeraMarkCryptoPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
@@ -2448,6 +2477,50 @@ class WuStackSpeedTestPerformance(models.Model):
                                          choices=[(0, "wustack_alloc_free_cycles")])
     output_average = models.IntegerField(verbose_name="Alloc/free cycles average", default=-1)
     output_average_unit = models.TextField(default="cycles")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class VoltestLsvPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    output_read_iops = models.BigIntegerField(verbose_name="Read ops per sec", default=-1)
+    output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_bandwidth = models.FloatField(verbose_name="Read Throughput in Mbps", default=-1)
+    output_read_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_write_iops = models.BigIntegerField(verbose_name="Write ops per sec", default=-1)
+    output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_write_bandwidth = models.FloatField(verbose_name="Write Throughput in Mbps", default=-1)
+    output_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class VoltestLsv4Performance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    output_read_iops = models.BigIntegerField(verbose_name="Read ops per sec", default=-1)
+    output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_bandwidth = models.FloatField(verbose_name="Read Throughput in Mbps", default=-1)
+    output_read_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_write_iops = models.BigIntegerField(verbose_name="Write ops per sec", default=-1)
+    output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_write_bandwidth = models.FloatField(verbose_name="Write Throughput in Mbps", default=-1)
+    output_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
     input_platform = models.TextField(default=FunPlatform.F1)
     tag = "analytics"
 

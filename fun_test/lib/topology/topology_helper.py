@@ -33,22 +33,34 @@ class TopologyHelper:
     def load(self, file_name):
         return dill.load(open(file_name, "rb"))
 
+    def get_topology(self):
+        return self.expanded_topology
+
     @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
 
         if not self.spec:
             test_bed_name = fun_test.get_job_environment_variable(variable="test_bed_type")
-            am = fun_test.get_asset_manager()
-            spec = am.get_test_bed_spec(name=test_bed_name)
-
-            fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
+            if test_bed_name == "suite-based":
+                custom_test_bed_spec = fun_test.get_suite_run_time_environment_variable(name="custom_test_bed_spec")
+                self.spec = custom_test_bed_spec
+            else:
+                am = fun_test.get_asset_manager()
+                spec = am.get_test_bed_spec(name=test_bed_name)
+                fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
+                self.spec = spec
 
         self.expanded_topology = ExpandedTopology(spec=self.spec)
+        spec = self.spec
 
+        disabled_hosts = spec.get("disabled_hosts", [])
         if "host_info" in spec:
             hosts = spec["host_info"]
             for host_name in hosts:
+                if host_name in disabled_hosts:
+                    fun_test.log("Disabling Host: {}".format(host_name))
+                    continue
                 host_spec = fun_test.get_asset_manager().get_host_spec(name=host_name)
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
                 self.expanded_topology.hosts[host_name] = Host(name=host_name, spec=host_spec)
@@ -71,7 +83,7 @@ class TopologyHelper:
             duts = spec["dut_info"]
             for dut_index, dut_info in duts.items():
                 dut_index = int(dut_index)
-                if dut_index in self.disabled_dut_indexes:
+                if dut_index in self.disabled_dut_indexes or ("disabled" in dut_info and dut_info["disabled"]):
                     fun_test.log("Skipping initialization for Dut-index: {}".format(dut_index))
                     continue
 
@@ -207,13 +219,29 @@ class TopologyHelper:
             if dut_index in self.disabled_dut_indexes:
                 continue
             fun_test.debug("Validating DUT readiness {}".format(dut_index))
-            fun_test.test_assert(dut_obj.get_instance().is_ready(), "DUT: {} ready".format(dut_index))
+            dut_ready = False
+            dut_ready_timer = FunTimer(max_time=300)
+            while not dut_ready_timer.is_expired() and not dut_ready:
+                dut_instance = dut_obj.get_instance()
+                dut_ready = dut_instance.is_ready()
+                fun_test.sleep("DUT: {} readiness check. Remaining time: {}".format(dut_index, dut_ready_timer.remaining_time()))
+                dut_instance.post_bootup()
+            fun_test.test_assert(dut_ready, "DUT: {} ready".format(dut_index))
 
             for interface_index, interface_info in dut_obj.interfaces.items():
                 fun_test.debug("Validating peer on DUT interface {}".format(interface_index))
-                peer_info = interface_info.peer_info
-                if peer_info:
-                    if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
+                peer = interface_info.peer_info
+                if peer:
+                    if peer.type == peer.END_POINT_TYPE_BARE_METAL:
+                        host_ready_timer = FunTimer(max_time=300)
+                        host_is_ready = False
+                        while not host_is_ready and not host_ready_timer.is_expired():
+                            host_is_ready = peer.is_ready()
+                            fun_test.sleep("Host: {} readiness check. Remaining time: {}".format(peer.get_instance(),
+                                                                                                 host_ready_timer.remaining_time()))
+
+                        fun_test.test_assert(not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
+                        """
                         host_instance = peer_info.get_host_instance()
                         ipmi_details = None
                         if host_instance.extra_attributes:
@@ -222,6 +250,7 @@ class TopologyHelper:
                         instance_ready = host_instance.ensure_host_is_up(max_wait_time=240, ipmi_details=ipmi_details)
                         fun_test.test_assert(instance_ready, "Instance: {} ready".format(str(host_instance)))
                         host_instance.lspci(grep_filter="1dad")
+                        """
         return True
 
     @fun_test.safe
@@ -269,7 +298,7 @@ class TopologyHelper:
                             fun_test.simple_assert(instance, "Bare-metal instance")
 
                             if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
-                                fun_test.test_assert(instance.reboot(non_blocking=True), "Host instance: {} rebooted issued".format(str(instance)))
+                                fun_test.test_assert(peer_info.reboot(), "Host instance: {} rebooted issued".format(str(instance)))
 
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,

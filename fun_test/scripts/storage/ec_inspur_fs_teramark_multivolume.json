@@ -1,14 +1,26 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
+    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"],
+    "dut_start_index": 2,
+    "host_start_index": 1,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": "ep",
+    "num_f1_per_fs": 1,
+    "num_f1s": 1,
+    "num_hosts": 1,
+    "fpg_int_prefix": "fpg",
     "disable_f1_index": 1,
     "f1_in_use": 0,
+    "load_modules": ["nvme", "nvme_tcp"],
     "huid": 7,
     "ctlid": 0,
     "syslog_level": 2,
     "command_timeout": 5,
     "reboot_timeout": 600,
     "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -50,16 +62,16 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 137438953472,
       "use_lsv": 1,
-      "lsv_pct": 0.30,
+      "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_ssd": 12,
-      "num_volumes": 6
+      "num_volumes": 8
     },
+    "num_ssd": 12,
     "command_timeout": 30,
-    "iter_interval": 30,
+    "iter_interval": 10,
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
@@ -67,13 +79,17 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 1800},
-    "fio_cmd_args": {"bs": "8k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "timeout": 180},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 4, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 6000},
+    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --cpus_allowed={} --numjobs={} --iodepth={} --bs=8k --size=100%", "timeout": 150},
+    "fio_runtime": 120,
+    "fio_run_timeout": 150,
+    "fio_size_timeout": 5400,
     "fio_modes": ["randrw"],
-    "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)", "(16, 8)", "(16, 16)"],
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_iodepth": [64, 8, 16, 32, 128, 256],
+    "fio_job_name": "inspur_8k_random_read_write",
+    "mpstat_args": {"interval": 60, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
   },
   "SequentialReadWrite1024kBlocks": {
     "ec_info": {
@@ -93,16 +109,16 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 274877906944,
       "use_lsv": 1,
-      "lsv_pct": 0.30,
+      "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_ssd": 12,
-      "num_volumes": 6
+      "num_volumes": 8
     },
+    "num_ssd": 12,
     "command_timeout": 30,
-    "iter_interval": 60,
+    "iter_interval": 10,
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
@@ -110,13 +126,14 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 1800},
-    "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "timeout": 180},
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
+    "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
     "fio_modes": ["rw"],
-    "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)", "(16, 8)", "(16, 16)"],
-    "fio_job_name": "inspur_1024k_sequential_read_write"
+    "fio_iodepth": [1, 8, 16, 32, 64, 128, 256],
+    "fio_job_name": "inspur_1024k_sequential_read_write",
+    "mpstat_args": {"interval":  5, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
   },
   "MixedRandReadWriteIOPS": {
     "ec_info": {
@@ -136,16 +153,16 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 274877906944,
       "use_lsv": 1,
-      "lsv_pct": 0.30,
+      "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_ssd": 12,
-      "num_volumes": 6
+      "num_volumes": 8
     },
+    "num_ssd": 12,
     "command_timeout": 30,
-    "iter_interval": 30,
+    "iter_interval": 10,
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
@@ -153,13 +170,14 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "timeout": 1800},
-    "fio_cmd_args": {"bssplit": "8k/50:1024k/50", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 80, "percentage_random": "100%", "ramp_time": 10, "runtime": 120, "timeout": 180},
+    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
+    "fio_cmd_args": {"bssplit": "8k/50:1024k/50", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 80, "percentage_random": "100%", "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
     "fio_modes": ["randrw"],
-    "fio_numjobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(16, 2)", "(16, 4)", "(16, 8)", "(16, 16)"],
-    "fio_job_name": "inspur_mixed_random_read_write"
+    "fio_iodepth": [1, 8, 16, 32, 64, 128, 256],
+    "fio_job_name": "inspur_mixed_random_read_write",
+    "mpstat_args": {"interval":  5, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
   },
   "OLTPModelReadWriteIOPS": {
     "ec_info": {
@@ -179,20 +197,15 @@
       },
       "ndata": 4,
       "nparity": 2,
-      //"capacity": 3298534883328,
-      //"capacity": 2199023255552,
-      //"capacity": 549755813888,
-      "capacity": 68719476736,
+      "capacity": 274877906944,
       "use_lsv": 1,
-      "lsv_pct": 0.30,
+      "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1
+      "num_volumes": 6
     },
-    // timeout used for the storage controller
     "command_timeout": 30,
-    "iter_interval": 60,
-    // Head room needed for the LS volume in percentage
+    "iter_interval": 10,
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
@@ -212,7 +225,7 @@
     "perf_run_config_file": "inspur_oltp_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 16
   },
   "OLAPModelReadWriteIOPS": {
     "ec_info": {
@@ -232,20 +245,15 @@
       },
       "ndata": 4,
       "nparity": 2,
-      //"capacity": 3298534883328,
-      //"capacity": 2199023255552,
-      //"capacity": 549755813888,
-      "capacity": 68719476736,
+      "capacity": 274877906944,
       "use_lsv": 1,
-      "lsv_pct": 0.30,
+      "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1
+      "num_volumes": 6
     },
-    // timeout used for the storage controller
     "command_timeout": 30,
-    "iter_interval": 60,
-    // Head room needed for the LS volume in percentage
+    "iter_interval": 10,
     "ns_id": 1,
     "attach_transport": "TCP",
     "transport_port": 1099,
@@ -265,59 +273,6 @@
     "perf_run_config_file": "inspur_olap_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
-  },
-  "RandReadWrite8kBlocksLatencyTest": {
-    "ec_info": {
-      "volume_types": {
-        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-        "ec": "VOL_TYPE_BLK_EC",
-        "lsv": "VOL_TYPE_BLK_LSV",
-        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-      },
-      "volume_block": {
-        "ndata": 4096,
-        "nparity": 4096,
-        "ec": 4096,
-        "lsv": 4096,
-        "jvol": 512
-      },
-      "ndata": 4,
-      "nparity": 2,
-      //"capacity": 3298534883328,
-      //"capacity": 2199023255552,
-      //"capacity": 549755813888,
-      "capacity": 68719476736,
-      "use_lsv": 1,
-      "lsv_pct": 0.30,
-      "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
-      "num_volumes": 1
-    },
-    // timeout used for the storage controller
-    "command_timeout": 30,
-    "iter_interval": 60,
-    // Head room needed for the LS volume in percentage
-    "ns_id": 1,
-    "attach_transport": "TCP",
-    "transport_port": 1099,
-    "huid": 7,
-    "ctlid": 0,
-    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "vdbench_path": "/usr/local/share/vdbench",
-    "warm_up_traffic": 1,
-    "warm_up_timeout": 5400,
-    //"warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=32\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=32\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=5m,interval=30",
-    "warm_up_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=32\nwd=wd1,sd=sd*,seekpct=eof,rdpct=0,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=6h,interval=30",
-    "warm_up_config_file": "populate_disk",
-    "read_pct": 0.7,
-    "operation": "randrw",
-    //"perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=1\nsd=sd2,lun=/dev/nvme0n2,openflags=o_direct,threads=1\nsd=sd3,lun=/dev/nvme0n3,openflags=o_direct,threads=1\nsd=sd4,lun=/dev/nvme0n4,openflags=o_direct,threads=1\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=8t,interval=10,warmup=10",
-    "perf_run_vdb_config": "sd=sd1,lun=/dev/nvme0n1,openflags=o_direct,threads=8\nwd=wd1,sd=sd*,seekpct=100,rdpct=70,xfersize=8k\nrd=rd1,wd=wd1,iorate=max,elapsed=120,maxdata=64g,interval=10,warmup=10",
-    "perf_run_config_file": "inspur_8k_random_read_write_latency_vdbench",
-    "perf_run_timeout": 180,
-    "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 16
   }
 }

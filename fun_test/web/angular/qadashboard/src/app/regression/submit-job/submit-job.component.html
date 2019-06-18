@@ -7,7 +7,7 @@
           <table class="table table-nonfluid table-borderless">
             <tr>
               <td class="no-wrap">
-                <label for="submitter">Submitter</label>
+                <label for="submitter" class="required-label">Submitter</label>
               </td>
               <td>
                 <select id="submitter" [(ngModel)]="selectedUser">
@@ -20,11 +20,11 @@
 
             <tr>
               <td class="no-wrap">
-                <label for="testbed-type">Testbed type</label>
+                <label for="testbed-type" class="required-label">Testbed type</label>
               </td>
               <td>
                   <select id="testbed-type" [(ngModel)]="selectedTestBedType">
-                    <option *ngFor="let tb of testBedNames" [ngValue]="tb">{{ tb }}</option>
+                    <option *ngFor="let tb of testBedNames" [ngValue]="tb" [selected]="selectedTestBedType == tb">{{ tb }}</option>
                   </select>
               </td>
             </tr>
@@ -39,10 +39,7 @@
                 &nbsp;&nbsp;<input (change)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With Jenkins build
               </td>
             </tr>
-            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
-              <td><label for="boot-args">Boot-args</label></td>
-              <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
-            </tr>
+
 
             <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
               <td class="no-wrap">
@@ -67,10 +64,16 @@
 
 
             <ng-container *ngIf="withJenkinsBuild">
+
+              <ng-container *ngIf="selectedTestBedType && (selectedTestBedType.indexOf('fs') > -1 || selectedTestBedType.indexOf('suite-based')) > -1">
               <tr>
-                <td colspan="2">
-                  <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
-                </td>
+                  <td colspan="2">
+                    <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
+                  </td>
+                </tr>
+                <tr>
+                <td><label for="boot-args">BOOTARGS</label></td>
+                <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
               </tr>
               <tr>
                   <td><input (change)="disableAssertions = !disableAssertions" type="checkbox" name="disable-assertions" [checked]="disableAssertions"> DISABLE_ASSERTIONS </td>
@@ -95,13 +98,24 @@
                   <td><input (change)="skipDasmC = !skipDasmC" type="checkbox" name="skip-dasm" [checked]="skipDasmC"> SKIP_DASM_C </td>
               </tr>
               <tr>
-                <td colspan="2">
-                  <app-section-horizontal-line></app-section-horizontal-line>
-                </td>
+                <td><label for="branch-funtools">BRANCH_FunTools</label></td>
+                <td><input style='width:100%' id="branch-funtools" name="branch-funtools" [(ngModel)]="branchFunTools" type="text"/></td>
               </tr>
+              <tr>
+                <td><label for="branch-funhw">BRANCH_FunHW</label></td>
+                <td><input style='width:100%' id="branch-funhw" name="branch-funhw" [(ngModel)]="branchFunHw" type="text"/></td>
+              </tr>
+
+              </ng-container>
+
 
             </ng-container>
 
+            <tr>
+              <td colspan="2">
+                <app-section-horizontal-line [text]="'Suite/Script selection'"></app-section-horizontal-line>
+              </td>
+            </tr>
 
             <tr>
               <td><input (change)="suiteSelectionMode = 'BY_SUITE'" type="radio" [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite</td>
@@ -109,7 +123,7 @@
             </tr>
             <tr *ngIf="suiteSelectionMode === 'BY_SUITE'">
               <td class="no-wrap">
-                <label for="suite-select">Select a suite</label>
+                <label for="suite-select" class="required-label">Select a suite</label>
               </td>
               <td>
                 <select class="field-width" id="suite-select" [(ngModel)]="selectedSuite"
@@ -127,6 +141,14 @@
                 <app-script-selector [resetEvent]="resetScriptSelector" (singleSelectPk)="singleSelectPkEvent($event)"></app-script-selector>
               </td>
             </tr>
+
+            <tr>
+              <td colspan="2">
+                <app-section-horizontal-line [text]="'Additional options'"></app-section-horizontal-line>
+              </td>
+            </tr>
+
+
             <tr>
               <td class="no-wrap">
                 <label>Select a tag: </label>
@@ -139,6 +161,9 @@
                 </div>
               </td>
             </tr>
+
+
+
             <tr>
               <td class="no-wrap">
                 <label>Inputs (JSON): </label>

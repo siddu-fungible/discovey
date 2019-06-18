@@ -1,6 +1,4 @@
 <div class="this-component component">
-
-
   <div class="row">
     <div class="col">
       <div class="card">
@@ -14,6 +12,11 @@
                   (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
                   class="anchor-button pseudo-anchor">
     / Re-run failed</span>)
+            <ng-container *ngIf="suiteExecution.fields.state > stateMap.COMPLETED">
+              <span style="color:red" class="anchor-button pseudo-anchor" (click)="killClick()">Kill</span>
+            </ng-container>
+
+
           </ng-container>
         </div>
         <div class="card-body">
@@ -27,7 +30,7 @@
                   <app-smart-label [value]="stateStringMap[attribute.value]"></app-smart-label>
                 </td>
                 <td *ngSwitchCase="'Result'">
-                  <app-smart-label [value]="attribute.value" [type]="attribute.value"></app-smart-label>
+                  <app-smart-label [value]="attribute.value"></app-smart-label>
                 </td>
                 <td *ngSwitchCase="'Path'">
                   <ng-container *ngIf="suiteExecution">
@@ -54,6 +57,15 @@
               <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log
                 directory</a>
             </tr>
+            <tr *ngIf="environment">
+              <td>Branch_FunOS</td>
+              <td>{{ environment.BRANCH_FunOS }}</td>
+            </tr>
+            <tr *ngIf="environment">
+              <td>DISABLE_ASSERTIONS</td>
+              <td>{{ environment.DISABLE_ASSERTIONS }}</td>
+            </tr>
+
           </table>
         </div>
       </div>
@@ -81,6 +93,12 @@
         </ng-container>
       </div>
 
+      <ng-container *ngIf="suiteExecution?.fields.state == stateMap.QUEUED">
+        <br>
+        <span class="h6">Queue occupancy:</span>
+        <app-queue-viewer></app-queue-viewer>
+      </ng-container>
+
 
       <div class="card" *ngFor="let scriptExecutionInfo of scriptExecutionsMap | keyvalue">
         <div class="card card-primary">
@@ -104,6 +122,7 @@
             <jira-info *ngIf="scriptInfo[scriptExecutionInfo.key]?.pk"
                          [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].pk">
             </jira-info>
+
 
             <br>
             <table *ngIf="getKeys(scriptExecutionInfo.value).length > 0"

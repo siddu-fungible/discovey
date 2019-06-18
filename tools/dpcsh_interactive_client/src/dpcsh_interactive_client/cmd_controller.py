@@ -2,6 +2,7 @@ from dpc_shell import DpcShell
 from dpc_client import DpcClient
 from cmd2 import Cmd, with_argparser
 from nu_commands import *
+from storage_commands import *
 from cmd_arg_parser import *
 import sys
 
@@ -20,6 +21,7 @@ class CmdController(Cmd):
         self._show_cmd_obj = ShowCommands(dpc_client=self.dpc_client)
         self._meter_cmd_obj = MeterCommands(dpc_client=self.dpc_client)
         self._flow_cmd_obj = FlowCommands(dpc_client=self.dpc_client)
+        self._storage_peek_obj = StoragePeekCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -827,6 +829,19 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_stats_hu(grep_regex=grep_regex)
 
+    # Storage Peek stats
+    def peek_stats_ssds(self, args):
+        grep = args.grep
+        self._storage_peek_obj.peek_connected_ssds(grep=grep)
+
+    def peek_blt_vol_stats(self, args):
+        vol_id = args.vol_id
+        self._storage_peek_obj.peek_blt_vol_stats(vol_id=vol_id)
+
+    def peek_rds_vol_stats(self, args):
+        vol_id = args.vol_id
+        self._storage_peek_obj.peek_rds_vol_stats(vol_id=vol_id)
+
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
 
@@ -1099,6 +1114,12 @@ class CmdController(Cmd):
     peek_hu_stats_parser.set_defaults(func=peek_hu_stats)
     peek_wus_stats_parser.set_defaults(func=peek_wus_stats)
 
+    # Storage Peek Commands
+    peek_stats_ssds_parser.set_defaults(func=peek_stats_ssds)
+    peek_stats_blt_vol_parser.set_defaults(func=peek_blt_vol_stats)
+    peek_stats_rds_vol_parser.set_defaults(func=peek_rds_vol_stats)
+
+
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
     clear_nu_fwd_stats_parser.set_defaults(func=clear_nu_fwd_stats)
@@ -1174,7 +1195,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.105.165", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

@@ -1,7 +1,7 @@
 from fun_global import get_current_time
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.models import TestBed
+from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails
 from web.fun_test.models import ScriptInfo, RegresssionScripts
@@ -21,7 +21,9 @@ def test_beds(request, id):
     am = AssetManager()
     if request.method == "GET":
         if not id:
+            valid_test_beds = am.get_valid_test_beds()
             all_test_beds = TestBed.objects.all().order_by('name')
+            all_test_beds = [x for x in all_test_beds if x.name in valid_test_beds]
             result = []
             for test_bed in all_test_beds:
                 t = {"name": test_bed.name,
@@ -36,7 +38,10 @@ def test_beds(request, id):
                     t["asset_level_manual_lock_status"] = {"asset_level_manual_locked": asset_level_manual_locked,
                                                            "error_message": error_message,
                                                            "asset_level_manual_lock_user": manual_lock_user}
+                test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name)
+                t["automation_status"] = test_bed_availability
                 result.append(t)
+
 
         else:
             t = TestBed.objects.get(name=id)
@@ -71,16 +76,18 @@ def test_beds(request, id):
             submitter_email = request_json["manual_lock_submitter_email"]
             test_bed.manual_lock_submitter = submitter_email
 
+        this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:
             future_time = get_current_time() + timedelta(hours=int(extension_hour),
                                                          minutes=int(extension_minute))
+            this_is_extension_request = True
             test_bed.manual_lock_expiry_time = future_time
         if "manual_lock" in request_json:
             test_bed.manual_lock = request_json["manual_lock"]
 
         if test_bed.manual_lock:
             manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(test_bed_name=test_bed.name)
-            if manual_locked:
+            if manual_locked and not this_is_extension_request:
                 raise Exception(error_message)
             else:
                 if submitter_email:
@@ -178,4 +185,37 @@ def script_infos(request, pk):
                            "bug": script_info.bug,
                            "pk": script_info.pk,
                            "script_path": regression_script.script_path})
+    return result
+
+
+"""
+    name = models.TextField(unique=True)
+    type = models.TextField()
+    job_ids = JSONField(default=[])
+    manual_lock_user = models.TextField(default=None, null=True)
+"""
+
+@csrf_exempt
+@api_safe_json_response
+def assets(request, name):
+    result = None
+    if request.method == "GET":
+        if not name:
+            all_assets = Asset.objects.all()
+            result = []
+            for one_asset in all_assets:
+                one_record = {"name": one_asset.name,
+                              "type": one_asset.type,
+                              "manual_lock_user": one_asset.manual_lock_user}
+                result.append(one_record)
+    elif request.method == "PUT":
+        request_json = json.loads(request.body)
+        try:
+            asset = Asset.objects.get(name=name)
+            if "manual_lock_user" in request_json:
+                asset.manual_lock_user = request_json.get("manual_lock_user")
+            asset.save()
+            result = True
+        except:
+            pass #TODO
     return result

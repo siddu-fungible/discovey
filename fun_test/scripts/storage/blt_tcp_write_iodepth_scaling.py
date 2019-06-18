@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 from lib.system import utils
 from lib.host.traffic_generator import TrafficGenerator
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.host.linux import Linux
 from lib.fun.fs import Fs
 from datetime import datetime
@@ -98,7 +98,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1
 
-        self.db_log_time = get_current_time()
+        self.db_log_time = get_data_collection_time()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         self.storage_controller = f1.get_dpc_storage_controller()
@@ -277,6 +277,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Attaching BLT {} with uuid {} to controller".
                                      format(x, cur_uuid))
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
+
+            fun_test.sleep("Waiting for host reboot to complete", 160)
 
             self.end_host.sudo_command("iptables -F")
             self.end_host.sudo_command("ip6tables -F")

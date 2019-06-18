@@ -5,7 +5,7 @@ from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 
 
-fs_with_pcie_host = ('fs-11', 'fs-45',)
+fs_with_pcie_host = ('fs-11', 'fs-45', 'fs-66', 'fs-60', 'fs-48',)
 
 
 class PcieHost(FunTestScript):
@@ -24,11 +24,29 @@ class PcieHost(FunTestScript):
         # Boot up FS1600
         topology_helper = TopologyHelper()
         if fs == 'fs-11':
-            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+            boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
             topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=boot_args)
         elif fs == 'fs-45':
-            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g"
-            f1_1_boot_args = "app=hw_hsu_test retimer=3 --dpc-uart --dpc-server --csr-replay --all_100g"
+            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            f1_1_boot_args = "app=hw_hsu_test retimer=3 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            topology_helper.set_dut_parameters(dut_index=0,
+                                               f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                              1: {"boot_args": f1_1_boot_args}})
+        elif fs == 'fs-66':
+            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            f1_1_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+            topology_helper.set_dut_parameters(dut_index=0,
+                                               f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                              1: {"boot_args": f1_1_boot_args}})
+        elif fs == 'fs-60':
+            f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2 --disable-wu-watchdog"
+            f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0 --disable-wu-watchdog"
+            topology_helper.set_dut_parameters(dut_index=0,
+                                               f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                              1: {"boot_args": f1_1_boot_args}})
+        elif fs == 'fs-48':
+            f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart retimer=0,1,2 --disable-wu-watchdog"
+            f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0 --disable-wu-watchdog"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
@@ -44,7 +62,7 @@ class PcieHost(FunTestScript):
 
     def cleanup(self):
         fs = fun_test.get_job_environment_variable('test_bed_type')
-        if fs and fs not in fs_with_pcie_host:
+        if fs and fs in fs_with_pcie_host:
             fun_test.shared_variables["topology"].cleanup()
             fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 

@@ -1,7 +1,5 @@
 <div class="component">
-
   <app-test-bed [embed]="true" ></app-test-bed>
-
 
   <div class="card">
     <div class="card-header">
@@ -13,27 +11,40 @@
   </div>
 
 
+
   <!-- button ng-click="test()">Test</button -->
   <div class="card card-primary">
-    <div class="card-header"><b>Suite Executions</b></div>
+    <div class="card-header"><b>Suite Executions</b>
+      &nbsp;&nbsp;
+      <ng-container *ngIf="filterButtons.length > 0">
+        Filters:
+        <ng-container *ngFor="let filterButton of filterButtons">
+          <span class="link-span-danger">{{ filterButton.displayString }}
+            <span class="pseudo-anchor" (click)="removeFilterButton(filterButton)">Remove</span>
+          </span>
+          &nbsp;
+        </ng-container>
+      </ng-container>
+
+    </div>
     <div class="card-body">
 
 
       <div id="filter-div" style="padding: 10px;">
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.ALL}"
-              (click)="onStateFilterClick(filter.ALL)">All</span> &nbsp;
+              (click)="onStateFilterClick('ALL')">All</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.IN_PROGRESS}"
-              (click)="onStateFilterClick(filter.IN_PROGRESS)">In-progress</span> &nbsp;
+              (click)="onStateFilterClick(stateMap.IN_PROGRESS)">In-progress</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.QUEUED}"
-              (click)="onStateFilterClick(filter.QUEUED)">Queued</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.QUEUED)">Queued</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.COMPLETED}"
-              (click)="onStateFilterClick(filter.COMPLETED)">Completed</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.COMPLETED)">Completed</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.SCHEDULED}"
-              (click)="onStateFilterClick(filter.SCHEDULED)">Scheduled</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.SCHEDULED)">Scheduled</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.SUBMITTED}"
-              (click)="onStateFilterClick(filter.SUBMITTED)">Submitted</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.SUBMITTED)">Submitted</span>&nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilterString === filter.AUTO_SCHEDULED}"
-              (click)="onStateFilterClick(filter.AUTO_SCHEDULED)">Auto-scheduled</span>&nbsp;
+              (click)="onStateFilterClick(stateMap.AUTO_SCHEDULED)">Auto-scheduled</span>&nbsp;
 
       </div>
 
@@ -60,29 +71,33 @@
           </span>
         </div>
       </div>
+
+
       <fun-spinner [status]="status"></fun-spinner>
       <table class="table table-hover table-responsive table-bordered" *ngIf="stateFilterString !== filter.AUTO_SCHEDULED">
         <tr style="text-align: center">
           <th></th>
-          <th>Id</th>
+          <th>ID</th>
           <th>Result</th>
           <th>State</th>
-          <th><label data-placement="top" data-toggle="tooltip" title="Passed"
-                     class="badge badge-success">Passed</label></th>
-          <th><label data-placement="top" data-toggle="tooltip" title="Failed"
-                     class="badge badge-danger">Failed</label></th>
-          <th><label data-placement="top" data-toggle="tooltip" title="Not Run"
-                     class="badge badge-secondary">Not Run</label></th>
-          <th><label data-placement="top" data-toggle="tooltip" title="In Progress"
-                     class="badge badge-info">In Progress</label></th>
-          <th><label data-placement="top" data-toggle="tooltip" title="Skipped"
-                     class="badge badge-warning">Skipped</label></th>
-          <th># TC</th>
+          <th tooltip [tooltipContentString]="'Test-cases that passed'" placement="top">
+            <label class="badge badge-success">P</label>
+          </th>
+          <th tooltip [tooltipContentString]="'Test-cases that failed'" placement="top">
+            <label class="badge badge-danger">F</label>
+          </th>
+          <th tooltip [tooltipContentString]="'Test-cases that are not run'" placement="top">
+            <label class="badge badge-secondary">NR</label>
+          </th>
+          <th tooltip [tooltipContentString]="'Test-cases that are in progress'" placement="top">
+            <label class="badge badge-info">IP</label>
+          </th>
+          <th tooltip [tooltipContentString]="'Number of test-cases'" placement="top">TCs</th>
           <th>Version</th>
           <th>Scheduled at</th>
           <th>Submitter</th>
           <th>Path</th>
-          <th>Action</th>
+          <th>Actions</th>
           <th>Re-runs</th>
           <th>Test-bed</th>
           <th>Tags</th>
@@ -110,53 +125,88 @@
                 <app-smart-label [value]="suiteExecution.suite_result"
                                  [type]="suiteExecution.suite_result"></app-smart-label>
             </td>
-            <td>{{ stateStringMap[suiteExecution.fields.state] }}</td>
+            <td>
+              <ng-container [ngSwitch]="suiteExecution.fields.state">
+                <span *ngSwitchCase="stateMap.KILLED" tooltip placement="right" [tooltipContentString]="'Killed'">
+                  <img width="20" height="20" src="/static/media/skull.png">
+                </span>
+                <span *ngSwitchCase="stateMap.ABORTED" tooltip placement="right" [tooltipContentString]="'Aborted'">
+                  <img width="20" height="20" src="/static/media/skull.png">
+                </span>
+                <span *ngSwitchCase="stateMap.COMPLETED" tooltip placement="right" [tooltipContentString]="'Completed'">
+                  <i class="fa fa-check"> </i>
+                </span>
+                <span *ngSwitchCase="stateMap.SUBMITTED" tooltip placement="right" [tooltipContentString]="'Submitted'">
+                  <i class="fa fa-upload"> </i>
+                </span>
+                <span *ngSwitchCase="stateMap.SCHEDULED" tooltip placement="right" [tooltipContentString]="'Scheduled'">
+                  <i class="fa fa-calendar"> </i>
+                </span>
+
+                <span *ngSwitchCase="stateMap.IN_PROGRESS" tooltip placement="right" [tooltipContentString]="'In-progress'">
+                  <div class="progress">
+                    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
+
+                    </div>
+                  </div>
+                </span>
+                <span *ngSwitchCase="stateMap.QUEUED" tooltip placement="right" [tooltipContentString]="'Queued'">
+                  <i class="fa fa-hourglass"> </i>
+                </span>
+
+                <div *ngSwitchDefault tooltip placement="right" [tooltipContentString]="stateStringMap[suiteExecution.fields.state]">{{ stateStringMap[suiteExecution.fields.state] }}</div>
+              </ng-container>
+
+            </td>
             <td>{{ suiteExecution.num_passed }}</td>
             <td>{{ suiteExecution.num_failed }}</td>
             <td>{{ suiteExecution.num_not_run }}</td>
             <td>{{ suiteExecution.num_in_progress }}</td>
-            <td>{{ suiteExecution.num_skipped }}</td>
             <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
             <td>{{ suiteExecution.fields.version === 'UNKNOWN'? '-': suiteExecution.fields.version }}</td>
             <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
             <td>
-              <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({submitter_email: suiteExecution.fields.submitter_email})" >{{ suiteExecution.fields.submitter_email }}
-              </a>
+              <span class="pseudo-anchor" (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})" >{{ suiteExecution.fields.submitter_email }}
+              </span>
             </td>
 
             <td>
               <ng-container *ngIf="suiteExecution.fields.suite_path === 'dynamic'; else regularSuitePath">
-                <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({suite_path: 'Re(' + suiteExecution.fields.suite_path}) + ')'" >Re({{ getReRunOriginalSuitePath(suiteExecution)}})</a>
+                <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: 'Re(' + suiteExecution.fields.suite_path})" >Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
               </ng-container>
               <ng-template #regularSuitePath>
-                <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({suite_path: suiteExecution.fields.suite_path})" >{{ suiteExecution.fields.suite_path }}</a>
+                <span class="pseudo-anchor" (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})" >{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}</span>
               </ng-template>
 
             </td>
             <td>
-              <ng-container *ngIf="suiteExecution.fields.suite_type ==='regular'">
-                <span data-placement="top" data-toggle="tooltip" title="Re-run all"
-                      (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path)"
-                      class="anchor-button pseudo-anchor">
-                Re-run all</span>
-                  <span data-placement="top" data-toggle="tooltip" title="Re-run failed"
-                        (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
-                        class="anchor-button pseudo-anchor">
-                / Re-run failed</span> &nbsp;
-                  <span style="display: inline-flex"
-                        [hidden]="suiteExecution.fields.state < 30"
-                        data-placement="top" data-toggle="tooltip" title="Stop/Kill"
-                        (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor">&nbsp;Kill</span>
-              </ng-container>
+              <div ngbDropdown class="dropdown" *ngIf="suiteExecution.fields.suite_type ==='regular'">
+                <a class="dropdown-toggle"role="button" aria-haspopup="true"
+                   aria-expanded="false" ngbDropdownToggle>...
+                </a>
+                <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <ng-container>
+                    <span
+                          (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path)"
+                          class="dropdown-item anchor-button pseudo-anchor">
+                      Re-run all</span>
+                    <span (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
+                          class="dropdown-item anchor-button pseudo-anchor">
+                       Re-run failed</span>
+                  </ng-container>
+                    <span *ngIf="suiteExecution.fields.state > stateMap.COMPLETED"
+                          (click)="killClick(suiteExecution.fields.execution_id)" class="dropdown-item anchor-button pseudo-anchor">Kill</span>
+                </div>
+              </div>
 
-              <ng-container *ngIf="suiteExecution.fields.suite_type ==='dynamic'">
-                <span style="display: inline-flex"
-                      [hidden]="suiteExecution.fields.state < 30"
-                      data-placement="top" data-toggle="tooltip" title="Stop/Kill"
-                      (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor">&nbsp;Kill</span>
-              </ng-container>
-
-
+              <div ngbDropdown class="dropdown" *ngIf="suiteExecution.fields.suite_type ==='dynamic' && suiteExecution.fields.state > stateMap.COMPLETED">
+                <a class="dropdown-toggle"role="button" aria-haspopup="true"
+                   aria-expanded="false" ngbDropdownToggle>...
+                </a>
+                <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <span (click)="killClick(suiteExecution.fields.execution_id)" class="dropdown-item anchor-button pseudo-anchor">Kill</span>
+                </div>
+              </div>
             </td>
             <td>
               <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.numActive"
@@ -172,11 +222,12 @@
               </ng-container>
             </td>
             <td>
-              <a [routerLink]="'/regression'" [queryParams]="prepareBaseQueryParams({test_bed_type: suiteExecution.fields.test_bed_type})"  >{{ suiteExecution.fields.test_bed_type }}</a>
+              <span class="pseudo-anchor" (click)="navigateByQueryParams({test_bed_type: suiteExecution.fields.test_bed_type})" >{{ suiteExecution.fields.test_bed_type }}</span>
             </td>
             <td>
               <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">
-                <a class="tag-link" target="_blank" href="/regression?tag={{ tag }}">{{ tag }}</a></label>
+                <span style="cursor: pointer" (click)="navigateByQueryParams({tag: tag})" >{{ tag }}</span>
+              </label>
             </td>
           </tr>
           <tr *ngIf="suiteExecution.showingDetails">
@@ -189,8 +240,8 @@
       </table>
       <table class="table" *ngIf="stateFilterString === filter.AUTO_SCHEDULED">
         <tr>
-          <th class="text-center">Action</th>
-          <th class="text-center">Id</th>
+          <th class="text-center">Actions</th>
+          <th class="text-center">ID</th>
           <th class="text-center">State</th>
           <th class="text-center">Submitter</th>
           <th class="text-center">Suite</th>
@@ -208,7 +259,8 @@
             </td>
 
             <td style="text-align: center">{{ suiteExecution.fields.execution_id }}</td>
-            <td style="text-align: center">{{ stateStringMap[suiteExecution.fields.state] }}</td>
+            <td style="text-align: center">{{ stateStringMap[suiteExecution.fields.state] }}
+            </td>
             <td>{{ suiteExecution.fields.submitter_email }}</td>
             <td>
               {{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}

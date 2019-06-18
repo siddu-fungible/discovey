@@ -23,7 +23,7 @@ import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawe
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
 import { Demo1Component } from './demo1/demo1.component';
-import { CreateChartComponent } from './create-chart/create-chart.component';
+import { CreateChartComponent } from './performance/create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
 import { ScrollToDirective } from './scroll-to.directive';
 import { RegressionComponent } from './regression/regression.component';
@@ -61,6 +61,11 @@ import { JsonInputComponent } from './ui-elements/json-input/json-input.componen
 import { Triage2Component } from './regression/triage2/triage2.component';
 import { JenkinsFormComponent } from './jenkins-form/jenkins-form.component';
 import { TriageDetailComponent } from './regression/triage2/triage-detail/triage-detail.component';
+import { SmartButtonComponent } from './ui-elements/smart-button/smart-button.component';
+import { AdminComponent } from "./performance/admin/admin.component";
+import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
+import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
+import { TooltipDirective } from './ui-elements/tooltip.directive';
 
 @NgModule({
   declarations: [
@@ -106,7 +111,12 @@ import { TriageDetailComponent } from './regression/triage2/triage-detail/triage
     JsonInputComponent,
     Triage2Component,
     JenkinsFormComponent,
-    TriageDetailComponent
+    TriageDetailComponent,
+    SmartButtonComponent,
+    AdminComponent,
+    ScoresTableComponent,
+    PerformanceTableComponent,
+    TooltipDirective
   ],
   imports: [
     BsDropdownModule,

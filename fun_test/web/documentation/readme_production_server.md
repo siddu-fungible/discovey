@@ -66,3 +66,12 @@ ClientAliveCountMax 3
 # export PRODUCTION_MODE=1
 # scheduler/restart_scheduler.sh
 ~~~~
+
+
+## Re-starting the web-server
+~~~~
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# export PRODUCTION_MODE=1
+# ./web/restart_production_server.sh
+~~~~

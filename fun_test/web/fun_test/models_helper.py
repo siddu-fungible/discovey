@@ -211,6 +211,12 @@ def update_suite_execution(suite_execution_id,
 def finalize_suite_execution(suite_execution_id):
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
 
+def get_suite_run_time(execution_id):
+    result = None
+    s = get_suite_execution(suite_execution_id=execution_id)
+    if s:
+        result = s.run_time
+    return result
 
 def get_new_suite_execution_id():
     last_suite_execution_id = LastSuiteExecution.objects.all()
@@ -272,7 +278,7 @@ def set_suite_execution_banner(suite_execution_id, banner):
     suite_execution.save()
 
 
-def get_suite_execution_banner(suite_execution_id, banner):
+def get_suite_execution_banner(suite_execution_id):
     suite_execution = get_suite_execution(suite_execution_id)
     return suite_execution.banner
 

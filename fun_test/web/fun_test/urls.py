@@ -29,7 +29,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
 from django.conf import settings
-
+import os
 
 regression_urls = [
     url(r'^$', views.angular_home),
@@ -177,19 +177,6 @@ upgrade_urls = [
     url(r'^.*$', upgrade_views.home)
 ]
 
-'''
-triage_urls = [
-    url(r'^insert_db$', triaging.insert_triage_db),
-    url(r'^fetch_flows$', triaging.fetch_triage_flow),
-    url(r'^test$', triaging.update_triage_flow),
-    url(r'^update_db$', triaging.update_triage),
-    url(r'^kill_db$', triaging.kill_triage),
-    url(r'^rerun_flow$', triaging.rerun_triage_flow),
-    url(r'^check_db$', triaging.check_triage),
-    url(r'^triages$', triaging.triages)
-]
-
-'''
 
 demo_urls = [
     url(r'^demo1/.*$', demo_views.home),
@@ -210,6 +197,7 @@ api_v1_urls = [
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
+    url(r'^regression/assets/?(.*)?$', regression.assets),
     url(r'^triages/?(\d+)?$', triaging.triagings),
     url(r'^triages/(\d+)/trials/?(\S+)?$', triaging.trials),
     url(r'^triage_states$', triaging.triaging_states),
@@ -219,29 +207,37 @@ api_v1_urls = [
     url(r'^git_commits_fun_os/(\S+)/(\S+)$', triaging.git_commits_fun_os)
 ]
 
+site_under_construction = False
+if "SITE_UNDER_CONSTRUCTION" in os.environ:
+    if int(os.environ["SITE_UNDER_CONSTRUCTION"]):
+        site_under_construction = True
 
-urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^performance/', views.angular_home),
-    url(r'^publish', views.publish, name='publish'),
-    url(r'^get_script_content', views.get_script_content, name='get_script_content'),
-    # url(r'^tools/', include('tools.urls')),
-    url(r'^regression/', include(regression_urls)),
-    url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
-    url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
-    # url(r'^triage/', include(triage_urls)),
-    url(r'^triaging/', views.angular_home),
-    url(r'^common/', include(common_urls)),
-    url(r'^$', views.angular_home),
-    url(r'^initialize$', metrics_views.initialize),
-    url(r'^test/', include(test_urls)),
-    url(r'^upgrade/', include(upgrade_urls)),
-    url(r'^demo/', include(demo_urls)),
-    url(r'^users', include(users_urls)),
-    url(r'^api/v1/', include(api_v1_urls)),
-    url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
+if not site_under_construction:
 
-]
+    urlpatterns = [
+        url(r'^admin/', admin.site.urls),
+        url(r'^performance/', views.angular_home),
+        url(r'^publish', views.publish, name='publish'),
+        url(r'^get_script_content', views.get_script_content, name='get_script_content'),
+        # url(r'^tools/', include('tools.urls')),
+        url(r'^regression/', include(regression_urls)),
+        url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
+        url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
+        # url(r'^triage/', include(triage_urls)),
+        url(r'^triaging/', views.angular_home),
+        url(r'^common/', include(common_urls)),
+        url(r'^$', views.angular_home),
+        url(r'^initialize$', metrics_views.initialize),
+        url(r'^test/', include(test_urls)),
+        url(r'^upgrade/', include(upgrade_urls)),
+        url(r'^demo/', include(demo_urls)),
+        url(r'^users', include(users_urls)),
+        url(r'^api/v1/', include(api_v1_urls)),
+        url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
+    ]
+else:
+    urlpatterns = [url(r'^admin/', admin.site.urls),
+                   url(r'.*', common_views.site_under_construction)]
 
 urlpatterns += staticfiles_urlpatterns()
 

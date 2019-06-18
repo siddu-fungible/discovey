@@ -8,6 +8,10 @@ from time import asctime
 
 
 CPU_LIST = range(8, 16)
+COALESCE_RX_USECS = 8
+COALESCE_TX_USECS = 16
+COALESCE_RX_FRAMES = 128
+COALESCE_TX_FRAMES = 32
 
 
 class Funeth:
@@ -160,6 +164,7 @@ class Funeth:
         result = result_list[0]
         if not all(r == result for r in result_list):
             fun_test.critical('Different FunSDK/Driver commit/bld in hosts')
+            fun_test.log('result_list: {}'.format(result_list))
             return False
         elif len(result) != 4:
             fun_test.critical('Failed to update FunSDK/Driver source')
@@ -205,7 +210,7 @@ class Funeth:
 
         return result
 
-    def load(self, sriov=0, cc=False, debug=False):
+    def load(self, sriov=0, num_queues=2, cc=False, debug=False):
         """Load driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         _modparams = []
@@ -218,8 +223,9 @@ class Funeth:
 
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
-                                            timeout=300)
+            self.linux_obj_dict[hu].sudo_command(
+                'cd {0}; insmod funeth.ko {1} num_queues={2}'.format(drvdir, " ".join(_modparams), num_queues),
+                timeout=300)
 
             #fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
@@ -262,10 +268,14 @@ class Funeth:
 
             # ip alias, e.g. hu3-f0:1, has no mac/mtu config
             if not self.tb_config_obj.is_alias(nu_or_hu, intf):
+                if mac_addr:
+                    cmds.extend(
+                        ['ifconfig {} hw ether {}'.format(intf, mac_addr),
+                         ]
+                    )
                 cmds.extend(
-                    ['ifconfig {} hw ether {}'.format(intf, mac_addr),
-                     'ifconfig {} mtu {}'.format(intf, mtu),
-                    ]
+                    ['ifconfig {} mtu {}'.format(intf, mtu),
+                     ]
                 )
 
             cmds.extend(
@@ -284,15 +294,21 @@ class Funeth:
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
                 match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
-            else:
+            elif mac_addr:
                 match = re.search(r'UP.*RUNNING.*HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
                                   output, re.DOTALL)
+            else:
+                match = re.search(
+                    r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
             if not match:
                 # Ubuntu 18.04
                 if self.tb_config_obj.is_alias(nu_or_hu, intf):
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
-                else:
+                elif mac_addr:
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                                      output, re.DOTALL)
+                else:
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask),
                                       output, re.DOTALL)
             result &= match is not None
 
@@ -338,6 +354,9 @@ class Funeth:
         """Enable interfaces multi tx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            # VF interface, TODO: have a better way to tell it's VF interface
+            if not intf.endswith('f0'):
+                continue
             cmd = 'ethtool -L {} tx {}'.format(intf, num_queues)
             cmd_chk = 'ethtool -l {}'.format(intf)
             if ns is None or 'netns' in cmd:
@@ -545,7 +564,7 @@ class Funeth:
                 if tx_or_rx == 'tx':
                     irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
                 elif tx_or_rx == 'rx':
-                    irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)
+                    irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)[1:]  # exclude Q0, admin queue
 
                 # cat irq affinity
                 cmds_cat = []
@@ -561,6 +580,37 @@ class Funeth:
                     cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+    def interrupt_coalesce(self, nu_or_hu, disable=True):
+        """Configure interrupt coalescing."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                if disable:
+                    cmd = 'ethtool -C {} rx-usecs 0 tx-usecs 0 rx-frames 1 tx-frames 1'.format(intf)
+                else:
+                    cmd = 'ethtool -C {} rx-usecs {} tx-usecs {} rx-frames {} tx-frames {}'.format(
+                        intf, COALESCE_RX_USECS, COALESCE_TX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_FRAMES)
+                cmd_chk = 'ethtool -c {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+                else:
+                    cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+                if ns:
+                    cmds = ['sudo ip netns add {}'.format(ns), 'sudo ip link set {} netns {}'.format(intf, ns)] + cmds
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+                match = re.search(r'rx-usecs: (\d+).*rx-frames: (\d+).*tx-usecs: (\d+).*tx-frames: (\d+)', output,
+                                  re.DOTALL)
+                if match:
+                    if disable:
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) == 0, 1, 0, 1)
+                    else:
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) ==
+                                   COALESCE_RX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_USECS, COALESCE_TX_FRAMES)
+                else:
+                    result &= False
+        return result
 
     def collect_syslog(self):
         """Collect all HU hosts' syslog file and copy to job's Log directory."""

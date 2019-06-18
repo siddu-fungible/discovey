@@ -98,9 +98,6 @@ export class FunTableComponent implements OnInit {
 
   //toggle between hide and show columns
   editColumns(): void {
-    this.headerIndexMap.forEach((value, key) => {
-      console.log(Number(key), this.headerIndexMap.get(Number(key)));
-    });
     this.hideShowColumns = !this.hideShowColumns;
   }
 

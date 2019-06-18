@@ -1,4 +1,8 @@
-import {Component, OnInit, Input} from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input
+} from '@angular/core';
 import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -9,6 +13,45 @@ import {RegressionService} from "./regression.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 
+class FilterButton {
+  displayString: string = null;
+  filterKey: string = null;
+  filterValue: string = null;
+  stateStringMap = null;
+  constructor(filterKey, filterValue, stateStringMap) {
+    this.filterKey = filterKey;
+    this.filterValue = filterValue;
+    this.stateStringMap = stateStringMap;
+    this._setDisplayString();
+  }
+
+  _setDisplayString() {
+    let keyString = this.filterKey;
+    let keyValue = this.filterValue;
+    if (keyString === 'state_filter') {
+      keyString = "State";
+      if (keyValue !== 'ALL') {
+        keyValue = this.stateStringMap[keyValue];
+      }
+    }
+    if (keyString === 'submitter_email') {
+      keyString = "Submitter";
+    }
+    if (keyString === 'test_bed_type') {
+      keyString = "Test-bed";
+    }
+    if (keyString === 'suite_path') {
+      keyString = "Suite";
+    }
+    this.displayString = `${keyString}=${keyValue}`;
+  }
+
+  setData(filterKey, filterValue): void  {
+    this.filterKey = filterKey;
+    this.filterValue = filterValue;
+  }
+}
+
 enum Filter {
   ALL = "ALL",
   COMPLETED = "COMPLETED",
@@ -18,7 +61,6 @@ enum Filter {
   SUBMITTED = "SUBMITTED",
   AUTO_SCHEDULED = "AUTO_SCHEDULED"
 }
-
 @Component({
   selector: 'app-regression',
   templateUrl: './regression.component.html',
@@ -33,11 +75,13 @@ export class RegressionComponent implements OnInit {
   items: any;
   logDir: any;
   status: string = "Fetching Data";
-  stateFilter: string = Filter.ALL;
-  stateFilterString: string = Filter.ALL;
+  //stateFilter: string = null; //Filter.ALL;
+  stateFilterString: string = "ALL";
   filter = Filter;
   stateStringMap: any = null;
+  stateMap: any = null;
   queryParameters: any = null;
+  filterButtons: FilterButton [] = [];
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
@@ -48,6 +92,7 @@ export class RegressionComponent implements OnInit {
               private regressionService: RegressionService,
               private router: Router) {
     this.stateStringMap = this.regressionService.stateStringMap;
+    this.stateMap = this.regressionService.stateMap;
   }
 
   ngOnInit() {
@@ -73,11 +118,12 @@ export class RegressionComponent implements OnInit {
       }
     }).pipe(switchMap(() => {
         return this.getQueryParam().pipe(switchMap((response) => {
-          if (response["state_filter"]) {
+          /*if (response["state_filter"]) {
             this.stateFilter = response["state_filter"];
             this.stateFilterString = this.regressionService.stateStringMap[this.stateFilter];
-          }
+          }*/
           this.queryParameters = response;
+          this.setFilterButtons();
           return of(response);
         }))
       }),switchMap((response) => {
@@ -87,12 +133,22 @@ export class RegressionComponent implements OnInit {
         if (response.hasOwnProperty('test_bed_type')) {
           payload["test_bed_type"] = response.test_bed_type;
         }
-
         if (response.hasOwnProperty('suite_path')) {
           payload["suite_path"] = response.suite_path;
         }
+        if (response.hasOwnProperty('tag')) {
+          payload["tags"] = [response.tag];
+        }
 
-        return this.apiService.post("/regression/suite_executions_count/" + this.stateFilter, payload).pipe(switchMap((result) => {
+        let url = "/regression/suite_executions_count";
+        if (!this.queryParameters.hasOwnProperty("state_filter")) {
+          url += "/ALL";
+          this.stateFilterString = this.stateStringMap.ALL;
+        } else {
+          url += "/" + this.queryParameters.state_filter;
+          this.stateFilterString = this.stateStringMap[this.queryParameters.state_filter];
+        }
+        return this.apiService.post(url, payload).pipe(switchMap((result) => {
           this.suiteExecutionsCount = (parseInt(result.data));
           this.setPage(1);
           return of(true);
@@ -114,19 +170,19 @@ export class RegressionComponent implements OnInit {
     this.status = null;
   }
 
+  setFilterButtons() {
+    this.filterButtons = [];
+    for (let key in this.queryParameters) {
+
+      let fb = new FilterButton(key, this.queryParameters[key], this.stateStringMap);
+      this.filterButtons.push(fb);
+    }
+    console.log(this.filterButtons);
+  }
+
   prepareBaseQueryParams(userSuppliedParams) {
     let queryParams = {};
     if (this.queryParameters) {
-      /*
-      s += "?";
-      if (this.queryParameters.hasOwnProperty('submitter_email')) {
-        s += `submitter_email=${this.queryParameters.submitter_email}&`;
-      }
-      s += `state_filter=${this.stateFilter}&`;
-      if (s.endsWith('&')) {
-        s = s.slice(0, s.length - 1);
-      }*/
-
       if (this.queryParameters.hasOwnProperty('submitter_email')) {
         queryParams["submitter_email"] = this.queryParameters['submitter_email'];
       }
@@ -139,14 +195,23 @@ export class RegressionComponent implements OnInit {
         queryParams["suite_path"] = this.queryParameters["suite_path"]
       }
 
-      queryParams["state_filter"] = this.stateFilter;
+      if (this.queryParameters.hasOwnProperty('tag')) {
+        queryParams["tag"] = this.queryParameters["tag"]
+      }
+
+      /*if (this.queryParameters.hasOwnProperty('state_filter')) {
+        queryParams["state_filter"] = this.queryParameters["state_filter"];
+        //this.stateFilterString = this.stateStringMap[this.queryParameters['state_filter']];
+      } else {
+        this.stateFilterString = "ALL";
+      }*/
     }
     if (userSuppliedParams) {
       for (let key in userSuppliedParams) {
         queryParams[key] = userSuppliedParams[key];
       }
     }
-
+    //console.log(queryParams);
     return queryParams;
   }
 
@@ -176,27 +241,31 @@ export class RegressionComponent implements OnInit {
   }
 
   onStateFilterClick(state) {
+    let userParams = {state_filter: state};
+    this.stateFilterString = this.stateStringMap[state];
+    this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(userParams)});
+    /*
     this.stateFilterString = state;
     this.stateFilter = this.stateFilterStringToNumber(state);
-    this.navigateByQuery(this.stateFilter);
+    this.navigateByQuery(this.stateFilter);*/
+  }
+
+  navigateByQueryParams(userParams) {
+    let queryParams = this.prepareBaseQueryParams(userParams);
+    this.router.navigate(['/regression'], {queryParams: queryParams});
   }
 
   navigateByQuery(state) {
     let queryPath = "/regression?state_filter=" + state;
-    //this.router.navigateByUrl(queryPath);
-    //this.router.navi
-    this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(null)});
+    let userParams = {state_filter: state};
+    this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(userParams)});
   }
 
   getQueryParam() {
     return this.route.queryParams.pipe(switchMap(params => {
-      if (params.hasOwnProperty('state_filter')) {
-        this.stateFilter = params["state_filter"];
-      }
       if (params.hasOwnProperty('tag')) {
         this.tags = '["' + params["tag"] + '"]';
       }
-
       return of(params);
     }))
   }
@@ -222,7 +291,11 @@ export class RegressionComponent implements OnInit {
     }
 
     this.status = "Fetching Data";
-    this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.stateFilter, payload).subscribe(result => {
+    let stateFilter = "ALL";
+    if (this.queryParameters.hasOwnProperty("state_filter")) {
+      stateFilter = this.queryParameters["state_filter"];
+    }
+    this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + stateFilter, payload).subscribe(result => {
       this.items = result.data;
       this.items.map(item => this.applyAdditionalAttributes(item));
       this.items
@@ -308,10 +381,11 @@ export class RegressionComponent implements OnInit {
   }
 
   killClick(suiteId) {
-    this.apiService.get("/regression/kill_job/" + suiteId).subscribe(function (result) {
-      let jobId = parseInt(result.data);
-      alert("Killed Successfully");
-      window.location.href = "/regression/";
+    this.regressionService.killSuite(suiteId).subscribe((result) => {
+      this.logger.success(`Killed job: ${result}`);
+      window.location.reload()
+    }, error => {
+      this.logger.error(`Unable kill ${suiteId}`);
     });
   }
 
@@ -365,6 +439,19 @@ export class RegressionComponent implements OnInit {
     }
     s += minute;
     return s;
+  }
+
+  removeFilterButton(filterButton) {
+    this.filterButtons = this.filterButtons.filter(x => x.filterKey !== filterButton.filterKey || x.filterValue !== filterButton.filterValue);
+    let o = {};
+    this.queryParameters = Object.keys(this.queryParameters).reduce((a, key) => {
+      if (key !== filterButton.filterKey) {
+        o[key] = this.queryParameters[key];
+      }
+      return o;
+    }, {});
+    this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(null)});
+
   }
 
 }
