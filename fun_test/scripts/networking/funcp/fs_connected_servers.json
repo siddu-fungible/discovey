@@ -14,6 +14,22 @@
       "cab02-qa-03": "x8",
       "cab02-qa-04": "x16"
     },
+     "fs-7": {
+       "fs-name":"fs-7",
+      "mpg_ips":{
+        "mode":false,
+        "mpg0":"",
+        "mpg1":""
+      },
+        "abstract_configs":{
+      "F1-0":"fs7_configs_f1_0.json",
+      "F1-1":"fs7_configs_f1_1.json"
+    },
+       "cc_pings":{
+          "F1-0":["1.1.1.1"],
+          "F1-1":["1.1.2.1"]
+       }
+  },
      "fs-11_alibaba_demo": {
        "fs-name":"fs-11",
     "hosts" : {
