@@ -405,6 +405,7 @@ class FunethTestScpBase(FunTestCase):
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
         linux_obj.command('touch {}'.format(self.file_name))
+        fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, self.file_name))
         with open(self.file_name, 'w') as f:
             f.write(content)
         fun_test.test_assert(linux_obj.check_file_directory_exists(self.file_name),
