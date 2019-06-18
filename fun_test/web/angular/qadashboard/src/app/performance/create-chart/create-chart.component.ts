@@ -122,7 +122,7 @@ export class CreateChartComponent implements OnInit, OnChanges {
     }
     this.addDataSet = {};
     this.addDataSet["inputs"] = this.inputNames;
-    this.addDataSet["output"] = {min: 0, max: 999999, expected: -1, reference: -1};
+    this.addDataSet["output"] = {min: 0, max: -1, expected: -1, reference: -1};
   };
 
   addClick = () => {

@@ -72,6 +72,7 @@
           <th>Output</th>
           <th>Min</th>
           <th>Max</th>
+          <th>Expected</th>
         </tr>
         <tr>
           <td>
@@ -102,6 +103,10 @@
           <td>
             <input type="number" min="0" max="999999" required
                    [(ngModel)]="addDataSet.output.max"/>
+          </td>
+          <td>
+            <input type="number" min="0" max="999999" required
+                   [(ngModel)]="addDataSet.output.expected"/>
           </td>
         </tr>
       </table>
