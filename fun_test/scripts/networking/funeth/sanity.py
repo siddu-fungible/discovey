@@ -404,7 +404,7 @@ class FunethTestScpBase(FunTestCase):
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
-        linux_obj.command('touch {}'.format(self.file_name))
+        linux_obj.command('rm {0}; touch {0}'.format(self.file_name))
         fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, self.file_name))
         with open(self.file_name, 'w') as f:
             f.write(content)
