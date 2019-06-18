@@ -142,7 +142,9 @@
                 <span *ngSwitchCase="stateMap.SCHEDULED" tooltip placement="right" [tooltipContentString]="'Scheduled'">
                   <i class="fa fa-calendar"> </i>
                 </span>
-
+                <span *ngSwitchCase="stateMap.AUTO_SCHEDULED" tooltip placement="right" [tooltipContentString]="'Auto-scheduled'">
+                  <i class="fa fa-calendar"> </i>
+                </span>
                 <span *ngSwitchCase="stateMap.IN_PROGRESS" tooltip placement="right" [tooltipContentString]="'In-progress'">
                   <img width="20" height="20" src="/static/media/progress_bar.jpg">
                 </span>
