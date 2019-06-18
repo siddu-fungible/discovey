@@ -44,8 +44,9 @@ class BringupSetup(FunTestCase):
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": f1_0_boot_args},
-                                                          1: {"boot_args": f1_1_boot_args}}
+                                                          1: {"boot_args": f1_1_boot_args}}, disable_f1_index=1
                                            )
+
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
