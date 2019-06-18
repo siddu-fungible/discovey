@@ -65,7 +65,7 @@
       "bs": "4k",
       "numjobs": 8,
       "cpumask": 1,
-      "iodepth": 2,
+      "iodepth": 16,
       "size": "100%",
       "rw": "read",
       "name": "ec_fio_25G",
