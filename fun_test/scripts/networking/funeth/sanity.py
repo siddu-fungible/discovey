@@ -10,6 +10,7 @@ from scripts.networking.funeth import perf_utils
 
 
 import re
+import struct
 
 
 try:
@@ -390,11 +391,25 @@ class FunethTestScpBase(FunTestCase):
         self.file_name = '/tmp/{}file'.format(nu_or_hu)
 
         # Create a file
+        #if TB == 'SN2':
+        #    file_size = '2m'
+        #else:
+        #    file_size = '2g'
+        #linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
+        # Create file with pattern of sequential 32-bit
         if TB == 'SN2':
-            file_size = '2m'
+            file_size = 2000000  # 2MB
         else:
-            file_size = '2g'
-        linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
+            file_size = 200000000  # 200MB
+        lista = list(range(0, file_size/4))
+        packer = struct.Struct('I ' * (file_size/4))
+        content = packer.pack(*lista)
+        linux_obj.command('rm {0}; touch {0}'.format(self.file_name))
+        fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, self.file_name))
+        with open(self.file_name, 'w') as f:
+            f.write(content)
+        fun_test.sleep("Wait for file to be created", seconds=5)
+        linux_obj.command('ls -l {}'.format(self.file_name))
         fun_test.test_assert(linux_obj.check_file_directory_exists(self.file_name),
                              'Create file {} in {}'.format(self.file_name, linux_obj.host_ip))
 

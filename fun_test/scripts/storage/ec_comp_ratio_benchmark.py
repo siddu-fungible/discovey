@@ -3,7 +3,7 @@ from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
-from ec_perf_helper import *
+from storage_helper import *
 from fun_settings import DATA_STORE_DIR
 from fun_global import PerfUnit, is_production_mode
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time

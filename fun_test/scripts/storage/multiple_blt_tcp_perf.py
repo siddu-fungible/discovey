@@ -7,7 +7,7 @@ from lib.host.linux import Linux
 from scripts.storage.funcp_deploy import FunCpDockerContainer
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -420,7 +420,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
 
     def cleanup(self):
         come_reboot = False
-        if hasattr(fun_test.shared_variables, "blt") and fun_test.shared_variables["blt"]["setup_created"]:
+        if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_objs[0]
@@ -484,7 +484,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
         else:
             fun_test.shared_variables["fs"].cleanup()
 
-        fun_test.shared_variables["storage_controller"].disconnect()
+        self.storage_controller.disconnect()
         fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()     # Why is this needed?
 

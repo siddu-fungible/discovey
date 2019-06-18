@@ -232,28 +232,29 @@ class FunethPerformanceBase(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         version = fun_test.get_version()
         fun_test.log('Collect stats before test')
-        fpg_tx_pkts1, _, fpg_rx_pkts1, _ = perf_utils.collect_dpc_stats(network_controller_objs,
-                                                                        fpg_interfaces,
-                                                                        fpg_intf_dict,
-                                                                        version,
-                                                                        when='before')
+        sth_stuck_before = perf_utils.collect_dpc_stats(network_controller_objs,
+                                                        fpg_interfaces,
+                                                        fpg_intf_dict,
+                                                        version,
+                                                        when='before')
 
-        # If ping check fails, assert here, so that dpc stats is collected for debugging
-        if not pingable:
-            fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
-                linux_obj_src.host_ip, dip, frame_size))
+        if pingable and not sth_stuck_before:
 
-        perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
+            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
 
-        result = perf_manager_obj.run(*arg_dicts)
+            result = perf_manager_obj.run(*arg_dicts)
 
-        fun_test.log('Collect stats after test')
-        perf_utils.collect_host_stats(funeth_obj, version, when='after')
-        fpg_tx_pkts2, _, fpg_rx_pkts2, _ = perf_utils.collect_dpc_stats(network_controller_objs,
-                                                                        fpg_interfaces,
-                                                                        fpg_intf_dict,
-                                                                        version,
-                                                                        when='after')
+            fun_test.log('Collect stats after test')
+            perf_utils.collect_host_stats(funeth_obj, version, when='after')
+            sth_stuck_after = perf_utils.collect_dpc_stats(network_controller_objs,
+                                                           fpg_interfaces,
+                                                           fpg_intf_dict,
+                                                           version,
+                                                           when='after')
+            if sth_stuck_after:
+                result = {}
+        else:
+            result = {}
 
         #if result:  # Only if perf_manager has valid result, we update pps; otherwise, it's meaningless
         #    if flow_type.startswith('NU_HU') and result.get('{}_n2h'.format(nm.THROUGHPUT)) != nm.NA:
@@ -320,9 +321,10 @@ class FunethPerformanceBase(FunTestCase):
         with open(RESULT_FILE, 'w') as f:
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
-        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
         fun_test.shared_variables['results'].append(result)
         tc_ids.append(fun_test.current_test_case_id)
+        fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
+        fun_test.simple_assert(not sth_stuck_after,'Something is stuck after test')
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):

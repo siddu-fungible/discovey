@@ -3,7 +3,7 @@ from web.fun_test.analytics_models_helper import get_data_collection_time
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -683,6 +683,7 @@ class StripeVolumeTestCase(FunTestCase):
                                                                             host_index=thread_count,
                                                                             filename=test_filename,
                                                                             rw=mode,
+                                                                            numjobs=fio_numjobs,
                                                                             bs=fio_block_size,
                                                                             iodepth=fio_iodepth,
                                                                             name=fio_job_name,

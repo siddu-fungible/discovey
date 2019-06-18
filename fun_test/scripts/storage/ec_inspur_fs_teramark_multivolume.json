@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"],
+    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dis-stats --dpc-server --dpc-uart --all_100g --nofreeze"],
     "dut_start_index": 2,
     "host_start_index": 1,
     "update_workspace": false,
@@ -62,7 +62,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 1099511627776,
+      "capacity": 137438953472,
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
@@ -79,9 +79,9 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 12000},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 6000},
     "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --cpus_allowed={} --numjobs={} --iodepth={} --bs=8k --size=100%", "timeout": 150},
     "fio_runtime": 120,
     "fio_run_timeout": 150,
@@ -109,7 +109,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 549755813888,
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
@@ -126,9 +126,9 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
     "fio_cmd_args": {"bs": "1024k", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 70, "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
     "fio_modes": ["rw"],
     "fio_iodepth": [1, 8, 16, 32, 64, 128, 256],
@@ -153,7 +153,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 549755813888,
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
@@ -170,9 +170,9 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "8k", "iodepth": 8, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 2100},
     "fio_cmd_args": {"bssplit": "8k/50:1024k/50", "size": "100%", "direct": 1, "prio": 0, "rwmixread": 80, "percentage_random": "100%", "ramp_time": 10, "runtime": 120, "cpus_allowed_policy": "split", "timeout": 150},
     "fio_modes": ["randrw"],
     "fio_iodepth": [1, 8, 16, 32, 64, 128, 256],
@@ -197,7 +197,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 549755813888,
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
@@ -225,7 +225,7 @@
     "perf_run_config_file": "inspur_oltp_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 16
   },
   "OLAPModelReadWriteIOPS": {
     "ec_info": {
@@ -245,7 +245,7 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 68719476736,
+      "capacity": 549755813888,
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
@@ -273,6 +273,6 @@
     "perf_run_config_file": "inspur_olap_model_read_write_vdbench",
     "perf_run_timeout": 180,
     "nvme_device": "/dev/nvme",
-    "io_queues": 0
+    "io_queues": 16
   }
 }

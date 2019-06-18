@@ -1,5 +1,6 @@
 from lib.system.fun_test import fun_test
 from fun_global import get_localized_time
+from fun_settings import JENKINS_USERNAME, JENKINS_PASSWORD
 from web.fun_test.models_helper import add_jenkins_job_id_map
 import requests
 import json
@@ -25,7 +26,7 @@ class LsfStatusServer:
                 past_jobs = self.get_jobs_by_tag(tag=tag)
                 if past_jobs:
                     response_dict = json.loads(past_jobs)
-                    fun_test.log(json.dumps(response_dict, indent=4))
+                    # fun_test.log(json.dumps(response_dict, indent=4))
                     past_jobs = response_dict["past_jobs"]
                 past_job = past_jobs[0]
                 local_past_jobs_index = fun_test.get_local_setting("lsf_past_jobs_index")
@@ -39,8 +40,8 @@ class LsfStatusServer:
 
     def _get(self, url):
         data = None
-        username = "jenkins.service"
-        password = "117071d3cb2cae6c964099664b271e4011"
+        username = JENKINS_USERNAME
+        password = JENKINS_PASSWORD
         response = requests.get(url, auth=(username, password))
         if response.status_code == 200:
             data = response.text

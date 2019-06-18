@@ -5,7 +5,7 @@ from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -97,6 +97,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Using Parameters passed during execution, this will override global and config parameters
             job_inputs = fun_test.get_job_inputs()
+            if not job_inputs:
+                job_inputs = {}
             fun_test.log("Provided job inputs: {}".format(job_inputs))
             if "dut_start_index" in job_inputs:
                 self.dut_start_index = job_inputs["dut_start_index"]
@@ -132,7 +134,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.test_assert(self.topology, "Topology deployed")
 
             # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time()
+            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
             fun_test.log("Data collection time: {}".format(self.db_log_time))
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it

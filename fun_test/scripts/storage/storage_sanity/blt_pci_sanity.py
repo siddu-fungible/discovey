@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 
 from lib.fun.fs import Fs
-from scripts.storage.ec_perf_helper import *
+from scripts.storage.storage_helper import *
 
 '''
 Sanity Script for BLT Volume via PCI

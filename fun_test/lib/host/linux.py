@@ -1998,6 +1998,7 @@ class Linux(object, ToDictMixin):
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
                 if ping_result:
                     max_reboot_timer = FunTimer(max_time=30)
+                    fun_test.log("Lowered max_reboot_timer")
             if ping_result or not service_host:
                 try:
                     fun_test.log("Attempting SSH")
@@ -2580,6 +2581,32 @@ class Linux(object, ToDictMixin):
             mpstat_output = self.command(cmd, timeout=timeout)
 
         return mpstat_output
+
+    def iostat(self, device=None, interval=5, count=2, background=True, extended_stats=False,
+               output_file="/tmp/iostat.out", timeout=None):
+        iostat_output = None
+        if not timeout:
+            timeout = interval * (count + 1)
+
+        cmd = "iostat"
+        if device:
+            cmd += " -p {}".format(str(device))
+        if extended_stats:
+            cmd += " -x"
+
+        cmd += " {} {}".format(str(interval), str(count))
+
+        if background:
+            fun_test.log("Starting iostat command {} in background".format(cmd))
+            iostat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
+            if iostat_output is None:
+                fun_test.critical("iostat process is not started")
+            else:
+                fun_test.log("iostat process is started in background, pid is: {}".format(iostat_output))
+        else:
+            iostat_output = self.command(cmd, timeout=timeout)
+
+        return iostat_output
 
 
 class LinuxBackup:
