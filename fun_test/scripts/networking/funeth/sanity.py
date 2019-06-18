@@ -408,6 +408,7 @@ class FunethTestScpBase(FunTestCase):
         fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, self.file_name))
         with open(self.file_name, 'w') as f:
             f.write(content)
+        linux_obj.command('ls -l {}'.format(self.file_name))
         fun_test.test_assert(linux_obj.check_file_directory_exists(self.file_name),
                              'Create file {} in {}'.format(self.file_name, linux_obj.host_ip))
 
