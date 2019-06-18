@@ -3,7 +3,7 @@ router_mac:
 
 # HU host
 hu:
-  hostname: cab02-qa-02
+  hostname: mktg15
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
@@ -23,7 +23,7 @@ hu:
         - prefix: 20.1.1.0/24
           nexthop: 18.1.1.1
 hu2:
-  hostname: cab03-qa-02
+  hostname: mktg16
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1

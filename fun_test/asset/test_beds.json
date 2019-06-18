@@ -1618,7 +1618,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "mktg15"
+              "name": "mktg16"
             }
           },
           "15": {
