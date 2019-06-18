@@ -440,7 +440,7 @@ class ECVolumeLevelScript(FunTestScript):
                     self.come_obj[index].command("sudo rmmod funeth")
                     fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
                                                   message="funeth module is unloaded")
-            except:
+            except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
         try:
