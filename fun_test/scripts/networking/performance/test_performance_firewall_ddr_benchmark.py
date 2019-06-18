@@ -21,7 +21,7 @@ class ScriptSetup(FunTestScript):
         """)
 
     def setup(self):
-        global dut_config, network_controller_obj, spirent_config, TIMESTAMP, publish_results, branch_name, use_new_tcc
+        global dut_config, network_controller_obj, spirent_config, TIMESTAMP, publish_results, branch_name, use_new_tcc, load_profile_only
 
         nu_config_obj = NuConfigManager()
         f1_index = nu_config_obj.get_f1_index()
@@ -51,12 +51,16 @@ class ScriptSetup(FunTestScript):
         branch_name = None
         publish_results = True
         use_new_tcc = False
+        load_profile_only = False
         if inputs:
             if 'publish_results' in inputs:
                 publish_results = bool(inputs['publish_results'])
 
             if 'use_new_tcc' in inputs:
                 use_new_tcc = bool(inputs['use_new_tcc'])
+
+            if 'load_profile_only' in inputs:
+                load_profile_only = bool(inputs['load_profile_only'])
 
         if 'funos_branch' in fun_test.shared_variables:
             branch_name = fun_test.shared_variables['funos_branch']
@@ -85,9 +89,10 @@ class ScriptSetup(FunTestScript):
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
-        if 'fs' in fun_test.shared_variables:
-            fs = fun_test.shared_variables['fs']
-            fs.cleanup()
+        if not load_profile_only:
+            if 'fs' in fun_test.shared_variables:
+                fs = fun_test.shared_variables['fs']
+                fs.cleanup()
 
 
 class TestFirewallPerformance(FunTestCase):
@@ -159,96 +164,97 @@ class TestFirewallPerformance(FunTestCase):
             fun_test.test_assert(result, checkpoint)
 
     def run(self):
-        display_negative_results = False
-        fun_test.log("----------------> Start RFC-2544 test using %s <----------------" % self.tcc_file_name)
+        if not load_profile_only:
+            display_negative_results = False
+            fun_test.log("----------------> Start RFC-2544 test using %s <----------------" % self.tcc_file_name)
 
-        fun_test.log("Fetching per VP stats before traffic")
-        network_controller_obj.peek_per_vp_stats()
+            fun_test.log("Fetching per VP stats before traffic")
+            network_controller_obj.peek_per_vp_stats()
 
-        fun_test.log("Fetching PSW NU Global stats before test")
-        network_controller_obj.peek_psw_global_stats()
+            fun_test.log("Fetching PSW NU Global stats before test")
+            network_controller_obj.peek_psw_global_stats()
 
-        fun_test.log("Fetching VP packets before test")
-        vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.log("Fetching VP packets before test")
+            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 
-        fun_test.log("Fetching BAM stats before test")
-        network_controller_obj.peek_resource_bam_stats()
-        
-        fun_test.log("Fetching flow output")
-        network_controller_obj.show_nu_benchmark(flow_offset=0, num_flows=100, show="1")
+            fun_test.log("Fetching BAM stats before test")
+            network_controller_obj.peek_resource_bam_stats()
 
-        checkpoint = "Start Sequencer"
-        result = self.template_obj.start_sequencer()
-        fun_test.test_assert(result, checkpoint)
+            fun_test.log("Fetching flow output")
+            network_controller_obj.show_nu_benchmark(flow_offset=0, num_flows=100, show="1")
 
-        sequencer_handle = self.template_obj.get_sequencer_handle()
+            checkpoint = "Start Sequencer"
+            result = self.template_obj.start_sequencer()
+            fun_test.test_assert(result, checkpoint)
 
-        output = run_dpcsh_commands(template_obj=self.template_obj, sequencer_handle=sequencer_handle,
-                                    network_controller_obj=network_controller_obj,
-                                    test_type=MEMORY_TYPE_DDR, single_flow=self.single_flow,
-                                    half_load_latency=self.half_load_latency, test_time=self.test_time)
+            sequencer_handle = self.template_obj.get_sequencer_handle()
 
-        fun_test.log("Fetching flow output")
-        network_controller_obj.show_nu_benchmark(flow_offset=0, num_flows=100, show="1")
-        
-        fun_test.log("Fetching PSW NU Global stats after test")
-        network_controller_obj.peek_psw_global_stats()
+            output = run_dpcsh_commands(template_obj=self.template_obj, sequencer_handle=sequencer_handle,
+                                        network_controller_obj=network_controller_obj,
+                                        test_type=MEMORY_TYPE_DDR, single_flow=self.single_flow,
+                                        half_load_latency=self.half_load_latency, test_time=self.test_time)
 
-        fun_test.log("Fetching VP packets after test")
-        vp_stats_after = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.log("Fetching flow output")
+            network_controller_obj.show_nu_benchmark(flow_offset=0, num_flows=100, show="1")
 
-        diff_vp_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats_after)
-        fun_test.log("VP Diff stats: %s" % diff_vp_stats)
+            fun_test.log("Fetching PSW NU Global stats after test")
+            network_controller_obj.peek_psw_global_stats()
 
-        if not int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_LE]) > 0:
-            display_negative_results = True
-            fun_test.log("VP packets not going via NU LE")
+            fun_test.log("Fetching VP packets after test")
+            vp_stats_after = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 
-        if not int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS]) == 0:
-            display_negative_results = display_negative_results or True
-            fun_test.log("VP packets shows nu le lookup miss for %s packets" % (int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS])))
+            diff_vp_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats_after)
+            fun_test.log("VP Diff stats: %s" % diff_vp_stats)
 
-        fun_test.log("Fetching BAM stats after test")
-        network_controller_obj.peek_resource_bam_stats()
+            if not int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_LE]) > 0:
+                display_negative_results = True
+                fun_test.log("VP packets not going via NU LE")
 
-        fun_test.log("Fetching per VP stats after traffic")
-        network_controller_obj.peek_per_vp_stats()
+            if not int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS]) == 0:
+                display_negative_results = display_negative_results or True
+                fun_test.log("VP packets shows nu le lookup miss for %s packets" % (int(diff_vp_stats[VP_PACKETS_NU_LE_LOOKUP_MISS])))
 
-        checkpoint = "Fetch summary result for latency and throughput for all frames and all iterations"
-        result_dict = self.template_obj.get_throughput_summary_results_by_frame_size()
-        fun_test.test_assert(result_dict['status'], checkpoint)
+            fun_test.log("Fetching BAM stats after test")
+            network_controller_obj.peek_resource_bam_stats()
 
-        # TODO: We need to validate script later on once we know numbers for palladium and F1
-        # checkpoint = "Validate results of current run"
-        # result = self.template_obj.validate_result(result_dict=result_dict['summary_result'])
-        # fun_test.test_assert(result, checkpoint)
+            fun_test.log("Fetching per VP stats after traffic")
+            network_controller_obj.peek_per_vp_stats()
 
-        checkpoint = "Display Performance Table"
-        table_name = "Performance Numbers for %s flow " % self.flow_direction
-        if self.spray:
-            table_name += " Spray Enable"
-        result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
-                                                            table_name=table_name)
-        fun_test.add_checkpoint(checkpoint)
+            checkpoint = "Fetch summary result for latency and throughput for all frames and all iterations"
+            result_dict = self.template_obj.get_throughput_summary_results_by_frame_size()
+            fun_test.test_assert(result_dict['status'], checkpoint)
 
-        if self.spray or self.single_flow:
-            mode = self.template_obj.get_interface_mode_input_speed()
-            if not branch_name:
-                if publish_results:
-                    result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
-                                                                              timestamp=TIMESTAMP,
-                                                                              mode=mode,
-                                                                              flow_direction=self.flow_direction,
-                                                                              file_name=OUTPUT_JSON_FILE_NAME,
-                                                                              num_flows=self.num_flows,
-                                                                              half_load_latency=self.half_load_latency,
-                                                                              model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
-                                                                              memory=MEMORY_TYPE_DDR,
-                                                                              update_charts=self.update_charts,
-                                                                              update_json=self.update_json,
-                                                                              display_negative_results=display_negative_results)
+            # TODO: We need to validate script later on once we know numbers for palladium and F1
+            # checkpoint = "Validate results of current run"
+            # result = self.template_obj.validate_result(result_dict=result_dict['summary_result'])
+            # fun_test.test_assert(result, checkpoint)
 
-        fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
+            checkpoint = "Display Performance Table"
+            table_name = "Performance Numbers for %s flow " % self.flow_direction
+            if self.spray:
+                table_name += " Spray Enable"
+            result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
+                                                                table_name=table_name)
+            fun_test.add_checkpoint(checkpoint)
+
+            if self.spray or self.single_flow:
+                mode = self.template_obj.get_interface_mode_input_speed()
+                if not branch_name:
+                    if publish_results:
+                        result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
+                                                                                  timestamp=TIMESTAMP,
+                                                                                  mode=mode,
+                                                                                  flow_direction=self.flow_direction,
+                                                                                  file_name=OUTPUT_JSON_FILE_NAME,
+                                                                                  num_flows=self.num_flows,
+                                                                                  half_load_latency=self.half_load_latency,
+                                                                                  model_name=JUNIPER_PERFORMANCE_MODEL_NAME,
+                                                                                  memory=MEMORY_TYPE_DDR,
+                                                                                  update_charts=self.update_charts,
+                                                                                  update_json=self.update_json,
+                                                                                  display_negative_results=display_negative_results)
+
+            fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
     def cleanup(self):
         self.template_obj.cleanup()

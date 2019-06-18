@@ -6,6 +6,7 @@ import {ApiResponse, ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
 import {error} from "util";
+import {TestBedService} from "./test-bed.service";
 
 enum EditMode {
   NONE = 0,
@@ -31,38 +32,61 @@ export class TestBedComponent implements OnInit {
   users: any = null;
   lockPanelHeader: string = null;
   selectedUser: any = null;
+  assets = null;
+  driver = null;
 
-  constructor(private regressionService: RegressionService, private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService
+  constructor(private regressionService: RegressionService,
+              private apiService: ApiService,
+              private loggerService: LoggerService,
+              private commonService: CommonService, private service: TestBedService
   ) { }
 
   ngOnInit() {
     // fetchUsers
     // fetchTestbeds
-    let o = new Observable(observer => {
+    this.driver = new Observable(observer => {
       observer.next(true);
-      observer.complete();
+      //observer.complete();
       return () => {
       };
     }).pipe(
       switchMap(response => {
-          return this.fetchTestBeds();
+        return this.fetchTestBeds();
       }),
       switchMap(response => {
         return this.fetchAutomationStatus();
       }),
       switchMap(response => {
         return this.getUsers();
-      }));
+      }),
+      switchMap(response => {
+        return this.fetchAssets();
+      })
+      );
+    this.refreshAll();
+  }
 
-    o.subscribe(() => {
-
+  refreshAll () {
+    this.driver.subscribe(() => {
     }, error => {
       this.loggerService.error("Unable to init test-bed component");
-    })
+    });
   }
 
   refreshTestBeds() {
     this.fetchTestBeds().subscribe();
+  }
+
+  fetchAssets() {
+    if (!this.embed) {
+      return this.service.assets().pipe(switchMap(response => {
+        this.assets = response;
+        return of(true);
+      }))
+    } else {
+      return of(true);
+    }
+
   }
 
   fetchTestBeds() {
@@ -223,5 +247,14 @@ export class TestBedComponent implements OnInit {
       }
     }
     return expired;
+  }
+
+  unlockAsset(name) {
+    this.service.unlockAsset(name).subscribe((response) => {
+      this.loggerService.success(`Asset: ${name} unlock submitted`);
+      this.refreshAll();
+    }, error => {
+      this.loggerService.error(`Unable to unlock asset: ${name}`);
+    })
   }
 }

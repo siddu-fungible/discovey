@@ -28,6 +28,10 @@ export class CreateChartComponent implements OnInit, OnChanges {
   chartName: string = null;
   modelName: string = null;
   metricId: number = null;
+  internalChartName: string = null;
+  currentOwner: string = null;
+  currentSource: string = null;
+  baseLineDate: string = null;
   buildInfo: any = null;
   description: string = "TBD";
   owner: string = "unknown";
@@ -60,6 +64,10 @@ export class CreateChartComponent implements OnInit, OnChanges {
         this.negativeGradient = !this.chartInfo.positive;
         this.chartName = this.chartInfo.chart_name;
         this.y1AxisTitle = this.chartInfo.y1_axis_title;
+        this.internalChartName = this.chartInfo.internal_chart_name;
+        this.baseLineDate = String(this.chartInfo.base_line_date);
+        this.currentOwner = this.chartInfo.owner_info;
+        this.currentSource = this.chartInfo.source;
 
       }, error => {
         this.logger.error("EditChartController: chart_info");
@@ -190,6 +198,10 @@ export class CreateChartComponent implements OnInit, OnChanges {
     payload["source"] = this.source;
     payload["owner_info"] = this.owner;
     payload["leaf"] = true;
+    payload["internal_chart_name"] = this.internalChartName;
+    payload["owner_info"] = this.currentOwner;
+    payload["source"] = this.currentSource;
+    payload["base_line_date"] = this.baseLineDate;
 
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {

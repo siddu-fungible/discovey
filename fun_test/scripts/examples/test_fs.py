@@ -48,7 +48,7 @@ class FunTestCase1(FunTestCase):
 class FunTestCase2(FunTestCase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Setup FS standalone without TopologyHelper",
+                              summary="Setup FS standalone with TopologyHelper",
                               steps="""
         1. Steps 1
         2. Steps 2

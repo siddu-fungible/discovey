@@ -5,10 +5,9 @@
     "f1_in_use": 0,
     "huid": 7,
     "ctlid": 0,
-    "syslog_level": 2,
-    "command_timeout": 5,
-    "reboot_timeout": 300,
-    "ethernet_adapter": "Mellanox",
+    "syslog_level": 6,
+    "command_timeout": 30,
+    "reboot_timeout": 400,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -30,9 +29,7 @@
         },
         "f1_loopback_ip": "29.1.1.1"
       }
-    }
-  },
-  "EC42FioTcpRead": {
+    },
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -50,23 +47,18 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 26843545600,
+      "capacity": 1073741824,
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    "command_timeout": 30,
-    "iter_interval": 3,
-    "ns_id": 1,
+    "iter_interval": 2,
     "attach_transport": "TCP",
     "transport_port": 1099,
-    "huid": 7,
-    "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "ns_id": 1,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "8k",
@@ -75,28 +67,22 @@
       "rw": "write",
       "direct": 1,
       "prio": 0,
-      "timeout": 720
-    },
+      "timeout": 600
+    }
+  },
+  "ECTcpRandRead": {
     "fio_cmd_args": {
       "bs": "4k",
       "size": "100%",
       "direct": 1,
       "prio": 0,
-      "runtime": 180,
-      "timeout": 200
+      "runtime": 30,
+      "timeout": 35
     },
-    "fio_modes": [
-      "read",
-      "randread"
-    ],
+    "fio_mode": "randread",
     "fio_numjobs_iodepth": [
-      "(1, 1)",
-      "(8, 1)",
-      "(16, 1)",
-      "(16, 2)",
-      "(16, 4)",
-      "(16, 8)"
+      "(16, 4)"
     ],
-    "fio_job_name": "ec_nvme_tcp"
+    "fio_job_name": "ec_tcp_sanity"
   }
 }

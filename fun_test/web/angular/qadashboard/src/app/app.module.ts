@@ -66,6 +66,7 @@ import { ScoresTableComponent } from './performance/scores-table/scores-table.co
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { AdminDagComponent } from './performance/admin/admin-dag/admin-dag.component';
 import { ChartsListComponent } from './performance/admin/charts-list/charts-list.component';
+import { TooltipDirective } from './ui-elements/tooltip.directive';
 
 @NgModule({
   declarations: [
@@ -116,7 +117,8 @@ import { ChartsListComponent } from './performance/admin/charts-list/charts-list
     ScoresTableComponent,
     PerformanceTableComponent,
     AdminDagComponent,
-    ChartsListComponent
+    ChartsListComponent,
+    TooltipDirective
   ],
   imports: [
     BsDropdownModule,

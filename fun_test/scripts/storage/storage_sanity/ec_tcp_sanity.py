@@ -6,16 +6,18 @@ from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
 
 '''
-Sanity Script for BLT Volume via PCI
+Sanity Script for EC Volume via NVME/TCP
 '''
 
 
-class BLTVolumeSanityScript(FunTestScript):
+class ECVolumeSanityScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Bring up FS
         2. Setup COMe, launch DPC cli
-        3. 
+        3. Configure Network interface between F1 and remote host.
+        4. Create 4:2 EC volume and attach it to remote host.
+        5. Execute write traffic to populate the EC volume.
         """)
 
     def setup(self):
@@ -42,6 +44,7 @@ class BLTVolumeSanityScript(FunTestScript):
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
+
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -77,9 +80,9 @@ class BLTVolumeSanityScript(FunTestScript):
         self.storage_controller = storage_controller
 
         # configure end host
-        #reboot host
-        fun_test.test_assert(end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
-                             "End Host {} is up".format(end_host.host_ip))
+        # Ensure host is up
+        # fun_test.test_assert(self.end_host.reboot(max_wait_time=self.reboot_timeout),
+        #                     message="End Host is up")
 
         # end host network interface
         configure_endhost_interface(end_host=end_host, test_network=test_network,
@@ -90,7 +93,7 @@ class BLTVolumeSanityScript(FunTestScript):
         # load nvme_tcp
         load_nvme_tcp_module(end_host)
 
-        #enable_counters(storage_controller, self.command_timeout)
+        # enable_counters(storage_controller, self.command_timeout)
 
         # configure ip on fs
         fun_test.test_assert(storage_controller.ip_cfg(ip=test_network['f1_loopback_ip'])["status"],
@@ -108,23 +111,16 @@ class BLTVolumeSanityScript(FunTestScript):
                              format(self.attach_transport, ctrlr_uuid))
         fun_test.shared_variables["ctrlr_uuid"] = ctrlr_uuid
 
-        # Create thin BLT volume
-        blt_uuid = utils.generate_uuid()
-        command_result = storage_controller.create_thin_block_volume(capacity=self.blt_details["capacity"],
-                                                                     block_size=self.blt_details["block_size"],
-                                                                     name=self.blt_details['name'],
-                                                                     uuid=blt_uuid,
-                                                                     command_duration=self.command_timeout)
-        fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(
-            self.blt_details['name'],
-            blt_uuid))
-
+        # Create EC volume
+        (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                       self.command_timeout)  # ToDo Assert it
+        fun_test.test_assert(ec_config_status, message="Configure EC volume on F1")
         # attach volume to controller
+        ec_uuid = self.ec_info["attach_uuid"][0]
         fun_test.test_assert(self.storage_controller.attach_volume_to_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                  ns_id=self.ns_id,
-                                                                                 vol_uuid=blt_uuid)["status"],
-                             "Attaching BLT {} with uuid {} to controller".format(self.ns_id, blt_uuid))
-        fun_test.shared_variables["blt_uuid"] = blt_uuid
+                                                                                 vol_uuid=ec_uuid),
+                             message="Attaching EC Vol nsid: {} with uuid {} to controller".format(self.ns_id, ec_uuid))
 
         # Set syslog level
         set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
@@ -134,6 +130,7 @@ class BLTVolumeSanityScript(FunTestScript):
                                                                          test_network["f1_loopback_ip"],
                                                                          self.transport_port,
                                                                          self.nvme_subsystem)
+
         nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=60)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
@@ -145,17 +142,14 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.shared_variables['volume_name'] = fetch_nvme['volume_name']
 
         # execute fio write to populate device
-        if self.warm_up_traffic:
-            fio_output = self.end_host.pcie_fio(filename=fun_test.shared_variables['nvme_block_device'],
-                                                **self.warm_up_fio_cmd_args)
-            fun_test.test_assert(fio_output, "Pre-populating the volume")
+        fun_test.test_assert(self.end_host.pcie_fio(filename=fun_test.shared_variables['nvme_block_device'],
+                                                    **self.warm_up_fio_cmd_args), "Pre-populating the volume")
         fun_test.shared_variables["setup_created"] = True
 
     def cleanup(self):
         try:
             if fun_test.shared_variables['setup_created']:
                 ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                blt_uuid = fun_test.shared_variables["blt_uuid"]
                 self.end_host.sudo_command("nvme disconnect -d {}".format(fun_test.shared_variables['volume_name']))
 
                 # disconnect device from controller
@@ -169,24 +163,19 @@ class BLTVolumeSanityScript(FunTestScript):
                 fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                command_duration=self.command_timeout),
                                      message="Delete Controller uuid: {}".format(ctrlr_uuid))
-                fun_test.sleep(seconds=2, message="BLT volume detached from controller")
-                # delete BLT
-                fun_test.test_assert(self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                           block_size=self.blt_details["block_size"],
-                                                                           type=self.blt_details["type"],
-                                                                           name=self.blt_details["name"],
-                                                                           uuid=blt_uuid,
-                                                                           command_duration=self.command_timeout)
-                                     ['status'],
-                                     message="Delete Configured BLT")
+                fun_test.sleep(seconds=2, message="EC volume detached from controller")
+
+                # delete EC
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
+                self.storage_controller.disconnect()
         except Exception as ex:
             fun_test.critical(ex.message)
         finally:
-            self.storage_controller.disconnect()
             fun_test.shared_variables["topology"].cleanup()
 
 
-class BltTcpSanityTestcase(FunTestCase):
+class ECTcpSanityTestcase(FunTestCase):
     def describe(self):
         pass
 
@@ -225,89 +214,16 @@ class BltTcpSanityTestcase(FunTestCase):
         pass
 
 
-class BltTcpSeqRead(BltTcpSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Test sequential read queries on BLT volume over nvme fabric",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Seq Read test(without verify) from the end host.''')
-
-
-class BltTcpRandRead(BltTcpSanityTestcase):
+class ECTcpRandRead(ECTcpSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test random read queries on BLT volume over nvme fabric",
+                              summary="Test random read queries on 4:2 EC volume over nvme-tcp fabric",
                               steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Rand Read test(without verify) from the end host.''')
-
-
-class BltTcpSeqRWMix(BltTcpSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Test Sequential read-write mix 70:30 ratio queries on BLT volume over nvme-tcp"
-                                      " fabric",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO mix seq read-write 70:30 test(without verify) from the end host.''')
-
-
-class BltTcpSeqWRMix(BltTcpSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Test Sequential write-read mix 70:30 ratio queries on BLT volume over nvme-tcp "
-                                      "fabric",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Seq write-read 70:30 test(without verify) from the end host.''')
-
-
-class BltTcpRandRWMix(BltTcpSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Test Random read-write mix 70:30 ratio queries on BLT volume over nvme-tcp "
-                                      "fabric",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO rand read-write 70:30 test(without verify) from the end host.''')
-
-
-class BltTcpRandWRMix(BltTcpSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=6,
-                              summary="Test Random write-read mix 70:30 ratio queries on BLT volume over nvme-tcp "
-                                      "fabric",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the network interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO random write-read 70:30 test(without verify) from the end host.''')
+        1. Execute random read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
 
 
 if __name__ == "__main__":
-    bltscript = BLTVolumeSanityScript()
-    bltscript.add_test_case(BltTcpSeqRead())
-    bltscript.add_test_case(BltTcpRandRead())
-    bltscript.add_test_case(BltTcpSeqRWMix())
-    bltscript.add_test_case(BltTcpSeqWRMix())
-    bltscript.add_test_case(BltTcpRandRWMix())
-    bltscript.add_test_case(BltTcpRandWRMix())
-
-    bltscript.run()
+    ecscript = ECVolumeSanityScript()
+    ecscript.add_test_case(ECTcpRandRead())
+    ecscript.run()

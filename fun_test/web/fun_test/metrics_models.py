@@ -36,6 +36,13 @@ class MetricsGlobalSettingsSerializer(ModelSerializer):
         fields = "__all__"
 
 
+class MetricsRunTime(models.Model):
+    name = models.TextField(default="", unique=True)
+    value = JSONField(default={})
+
+    def __str__(self):
+        return "{}: {}".format(self.name, self.value)
+
 class SchedulingStates:
     ACTIVE = "Active"
     COMPLETED = "Completed"

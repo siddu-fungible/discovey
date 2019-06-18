@@ -51,6 +51,7 @@ export class SubmitJobComponent implements OnInit {
   branchFunOs: string = null;
   branchFunSdk: string = null;
   branchFunControlPlane: string = null;
+  branchFunHw: string = null;
   skipDasmC: boolean = true;
   branchFunTools: string = null;
 
@@ -274,6 +275,7 @@ export class SubmitJobComponent implements OnInit {
         payload["environment"]["build_parameters"]["BRANCH_FunControlPlane"] = this.branchFunControlPlane;
         payload["environment"]["build_parameters"]["SKIP_DASM_C"] = this.skipDasmC;
         payload["environment"]["build_parameters"]["BRANCH_FunTools"] = this.branchFunTools;
+        payload["environment"]["build_parameters"]["BRANCH_FunHW"] = this.branchFunHw;
       }
     }
 

@@ -325,5 +325,15 @@ export class SuiteDetailComponent implements OnInit {
     return this.scriptInfo[scriptPath].pk;
   }
 
+  killClick() {
+    let suiteId = this.executionId;
+    this.regressionService.killSuite(this.executionId).subscribe((result) => {
+      this.logger.success(`Killed job: ${result}`);
+      window.location.reload()
+    }, error => {
+      this.logger.error(`Unable kill ${suiteId}`);
+    });
+  }
+
 
 }

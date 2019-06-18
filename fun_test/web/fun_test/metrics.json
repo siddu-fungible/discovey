@@ -2569,15 +2569,15 @@
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_read_qd64_nvmetcp_output_latency",
-                            "weight": 1,
-                            "label": "Latency, QDepth=64"
-                          },
-                          {
-                            "metric_model_name": "BltVolumePerformance",
                             "name": "rand_read_qd128_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_read_qd256_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=256"
                           }
                         ]
                       },
@@ -2601,15 +2601,15 @@
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_write_qd16_nvmetcp_output_latency",
+                            "name": "rand_write_qd64_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QDepth=16"
+                            "label": "Latency, QDepth=64"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_write_qd32_nvmetcp_output_latency",
+                            "name": "rand_write_qd128_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QDepth=32"
+                            "label": "Latency, QDepth=128"
                           }
                         ]
                       }
