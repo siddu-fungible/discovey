@@ -149,110 +149,60 @@ if __name__ == "__main_changed_owner__":
             entry.save()
     print "changed owner to Bertrand"
 
-if __name__ == "__main_temp__":
-    random_read_qdepths = ["qd128", "qd256"]
-    random_write_qdepths = ["qd1", "qd64", "qd128"]
-
-    random_read_qd128 = ["fio_tcp_randread_blt_32_4_nvols"]
-    random_read_qd256 = ["fio_tcp_randread_blt_32_8_nvols"]
+if __name__ == "__main__":
     random_write_qd64 = ["fio_tcp_randwrite_blt_16_4_scaling", "fio_tcp_randwrite_blt_32_2_nvols"]
     random_write_qd128 = ["fio_tcp_randwrite_blt_32_4_nvols"]
-
     model_name = "BltVolumePerformance"
     base_line_date = datetime(year=2019, month=1, day=26, minute=0, hour=0, second=0)
-    internal_chart_names = ["rand_read_qd1_nvmetcp_output_latency",
-                            "rand_read_qd128_nvmetcp_output_latency",
-                            "rand_read_qd256_nvmetcp_output_latency",
-                            "rand_write_qd1_nvmetcp_output_latency",
-                            "rand_write_qd64_nvmetcp_output_latency", "rand_write_qd128_nvmetcp_output_latency"]
-    fio_job_names_randread = ["fio_tcp_randread_blt_32_4_nvols", "fio_tcp_randread_blt_32_8_nvols"]
-    fio_job_names_randwrite = ["fio_tcp_randwrite_blt_16_4_scaling",
-                               "fio_tcp_randwrite_blt_32_2_nvols", "fio_tcp_randwrite_blt_32_4_nvols"]
-    output_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
-
+    internal_chart_names = ["rand_write_qd64_nvmetcp_output_latency", "rand_write_qd128_nvmetcp_output_latency"]
+    output_names = ["output_write_avg_latency", "output_write_99_latency", "output_write_99_99_latency"]
     for internal_chart_name in internal_chart_names:
-        if "rand_read" in internal_chart_name:
-            operation = "randread"
-            fio_job_names = fio_job_names_randread
-            qdepths = random_read_qdepths
-            common_qd = "qd128"
+        if "qd64" in internal_chart_name:
+            fio_job_names = random_write_qd64
         else:
-            operation = "randwrite"
-            fio_job_names = fio_job_names_randwrite
-            qdepths = random_write_qdepths
-            common_qd = "qd64"
-        try:
-            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
-            if chart:
-                data_sets = json.loads(chart.data_sets)
-                for data_set in data_sets:
-                    data_set["name"] = data_set["name"] + "(1 vol)"
-                chart.data_sets = json.dumps(data_sets)
-                chart.owner_info = "Radhika Naik (radhika.naik@fungible.com)"
-                chart.source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/multiple_blt_tcp_perf.py"
-                chart.save()
-                if "qd1" in internal_chart_name:
-                    print "dont do anything"
+            fio_job_names = random_write_qd128
+        operation = "randwrite"
+        chart_name = "Latency"
+        data_sets = []
+        for fio_job_name in fio_job_names:
+            if "scaling" in fio_job_name:
+                vol = "(1 vol)"
+            else:
+                vol = "(N vols)"
 
-
-                for fio_job_name in fio_job_names:
-                    if "_32_4_" in fio_job_name:
-                        qdepth = "qd128"
-                    elif "_16_4_" in fio_job_name:
-                        qdepth = "qd64"
-                    elif "_32_2_" in fio_job_name:
-                        qdepth = "qd64"
-                    else:
-                        qdepth = "qd256"
-
-
-
-        except ObjectDoesNotExist:
-            chart_name = "Latency"
-            data_sets = []
-            for fio_job_name in fio_job_names:
-                if "_32_4_" in fio_job_name:
-                    qdepth = "qd128"
-                elif "_16_4_" in fio_job_name:
-                    qdepth = "qd64"
-                elif "_32_2_" in fio_job_name:
-                    qdepth = "qd64"
+            for output_name in output_names:
+                if "avg" in output_name:
+                    name = "avg" + vol
+                elif "99_99" in output_name:
+                    name = "99.99%" + vol
                 else:
-                    qdepth = "qd256"
+                    name = "99%" + vol
+                one_data_set = {}
+                one_data_set["name"] = name
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                one_data_set["inputs"]["input_operation"] = operation
+                one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                          "reference": -1, "unit": PerfUnit.UNIT_USECS}
+                data_sets.append(one_data_set)
 
-                if "scaling" in fio_job_name:
-                    vol = "(1 vol)"
-                else:
-                    vol = "(N vols)"
-
-                for output_name in output_names:
-                    if "avg" in output_name:
-                        name = "avg" + vol
-                    one_data_set = {}
-                    one_data_set["name"] = name
-                    one_data_set["inputs"] = {}
-                    one_data_set["inputs"]["input_platform"] = FunPlatform.F1
-                    one_data_set["inputs"]["input_operation"] = operation
-                    one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
-                    one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
-                                              "reference": -1, "unit": PerfUnit.UNIT_USECS}
-
-                metric_id = LastMetricId.get_next_id()
-                MetricChart(chart_name=chart_name,
-                            metric_id=metric_id,
-                            internal_chart_name=internal_chart_name,
-                            data_sets=json.dumps(data_sets),
-                            leaf=True,
-                            description="TBD",
-                            owner_info="Radhika Naik (radhika.naik@fungible.com)",
-                            source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/multiple_blt_tcp_perf.py",
-                            positive=False,
-                            y1_axis_title=PerfUnit.UNIT_USECS,
-                            visualization_unit=PerfUnit.UNIT_USECS,
-                            metric_model_name=model_name,
-                            base_line_date=base_line_date,
-                            work_in_progress=False,
-                            platform=FunPlatform.F1).save()
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Radhika Naik (radhika.naik@fungible.com)",
+                        source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/multiple_blt_tcp_perf.py",
+                        positive=False,
+                        y1_axis_title=PerfUnit.UNIT_USECS,
+                        visualization_unit=PerfUnit.UNIT_USECS,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
 
 if __name__ == "__main__":
     internal_chart_names = ["rand_read_qd1_nvmetcp_output_latency",
@@ -282,7 +232,7 @@ if __name__ == "__main__":
         except ObjectDoesNotExist:
             chart_name = "Latency"
             chart = MetricChart.objects.get(internal_chart_name="rand_read_qd1_nvmetcp_output_latency")
-            data_sets = json.dumps(chart.data_sets)
+            data_sets = json.loads(chart.data_sets)
             for data_set in data_sets:
                 data_set["name"] = data_set["name"].replace("1 vol", "N vols")
                 data_set["inputs"]["input_fio_job_name"] = "fio_tcp_randread_blt_32_8_nvols"
@@ -304,4 +254,3 @@ if __name__ == "__main__":
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
     print "added charts for random read latency"
-
