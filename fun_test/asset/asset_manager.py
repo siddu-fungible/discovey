@@ -371,15 +371,23 @@ class AssetManager:
         asset_request = custom_spec.get("asset_request", None)
         fun_test.simple_assert(asset_request, "asset_request in custom_spec")
 
+        specific_dut = None
         num_duts_required = None
         if AssetType.DUT in asset_request:
             dut_info = asset_request[AssetType.DUT]
             num_duts_required = dut_info.get("num", None)
+            specific_dut = dut_info.get("name", None)
+            if specific_dut:
+                num_duts_required = 1
 
+        specific_host = None
         num_hosts_required = None
         if AssetType.HOST in asset_request:
             host_info = asset_request[AssetType.HOST]
             num_hosts_required = host_info.get("num", None)
+            specific_dut = host_info.get("name", None)
+            if specific_host:
+                num_duts_required = 1
 
         asset_category_unavailable = False
         error_message = ""
@@ -401,6 +409,9 @@ class AssetManager:
                 unavailable_assets = []
                 available_assets = []
                 for asset_in_test_bed in assets_in_test_bed:
+                    if specific_dut and asset_type == AssetType.DUT and specific_dut != asset_in_test_bed:
+                        fun_test.log("Specific DUT set: {}, so skipping {}".format(specific_dut, asset_in_test_bed))
+                        continue
                     asset = None
                     try:
                         asset = Asset.objects.get(name=asset_in_test_bed)

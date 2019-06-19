@@ -37,6 +37,11 @@ class TopologyHelper:
         return self.expanded_topology
 
     @fun_test.safe
+    def get_available_duts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+
+    @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
 
@@ -189,6 +194,18 @@ class TopologyHelper:
 
 
     @fun_test.safe
+    def get_available_duts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        return self.expanded_topology.get_duts()
+
+    @fun_test.safe
+    def get_available_hosts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        return self.expanded_topology.get_hosts()
+
+    @fun_test.safe
     def set_dut_parameters(self, dut_index=None, **kwargs):
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
@@ -233,10 +250,11 @@ class TopologyHelper:
                 peer = interface_info.peer_info
                 if peer:
                     if peer.type == peer.END_POINT_TYPE_BARE_METAL:
-                        host_ready_timer = FunTimer(max_time=300)
+                        host_ready_max_wait_time = 360
+                        host_ready_timer = FunTimer(max_time=host_ready_max_wait_time)
                         host_is_ready = False
                         while not host_is_ready and not host_ready_timer.is_expired():
-                            host_is_ready = peer.is_ready()
+                            host_is_ready = peer.is_ready(max_wait_time=host_ready_max_wait_time)
                             fun_test.sleep("Host: {} readiness check. Remaining time: {}".format(peer.get_instance(),
                                                                                                  host_ready_timer.remaining_time()))
 

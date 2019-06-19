@@ -139,6 +139,7 @@ class SuiteExecution(models.Model):
     version = models.CharField(max_length=50, null=True)
     requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
     tags = models.TextField(default="[]", null=True)
+    description = models.TextField(default="", null=True)
 
     """
     Scheduling

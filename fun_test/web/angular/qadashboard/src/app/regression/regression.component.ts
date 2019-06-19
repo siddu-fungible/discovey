@@ -307,6 +307,16 @@ export class RegressionComponent implements OnInit {
 
   applyAdditionalAttributes(item) {
     item["showingDetails"] = false;
+    if (item.hasOwnProperty('fields') && item.fields.hasOwnProperty('environment')) {
+      let environment = JSON.parse(item.fields.environment);
+      if (environment && environment.hasOwnProperty('with_jenkins_build') && environment.with_jenkins_build) {
+        if (environment.hasOwnProperty('build_parameters')) {
+          if (environment.build_parameters.hasOwnProperty('BRANCH_FunOS')) {
+            item["BRANCH_FunOS"] = environment.build_parameters.BRANCH_FunOS ? environment.build_parameters.BRANCH_FunOS : "master";
+          }
+        }
+      }
+    }
   }
 
   showDetailsClick(item) {
