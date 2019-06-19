@@ -322,6 +322,10 @@ class FunTest:
                 self.build_parameters["BRANCH_FunControlPlane"] = user_supplied_build_parameters["BRANCH_FunControlPlane"]
             if "SKIP_DASM_C" in user_supplied_build_parameters:
                 self.build_parameters["SKIP_DASM_C"] = user_supplied_build_parameters["SKIP_DASM_C"]
+            if "BRANCH_FunHW" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunHW"] = user_supplied_build_parameters["BRANCH_FunHW"]
+            if "BRANCH_FunTools" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunTools"] = user_supplied_build_parameters["BRANCH_FunTools"]
 
     def get_build_parameters(self):
         return self.build_parameters
@@ -605,11 +609,14 @@ class FunTest:
         log_prefix = ""
         if self.log_prefix:
             log_prefix = "_{}".format(self.log_prefix)
-        artifact_file = self.logs_dir + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        artifact_file = self.get_logs_directory() + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         return artifact_file
 
     def enable_pause_on_failure(self):
         self.pause_on_failure = True
+
+    def get_logs_directory(self):
+        return self.logs_dir
 
     def disable_pause_on_failure(self):
         self.pause_on_failure = False
