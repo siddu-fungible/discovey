@@ -795,7 +795,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                          format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(int(fio_iodepth) * int(fio_num_jobs)))
+            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(row_data_dict["iodepth"]))
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
                 fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus,
