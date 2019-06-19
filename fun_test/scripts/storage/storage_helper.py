@@ -1,7 +1,11 @@
-from lib.system.fun_test import fun_test
+from lib.system.fun_test import *
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
-from datetime import datetime
 import re
+from prettytable import PrettyTable
+import time
+from collections import OrderedDict
+
+DPCSH_COMMAND_TIMEOUT = 5
 
 fio_perf_table_header = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                          "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
@@ -213,3 +217,51 @@ def configure_endhost_interface(end_host, test_network, interface_name, timeout=
     fun_test.test_assert_expected(expected=0,
                                   actual=end_host.exit_status(),
                                   message="Adding static ARP to F1 route")
+
+
+def build_simple_table(data, column_headers=[]):
+    simple_table = PrettyTable(column_headers)
+    simple_table.align = 'l'
+    simple_table.border = True
+    simple_table.header = True
+    try:
+        for key in sorted(data):
+            simple_table.add_row([key, data[key]])
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return simple_table
+
+
+def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3, non_zero_stats_only=True,
+                           command_timeout=DPCSH_COMMAND_TIMEOUT):
+    output = False
+    column_headers = ["VP", "Utilization"]
+    try:
+        with open(output_file, 'a') as f:
+            timer = FunTimer(max_time=interval * (count + 1))
+            while not timer.is_expired():
+                lines = []
+                dpcsh_result = storage_controller.debug_vp_util(command_timeout=command_timeout)
+                fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
+                if dpcsh_result["data"] is not None:
+                    vp_util = dpcsh_result["data"]
+                else:
+                    vp_util = {}
+
+                if non_zero_stats_only:
+                    filtered_vp_util = OrderedDict()
+                    for key, value in sorted(vp_util.iteritems()):
+                        if value != 0.0 or value != 0:
+                            filtered_vp_util[key] = value
+                    vp_util = filtered_vp_util
+
+                table_data = build_simple_table(data=vp_util, column_headers=column_headers)
+                lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                lines.append(table_data.get_string())
+                lines.append("\n\n")
+                f.writelines(lines)
+                fun_test.sleep("for the next iteration", seconds=interval)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
