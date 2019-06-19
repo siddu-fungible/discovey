@@ -37,6 +37,11 @@ class TopologyHelper:
         return self.expanded_topology
 
     @fun_test.safe
+    def get_available_duts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+
+    @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
 
@@ -187,6 +192,18 @@ class TopologyHelper:
             fun_test.test_assert(self.validate_topology(), "Validate topology")
         return self.expanded_topology
 
+
+    @fun_test.safe
+    def get_available_duts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        return self.expanded_topology.get_duts()
+
+    @fun_test.safe
+    def get_available_hosts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        return self.expanded_topology.get_hosts()
 
     @fun_test.safe
     def set_dut_parameters(self, dut_index=None, **kwargs):
