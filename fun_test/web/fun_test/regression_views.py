@@ -191,6 +191,8 @@ def submit_job(request):
             requested_minute = request_json["requested_minute"]
         if "repeat_in_minutes" in request_json:
             repeat_in_minutes = request_json["repeat_in_minutes"]
+        description = request_json.get("description", None)
+
 
         if suite_path:
             job_id = queue_job3(suite_path=suite_path,
@@ -206,7 +208,9 @@ def submit_job(request):
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
                                 repeat_in_minutes=repeat_in_minutes,
-                                submitter_email=submitter_email, inputs=inputs)
+                                submitter_email=submitter_email,
+                                inputs=inputs,
+                                description=description)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -222,7 +226,9 @@ def submit_job(request):
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
                                 repeat_in_minutes=repeat_in_minutes,
-                                submitter_email=submitter_email, inputs=inputs)
+                                submitter_email=submitter_email,
+                                inputs=inputs,
+                                description=description)
         elif dynamic_suite_spec:
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                 emails=emails,

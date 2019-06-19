@@ -30,7 +30,7 @@ tb_config = {
             "model": "StorageNetwork2",
             "run_mode": "build_only",
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
             "fnid": 2,

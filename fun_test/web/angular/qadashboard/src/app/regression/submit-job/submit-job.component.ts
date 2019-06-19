@@ -43,7 +43,7 @@ export class SubmitJobComponent implements OnInit {
   testBedNames: string[] = [];
   submitting: string = null;
   tftpImagePath: string = "stable-funos-f1.stripped.gz";
-  bootArgs: string = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
+  bootArgs: string = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
   withJenkinsBuild: boolean = true;
 
   disableAssertions: boolean = true;
@@ -63,6 +63,7 @@ export class SubmitJobComponent implements OnInit {
   selectedUser: any = null;
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
+  description: string = null;
 
 
   jobInputs: string = null; // input dictionary to be sent to the scheduler
@@ -287,6 +288,10 @@ export class SubmitJobComponent implements OnInit {
       payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
     }
 
+    if (this.description) {
+      payload["description"] = this.description;
+    }
+
     this.submitting = "Submitting job";
     let ctrl = this;
     this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
@@ -317,7 +322,7 @@ export class SubmitJobComponent implements OnInit {
   isTestBedFs(): boolean {
     let result = null;
     if (this.selectedTestBedType) {
-      result = this.selectedTestBedType.indexOf('fs') > -1;
+      result = this.selectedTestBedType.indexOf('fs') > -1 || this.selectedTestBedType.indexOf('suite-based') > -1;
     }
     return result;
   }

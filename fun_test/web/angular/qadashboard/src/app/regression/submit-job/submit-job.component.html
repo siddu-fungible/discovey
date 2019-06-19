@@ -30,7 +30,7 @@
             </tr>
 
 
-            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
+            <tr *ngIf="selectedTestBedType && isTestBedFs()">
               <td class="no-wrap">
                 <label for="tftp-path">TFTP path (F1 stripped image)</label>
               </td>
@@ -65,7 +65,7 @@
 
             <ng-container *ngIf="withJenkinsBuild">
 
-              <ng-container *ngIf="selectedTestBedType && (selectedTestBedType.indexOf('fs') > -1 || selectedTestBedType.indexOf('suite-based')) > -1">
+              <ng-container *ngIf="selectedTestBedType && isTestBedFs()">
               <tr>
                   <td colspan="2">
                     <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
@@ -172,6 +172,17 @@
                 <app-json-input (dataChanged)="jobInputsChanged($event)"></app-json-input>
               </td>
             </tr>
+            <tr>
+              <td class="no-wrap">
+                <label>Description: </label>
+              </td>
+              <td>
+                <textarea style="width: 100%" [(ngModel)]="description">
+
+                </textarea>
+              </td>
+            </tr>
+
             <tr>
               <td class="no-wrap">
                 <label for="emails">Additional e-mails: </label>
