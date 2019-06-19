@@ -1,21 +1,37 @@
 from lib.system.fun_test import *
 from lib.system import utils
+from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
-import re
+from lib.host.linux import Linux
+from scripts.storage.funcp_deploy import FunCpDockerContainer
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from storage_helper import *
 from collections import OrderedDict
 
 '''
-Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
+Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
+
+def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
+    host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
+                             format(sleep_time, iostat_interval, iostat_iter), timeout=400)
+    host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d > /tmp/iostat_final.log")
+
+    fun_test.shared_variables["avg_tps"] = host_thread.sudo_command(
+        "awk '{ total += $2 } END { print total/NR }' /tmp/iostat_final.log")
+
+    fun_test.shared_variables["avg_kbr"] = host_thread.sudo_command(
+        "awk '{ total += $3 } END { print total/NR }' /tmp/iostat_final.log")
+
+    host_thread.disconnect()
 
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -24,11 +40,11 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
 
     db_log_time = fun_test.shared_variables["db_log_time"]
     num_ssd = fun_test.shared_variables["num_ssd"]
-    num_volumes = fun_test.shared_variables["num_volumes"]
+    num_volume = fun_test.shared_variables["blt_count"]
 
     blt = BltVolumePerformanceHelper()
     blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volumes, fio_job_name=fio_job_name,
+                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
                   write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
                   write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
                   write_95_latency=write_95_latency, write_99_latency=write_99_latency,
@@ -49,14 +65,22 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
     fun_test.log("Result: {}".format(result))
 
 
-class ECVolumeLevelScript(FunTestScript):
+def compare(actual, expected, threshold, operation):
+    if operation == "lesser":
+        return (actual < (expected * (1 - threshold)) and ((expected - actual) > 2))
+    else:
+        return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
+
+
+class MultiBLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. Bring up F1 with funos 
-        2. Configure Linux Host instance and make it available for test case
+        1. Deploy the topology. i.e Bring up FS
+        2. Make the Linux instance available for the testcase
         """)
 
     def setup(self):
+
         # Parsing the global config and assign them as object members
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
@@ -68,8 +92,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
             self.f1_in_use = 0
-            self.syslog_level = 2
-            self.command_timeout = 5
+            self.syslog = 2
+            self.command_timeout = 30
             self.reboot_timeout = 600
         else:
             for k, v in config_dict["GlobalSetup"].items():
@@ -97,8 +121,6 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Using Parameters passed during execution, this will override global and config parameters
             job_inputs = fun_test.get_job_inputs()
-            if not job_inputs:
-                job_inputs = {}
             fun_test.log("Provided job inputs: {}".format(job_inputs))
             if "dut_start_index" in job_inputs:
                 self.dut_start_index = job_inputs["dut_start_index"]
@@ -130,11 +152,12 @@ class ECVolumeLevelScript(FunTestScript):
             topology_helper.disable_duts(self.skip_dut_list)
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                               1: {"boot_args": self.bootargs[1]}})
+            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
             self.topology = topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
             # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
+            self.db_log_time = get_data_collection_time()
             fun_test.log("Data collection time: {}".format(self.db_log_time))
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
@@ -189,22 +212,22 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
             # for all the DUTs going to be used in the test
-            self.fs_obj = []
+            self.fs_objs = []
             self.fs_spec = []
             self.come_obj = []
-            self.f1_obj = {}
-            self.sc_obj = []
+            self.f1_objs = {}
+            self.sc_objs = []
             self.f1_ips = []
             self.gateway_ips = []
             for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
                 curr_index = i - self.dut_start_index
-                self.fs_obj.append(self.topology.get_dut_instance(index=i))
+                self.fs_objs.append(self.topology.get_dut_instance(index=i))
                 self.fs_spec.append(self.topology.get_dut(index=i))
-                self.come_obj.append(self.fs_obj[curr_index].get_come())
-                self.f1_obj[curr_index] = []
+                self.come_obj.append(self.fs_objs[curr_index].get_come())
+                self.f1_objs[curr_index] = []
                 for j in xrange(self.num_f1_per_fs):
-                    self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
-                    self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
+                    self.f1_objs[curr_index].append(self.fs_objs[curr_index].get_f1(index=j))
+                    self.sc_objs.append(self.f1_objs[curr_index][j].get_dpc_storage_controller())
 
             # Bringing up of FunCP docker container if it is needed
             self.funcp_obj = {}
@@ -240,10 +263,10 @@ class ECVolumeLevelScript(FunTestScript):
 
             # Forming shared variables for defined parameters
             fun_test.shared_variables["topology"] = self.topology
-            fun_test.shared_variables["fs_obj"] = self.fs_obj
+            fun_test.shared_variables["fs_objs"] = self.fs_objs
             fun_test.shared_variables["come_obj"] = self.come_obj
-            fun_test.shared_variables["f1_obj"] = self.f1_obj
-            fun_test.shared_variables["sc_obj"] = self.sc_obj
+            fun_test.shared_variables["f1_objs"] = self.f1_objs
+            fun_test.shared_variables["sc_obj"] = self.sc_objs
             fun_test.shared_variables["f1_ips"] = self.f1_ips
             fun_test.shared_variables["host_handles"] = self.host_handles
             fun_test.shared_variables["host_ips"] = self.host_ips
@@ -251,7 +274,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
             fun_test.shared_variables["num_f1s"] = self.num_f1s
             fun_test.shared_variables["num_duts"] = self.num_duts
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
+            fun_test.shared_variables["syslog_level"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
 
             for key in self.host_handles:
@@ -277,7 +300,7 @@ class ECVolumeLevelScript(FunTestScript):
             # Ensuring connectivity from Host to F1's
             for key in self.host_handles:
                 for index, ip in enumerate(self.f1_ips):
-                    ping_status = self.host_handles[key].ping(dst=ip, max_percentage_loss=80)
+                    ping_status = self.host_handles[key].ping(dst=ip)
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                          format(key, self.funcp_spec[0]["container_names"][index], ip))
 
@@ -290,6 +313,7 @@ class ECVolumeLevelScript(FunTestScript):
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                               1: {"boot_args": self.bootargs[1]}})
+            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
             self.topology = topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -301,7 +325,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.storage_controller = self.f1.get_dpc_storage_controller()
 
             # Fetching Linux host with test interface name defined
-            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
+            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0,
+                                                                                     f1_index=self.f1_in_use)
             for host_ip, host_info in fpg_connected_hosts.iteritems():
                 if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
                     continue
@@ -320,7 +345,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["fs"] = self.fs
             fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
+            fun_test.shared_variables["syslog_level"] = self.syslog
             fun_test.shared_variables["db_log_time"] = self.db_log_time
             fun_test.shared_variables["storage_controller"] = self.storage_controller
 
@@ -394,41 +419,40 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
-
         come_reboot = False
-        if fun_test.shared_variables["ec"]["setup_created"]:
+        if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
-                self.fs = self.fs_obj[0]
+                self.fs = self.fs_objs[0]
                 self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["csr_replay"]:
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
-                self.ec_info = fun_test.shared_variables["ec_info"]
-                self.remote_ip = fun_test.shared_variables["remote_ip"]
-                self.attach_transport = fun_test.shared_variables["attach_transport"]
+                self.blt_details = fun_test.shared_variables["blt_details"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                # Detaching all the EC/LS volumes to the external server
-                """for num in xrange(self.ec_info["num_volumes"]):
+
+                # Deleting the volumes
+                for i in range(0, fun_test.shared_variables["blt_count"], 1):
+                    cur_uuid = fun_test.shared_variables["thin_uuid"][i]
                     command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+                        ctrlr_uuid=self.ctrlr_uuid, ns_id=i + 1, command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
-                # Unconfiguring all the LSV/EC and it's plex volumes
-                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
-                                                              command_timeout=self.command_timeout)
+                    command_result = self.storage_controller.delete_volume(uuid=cur_uuid,
+                                                                           command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                         format(i + 1, cur_uuid))
 
+                # Deleting the controller
                 command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
-                self.storage_controller.disconnect()
-            except Exception as ex:
-                fun_test.critical(str(ex))
-                come_reboot = True
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+
+            except:
+                fun_test.log("Clean-up of volumes failed.")
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -443,6 +467,7 @@ class ECVolumeLevelScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
+
         try:
             if come_reboot:
                 self.fs.fpga_initialize()
@@ -451,11 +476,19 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        self.topology.cleanup()
+        fun_test.log("FS cleanup")
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
+            for fs in fun_test.shared_variables["fs_objs"]:
+                fs.cleanup()
+        else:
+            fun_test.shared_variables["fs"].cleanup()
 
+        self.storage_controller.disconnect()
+        fun_test.sleep("Allowing buffer time before clean-up", 30)
+        self.topology.cleanup()     # Why is this needed?
 
-class ECVolumeLevelTestcase(FunTestCase):
-
+class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def describe(self):
         pass
 
@@ -463,7 +496,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
 
-        # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
         benchmark_file = ""
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -481,26 +513,62 @@ class ECVolumeLevelTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        # Setting the list of numjobs and IO depth combo
+        # TODO: Check if block size is not required
+        if 'fio_jobs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_jobs_iodepth']:
+            benchmark_parsing = False
+            fun_test.critical("Numjobs and IO depth combo to be used for this {} testcase is not available in "
+                              "the {} file".format(testcase, benchmark_file))
+
+        # Setting expected FIO results
+        if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
+                              "testcase is not available in the {} file".format(testcase, benchmark_file))
+
+        if "fio_sizes" in benchmark_dict[testcase]:
+            if len(self.fio_sizes) != len(self.expected_fio_result.keys()):
+                benchmark_parsing = False
+                fun_test.critical("Mismatch in FIO sizes and its benchmarking results")
+        elif "fio_jobs_iodepth" in benchmark_dict[testcase]:
+            if len(self.fio_jobs_iodepth) != len(self.expected_fio_result.keys()):
+                benchmark_parsing = False
+                fun_test.critical("Mismatch in numjobs and IO depth combo and its benchmarking results")
+
+        if 'fio_pass_threshold' not in benchmark_dict[testcase]:
+            self.fio_pass_threshold = .05
+            fun_test.log("Setting passing threshold to {} for this {} testcase, because its not set in the {} file".
+                         format(self.fio_pass_threshold, testcase, benchmark_file))
 
         if not hasattr(self, "num_ssd"):
-            self.num_ssd = 1
+            self.num_ssd = 12
+        if not hasattr(self, "blt_count"):
+            self.blt_count = 12
+
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
+                     format(testcase, self.fio_jobs_iodepth))
+        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
+                     format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
 
         self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.syslog_level = fun_test.shared_variables["syslog_level"]
+        self.syslog = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
-        fun_test.shared_variables["attach_transport"] = self.attach_transport
+        fun_test.shared_variables["blt_count"] = self.blt_count
 
-        self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
+        # New changes
+        fun_test.shared_variables["transport_type"] = self.transport_type
+
+        self.nvme_block_device = self.nvme_device + "0n" + str(self.blt_details["ns_id"])
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
-            self.fs = fun_test.shared_variables["fs_obj"]
+            self.fs = fun_test.shared_variables["fs_objs"]
             self.come_obj = fun_test.shared_variables["come_obj"]
-            self.f1 = fun_test.shared_variables["f1_obj"][0][0]
+            self.f1 = fun_test.shared_variables["f1_objs"][0][0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             self.f1_ips = fun_test.shared_variables["f1_ips"][0]
             self.host_handles = fun_test.shared_variables["host_handles"]
@@ -526,155 +594,183 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
             fun_test.shared_variables["remote_ip"] = self.remote_ip
 
-        if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
-            fun_test.shared_variables["ec"] = {}
-            fun_test.shared_variables["ec"]["setup_created"] = False
-            fun_test.shared_variables["ec"]["nvme_connect"] = False
-            fun_test.shared_variables["ec"]["warmup_io_completed"] = False
-            fun_test.shared_variables["ec_info"] = self.ec_info
-            fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
+        if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
+            fun_test.shared_variables["blt"] = {}
+            fun_test.shared_variables["blt"]["setup_created"] = False
+            fun_test.shared_variables["blt_details"] = self.blt_details
 
+            # Enabling counters
+            """
+            command_result = self.storage_controller.json_execute(verb="enable_counters",
+                                                                  command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+            """
+
+            # Configuring controller IP
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
 
-            (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
-                                                                                           self.command_timeout)
-            fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
-
-            fun_test.log("EC details after configuring EC Volume:")
-            for k, v in self.ec_info.items():
-                fun_test.log("{}: {}".format(k, v))
-
-            # Attaching/Exporting all the EC/LS volumes to the external server
-            self.ctrlr_uuid = utils.generate_uuid()
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                       transport=self.attach_transport,
-                                                                       remote_ip=self.remote_ip,
-                                                                       nqn=self.nvme_subsystem,
-                                                                       port=self.transport_port,
-                                                                       command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"],
-                                 "Create Storage Controller for {} with controller uuid {} on DUT".
-                                 format(self.attach_transport, self.ctrlr_uuid))
-
-            for num in xrange(self.ec_info["num_volumes"]):
-                command_result = self.storage_controller.attach_volume_to_controller(
-                    ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, vol_uuid=self.ec_info["attach_uuid"][num],
+            # Create BLT's
+            self.nvme_block_device = []
+            self.thin_uuid_list = []
+            for i in range(0, self.blt_count, 1):
+                cur_uuid = utils.generate_uuid()
+                self.thin_uuid_list.append(cur_uuid)
+                command_result = self.storage_controller.create_thin_block_volume(
+                    capacity=self.blt_details["capacity"],
+                    block_size=self.blt_details["block_size"],
+                    name="thin_block" + str(i + 1),
+                    uuid=cur_uuid,
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
+                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
+                self.nvme_block_device.append(self.nvme_device + "n" + str(i + 1))
+            fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
+            fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
 
-            fun_test.shared_variables["ec"]["setup_created"] = True
-            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
-
-            # disabling the error_injection for the EC volume
-            command_result = {}
-            command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
-                                                          command_duration=self.command_timeout)
+            # Create TCP controller
+            self.ctrlr_uuid = utils.generate_uuid()
+            command_result = self.storage_controller.create_controller(
+                ctrlr_uuid=self.ctrlr_uuid,
+                transport=unicode.upper(self.transport_type),
+                remote_ip=self.remote_ip,
+                nqn=self.nqn,
+                port=self.transport_port,
+                command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
+            fun_test.test_assert(command_result["status"], "Creating controller for {} with uuid {} on DUT".
+                                 format(self.transport_type, self.ctrlr_uuid))
 
-            # Ensuring that the error_injection got disabled properly
-            fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-            command_result = {}
-            command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
-                                          message="Ensuring error_injection got disabled")
+            # Attach controller to all BLTs
+            for i in range(0, self.blt_count, 1):
+                vol_uuid = fun_test.shared_variables["thin_uuid"][i]
+                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                                 vol_uuid=vol_uuid,
+                                                                                 ns_id=i + 1,
+                                                                                 command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
+                                 format(vol_uuid, self.ctrlr_uuid))
 
-            # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False, command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
+            self.end_host.sudo_command("iptables -F")
+            self.end_host.sudo_command("ip6tables -F")
+            self.end_host.sudo_command("dmesg -c > /dev/null")
 
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+            try:
+                self.end_host.sudo_command("service irqbalance stop")
+                fun_test.sleep("Disable irqbalance", 5)
+                command_result = self.end_host.sudo_command("service irqbalance status")
+                if "inactive" in command_result:
+                    fun_test.log("IRQ balance disabled")
+                else:
+                    fun_test.critical("IRQ Balance still active")
+            except:
+                fun_test.log("irqbalance service not found")
+
+            install_status = self.end_host.install_package("tuned")
+            fun_test.test_assert(install_status, "tuned installed successfully")
+
+            active_profile = self.end_host.sudo_command("tuned-adm active")
+            if "network-throughput" not in active_profile:
+                self.end_host.sudo_command("tuned-adm profile network-throughput")
+
+            command_result = self.end_host.command("lsmod | grep -w nvme")
+            if "nvme" in command_result:
+                fun_test.log("nvme driver is loaded")
+            else:
+                fun_test.log("Loading nvme")
+                self.end_host.modprobe("nvme")
+                self.end_host.modprobe("nvme_core")
+            command_result = self.end_host.lsmod("nvme_tcp")
+            if "nvme_tcp" in command_result:
+                fun_test.log("nvme_tcp driver is loaded")
+            else:
+                fun_test.log("Loading nvme_tcp")
+                self.end_host.modprobe("nvme_tcp")
+                self.end_host.modprobe("nvme_fabrics")
+
+            # Setting the syslog level to 2
+            command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
+            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
+
+            command_result = self.storage_controller.peek("params/syslog/level")
+            fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
                                           message="Checking syslog level")
 
-            if not fun_test.shared_variables["ec"]["nvme_connect"]:
-                # Checking nvme-connect status
-                if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                        self.testbed_config["workarounds"]["enable_funcp"]:
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, self.remote_ip)
-                    else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues), self.remote_ip)
+            fun_test.sleep("x86 Config done", seconds=10)
+            if hasattr(self, "nvme_io_q"):
+                command_result = self.end_host.sudo_command(
+                    "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".
+                        format(unicode.lower(self.transport_type),
+                               self.test_network["f1_loopback_ip"],
+                               str(self.transport_port),
+                               self.nqn,
+                               self.nvme_io_q,
+                               self.remote_ip))
+                fun_test.log(command_result)
+            else:
+                command_result = self.end_host.sudo_command(
+                    "nvme connect -t {} -a {} -s {} -n {} -q {}".
+                        format(unicode.lower(self.transport_type),
+                               self.test_network["f1_loopback_ip"],
+                               str(self.transport_port),
+                               self.nqn,
+                               self.remote_ip))
+                fun_test.log(command_result)
+
+            # Checking that the above created BLT volume is visible to the end host
+            fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
+            for i in range(0, self.blt_count, 1):
+                self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(i + 1)
+                lsblk_output = self.end_host.lsblk()
+                fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
+                fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
+                                                message="{} device type check".format(self.volume_name))
+
+            fun_test.shared_variables["blt"]["setup_created"] = True
+
+            # Pre-conditioning the volume (one time task)
+            self.nvme_block_device_str = ':'.join(self.nvme_block_device)
+            fun_test.shared_variables["nvme_block_device_str"] = self.nvme_block_device_str
+            if self.warm_up_traffic:
+                fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
+                warm_up_fio_cmd_args = {}
+                jobs = ""
+                if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                    for i in range(0, len(self.nvme_block_device)):
+                         jobs += " --name=pre-cond-job-{} --filename={}".format(i + 1, self.nvme_block_device[i])
+                    warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
+                    fio_output = self.end_host.pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
+                                                        **warm_up_fio_cmd_args)
                 else:
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem)
-                    else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
-
-                nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
-                fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
-                fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                              message="NVME Connect Status")
-
-                lsblk_output = self.end_host.lsblk("-b")
-                fun_test.simple_assert(lsblk_output, "Listing available volumes")
-
-                # Checking that the above created BLT volume is visible to the end host
-                self.nvme_block_device_list = []
-                for num in xrange(self.ec_info["num_volumes"]):
-                    volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(num + 1)
-                    for volume_name in lsblk_output:
-                        match = re.search(volume_pattern, volume_name)
-                        if match:
-                            self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(num + 1)
-                            self.nvme_block_device_list.append(self.nvme_block_device)
-                            self.volume_name = self.nvme_block_device.replace("/dev/", "")
-                            fun_test.test_assert_expected(expected=self.volume_name,
-                                                          actual=lsblk_output[volume_name]["name"],
-                                                          message="{} device available".format(self.volume_name))
-                            break
-                    else:
-                        fun_test.test_assert(False, "{} device available".format(self.volume_name))
-                    fun_test.log("NVMe Block Device/s: {}".format(self.nvme_block_device_list))
-
-                fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
-                fun_test.shared_variables["volume_name"] = self.volume_name
-                fun_test.shared_variables["ec"]["nvme_connect"] = True
-
-                self.nvme_block_device_list.sort()
-                self.fio_filename = ":".join(self.nvme_block_device_list)
-                fun_test.shared_variables["self.fio_filename"] = self.fio_filename
-
-            # Executing the FIO command to fill the volume to it's capacity
-            if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
-                fun_test.log("Executing the FIO command to perform sequential write to volume")
-                fio_output = self.end_host.pcie_fio(filename=self.fio_filename, cpus_allowed=self.numa_cpus,
-                                                    **self.warm_up_fio_cmd_args)
-                fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                    fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
                 fun_test.test_assert(fio_output, "Pre-populating the volume")
+                fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
+                               self.iter_interval)
 
-                fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
     def run(self):
 
         testcase = self.__class__.__name__
-        test_method = testcase[4:]
+        test_method = testcase[3:]
 
-        if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
-            self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
-            self.volume_name = fun_test.shared_variables["volume_name"]
-            self.fio_filename = fun_test.shared_variables["self.fio_filename"]
-        else:
-            fun_test.simple_assert(False, "Setup Section Status")
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
+        # & read only modes
+        fio_result = {}
+        fio_output = {}
+        internal_result = {}
+        initial_volume_status = {}
+        final_volume_status = {}
+        diff_volume_stats = {}
+        initial_stats = {}
+        final_stats = {}
+        diff_stats = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
@@ -686,327 +782,212 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
-        fio_result = {}
-        fio_output = {}
+        for combo in self.fio_jobs_iodepth:
+            fio_result[combo] = {}
+            fio_output[combo] = {}
+            internal_result[combo] = {}
+            initial_volume_status[combo] = {}
+            final_volume_status[combo] = {}
+            diff_volume_stats[combo] = {}
+            initial_stats[combo] = {}
+            final_stats[combo] = {}
+            diff_stats[combo] = {}
 
-        start_stats = True
+            for mode in self.fio_modes:
+                tmp = combo.split(',')
+                fio_block_size = self.fio_bs
+                fio_numjobs = tmp[0].strip('() ')
+                fio_iodepth = tmp[1].strip('() ')
+                fio_result[combo][mode] = True
+                internal_result[combo][mode] = True
+                row_data_dict = {}
+                row_data_dict["mode"] = mode
+                row_data_dict["block_size"] = fio_block_size
+                row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_numjobs)
+                row_data_dict["num_jobs"] = fio_numjobs
+                file_size_in_gb = self.blt_details["capacity"] / 1073741824
+                row_data_dict["size"] = str(file_size_in_gb) + "GB"
 
-        fio_job_args = ""
-        for index, volume_name in enumerate(self.nvme_block_device_list):
-            fio_job_args += " --name=job{} --filename={}".format(index, volume_name)
-        for iodepth in self.fio_iodepth:
-            fio_result[iodepth] = {}
-            fio_output[iodepth] = {}
-            fio_cmd_args = {}
-            fio_iodepth = iodepth / len(self.nvme_block_device_list)
-            fio_num_jobs = len(self.nvme_block_device_list)
+                fun_test.log("Running FIO {} only test for block size: {} using num_jobs: {}, IO depth: {}".
+                             format(mode, fio_block_size, fio_numjobs, fio_iodepth))
 
-            if "multiple_jobs" in self.fio_cmd_args and self.fio_cmd_args["multiple_jobs"].count("name") > 0:
-                global_num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
-                fio_num_jobs = fio_num_jobs / global_num_jobs
-            else:
-                if iodepth <= self.total_numa_cpus:
-                    global_num_jobs = iodepth / len(self.nvme_block_device_list)
-                    fio_iodepth = 1
+                if int(fio_numjobs) == 1:
+                    cpus_allowed = "1"
+                elif int(fio_numjobs) == 4:
+                    cpus_allowed = "1-4"
+                elif int(fio_numjobs) > 4:
+                    cpus_allowed = "1-19,40-59"
+
+                # Flush cache before read test
+                self.end_host.sudo_command("sync")
+                self.end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
+
+                """
+                # Check EQM stats before test
+                self.eqm_stats_before = {}
+                self.eqm_stats_before = self.storage_controller.peek(props_tree="stats/eqm")
+
+                # Get iostat results
+                self.iostat_host_thread = self.end_host.clone()
+                iostat_thread = fun_test.execute_thread_after(time_in_seconds=1,
+                                                              func=get_iostat,
+                                                              host_thread=self.iostat_host_thread,
+                                                              sleep_time=self.fio_cmd_args["runtime"] / 4,
+                                                              iostat_interval=self.iostat_details["interval"],
+                                                              iostat_iter=(self.fio_cmd_args["runtime"] / 4) + 1)
+                """
+
+                fun_test.log("Running FIO...")
+                fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
+                fio_output[combo][mode] = {}
+                if hasattr(self, "test_blt_count") and self.test_blt_count == 1:
+                    fio_filename = fun_test.shared_variables["nvme_block_device_list"][0]
                 else:
-                    io_factor = 2
-                    while True:
-                        if (iodepth / io_factor) <= self.total_numa_cpus:
-                            global_num_jobs = (iodepth / len(self.nvme_block_device_list)) / io_factor
-                            fio_iodepth = io_factor
-                            break
-                        else:
-                            io_factor += 2
+                    fio_filename = fun_test.shared_variables["nvme_block_device_str"]
+                fio_output[combo][mode] = self.end_host.pcie_fio(filename=fio_filename,
+                                                                 numjobs=fio_numjobs,
+                                                                 rw=mode,
+                                                                 bs=fio_block_size,
+                                                                 iodepth=fio_iodepth,
+                                                                 name=fio_job_name,
+                                                                 cpus_allowed=cpus_allowed,
+                                                                 **self.fio_cmd_args)
 
-            fio_result[iodepth] = True
-            row_data_dict = {}
-            row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
-            size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
-            row_data_dict["size"] = str(size) + "G"
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fio_output[combo][mode])
+                fun_test.test_assert(fio_output[combo][mode], "Fio {} test for numjobs {} & iodepth {}".
+                                     format(mode, fio_numjobs, fio_iodepth))
 
-            fun_test.sleep("Waiting in between iterations", self.iter_interval)
+                """
+                self.eqm_stats_after = {}
+                self.eqm_stats_after = self.storage_controller.peek(props_tree="stats/eqm")
+                
+                for field, value in self.eqm_stats_before["data"].items():
+                    current_value = self.eqm_stats_after["data"][field]
+                    if (value != current_value) and (field != "incoming BN msg valid"):
+                        # fun_test.test_assert_expected(value, current_value, "EQM {} stat mismatch".format(field))
+                        stat_delta = current_value - value
+                        fun_test.critical("There is a mismatch in {} stat, delta {}".
+                                          format(field, stat_delta))
+                """
 
-            if iodepth != 256:
-                if "runtime" not in self.fio_cmd_args["multiple_jobs"]:
-                    self.fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}".format(self.fio_runtime)
-                    self.fio_cmd_args["timeout"] = self.fio_run_timeout
-            else:
-                self.fio_cmd_args["multiple_jobs"] = re.sub(r"--runtime=\d+", "", self.fio_cmd_args["multiple_jobs"])
-                self.fio_cmd_args["multiple_jobs"] = re.sub(r"--time_based", "", self.fio_cmd_args["multiple_jobs"])
-                self.fio_cmd_args["timeout"] = self.fio_size_timeout
-            # Collecting mpstat during IO
-            mpstat_cpu_list = self.mpstat_args["cpu_list"]  # To collect mpstat for all CPU's: recommended
-            # mpstat_cpu_list = self.numa_cpus  # To collect mpstat for NUMA CPU's only
-            fun_test.log("Collecting mpstat")
-            if "runtime" not in self.fio_cmd_args:
-                mpstat_count = self.fio_cmd_args["timeout"] / self.mpstat_args["interval"]
-            elif "runtime" in self.fio_cmd_args and "ramp_time" in self.fio_cmd_args:
-                mpstat_count = ((self.fio_cmd_args["runtime"] + self.fio_cmd_args["ramp_time"]) /
-                                self.mpstat_args["interval"])
-            elif "multiple_jobs" in self.fio_cmd_args:
-                match = re.search("--ramp_time=(\d+).*--runtime=(\d+)|--runtime=(\d+).*--ramp_time=(\d+)",
-                                  self.fio_cmd_args["multiple_jobs"])
-                if match:
-                    if match.group(1) != None:
-                        ramp_time = match.group(1)
-                    if match.group(2) != None:
-                        runtime = match.group(2)
-                    if match.group(3) != None:
-                        runtime = match.group(3)
-                    if match.group(4) != None:
-                        ramp_time = match.group(4)
-                    mpstat_count = (int(runtime) + int(ramp_time)) / self.mpstat_args["interval"]
-                else:
-                    start_stats = False
-            else:
-                start_stats = False
+                """
+                # Boosting the fio output with the testbed performance multiplier
+                multiplier = tb_config["dut_info"][0]["perf_multiplier"]
+                for op, stats in fio_output[combo][mode].items():
+                    for field, value in stats.items():
+                        if field == "iops":
+                            fio_output[combo][mode][op][field] = int(round(value * multiplier))
+                        if field == "bw":
+                            # Converting the KBps to MBps
+                            fio_output[combo][mode][op][field] = int(round(value * multiplier / 1000))
+                        if field == "latency":
+                            fio_output[combo][mode][op][field] = int(round(value / multiplier))
+                fun_test.log("FIO Command Output after multiplication:")
+                """
+                fun_test.log(fio_output[combo][mode])
 
-            if start_stats:
-                mpstat_post_fix_name = "mpstat_iodepth_{}.txt".format(row_data_dict["iodepth"])
-                # vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(row_data_dict["iodepth"])
-                mpstat_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=mpstat_post_fix_name)
-                # vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                               self.iter_interval)
 
-                mpstat_pid = self.end_host.mpstat(cpu_list=mpstat_cpu_list, output_file=self.mpstat_args["output_file"],
-                                                  interval=self.mpstat_args["interval"], count=int(mpstat_count))
-                """thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
-                                                          storage_controller=self.storage_controller,
-                                                          output_file=vp_util_artifact_file,
-                                                          interval=self.vp_util_args["interval"],
-                                                          count=int(mpstat_count))"""
-                # collect_vp_utils_stats(self.storage_controller, vp_util_artifact_file,
-                #                        interval=30, count=4)
-            else:
-                fun_test.critical("Not starting the stats collection because of lack of interval and count details")
+                # Comparing the FIO results with the expected value for the current block size and IO depth combo
+                for op, stats in self.expected_fio_result[combo][mode].items():
+                    for field, value in stats.items():
+                        actual = fio_output[combo][mode][op][field]
+                        row_data_dict[op + field] = actual
+                        fun_test.log("raw_data[op + field] is: {}".format(row_data_dict[op + field]))
 
-            # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-            if "bs" in self.fio_cmd_args:
-                fio_block_size = self.fio_cmd_args["bs"]
-            else:
-                fio_block_size = "Mixed"
+                row_data_dict["fio_job_name"] = fio_job_name
 
-            if "rw" in self.fio_cmd_args:
-                row_data_dict["mode"] = self.fio_cmd_args["rw"]
-            else:
-                row_data_dict["mode"] = "Combined"
+                # Building the table row for this variation for both the script table and performance dashboard
+                row_data_list = []
+                for i in table_data_cols:
+                    if i not in row_data_dict:
+                        row_data_list.append(-1)
+                    else:
+                        row_data_list.append(row_data_dict[i])
 
-            row_data_dict["block_size"] = fio_block_size
-
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
-                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(row_data_dict["iodepth"]))
-            fio_output[iodepth] = {}
-            if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus,
-                                                                                          global_num_jobs, fio_iodepth,
-                                                                                          self.ec_info["capacity"],
-                                                                                          (100 / global_num_jobs))
-                fio_cmd_args["multiple_jobs"] += fio_job_args
-                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
-                                                             timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
-            else:
-                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename, numjobs=fio_num_jobs,
-                                                             iodepth=fio_iodepth, name=fio_job_name,
-                                                             cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
-            fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth]))
-            fun_test.test_assert(fio_output[iodepth],
-                                 "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
-                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth,
-                                         fio_num_jobs * global_num_jobs))
-
-            for op, stats in fio_output[iodepth].items():
-                for field, value in stats.items():
-                    if field == "iops":
-                        fio_output[iodepth][op][field] = int(round(value))
-                    if field == "bw":
-                        # Converting the KBps to MBps
-                        fio_output[iodepth][op][field] = int(round(value / 1000))
-                    if field == "latency":
-                        fio_output[iodepth][op][field] = int(round(value))
-                    row_data_dict[op + field] = fio_output[iodepth][op][field]
-
-            if not fio_output[iodepth]:
-                fio_result[iodepth] = False
-                fun_test.critical("No output from FIO test, hence moving to the next variation")
-                continue
-
-            row_data_dict["fio_job_name"] = fio_job_name
-
-            # Building the table raw for this variation
-            row_data_list = []
-            for i in table_data_cols:
-                if i not in row_data_dict:
-                    row_data_list.append(-1)
-                else:
-                    row_data_list.append(row_data_dict[i])
-            table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
-
-            # Checking if mpstat process is still running
-            mpstat_pid_check = self.end_host.get_process_id("mpstat")
-            if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid):
-                self.end_host.kill_process(process_id=mpstat_pid)
-            mpstat_data = self.end_host.read_file(file_name=self.mpstat_args["output_file"])
-            with open(mpstat_artifact_file, 'a') as f:
-                f.writelines(mpstat_data)
-
-            fun_test.add_auxillary_file(description="Host Processor Statistics - IO depth {}".
-                                        format(row_data_dict["iodepth"]),
-                                        filename=mpstat_artifact_file)
-            """fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=vp_util_artifact_file)"""
+                table_data_rows.append(row_data_list)
+                post_results("Multi_vol_TCP", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="Single/Multiple Volume(s) over TCP Perf Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
-        fun_test.log(fio_result)
         test_result = True
-        for iodepth in self.fio_iodepth:
-            if not fio_result[iodepth]:
-                test_result = False
+        fun_test.log(fio_result)
+        fun_test.log(internal_result)
+        for combo in self.fio_jobs_iodepth:
+            for mode in self.fio_modes:
+                if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                    test_result = False
 
-        fun_test.test_assert(test_result, self.summary)
+        fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
         pass
 
+class SingleBLTFioRead(MultiBLTVolumePerformanceTestcase):
 
-class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of Multiple"
-                                      " EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 8k transfer size Random read/write IOPS
-        """)
+                              summary="Random Read performance for 1 volumes on TCP "
+                                      "with different levels of numjobs & iodepth & block size 4K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
 
-    def setup(self):
-        super(RandReadWrite8kBlocks, self).setup()
+class SingleBLTFioRandRead(MultiBLTVolumePerformanceTestcase):
 
-    def run(self):
-        super(RandReadWrite8kBlocks, self).run()
-
-    def cleanup(self):
-        super(RandReadWrite8kBlocks, self).cleanup()
-
-
-class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
-                                      "of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 1024k transfer size Sequential write IOPS
-        """)
+                              summary="Random Read performance for 1 volumes on TCP "
+                                      "with different levels of numjobs & iodepth & block size 4K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
 
-    def setup(self):
-        super(SequentialReadWrite1024kBlocks, self).setup()
+class MultiBLTFioRead12(MultiBLTVolumePerformanceTestcase):
 
-    def run(self):
-        super(SequentialReadWrite1024kBlocks, self).run()
-
-    def cleanup(self):
-        super(SequentialReadWrite1024kBlocks, self).cleanup()
-
-
-class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of Multiple"
-                                      " EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for Integrated Model read/write IOPS
-        """)
+                              summary="Sequential Read performance for 12 volumes on TCP "
+                                      "with different levels of numjobs & iodepth & block size 4K",
+                              steps='''
+        1. Create 12 BLT volumes on F1 attached with 12 SSD
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
 
-    def setup(self):
-        super(MixedRandReadWriteIOPS, self).setup()
+class MultiBLTFioRandRead12(MultiBLTVolumePerformanceTestcase):
 
-    def run(self):
-        super(MixedRandReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(MixedRandReadWriteIOPS, self).cleanup()
-
-
-class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for OLTP model read/write IOPS
-        """)
-
-    def setup(self):
-        super(OLTPModelReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(OLTPModelReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(OLTPModelReadWriteIOPS, self).cleanup()
-
-
-class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of Multiple EC volume",
-                              steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for OLAP model Random read/write IOPS
-        """)
-
-    def setup(self):
-        super(OLAPModelReadWriteIOPS, self).setup()
-
-    def run(self):
-        super(OLAPModelReadWriteIOPS, self).run()
-
-    def cleanup(self):
-        super(OLAPModelReadWriteIOPS, self).cleanup()
-
+                              summary="Random Read performance for 12 volumes on TCP "
+                                      "with different levels of numjobs & iodepth & block size of 4K",
+                              steps='''
+        1. Create 12 BLT volumes on FS attached with 12 SSD
+        2. Create a storage controller for TCP and attach above volume to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
 
 if __name__ == "__main__":
-    ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(MixedRandReadWriteIOPS())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWri`teIOPS())
-    ecscript.run()
+
+    bltscript = MultiBLTVolumePerformanceScript()
+    bltscript.add_test_case(SingleBLTFioRead())
+    bltscript.add_test_case(SingleBLTFioRandRead())
+    bltscript.add_test_case(MultiBLTFioRandRead12())
+    bltscript.run()
