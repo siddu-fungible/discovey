@@ -77,15 +77,10 @@ def describe_table(request, table_name):
             choices = None
             verbose_name = "verbose_name"
             if hasattr(field, "choices"):
-                choices = field.choices
-                if editing_chart:
-                    if field.column.startswith("input_") and (not field.column.startswith("input_date_time")):
-                        all_values = metric_model.objects.values(field.column).distinct()
-                        choices = []
-
-                        for index, value in enumerate(all_values):
-                            choices.append((index, value[field.column]))
-
+                all_values = metric_model.objects.values(field.column).distinct()
+                choices = []
+                for index, value in enumerate(all_values):
+                    choices.append((index, value[field.column]))
                 choices.append((len(choices), "any"))
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
@@ -541,7 +536,7 @@ def update_chart(request):
     if "source" in request_json:
         source = request_json["source"]
     base_line_date = datetime(year=2018, month=4, day=1)
-    if "base_line_date" in request_json:
+    if "base_line_date" in request_json and request_json["base_line_date"]:
         base_line_date = request_json["base_line_date"]
         base_line_date = get_time_from_timestamp(base_line_date)
     try:
@@ -576,10 +571,12 @@ def update_chart(request):
         global_settings.cache_valid = False
         global_settings.save()
     except ObjectDoesNotExist:
+        metric_id = LastMetricId.get_next_id()
         c = MetricChart(metric_model_name=model_name,
                         chart_name=chart_name,
                         data_sets=json.dumps(data_sets),
-                        metric_id=LastMetricId.get_next_id())
+                        metric_id=metric_id,
+                        internal_chart_name=metric_id)
         if leaf:
             c.leaf = leaf
         if owner_info:
@@ -590,7 +587,7 @@ def update_chart(request):
             c.base_line_date = base_line_date
         c.save()
         invalidate_goodness_cache()
-    return "Ok"
+    return c.metric_id
 
 def update_expected(chart, expected_operation):
     if expected_operation:

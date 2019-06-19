@@ -67,7 +67,7 @@
     <div *ngIf="showOutputSelection">
       <table class="table table-bordered">
         <tr>
-          <td>Name</td>
+          <td>Name:</td>
           <td>
             <input type="text" minlength="1" maxlength="50" required="true"
                    [(ngModel)]="addDataSet.name"/>
@@ -79,39 +79,45 @@
           <!--<th>Expected</th>-->
         </tr>
         <tr>
+          <td>
+            Output:
+          </td>
+          <td>
+            Name:
+            <select [(ngModel)]="addDataSet.output.name" (change)="fetchUnits(addDataSet.output.name)">
+              <option *ngFor="let output of outputOptions">{{ output.name }}</option>
+
+            </select> &nbsp;
+            Min:
+            <input type="number" min="0" max="999999" required
+                   [(ngModel)]="addDataSet.output.min"/>&nbsp;
+            Max:
+            <input type="number" min="0" max="999999" required
+                   [(ngModel)]="addDataSet.output.max"/>&nbsp;
+            Expected:
+            <input type="number" min="0" max="999999" required
+                   [(ngModel)]="addDataSet.output.expected"/>&nbsp;
+            Unit:
+            <select [(ngModel)]="addDataSet.output.unit">
+              <option *ngFor="let unit of outputUnits">{{ unit }}</option>
+
+            </select> &nbsp;
+          </td>
+        </tr>
+        <tr *ngFor="let input of addDataSet.inputs">
           <!--<td>-->
             <!--<input type="text" minlength="1" maxlength="50" required="true"-->
                    <!--[(ngModel)]="addDataSet.name"/>-->
           <!--</td>-->
-          <th [attr.colspan]="addDataSet.inputs.length" style="text-align:center;">Input</th>
-          <td *ngFor="let input of addDataSet.inputs"><label>{{ input.name }}</label>
+          <td>
+            <label>{{ input.name }}:&nbsp;</label>
+          </td>
+          <td>
             <select [(ngModel)]="input.selectedChoice">
               <option *ngFor="let choice of input.choices">
                 {{ choice }}
               </option>
-            </select>
-          </td>
-
-
-          <td>
-            <select [(ngModel)]="addDataSet.output.name">
-              <option *ngFor="let output of outputOptions">{{ output }}</option>
-
-            </select>
-          </td>
-
-          <td>
-            <input type="number" min="0" max="999999" required
-                   [(ngModel)]="addDataSet.output.min"/>
-          </td>
-
-          <td>
-            <input type="number" min="0" max="999999" required
-                   [(ngModel)]="addDataSet.output.max"/>
-          </td>
-          <td>
-            <input type="number" min="0" max="999999" required
-                   [(ngModel)]="addDataSet.output.expected"/>
+            </select>&nbsp;
           </td>
         </tr>
       </table>
