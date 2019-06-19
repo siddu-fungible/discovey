@@ -3,6 +3,7 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 import re
 from prettytable import PrettyTable
 import time
+from collections import OrderedDict
 
 DPCSH_COMMAND_TIMEOUT = 5
 
@@ -233,27 +234,35 @@ def build_simple_table(data, column_headers=[]):
 
 def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3, non_zero_stats_only=True,
                            command_timeout=DPCSH_COMMAND_TIMEOUT):
+    print "****** Inside collect_vp_utils_stats ******"
     output = False
     column_headers = ["VP", "Utilization"]
     try:
         with open(output_file, 'a') as f:
             timer = FunTimer(max_time=interval * (count + 1))
             while not timer.is_expired():
+                print "****** Inside Timer Loop ******"
                 lines = []
                 dpcsh_result = storage_controller.debug_vp_util(command_timeout=command_timeout)
                 fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                vp_util = dpcsh_result["data"]
+                if dpcsh_result["data"] is not None:
+                    vp_util = dpcsh_result["data"]
+                else:
+                    vp_util = {}
 
                 if non_zero_stats_only:
-                    for key, value in vp_util.iteritems():
-                        if value == 0.0 or value == 0:
-                            del vp_util[key]
+                    filtered_vp_util = OrderedDict()
+                    for key, value in sorted(vp_util.iteritems()):
+                        if value != 0.0 or value != 0:
+                            filtered_vp_util[key] = value
+                    vp_util = filtered_vp_util
 
                 table_data = build_simple_table(data=vp_util, column_headers=column_headers)
                 lines.append("\n########################  {} ########################\n".format(time.ctime))
                 lines.append(table_data.get_string())
                 lines.append("\n\n")
                 f.writelines(lines)
+                fun_test.sleep("for the next iteration", seconds=interval)
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
