@@ -1018,8 +1018,6 @@ def fetch_charts(request):
     result = []
     charts = MetricChart.objects.filter(metric_model_name=model_name, owner_info=owner)
     for chart in charts:
-        new_dict = {}
-        new_dict["chartName"] = chart.chart_name
-        new_dict["metricId"] = chart.metric_id
-        result.append(new_dict)
+        chartName = chart.chart_name + "/" + str(chart.metric_id)
+        result.append(chartName)
     return result

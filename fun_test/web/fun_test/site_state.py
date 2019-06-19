@@ -98,7 +98,7 @@ class SiteState():
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
             # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
-            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
+            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["label"])
             m.chart_name = metric["label"]
             m.save()
             if description and not m.description:
