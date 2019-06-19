@@ -81,10 +81,11 @@ class SiteState():
         all_metrics_chart = None
         try:
             all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
-                                                        chart_name="All metrics")
+                                                        internal_chart_name="All metrics")
         except ObjectDoesNotExist:
             all_metrics_chart = MetricChart(metric_model_name="MetricContainer",
                                             chart_name="All metrics",
+                                            internal_chart_name="All metrics",
                                             leaf=False, metric_id=LastMetricId.get_next_id())
         m = None
         children = []
@@ -98,7 +99,7 @@ class SiteState():
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
             # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
-            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["label"])
+            m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
             m.chart_name = metric["label"]
             m.save()
             if description and not m.description:
@@ -107,6 +108,7 @@ class SiteState():
 
         except ObjectDoesNotExist:
             m = MetricChart(metric_model_name="MetricContainer",
+                                internal_chart_name=metric["name"],
                                 chart_name=metric["label"],
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
                                 description=description)
@@ -154,6 +156,7 @@ class SiteState():
             metrics = json.load(f)
             all_metrics_metric = {
                 "metric_model_name": "MetricContainer",
+                "name": "All metrics",
                 "label": "All metrics",
                 "children": [],
                 "weight": 0

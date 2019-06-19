@@ -67,18 +67,23 @@
     <div *ngIf="showOutputSelection">
       <table class="table table-bordered">
         <tr>
-          <th>Name</th>
-          <th [attr.colspan]="addDataSet.inputs.length" style="text-align:center;">Input</th>
-          <th>Output</th>
-          <th>Min</th>
-          <th>Max</th>
-          <th>Expected</th>
-        </tr>
-        <tr>
+          <td>Name</td>
           <td>
             <input type="text" minlength="1" maxlength="50" required="true"
                    [(ngModel)]="addDataSet.name"/>
           </td>
+          <!--<th [attr.colspan]="addDataSet.inputs.length" style="text-align:center;">Input</th>-->
+          <!--<th>Output</th>-->
+          <!--<th>Min</th>-->
+          <!--<th>Max</th>-->
+          <!--<th>Expected</th>-->
+        </tr>
+        <tr>
+          <!--<td>-->
+            <!--<input type="text" minlength="1" maxlength="50" required="true"-->
+                   <!--[(ngModel)]="addDataSet.name"/>-->
+          <!--</td>-->
+          <th [attr.colspan]="addDataSet.inputs.length" style="text-align:center;">Input</th>
           <td *ngFor="let input of addDataSet.inputs"><label>{{ input.name }}</label>
             <select [(ngModel)]="input.selectedChoice">
               <option *ngFor="let choice of input.choices">
