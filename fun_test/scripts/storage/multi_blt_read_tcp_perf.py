@@ -987,6 +987,7 @@ class MultiBLTFioRandRead12(MultiBLTVolumePerformanceTestcase):
 if __name__ == "__main__":
 
     bltscript = MultiBLTVolumePerformanceScript()
+    bltscript.add_test_case(SingleBLTFioRead())
     bltscript.add_test_case(SingleBLTFioRandRead())
     bltscript.add_test_case(MultiBLTFioRandRead12())
     bltscript.run()
