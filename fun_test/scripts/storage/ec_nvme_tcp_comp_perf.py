@@ -3,7 +3,7 @@ from lib.fun.fs import Fs
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
-from ec_perf_helper import *
+from storage_helper import *
 import fun_global
 
 '''
@@ -86,8 +86,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["db_log_time"] = get_current_time()
 
         # Configuring Linux host
-        '''fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
-                             "End Host {} is up".format(self.end_host.host_ip))'''
+        fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
+                             "End Host {} is up".format(self.end_host.host_ip))
 
         configure_endhost_interface(end_host=self.end_host,
                                     test_network=test_network,

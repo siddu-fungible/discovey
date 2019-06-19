@@ -88,14 +88,14 @@
       "direct": 1,
       "prio": 0,
       "runtime": 300,
-      "timeout": 330
+      "timeout": 305
     },
     "fio_modes": [
       "read",
       "randread"
     ],
     "fio_numjobs_iodepth": [
-      "(8, 1)"
+      "(8, 8)"
     ],
     "fio_job_name": "ec_nvme_tcp",
     "test_parameters": [
