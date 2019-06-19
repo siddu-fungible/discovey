@@ -95,7 +95,7 @@
       "randread"
     ],
     "fio_numjobs_iodepth": [
-      "(8, 8)"
+      "(16, 8)"
     ],
     "fio_job_name": "ec_nvme_tcp",
     "test_parameters": [
