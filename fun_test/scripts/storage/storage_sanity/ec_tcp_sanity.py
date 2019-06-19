@@ -81,8 +81,8 @@ class ECVolumeSanityScript(FunTestScript):
 
         # configure end host
         # Ensure host is up
-        # fun_test.test_assert(self.end_host.reboot(max_wait_time=self.reboot_timeout),
-        #                     message="End Host is up")
+        fun_test.test_assert(self.end_host.reboot(max_wait_time=self.reboot_timeout),
+                             message="End Host is up")
 
         # end host network interface
         configure_endhost_interface(end_host=end_host, test_network=test_network,
