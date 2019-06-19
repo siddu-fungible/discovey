@@ -700,23 +700,34 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_output[iodepth] = {}
             fio_cmd_args = {}
             fio_iodepth = iodepth / len(self.nvme_block_device_list)
+            fio_num_jobs = len(self.nvme_block_device_list)
 
             if "multiple_jobs" in self.fio_cmd_args and self.fio_cmd_args["multiple_jobs"].count("name") > 0:
-                num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
-                fio_num_jobs = fio_num_jobs / num_jobs
+                global_num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
+                fio_num_jobs = fio_num_jobs / global_num_jobs
             else:
-                num_jobs = 1
-                fio_num_jobs = len(self.nvme_block_device_list)
+                if iodepth <= self.total_numa_cpus:
+                    global_num_jobs = iodepth / len(self.nvme_block_device_list)
+                    fio_iodepth = 1
+                else:
+                    io_factor = 2
+                    while True:
+                        if (iodepth / io_factor) <= self.total_numa_cpus:
+                            global_num_jobs = (iodepth / len(self.nvme_block_device_list)) / io_factor
+                            fio_iodepth = io_factor
+                            break
+                        else:
+                            io_factor += 2
 
             fio_result[iodepth] = True
             row_data_dict = {}
-            row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_num_jobs)
+            row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
             size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
             row_data_dict["size"] = str(size) + "G"
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
-            if iodepth != 64:
+            if iodepth != 256:
                 if "runtime" not in self.fio_cmd_args["multiple_jobs"]:
                     self.fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}".format(self.fio_runtime)
                     self.fio_cmd_args["timeout"] = self.fio_run_timeout
@@ -783,12 +794,14 @@ class ECVolumeLevelTestcase(FunTestCase):
             row_data_dict["block_size"] = fio_block_size
 
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
-                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs))
+                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
             fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(int(fio_iodepth) * int(fio_num_jobs)))
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus, num_jobs,
-                                                                                          fio_iodepth)
+                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus,
+                                                                                          global_num_jobs, fio_iodepth,
+                                                                                          self.ec_info["capacity"],
+                                                                                          (100 / global_num_jobs))
                 fio_cmd_args["multiple_jobs"] += fio_job_args
                 fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
                                                              timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
@@ -799,7 +812,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth]))
             fun_test.test_assert(fio_output[iodepth],
                                  "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
-                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs))
+                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth,
+                                         fio_num_jobs * global_num_jobs))
 
             for op, stats in fio_output[iodepth].items():
                 for field, value in stats.items():
