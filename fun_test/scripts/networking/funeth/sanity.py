@@ -407,7 +407,7 @@ class FunethTestScpBase(FunTestCase):
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
-        tmp_filename = '/tmp/funeth_sanity_scp_test_file'  # TODO: Create file under job folder
+        tmp_filename = '{}/funeth_sanity_scp_test_file'.format(fun_test.get_logs_directory())
         fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, tmp_filename))
         with open(tmp_filename, 'w') as f:
             f.write(content)
