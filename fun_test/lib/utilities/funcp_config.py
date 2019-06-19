@@ -381,14 +381,14 @@ class FunControlPlaneBringup:
 
     def add_routes_on_f1(self, routes_dict):
         self._get_docker_names()
+        linux_obj = object
         for docker_name in self.docker_names:
-            linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
             routes = routes_dict[docker_name.rstrip()]
             for num in routes:
                 try:
-                    linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+                    linux_obj = FunCpDockerContainer(name=docker_name.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
+                                                     ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                                     ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
                     fun_test.log("")
                     fun_test.log("======================")
                     fun_test.log("Add static route on %s" % docker_name)
