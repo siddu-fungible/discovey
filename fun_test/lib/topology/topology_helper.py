@@ -37,11 +37,6 @@ class TopologyHelper:
         return self.expanded_topology
 
     @fun_test.safe
-    def get_available_duts(self):
-        if not self.expanded_topology:
-            self.expanded_topology = self.get_expanded_topology()
-
-    @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
 
