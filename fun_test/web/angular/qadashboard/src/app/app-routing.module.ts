@@ -66,7 +66,7 @@ const routes: Routes = [
   { path: 'performance/admin/:mode/:modelName/:metricId', component: CreateChartComponent},
   { path: 'performance/admin/:mode/:modelName', component: CreateChartComponent},
   { path: 'performance/admin', component: AdminComponent},
-  { path: 'metrics/score_table/:metricId', component: ScoresTableComponent},
+  { path: 'performance/score_table/:metricId', component: ScoresTableComponent},
 ];
 
 @NgModule({
