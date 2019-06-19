@@ -81,7 +81,10 @@ export class RegressionService implements OnInit{
   }
 
   getPrettyLocalizeTime(t) {
-    return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    let localTime = this.convertToLocalTimezone(t);
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
 
   getTestCaseExecution(executionId) {

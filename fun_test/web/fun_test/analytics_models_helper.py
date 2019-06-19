@@ -53,6 +53,7 @@ def get_data_collection_time(tag=None):
                                                             value=value, tag=tag)
             except ObjectDoesNotExist:
                 data_collection_time = _update_run_time(tag=tag)
+        fun_test.log("The returned date time is {}".format(str(data_collection_time)))
         return data_collection_time
     else:
         result = get_current_time()

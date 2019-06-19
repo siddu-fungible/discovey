@@ -14,7 +14,7 @@ tb_config = {
     "dut_info": {
         0: {
             "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test --serial sku=SKU_FS1600_0 --all_100g"
-                       " --dis-stats --dpc-server --dpc-uart --csr-replay --nofreeze",
+                       " --dpc-server --dpc-uart --csr-replay --nofreeze",
             "f1_ip": "29.1.1.1",
             "tcp_port": 1099,
             "perf_multiplier": 1

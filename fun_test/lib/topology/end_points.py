@@ -78,19 +78,17 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
         self.reboot_worker.start()
         return True
 
-    def is_ready(self):
+    def is_ready(self, max_wait_time=300):
         instance_ready = False
         if self.reboot_worker and self.reboot_worker.work_complete:
-            if not self.reboot_worker.result:
+            if self.reboot_worker.result:
                 host_instance = self.get_host_instance()
                 ipmi_details = None
                 if host_instance.extra_attributes:
                     if "ipmi_info" in host_instance.extra_attributes:
                         ipmi_details = host_instance.extra_attributes["ipmi_info"]
-                instance_ready = host_instance.ensure_host_is_up(max_wait_time=240, ipmi_details=ipmi_details)
+                instance_ready = host_instance.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
                 host_instance.lspci(grep_filter="1dad")
-            else:
-                instance_ready = self.reboot_worker.result
         return instance_ready
 
 

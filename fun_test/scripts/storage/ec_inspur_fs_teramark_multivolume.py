@@ -277,7 +277,7 @@ class ECVolumeLevelScript(FunTestScript):
             # Ensuring connectivity from Host to F1's
             for key in self.host_handles:
                 for index, ip in enumerate(self.f1_ips):
-                    ping_status = self.host_handles[key].ping(dst=ip)
+                    ping_status = self.host_handles[key].ping(dst=ip, max_percentage_loss=80)
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                          format(key, self.funcp_spec[0]["container_names"][index], ip))
 
@@ -440,7 +440,7 @@ class ECVolumeLevelScript(FunTestScript):
                     self.come_obj[index].command("sudo rmmod funeth")
                     fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
                                                   message="funeth module is unloaded")
-            except:
+            except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
         try:
@@ -451,7 +451,6 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
 
@@ -691,7 +690,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fio_result = {}
         fio_output = {}
 
-        start_mpstat = True
+        start_stats = True
 
         fio_job_args = ""
         for index, volume_name in enumerate(self.nvme_block_device_list):
@@ -701,23 +700,34 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_output[iodepth] = {}
             fio_cmd_args = {}
             fio_iodepth = iodepth / len(self.nvme_block_device_list)
+            fio_num_jobs = len(self.nvme_block_device_list)
 
             if "multiple_jobs" in self.fio_cmd_args and self.fio_cmd_args["multiple_jobs"].count("name") > 0:
-                num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
-                fio_num_jobs = fio_num_jobs / num_jobs
+                global_num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
+                fio_num_jobs = fio_num_jobs / global_num_jobs
             else:
-                num_jobs = 1
-                fio_num_jobs = len(self.nvme_block_device_list)
+                if iodepth <= self.total_numa_cpus:
+                    global_num_jobs = iodepth / len(self.nvme_block_device_list)
+                    fio_iodepth = 1
+                else:
+                    io_factor = 2
+                    while True:
+                        if (iodepth / io_factor) <= self.total_numa_cpus:
+                            global_num_jobs = (iodepth / len(self.nvme_block_device_list)) / io_factor
+                            fio_iodepth = io_factor
+                            break
+                        else:
+                            io_factor += 2
 
             fio_result[iodepth] = True
             row_data_dict = {}
-            row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_num_jobs)
+            row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
             size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
             row_data_dict["size"] = str(size) + "G"
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
-            if iodepth != 64:
+            if iodepth != 256:
                 if "runtime" not in self.fio_cmd_args["multiple_jobs"]:
                     self.fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}".format(self.fio_runtime)
                     self.fio_cmd_args["timeout"] = self.fio_run_timeout
@@ -748,15 +758,27 @@ class ECVolumeLevelTestcase(FunTestCase):
                         ramp_time = match.group(4)
                     mpstat_count = (int(runtime) + int(ramp_time)) / self.mpstat_args["interval"]
                 else:
-                    start_mpstat = False
+                    start_stats = False
             else:
-                start_mpstat = False
+                start_stats = False
 
-            if start_mpstat:
+            if start_stats:
+                mpstat_post_fix_name = "mpstat_iodepth_{}.txt".format(row_data_dict["iodepth"])
+                # vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(row_data_dict["iodepth"])
+                mpstat_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=mpstat_post_fix_name)
+                # vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
+
                 mpstat_pid = self.end_host.mpstat(cpu_list=mpstat_cpu_list, output_file=self.mpstat_args["output_file"],
                                                   interval=self.mpstat_args["interval"], count=int(mpstat_count))
+                """thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
+                                                          storage_controller=self.storage_controller,
+                                                          output_file=vp_util_artifact_file,
+                                                          interval=self.vp_util_args["interval"],
+                                                          count=int(mpstat_count))"""
+                # collect_vp_utils_stats(self.storage_controller, vp_util_artifact_file,
+                #                        interval=30, count=4)
             else:
-                fun_test.critical("Not starting the mpstat because of lack of interval and count details")
+                fun_test.critical("Not starting the stats collection because of lack of interval and count details")
 
             # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
             if "bs" in self.fio_cmd_args:
@@ -772,12 +794,14 @@ class ECVolumeLevelTestcase(FunTestCase):
             row_data_dict["block_size"] = fio_block_size
 
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
-                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs))
-            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(int(fio_iodepth) * int(fio_num_jobs)))
+                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
+            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(row_data_dict["iodepth"]))
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus, num_jobs,
-                                                                                          fio_iodepth)
+                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus,
+                                                                                          global_num_jobs, fio_iodepth,
+                                                                                          self.ec_info["capacity"],
+                                                                                          (100 / global_num_jobs))
                 fio_cmd_args["multiple_jobs"] += fio_job_args
                 fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
                                                              timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
@@ -788,7 +812,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth]))
             fun_test.test_assert(fio_output[iodepth],
                                  "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
-                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs))
+                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth,
+                                         fio_num_jobs * global_num_jobs))
 
             for op, stats in fio_output[iodepth].items():
                 for field, value in stats.items():
@@ -822,7 +847,16 @@ class ECVolumeLevelTestcase(FunTestCase):
             mpstat_pid_check = self.end_host.get_process_id("mpstat")
             if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid):
                 self.end_host.kill_process(process_id=mpstat_pid)
-            self.end_host.read_file(file_name=self.mpstat_args["output_file"])
+            mpstat_data = self.end_host.read_file(file_name=self.mpstat_args["output_file"])
+            with open(mpstat_artifact_file, 'a') as f:
+                f.writelines(mpstat_data)
+
+            fun_test.add_auxillary_file(description="Host Processor Statistics - IO depth {}".
+                                        format(row_data_dict["iodepth"]),
+                                        filename=mpstat_artifact_file)
+            """fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
+                                        filename=vp_util_artifact_file)"""
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
