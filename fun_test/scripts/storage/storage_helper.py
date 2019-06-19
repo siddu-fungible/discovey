@@ -234,14 +234,12 @@ def build_simple_table(data, column_headers=[]):
 
 def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3, non_zero_stats_only=True,
                            command_timeout=DPCSH_COMMAND_TIMEOUT):
-    print "****** Inside collect_vp_utils_stats ******"
     output = False
     column_headers = ["VP", "Utilization"]
     try:
         with open(output_file, 'a') as f:
             timer = FunTimer(max_time=interval * (count + 1))
             while not timer.is_expired():
-                print "****** Inside Timer Loop ******"
                 lines = []
                 dpcsh_result = storage_controller.debug_vp_util(command_timeout=command_timeout)
                 fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
@@ -258,7 +256,7 @@ def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3
                     vp_util = filtered_vp_util
 
                 table_data = build_simple_table(data=vp_util, column_headers=column_headers)
-                lines.append("\n########################  {} ########################\n".format(time.ctime))
+                lines.append("\n########################  {} ########################\n".format(time.ctime()))
                 lines.append(table_data.get_string())
                 lines.append("\n\n")
                 f.writelines(lines)

@@ -759,6 +759,11 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                 mpstat_pid = self.end_host.mpstat(cpu_list=mpstat_cpu_list, output_file=self.mpstat_args["output_file"],
                                                   interval=self.mpstat_args["interval"], count=int(mpstat_count))
+                thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
+                                                          storage_controller=self.storage_controller,
+                                                          output_file=vp_util_artifact_file,
+                                                          interval=self.vp_util_args["interval"],
+                                                          count=int(mpstat_count))
                 # collect_vp_utils_stats(self.storage_controller, vp_util_artifact_file,
                 #                        interval=30, count=4)
             else:
@@ -822,7 +827,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            # post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running
             mpstat_pid_check = self.end_host.get_process_id("mpstat")
@@ -832,8 +837,12 @@ class ECVolumeLevelTestcase(FunTestCase):
             with open(mpstat_artifact_file, 'a') as f:
                 f.writelines(mpstat_data)
 
-            fun_test.add_auxillary_file(description="Host Processor Statistics", filename=mpstat_artifact_file)
-            fun_test.add_auxillary_file(description="F1 VP Utilization", filename=vp_util_artifact_file)
+            fun_test.add_auxillary_file(description="Host Processor Statistics - IO depth {}".
+                                        format(row_data_dict["iodepth"]),
+                                        filename=mpstat_artifact_file)
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
+                                        filename=vp_util_artifact_file)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
