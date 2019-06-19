@@ -53,6 +53,7 @@
           "user":"localadmin",
           "password":"Precious1*",
           "ethernet_pci_device":"pci_0000_af_01_0",
+          "nvme_pci_device":"pci_0000_af_03_0",
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
         "cab03-qa-01-vm02":{
@@ -60,6 +61,7 @@
           "user":"localadmin",
           "password":"Precious1*",
           "ethernet_pci_device":"pci_0000_af_01_1",
+          "nvme_pci_device":"pci_0000_af_03_1",
           "vm_pings": ["30.1.1.2","19.1.1.1"]
         },
         "cab03-qa-01-vm03":{

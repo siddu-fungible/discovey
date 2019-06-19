@@ -4,6 +4,7 @@ from lib.system.fun_test import *
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth.sanity import Funeth
 
+
 def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
     if reboot:
@@ -217,7 +218,7 @@ def critical_log(expression, message):
         fun_test.critical(message=message)
 
 
-def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
+def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vfs_count=16):
     host_file = ASSET_DIR + "/hosts.json"
     all_hosts_specs = parse_file_to_json(file_name=host_file)
     host_spec = all_hosts_specs[server_name]
@@ -225,6 +226,7 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
                       ssh_password=host_spec["ssh_password"])
     all_vms = map(lambda s: s.strip(), linux_obj.command(command="virsh list --all --name").split())
     linux_obj.command(command="sudo chmod 777 /dev/vfio/vfio")
+    linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/0000\:af\:00.2/sriov_numvfs" % pcie_vfs_count)
     for vm in vm_dict:
         if vm in all_vms:
             pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
@@ -236,10 +238,15 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
             if not "domain is not running" in shut_op:
                 fun_test.sleep(message="Waiting for VM to shutdown", seconds=7)
             linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["ethernet_pci_device"])
+            if "nvme_pci_device" in vm_dict[vm]:
+                pci_device_nvme = linux_obj.command(
+                    command="virsh nodedev-list | grep %s" % vm_dict[vm]["nvme_pci_device"])
+                critical_log(expression=vm_dict[vm]["nvme_pci_device"] in pci_device_nvme, message="NVME PF not present")
+                if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
+                    linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
             fun_test.sleep(message="Waiting for VF detach")
             start_op = linux_obj.command(command="virsh start %s" % vm)
-            if ("%s started" % vm) not in start_op:
-                fun_test.critical("%s not started" % vm)
+            critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
     fun_test.sleep(message="Waiting for VMs to come up", seconds=60)
@@ -249,3 +256,11 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False):
     fun_test.shared_variables['funeth_obj'] = funeth_obj
     setup_hu_vm(funeth_obj, update_driver=update_funeth_driver)
 
+def shut_all_vms(hostname):
+
+    host_file = ASSET_DIR + "/hosts.json"
+    all_hosts_specs = parse_file_to_json(file_name=host_file)
+    host_spec = all_hosts_specs[hostname]
+    linux_obj = Linux(host_ip=host_spec["host_ip"], ssh_username=host_spec["ssh_username"],
+                      ssh_password=host_spec["ssh_password"])
+    linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")

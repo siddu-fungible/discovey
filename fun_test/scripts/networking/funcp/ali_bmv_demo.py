@@ -63,6 +63,7 @@ class BringupSetup(FunTestCase):
 
         for server in servers_mode:
             print server
+            shut_all_vms(hostname=server)
             critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
             servers_list.append(server)
 
@@ -143,7 +144,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=32)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=16)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -565,7 +566,7 @@ class ConfigureVMs(FunTestCase):
         for server in servers_with_vms:
             print server
             configure_vms(server_name=server, vm_dict=servers_with_vms[server], yml="FS-ALIBABA-DEMO-VM",
-                          update_funeth_driver=True)
+                          update_funeth_driver=False)
             for vm in servers_with_vms[server]:
                 if servers_with_vms[server][vm]["vm_pings"]:
                     test_host_pings(host=servers_with_vms[server][vm]["hostname"],
@@ -583,12 +584,13 @@ if __name__ == '__main__':
     ts.add_test_case(BringupSetup())
 
     ts.add_test_case(NicEmulation())
-
-    # ts.add_test_case(LocalSSDTest())
-    #
-    # ts.add_test_case(RemoteSSDTest())
-
     ts.add_test_case(ConfigureVMs())
+
+    ts.add_test_case(LocalSSDTest())
+
+    ts.add_test_case(RemoteSSDTest())
+
+
     # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
     # T2 : Local SSD from FIO
     # T3 : Remote SSD FIO
