@@ -1,3 +1,4 @@
 [
-  {"path": "storage/multiple_blt_tcp_perf.py"}
+  {"path": "storage/multi_blt_read_tcp_perf.py"},
+  {"path": "storage/multi_blt_write_tcp_perf.py"}
 ]

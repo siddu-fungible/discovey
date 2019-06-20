@@ -108,6 +108,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.update_workspace = job_inputs["update_workspace"]
             if "update_deploy_script" in job_inputs:
                 self.update_deploy_script = job_inputs["update_deploy_script"]
+            if "io_depth" in job_inputs:
+                self.fio_iodepth = job_inputs["io_depth"]
 
             self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
             fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -496,6 +498,16 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
+        # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
+        # to be used in this test. If so, override the script default with the user provided config
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "num_volumes" in job_inputs:
+            self.ec_info["num_volumes"] = job_inputs["num_volumes"]
+        if "vol_size" in job_inputs:
+            self.ec_info["capacity"] = job_inputs["vol_size"]
+
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
             self.fs = fun_test.shared_variables["fs_obj"]
@@ -686,6 +698,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
+        # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
+        # If so, override the script default with the user provided config
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "io_depth" in job_inputs:
+            self.fio_iodepth = job_inputs["io_depth"]
+
+        if not isinstance(self.fio_iodepth, list):
+            self.fio_iodepth = [self.fio_iodepth]
+
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
         fio_output = {}
@@ -727,7 +750,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
-            if iodepth != 256:
+            if iodepth != 0:
                 if "runtime" not in self.fio_cmd_args["multiple_jobs"]:
                     self.fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}".format(self.fio_runtime)
                     self.fio_cmd_args["timeout"] = self.fio_run_timeout
@@ -764,17 +787,17 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             if start_stats:
                 mpstat_post_fix_name = "mpstat_iodepth_{}.txt".format(row_data_dict["iodepth"])
-                # vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(row_data_dict["iodepth"])
+                vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(row_data_dict["iodepth"])
                 mpstat_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=mpstat_post_fix_name)
-                # vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
+                vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
 
                 mpstat_pid = self.end_host.mpstat(cpu_list=mpstat_cpu_list, output_file=self.mpstat_args["output_file"],
                                                   interval=self.mpstat_args["interval"], count=int(mpstat_count))
-                """thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
+                thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
                                                           storage_controller=self.storage_controller,
                                                           output_file=vp_util_artifact_file,
                                                           interval=self.vp_util_args["interval"],
-                                                          count=int(mpstat_count))"""
+                                                          count=int(mpstat_count))
                 # collect_vp_utils_stats(self.storage_controller, vp_util_artifact_file,
                 #                        interval=30, count=4)
             else:
@@ -795,7 +818,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                          format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(row_data_dict["iodepth"]))
+            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, row_data_dict["iodepth"])
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
                 fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus,
@@ -841,7 +864,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            # post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running
             mpstat_pid_check = self.end_host.get_process_id("mpstat")
@@ -854,9 +877,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.add_auxillary_file(description="Host Processor Statistics - IO depth {}".
                                         format(row_data_dict["iodepth"]),
                                         filename=mpstat_artifact_file)
-            """fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=vp_util_artifact_file)"""
+                                        filename=vp_util_artifact_file)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

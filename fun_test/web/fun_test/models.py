@@ -120,6 +120,7 @@ class SuiteContainerExecution(models.Model):
         return s
 
 
+
 class SuiteExecution(models.Model):
     """
     Suite selection
@@ -208,6 +209,13 @@ class SuiteExecution(models.Model):
         result = None
         if name in self.run_time:
             result = self.run_time[name]
+        return result
+
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
         return result
 
 class SuiteExecutionSerializer(serializers.Serializer):

@@ -71,8 +71,8 @@
       "name": "ec_fio_25G",
       "direct": 1,
       "prio": 0,
-      "runtime": 300,
-      "timeout": 720
+      "runtime": 180,
+      "timeout": 185
     },
     "write_ut_fio_cmd_args": {
       "bs": "4k",
@@ -92,6 +92,22 @@
       {
         "name": "Performance stats for 1% compressed data",
         "compress_percent": 1
+      },
+      {
+        "name": "Performance stats for 5% compressed data",
+        "compress_percent": 5
+      },
+      {
+        "name": "Performance stats for 10% compressed data",
+        "compress_percent": 10
+      },
+      {
+        "name": "Performance stats for 20% compressed data",
+        "compress_percent": 20
+      },
+      {
+        "name": "Performance stats for 30% compressed data",
+        "compress_percent": 30
       },
       {
         "name": "Performance stats for 50% compressed data",
@@ -172,8 +188,8 @@
       "name": "ec_fio_25G_comp_disabled",
       "direct": 1,
       "prio": 0,
-      "runtime": 300,
-      "timeout": 720
+      "runtime": 180,
+      "timeout": 185
     },
     "write_ut_fio_cmd_args": {
       "bs": "4k",

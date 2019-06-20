@@ -130,6 +130,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
             fun_test.add_checkpoint("Started mpstat command in {}".format(h))
         elif when == 'after':
             # Scp mpstat json to LOGS dir
+            fun_test.log('Populating mpstat %s' % mpstat_output_file)
             fun_test.log_module_filter("random_module")
             helper.populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=linux_obj,
                                                dump_filename=mpstat_temp_filename)

@@ -6,7 +6,7 @@ from scripts.networking.helper import *
 from lib.utilities.funcp_config import *
 
 fs = "fs-11"
-image = "s_15039_funos-f1.stripped.gz"
+image = "funos-f1.stripped.gz.rajesh"
 boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
 #boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart "
 #boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart "

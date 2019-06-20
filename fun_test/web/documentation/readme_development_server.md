@@ -46,6 +46,8 @@ Example:
 # export DEVELOPMENT_MODE=1
 # python web/manage.py migrate --database=default
 # cd web/angular/qadashboard/
+# brew install npm (For Mac only)
+# npm install -g @angular/cli
 # npm install
 # ng build
 # nohup python web/start_development_server.py &> server.out  &
