@@ -240,17 +240,18 @@ class FunethPerformanceBase(FunTestCase):
 
         if pingable and not sth_stuck_before:
 
-            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*3+5)
+            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*4+10)
 
             result = perf_manager_obj.run(*arg_dicts)
 
             fun_test.log('Collect stats after test')
-            perf_utils.collect_host_stats(funeth_obj, version, when='after')
             sth_stuck_after = perf_utils.collect_dpc_stats(network_controller_objs,
                                                            fpg_interfaces,
                                                            fpg_intf_dict,
                                                            version,
                                                            when='after')
+            # Collect host stats after dpc stats to give enough time for mpstat collection
+            perf_utils.collect_host_stats(funeth_obj, version, when='after')
             if sth_stuck_after:
                 result = {}
         else:
