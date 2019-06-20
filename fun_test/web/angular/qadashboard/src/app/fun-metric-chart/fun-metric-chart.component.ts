@@ -481,7 +481,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       if (!dataSet.output.expected)
         dataSet.output.expected = -1;
     }
-    
   }
 
   //saves the edited data back to the DB
