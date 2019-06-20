@@ -77,7 +77,7 @@ class BLTVolumeSanityScript(FunTestScript):
         self.storage_controller = storage_controller
 
         # configure end host
-        #reboot host
+        # reboot host
         fun_test.test_assert(end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
                              "End Host {} is up".format(end_host.host_ip))
 
@@ -90,7 +90,7 @@ class BLTVolumeSanityScript(FunTestScript):
         # load nvme_tcp
         load_nvme_tcp_module(end_host)
 
-        #enable_counters(storage_controller, self.command_timeout)
+        # enable_counters(storage_controller, self.command_timeout)
 
         # configure ip on fs
         fun_test.test_assert(storage_controller.ip_cfg(ip=test_network['f1_loopback_ip'])["status"],
@@ -134,6 +134,9 @@ class BLTVolumeSanityScript(FunTestScript):
                                                                          test_network["f1_loopback_ip"],
                                                                          self.transport_port,
                                                                          self.nvme_subsystem)
+        if hasattr(self, "io_queues") and self.io_queues:
+            nvme_connect_cmd += " -i {}".format(self.io_queues)
+
         nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=60)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
         fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="NVME Connect Status")
@@ -303,11 +306,11 @@ class BltTcpRandWRMix(BltTcpSanityTestcase):
 
 if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
-    bltscript.add_test_case(BltTcpSeqRead())
-    bltscript.add_test_case(BltTcpRandRead())
+    # bltscript.add_test_case(BltTcpSeqRead())
+    # bltscript.add_test_case(BltTcpRandRead())
     bltscript.add_test_case(BltTcpSeqRWMix())
-    bltscript.add_test_case(BltTcpSeqWRMix())
+    # bltscript.add_test_case(BltTcpSeqWRMix())
     bltscript.add_test_case(BltTcpRandRWMix())
-    bltscript.add_test_case(BltTcpRandWRMix())
+    # bltscript.add_test_case(BltTcpRandWRMix())
 
     bltscript.run()
