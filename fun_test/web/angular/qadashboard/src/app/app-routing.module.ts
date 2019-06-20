@@ -5,7 +5,6 @@ import {DashboardComponent} from './dashboard/dashboard.component';
 import {PerformanceComponent} from "./performance/performance.component";
 import {TestComponent} from "./test/test.component";
 import {FunMetricChartComponent} from "./fun-metric-chart/fun-metric-chart.component";
-import {Demo1Component} from "./demo1/demo1.component";
 import {RegressionComponent} from "./regression/regression.component";
 import {SubmitJobComponent} from "./regression/submit-job/submit-job.component";
 import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.component";
@@ -56,7 +55,6 @@ const routes: Routes = [
   {path: 'common/alerts', component: AlertsComponent},
   {path: 'common/logs', component: LogViewerComponent},
   {path: 'upgrade/test', component: TestComponent},
-  /*{path: 'upgrade/demo1', component: Demo1Component},*/
   {path: '*', component: NotFoundComponent},
   { path: 'performance/atomic/:id/triage', component: TriageComponent},
   { path: 'regression/triaging/:id', component: TriageDetailComponent},

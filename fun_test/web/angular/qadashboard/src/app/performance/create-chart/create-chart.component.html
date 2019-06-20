@@ -1,4 +1,4 @@
-<div class="component modal-content">
+<div class="component">
   <div class="modal-header">
     <h3 *ngIf="mode === 'edit'" class="modal-title">Edit chart: {{ chartName }}</h3>
     <h3 *ngIf="mode === 'create'" class="modal-title">Create chart</h3>
@@ -12,25 +12,49 @@
           <td><label>Chart display name: </label></td>
           <td>
             <input type="text" required
-                   [(ngModel)]="chartName"/>
+                   [(ngModel)]="chartName" style="width: 250px"/>
           </td>
-
-          <td><label>Internal chart name: </label></td>
+        </tr>
+        <tr>
+          <td><label>Metric Model Name: </label></td>
           <td>
             <input type="text" required
-                   [(ngModel)]="internalChartName"/>
+                   [(ngModel)]="modelName" style="width: 250px"/>
           </td>
         </tr>
         <tr>
           <td><label>Y1 axis title: </label></td>
           <td>
             <input type="text" required
-                   [(ngModel)]="y1AxisTitle"/>
+                   [(ngModel)]="y1AxisTitle" style="width: 250px"/>
+          </td>
+        </tr>
+        <tr>
+          <td><label>Source: </label></td>
+          <td>
+            <input type="text" required
+                   [(ngModel)]="source" style="width: 250px"/>
+          </td>
+        </tr>
+        <tr>
+          <td><label>Owner: </label></td>
+          <td>
+            <input type="text" required
+                   [(ngModel)]="owner" style="width: 250px"/>
+          </td>
+        </tr>
+        <tr>
+          <td><label>Description: </label></td>
+          <td>
+            <textarea rows="10" [(ngModel)]="description" style="width: 100%;"></textarea>
           </td>
         </tr>
         <tr>
           <td>
-            Negative gradient&nbsp;<input type="checkbox" [(ngModel)]="negativeGradient"/>
+            <label>Negative gradient: </label>
+          </td>
+          <td>
+            <input type="checkbox" [(ngModel)]="negativeGradient"/>
           </td>
         </tr>
       </table>
@@ -43,41 +67,57 @@
     <div *ngIf="showOutputSelection">
       <table class="table table-bordered">
         <tr>
-          <th>Name</th>
-          <th [attr.colspan]="addDataSet.inputs.length" style="text-align:center;">Input</th>
-          <th>Output</th>
-          <th>Min</th>
-          <th>Max</th>
-        </tr>
-        <tr>
+          <td>Name:</td>
           <td>
             <input type="text" minlength="1" maxlength="50" required="true"
                    [(ngModel)]="addDataSet.name"/>
           </td>
-          <td *ngFor="let input of addDataSet.inputs"><label>{{ input.name }}</label>
+          <!--<th [attr.colspan]="addDataSet.inputs.length" style="text-align:center;">Input</th>-->
+          <!--<th>Output</th>-->
+          <!--<th>Min</th>-->
+          <!--<th>Max</th>-->
+          <!--<th>Expected</th>-->
+        </tr>
+        <tr>
+          <td>
+            Output:
+          </td>
+          <td>
+            Name:
+            <select [(ngModel)]="addDataSet.output.name" (change)="fetchUnits(addDataSet.output.name)">
+              <option *ngFor="let output of outputOptions">{{ output.name }}</option>
+
+            </select> &nbsp;
+            Min:
+            <input type="number" min="0" max="999999" required
+                   [(ngModel)]="addDataSet.output.min"/>&nbsp;
+            Max:
+            <input type="number" min="0" max="999999" required
+                   [(ngModel)]="addDataSet.output.max"/>&nbsp;
+            Expected:
+            <input type="number" min="0" max="999999" required
+                   [(ngModel)]="addDataSet.output.expected"/>&nbsp;
+            Unit:
+            <select [(ngModel)]="addDataSet.output.unit">
+              <option *ngFor="let unit of outputUnits">{{ unit }}</option>
+
+            </select> &nbsp;
+          </td>
+        </tr>
+        <tr *ngFor="let input of addDataSet.inputs">
+          <!--<td>-->
+            <!--<input type="text" minlength="1" maxlength="50" required="true"-->
+                   <!--[(ngModel)]="addDataSet.name"/>-->
+          <!--</td>-->
+          <td>
+            <label>{{ input.name }}:&nbsp;</label>
+          </td>
+          <td>
             <select [(ngModel)]="input.selectedChoice">
               <option *ngFor="let choice of input.choices">
                 {{ choice }}
               </option>
-            </select>
-          </td>
-
-
-          <td>
-            <select [(ngModel)]="addDataSet.output.name">
-              <option *ngFor="let output of outputOptions">{{ output }}</option>
-
-            </select>
-          </td>
-
-          <td>
-            <input type="number" min="0" max="999999" required
-                   [(ngModel)]="addDataSet.output.min"/>
-          </td>
-
-          <td>
-            <input type="number" min="0" max="999999" required
-                   [(ngModel)]="addDataSet.output.max"/>
+            </select>&nbsp;
           </td>
         </tr>
       </table>
@@ -85,7 +125,7 @@
 
     </div>
 
-    <table class="table table-bordered fixed-layout">
+    <table class="table table-bordered">
       <tr>
         <th>Delete</th>
         <th>Name</th>
@@ -114,8 +154,6 @@
                    style="width: 100px"></td>
       </tr>
     </table>
-  </div>
-  <div class="modal-footer">
     <button class="btn btn-success" (click)="submit()">Submit</button>
     <button class="btn" (click)="dismiss()">Close</button>
   </div>
