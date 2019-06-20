@@ -138,7 +138,7 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*"):
             fun_test.critical("%s cannot reach %s" % (host, hosts))
 
 
-def setup_hu_host(funeth_obj, update_driver=True, sriov=4):
+def setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4):
     fun_test.log("===================")
     fun_test.log("Configuring HU host")
     fun_test.log("===================")
@@ -152,11 +152,11 @@ def setup_hu_host(funeth_obj, update_driver=True, sriov=4):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
             critical_log(update_src_result, 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    critical_log(funeth_obj.load(sriov=sriov), 'Load funeth driver.')
+    critical_log(funeth_obj.load(sriov=sriov, num_queues=num_queues), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
 
-        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=8),
+        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=4),
                      'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
@@ -241,10 +241,11 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vf
             if "nvme_pci_device" in vm_dict[vm]:
                 pci_device_nvme = linux_obj.command(
                     command="virsh nodedev-list | grep %s" % vm_dict[vm]["nvme_pci_device"])
-                critical_log(expression=vm_dict[vm]["nvme_pci_device"] in pci_device_nvme, message="NVME PF not present")
+                critical_log(expression=vm_dict[vm]["nvme_pci_device"] in pci_device_nvme,
+                             message="Check NVME PF is present")
                 if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
                     linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
-            fun_test.sleep(message="Waiting for VF detach")
+            fun_test.sleep(message="Waiting for VFs detach")
             start_op = linux_obj.command(command="virsh start %s" % vm)
             critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
         else:
@@ -256,6 +257,7 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vf
     fun_test.shared_variables['funeth_obj'] = funeth_obj
     setup_hu_vm(funeth_obj, update_driver=update_funeth_driver)
 
+
 def shut_all_vms(hostname):
 
     host_file = ASSET_DIR + "/hosts.json"
@@ -264,3 +266,54 @@ def shut_all_vms(hostname):
     linux_obj = Linux(host_ip=host_spec["host_ip"], ssh_username=host_spec["ssh_username"],
                       ssh_password=host_spec["ssh_password"])
     linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")
+
+
+def local_volume_create(storage_controller, vm_dict, uuid, count):
+    result = storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                              capacity=vm_dict["blt_vol_capacity"],
+                                              block_size=vm_dict["blt_vol_block_size"],
+                                              uuid=uuid, name="thin_blk" + str(count),
+                                              command_duration=vm_dict["command_timeout"])
+
+    critical_log(result["status"], "Creating volume with uuid {}".format(uuid))
+
+
+def remote_storage_config(storage_controller, vm_dict, vol_uuid, count, ctrl_uuid, local_ip, local_port):
+    local_volume_create(storage_controller, vm_dict, vol_uuid, count)
+    print("\n")
+    print("=============================")
+    print("Creating Controller on DPU 1")
+    print("=============================\n")
+    command_result = storage_controller.create_controller(ctrlr_uuid=ctrl_uuid,
+                                                          transport="RDS",
+                                                          remote_ip=local_ip,
+                                                          nqn="nqn-"+str(count),
+                                                          port=local_port,
+                                                          command_duration=vm_dict["command_timeout"])
+    fun_test.log(command_result)
+    fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
+                         format(ctrl_uuid))
+    print("\n")
+    print("==============================================")
+    print("Attaching Local Volume to Controller on DPU 1")
+    print("==============================================\n")
+    result = storage_controller.attach_volume_to_controller(ctrlr_uuid=ctrl_uuid,
+                                                            vol_uuid=vol_uuid,
+                                                            ns_id=int(count),
+                                                            command_duration=vm_dict["command_timeout"])
+    fun_test.log(result)
+    critical_log(result["status"], "Attaching volume {} to controller {}".format(vol_uuid, ctrl_uuid))
+
+
+def rds_volume_create(storage_controller, vm_dict, vol_uuid, count, remote_ip, port):
+    command_result = storage_controller.create_volume(type="VOL_TYPE_BLK_RDS",
+                                                      capacity=vm_dict["rds_vol_capacity"],
+                                                      block_size=vm_dict["rds_vol_block_size"],
+                                                      uuid=vol_uuid,
+                                                      name="rds-block"+str(count),
+                                                      remote_nsid=int(count),
+                                                      remote_ip=remote_ip,
+                                                      port=port,
+                                                      command_duration=vm_dict["command_timeout"])
+    critical_log(command_result["status"], "Creating volume with uuid {}".format(vol_uuid))
+
