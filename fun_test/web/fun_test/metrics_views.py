@@ -25,7 +25,7 @@ from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
-from analytics_models_helper import invalidate_goodness_cache
+# from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime, timedelta
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
@@ -41,6 +41,12 @@ ml = MetricLib()
 def index(request):
     return render(request, 'qa_dashboard/metrics.html', locals())
 
+
+def invalidate_goodness_cache():
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        chart.goodness_cache_valid = False
+        chart.save()
 
 @csrf_exempt
 @api_safe_json_response

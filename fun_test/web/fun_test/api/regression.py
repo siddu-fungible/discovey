@@ -12,12 +12,13 @@ from datetime import datetime, timedelta
 from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
 from asset.asset_global import AssetType
-from asset.asset_manager import AssetManager
+
 
 @csrf_exempt
 @api_safe_json_response
 def test_beds(request, id):
     result = None
+    from asset.asset_manager import AssetManager
     am = AssetManager()
     if request.method == "GET":
         if not id:
