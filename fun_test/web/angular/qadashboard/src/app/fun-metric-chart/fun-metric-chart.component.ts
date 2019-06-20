@@ -468,9 +468,23 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
+  _setDataSetsDefaults(): void {
+    for (let dataSet of this.previewDataSets) {
+      if (!dataSet.output.max)
+        dataSet.output.max = -1;
+      if (!dataSet.output.min)
+        dataSet.output.min = 0;
+      if (!dataSet.output.reference)
+        dataSet.output.reference = -1;
+      if (!dataSet.output.expected)
+        dataSet.output.expected = -1;
+    }
+  }
+
   //saves the edited data back to the DB
   submit(): void {
     // this.convertExpected();
+    this._setDataSetsDefaults();
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
@@ -882,7 +896,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         chartDataSets.push(oneChartDataSet);
         let output = {};
         output["name"] = name;
-        if (expected !== -1) {
+        if (expected && expected !== -1) {
           output["value"] = this.convertToBaseUnit(unit, expected);
           output["value"] = this.convertToVisualizationUnit(this.visualizationUnit, output["value"]);
         } else {
