@@ -70,6 +70,7 @@
     "transport_port": 1099,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
+    "io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "4k",
