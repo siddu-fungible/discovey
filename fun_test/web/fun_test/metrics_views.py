@@ -989,38 +989,3 @@ def get_git_commits(request):
     commits = git_obj.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
     return result
-
-@csrf_exempt
-@api_safe_json_response
-def fetch_models(request):
-    result = []
-    models = app_config.get_metric_models()
-    for model in models:
-        result.append(model)
-    return result
-
-
-@csrf_exempt
-@api_safe_json_response
-def fetch_owners(request):
-    result = []
-    fields = MetricChart._meta.get_fields()
-    for field in fields:
-        if field.column.startswith("owner"):
-            all_values = MetricChart.objects.values(field.column).distinct()
-            for index, value in enumerate(all_values):
-                result.append(value[field.column])
-    return result
-
-@csrf_exempt
-@api_safe_json_response
-def fetch_charts(request):
-    request_json = json.loads(request.body)
-    model_name = request_json["model_name"]
-    owner = request_json["owner"]
-    result = []
-    charts = MetricChart.objects.filter(metric_model_name=model_name, owner_info=owner)
-    for chart in charts:
-        chartName = chart.chart_name + "/" + str(chart.metric_id)
-        result.append(chartName)
-    return result
