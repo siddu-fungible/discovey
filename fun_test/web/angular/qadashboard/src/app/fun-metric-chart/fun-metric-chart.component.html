@@ -118,7 +118,7 @@
           All</a>
         <table>
           <tr *ngFor="let output of expectedValues">
-            <td *ngIf="output.value !== -1">
+            <td *ngIf="output.value && output.value !== -1">
               <input
                 type="checkbox"
                 [checked]="output.show"
