@@ -2,7 +2,7 @@ import os, django, json, datetime
 import sys
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.core import paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
 from fun_settings import SCRIPTS_DIR
@@ -262,6 +262,7 @@ def add_suite_execution(submitted_time,
                                state=state,
                                suite_type=suite_type,
                                submitter_email=submitter_email)
+            s.started_time = submitted_time
             s.save()
             s.save()
 
@@ -464,8 +465,8 @@ def _get_suite_executions(execution_id=None,
         q = q & Q(test_bed_type=test_bed_type)
     if suite_path:
         q = q & Q(suite_path=suite_path)
-
-    all_objects = SuiteExecution.objects.filter(q).order_by('-id')
+    q = q & (Q(started_time__gt=get_current_time() - timedelta(days=30)) | Q(state=JobStatusType.AUTO_SCHEDULED))
+    all_objects = SuiteExecution.objects.filter(q).order_by('-started_time')
 
     if get_count:
         return all_objects.count()
@@ -588,6 +589,8 @@ def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
     suite_execution_attributes.append(
         {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
+    suite_execution_attributes.append(
+        {"name": "Started Time", "value": str(suite_execution["fields"]["started_time"])})
     suite_execution_attributes.append(
         {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})

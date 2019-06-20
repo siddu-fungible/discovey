@@ -113,7 +113,6 @@
                 </td>
               </tr>
               <tr>
-
               </tr>
               <tr>
                 <td colspan="2">
@@ -153,7 +152,8 @@
           <tr>
             <th>Name</th>
             <th>Type</th>
-            <th>Manual-lock user</th>
+            <th>Manual-lock</th>
+            <th>Suites</th>
           </tr>
           <tr *ngFor="let asset of assets">
             <td>{{ asset.name }}</td>
@@ -161,6 +161,11 @@
             <td>{{ asset.manual_lock_user }}
               <span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
                     (click)="unlockAsset(asset.name)"> Un-lock</span>
+            </td>
+            <td>
+              <ng-container *ngFor="let jobId of asset.job_ids">
+                <a href="/regression/suite_detail/{{ jobId }}">{{ jobId }}</a>&nbsp;
+              </ng-container>
             </td>
           </tr>
         </table>
