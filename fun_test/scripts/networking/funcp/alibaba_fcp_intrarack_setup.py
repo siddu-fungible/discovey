@@ -160,18 +160,9 @@ class TestIntraF1Pings(FunTestCase):
                               """)
 
     def setup(self):
-        global CHECK_HPING3_ON_HOSTS
         topology_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/topo_description.json')
         self.hosts = FunControlPlaneBringup.get_list_of_hosts_connected_each_f1(topology_info=topology_info)
         self.dpc_info = FunControlPlaneBringup.get_dpc_ip_port_for_each_f1(topology_info=topology_info)
-
-        if CHECK_HPING3_ON_HOSTS:
-            all_hosts = FunControlPlaneBringup.get_list_of_all_hosts(topology_info=topology_info)
-            for host in all_hosts:
-                hping_installed = ensure_hping_install(host_ip=host['name'], host_username=host['ssh_username'],
-                                                       host_password=host['ssh_password'])
-                fun_test.simple_assert(hping_installed, "Ensure Hping3 is installed on host: %s" % host['name'])
-            CHECK_HPING3_ON_HOSTS = False
 
         fun_test.log("Hosts connected to each F1 in topology: %s" % self.hosts)
 
@@ -187,7 +178,7 @@ class TestIntraF1Pings(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BringupSetup())
+    # ts.add_test_case(BringupSetup())
     ts.add_test_case(TestCcCcPing())
     ts.add_test_case(TestIntraF1Pings())
     ts.run()
