@@ -496,6 +496,16 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
 
+        # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
+        # to be used in this test. If so, override the script default with the user provided config
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "num_volumes" in job_inputs:
+            self.ec_info["num_volumes"] = job_inputs["num_volumes"]
+        if "vol_size" in job_inputs:
+            self.ec_info["capacity"] = job_inputs["vol_size"]
+
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
             self.fs = fun_test.shared_variables["fs_obj"]
@@ -686,6 +696,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
+        # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
+        # If so, override the script default with the user provided config
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "io_depth" in job_inputs:
+            self.fio_iodepth = job_inputs["io_depth"]
+
+        if not isinstance(self.fio_iodepth, list):
+            self.fio_iodepth = [self.fio_iodepth]
+
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
         fio_output = {}
@@ -727,7 +748,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
-            if iodepth != 256:
+            if iodepth not in self.full_run_iodepth:
                 if "runtime" not in self.fio_cmd_args["multiple_jobs"]:
                     self.fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}".format(self.fio_runtime)
                     self.fio_cmd_args["timeout"] = self.fio_run_timeout
