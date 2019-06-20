@@ -470,7 +470,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
-  checkDataSets(): void {
+  _setDataSetsDefaults(): void {
     for (let dataSet of this.previewDataSets) {
       if (!dataSet.output.max)
         dataSet.output.max = -1;
@@ -486,7 +486,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //saves the edited data back to the DB
   submit(): void {
     // this.convertExpected();
-    this.checkDataSets();
+    this._setDataSetsDefaults();
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
