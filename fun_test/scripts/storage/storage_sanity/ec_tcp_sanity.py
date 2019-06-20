@@ -130,6 +130,8 @@ class ECVolumeSanityScript(FunTestScript):
                                                                          test_network["f1_loopback_ip"],
                                                                          self.transport_port,
                                                                          self.nvme_subsystem)
+        if hasattr(self, "io_queues") and self.io_queues:
+            nvme_connect_cmd += " -i {}".format(self.io_queues)
 
         nvme_connect_status = end_host.sudo_command(command=nvme_connect_cmd, timeout=60)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
@@ -214,16 +216,26 @@ class ECTcpSanityTestcase(FunTestCase):
         pass
 
 
-class ECTcpRandRead(ECTcpSanityTestcase):
+class ECTcpRandRW(ECTcpSanityTestcase):
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=1,
                               summary="Test random read queries on 4:2 EC volume over nvme-tcp fabric",
                               steps='''
         1. Execute random read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
 
 
+class ECTcpSeqRW(ECTcpSanityTestcase):
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Test sequential read queries on 4:2 EC volume over nvme-tcp fabric",
+                              steps='''
+        1. Execute sequential read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
+
+
 if __name__ == "__main__":
     ecscript = ECVolumeSanityScript()
-    ecscript.add_test_case(ECTcpRandRead())
+    ecscript.add_test_case(ECTcpRandRW())
+    ecscript.add_test_case(ECTcpSeqRW())
     ecscript.run()

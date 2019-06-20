@@ -8,6 +8,7 @@
     "syslog_level": 2,
     "command_timeout": 30,
     "reboot_timeout": 400,
+    "io_queues": 16,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -49,6 +50,8 @@
       "size": "100%",
       "rw": "write",
       "direct": 1,
+      "verify": "xxhash",
+      "do_verify": 1,
       "prio": 0,
       "timeout": 360
     }
@@ -89,6 +92,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
+      "verify": "xxhash",
+      "do_verify": 1,
       "rwmixread": 70,
       "runtime": 30,
       "timeout": 35
@@ -105,6 +110,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
+      "verify": "xxhash",
+      "do_verify": 1,
       "rwmixread": 30,
       "runtime": 30,
       "timeout": 35
@@ -121,6 +128,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
+      "verify": "xxhash",
+      "do_verify": 1,
       "rwmixread": 70,
       "runtime": 30,
       "timeout": 35
@@ -138,6 +147,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
+      "verify": "xxhash",
+      "do_verify": 1,
       "runtime": 30,
       "timeout": 35
     },

@@ -66,6 +66,7 @@
     "transport_port": 1099,
     "attach_transport": "TCP",
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "io_queues": 16,
     "command_timeout": 30,
     "file_system": "ext3",
     "artifact_dir": "compression",
