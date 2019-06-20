@@ -471,6 +471,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   checkDataSets(): void {
+    for (let dataSet of this.previewDataSets) {
+      if (!dataSet.output.max)
+        dataSet.output.max = -1;
+      if (!dataSet.output.min)
+        dataSet.output.min = 0;
+      if (!dataSet.output.reference)
+        dataSet.output.reference = -1;
+      if (!dataSet.output.expected)
+        dataSet.output.expected = -1;
+    }
     
   }
 
