@@ -23,7 +23,7 @@
               </tr>
 
               <tr *ngFor="let testBed of testBeds">
-                <td>{{ testBed.name }}</td>
+                <td><a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a></td>
                 <td [innerHtml]="testBed.description | safeHtml"></td>
                 <td>
                   <span class="badge badge-danger"
@@ -149,7 +149,7 @@
         Assets
       </div>
       <div class="card-body">
-        <table class="table table-bordered">
+        <table class="table table-bo">
           <tr>
             <th>Name</th>
             <th>Type</th>
