@@ -6,6 +6,8 @@ from dateutil import parser
 from django.utils import timezone
 from fun_global import PerfUnit
 
+METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
+
 if __name__ == "__main_channel_parall__":
     internal_chart_names = ["channel_parall_performance_4_8_16", "channel_parall_performance_1000"]
     base_line_date = datetime(year=2019, month=6, day=8, minute=0, hour=0, second=0)
@@ -149,7 +151,7 @@ if __name__ == "__main_changed_owner__":
             entry.save()
     print "changed owner to Bertrand"
 
-if __name__ == "__main__":
+if __name__ == "__main_rand_write_rawblock_nvmetcp__":
     random_write_qd64 = ["fio_tcp_randwrite_blt_16_4_scaling", "fio_tcp_randwrite_blt_32_2_nvols"]
     random_write_qd128 = ["fio_tcp_randwrite_blt_32_4_nvols"]
     model_name = "BltVolumePerformance"
@@ -205,7 +207,7 @@ if __name__ == "__main__":
                         platform=FunPlatform.F1).save()
     print "added charts for random write latency"
 
-if __name__ == "__main__":
+if __name__ == "__main_rand_read_rawblock_nvmetcp__":
     internal_chart_names = ["rand_read_qd1_nvmetcp_output_latency",
                             "rand_read_qd128_nvmetcp_output_latency",
                             "rand_read_qd256_nvmetcp_output_latency"]
@@ -255,3 +257,20 @@ if __name__ == "__main__":
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
     print "added charts for random read latency"
+
+if __name__ == "__main__":
+    internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        children = json.loads(chart.children)
+        print json.dumps(children)
+        for child in children:
+            child_chart = MetricChart.objects.get(metric_id=child)
+            data_sets = json.loads(child_chart.data_sets)
+            for data_set in data_sets:
+                if "(N vols)" in data_set["name"]:
+                    print data_set["name"]
+                    data_set["name"] = data_set["name"].replace("(N vols)", "(8 vols)")
+            child_chart.data_sets = json.dumps(data_sets)
+            child_chart.save()
+
