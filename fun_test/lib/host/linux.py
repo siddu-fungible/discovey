@@ -830,11 +830,29 @@ class Linux(object, ToDictMixin):
     def tshark_capture_stop(self, process_id):
         return self.kill_process(process_id=process_id)
 
-    def tcpdump_capture_start(self):
-        pass
+    def tcpdump_capture_start(self, interface, tcpdump_filename="/tmp/tcpdump_capture.pcap", snaplen=80, filecount=1,
+                              count=2000000, sudo=False):
+        result = None
+        try:
+            cmd = "sudo tcpdump -leni {} tcp -w {} -s {} -W {} -c {}".format(interface, tcpdump_filename, snaplen,
+                                                                             filecount, count)
+            fun_test.log("executing command: {}".format(cmd))
+            if sudo:
+                cmd = "nohup tcpdump -leni {} tcp -w {} -s {} -W {} -c {} >/dev/null 2>&1 &".format(
+                    interface, tcpdump_filename, snaplen, filecount, count)
+                self.sudo_command(command=cmd)
+                process_id = self.get_process_id_by_pattern(process_pat="tcpdump")
+            else:
+                process_id = self.start_bg_process(command=cmd)
+            fun_test.log("tcpdump is started, process id: {}".format(process_id))
+            if process_id:
+                result = process_id
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def tcpdump_capture_stop(self, process_id):
-        pass
+        return self.kill_process(process_id=process_id)
 
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
