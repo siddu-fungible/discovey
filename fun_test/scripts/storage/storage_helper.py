@@ -238,7 +238,7 @@ def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3
     column_headers = ["VP", "Utilization"]
     try:
         with open(output_file, 'a') as f:
-            timer = FunTimer(max_time=interval * (count + 1))
+            timer = FunTimer(max_time=interval * count)
             while not timer.is_expired():
                 lines = []
                 dpcsh_result = storage_controller.debug_vp_util(command_timeout=command_timeout)
