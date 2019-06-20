@@ -125,7 +125,7 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
         if when == 'before':
             fun_test.log("Starting to run mpstat command")
             mp_out = helper.run_mpstat_command(linux_obj=linux_obj, interval=2,
-                                               output_file=mpstat_output_file, bg=True, count=duration+5)
+                                               output_file=mpstat_output_file, bg=True, count=duration/2)
             fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command in {}".format(h))
         elif when == 'after':
