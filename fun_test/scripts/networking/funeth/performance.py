@@ -240,7 +240,7 @@ class FunethPerformanceBase(FunTestCase):
 
         if pingable and not sth_stuck_before:
 
-            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
+            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*3+5)
 
             result = perf_manager_obj.run(*arg_dicts)
 
