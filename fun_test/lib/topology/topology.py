@@ -62,6 +62,9 @@ class ExpandedTopology(ToDictMixin):
     def get_hosts(self):
         return self.hosts
 
+    def get_host(self, name):
+        host = self.hosts.get(name, None)
+        return host
 
     def get_host_instance(self, dut_index, name=None, host_index=None, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
         host = None
