@@ -42,6 +42,12 @@
                     {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                   </ng-container>
                 </td>
+                <td *ngSwitchCase="'Started Time'">
+                  <ng-container *ngIf="suiteExecution && suiteExecution.fields.state == stateMap.IN_PROGRESS">
+                    {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
+                  </ng-container>
+                </td>
+
                 <td *ngSwitchDefault>
                   {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                 </td>
