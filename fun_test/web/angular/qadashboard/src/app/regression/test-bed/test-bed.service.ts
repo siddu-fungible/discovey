@@ -25,4 +25,12 @@ export class TestBedService {
     }))
   }
 
+  lockAsset(name, submitter) {
+    let url = "/api/v1/regression/assets/" + name;
+    let payload = {"manual_lock_user": submitter};
+    return this.apiService.put(url, payload).pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
 }

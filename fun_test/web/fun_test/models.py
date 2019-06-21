@@ -502,6 +502,7 @@ class Asset(FunModel):
     type = models.TextField()
     job_ids = JSONField(default=[])
     manual_lock_user = models.TextField(default=None, null=True)
+    test_beds = JSONField(default=[])
 
     @staticmethod
     def add_update(name, type, job_ids=None):
