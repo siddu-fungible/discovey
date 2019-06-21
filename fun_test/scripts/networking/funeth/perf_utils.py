@@ -526,14 +526,15 @@ def mlx5_irq_affinity(linux_obj):
     irq_list = re.findall(r'(\d+):.*mlx5_comp', output)
 
     # cat irq affinity
-    cmds = []
+    cmds_cat = []
     for i in irq_list:
-        cmds.append('cat /proc/irq/{}/smp_affinity'.format(i))
-    linux_obj.command(';'.join(cmds))
+        cmds_cat.append('cat /proc/irq/{}/smp_affinity'.format(i))
+    linux_obj.command(';'.join(cmds_cat))
 
     # set irq affinity
     # TODO: here its' hardcoded to exclude cpu 15, which single flow netperf will run on
-    cmds = []
+    cmds_chg = []
     for i in irq_list:
-        cmds.append('echo 7f00 > /proc/irq/{}/smp_affinity'.format(i))
-    linux_obj.sudo_command(';'.join(cmds))
+        cmds_chg.append('echo 7f00 > /proc/irq/{}/smp_affinity'.format(i))
+    linux_obj.sudo_command(';'.join(cmds_chg))
+    linux_obj.command(';'.join(cmds_cat))
