@@ -71,7 +71,7 @@ export class TestBedComponent implements OnInit {
   }
 
   refreshAll () {
-    this.refreshing = "Refreshing";
+    this.refreshing = "Refreshing test-beds";
     this.driver.subscribe(() => {
       this.refreshing = null;
     }, error => {
