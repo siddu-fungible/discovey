@@ -830,16 +830,27 @@ class Linux(object, ToDictMixin):
     def tshark_capture_stop(self, process_id):
         return self.kill_process(process_id=process_id)
 
-    def tcpdump_capture_start(self, interface, tcpdump_filename="/tmp/tcpdump_capture.pcap", snaplen=80, filecount=1,
-                              count=2000000, sudo=False):
+    def tcpdump_capture_start(self, interface, tcpdump_filename="/tmp/tcpdump_capture.pcap", snaplen=96, filecount=1,
+                              packet_count=2000000, file_size=None, rotate_seconds=None, sudo=True):
         result = None
         try:
-            cmd = "sudo tcpdump -leni {} tcp -w {} -s {} -W {} -c {}".format(interface, tcpdump_filename, snaplen,
-                                                                             filecount, count)
+            if not file_size and not rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -c {} -W {} -w {}".format(interface, snaplen, packet_count, filecount,
+                                                                            tcpdump_filename)
+            elif file_size and rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -G {} -W {} -w {}".format(interface, snaplen, file_size,
+                                                                                  rotate_seconds, filecount,
+                                                                                  tcpdump_filename)
+            elif file_size:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -W {} -w {}".format(interface, snaplen, file_size, filecount,
+                                                                            tcpdump_filename)
+            elif rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -G {} -W {} -w {}".format(interface, snaplen, rotate_seconds,
+                                                                            filecount, tcpdump_filename)
+
             fun_test.log("executing command: {}".format(cmd))
             if sudo:
-                cmd = "nohup tcpdump -leni {} tcp -w {} -s {} -W {} -c {} >/dev/null 2>&1 &".format(
-                    interface, tcpdump_filename, snaplen, filecount, count)
+                cmd = "nohup {} >/dev/null 2>&1 &".format(cmd)
                 self.sudo_command(command=cmd)
                 process_id = self.get_process_id_by_pattern(process_pat="tcpdump")
             else:
