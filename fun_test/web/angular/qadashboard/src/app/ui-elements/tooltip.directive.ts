@@ -55,10 +55,8 @@ export class TooltipDirective {
 
     this.renderer.addClass(this.tooltip, 'fun-tooltip');
     this.renderer.addClass(this.tooltip, `fun-tooltip-${this.placement}`);
-    this.renderer.setStyle(this.tooltip, 'line-height', 1.6);
-
-    this.renderer.setStyle(this.tooltip, 'position', 'fixed');
-    //this.renderer.setStyle(this.tooltip, 'margin', '10px');
+    //this.renderer.setStyle(this.tooltip, 'line-height', 1.6);
+    //this.renderer.setStyle(this.tooltip, 'position', 'fixed');
     this.renderer.setStyle(this.tooltip, 'font-size', '14px');
     this.renderer.setStyle(this.tooltip, 'font-weight', '1');
 

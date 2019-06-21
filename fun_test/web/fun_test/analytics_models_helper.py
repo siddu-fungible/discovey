@@ -76,6 +76,7 @@ def is_same_day(current_time, data_collection_time):
 def _update_run_time(tag, value=None, date_time_details=None):
     current_time = get_data_collection_time()
     if date_time_details and value:
+        value[tag] = {}
         value[tag]["data_collection_time"] = str(current_time)
         date_time_details.value = value
         date_time_details.save()

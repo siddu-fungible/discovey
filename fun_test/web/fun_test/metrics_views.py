@@ -83,15 +83,10 @@ def describe_table(request, table_name):
             choices = None
             verbose_name = "verbose_name"
             if hasattr(field, "choices"):
-                choices = field.choices
-                if editing_chart:
-                    if field.column.startswith("input_") and (not field.column.startswith("input_date_time")):
-                        all_values = metric_model.objects.values(field.column).distinct()
-                        choices = []
-
-                        for index, value in enumerate(all_values):
-                            choices.append((index, value[field.column]))
-
+                all_values = metric_model.objects.values(field.column).distinct()
+                choices = []
+                for index, value in enumerate(all_values):
+                    choices.append((index, value[field.column]))
                 choices.append((len(choices), "any"))
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
@@ -125,7 +120,6 @@ def chart_info(request):
                   "children": json.loads(chart.children),
                   "metric_id": chart.metric_id,
                   "chart_name": chart.chart_name,
-                  "internal_chart_name": chart.internal_chart_name,
                   "metric_model_name": chart.metric_model_name,
                   "y1_axis_title": chart.y1_axis_title,
                   "y2_axis_title": chart.y2_axis_title,
@@ -530,7 +524,7 @@ def update_chart(request):
     request_json = json.loads(request.body)
     model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
-    internal_chart_name = request_json["internal_chart_name"]
+    metric_id = request_json["metric_id"]
 
     leaf = None
     data_sets = None
@@ -548,11 +542,11 @@ def update_chart(request):
     if "source" in request_json:
         source = request_json["source"]
     base_line_date = datetime(year=2018, month=4, day=1)
-    if "base_line_date" in request_json:
+    if "base_line_date" in request_json and request_json["base_line_date"]:
         base_line_date = request_json["base_line_date"]
         base_line_date = get_time_from_timestamp(base_line_date)
     try:
-        c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
+        c = MetricChart.objects.get(metric_model_name=model_name, metric_id=metric_id)
         if "set_expected" in request_json:
             expected_operation = request_json["set_expected"]
             if expected_operation:
@@ -583,16 +577,23 @@ def update_chart(request):
         global_settings.cache_valid = False
         global_settings.save()
     except ObjectDoesNotExist:
+        metric_id = LastMetricId.get_next_id()
         c = MetricChart(metric_model_name=model_name,
                         chart_name=chart_name,
-                        internal_chart_name=internal_chart_name,
                         data_sets=json.dumps(data_sets),
-                        metric_id=LastMetricId.get_next_id())
+                        metric_id=metric_id,
+                        internal_chart_name=metric_id)
         if leaf:
             c.leaf = leaf
+        if owner_info:
+            c.owner_info = owner_info
+        if source:
+            c.source = source
+        if base_line_date:
+            c.base_line_date = base_line_date
         c.save()
         invalidate_goodness_cache()
-    return "Ok"
+    return c.metric_id
 
 def update_expected(chart, expected_operation):
     if expected_operation:
@@ -652,7 +653,6 @@ def models_by_module(request):
         result[model] = {"charts": model_charts}
         for chart in charts:
             model_charts.append({"chart_name": chart.chart_name,
-                                 "internal_chart_name": chart.internal_chart_name,
                                  "metric_id": chart.metric_id,
                                  "metric_model_name": chart.metric_model_name})
     return result
@@ -683,7 +683,6 @@ def metric_by_id(request):
     result = {}
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
-    result["internal_chart_name"] = chart.internal_chart_name
     result["platform"] = chart.platform
     return result
 
