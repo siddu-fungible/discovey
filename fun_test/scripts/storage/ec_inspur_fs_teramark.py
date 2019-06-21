@@ -712,6 +712,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         io_factor += 1
 
             fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
+            fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
 
             if "multiple_jobs" in self.fio_cmd_args:
                 num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
