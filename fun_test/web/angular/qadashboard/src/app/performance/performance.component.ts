@@ -274,7 +274,8 @@ export class PerformanceComponent implements OnInit {
           }
 
         }
-      })
+      });
+
     }, error => {
       this.loggerService.error("fetchDag");
     });

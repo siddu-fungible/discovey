@@ -201,6 +201,7 @@ class MetricChart(models.Model):
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
     platform = models.TextField(default=FunPlatform.F1)
+    companion_charts = JSONField(default={})
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)

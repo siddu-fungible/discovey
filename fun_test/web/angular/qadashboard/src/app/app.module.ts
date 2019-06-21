@@ -66,7 +66,7 @@ import { AdminComponent } from "./performance/admin/admin.component";
 import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { TooltipDirective } from './ui-elements/tooltip.directive';
-import { CompanionMetricChartComponent } from './companion-metric-chart/companion-metric-chart.component';
+import { ChartComponent} from "./chart/chart.component";
 
 @NgModule({
   declarations: [
@@ -118,7 +118,7 @@ import { CompanionMetricChartComponent } from './companion-metric-chart/companio
     ScoresTableComponent,
     PerformanceTableComponent,
     TooltipDirective,
-    CompanionMetricChartComponent
+    ChartComponent
   ],
   imports: [
     BsDropdownModule,

@@ -5,8 +5,53 @@ from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
 from django.utils import timezone
 from fun_global import PerfUnit
+from fun_global import MetricChartType
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
+latency_category = ["nsecs", "usecs", "msecs", "secs"]
+ops_category = ["ops", "Kops", "Mops", "Gops"]
+operations_category = ["op", "Kop", "Mop", "Gop"]
+cycles_category = ["cycles"]
+bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
+bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
+packets_per_second_category = ["Mpps", "pps", "Kpps", "Gpps"]
+connections_per_second_category = ["Mcps", "cps", "Kcps", "Gcps"]
+
+def get_category(y1_axis_title):
+   if y1_axis_title in latency_category:
+       return latency_category
+   elif y1_axis_title in ops_category:
+       return ops_category
+   elif y1_axis_title in operations_category:
+       return operations_category
+   elif y1_axis_title in cycles_category:
+       return cycles_category
+   elif y1_axis_title in bits_bytes_category:
+       return bits_bytes_category
+   elif y1_axis_title in bandwidth_category:
+       return bandwidth_category
+   elif y1_axis_title in packets_per_second_category:
+       return packets_per_second_category
+   elif y1_axis_title in connections_per_second_category:
+       return connections_per_second_category
+
+def get_base(category):
+    if category == "latency_category":
+        return "secs"
+    elif category == "ops_category":
+        return "ops"
+    elif category == "operations_category":
+        return "op"
+    elif category == "cycles_category":
+        return "cycles"
+    elif category == "bits_bytes_category":
+        return "b"
+    elif category == "bandwidth_category":
+        return "bps"
+    elif category == "packets_per_second_category":
+        return "pps"
+    elif category == "connections_per_second_category":
+        return "cps"
 
 if __name__ == "__main_channel_parall__":
     internal_chart_names = ["channel_parall_performance_4_8_16", "channel_parall_performance_1000"]
@@ -191,20 +236,20 @@ if __name__ == "__main_rand_write_rawblock_nvmetcp__":
 
         metric_id = LastMetricId.get_next_id()
         MetricChart(chart_name=chart_name,
-                        metric_id=metric_id,
-                        internal_chart_name=internal_chart_name,
-                        data_sets=json.dumps(data_sets),
-                        leaf=True,
-                        description="TBD",
-                        owner_info="Radhika Naik (radhika.naik@fungible.com)",
-                        source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/multiple_blt_tcp_perf.py",
-                        positive=False,
-                        y1_axis_title=PerfUnit.UNIT_USECS,
-                        visualization_unit=PerfUnit.UNIT_USECS,
-                        metric_model_name=model_name,
-                        base_line_date=base_line_date,
-                        work_in_progress=False,
-                        platform=FunPlatform.F1).save()
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Radhika Naik (radhika.naik@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/multiple_blt_tcp_perf.py",
+                    positive=False,
+                    y1_axis_title=PerfUnit.UNIT_USECS,
+                    visualization_unit=PerfUnit.UNIT_USECS,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
     print "added charts for random write latency"
 
 if __name__ == "__main_rand_read_rawblock_nvmetcp__":
@@ -258,7 +303,7 @@ if __name__ == "__main_rand_read_rawblock_nvmetcp__":
                         platform=FunPlatform.F1).save()
     print "added charts for random read latency"
 
-if __name__ == "__main__":
+if __name__ == "__main_nvols_to_bvols__":
     internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
@@ -274,3 +319,14 @@ if __name__ == "__main__":
             child_chart.data_sets = json.dumps(data_sets)
             child_chart.save()
 
+if __name__ == "__main__":
+    internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        unit = PerfUnit.UNIT_OPS if "_6" not in internal_chart_name else PerfUnit.UNIT_USECS
+        companion_charts = {}
+        companion_charts[MetricChartType.REGULAR] = {"add": True, "y1AxisLabel": unit, "xAxisLabel": "qdepth"}
+        companion_charts[MetricChartType.FUN_METIRC] = {}
+        print companion_charts
+        chart.companion_charts = companion_charts
+        chart.save()

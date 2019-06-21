@@ -134,3 +134,7 @@ class FunPlatform:
     F1 = "F1"
     S1 = "S1"
     F11 = "F1.1"
+
+class MetricChartType:
+    REGULAR = "Regular"
+    FUN_METIRC = "Fun Metric"
