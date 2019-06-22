@@ -816,13 +816,17 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                          format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, str(row_data_dict["iodepth"]))
+            if self.ec_info["num_volumes"] != 1:
+                fio_job_name = "{}_iodepth_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
+                                                             self.ec_info["num_volumes"])
+            else:
+                fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
+
+            fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus,
-                                                                                          global_num_jobs, fio_iodepth,
-                                                                                          self.ec_info["capacity"],
-                                                                                          (100 / global_num_jobs))
+                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
+                    self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
                 fio_cmd_args["multiple_jobs"] += fio_job_args
                 fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
                                                              timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)

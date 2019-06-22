@@ -6,9 +6,11 @@ from web.fun_test.models import Tag
 from web.fun_test.models import TestBed, TestbedNotificationEmails
 from web.fun_test.models import Module
 from web.fun_test.metrics_models import MetricsGlobalSettings
+from web.fun_test.models import Asset
 from django.apps import apps
 from web.fun_test.metrics_models import MetricChart, LastMetricId
 import json
+import os
 
 site_state = None
 
@@ -58,6 +60,25 @@ class SiteState():
             except ObjectDoesNotExist:
                 t = TestBed(name=testbed)
                 t.save()
+
+    def register_assets(self):
+        del os.environ["DISABLE_FUN_TEST"]
+        from asset.asset_manager import AssetManager
+
+        am = AssetManager()
+        valid_test_beds = am.get_valid_test_beds()
+        for test_bed_name in valid_test_beds:
+            # print test_bed_name
+            assets_required = am.get_assets_required(test_bed_name=test_bed_name)
+            for asset_type, assets in assets_required.iteritems():
+                print asset_type, assets
+                for asset in assets:
+                    (o, created) = Asset.objects.get_or_create(type=asset_type,
+                                                               name=asset)
+                    if test_bed_name not in o.test_beds:
+                        o.test_beds.append(test_bed_name)
+                    o.save()
+        os.environ["DISABLE_FUN_TEST"] = "1"
 
     def register_tags(self):
         for tag in self.site_base_data["tags"]:

@@ -192,7 +192,7 @@
                 <ng-template #regularSuitePath>
                   <span class="pseudo-anchor"
                         (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})">{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}</span>
-                  <p>
+                  <p *ngIf="suiteExecution.fields.description">
                     <small>{{ suiteExecution.fields.description }}</small>
                   </p>
                 </ng-template>

@@ -208,7 +208,8 @@ def assets(request, name):
                 one_record = {"name": one_asset.name,
                               "type": one_asset.type,
                               "manual_lock_user": one_asset.manual_lock_user,
-                              "job_ids": one_asset.job_ids}
+                              "job_ids": one_asset.job_ids,
+                              "test_beds": one_asset.test_beds}
                 result.append(one_record)
     elif request.method == "PUT":
         request_json = json.loads(request.body)

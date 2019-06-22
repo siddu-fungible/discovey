@@ -425,6 +425,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
+                self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
@@ -450,7 +451,6 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        self.storage_controller.disconnect()
         # fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
@@ -712,6 +712,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         io_factor += 1
 
             fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
+            fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
 
             if "multiple_jobs" in self.fio_cmd_args:
                 num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
@@ -968,7 +969,7 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(RandReadWrite8kBlocks())
+    # ecscript.add_test_case(RandReadWrite8kBlocks())
     ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(MixedRandReadWriteIOPS())
     ecscript.add_test_case(OLTPModelReadWriteIOPS())

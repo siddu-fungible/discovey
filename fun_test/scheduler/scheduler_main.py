@@ -5,6 +5,7 @@ import re
 import subprocess
 from threading import Thread, Lock
 import threading
+import traceback
 
 from scheduler_helper import *
 import signal
@@ -905,12 +906,17 @@ def join_suite_workers():
     jobs_to_be_removed = []
     for job_id, t in job_id_threads.iteritems():
         try:
+
             if not t.is_suite_completed():
                 t.run_next()
             else:
                 jobs_to_be_removed.append(job_id)
+            if job_id not in job_id_threads:
+                jobs_to_be_removed.append(job_id)
         except Exception as ex:
+            traceback.print_exc()
             send_error_mail(submitter_email=t.submitter_email, job_id=job_id, message="Suite execution error at run_next. Exception: {}".format(str(ex)))
+
 
     for job_to_be_removed in jobs_to_be_removed:
         if job_to_be_removed in job_id_threads:

@@ -70,7 +70,7 @@
       "verify": "xxhash",
       "do_verify": 1,
       "prio": 0,
-      "timeout": 900
+      "timeout": 1200
     }
   },
   "ECTcpRandRW": {

@@ -26,6 +26,8 @@ class DpcshClient(object):
                 if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
                     time.sleep(0.1)
                     continue
+                else:
+                    fun_test.critical("DPCSH socket error: {}: {}".format(socket.error, e))
 
     def _read(self, command_duration=1, chunk=4096):
         start = time.time()
@@ -45,8 +47,8 @@ class DpcshClient(object):
                     continue
                 else:
                     # a "real" error occurred
-                    print e
-                    sys.exit(1)
+                    fun_test.critical("DPCSH exception: {}".format(e))
+                    break
             else:
                 output += buffer
         return output

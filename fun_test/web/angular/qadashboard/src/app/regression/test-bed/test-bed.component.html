@@ -1,10 +1,11 @@
 <div [ngClass]="{'component': !embed}">
-  <div class="container1">
+  <fun-spinner [status]="refreshing"></fun-spinner>
+  <div *ngIf="!refreshing" class="container1">
     <div class="row">
       <div class="col">
         <div class="card">
           <div class="card-header">
-            Testbeds
+            Test-beds
           </div>
           <div class="card-body">
             <table class="table table-bordered">
@@ -142,25 +143,49 @@
       </div>
     </div>
   </div>
-  <ng-container *ngIf="!embed">
+  <ng-container *ngIf="!embed && !refreshing">
     <div class="card">
       <div class="card-header">
         Assets
       </div>
       <div class="card-body">
-        <table class="table table-bo">
+        <table class="table table-bordered table-nonfluid">
           <tr>
             <th>Name</th>
+            <th>Belongs to</th>
             <th>Type</th>
             <th>Manual-lock</th>
             <th>Suites</th>
           </tr>
           <tr *ngFor="let asset of assets">
             <td>{{ asset.name }}</td>
+            <td>
+              <ng-container *ngFor="let testBed of asset.test_beds">
+                {{ testBed }},&nbsp;
+              </ng-container>
+            </td>
             <td>{{ asset.type }}</td>
             <td>{{ asset.manual_lock_user }}
               <span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
-                    (click)="unlockAsset(asset.name)"> Un-lock</span>
+                    (click)="unlockAsset(asset)"> Un-lock</span>
+              <span *ngIf="!asset.applyingManualLock && !asset.manual_lock_user" class="pseudo-anchor" (click)="asset.applyingManualLock = true">Apply manual-lock</span>
+              <ng-container *ngIf="asset.applyingManualLock && !asset.manual_lock_user">
+                Applying manual-lock
+              </ng-container>
+              <select *ngIf="asset.applyingManualLock" id="assetSelectedUser" [(ngModel)]="asset.selectedUser">
+                <option *ngFor="let user of users" [ngValue]="user.email">{{ user.email }}
+                </option>
+              </select>
+              <ng-container *ngIf="asset.applyingManualLock">
+                <span><i class="fa fa-check fa-fw tick-color" (click)="lockAsset(asset)"></i>
+                </span>
+                <span><i class="fa fa-times fa-fw close-color" (click)="asset.applyingManualLock = false; asset.selectedUser = null"></i>
+                </span>
+
+              </ng-container>
+
+
+
             </td>
             <td>
               <ng-container *ngFor="let jobId of asset.job_ids">

@@ -7,6 +7,7 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
 import {error} from "util";
 import {TestBedService} from "./test-bed.service";
+import {UserService} from "../../services/user/user.service";
 
 enum EditMode {
   NONE = 0,
@@ -32,13 +33,16 @@ export class TestBedComponent implements OnInit {
   users: any = null;
   lockPanelHeader: string = null;
   selectedUser: any = null;
+  assetSelectedUser: any = null;
   assets = null;
   driver = null;
+  refreshing: string = null;
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
               private loggerService: LoggerService,
-              private commonService: CommonService, private service: TestBedService
+              private commonService: CommonService,
+              private service: TestBedService
   ) { }
 
   ngOnInit() {
@@ -67,7 +71,9 @@ export class TestBedComponent implements OnInit {
   }
 
   refreshAll () {
+    this.refreshing = "Refreshing test-beds";
     this.driver.subscribe(() => {
+      this.refreshing = null;
     }, error => {
       this.loggerService.error("Unable to init test-bed component");
     });
@@ -80,7 +86,20 @@ export class TestBedComponent implements OnInit {
   fetchAssets() {
     if (!this.embed) {
       return this.service.assets().pipe(switchMap(response => {
+        let dutAssets = [];
+        let hostAssets = [];
         this.assets = response;
+        this.assets.map((asset) => {
+          asset.applyingManualLock = false;
+          asset.selectedUser = null;
+          if (asset.type === 'DUT') {
+            dutAssets.push(asset);
+          }
+          if (asset.type === 'Host') {
+            hostAssets.push(asset);
+          }
+        });
+        this.assets = [...dutAssets, ...hostAssets];
         return of(true);
       }))
     } else {
@@ -249,10 +268,28 @@ export class TestBedComponent implements OnInit {
     return expired;
   }
 
-  unlockAsset(name) {
+  lockAsset(asset) {
+    if (!asset.selectedUser) {
+      return this.loggerService.error('Please select a user');
+    }
+    let name = asset.name;
+    this.service.lockAsset(name, asset.selectedUser).subscribe((response) => {
+      this.loggerService.success(`Asset ${name} lock submitted`);
+      asset.applyingManualLock = false;
+      asset.selectedUser = null;
+      this.refreshAll();
+    }, error => {
+      this.loggerService.error(`Unable to lock asset: ${name}`);
+    })
+  }
+
+  unlockAsset(asset) {
+    let name = asset.name;
     this.service.unlockAsset(name).subscribe((response) => {
       this.loggerService.success(`Asset: ${name} unlock submitted`);
+      asset.applyingManualLock = false;
       this.refreshAll();
+
     }, error => {
       this.loggerService.error(`Unable to unlock asset: ${name}`);
     })

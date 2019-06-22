@@ -106,13 +106,11 @@ def inspect(module_name):
 def get_all_test_cases(script_path):
     test_cases = {}
 
-    try:
-        result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
-        if result:
-            if "classes" in result:
-                for c in result["classes"]:
-                    test_cases[c["id"]] = c
+    all_test_cases = TestCaseInfo.objects.filter(script_path=script_path)
 
+    try:
+        for test_case in all_test_cases:
+            test_cases[test_case.test_case_id] = {"summary": test_case.summary}
     except Exception as ex:
         print "Error: {}".format(str(ex))
 
@@ -511,11 +509,11 @@ def _get_suite_executions(execution_id=None,
             elif te_result == RESULTS["IN_PROGRESS"]:
                 num_in_progress += 1
 
-            if save_test_case_info:
-                suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
-                                                          "test_case_id": test_case_execution.test_case_id,
-                                                          "inputs": test_case_execution.inputs,
-                                                          "result": test_case_execution.result})
+            # if save_test_case_info:
+            #    suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
+            #                                              "test_case_id": test_case_execution.test_case_id,
+            #                                              "inputs": test_case_execution.inputs,
+            #                                              "result": test_case_execution.result})
 
         if not finalized:
             if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
