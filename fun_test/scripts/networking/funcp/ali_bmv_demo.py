@@ -545,9 +545,9 @@ if __name__ == '__main__':
 
     ts.add_test_case(NicEmulation())
 
-    ts.add_test_case(LocalSSDTest())
+#     ts.add_test_case(LocalSSDTest())
 
-    ts.add_test_case(RemoteSSDTest())
+#     ts.add_test_case(RemoteSSDTest())
     # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
     # T2 : Local SSD from FIO
     # T3 : Remote SSD FIO
