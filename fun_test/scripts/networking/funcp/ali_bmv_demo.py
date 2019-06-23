@@ -22,9 +22,10 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        funcp_obj.cleanup_funcp()
-        for server in servers_mode:
-            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+        pass
+        # funcp_obj.cleanup_funcp()
+        # for server in servers_mode:
+        #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
 
 class BringupSetup(FunTestCase):
@@ -151,7 +152,12 @@ class NicEmulation(FunTestCase):
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
             test_host_pings(host=host, ips=ping_dict[host])
-
+        fun_test.sleep(message="Wait for host to check ping again", seconds = 30)
+        # Ping hosts
+        ping_dict = self.server_key["fs"][fs_name]["host_pings"]
+        for host in ping_dict:
+            test_host_pings(host=host, ips=ping_dict[host])
+            
     def cleanup(self):
         pass
 
