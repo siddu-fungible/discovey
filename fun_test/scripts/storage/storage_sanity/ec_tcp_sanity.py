@@ -220,18 +220,18 @@ class ECTcpRandRW(ECTcpSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test random read queries on 4:2 EC volume over nvme-tcp fabric",
+                              summary="Test random read-write queries on 4:2 EC volume over nvme-tcp fabric",
                               steps='''
-        1. Execute random read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
+        1. Execute random read-write traffic on a 4:2 EC volume via nvme-tcp fabric.''')
 
 
 class ECTcpSeqRW(ECTcpSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test sequential read queries on 4:2 EC volume over nvme-tcp fabric",
+                              summary="Test sequential read-write queries on 4:2 EC volume over nvme-tcp fabric",
                               steps='''
-        1. Execute sequential read traffic on a 4:2 EC volume via nvme-tcp fabric.''')
+        1. Execute sequential read-write traffic on a 4:2 EC volume via nvme-tcp fabric.''')
 
 
 if __name__ == "__main__":
