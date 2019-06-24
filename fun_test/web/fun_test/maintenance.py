@@ -303,7 +303,7 @@ if __name__ == "__main_rand_read_rawblock_nvmetcp__":
                         platform=FunPlatform.F1).save()
     print "added charts for random read latency"
 
-if __name__ == "__main_nvols_to_bvols__":
+if __name__ == "__main_nvols_to_8vols__":
     internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
@@ -318,6 +318,121 @@ if __name__ == "__main_nvols_to_bvols__":
                     data_set["name"] = data_set["name"].replace("(N vols)", "(8 vols)")
             child_chart.data_sets = json.dumps(data_sets)
             child_chart.save()
+
+if __name__ == "__main_nvmetcp_multi_host__":
+    model_name = "BltVolumePerformance"
+    base_line_date = datetime(year=2019, month=6, day=20, minute=0, hour=0, second=0)
+    internal_iops_chart_names = ["rand_read_qd_multi_host_nvmetcp_output_iops",
+                                 "rand_write_qd_multi_host_nvmetcp_output_iops"]
+    internal_latency_chart_names = [
+        "rand_read_qd1_multi_host_nvmetcp_output_latency",
+        "rand_read_qd32_multi_host_nvmetcp_output_latency",
+        "rand_read_qd64_multi_host_nvmetcp_output_latency",
+        "rand_write_qd1_multi_host_nvmetcp_output_latency",
+        "rand_write_qd32_multi_host_nvmetcp_output_latency",
+        "rand_write_qd64_multi_host_nvmetcp_output_latency"]
+    fio_read_job_names = ["fio_tcp_randread_blt_1_1_nhosts",
+                     "fio_tcp_randread_blt_32_1_nhosts",
+                     "fio_tcp_randread_blt_32_2_nhosts"]
+    fio_write_job_names = ["fio_tcp_randwrite_blt_1_1_nhosts",
+                     "fio_tcp_randwrite_blt_32_1_nhosts",
+                     "fio_tcp_randwrite_blt_32_2_nhosts"]
+    output_read_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
+    output_write_names = ["output_write_avg_latency", "output_write_99_latency", "output_write_99_99_latency"]
+    for internal_iops_chart_name in internal_iops_chart_names:
+        chart_name = "IOPS"
+        if "rand_read" in internal_iops_chart_name:
+            fio_job_names = fio_read_job_names
+            output_name = "output_read_iops"
+        else:
+            fio_job_names = fio_write_job_names
+            output_name = "output_write_iops"
+        data_sets = []
+        for fio_job_name in fio_job_names:
+            if "1_1" in fio_job_name:
+                name = "qd1"
+            elif "32_1" in fio_job_name:
+                name = "qd32"
+            else:
+                name = "qd64"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                          "reference": -1, "unit": PerfUnit.UNIT_OPS}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_iops_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Radhika Naik (radhika.naik@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/multi_host_blt_tcp_perf.py",
+                    positive=True,
+                    y1_axis_title=PerfUnit.UNIT_OPS,
+                    visualization_unit=PerfUnit.UNIT_OPS,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added iops chart"
+    for internal_latency_chart_name in internal_latency_chart_names:
+        if "rand_read" in internal_latency_chart_name:
+            fio_job_names = fio_read_job_names
+            output_names = output_read_names
+            if "qd1" in internal_latency_chart_name:
+                fio_job_name = "fio_tcp_randread_blt_1_1_nhosts"
+            elif "qd32" in internal_latency_chart_name:
+                fio_job_name = "fio_tcp_randread_blt_32_1_nhosts"
+            else:
+                fio_job_name = "fio_tcp_randread_blt_32_2_nhosts"
+        else:
+            fio_job_names = fio_write_job_names
+            output_names = output_write_names
+            if "qd1" in internal_latency_chart_name:
+                fio_job_name = "fio_tcp_randwrite_blt_1_1_nhosts"
+            elif "qd32" in internal_latency_chart_name:
+                fio_job_name = "fio_tcp_randwrite_blt_32_1_nhosts"
+            else:
+                fio_job_name = "fio_tcp_randwrite_blt_32_2_nhosts"
+        data_sets = []
+        for output_name in output_names:
+            if "avg" in output_name:
+                name = "avg"
+            elif "99_99" in output_name:
+                name = "99.99%"
+            else:
+                name = "99%"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": PerfUnit.UNIT_USECS}
+            data_sets.append(one_data_set)
+        chart_name = "Latency"
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_latency_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Radhika Naik (radhika.naik@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/multi_host_blt_tcp_perf.py",
+                    positive=False,
+                    y1_axis_title=PerfUnit.UNIT_USECS,
+                    visualization_unit=PerfUnit.UNIT_USECS,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added latency charts"
 
 if __name__ == "__main__":
     internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]

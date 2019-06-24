@@ -108,6 +108,10 @@ class ECVolumeLevelScript(FunTestScript):
                 self.update_workspace = job_inputs["update_workspace"]
             if "update_deploy_script" in job_inputs:
                 self.update_deploy_script = job_inputs["update_deploy_script"]
+            if "disable_wu_watchdog" in job_inputs:
+                self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+            else:
+                self.disable_wu_watchdog = True
 
             self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
             fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -124,6 +128,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             # Deploying of DUTs
             topology_helper = TopologyHelper()
@@ -286,6 +292,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --csr-replay"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
@@ -738,7 +746,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fio_iodepth = io_factor
                             break
                         else:
-                            io_factor += 2
+                            io_factor += 1
 
             fio_result[iodepth] = True
             row_data_dict = {}
@@ -816,13 +824,17 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                          format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-            fio_job_name = "{}_iodepth_{}_vol_8".format(self.fio_job_name, row_data_dict["iodepth"])
+            if self.ec_info["num_volumes"] != 1:
+                fio_job_name = "{}_iodepth_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
+                                                             self.ec_info["num_volumes"])
+            else:
+                fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
+
+            fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
             fio_output[iodepth] = {}
             if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus,
-                                                                                          global_num_jobs, fio_iodepth,
-                                                                                          self.ec_info["capacity"],
-                                                                                          (100 / global_num_jobs))
+                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
+                    self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
                 fio_cmd_args["multiple_jobs"] += fio_job_args
                 fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
                                                              timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
@@ -864,17 +876,24 @@ class ECVolumeLevelTestcase(FunTestCase):
             table_data_rows.append(row_data_list)
             # post_results("Inspur Performance Test", test_method, *row_data_list)
 
-            # Checking if mpstat process is still running
+            # Checking if mpstat process is still running...If so killing it...
             mpstat_pid_check = self.end_host.get_process_id("mpstat")
             if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid):
                 self.end_host.kill_process(process_id=mpstat_pid)
-            mpstat_data = self.end_host.read_file(file_name=self.mpstat_args["output_file"])
+            # Saving the mpstat output to the mpstat_artifact_file file
+            """mpstat_data = self.end_host.read_file(file_name=self.mpstat_args["output_file"])
             with open(mpstat_artifact_file, 'a') as f:
-                f.writelines(mpstat_data)
-
-            fun_test.add_auxillary_file(description="Host Processor Statistics - IO depth {}".
-                                        format(row_data_dict["iodepth"]),
+                f.writelines(mpstat_data)"""
+            fun_test.scp(source_port=self.end_host.ssh_port, source_username=self.end_host.ssh_username,
+                         source_password=self.end_host.ssh_password, source_ip=self.end_host.host_ip,
+                         source_file_path=self.mpstat_args["output_file"], target_file_path=mpstat_artifact_file)
+            fun_test.add_auxillary_file(description="Host CPU Usage - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=mpstat_artifact_file)
+
+            # Checking whether the vp_util stats collection thread is still running...If so stopping it...
+            if fun_test.fun_test_threads[thread_id]["thread"].is_alive():
+                fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                fun_test.fun_test_threads[thread_id]["thread"]._Thread__stop()
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)

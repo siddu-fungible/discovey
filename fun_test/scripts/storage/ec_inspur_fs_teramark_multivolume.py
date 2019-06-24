@@ -108,6 +108,10 @@ class ECVolumeLevelScript(FunTestScript):
                 self.update_workspace = job_inputs["update_workspace"]
             if "update_deploy_script" in job_inputs:
                 self.update_deploy_script = job_inputs["update_deploy_script"]
+            if "disable_wu_watchdog" in job_inputs:
+                self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+            else:
+                self.disable_wu_watchdog = True
 
             self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
             fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -124,6 +128,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             # Deploying of DUTs
             topology_helper = TopologyHelper()
@@ -286,6 +292,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --csr-replay"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
@@ -738,7 +746,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fio_iodepth = io_factor
                             break
                         else:
-                            io_factor += 2
+                            io_factor += 1
 
             fio_result[iodepth] = True
             row_data_dict = {}
@@ -824,16 +832,24 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
             fio_output[iodepth] = {}
-            if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
-                    self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
-                fio_cmd_args["multiple_jobs"] += fio_job_args
-                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
-                                                             timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
-            else:
-                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename, numjobs=fio_num_jobs,
-                                                             iodepth=fio_iodepth, name=fio_job_name,
-                                                             cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
+            try:
+                if "multiple_jobs" in self.fio_cmd_args:
+                    fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
+                        self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
+                    fio_cmd_args["multiple_jobs"] += fio_job_args
+                    fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
+                                                                 timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
+                else:
+                    fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename, numjobs=fio_num_jobs,
+                                                                 iodepth=fio_iodepth, name=fio_job_name,
+                                                                 cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                # Checking whether the vp_util stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[thread_id]["thread"].is_alive():
+                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                    fun_test.fun_test_threads[thread_id]["thread"]._Thread__stop()
+
             fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth]))
             fun_test.test_assert(fio_output[iodepth],
                                  "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"

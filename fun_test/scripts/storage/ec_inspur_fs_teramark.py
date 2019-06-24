@@ -108,6 +108,10 @@ class ECVolumeLevelScript(FunTestScript):
                 self.update_workspace = job_inputs["update_workspace"]
             if "update_deploy_script" in job_inputs:
                 self.update_deploy_script = job_inputs["update_deploy_script"]
+            if "disable_wu_watchdog" in job_inputs:
+                self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+            else:
+                self.disable_wu_watchdog = True
 
             self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
             fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -124,6 +128,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             # Deploying of DUTs
             topology_helper = TopologyHelper()
@@ -286,6 +292,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --csr-replay"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
