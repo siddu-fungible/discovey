@@ -746,7 +746,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fio_iodepth = io_factor
                             break
                         else:
-                            io_factor += 2
+                            io_factor += 1
 
             fio_result[iodepth] = True
             row_data_dict = {}
