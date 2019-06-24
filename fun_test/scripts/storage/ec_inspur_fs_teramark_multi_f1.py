@@ -104,8 +104,8 @@ class ECVolumeLevelScript(FunTestScript):
         else:
             self.disable_wu_watchdog = True
 
-        if self.disable_wu_watchdog:
-            for i in range(len(self.bootargs)):
+        for i in range(len(self.bootargs)):
+            if self.disable_wu_watchdog:
                 self.bootargs[i] += " --disable-wu-watchdog"
 
         fun_test.log("Global Config: {}".format(self.__dict__))
