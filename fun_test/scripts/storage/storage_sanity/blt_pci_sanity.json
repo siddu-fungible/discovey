@@ -29,7 +29,7 @@
       "prio": 0,
       "verify": "xxhash",
       "do_verify": 1,
-      "timeout": 400
+      "timeout": 600
     }
   },
   "BltPciSeqRead": {
@@ -72,7 +72,7 @@
       "verify": "xxhash",
       "do_verify": 1,
       "runtime": 30,
-      "timeout": 50
+      "timeout": 60
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
@@ -108,7 +108,7 @@
       "verify": "xxhash",
       "do_verify": 1,
       "runtime": 30,
-      "timeout": 35
+      "timeout": 60
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [
