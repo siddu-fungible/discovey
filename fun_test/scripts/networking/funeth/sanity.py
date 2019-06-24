@@ -396,19 +396,28 @@ class FunethTestScpBase(FunTestCase):
         #else:
         #    file_size = '2g'
         #linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
+
         # Create file with pattern of sequential 32-bit
         if TB == 'SN2':
             file_size = 2000000  # 2MB
         else:
             file_size = 200000000  # 200MB
+
+        # Create file in regression server
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
-        linux_obj.command('rm {0}; touch {0}'.format(self.file_name))
-        fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, self.file_name))
-        with open(self.file_name, 'w') as f:
+        tmp_filename = '{}/funeth_sanity_scp_test_file'.format(fun_test.get_logs_directory())
+        fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, tmp_filename))
+        with open(tmp_filename, 'w') as f:
             f.write(content)
-        fun_test.sleep("Wait for file to be created", seconds=5)
+
+        # Scp file to test server
+        fun_test.scp(source_file_path=tmp_filename,
+                     target_ip=linux_obj.host_ip,
+                     target_username=linux_obj.ssh_username,
+                     target_password=linux_obj.ssh_password,
+                     target_file_path=self.file_name)
         linux_obj.command('ls -l {}'.format(self.file_name))
         fun_test.test_assert(linux_obj.check_file_directory_exists(self.file_name),
                              'Create file {} in {}'.format(self.file_name, linux_obj.host_ip))

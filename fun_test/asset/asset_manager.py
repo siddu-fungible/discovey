@@ -380,10 +380,14 @@ class AssetManager:
             if specific_dut:
                 num_duts_required = 1
 
+        specific_host = None
         num_hosts_required = None
         if AssetType.HOST in asset_request:
             host_info = asset_request[AssetType.HOST]
             num_hosts_required = host_info.get("num", None)
+            specific_dut = host_info.get("name", None)
+            if specific_host:
+                num_duts_required = 1
 
         asset_category_unavailable = False
         error_message = ""

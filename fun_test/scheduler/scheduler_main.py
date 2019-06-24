@@ -889,7 +889,7 @@ def clear_out_queue():
 def initialize():
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
     test_bed_monitor.start()
-    clear_out_queue()
+    # clear_out_queue()
     clear_out_old_jobs()
 
     if is_development_mode():
@@ -919,7 +919,11 @@ def join_suite_workers():
 def clear_out_old_jobs():
     today = get_current_time()
     past = today - timedelta(days=2)
-    old_jobs = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.SUBMITTED, scheduled_time__gt=past)
+    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SUBMITTED, scheduled_time__gt=past)
+    old_jobs.delete()
+    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SCHEDULED)
+    old_jobs.delete()
+    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.IN_PROGRESS)
     old_jobs.delete()
 
 def cleanup_unused_assets():

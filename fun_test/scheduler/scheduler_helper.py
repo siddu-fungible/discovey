@@ -290,7 +290,8 @@ def queue_job3(suite_path=None,
                test_bed_type=None,
                version=None,
                requested_priority_category=SchedulerJobPriority.NORMAL,
-               submitter_email=None):
+               submitter_email=None,
+               description=None):
     time.sleep(0.1)
     result = -1
     if not tags:
@@ -350,6 +351,7 @@ def queue_job3(suite_path=None,
         suite_execution.build_url = build_url
         suite_execution.version = version
         suite_execution.requested_priority_category = requested_priority_category
+        suite_execution.description = description
 
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:

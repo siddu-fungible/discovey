@@ -609,11 +609,14 @@ class FunTest:
         log_prefix = ""
         if self.log_prefix:
             log_prefix = "_{}".format(self.log_prefix)
-        artifact_file = self.logs_dir + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        artifact_file = self.get_logs_directory() + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         return artifact_file
 
     def enable_pause_on_failure(self):
         self.pause_on_failure = True
+
+    def get_logs_directory(self):
+        return self.logs_dir
 
     def disable_pause_on_failure(self):
         self.pause_on_failure = False
