@@ -50,7 +50,7 @@ class BringupSetup(FunTestCase):
 
         # Removing any funeth driver from COMe and and all the connected server
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
             funcp_obj.cleanup_funcp()
             server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
             servers_mode = server_key["fs"][fs_name]
@@ -78,7 +78,7 @@ class BringupSetup(FunTestCase):
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
 
             print "\n\n\n Booting of Control Plane  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -136,7 +136,7 @@ class TestCcCcPing(FunTestCase):
 
         checkpoint = "Ensure all vlans can ping its neighbour vlan"
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
             res = funcp_obj.test_cc_pings_fs()
             fun_test.simple_assert(res, checkpoint)
         fun_test.add_checkpoint(checkpoint)
@@ -178,7 +178,7 @@ class TestIntraF1Pings(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    # ts.add_test_case(BringupSetup())
+    ts.add_test_case(BringupSetup())
     ts.add_test_case(TestCcCcPing())
     ts.add_test_case(TestIntraF1Pings())
     ts.run()

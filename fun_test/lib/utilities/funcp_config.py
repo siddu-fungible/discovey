@@ -311,10 +311,10 @@ class FunControlPlaneBringup:
 
             else:
                 try:
-                    if docker_name.strip() == "F1-0":
+                    if "F1-0" in docker_name.strip():
                         linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
                                                               f1_0_mpg, timeout=60)
-                    elif docker_name.strip() == "F1-1":
+                    elif "F1-1" in docker_name.strip():
                         linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
                                                               f1_1_mpg, timeout=60)
                 except:
