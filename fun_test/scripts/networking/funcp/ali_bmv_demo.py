@@ -156,7 +156,7 @@ class NicEmulation(FunTestCase):
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
-            test_host_pings(host=host, ips=ping_dict[host])
+            test_host_pings(host=host, ips=ping_dict[host], strict=True)
             
     def cleanup(self):
         pass
