@@ -832,16 +832,24 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
             fio_output[iodepth] = {}
-            if "multiple_jobs" in self.fio_cmd_args:
-                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
-                    self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
-                fio_cmd_args["multiple_jobs"] += fio_job_args
-                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
-                                                             timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
-            else:
-                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename, numjobs=fio_num_jobs,
-                                                             iodepth=fio_iodepth, name=fio_job_name,
-                                                             cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
+            try:
+                if "multiple_jobs" in self.fio_cmd_args:
+                    fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
+                        self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
+                    fio_cmd_args["multiple_jobs"] += fio_job_args
+                    fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
+                                                                 timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
+                else:
+                    fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename, numjobs=fio_num_jobs,
+                                                                 iodepth=fio_iodepth, name=fio_job_name,
+                                                                 cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                # Checking whether the vp_util stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[thread_id]["thread"].is_alive():
+                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                    fun_test.fun_test_threads[thread_id]["thread"]._Thread__stop()
+
             fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth]))
             fun_test.test_assert(fio_output[iodepth],
                                  "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
