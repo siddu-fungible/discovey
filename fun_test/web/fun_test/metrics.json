@@ -2503,7 +2503,7 @@
                     "metric_model_name": "MetricContainer",
                     "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
                     "weight": 1,
-                    "label": "NVMe/TCP",
+                    "label": "NVMe/TCP - Single host",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
@@ -2610,6 +2610,78 @@
                             "name": "rand_write_qd128_nvmetcp_output_latency",
                             "weight": 1,
                             "label": "Latency, QDepth=128"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "multi_host_raw_block_nvmetcp",
+                    "weight": 1,
+                    "label": "NVMe/TCP - Multi host",
+                    "children": [
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "raw_block_teramarks_multi_host_nvmetcp_rand_read",
+                        "weight": 1,
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_read_qd_multi_host_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_read_qd1_multi_host_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_read_qd32_multi_host_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_read_qd64_multi_host_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
+                          }
+                        ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "raw_block_teramarks_multi_host_nvmetcp_rand_write",
+                        "weight": 1,
+                        "label": "Random Write",
+                        "children": [
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_write_qd_multi_host_nvmetcp_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_write_qd1_multi_host_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=1"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_write_qd32_multi_host_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=32"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_write_qd64_multi_host_nvmetcp_output_latency",
+                            "weight": 1,
+                            "label": "Latency, QDepth=64"
                           }
                         ]
                       }
