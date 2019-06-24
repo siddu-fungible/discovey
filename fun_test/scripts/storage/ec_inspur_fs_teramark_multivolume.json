@@ -87,8 +87,8 @@
     "fio_run_timeout": 150,
     "fio_size_timeout": 1800,
     "fio_modes": ["randrw"],
-    "fio_iodepth": [32, 64, 128],
-    "full_run_iodepth": [32, 64, 128],
+    "fio_iodepth": [32, 64, 96, 128],
+    "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read_write",
     "mpstat_args": {"interval": 60, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 60}
