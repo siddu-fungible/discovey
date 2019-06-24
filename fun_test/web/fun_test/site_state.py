@@ -62,7 +62,10 @@ class SiteState():
                 t.save()
 
     def register_assets(self):
-        del os.environ["DISABLE_FUN_TEST"]
+        fun_test_was_disabled = False
+        if "DISABLE_FUN_TEST" in os.environ:
+            fun_test_was_disabled = True
+            del os.environ["DISABLE_FUN_TEST"]
         from asset.asset_manager import AssetManager
 
         am = AssetManager()
@@ -78,7 +81,8 @@ class SiteState():
                     if test_bed_name not in o.test_beds:
                         o.test_beds.append(test_bed_name)
                     o.save()
-        os.environ["DISABLE_FUN_TEST"] = "1"
+        if fun_test_was_disabled:
+            os.environ["DISABLE_FUN_TEST"] = "1"
 
     def register_tags(self):
         for tag in self.site_base_data["tags"]:
