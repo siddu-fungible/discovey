@@ -292,7 +292,7 @@ def queue_job3(suite_path=None,
                requested_priority_category=SchedulerJobPriority.NORMAL,
                submitter_email=None,
                description=None):
-    time.sleep(0.1)
+    # time.sleep(0.1)
     result = -1
     if not tags:
         tags = []
@@ -302,7 +302,8 @@ def queue_job3(suite_path=None,
         inputs = {}
     if suite_type == SuiteType.DYNAMIC:
         original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
-        suite_path = "Re({})".format(original_suite_execution.suite_path)
+        # suite_path = "Re({})".format(original_suite_execution.suite_path)
+        suite_path = original_suite_execution.suite_path
 
     if suite_path and suite_path.replace(".json", "").endswith("_container"):
         suite_type = SuiteType.CONTAINER
