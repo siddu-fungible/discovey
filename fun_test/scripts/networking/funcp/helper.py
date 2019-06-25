@@ -138,7 +138,7 @@ def test_host_pings(host, ips, strict=False):
                 fun_test.critical("%s cannot reach %s" % (host, hosts))
 
 
-def setup_hu_host(funeth_obj, update_driver=True):
+def setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4):
     fun_test.log("===================")
     fun_test.log("Configuring HU host")
     fun_test.log("===================")
@@ -152,11 +152,11 @@ def setup_hu_host(funeth_obj, update_driver=True):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
             critical_log(update_src_result, 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    critical_log(funeth_obj.load(sriov=4), 'Load funeth driver.')
+    critical_log(funeth_obj.load(sriov=sriov, num_queues=num_queues), 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
 
-        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=8),
+        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=4),
                      'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
