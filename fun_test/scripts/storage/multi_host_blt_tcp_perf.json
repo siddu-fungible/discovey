@@ -74,7 +74,7 @@
       "rw": "write", "bs": "4k",
       "iodepth": 1, "numjobs": 1,
       "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "", "timeout": 7200
+      "size": "10%", "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
