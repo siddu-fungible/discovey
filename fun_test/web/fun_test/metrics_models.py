@@ -201,7 +201,8 @@ class MetricChart(models.Model):
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
     platform = models.TextField(default=FunPlatform.F1)
-    companion_charts = ArrayField(models.IntegerField, default=[])
+    companion_charts = ArrayField(models.IntegerField(default=-1))
+    creator = models.TextField(default="team-regression@fungible.com")
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
@@ -707,12 +708,13 @@ class CompanionChart(models.Model):
     fun_chart_type = models.TextField(default=FunChartType.LINE_CHART)
     xaxis_title = models.TextField(default="")
     yaxis_title = models.TextField(default="")
-    data_sets = ArrayField(models.TextField, default=[])
+    data_sets = ArrayField(models.TextField(default=""))
     chart_id = models.IntegerField(default=-1, unique=True)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.metric_chart_type, self.fun_chart_type, self.xaxis_title,
                                          self.yaxis_title, self.chart_id)
+
 
 class LastCompanionChartId(models.Model):
     last_id = models.IntegerField(unique=True, default=100)
