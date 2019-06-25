@@ -77,14 +77,22 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
+        self.topology_helper = TopologyHelper()
+        self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
+        self.required_hosts = self.topology_helper.get_available_hosts()
+        print("required hosts output is: {}".format(self.required_hosts))
+        print("dir of required hosts output is: {}".format(dir(self.required_hosts)))
+
+        """
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
         fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
         self.total_avaialble_duts = len(self.testbed_config["dut_info"])
         fun_test.log("Total Avaialble Duts: {}".format(self.total_avaialble_duts))
+        """
 
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
+        if "workarounds" in self.topology_helper.spec and "enable_funcp" in self.topology_helper.spec["workarounds"]\
+                and self.topology_helper.spec["workarounds"]["enable_funcp"]:
             # Declaring default values if not defined in config files
             """
             if not hasattr(self, "dut_start_index"):
@@ -133,33 +141,33 @@ class ECVolumeLevelScript(FunTestScript):
                     self.bootargs[i] += " --disable-wu-watchdog"
 
             # Deploying of DUTs
+            """"
             topology_helper = TopologyHelper()
             available_dut_indexes = topology_helper.get_available_duts().keys()
+            """
             """
             topology_helper.disable_duts(self.skip_dut_list)
             """
             """
             self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
             """
-            self.num_duts = len(available_dut_indexes)
+            self.num_duts = len(self.available_dut_indexes)
             fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
-            fun_test.test_assert(expression=self.num_duts <= self.total_avaialble_duts,
+            fun_test.test_assert(expression=self.num_duts <= self.available_dut_indexes,
                                  message="Testbed has enough DUTs")
 
-            for dut_index in available_dut_indexes:
-                topology_helper.set_dut_parameters(dut_index=dut_index,
+            for dut_index in self.available_dut_indexes:
+                self.topology_helper.set_dut_parameters(dut_index=dut_index,
                                                    f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                                   1: {"boot_args": self.bootargs[1]}})
-            self.topology = topology_helper.deploy()
+            self.topology = self.topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
             # Datetime required for daily Dashboard data filter
             self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
             fun_test.log("Data collection time: {}".format(self.db_log_time))
 
-            required_hosts = topology_helper.get_available_hosts()
-            print("required hosts output is: {}".format(required_hosts))
-            print("dir of required hosts output is: {}".format(dir(required_hosts)))
+            """required_hosts = topology_helper.get_available_hosts()"""
             """
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
             hosts = self.topology.get_hosts()
@@ -180,7 +188,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.host_ips = []
             self.host_numa_cpus = {}
             self.total_numa_cpus = {}
-            for host_name, host_obj in required_hosts.items():
+            for host_name, host_obj in self.required_hosts.items():
                 # Retrieving host ips
                 if host_name not in self.hosts_test_interfaces:
                     self.hosts_test_interfaces[host_name] = []
@@ -223,7 +231,7 @@ class ECVolumeLevelScript(FunTestScript):
             """
             for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
             """
-            for curr_index, dut_index in enumerate(available_dut_indexes):
+            for curr_index, dut_index in enumerate(self.available_dut_indexes):
                 """
                 curr_index = dut_index - self.dut_start_index
                 """
@@ -318,10 +326,10 @@ class ECVolumeLevelScript(FunTestScript):
                 if self.disable_wu_watchdog:
                     self.bootargs[i] += " --disable-wu-watchdog"
 
-            topology_helper = TopologyHelper()
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
+            """topology_helper = TopologyHelper()"""
+            self.topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
                                                               1: {"boot_args": self.bootargs[1]}})
-            self.topology = topology_helper.deploy()
+            self.topology = self.topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
             self.fs = self.topology.get_dut_instance(index=0)
