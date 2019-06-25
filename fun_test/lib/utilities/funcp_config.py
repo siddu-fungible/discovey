@@ -455,7 +455,7 @@ class FunControlPlaneBringup:
         self.docker_names_got = True
         linux_obj_come.disconnect()
 
-    def test_cc_pings_fs(self):
+    def test_cc_pings_fs(self, interval=1):
         self._get_docker_names()
         self._get_vlan1_ips()
         ping_success = False
@@ -470,7 +470,9 @@ class FunControlPlaneBringup:
                 linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                                  ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                                  ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-                output = linux_obj.command("ping -c 5 -I %s %s " % (self.vlan1_ips[host.rstrip()], self.vlan1_ips[docker]))
+                output = linux_obj.command("sudo ping -c 5 -i %s -I %s %s " % (interval,
+                                                                               self.vlan1_ips[host.rstrip()],
+                                                                               self.vlan1_ips[docker]))
 
                 linux_obj.disconnect()
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
@@ -492,7 +494,7 @@ class FunControlPlaneBringup:
                     fun_test.log("=================================")
         return ping_success
 
-    def test_cc_pings_remote_fs(self, dest_ips, docker_name=None, from_vlan=False):
+    def test_cc_pings_remote_fs(self, dest_ips, docker_name=None, from_vlan=False, interval=1):
         if not docker_name:
             self._get_docker_names()
         self._get_vlan1_ips()
@@ -511,9 +513,9 @@ class FunControlPlaneBringup:
                 result = False
                 percentage_loss = 100
                 if from_vlan:
-                    command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host.rstrip()], ips)
+                    command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()], ips)
                 else:
-                    command = "ping -c 5 %s " % ips
+                    command = "sudo ping -c 5 -i %s %s " % (interval, ips)
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:
@@ -666,7 +668,7 @@ class FunControlPlaneBringup:
     def _test_intra_f1_ping(self, network_controller_obj, hosts):
         result = False
         try:
-            count = 10000
+            count = 5000
             for host in hosts:
                 linux_obj = Linux(host_ip=host['name'], ssh_username=host['ssh_username'],
                                   ssh_password=host['ssh_password'])
@@ -674,7 +676,7 @@ class FunControlPlaneBringup:
                     if host['ip'] == hosts[index]['ip']:
                         continue
                     checkpoint = "Ping from %s to %s" % (host['ip'], hosts[index]['ip'])
-                    res = linux_obj.ping(dst=hosts[index]['ip'], count=2)
+                    res = linux_obj.ping(dst=hosts[index]['ip'], count=2, interval=0.01, sudo=True)
                     fun_test.simple_assert(res, checkpoint)
 
                     erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
@@ -740,6 +742,8 @@ class FunControlPlaneBringup:
 
     def validate_intra_fs_ping(self, hosts, dpc_info):
         result = False
+        f1_0_dpc_obj = None
+        f1_1_dpc_obj = None
         try:
             for fs in hosts:
                 for fs_name in fs:
@@ -755,11 +759,15 @@ class FunControlPlaneBringup:
                     res = self._test_intra_fs_ping(f1_0_hosts=f1_0_hosts, f1_1_hosts=f1_1_hosts,
                                                    f1_0_dpc_obj=f1_0_dpc_obj, f1_1_dpc_obj=f1_1_dpc_obj)
                     fun_test.test_assert(res, checkpoint)
-                    f1_0_dpc_obj.disconnect()
                     f1_1_dpc_obj.disconnect()
+                    f1_0_dpc_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
+        finally:
+            if f1_1_dpc_obj and f1_0_dpc_obj:
+                f1_1_dpc_obj.disconnect()
+                f1_0_dpc_obj.disconnect()
         return result
 
     def validate_inter_rack_ping(self, fs_per_rack):
@@ -810,7 +818,7 @@ class FunControlPlaneBringup:
     def _test_ping_within_racks(self, remote_fs, local_fs):
         result = False
         try:
-            count = 10000
+            count = 5000
             for f1 in local_fs['F1s']:
                 spine_links = self._fetch_spine_links(cx_links=f1['CxLinks'])
                 fab_links = self._fetch_fabric_links(fab_links=f1['FabLinks'])
@@ -828,7 +836,7 @@ class FunControlPlaneBringup:
                         for remote_host in remote_f1['Hosts']:
                             hu_interface_ip = remote_host['ip']
                             checkpoint = "Ping from %s to %s" % (host['ip'], hu_interface_ip)
-                            res = linux_obj.ping(dst=hu_interface_ip, count=2)
+                            res = linux_obj.ping(dst=hu_interface_ip, count=2, interval=0.01, sudo=True)
                             fun_test.simple_assert(res, checkpoint)
 
                             src_fcp_stats_before = source_dpc_obj.peek_fcp_global_stats()
@@ -946,14 +954,14 @@ class FunControlPlaneBringup:
     def _test_intra_fs_ping(self, f1_0_hosts, f1_1_hosts, f1_0_dpc_obj, f1_1_dpc_obj):
         result = False
         try:
-            count = 10000
+            count = 5000
             for f1_0_host in f1_0_hosts:
                 linux_obj = Linux(host_ip=f1_0_host['name'], ssh_username=f1_0_host['ssh_username'],
                                   ssh_password=f1_0_host['ssh_password'])
                 for f1_1_host in f1_1_hosts:
                     hu_interface_ip = f1_1_host['ip']
                     checkpoint = "Ping from %s to %s" % (f1_0_host['ip'], hu_interface_ip)
-                    res = linux_obj.ping(dst=hu_interface_ip, count=2)
+                    res = linux_obj.ping(dst=hu_interface_ip, count=2, interval=0.01, sudo=True)
                     fun_test.simple_assert(res, checkpoint)
 
                     fcp_stats_before = f1_0_dpc_obj.peek_fcp_global_stats()
