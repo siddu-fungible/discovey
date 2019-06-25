@@ -332,8 +332,8 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency = read_95_latency
             entry.output_read_99_latency = read_99_latency
             entry.output_read_99_99_latency = read_99_99_latency
-            entry.output_write_iops_unit = write_iops
-            entry.output_read_iops_unit = read_iops
+            entry.output_write_iops_unit = write_iops_unit
+            entry.output_read_iops_unit = read_iops_unit
             entry.output_write_throughput_unit = write_throughput_unit
             entry.output_read_throughput_unit = read_throughput_unit
             entry.output_write_avg_latency_unit = write_avg_latency_unit
