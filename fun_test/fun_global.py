@@ -138,3 +138,9 @@ class FunPlatform:
 class MetricChartType:
     REGULAR = "Regular"
     FUN_METIRC = "Fun Metric"
+
+class FunChartType:
+    VERTICAL_BAR_CHART = "vertical_colored_bar_chart"
+    HORIZONTAL_BAR_CHART = "horizontal_bar_chart"
+    LINE_CHART = "line"
+    PIE_CHART = "pie_chart"

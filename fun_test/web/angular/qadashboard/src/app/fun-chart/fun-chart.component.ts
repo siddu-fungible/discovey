@@ -194,6 +194,53 @@ export class FunChartComponent implements OnInit, OnChanges {
         },
       };
     }
+    else if (this.chartType === 'horizontal_bar_chart') {
+      chartOptions = {
+        chart: {
+        type: 'bar'
+    },
+    title: {
+        text: this.title
+    },
+    xAxis: {
+        categories: this.xValues,
+        title: {
+            text: this.xAxisLabel
+        }
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: this.y1AxisLabel
+        },
+        labels: {
+            overflow: 'justify'
+        }
+    },
+    tooltip: {
+        valueSuffix: ' ' + this.y1AxisLabel
+    },
+    plotOptions: {
+        bar: {
+            dataLabels: {
+                enabled: true
+            }
+        }
+    },
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'top',
+        floating: true,
+        borderWidth: 1,
+        shadow: true
+    },
+    credits: {
+        enabled: false
+    },
+    series: this.y1Values
+      }
+    }
 
     this.chart = new Chart(chartOptions);
   }

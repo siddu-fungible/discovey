@@ -5,7 +5,8 @@ from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
 from django.utils import timezone
 from fun_global import PerfUnit
-from fun_global import MetricChartType
+from fun_global import MetricChartType, FunChartType
+from web.fun_test.metrics_models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 latency_category = ["nsecs", "usecs", "msecs", "secs"]
@@ -434,14 +435,34 @@ if __name__ == "__main_nvmetcp_multi_host__":
                     platform=FunPlatform.F1).save()
     print "added latency charts"
 
-if __name__ == "__main__":
+if __name__ == "__main_temp__":
     internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
     for internal_chart_name in internal_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         unit = PerfUnit.UNIT_OPS if "_6" not in internal_chart_name else PerfUnit.UNIT_USECS
         companion_charts = {}
-        companion_charts[MetricChartType.REGULAR] = {"add": True, "y1AxisLabel": unit, "xAxisLabel": "qdepth"}
+        companion_charts[MetricChartType.REGULAR] = {"add": True, "y1AxisLabel": unit, "xAxisLabel": "qdepth",
+                                                     "dataSets": ["read(8 vols)", "write(8 vols)"]}
         companion_charts[MetricChartType.FUN_METIRC] = {}
         print companion_charts
         chart.companion_charts = companion_charts
         chart.save()
+
+if __name__ == "__main__":
+    data_sets = ["read(8 vols)", "write(8 vols)"]
+    xaxis_title = "log2(qDepth)"
+    yaxis_titles = [PerfUnit.UNIT_KOPS, PerfUnit.UNIT_USECS]
+    metric_chart_type = MetricChartType.REGULAR
+    fun_chart_type = FunChartType.LINE_CHART
+    for yaxis_title in yaxis_titles:
+        chart_id = LastCompanionChartId.get_next_id()
+        CompanionChart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
+                       metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets)
+        if yaxis_title == PerfUnit.UNIT_KOPS:
+            chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host")
+        else:
+            chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host_6")
+        if chart:
+            chart.companion_charts = [chart_id]
+            chart.save()
+    print "added companion charts"
