@@ -103,7 +103,7 @@
   },
   "MultiHostFioRandWrite": {
     "num_ssd": 12,
-    "blt_count": 12,
+    "blt_count": 10,
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
