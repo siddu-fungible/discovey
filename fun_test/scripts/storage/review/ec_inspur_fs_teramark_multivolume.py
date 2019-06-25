@@ -80,8 +80,7 @@ class ECVolumeLevelScript(FunTestScript):
         self.topology_helper = TopologyHelper()
         self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
         self.required_hosts = self.topology_helper.get_available_hosts()
-        print("required hosts output is: {}".format(self.required_hosts))
-        print("dir of required hosts output is: {}".format(dir(self.required_hosts)))
+        self.testbed_config = self.topology_helper.spec
 
         """
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -91,8 +90,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.log("Total Avaialble Duts: {}".format(self.total_avaialble_duts))
         """
 
-        if "workarounds" in self.topology_helper.spec and "enable_funcp" in self.topology_helper.spec["workarounds"]\
-                and self.topology_helper.spec["workarounds"]["enable_funcp"]:
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
             # Declaring default values if not defined in config files
             """
             if not hasattr(self, "dut_start_index"):
@@ -913,7 +912,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            # post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running...If so killing it...
             mpstat_pid_check = self.end_host.get_process_id("mpstat")
