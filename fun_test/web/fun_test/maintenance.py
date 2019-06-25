@@ -449,7 +449,7 @@ if __name__ == "__main_temp__":
         chart.save()
 
 if __name__ == "__main__":
-    data_sets = ["read(8 vols)", "write(8 vols)"]
+    data_sets = {"qdepths": [1, 8, 16, 32, 64, 128, 256], "names": ["read(8 vols)", "write(8 vols)"]}
     xaxis_title = "log2(qDepth)"
     yaxis_titles = [PerfUnit.UNIT_KOPS, PerfUnit.UNIT_USECS]
     metric_chart_type = MetricChartType.REGULAR
@@ -458,7 +458,7 @@ if __name__ == "__main__":
         chart_id = LastCompanionChartId.get_next_id()
         yaxis_title = "log10(" + yaxis_title + ")"
         CompanionChart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
-                       metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets)
+                       metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
         if PerfUnit.UNIT_KOPS in yaxis_title:
             chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host")
         else:

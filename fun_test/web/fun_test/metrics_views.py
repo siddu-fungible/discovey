@@ -810,6 +810,7 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
     result["work_in_progress"] = chart.work_in_progress
+    result["companion_charts"] = chart.companion_charts
     result["jira_ids"] = json.loads(chart.jira_ids)
     result["metric_id"] = chart.metric_id
 

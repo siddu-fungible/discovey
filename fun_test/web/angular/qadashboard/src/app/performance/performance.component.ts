@@ -325,6 +325,7 @@ export class PerformanceComponent implements OnInit {
     node.showAddJira = false;
     node.positive = dagEntry.positive;
     node.workInProgress = dagEntry.work_in_progress;
+    node.companionCharts = dagEntry.companion_charts;
     if (metricId in this.tagsForId) {
       node.tags = this.tagsForId[metricId];
     }
