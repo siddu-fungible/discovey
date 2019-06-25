@@ -803,14 +803,21 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
-            """
-            # Comparing the FIO results with the expected value for the current block size and IO depth combo
-            for op, stats in self.expected_fio_result[combo][mode].items():
-                for field, value in stats.items():
-                    actual = fio_output[combo][mode][op][field]
-                    row_data_dict[op + field] = actual
-                    fun_test.log("raw_data[op + field] is: {}".format(row_data_dict[op + field]))
-            """
+            for i in range(1, self.blt_count + 1):
+                latency_read = False
+                for op, stats in fio_output[combo][mode][i].items():
+                    for field, value in stats.items():
+                        if field == "latency" and not latency_read:
+                            actual = fio_output[combo][mode][i][op][field]
+                            row_data_dict[op + field] = actual
+                            latency_read = True
+                        else:
+                            if row_data_dict[op + field] is None:
+                                row_data_dict[op + field] = fio_output[combo][mode][i][op][field]
+                            else:
+                                row_data_dict[op + field] += fio_output[combo][mode][i][op][field]
+                        fun_test.log("raw_data[op + field] is: {}".format(row_data_dict[op + field]))
+
             row_data_dict["fio_job_name"] = fio_job_name
 
             # Building the table row for this variation for both the script table and performance dashboard

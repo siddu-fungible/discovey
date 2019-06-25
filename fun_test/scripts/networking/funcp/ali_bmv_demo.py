@@ -143,7 +143,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -156,7 +156,7 @@ class NicEmulation(FunTestCase):
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
-            test_host_pings(host=host, ips=ping_dict[host])
+            test_host_pings(host=host, ips=ping_dict[host], strict=True)
             
     def cleanup(self):
         pass

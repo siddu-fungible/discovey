@@ -54,7 +54,7 @@
   },
   "MultiHostFioRandRead": {
     "num_ssd": 12,
-    "blt_count": 12,
+    "blt_count": 10,
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -71,10 +71,10 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "write", "bs": "64k",
+      "rw": "write", "bs": "4k",
       "iodepth": 1, "numjobs": 1,
       "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "100%", "timeout": 7200
+      "size": "10%", "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
@@ -103,7 +103,7 @@
   },
   "MultiHostFioRandWrite": {
     "num_ssd": 12,
-    "blt_count": 12,
+    "blt_count": 10,
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
