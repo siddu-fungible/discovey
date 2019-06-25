@@ -1,0 +1,6 @@
+[
+  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"names": ["fs-42"]}, "Host": {"names": ["mktg-server-02"]}}}}},
+  {"path": "storage/review/ec_inspur_fs_teramark_multivolume.py", "inputs": {"num_volumes": 8}},
+  {"path": "storage/review/ec_inspur_fs_teramark_multivolume.py", "inputs": {"num_volumes": 1, "io_depth": [8, 16, 32, 64, 128]}},
+  {"path": "storage/review/ec_inspur_fs_teramark_multivolume.py", "inputs": {"num_volumes": 4}}
+]
