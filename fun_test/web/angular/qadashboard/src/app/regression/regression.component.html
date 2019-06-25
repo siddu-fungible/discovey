@@ -188,6 +188,8 @@
                 <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'; else regularSuitePath">
                   <span class="pseudo-anchor"
                         (click)="navigateByQueryParams({suite_path: getReRunOriginalSuitePath(suiteExecution)})">Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
+                  <small>{{ suiteExecution.fields.description }}</small>
+
                 </ng-container>
                 <ng-template #regularSuitePath>
                   <span class="pseudo-anchor"
