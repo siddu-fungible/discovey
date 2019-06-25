@@ -185,9 +185,9 @@
               </td>
 
               <td>
-                <ng-container *ngIf="suiteExecution.fields.suite_path === 'dynamic'; else regularSuitePath">
+                <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'; else regularSuitePath">
                   <span class="pseudo-anchor"
-                        (click)="navigateByQueryParams({suite_path: 'Re(' + suiteExecution.fields.suite_path})">Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
+                        (click)="navigateByQueryParams({suite_path: getReRunOriginalSuitePath(suiteExecution)})">Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
                 </ng-container>
                 <ng-template #regularSuitePath>
                   <span class="pseudo-anchor"
@@ -297,7 +297,7 @@
             </td>
             <td>{{ suiteExecution.fields.submitter_email }}</td>
             <td>
-              {{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
+              {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
             </td>
 
             <ng-container [ngSwitch]="suiteExecution.fields.scheduling_type">

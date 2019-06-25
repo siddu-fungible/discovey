@@ -52,7 +52,7 @@ class FunTestCase2(FunTestCase):
 
     def setup(self):
         fun_test.log("Testcase setup")
-        fun_test.sleep("demo", seconds=10)
+        fun_test.sleep("demo", seconds=180)
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
