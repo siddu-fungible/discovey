@@ -181,10 +181,10 @@ class TestCcCcPing(FunTestCase):
         checkpoint = "Ensure all vlans can ping its neighbour vlan"
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
-            res = funcp_obj.test_cc_pings_fs()
+            res = funcp_obj.test_cc_pings_fs(interval=0.01)
             fun_test.simple_assert(res, checkpoint)
         fun_test.add_checkpoint(checkpoint)
-        '''
+
         funcp1_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][0])
         funcp2_obj = FunControlPlaneBringup(fs_name=testbed_info['fs'][test_bed_type]["fs_list"][1])
 
@@ -195,15 +195,15 @@ class TestCcCcPing(FunTestCase):
         funcp2_obj._get_vlan1_ips()
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp1_obj.fs_name, funcp2_obj.fs_name)
-        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips, from_vlan=True)
+        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips, from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp2_obj.fs_name, funcp1_obj.fs_name)
-        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips, from_vlan=True)
+        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips, from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         fun_test.add_checkpoint("Ensure all vlans can ping its neighbour FS vlans")
-        '''
+
     def cleanup(self):
         pass
 
@@ -234,6 +234,7 @@ class TestIntraFsPings(FunTestCase):
                 hping_installed = ensure_hping_install(host_ip=host['name'], host_username=host['ssh_username'],
                                                        host_password=host['ssh_password'])
                 fun_test.simple_assert(hping_installed, "Ensure Hping3 is installed on host: %s" % host['name'])
+            CHECK_HPING3_ON_HOSTS = False
 
         fun_test.log("Hosts connected to each F1 in topology: %s" % self.hosts)
 
