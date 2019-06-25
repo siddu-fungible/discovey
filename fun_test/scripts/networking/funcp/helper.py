@@ -178,7 +178,7 @@ def setup_hu_vm(funeth_obj, update_driver=True, sriov=0, num_queues=1):
     if update_driver:
         funeth_obj.setup_workspace()
         critical_log(funeth_obj.lspci(check_pcie_width=False), 'Fungible Ethernet controller is seen.')
-        update_src_result = funeth_obj.update_src(parallel=False)
+        update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
             critical_log(update_src_result, 'Update funeth driver source code.')
@@ -218,7 +218,7 @@ def critical_log(expression, message):
         fun_test.critical(message=message)
 
 
-def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vfs_count=16):
+def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vfs_count=32):
     host_file = ASSET_DIR + "/hosts.json"
     all_hosts_specs = parse_file_to_json(file_name=host_file)
     host_spec = all_hosts_specs[server_name]
@@ -227,30 +227,36 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vf
     all_vms = map(lambda s: s.strip(), linux_obj.command(command="virsh list --all --name").split())
     linux_obj.command(command="sudo chmod 777 /dev/vfio/vfio")
     linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/0000\:af\:00.2/sriov_numvfs" % pcie_vfs_count)
+    linux_obj.command(command="lspci -d 1dad:")
     for vm in vm_dict:
         if vm in all_vms:
-            pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
-            if vm_dict[vm]["ethernet_pci_device"] not in pci_device:
-                fun_test.critical(message="%s device not present on server" % vm_dict[vm]["ethernet_pci_device"])
-                fun_test.log("Skipping VM: %s" % vm)
-                continue
-            shut_op = linux_obj.command(command="virsh shutdown %s" % vm)
-            if not "domain is not running" in shut_op:
-                fun_test.sleep(message="Waiting for VM to shutdown", seconds=7)
-            linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["ethernet_pci_device"])
-            if "nvme_pci_device" in vm_dict[vm]:
-                pci_device_nvme = linux_obj.command(
-                    command="virsh nodedev-list | grep %s" % vm_dict[vm]["nvme_pci_device"])
-                critical_log(expression=vm_dict[vm]["nvme_pci_device"] in pci_device_nvme,
-                             message="Check NVME PF is present")
-                if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
-                    linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
-            fun_test.sleep(message="Waiting for VFs detach")
-            start_op = linux_obj.command(command="virsh start %s" % vm)
-            critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
+            try:
+                pci_device = linux_obj.command(command="virsh nodedev-list | grep %s" % vm_dict[vm]["ethernet_pci_device"])
+                if vm_dict[vm]["ethernet_pci_device"] not in pci_device:
+                    fun_test.critical(message="%s device not present on server" % vm_dict[vm]["ethernet_pci_device"])
+                    fun_test.log("Skipping VM: %s" % vm)
+                    continue
+                shut_op = linux_obj.command(command="virsh shutdown %s" % vm)
+                if not "domain is not running" in shut_op:
+                    fun_test.sleep(message="Waiting for VM to shutdown", seconds=7)
+                linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["ethernet_pci_device"])
+                if "nvme_pci_device" in vm_dict[vm]:
+                    pci_device_nvme = linux_obj.command(
+                        command="virsh nodedev-list | grep %s" % vm_dict[vm]["nvme_pci_device"])
+                    critical_log(expression=vm_dict[vm]["nvme_pci_device"] in pci_device_nvme,
+                                 message="Check NVME PF %s is present" % vm_dict[vm]["nvme_pci_device"])
+                    if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
+                        linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
+                fun_test.sleep(message="Waiting for VFs detach")
+                start_op = linux_obj.command(command="virsh start %s" % vm)
+                critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
+            except Exception as ex:
+                if ex == "Timeout exceeded.":
+                    fun_test.critical("Error with VM %s, proceeding" % vm)
+
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
-    fun_test.sleep(message="Waiting for VMs to come up", seconds=60)
+    fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
     tb_config_obj = tb_configs.TBConfigs(yml)
     funeth_obj = Funeth(tb_config_obj, ws='/home/localadmin/ws')
@@ -280,19 +286,7 @@ def local_volume_create(storage_controller, vm_dict, uuid, count):
 
 def remote_storage_config(storage_controller, vm_dict, vol_uuid, count, ctrl_uuid, local_ip, local_port):
     local_volume_create(storage_controller, vm_dict, vol_uuid, count)
-    print("\n")
-    print("=============================")
-    print("Creating Controller on DPU 1")
-    print("=============================\n")
-    command_result = storage_controller.create_controller(ctrlr_uuid=ctrl_uuid,
-                                                          transport="RDS",
-                                                          remote_ip=local_ip,
-                                                          nqn="nqn-"+str(count),
-                                                          port=local_port,
-                                                          command_duration=vm_dict["command_timeout"])
-    fun_test.log(command_result)
-    fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
-                         format(ctrl_uuid))
+
     print("\n")
     print("==============================================")
     print("Attaching Local Volume to Controller on DPU 1")
@@ -317,3 +311,18 @@ def rds_volume_create(storage_controller, vm_dict, vol_uuid, count, remote_ip, p
                                                       command_duration=vm_dict["command_timeout"])
     critical_log(command_result["status"], "Creating volume with uuid {}".format(vol_uuid))
 
+
+def check_nvme_function(host, username="localadmin", password="Precious1*"):
+    linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    if not linux_obj.check_ssh():
+        return False
+    lspci_op = linux_obj.command("lspci -d 1dad:")
+    return "Non-Volatile memory controller" in lspci_op
+
+
+def check_funeth_function(host, username="localadmin", password="Precious1*"):
+    linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    if not linux_obj.check_ssh():
+        return False
+    lspci_op = linux_obj.command("lspci -d 1dad:")
+    return "Ethernet controller" in lspci_op

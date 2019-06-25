@@ -52,9 +52,9 @@ class BringupSetup(FunTestCase):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
 
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -145,7 +145,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=16, num_queues=3)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -185,13 +185,13 @@ class ConfigureVMs(FunTestCase):
         for server in servers_with_vms:
             print server
             configure_vms(server_name=server, vm_dict=servers_with_vms[server]["vms"], yml="FS-ALIBABA-DEMO-VM",
-                          update_funeth_driver=False)
-            for vm in servers_with_vms[server]:
-                if "vm_pings" in servers_with_vms[server][vm]:
-                    test_host_pings(host=servers_with_vms[server][vm]["hostname"],
-                                    ips=servers_with_vms[server][vm]["vm_pings"],
-                                    username=servers_with_vms[server][vm]["user"],
-                                    password=servers_with_vms[server][vm]["password"])
+                          update_funeth_driver=False, pcie_vfs_count=32)
+            for vm in servers_with_vms[server]["vms"]:
+                if "vm_pings" in servers_with_vms[server]["vms"][vm]:
+                    test_host_pings(host=servers_with_vms[server]["vms"][vm]["hostname"],
+                                    ips=servers_with_vms[server]["vms"][vm]["vm_pings"],
+                                    username=servers_with_vms[server]["vms"][vm]["user"],
+                                    password=servers_with_vms[server]["vms"][vm]["password"])
 
     def cleanup(self):
         pass
@@ -232,9 +232,32 @@ class CreateNamespaceVMs(FunTestCase):
             result = storage_controller_remote.ip_cfg(ip=servers_with_vms[server]["remote_controller_ip"],
                                                       port=servers_with_vms[server]["remote_controller_port"])
             result_dict = {}
+            controller_dpu_1 = utils.generate_uuid()
+            print("\n")
+            print("=============================")
+            print("Creating Controller on DPU 1")
+            print("=============================\n")
+            command_result = storage_controller_remote.create_controller(ctrlr_uuid=controller_dpu_1,
+                                                                         transport="RDS",
+                                                                         remote_ip=servers_with_vms[server][
+                                                                          "local_controller_ip"],
+                                                                         nqn="nqn-1",
+                                                                         port=servers_with_vms[server][
+                                                                          "local_controller_port"],
+                                                                         command_duration=10)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
+                                 format(controller_dpu_1))
+
             for vm in servers_with_vms[server]["vms"]:
-                if "nvme_pci_device" in servers_with_vms[server]["vms"][vm]:
-                    continue
+                # if "nvme_pci_device" not in servers_with_vms[server]["vms"][vm]:
+                #     continue
+                # if not check_nvme_function(host=servers_with_vms[server]["vms"][vm]["hostname"],
+                #                     username=servers_with_vms[server]["vms"][vm]["user"],
+                #                     password=servers_with_vms[server]["vms"][vm]["password"]):
+                #     fun_test.critical(message="No NVMe Function on VM %s" % vm)
+                #     continue
+
                 result_dict[vm] = {}
                 blt_volume_dpu_0 = utils.generate_uuid()
                 controller_dpu_0 = utils.generate_uuid()
@@ -265,7 +288,7 @@ class CreateNamespaceVMs(FunTestCase):
                 result_dict[vm]["blt_volume_dpu_0"] = blt_volume_dpu_0
 
                 blt_volume_dpu_1 = utils.generate_uuid()
-                controller_dpu_1 = utils.generate_uuid()
+
                 print("\n")
                 print("==============================")
                 print("Creating Local Volume on DPU 1")
@@ -320,8 +343,150 @@ class CreateNamespaceVMs(FunTestCase):
                 fun_test.log(result)
                 critical_log(result["status"], "Attaching volume {} to controller {}"
                              .format(rds_volume_dpu_0, controller_dpu_0))
+                i += 1
+            fun_test.log(result_dict)
+
+    def cleanup(self):
+        pass
 
 
+class VfScalabilityTest(FunTestCase):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="Test Pings from all VMs",
+                              steps="""
+                              1. Login into each VM
+                              2. show lspci output
+                              3. See Funeth interface
+                              4. See NVMe list output
+                              5. Ping to NU host(TOR connected NU server)
+                              """)
+
+    def setup(self):
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+
+    def run(self):
+
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
+
+        for server in servers_with_vms:
+            print("\n")
+            print("====================")
+            print("Verify Virtual Ports")
+            print("====================\n")
+            fun_test.test_assert(expression=check_funeth_function(host=server), message="Funeth PF and VF")
+            fun_test.test_assert(expression=check_nvme_function(host=server), message="NVME PF and VF")
+            print("\n")
+            print("=============================")
+            print("Ping tests for VF Scalability")
+            print("=============================\n")
+            for vm in servers_with_vms[server]:
+                if "vm_pings" in servers_with_vms[server][vm]:
+                    test_host_pings(host=servers_with_vms[server][vm]["hostname"],
+                                    ips=servers_with_vms[server][vm]["vm_pings"],
+                                    username=servers_with_vms[server][vm]["user"],
+                                    password=servers_with_vms[server][vm]["password"])
+
+    def cleanup(self):
+        pass
+
+
+class LocalNamespace(FunTestCase):
+    spec_file = {}
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="Local/Remote read & write from VM",
+                              steps="""
+                              1. Login into VM
+                              2. Run FIO to local volume for read/write
+                              3. Run FIO to remote volume for read/write
+                              """)
+
+    def setup(self):
+        self.spec_file = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                     '/fs_connected_servers.json')
+
+    def run(self):
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.spec_file["fs"][fs_name]["fs-name"])
+
+        servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"]
+
+        for server in servers_with_vms:
+            i = 1
+
+            storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
+                                                   target_port=40220)
+            # result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
+            #                                    port=servers_with_vms[server]["local_controller_port"])
+
+            storage_controller_remote = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
+                                                          target_port=40221)
+            # result = storage_controller_remote.ip_cfg(ip=servers_with_vms[server]["remote_controller_ip"],
+            #                                           port=servers_with_vms[server]["remote_controller_port"])
+            result_dict = {}
+
+            for vm in servers_with_vms[server]["vms"]:
+                # if "nvme_pci_device" not in servers_with_vms[server]["vms"][vm]:
+                #     continue
+                # if not check_nvme_function(host=servers_with_vms[server]["vms"][vm]["hostname"],
+                #                     username=servers_with_vms[server]["vms"][vm]["user"],
+                #                     password=servers_with_vms[server]["vms"][vm]["password"]):
+                #     fun_test.critical(message="No NVMe Function on VM %s" % vm)
+                #     continue
+
+                result_dict[vm] = {}
+                blt_volume_dpu_0 = utils.generate_uuid()
+                controller_dpu_0 = utils.generate_uuid()
+                print("\n")
+                print("==============================")
+                print("Creating Local Volume on DPU 0")
+                print("==============================\n")
+
+                local_volume_create(storage_controller=storage_controller,
+                                    vm_dict=servers_with_vms[server]["vms"][vm]["local_storage"],
+                                    uuid=blt_volume_dpu_0, count=i)
+                result_dict[vm]["blt_volume_dpu_0"] = blt_volume_dpu_0
+
+                blt_volume_dpu_1 = utils.generate_uuid()
+
+                print("\n")
+                print("=============================")
+                print("Creating Controller on DPU 0")
+                print("=============================\n")
+                print servers_with_vms[server]["vms"][vm]["local_storage"]
+                command_result = storage_controller.create_controller(ctrlr_uuid=controller_dpu_0,
+                                                                      transport="PCI",
+                                                                      fnid=servers_with_vms[server]["vms"][vm][
+                                                                                   "fnid"],
+                                                                      ctlid=servers_with_vms[server]["ctlid"],
+                                                                      huid=servers_with_vms[server]["huid"],
+                                                                      command_duration=servers_with_vms[server]["vms"][
+                                                                          vm]["local_storage"]["command_timeout"])
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
+                                     format(controller_dpu_0))
+
+                print("\n")
+                print("===========================================")
+                print("Attach Local Volume to Controller  on DPU 0")
+                print("===========================================\n")
+                result = storage_controller.attach_volume_to_controller(ctrlr_uuid=controller_dpu_0,
+                                                                        vol_uuid=blt_volume_dpu_0,
+                                                                        ns_id=int(i),
+                                                                        command_duration=
+                                                                        servers_with_vms[server]["vms"][vm][
+                                                                            "local_storage"]["command_timeout"])
+                fun_test.log(result)
+                critical_log(result["status"], "Attaching volume {} to controller {}"
+                             .format(blt_volume_dpu_0, controller_dpu_0))
+                i += 1
+            fun_test.log(result_dict)
 
     def cleanup(self):
         pass
@@ -329,12 +494,96 @@ class CreateNamespaceVMs(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BringupSetup())
-    ts.add_test_case(NicEmulation())
+    # ts.add_test_case(BringupSetup())
+    # ts.add_test_case(NicEmulation())
     ts.add_test_case(ConfigureVMs())
-    ts.add_test_case(CreateNamespaceVMs())
-
+    # ts.add_test_case(CreateNamespaceVMs())
+    # ts.add_test_case(VfScalabilityTest())
+    ts.add_test_case(LocalNamespace())
     # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
     # T2 : Local SSD from FIO
     # T3 : Remote SSD FIO
     ts.run()
+''' 
+"cab03-qa-01-perf":{
+          "hostname":"10.1.105.57",
+          "user":"localadmin",
+          "password":"Precious1*",
+          "ethernet_pci_device":"pci_0000_af_04_7",
+          "nvme_pci_device":"pci_0000_af_06_7",
+          "fnid":"",
+          "local_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "rds_vol_capacity": 5368709120,
+                            "rds_vol_block_size": 4096,
+                            "command_timeout": "5"
+                          },
+          "remote_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "command_timeout": "5"
+                          },
+          "vm_pings": ["30.1.1.2","19.1.1.1"]
+        }
+        
+        
+
+hu5:
+  hostname: 10.1.105.57
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f39
+  vf_interface: hu2-f39
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f15:
+            ipv4_addr: 18.1.1.47
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1        
+        
+        
+        
+hu10:
+  hostname: 10.1.105.26
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f17
+  vf_interface: hu2-f17
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f17:
+            ipv4_addr: 18.1.1.12
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+
+hu11:
+  hostname: 10.1.105.27
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f18
+  vf_interface: hu2-f18
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f18:
+            ipv4_addr: 18.1.1.13
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+        '''
