@@ -51,10 +51,11 @@
         {
         "remote_controller_ip":"19.1.1.1",
         "local_controller_ip":"18.1.1.1",
-        "remote_controller_port":"4420",
-        "local_controller_port":"4420",
+        "remote_controller_port":4420,
+        "local_controller_port":4420,
         "ctlid":0,
         "huid":2,
+        "pcie_vfs": 32,
         "vms":{
 
         "cab03-qa-01-vm01":{

@@ -270,7 +270,8 @@ class FunControlPlaneBringup:
 
         linux_obj.disconnect()
 
-    def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None):
+    def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None, f1_0_mpg_netmask="255.255.255.0",
+                       f1_1_mpg_netmask="255.255.255.0"):
 
         self._get_docker_names()
         linux_containers = {}
@@ -312,11 +313,11 @@ class FunControlPlaneBringup:
             else:
                 try:
                     if str(docker_name.split("-")[-1]).rstrip() == "0":
-                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
-                                                              f1_0_mpg, timeout=60)
+                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask %s" %
+                                                                      (f1_0_mpg, f1_0_mpg_netmask), timeout=60)
                     elif str(docker_name.split("-")[-1]).rstrip() == "1":
-                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
-                                                              f1_1_mpg, timeout=60)
+                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask %s" %
+                                                                      (f1_1_mpg, f1_1_mpg_netmask), timeout=60)
                 except:
                     linux_containers[docker_name].command(command="ifconfig mpg")
                     ifconfig_output = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')[1]

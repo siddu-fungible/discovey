@@ -218,7 +218,8 @@ def critical_log(expression, message):
         fun_test.critical(message=message)
 
 
-def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vfs_count=32):
+def configure_vms(server_name, vm_dict):
+
     host_file = ASSET_DIR + "/hosts.json"
     all_hosts_specs = parse_file_to_json(file_name=host_file)
     host_spec = all_hosts_specs[server_name]
@@ -226,7 +227,6 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vf
                       ssh_password=host_spec["ssh_password"])
     all_vms = map(lambda s: s.strip(), linux_obj.command(command="virsh list --all --name").split())
     linux_obj.command(command="sudo chmod 777 /dev/vfio/vfio")
-    linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/0000\:af\:00.2/sriov_numvfs" % pcie_vfs_count)
     linux_obj.command(command="lspci -d 1dad:")
     for vm in vm_dict:
         if vm in all_vms:
@@ -257,11 +257,6 @@ def configure_vms(server_name, vm_dict, yml, update_funeth_driver=False, pcie_vf
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
     fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
-
-    tb_config_obj = tb_configs.TBConfigs(yml)
-    funeth_obj = Funeth(tb_config_obj, ws='/home/localadmin/ws')
-    fun_test.shared_variables['funeth_obj'] = funeth_obj
-    setup_hu_vm(funeth_obj, update_driver=update_funeth_driver)
 
 
 def shut_all_vms(hostname):
@@ -326,3 +321,17 @@ def check_funeth_function(host, username="localadmin", password="Precious1*"):
         return False
     lspci_op = linux_obj.command("lspci -d 1dad:")
     return "Ethernet controller" in lspci_op
+
+
+def enable_nvme_vfs(host, username="localadmin", password="Precious1*", pcie_vfs_count=32):
+    linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    if not linux_obj.check_ssh():
+        return False
+    linux_obj.sudo_command(command="echo \"%s\" >  /sys/bus/pci/devices/0000\:af\:00.2/sriov_numvfs" % pcie_vfs_count)
+    fun_test.sleep(message="waiting for NVME VFs to be created")
+    lspci_op = linux_obj.command(command="lspci -d 1dad:")
+    if lspci_op.count("Non-Volatile memory controller:") >= pcie_vfs_count+1:
+        return True
+    else:
+        return False
+

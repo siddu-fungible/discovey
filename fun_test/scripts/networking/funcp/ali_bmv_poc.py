@@ -141,15 +141,20 @@ class NicEmulation(FunTestCase):
             if result == "2":
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
+
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=16, num_queues=4)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
-
+        for server in self.server_key["fs"][fs_name]["vm_config"]:
+            critical_log(enable_nvme_vfs
+                         (host=server,
+                          pcie_vfs_count=16),
+                         message="NVMe VFs enabled")
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
@@ -159,7 +164,7 @@ class NicEmulation(FunTestCase):
         pass
 
 
-class ConfigureVMs(FunTestCase):
+class StartVMs(FunTestCase):
     server_key = {}
 
     def describe(self):
@@ -183,15 +188,7 @@ class ConfigureVMs(FunTestCase):
         servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
 
         for server in servers_with_vms:
-            print server
-            configure_vms(server_name=server, vm_dict=servers_with_vms[server]["vms"], yml="FS-ALIBABA-DEMO-VM",
-                          update_funeth_driver=False, pcie_vfs_count=32)
-            for vm in servers_with_vms[server]["vms"]:
-                if "vm_pings" in servers_with_vms[server]["vms"][vm]:
-                    test_host_pings(host=servers_with_vms[server]["vms"][vm]["hostname"],
-                                    ips=servers_with_vms[server]["vms"][vm]["vm_pings"],
-                                    username=servers_with_vms[server]["vms"][vm]["user"],
-                                    password=servers_with_vms[server]["vms"][vm]["password"])
+            configure_vms(server_name=server, vm_dict=servers_with_vms[server]["vms"])
 
     def cleanup(self):
         pass
@@ -216,6 +213,7 @@ class CreateNamespaceVMs(FunTestCase):
     def run(self):
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.spec_file["fs"][fs_name]["fs-name"])
+
 
         servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"]
 
@@ -350,8 +348,7 @@ class CreateNamespaceVMs(FunTestCase):
         pass
 
 
-class VfScalabilityTest(FunTestCase):
-    server_key = {}
+class LoadFunethVMs(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
@@ -365,31 +362,13 @@ class VfScalabilityTest(FunTestCase):
                               """)
 
     def setup(self):
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/fs_connected_servers.json')
+        pass
 
     def run(self):
-
-        fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
-
-        for server in servers_with_vms:
-            print("\n")
-            print("====================")
-            print("Verify Virtual Ports")
-            print("====================\n")
-            fun_test.test_assert(expression=check_funeth_function(host=server), message="Funeth PF and VF")
-            fun_test.test_assert(expression=check_nvme_function(host=server), message="NVME PF and VF")
-            print("\n")
-            print("=============================")
-            print("Ping tests for VF Scalability")
-            print("=============================\n")
-            for vm in servers_with_vms[server]:
-                if "vm_pings" in servers_with_vms[server][vm]:
-                    test_host_pings(host=servers_with_vms[server][vm]["hostname"],
-                                    ips=servers_with_vms[server][vm]["vm_pings"],
-                                    username=servers_with_vms[server][vm]["user"],
-                                    password=servers_with_vms[server][vm]["password"])
+        tb_config_obj = tb_configs.TBConfigs("FS-ALIBABA-DEMO-VM")
+        funeth_obj = Funeth(tb_config_obj, ws='/home/localadmin/ws')
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
+        setup_hu_vm(funeth_obj, update_driver=False)
 
     def cleanup(self):
         pass
@@ -494,96 +473,10 @@ class LocalNamespace(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    # ts.add_test_case(BringupSetup())
-    # ts.add_test_case(NicEmulation())
-    ts.add_test_case(ConfigureVMs())
-    # ts.add_test_case(CreateNamespaceVMs())
-    # ts.add_test_case(VfScalabilityTest())
-    ts.add_test_case(LocalNamespace())
-    # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
-    # T2 : Local SSD from FIO
-    # T3 : Remote SSD FIO
+    ts.add_test_case(BringupSetup())
+    ts.add_test_case(NicEmulation())
+    # ts.add_test_case(LocalNamespace())
+    ts.add_test_case(CreateNamespaceVMs())
+    # ts.add_test_case(StartVMs())
+    # ts.add_test_case(LoadFunethVMs())
     ts.run()
-''' 
-"cab03-qa-01-perf":{
-          "hostname":"10.1.105.57",
-          "user":"localadmin",
-          "password":"Precious1*",
-          "ethernet_pci_device":"pci_0000_af_04_7",
-          "nvme_pci_device":"pci_0000_af_06_7",
-          "fnid":"",
-          "local_storage":{"blt_vol_capacity": 5368709120,
-                            "blt_vol_block_size": 4096,
-                            "rds_vol_capacity": 5368709120,
-                            "rds_vol_block_size": 4096,
-                            "command_timeout": "5"
-                          },
-          "remote_storage":{"blt_vol_capacity": 5368709120,
-                            "blt_vol_block_size": 4096,
-                            "command_timeout": "5"
-                          },
-          "vm_pings": ["30.1.1.2","19.1.1.1"]
-        }
-        
-        
-
-hu5:
-  hostname: 10.1.105.57
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno3
-  pf_interface: hu2-f39
-  vf_interface: hu2-f39
-  namespaces:
-    default:
-      interfaces:
-        - hu2-f15:
-            ipv4_addr: 18.1.1.47
-            ipv4_netmask: 255.255.255.0
-      routes:
-      - prefix: 19.1.1.0/24
-        nexthop: 18.1.1.1
-      - prefix: 30.1.1.0/24
-        nexthop: 18.1.1.1        
-        
-        
-        
-hu10:
-  hostname: 10.1.105.26
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno3
-  pf_interface: hu2-f17
-  vf_interface: hu2-f17
-  namespaces:
-    default:
-      interfaces:
-        - hu2-f17:
-            ipv4_addr: 18.1.1.12
-            ipv4_netmask: 255.255.255.0
-      routes:
-      - prefix: 19.1.1.0/24
-        nexthop: 18.1.1.1
-      - prefix: 30.1.1.0/24
-        nexthop: 18.1.1.1
-
-
-hu11:
-  hostname: 10.1.105.27
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno3
-  pf_interface: hu2-f18
-  vf_interface: hu2-f18
-  namespaces:
-    default:
-      interfaces:
-        - hu2-f18:
-            ipv4_addr: 18.1.1.13
-            ipv4_netmask: 255.255.255.0
-      routes:
-      - prefix: 19.1.1.0/24
-        nexthop: 18.1.1.1
-      - prefix: 30.1.1.0/24
-        nexthop: 18.1.1.1
-        '''
