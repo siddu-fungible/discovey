@@ -799,23 +799,13 @@ class MetricParser():
     def voltest_lsv(self, logs, date_time, platform):
         self.initialize()
         for line in logs:
-            m = re.search(
-                r'loadgen_tot\S+\s+(?P<metric>\S+):\s+(?P<value_json>{.*})\s+\[(?P<metric_name>\S+)\]',
-                line)
+            m = re.search(r'loadgen_aggregate\s+(?P<metric>\w+).*(?P<value_json>{.*})', line)
             if m:
                 metric = m.group("metric")
                 if metric == "Bandwidth" or metric == "IOPS":
                     self.match_found = True
                     value_json = json.loads(m.group("value_json"))
-                    metric_name = m.group("metric_name")
-                    if "read" in metric_name:
-                        operation = "read"
-                    else:
-                        operation = "write"
-                    if metric == "Bandwidth":
-                        key = "output_" + operation + "_bandwidth"
-                    else:
-                        key = "output_" + operation + "_iops"
+                    key = "output_readwrite_" + metric.lower()
                     self.set_value_metrics(value_json=value_json, key=key, default=-1)
                     self.metrics["input_platform"] = platform
                     self.status = RESULTS["PASSED"]
