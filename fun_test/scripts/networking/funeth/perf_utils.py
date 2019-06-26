@@ -125,11 +125,12 @@ def collect_host_stats(funeth_obj, version, when='before', duration=0):
         if when == 'before':
             fun_test.log("Starting to run mpstat command")
             mp_out = helper.run_mpstat_command(linux_obj=linux_obj, interval=2,
-                                               output_file=mpstat_output_file, bg=True, count=duration+5)
+                                               output_file=mpstat_output_file, bg=True, count=duration/2)
             fun_test.log('mpstat cmd process id: %s' % mp_out)
             fun_test.add_checkpoint("Started mpstat command in {}".format(h))
         elif when == 'after':
             # Scp mpstat json to LOGS dir
+            fun_test.log('Populating mpstat %s' % mpstat_output_file)
             fun_test.log_module_filter("random_module")
             helper.populate_mpstat_output_file(output_file=mpstat_output_file, linux_obj=linux_obj,
                                                dump_filename=mpstat_temp_filename)
@@ -516,3 +517,24 @@ def db_helper(results):
         except Exception as ex:
             fun_test.critical(str(ex))
         #print "used generic helper to add an entry"
+
+
+def mlx5_irq_affinity(linux_obj):
+    """Set Mellanox ConnectX-5 NIC irq affinity."""
+    cmd = 'cat /proc/interrupts | grep "mlx5"'
+    output = linux_obj.command(cmd)
+    irq_list = re.findall(r'(\d+):.*mlx5_comp', output)
+
+    # cat irq affinity
+    cmds_cat = []
+    for i in irq_list:
+        cmds_cat.append('cat /proc/irq/{}/smp_affinity'.format(i))
+    linux_obj.command(';'.join(cmds_cat))
+
+    # set irq affinity
+    # TODO: here its' hardcoded to exclude cpu 15, which single flow netperf will run on
+    cmds_chg = []
+    for i in irq_list:
+        cmds_chg.append('echo 7f00 > /proc/irq/{}/smp_affinity'.format(i))
+    linux_obj.sudo_command(';'.join(cmds_chg))
+    linux_obj.command(';'.join(cmds_cat))

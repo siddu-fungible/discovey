@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 7,
@@ -66,6 +66,7 @@
     "transport_port": 1099,
     "attach_transport": "TCP",
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "io_queues": 16,
     "command_timeout": 30,
     "file_system": "ext3",
     "artifact_dir": "compression",

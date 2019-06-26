@@ -826,16 +826,7 @@
       }
     },
     "host_info": [
-      "mktg-server-05",
-      "mktg-server-06",
-      "mktg-server-07",
-      "mktg-server-08",
-      "mktg-server-09",
-      "mktg-server-10",
-      "mktg-server-11",
-      "mktg-server-12",
-      "mktg-server-13",
-      "mktg-server-14"
+      "mktg-server-04"
     ]
   },
   "fs-44": {
@@ -949,7 +940,16 @@
       }
     },
     "host_info": [
-      "mktg-server-04"
+      "mktg-server-05",
+      "mktg-server-06",
+      "mktg-server-07",
+      "mktg-server-08",
+      "mktg-server-09",
+      "mktg-server-10",
+      "mktg-server-11",
+      "mktg-server-12",
+      "mktg-server-13",
+      "mktg-server-14"
     ]
   },
   "fs-45": {
@@ -1595,16 +1595,43 @@
         "type": "DUT_TYPE_FSU",
         "dut": "fs-66",
         "pcie_interface_info": {
-          "18": {
+           "0": {
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "cab03-qa-02"
+              "name": "mktg15"
             }
           },
-          "19": {
+          "1": {
             "type": "INTERFACE_TYPE_PCIE",
-            "dual": 18
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+         "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "mktg16"
+            }
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         }
       }

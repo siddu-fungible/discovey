@@ -22,9 +22,10 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        funcp_obj.cleanup_funcp()
-        for server in servers_mode:
-            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+        pass
+        # funcp_obj.cleanup_funcp()
+        # for server in servers_mode:
+        #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
 
 class BringupSetup(FunTestCase):
@@ -50,7 +51,7 @@ class BringupSetup(FunTestCase):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=3 --mgmt --disable-wu-watchdog syslog=2"
 
@@ -142,7 +143,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -151,7 +152,12 @@ class NicEmulation(FunTestCase):
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
             test_host_pings(host=host, ips=ping_dict[host])
-
+        fun_test.sleep(message="Wait for host to check ping again", seconds = 30)
+        # Ping hosts
+        ping_dict = self.server_key["fs"][fs_name]["host_pings"]
+        for host in ping_dict:
+            test_host_pings(host=host, ips=ping_dict[host], strict=True)
+            
     def cleanup(self):
         pass
 
@@ -545,9 +551,9 @@ if __name__ == '__main__':
 
     ts.add_test_case(NicEmulation())
 
-    ts.add_test_case(LocalSSDTest())
+#     ts.add_test_case(LocalSSDTest())
 
-    ts.add_test_case(RemoteSSDTest())
+#     ts.add_test_case(RemoteSSDTest())
     # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
     # T2 : Local SSD from FIO
     # T3 : Remote SSD FIO

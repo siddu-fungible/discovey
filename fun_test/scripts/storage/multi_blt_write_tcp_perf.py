@@ -7,7 +7,7 @@ from lib.host.linux import Linux
 from scripts.storage.funcp_deploy import FunCpDockerContainer
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -928,17 +928,17 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def cleanup(self):
         pass
 
-class SingleBLTFioRandRead(MultiBLTVolumePerformanceTestcase):
+class SingleBLTFioWrite(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Random Read performance for 1 volumes on TCP "
+                              summary="Sequential Write performance for 1 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
         1. Create 1 BLT volumes on F1 attached
         2. Create a storage controller for TCP and attach above volumes to this controller   
         3. Connect to this volume from remote host
-        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
+        4. Run the FIO Sequential Write test(without verify) for various block size and IO depth from the 
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
@@ -952,56 +952,28 @@ class SingleBLTFioRandWrite(MultiBLTVolumePerformanceTestcase):
         1. Create 1 BLT volumes on F1 attached
         2. Create a storage controller for TCP and attach above volumes to this controller   
         3. Connect to this volume from remote host
-        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
-        remote host and check the performance are inline with the expected threshold. 
-        ''')
-
-class MultiBLTFioRead12(MultiBLTVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Sequential Read performance for 12 volumes on TCP "
-                                      "with different levels of numjobs & iodepth & block size 4K",
-                              steps='''
-        1. Create 12 BLT volumes on F1 attached with 12 SSD
-        2. Create a storage controller for TCP and attach above volumes to this controller   
-        3. Connect to this volume from remote host
-        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
-        remote host and check the performance are inline with the expected threshold. 
-        ''')
-
-class MultiBLTFioRandRead12(MultiBLTVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Random Read performance for 12 volumes on TCP "
-                                      "with different levels of numjobs & iodepth & block size of 4K",
-                              steps='''
-        1. Create 12 BLT volumes on FS attached with 12 SSD
-        2. Create a storage controller for TCP and attach above volume to this controller   
-        3. Connect to this volume from remote host
-        4. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
+        4. Run the FIO Random Write test(without verify) for various block size and IO depth from the 
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
 class MultiBLTFioWrite12(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=3,
                               summary="Sequential Read performance for 12 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size of 4K",
                               steps='''
         1. Create 12 BLT volumes on FS attached with 12 SSD
         2. Create a storage controller for TCP and attach above volume to this controller   
         3. Connect to this volume from remote host
-        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
+        4. Run the FIO Sequential Write test(without verify) for various block size and IO depth from the 
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
 class MultiBLTFioRandWrite12(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=4,
                               summary="Random Write performance for 12 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size of 4K",
                               steps='''
@@ -1012,12 +984,9 @@ class MultiBLTFioRandWrite12(MultiBLTVolumePerformanceTestcase):
         remote host and check the performance are inline with the expected threshold. 
         ''')
 
-
 if __name__ == "__main__":
 
     bltscript = MultiBLTVolumePerformanceScript()
-    bltscript.add_test_case(SingleBLTFioRandRead())
     bltscript.add_test_case(SingleBLTFioRandWrite())
-    bltscript.add_test_case(MultiBLTFioRandRead12())
     bltscript.add_test_case(MultiBLTFioRandWrite12())
     bltscript.run()

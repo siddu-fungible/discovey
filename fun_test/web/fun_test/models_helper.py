@@ -2,8 +2,8 @@ import os, django, json, datetime
 import sys
 import random
 import time
-from datetime import datetime
-from django.core import serializers, paginator
+from datetime import datetime, timedelta
+from django.core import paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
 from fun_settings import SCRIPTS_DIR
 from django.utils import timezone
@@ -106,13 +106,11 @@ def inspect(module_name):
 def get_all_test_cases(script_path):
     test_cases = {}
 
-    try:
-        result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
-        if result:
-            if "classes" in result:
-                for c in result["classes"]:
-                    test_cases[c["id"]] = c
+    all_test_cases = TestCaseInfo.objects.filter(script_path=script_path)
 
+    try:
+        for test_case in all_test_cases:
+            test_cases[test_case.test_case_id] = {"summary": test_case.summary}
     except Exception as ex:
         print "Error: {}".format(str(ex))
 
@@ -262,6 +260,7 @@ def add_suite_execution(submitted_time,
                                state=state,
                                suite_type=suite_type,
                                submitter_email=submitter_email)
+            s.started_time = submitted_time
             s.save()
             s.save()
 
@@ -403,6 +402,11 @@ def get_test_case_execution(execution_id):
     return results[0]  # TODO: what if len(results) > 1
 
 
+def _suite_execution_helper(suite_execution):
+    result = {}
+    result["fields"] = suite_execution.to_dict()
+    return result
+
 def _get_suite_executions(execution_id=None,
                           page=None,
                           records_per_page=10,
@@ -459,8 +463,8 @@ def _get_suite_executions(execution_id=None,
         q = q & Q(test_bed_type=test_bed_type)
     if suite_path:
         q = q & Q(suite_path=suite_path)
-
-    all_objects = SuiteExecution.objects.filter(q).order_by('-id')
+    q = q & (Q(started_time__gt=get_current_time() - timedelta(days=30)) | Q(state=JobStatusType.AUTO_SCHEDULED))
+    all_objects = SuiteExecution.objects.filter(q).order_by('-started_time')
 
     if get_count:
         return all_objects.count()
@@ -469,16 +473,17 @@ def _get_suite_executions(execution_id=None,
         p = paginator.Paginator(all_objects, records_per_page)
         all_objects = p.page(page)
 
-    data = serializers.serialize("json", all_objects)
-    all_objects_dict = json.loads(data)
+    # data = serializers.serialize("json", all_objects)
+    # all_objects_dict = json.loads(data)
 
+    return_results = []
     ses = []
-    for suite_execution in all_objects_dict:
-        ts = get_test_case_executions_by_suite_execution(suite_execution_id=suite_execution["fields"]["execution_id"])
+    for suite_execution in all_objects:
+        ts = get_test_case_executions_by_suite_execution(suite_execution_id=suite_execution.execution_id)
         test_case_execution_ids = []
         for t in ts:
             test_case_execution_ids.append(t.execution_id)
-        suite_execution["fields"]["test_case_execution_ids"] = json.dumps(test_case_execution_ids)
+        suite_execution.test_case_execution_ids = json.dumps(test_case_execution_ids)
         # test_case_execution_ids = json.loads(suite_execution["fields"]["test_case_execution_ids"])
         suite_result = RESULTS["UNKNOWN"]
         num_passed = 0
@@ -487,8 +492,8 @@ def _get_suite_executions(execution_id=None,
         num_not_run = 0
         num_in_progress = 0
 
-        suite_execution["test_case_info"] = []
-        finalized = suite_execution["fields"]["finalized"]
+        # suite_execution["test_case_info"] = []
+        finalized = suite_execution.finalized
 
         for test_case_execution_id in test_case_execution_ids:
             test_case_execution = TestCaseExecution.objects.get(execution_id=test_case_execution_id)
@@ -504,11 +509,11 @@ def _get_suite_executions(execution_id=None,
             elif te_result == RESULTS["IN_PROGRESS"]:
                 num_in_progress += 1
 
-            if save_test_case_info:
-                suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
-                                                          "test_case_id": test_case_execution.test_case_id,
-                                                          "inputs": test_case_execution.inputs,
-                                                          "result": test_case_execution.result})
+            # if save_test_case_info:
+            #    suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
+            #                                              "test_case_id": test_case_execution.test_case_id,
+            #                                              "inputs": test_case_execution.inputs,
+            #                                              "result": test_case_execution.result})
 
         if not finalized:
             if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
@@ -518,12 +523,12 @@ def _get_suite_executions(execution_id=None,
 
             if finalize and (not num_failed) and (not num_passed):
                 suite_result = RESULTS["ABORTED"]
-            if "result" in suite_execution["fields"]:
-                if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
+            if suite_execution.result:
+                if suite_execution.result == RESULTS["KILLED"]:
                     suite_result = RESULTS["KILLED"]
 
             if finalize:  # TODO: Perf too many saves
-                se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
+                se = SuiteExecution.objects.get(execution_id=suite_execution.execution_id)
                 if finalize:
                     se.finalized = True
                 if suite_result not in pending_states:
@@ -533,27 +538,27 @@ def _get_suite_executions(execution_id=None,
                 ses.append(se)
                 suite_result = se.result
         else:
-            suite_result = suite_execution["fields"]["result"]
+            suite_result = suite_execution.result
 
-        suite_execution["suite_result"] = suite_result
-        suite_execution["num_passed"] = num_passed
-        suite_execution["num_failed"] = num_failed
-        suite_execution["num_skipped"] = num_skipped
-        suite_execution["num_not_run"] = num_not_run
-        suite_execution["num_in_progress"] = num_in_progress
+        one_result = _suite_execution_helper(suite_execution)
+        one_result["suite_result"] = suite_result
+        one_result["num_passed"] = num_passed
+        one_result["num_failed"] = num_failed
+        one_result["num_skipped"] = num_skipped
+        one_result["num_not_run"] = num_not_run
+        one_result["num_in_progress"] = num_in_progress
 
-        suite_execution["fields"]["scheduled_time"] = str(
-            timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["scheduled_time"])))
-        suite_execution["fields"]["submitted_time"] = str(
-            timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["submitted_time"])))
-        suite_execution["fields"]["completed_time"] = str(
-            timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["completed_time"])))
-
+        one_result["fields"]["scheduled_time"] = str(
+           suite_execution.scheduled_time)
+        one_result["fields"]["submitted_time"] = str(
+            suite_execution.submitted_time)
+        one_result["fields"]["completed_time"] = str(suite_execution.completed_time)
+        return_results.append(one_result)
     with transaction.atomic():
         if finalize:
             for se in ses:
                 se.save()
-    return all_objects_dict
+    return return_results
 
 
 def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date,
@@ -582,6 +587,8 @@ def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes.append({"name": "Version", "value": str(suite_execution["fields"]["version"])})
     suite_execution_attributes.append(
         {"name": "Scheduled Time", "value": str(suite_execution["fields"]["scheduled_time"])})
+    suite_execution_attributes.append(
+        {"name": "Started Time", "value": str(suite_execution["fields"]["started_time"])})
     suite_execution_attributes.append(
         {"name": "Completed Time", "value": str(suite_execution["fields"]["completed_time"])})
     suite_execution_attributes.append({"name": "Path", "value": str(suite_execution["fields"]["suite_path"])})

@@ -849,11 +849,40 @@ class Linux(object, ToDictMixin):
     def tshark_capture_stop(self, process_id):
         return self.kill_process(process_id=process_id)
 
-    def tcpdump_capture_start(self):
-        pass
+    def tcpdump_capture_start(self, interface, tcpdump_filename="/tmp/tcpdump_capture.pcap", snaplen=96, filecount=1,
+                              packet_count=2000000, file_size=None, rotate_seconds=None, sudo=True):
+        result = None
+        try:
+            if not file_size and not rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -c {} -W {} -w {}".format(interface, snaplen, packet_count, filecount,
+                                                                            tcpdump_filename)
+            elif file_size and rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -G {} -W {} -w {}".format(interface, snaplen, file_size,
+                                                                                  rotate_seconds, filecount,
+                                                                                  tcpdump_filename)
+            elif file_size:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -W {} -w {}".format(interface, snaplen, file_size, filecount,
+                                                                            tcpdump_filename)
+            elif rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -G {} -W {} -w {}".format(interface, snaplen, rotate_seconds,
+                                                                            filecount, tcpdump_filename)
+
+            fun_test.log("executing command: {}".format(cmd))
+            if sudo:
+                cmd = "nohup {} >/dev/null 2>&1 &".format(cmd)
+                self.sudo_command(command=cmd)
+                process_id = self.get_process_id_by_pattern(process_pat="tcpdump")
+            else:
+                process_id = self.start_bg_process(command=cmd)
+            fun_test.log("tcpdump is started, process id: {}".format(process_id))
+            if process_id:
+                result = process_id
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def tcpdump_capture_stop(self, process_id):
-        pass
+        return self.kill_process(process_id=process_id)
 
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
@@ -2017,6 +2046,7 @@ class Linux(object, ToDictMixin):
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
                 if ping_result:
                     max_reboot_timer = FunTimer(max_time=30)
+                    fun_test.log("Lowered max_reboot_timer")
             if ping_result or not service_host:
                 try:
                     fun_test.log("Attempting SSH")
@@ -2599,6 +2629,32 @@ class Linux(object, ToDictMixin):
             mpstat_output = self.command(cmd, timeout=timeout)
 
         return mpstat_output
+
+    def iostat(self, device=None, interval=5, count=2, background=True, extended_stats=False,
+               output_file="/tmp/iostat.out", timeout=None):
+        iostat_output = None
+        if not timeout:
+            timeout = interval * (count + 1)
+
+        cmd = "iostat"
+        if device:
+            cmd += " -p {}".format(str(device))
+        if extended_stats:
+            cmd += " -x"
+
+        cmd += " {} {}".format(str(interval), str(count))
+
+        if background:
+            fun_test.log("Starting iostat command {} in background".format(cmd))
+            iostat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
+            if iostat_output is None:
+                fun_test.critical("iostat process is not started")
+            else:
+                fun_test.log("iostat process is started in background, pid is: {}".format(iostat_output))
+        else:
+            iostat_output = self.command(cmd, timeout=timeout)
+
+        return iostat_output
 
 
 class LinuxBackup:

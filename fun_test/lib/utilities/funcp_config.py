@@ -270,7 +270,8 @@ class FunControlPlaneBringup:
 
         linux_obj.disconnect()
 
-    def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None):
+    def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None, f1_0_mpg_netmask="255.255.255.0",
+                       f1_1_mpg_netmask="255.255.255.0"):
 
         self._get_docker_names()
         linux_containers = {}
@@ -311,12 +312,12 @@ class FunControlPlaneBringup:
 
             else:
                 try:
-                    if "F1-0" in docker_name.strip():
-                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
-                                                              f1_0_mpg, timeout=60)
-                    elif "F1-1" in docker_name.strip():
-                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask 255.255.255.0" %
-                                                              f1_1_mpg, timeout=60)
+                    if str(docker_name.split("-")[-1]).rstrip() == "0":
+                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask %s" %
+                                                                      (f1_0_mpg, f1_0_mpg_netmask), timeout=60)
+                    elif str(docker_name.split("-")[-1]).rstrip() == "1":
+                        linux_containers[docker_name].command(command="sudo ifconfig mpg %s netmask %s" %
+                                                                      (f1_1_mpg, f1_1_mpg_netmask), timeout=60)
                 except:
                     linux_containers[docker_name].command(command="ifconfig mpg")
                     ifconfig_output = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')[1]
@@ -381,14 +382,14 @@ class FunControlPlaneBringup:
 
     def add_routes_on_f1(self, routes_dict):
         self._get_docker_names()
+        linux_obj = object
         for docker_name in self.docker_names:
-            linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
-                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
-                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
             routes = routes_dict[docker_name.rstrip()]
             for num in routes:
                 try:
-                    linux_obj.command(command="docker exec -it " + docker_name.rstrip() + " bash", timeout=300)
+                    linux_obj = FunCpDockerContainer(name=docker_name.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
+                                                     ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
+                                                     ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
                     fun_test.log("")
                     fun_test.log("======================")
                     fun_test.log("Add static route on %s" % docker_name)

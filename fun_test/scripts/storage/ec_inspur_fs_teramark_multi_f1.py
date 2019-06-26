@@ -6,7 +6,7 @@ import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -99,6 +99,14 @@ class ECVolumeLevelScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
+        if "disable_wu_watchdog" in job_inputs:
+            self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+        else:
+            self.disable_wu_watchdog = True
+
+        for i in range(len(self.bootargs)):
+            if self.disable_wu_watchdog:
+                self.bootargs[i] += " --disable-wu-watchdog"
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 

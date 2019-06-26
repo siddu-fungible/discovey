@@ -487,7 +487,7 @@ tr.text-center > th {
 
 /* tooltip */
 .fun-tooltip {
-  position: absolute;
+  position: fixed;
   /*font-size: 14px;*/
   text-align: center;
   color: #000000;
@@ -496,6 +496,7 @@ tr.text-center > th {
   z-index: 1000;
   opacity: 0;
   border: 1px solid;
+  line-height: 1.6;
 }
 .fun-tooltip:after {
   content: "";

@@ -382,6 +382,26 @@
       "password": "ADMIN"
     }
   },
+    "mktg15": {
+    "host_ip": "mktg15",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mktg15-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+      "mktg16": {
+    "host_ip": "mktg16",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mktg16-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
   "cab02-qa-08": {
     "host_ip": "cab02-qa-08",
     "ssh_username": "localadmin",

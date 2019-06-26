@@ -5,7 +5,7 @@ from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from ec_perf_helper import *
+from storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -108,6 +108,10 @@ class ECVolumeLevelScript(FunTestScript):
                 self.update_workspace = job_inputs["update_workspace"]
             if "update_deploy_script" in job_inputs:
                 self.update_deploy_script = job_inputs["update_deploy_script"]
+            if "disable_wu_watchdog" in job_inputs:
+                self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+            else:
+                self.disable_wu_watchdog = True
 
             self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
             fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -124,6 +128,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --mgmt"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             # Deploying of DUTs
             topology_helper = TopologyHelper()
@@ -286,6 +292,8 @@ class ECVolumeLevelScript(FunTestScript):
 
             for i in range(len(self.bootargs)):
                 self.bootargs[i] += " --csr-replay"
+                if self.disable_wu_watchdog:
+                    self.bootargs[i] += " --disable-wu-watchdog"
 
             topology_helper = TopologyHelper()
             topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
@@ -425,6 +433,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
+                self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
@@ -450,7 +459,6 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        self.storage_controller.disconnect()
         # fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
@@ -712,6 +720,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         io_factor += 1
 
             fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
+            fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
 
             if "multiple_jobs" in self.fio_cmd_args:
                 num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
@@ -968,7 +977,7 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(RandReadWrite8kBlocks())
+    # ecscript.add_test_case(RandReadWrite8kBlocks())
     ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     ecscript.add_test_case(MixedRandReadWriteIOPS())
     ecscript.add_test_case(OLTPModelReadWriteIOPS())

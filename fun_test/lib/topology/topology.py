@@ -62,16 +62,27 @@ class ExpandedTopology(ToDictMixin):
     def get_hosts(self):
         return self.hosts
 
-    def get_host_instance(self, dut_index, host_index, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
-        dut = self.get_dut(index=dut_index)
-        if ssd_interface_index is not None:  # Backward compatibility
-            interface_index = ssd_interface_index
+    def get_host(self, name):
+        host = self.hosts.get(name, None)
+        return host
+
+    def get_host_instance(self, dut_index, name=None, host_index=None, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
         host = None
-        fun_test.simple_assert(interface_index is not None or fpg_interface_index is not None, "Provide SSD interface or FPG interface")
-        if interface_index is not None:
-            host = dut.get_host_on_interface(interface_index=interface_index, host_index=host_index)
-        elif fpg_interface_index is not None:
-            host = dut.get_host_on_fpg_interface(interface_index=fpg_interface_index, host_index=host_index, f1_index=f1_index)
+        if interface_index is not None and host_index is not None:
+            dut = self.get_dut(index=dut_index)
+            if ssd_interface_index is not None:  # Backward compatibility
+                interface_index = ssd_interface_index
+            host = None
+            fun_test.simple_assert(interface_index is not None or fpg_interface_index is not None, "Provide SSD interface or FPG interface")
+            if interface_index is not None:
+                host = dut.get_host_on_interface(interface_index=interface_index, host_index=host_index)
+            elif fpg_interface_index is not None:
+                host = dut.get_host_on_fpg_interface(interface_index=fpg_interface_index, host_index=host_index, f1_index=f1_index)
+        elif name is not None:
+            host_instances = self.get_host_instances()
+            if name not in host_instances:
+                fun_test.critical("Host name: {} not found".format(name))
+            host = host_instances[name]
         return host
 
     def _get_host_instances_on_interfaces(self, dut, interfaces):

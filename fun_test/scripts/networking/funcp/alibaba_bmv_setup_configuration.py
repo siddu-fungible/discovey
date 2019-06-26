@@ -142,7 +142,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=32)
 
         # get ethtool output TODO : IFCONFIG, lspci
         get_ethtool_on_hu_host(funeth_obj)

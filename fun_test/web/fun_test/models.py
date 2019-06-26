@@ -120,6 +120,7 @@ class SuiteContainerExecution(models.Model):
         return s
 
 
+
 class SuiteExecution(models.Model):
     """
     Suite selection
@@ -139,6 +140,7 @@ class SuiteExecution(models.Model):
     version = models.CharField(max_length=50, null=True)
     requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
     tags = models.TextField(default="[]", null=True)
+    description = models.TextField(default="", null=True)
 
     """
     Scheduling
@@ -155,7 +157,6 @@ class SuiteExecution(models.Model):
     timezone_string = models.TextField(default="PST")  # timezone string PST or IST
     repeat_in_minutes = models.IntegerField(null=True)  # Repeat the job in some minutes
     submitter_email = models.EmailField(default="john.abraham@fungible.com")
-    description = models.TextField(default="", null=True)
 
     """
     Job result related
@@ -202,11 +203,19 @@ class SuiteExecution(models.Model):
         run_time = self.run_time
         run_time[name] = value
         self.save()
+        return run_time
 
     def get_run_time_variable(self, name):
         result = None
         if name in self.run_time:
             result = self.run_time[name]
+        return result
+
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
         return result
 
 class SuiteExecutionSerializer(serializers.Serializer):
@@ -494,6 +503,7 @@ class Asset(FunModel):
     type = models.TextField()
     job_ids = JSONField(default=[])
     manual_lock_user = models.TextField(default=None, null=True)
+    test_beds = JSONField(default=[])
 
     @staticmethod
     def add_update(name, type, job_ids=None):

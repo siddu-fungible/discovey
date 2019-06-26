@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 
 from lib.fun.fs import Fs
-from scripts.storage.ec_perf_helper import *
+from scripts.storage.storage_helper import *
 
 '''
 Sanity Script for BLT Volume via PCI
@@ -254,11 +254,11 @@ class BltPciRandWRMix(BltPciSanityTestcase):
 
 if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
-    bltscript.add_test_case(BltPciSeqRead())
-    bltscript.add_test_case(BltPciRandRead())
+    #bltscript.add_test_case(BltPciSeqRead())
+    #bltscript.add_test_case(BltPciRandRead())
     bltscript.add_test_case(BltPciSeqRWMix())
-    bltscript.add_test_case(BltPciSeqWRMix())
+    #bltscript.add_test_case(BltPciSeqWRMix())
     bltscript.add_test_case(BltPciRandRWMix())
-    bltscript.add_test_case(BltPciRandWRMix())
+    #bltscript.add_test_case(BltPciRandWRMix())
 
     bltscript.run()

@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 7,
@@ -66,7 +66,7 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
-    "io_queues": 0,
+    "io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
       "bs": "8k",
@@ -94,7 +94,8 @@
       "(8, 1)",
       "(16, 1)",
       "(16, 2)",
-      "(16, 4)"
+      "(16, 4)",
+      "(16, 8)"
     ],
     "fio_job_name": "ec_nvme_tcp"
   }

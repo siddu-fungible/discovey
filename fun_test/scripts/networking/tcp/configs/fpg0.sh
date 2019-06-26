@@ -1,4 +1,5 @@
-sudo ip addr add 20.1.1.1/24 dev p3p1 
+sudo ip addr flush p3p1
+sudo ip addr add 20.1.1.1/24 dev p3p1
 sudo ip link set p3p1 address fe:dc:ba:44:66:30
 sudo ip link set p3p1 up
 sudo ifconfig p3p1 up
