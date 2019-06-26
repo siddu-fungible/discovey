@@ -456,9 +456,10 @@ class FunControlPlaneBringup:
         self.docker_names_got = True
         linux_obj_come.disconnect()
 
-    def test_cc_pings_fs(self):
+    def test_cc_pings_fs(self, interval=1):
         self._get_docker_names()
         self._get_vlan1_ips()
+        ping_success = False
 
         for host in self.docker_names:
 
@@ -470,7 +471,9 @@ class FunControlPlaneBringup:
                 linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                                  ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                                  ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-                output = linux_obj.command("ping -c 5 -I %s %s " % (self.vlan1_ips[host.rstrip()], self.vlan1_ips[docker]))
+                output = linux_obj.command("sudo ping -c 5 -i %s -I %s %s " % (interval,
+                                                                               self.vlan1_ips[host.rstrip()],
+                                                                               self.vlan1_ips[docker]))
 
                 linux_obj.disconnect()
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
@@ -479,21 +482,24 @@ class FunControlPlaneBringup:
                 if percentage_loss <= 50:
                     result = True
                 if result:
+                    ping_success = True
                     fun_test.log("=============================")
                     fun_test.add_checkpoint("Container %s can ping %s" % (host.rstrip(),
                                                                           self.vlan1_ips[host.rstrip()]))
                     fun_test.log("=============================")
                 else:
+                    ping_success = False
                     fun_test.log("=================================")
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(),
                                                                                self.vlan1_ips[host.rstrip()]))
                     fun_test.log("=================================")
+        return ping_success
 
-    def test_cc_pings_remote_fs(self, dest_ips, docker_name=None, from_vlan=False):
+    def test_cc_pings_remote_fs(self, dest_ips, docker_name=None, from_vlan=False, interval=1):
         if not docker_name:
             self._get_docker_names()
         self._get_vlan1_ips()
-
+        ping_success = False
         docker_list = []
         if docker_name:
             docker_list.append(docker_name)
@@ -504,13 +510,13 @@ class FunControlPlaneBringup:
             linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-            for ips in dest_ips:
+            for ips in dest_ips.values():
                 result = False
                 percentage_loss = 100
                 if from_vlan:
-                    command = "ping -c 5 -I %s  %s " % (self.vlan1_ips[host.rstrip()], ips)
+                    command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()], ips)
                 else:
-                    command = "ping -c 5 %s " % ips
+                    command = "sudo ping -c 5 -i %s %s " % (interval, ips)
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:
@@ -518,13 +524,17 @@ class FunControlPlaneBringup:
                 if percentage_loss <= 50:
                     result = True
                 if result:
+                    ping_success = True
                     fun_test.log("")
                     fun_test.log("=============================")
                     fun_test.log("Container %s can ping %s" % (host.rstrip(), ips))
                     fun_test.log("=============================")
                 else:
+                    ping_success = False
                     fun_test.critical(message="Container %s cannot ping %s" % (host.rstrip(), ips))
+                    break
             linux_obj.disconnect()
+        return ping_success
 
     def _get_vlan1_ips(self):
         if self.vlan_ips_got:
@@ -565,3 +575,492 @@ class FunControlPlaneBringup:
             else:
                 "Cannot ping host"
                 fun_test.sleep(seconds=10, message="waiting for host")
+
+    def get_vlan_ips(self, come_dict, vlan_interface="vlan1"):
+        vlan_list = []
+        try:
+            for come in come_dict:
+                docker_obj = FunCpDockerContainer(name="F1-0", host_ip=come['come_ip'],
+                                                  ssh_username=come['come_username'],
+                                                  ssh_password=come['come_password'])
+
+                contents = docker_obj.command('ifconfig %s' % vlan_interface)
+                m = re.search(r'inet\s+(\d+.\d+.\d+.\d+)', contents.strip(), re.DOTALL)
+                if m:
+                    vlan_list.append(m.group(1))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return vlan_list
+
+    def fetch_host_interface_ip(self, host_name, host_username, host_password):
+        hu_ip = None
+        try:
+            linux_obj = Linux(host_ip=host_name, ssh_username=host_username, ssh_password=host_password)
+
+            contents = linux_obj.command(command="ip address")
+            m = re.search(r'hu\d+-f\d+.*.inet\s+(\d+.\d+.\d+.\d+)', contents.strip(), re.DOTALL)
+            if m:
+                hu_ip = m.group(1).strip()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return hu_ip
+
+    def _ensure_route_exists(self, linux_obj, network, interface, gateway):
+        result = False
+        try:
+            ip_route = linux_obj.get_ip_route()
+            if network in ip_route:
+                fun_test.test_assert_expected(expected=interface, actual=ip_route[network][gateway])
+            else:
+                linux_obj.ip_route_add(network=network, gateway=gateway, interface=interface)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _get_network_by_ip(self, ip, subnet=24):
+        return '.'.join(ip.split('.')[:3]) + '.0' + '/%s' % subnet
+
+    def _get_gateway_by_ip(self, ip):
+        x = ip.split('.')
+        x[3] = '1'
+        return '.'.join(x)
+
+    def get_hu_interface_on_host(self, linux_obj):
+        interface_name = None
+        try:
+            contents = linux_obj.command(command="ip address")
+            m = re.search(r'(hu\d+-f\d+)', contents.strip(), re.DOTALL)
+            if m:
+                interface_name = m.group(1).strip()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return interface_name
+
+    def _ensure_same_network(self, network1, network2):
+        return network1 == network2
+
+    @staticmethod
+    def get_list_of_hosts_connected_each_f1(topology_info):
+        hosts = []
+        try:
+            for fs in topology_info['racks']:
+                fs_f1_dict = {fs['name']: {}}
+                for f1 in fs['F1s']:
+                    fs_f1_dict[fs['name']].update({f1['id']: f1['Hosts']})
+                hosts.append(fs_f1_dict)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return hosts
+
+    def get_rx_tx_ifconfig(self, interface_name, linux_obj):
+        result = {"rx_packets": None, "tx_packets": None}
+        try:
+            cmd = "ifconfig %s | egrep \"RX packets | TX packets\" " % interface_name
+            output = linux_obj.command(cmd)
+            rx_packets = int(re.search(r'RX\s+packets\s+(\d+)', output).group(1))
+            tx_packets = int(re.search(r'TX\s+packets\s+(\d+)', output).group(1))
+            result["rx_packets"] = rx_packets
+            result["tx_packets"] = tx_packets
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _test_intra_f1_ping(self, network_controller_obj, hosts):
+        result = False
+        try:
+            count = 5000
+            for host in hosts:
+                linux_obj = Linux(host_ip=host['name'], ssh_username=host['ssh_username'],
+                                  ssh_password=host['ssh_password'])
+                for index in range(len(hosts)):
+                    if host['ip'] == hosts[index]['ip']:
+                        continue
+                    checkpoint = "Ping from %s to %s" % (host['ip'], hosts[index]['ip'])
+                    res = linux_obj.ping(dst=hosts[index]['ip'], count=2, interval=0.01, sudo=True)
+                    fun_test.simple_assert(res, checkpoint)
+
+                    erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
+                    vppkts_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+                    hu_interface = self.get_hu_interface_on_host(linux_obj=linux_obj)
+                    ifconfig_stats_before = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
+
+                    checkpoint = "hping from %s to %s" % (host['ip'], hosts[index]['ip'])
+                    res = linux_obj.hping(dst=hosts[index]['ip'], count=count, mode='faster', protocol_mode='icmp',
+                                          timeout=10)
+                    # fun_test.simple_assert(res, checkpoint)
+                    ifconfig_stats = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
+                    diff_stats = get_diff_stats(old_stats=ifconfig_stats_before, new_stats=ifconfig_stats)
+                    fun_test.log("Diff stats for Ifconfig %s interface: %s" % (hu_interface, diff_stats))
+                    fun_test.simple_assert(
+                        expression=(diff_stats['rx_packets'] >= count and diff_stats['tx_packets'] >= count),
+                        message=checkpoint)
+
+                    checkpoint = "Validate ERP stats"
+                    erp_stats = get_erp_stats_values(network_controller_obj=network_controller_obj)
+                    diff_stats = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats)
+                    fun_test.log("ERP Diff stats: %s" % diff_stats)
+                    fun_test.simple_assert(diff_stats[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED] >= count, checkpoint)
+
+                    checkpoint = "Validate vppkts stats"
+                    vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+                    diff_stats = get_diff_stats(old_stats=vppkts_before, new_stats=vp_stats)
+                    fun_test.log("VP packets Diff: %s" % diff_stats)
+                    fun_test.test_assert_expected(expected=diff_stats[VP_FAE_REQUESTS_SENT],
+                                                  actual=diff_stats[VP_FAE_RESPONSES_RECEIVED],
+                                                  message="Ensure FAE req equal to sent ", ignore_on_success=True)
+                    fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
+                                                                          diff_stats[VP_PACKETS_OUT_NU_ETP]))
+                    fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                                                       diff_stats[VP_PACKETS_OUT_NU_ETP] >= count), message=checkpoint)
+                linux_obj.disconnect()
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_intra_f1_ping(self, dpc_info, hosts):
+        result = False
+        try:
+            for fs in hosts:
+                for fs_name in fs:
+                    for f1 in fs[fs_name]:
+                        checkpoint = "Test ping between hosts connected to F1_%s of %s" % (f1, fs_name)
+                        fun_test.log_section(checkpoint)
+                        dpc_server_ip = dpc_info[fs_name]['F1_%s_dpc' % f1][0]
+                        dpc_server_port = dpc_info[fs_name]['F1_%s_dpc' % f1][1]
+                        network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip,
+                                                                   dpc_server_port=dpc_server_port)
+
+                        res = self._test_intra_f1_ping(network_controller_obj=network_controller_obj,
+                                                       hosts=fs[fs_name][f1])
+                        fun_test.test_assert(res, checkpoint)
+                        network_controller_obj.disconnect()
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_intra_fs_ping(self, hosts, dpc_info):
+        result = False
+        f1_0_dpc_obj = None
+        f1_1_dpc_obj = None
+        try:
+            for fs in hosts:
+                for fs_name in fs:
+                    checkpoint = "Test ping from hosts connected to F1_0 of %s to F1_1 hosts of %s" % (fs_name,
+                                                                                                       fs_name)
+                    fun_test.log_section(checkpoint)
+                    f1_0_hosts = fs[fs_name][0]
+                    f1_1_hosts = fs[fs_name][1]
+                    f1_0_dpc_obj = NetworkController(dpc_server_ip=dpc_info[fs_name]['F1_0_dpc'][0],
+                                                     dpc_server_port=dpc_info[fs_name]['F1_0_dpc'][1])
+                    f1_1_dpc_obj = NetworkController(dpc_server_ip=dpc_info[fs_name]['F1_1_dpc'][0],
+                                                     dpc_server_port=dpc_info[fs_name]['F1_1_dpc'][1])
+                    res = self._test_intra_fs_ping(f1_0_hosts=f1_0_hosts, f1_1_hosts=f1_1_hosts,
+                                                   f1_0_dpc_obj=f1_0_dpc_obj, f1_1_dpc_obj=f1_1_dpc_obj)
+                    fun_test.test_assert(res, checkpoint)
+                    f1_1_dpc_obj.disconnect()
+                    f1_0_dpc_obj.disconnect()
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        finally:
+            if f1_1_dpc_obj and f1_0_dpc_obj:
+                f1_1_dpc_obj.disconnect()
+                f1_0_dpc_obj.disconnect()
+        return result
+
+    def validate_inter_rack_ping(self, fs_per_rack):
+        result = False
+        try:
+            for fs in fs_per_rack:
+                fs_name = fs['name']
+                for _fs in fs_per_rack:
+                    if fs['name'] == _fs['name']:
+                        continue
+                    checkpoint = "Test ping from source %s of one rack to dest %s of other rack" % (fs_name,
+                                                                                                    _fs['name'])
+                    result = self._test_ping_within_racks(remote_fs=_fs, local_fs=fs)
+                    fun_test.test_assert(result, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_intra_rack_ping(self, all_fs):
+        result = False
+        try:
+            for fs in all_fs:
+                fs_name = fs['name']
+                for _fs in all_fs:
+                    if fs['name'] == _fs['name']:
+                        continue
+                    checkpoint = "Test ping from source %s to dest %s of same rack" % (fs_name, _fs['name'])
+                    result = self._test_ping_within_racks(remote_fs=_fs, local_fs=fs)
+                    fun_test.test_assert(result, checkpoint)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _fetch_spine_links(self, cx_links):
+        spine_links = []
+        for link in cx_links:
+            spine_links.extend([int(re.search(r'(\d+)', k).group(1)) for k in link['interfaces'].keys()])
+        return spine_links
+
+    def _fetch_fabric_links(self, fab_links):
+        fabric_links = []
+        for key in fab_links:
+            fabric_links.append(int(re.search(r'(\d+)', key).group(1)))
+        return fabric_links
+
+    def _test_ping_within_racks(self, remote_fs, local_fs):
+        result = False
+        try:
+            count = 5000
+            for f1 in local_fs['F1s']:
+                spine_links = self._fetch_spine_links(cx_links=f1['CxLinks'])
+                fab_links = self._fetch_fabric_links(fab_links=f1['FabLinks'])
+                source_dpc_obj = NetworkController(dpc_server_ip=f1['F1_%s_dpc' % f1['id']][0],
+                                                   dpc_server_port=f1['F1_%s_dpc' % f1['id']][1])
+                f1_index = 0
+                for host in f1['Hosts']:
+                    linux_obj = Linux(host_ip=host['name'], ssh_username=host['ssh_username'],
+                                      ssh_password=host['ssh_password'])
+                    for remote_f1 in remote_fs['F1s']:
+                        remote_spine_links = self._fetch_spine_links(cx_links=remote_f1['CxLinks'])
+                        remote_fabric_links = self._fetch_fabric_links(fab_links=remote_f1['FabLinks'])
+                        remote_dpc_obj = NetworkController(dpc_server_ip=remote_f1['F1_%s_dpc' % remote_f1['id']][0],
+                                                           dpc_server_port=remote_f1['F1_%s_dpc' % remote_f1['id']][1])
+                        for remote_host in remote_f1['Hosts']:
+                            hu_interface_ip = remote_host['ip']
+                            checkpoint = "Ping from %s to %s" % (host['ip'], hu_interface_ip)
+                            res = linux_obj.ping(dst=hu_interface_ip, count=2, interval=0.01, sudo=True)
+                            fun_test.simple_assert(res, checkpoint)
+
+                            src_fcp_stats_before = source_dpc_obj.peek_fcp_global_stats()
+                            remote_fcp_stats_before = remote_dpc_obj.peek_fcp_global_stats()
+                            remote_vppkts_before = get_vp_pkts_stats_values(network_controller_obj=remote_dpc_obj)
+                            src_vppkts_before = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
+                            hu_interface = self.get_hu_interface_on_host(linux_obj=linux_obj)
+                            ifconfig_stats_before = self.get_rx_tx_ifconfig(interface_name=hu_interface,
+                                                                            linux_obj=linux_obj)
+                            checkpoint = "Clear stats on Source Spine and Fabric links"
+                            for fpg in spine_links + fab_links:
+                                source_dpc_obj.clear_port_stats(port_num=fpg, shape=0)
+
+                            checkpoint = "Clear stats on Dest Spine and Fabric links"
+                            for fpg in remote_spine_links + remote_fabric_links:
+                                remote_dpc_obj.clear_port_stats(port_num=fpg, shape=0)
+
+                            checkpoint = "hping from %s to %s" % (host['ip'], hu_interface_ip)
+                            res = linux_obj.hping(dst=hu_interface_ip, count=count, mode='faster', protocol_mode='icmp',
+                                                  timeout=10)
+                            # fun_test.simple_assert(res, checkpoint)
+                            ifconfig_stats = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
+                            diff_stats = get_diff_stats(old_stats=ifconfig_stats_before, new_stats=ifconfig_stats)
+                            fun_test.log("Diff stats for Ifconfig %s interface: %s" % (hu_interface, diff_stats))
+                            fun_test.simple_assert(
+                                expression=(diff_stats['rx_packets'] >= count and diff_stats['tx_packets'] >= count),
+                                message=checkpoint)
+
+                            checkpoint = "Validate FCB stats on source F1"
+                            src_fcp_stats = source_dpc_obj.peek_fcp_global_stats()
+                            diff_stats = get_diff_stats(old_stats=src_fcp_stats_before, new_stats=src_fcp_stats)
+                            fun_test.log("Source F1 FCP Diff stats: %s" % diff_stats)
+
+                            fun_test.simple_assert(
+                                expression=(int(diff_stats[FCB_DST_FCP_PKT_RCVD]) >= count and
+                                            int(diff_stats[FCB_DST_REQ_MSG_RCVD]) >= count and
+                                            int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count), message=checkpoint
+                            )
+
+                            checkpoint = "Validate Source F1 vppkts stats"
+                            src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
+                            diff_stats = get_diff_stats(old_stats=src_vppkts_before, new_stats=src_vp_stats)
+                            fun_test.log("Source F1 VP packets Diff: %s" % diff_stats)
+                            fun_test.test_assert_expected(expected=diff_stats[VP_FAE_REQUESTS_SENT],
+                                                          actual=diff_stats[VP_FAE_RESPONSES_RECEIVED],
+                                                          message="Ensure FAE req equal to sent ",
+                                                          ignore_on_success=True)
+                            fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
+                                                                                  diff_stats[VP_PACKETS_OUT_NU_ETP]))
+                            fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                                                               diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
+                                                   message=checkpoint)
+
+                            checkpoint = "Validate Source FPG spine links Tx stats."
+                            for spine in spine_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=spine),
+                                    stat_type=FRAMES_TRANSMITTED_OK)
+                                fun_test.simple_assert(stats >= count, checkpoint)
+
+                            checkpoint = "Validate Source FPG fabric links Tx stats."
+                            for fab in fab_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=fab),
+                                    stat_type=FRAMES_TRANSMITTED_OK, tx=True)
+                                fun_test.simple_assert(stats >= (count * len(spine_links)), checkpoint)
+
+                            checkpoint = "Validate Remote FPG spine links Rx stats."
+                            for spine in remote_spine_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=spine),
+                                    stat_type=FRAMES_RECEIVED_OK, tx=False)
+                                fun_test.simple_assert(stats >= count, checkpoint)
+
+                            checkpoint = "Validate Remote FPG fabric links Rx stats."
+                            for fab in remote_fabric_links:
+                                stats = get_dut_output_stats_value(
+                                    result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=fab),
+                                    stat_type=FRAMES_RECEIVED_OK, tx=False)
+                                fun_test.simple_assert(stats >= (count * len(spine_links)), checkpoint)
+
+                            checkpoint = "Validate FCB stats on remote F1"
+                            fcp_stats = remote_dpc_obj.peek_fcp_global_stats()
+                            diff_stats = get_diff_stats(old_stats=remote_fcp_stats_before, new_stats=fcp_stats)
+                            fun_test.log("Source F1 FCP Diff stats: %s" % diff_stats)
+
+                            fun_test.simple_assert(
+                                expression=(int(diff_stats[FCB_DST_FCP_PKT_RCVD]) >= count and
+                                            int(diff_stats[FCB_DST_REQ_MSG_RCVD]) >= count and
+                                            int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count), message=checkpoint
+                            )
+
+                            checkpoint = "Validate Source F1 vppkts stats"
+                            src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
+                            diff_stats = get_diff_stats(old_stats=remote_vppkts_before, new_stats=src_vp_stats)
+                            fun_test.log("Source F1 VP packets Diff: %s" % diff_stats)
+                            fun_test.test_assert_expected(expected=diff_stats[VP_FAE_REQUESTS_SENT],
+                                                          actual=diff_stats[VP_FAE_RESPONSES_RECEIVED],
+                                                          message="Ensure FAE req equal to sent ",
+                                                          ignore_on_success=True)
+                            fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
+                                                                                  diff_stats[VP_PACKETS_OUT_NU_ETP]))
+                            fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                                                               diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
+                                                   message=checkpoint)
+
+                    linux_obj.disconnect()
+                    source_dpc_obj.disconnect()
+                    remote_dpc_obj.disconnect()
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _test_intra_fs_ping(self, f1_0_hosts, f1_1_hosts, f1_0_dpc_obj, f1_1_dpc_obj):
+        result = False
+        try:
+            count = 5000
+            for f1_0_host in f1_0_hosts:
+                linux_obj = Linux(host_ip=f1_0_host['name'], ssh_username=f1_0_host['ssh_username'],
+                                  ssh_password=f1_0_host['ssh_password'])
+                for f1_1_host in f1_1_hosts:
+                    hu_interface_ip = f1_1_host['ip']
+                    checkpoint = "Ping from %s to %s" % (f1_0_host['ip'], hu_interface_ip)
+                    res = linux_obj.ping(dst=hu_interface_ip, count=2, interval=0.01, sudo=True)
+                    fun_test.simple_assert(res, checkpoint)
+
+                    fcp_stats_before = f1_0_dpc_obj.peek_fcp_global_stats()
+                    vppkts_before = get_vp_pkts_stats_values(network_controller_obj=f1_0_dpc_obj)
+                    hu_interface = self.get_hu_interface_on_host(linux_obj=linux_obj)
+                    ifconfig_stats_before = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
+
+                    checkpoint = "hping from %s to %s" % (f1_0_host['ip'], hu_interface_ip)
+                    res = linux_obj.hping(dst=hu_interface_ip, count=count, mode='faster', protocol_mode='icmp',
+                                          timeout=10)
+                    # fun_test.simple_assert(res, checkpoint)
+                    ifconfig_stats = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
+                    diff_stats = get_diff_stats(old_stats=ifconfig_stats_before, new_stats=ifconfig_stats)
+                    fun_test.log("Diff stats for Ifconfig %s interface: %s" % (hu_interface, diff_stats))
+                    fun_test.simple_assert(
+                        expression=(diff_stats['rx_packets'] >= count and diff_stats['tx_packets'] >= count),
+                        message=checkpoint)
+
+                    checkpoint = "Validate FCB stats"
+                    fcp_stats = f1_0_dpc_obj.peek_fcp_global_stats()
+                    diff_stats = get_diff_stats(old_stats=fcp_stats_before, new_stats=fcp_stats)
+                    fun_test.log("FCP Diff stats: %s" % diff_stats)
+                    '''
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_TDP0_DATA]) + int(diff_stats[FCB_TDP0_GNT]) +
+                                    int(diff_stats[FCB_TDP0_REQ])) >= count, message="Ensure TDP0 packets")
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_TDP1_DATA]) + int(diff_stats[FCB_TDP1_GNT]) +
+                                    int(diff_stats[FCB_TDP1_REQ])) >= count, message="Ensure TDP1 packets")
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_TDP2_DATA]) + int(diff_stats[FCB_TDP2_GNT]) +
+                                    int(diff_stats[FCB_TDP2_REQ])) >= count, message="Ensure TDP2 packets")
+                    fun_test.add_checkpoint(checkpoint)
+                    '''
+                    fun_test.simple_assert(
+                        expression=(int(diff_stats[FCB_DST_FCP_PKT_RCVD]) >= count and
+                                    int(diff_stats[FCB_DST_REQ_MSG_RCVD]) >= count and
+                                    int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count), message=checkpoint
+                    )
+
+                    checkpoint = "Validate vppkts stats"
+                    vp_stats = get_vp_pkts_stats_values(network_controller_obj=f1_0_dpc_obj)
+                    diff_stats = get_diff_stats(old_stats=vppkts_before, new_stats=vp_stats)
+                    fun_test.log("VP packets Diff: %s" % diff_stats)
+                    fun_test.test_assert_expected(expected=diff_stats[VP_FAE_REQUESTS_SENT],
+                                                  actual=diff_stats[VP_FAE_RESPONSES_RECEIVED],
+                                                  message="Ensure FAE req equal to sent ", ignore_on_success=True)
+                    fun_test.log("VP HU OUT: %s and VP NU ETP OUT: %s" % (diff_stats[VP_PACKETS_OUT_HU],
+                                                                          diff_stats[VP_PACKETS_OUT_NU_ETP]))
+                    fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
+                                                       diff_stats[VP_PACKETS_OUT_NU_ETP] >= count), message=checkpoint)
+                linux_obj.disconnect()
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    @staticmethod
+    def get_dpc_ip_port_for_each_f1(topology_info):
+        info = {}
+        try:
+            for fs in topology_info['racks']:
+                dpc_info = {fs['name']: {}}
+                for f1 in fs['F1s']:
+                    key = "F1_%s_dpc" % f1['id']
+                    val = tuple(f1[key])
+                    dpc_info[fs['name']].update({key: val})
+                info.update(dpc_info)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return info
+
+    @staticmethod
+    def get_list_of_all_hosts(topology_info):
+        hosts = []
+        try:
+            hosts = []
+            for fs in topology_info['racks']:
+                for f1 in fs['F1s']:
+                    hosts.extend(f1['Hosts'])
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return hosts
+
+    @staticmethod
+    def get_list_of_fs_per_rack(topology_info):
+        fs_per_rack = []
+        try:
+            for index in range(topology_info['no_of_racks']):
+                fs_per_rack.append(topology_info['racks'][index])
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return fs_per_rack
+
+
+
+
+
+
+
+

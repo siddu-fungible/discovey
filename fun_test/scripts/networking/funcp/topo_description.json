@@ -1,0 +1,159 @@
+{
+  "description": "Topology description for Alibaba ping test",
+  "no_of_racks": 2,
+  "fs_per_rack": 1,
+  "racks": [
+    {
+      "id": 1,
+      "name": "FS-48",
+      "F1s": [
+        {
+          "id": 0,
+          "CxLinks": [
+            {
+              "mgmt_ip": "41.1.1.1",
+              "interfaces": {
+                "FPG0": "et-0/0/2.0"
+              }
+            },
+            {
+              "mgmt_ip": "41.1.1.1",
+              "interfaces": {
+                "FPG4": "et-0/0/3.0"
+              }
+            }
+          ],
+          "FabLinks": {
+            "FPG8": "F1_1"
+          },
+          "Hosts": [
+            {
+              "name": "cab02-qa-05",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "41.1.1.2"
+            },
+            {
+              "name": "cab02-qa-06",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "41.1.1.3"
+            },
+            {
+              "name": "cab02-qa-07",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "41.1.1.4"
+            }
+          ],
+          "F1_0_dpc": ["10.1.105.168", 40220]
+        },
+        {
+          "id": 1,
+          "CxLinks": [
+            {
+              "mgmt_ip": "42.1.1.1",
+              "interfaces": {
+                "FPG0": "et-0/0/0"
+              }
+            },
+            {
+              "mgmt_ip": "42.1.1.1",
+              "interfaces": {
+                "FPG4": "et-0/0/1"
+              }
+            }
+          ],
+          "FabLinks": {
+            "FPG20": "F1_0"
+          },
+          "Hosts": [
+            {
+              "name": "cab02-qa-08",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "42.1.1.2"
+            }
+          ],
+          "F1_1_dpc": ["10.1.105.168", 40221]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "FS-60",
+      "F1s": [
+        {
+          "id": 0,
+          "CxLinks": [
+            {
+              "mgmt_ip": "43.1.1.1",
+              "interfaces": {
+                "FPG0": "et-0/0/6"
+              }
+            },
+            {
+              "mgmt_ip": "43.1.1.1",
+              "interfaces": {
+                "FPG4": "et-0/0/7"
+              }
+            }
+          ],
+          "FabLinks": {
+            "FPG8": "F1_1"
+          },
+          "Hosts": [
+            {
+              "name": "cab02-qa-01",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "43.1.1.4"
+            },
+            {
+              "name": "cab02-qa-02",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "43.1.1.3"
+            },
+            {
+              "name": "cab02-qa-03",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "43.1.1.2"
+            }
+          ],
+          "F1_0_dpc": ["10.1.105.171", 40220]
+        },
+        {
+          "id": 1,
+          "CxLinks": [
+            {
+              "mgmt_ip": "44.1.1.1",
+              "interfaces": {
+                "FPG0": "et-0/0/4"
+              }
+            },
+            {
+              "mgmt_ip": "44.1.1.1",
+              "interfaces": {
+                "FPG4": "et-0/0/5"
+              }
+            }
+          ],
+          "FabLinks": {
+            "FPG20": "F1_0"
+          },
+          "Hosts": [
+            {
+              "name": "cab02-qa-04",
+              "ssh_username": "localadmin",
+              "ssh_password": "Precious1*",
+              "ip": "44.1.1.2"
+            }
+          ],
+          "F1_1_dpc": ["10.1.105.171", 40221]
+        }
+      ]
+    }
+  ]
+}

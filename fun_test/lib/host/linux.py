@@ -523,6 +523,25 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def hping(self, dst, count=5, mode='faster', protocol_mode='icmp', max_percentage_loss=50, timeout=10,
+              data_bytes=80):
+        result = False
+        percentage_loss = 100
+        try:
+            cmd = "hping3 %s --%s -d %d --%s -c %d" % (dst, protocol_mode, data_bytes, mode, count)
+            output = self.sudo_command(command=cmd, timeout=timeout)
+            m = re.search(r'(\d+)%\s+packet\s+loss', output)
+            if m:
+                percentage_loss = int(m.group(1))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        if percentage_loss <= max_percentage_loss:
+            result = True
+        return result
+
+    @fun_test.safe
     def check_disk(self, threshold=75):
         result = False
         try:
