@@ -437,4 +437,5 @@ if __name__ == "__main__":
                         data_sets.append(one_data_set)
                     child_chart.data_sets = json.dumps(data_sets)
                     child_chart.save()
+                    print "added datasets for {}".format(child_chart.chart_name)
     print "added datasets for inspur containers"
