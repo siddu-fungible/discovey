@@ -124,7 +124,7 @@ def power_cycle_host(hostname):
     linux_obj.sudo_command("ipmitool -I lanplus -H %s-ilo -U ADMIN -P ADMIN chassis power on" % hostname)
 
 
-def test_host_pings(host, ips, username="localadmin", password="Precious1*"):
+def test_host_pings(host, ips, username="localadmin", password="Precious1*", strict=False):
     fun_test.log("")
     fun_test.log("================")
     fun_test.log("Pings from Hosts")
@@ -136,7 +136,10 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*"):
         if result:
             fun_test.log("%s can reach %s" % (host, hosts))
         else:
-            fun_test.critical("%s cannot reach %s" % (host, hosts))
+            if strict:
+                fun_test.test_assert(False, 'Cannot ping host')
+            else:
+                fun_test.critical("%s cannot reach %s" % (host, hosts))
 
 
 def setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4):
