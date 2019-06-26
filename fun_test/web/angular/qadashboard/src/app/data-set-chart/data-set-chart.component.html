@@ -1,0 +1,10 @@
+<ng-container *ngIf="showBarChart">
+  <div *ngFor="let chart of charts">
+     <fun-chart [y1Values]="chart.y1Values"
+               [xValues]="chart.xValues"
+               [title]="'Today\'s Trend'"
+               [xAxisLabel]="chart.xAxisLabel"
+               [y1AxisLabel]="chart.y1AxisLabel"></fun-chart>
+  </div>
+</ng-container>
+
