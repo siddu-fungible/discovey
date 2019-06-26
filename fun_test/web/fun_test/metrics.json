@@ -497,14 +497,14 @@
                     "children": [
                       {
                         "metric_model_name": "VoltestLsvPerformance",
-                        "name": "voltest_lsv_1instances_blt_iops",
+                        "name": "voltest_lsv_1instances_blt_readwrite_iops",
                         "label": "BLT: IOPS",
                         "children": [],
                         "weight": 1
                       },
                       {
                         "metric_model_name": "VoltestLsvPerformance",
-                        "name": "voltest_lsv_1instances_blt_bandwidth",
+                        "name": "voltest_lsv_1instances_blt_readwrite_bandwidth",
                         "label": "BLT: Bandwidth",
                         "children": [],
                         "weight": 1
@@ -519,14 +519,14 @@
                     "children": [
                       {
                         "metric_model_name": "VoltestLsv4Performance",
-                        "name": "voltest_lsv_4instances_blt_iops",
+                        "name": "voltest_lsv_4instances_blt_readwrite_iops",
                         "label": "BLT: IOPS",
                         "children": [],
                         "weight": 1
                       },
                       {
                         "metric_model_name": "VoltestLsv4Performance",
-                        "name": "voltest_lsv_4instances_blt_bandwidth",
+                        "name": "voltest_lsv_4instances_blt_readwrite_bandwidth",
                         "label": "BLT: Bandwidth",
                         "children": [],
                         "weight": 1
