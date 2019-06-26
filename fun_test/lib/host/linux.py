@@ -523,6 +523,25 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def hping(self, dst, count=5, mode='faster', protocol_mode='icmp', max_percentage_loss=50, timeout=10,
+              data_bytes=80):
+        result = False
+        percentage_loss = 100
+        try:
+            cmd = "hping3 %s --%s -d %d --%s -c %d" % (dst, protocol_mode, data_bytes, mode, count)
+            output = self.sudo_command(command=cmd, timeout=timeout)
+            m = re.search(r'(\d+)%\s+packet\s+loss', output)
+            if m:
+                percentage_loss = int(m.group(1))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        if percentage_loss <= max_percentage_loss:
+            result = True
+        return result
+
+    @fun_test.safe
     def check_disk(self, threshold=75):
         result = False
         try:
@@ -830,11 +849,40 @@ class Linux(object, ToDictMixin):
     def tshark_capture_stop(self, process_id):
         return self.kill_process(process_id=process_id)
 
-    def tcpdump_capture_start(self):
-        pass
+    def tcpdump_capture_start(self, interface, tcpdump_filename="/tmp/tcpdump_capture.pcap", snaplen=96, filecount=1,
+                              packet_count=2000000, file_size=None, rotate_seconds=None, sudo=True):
+        result = None
+        try:
+            if not file_size and not rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -c {} -W {} -w {}".format(interface, snaplen, packet_count, filecount,
+                                                                            tcpdump_filename)
+            elif file_size and rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -G {} -W {} -w {}".format(interface, snaplen, file_size,
+                                                                                  rotate_seconds, filecount,
+                                                                                  tcpdump_filename)
+            elif file_size:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -W {} -w {}".format(interface, snaplen, file_size, filecount,
+                                                                            tcpdump_filename)
+            elif rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -G {} -W {} -w {}".format(interface, snaplen, rotate_seconds,
+                                                                            filecount, tcpdump_filename)
+
+            fun_test.log("executing command: {}".format(cmd))
+            if sudo:
+                cmd = "nohup {} >/dev/null 2>&1 &".format(cmd)
+                self.sudo_command(command=cmd)
+                process_id = self.get_process_id_by_pattern(process_pat="tcpdump")
+            else:
+                process_id = self.start_bg_process(command=cmd)
+            fun_test.log("tcpdump is started, process id: {}".format(process_id))
+            if process_id:
+                result = process_id
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def tcpdump_capture_stop(self, process_id):
-        pass
+        return self.kill_process(process_id=process_id)
 
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
@@ -1674,6 +1722,9 @@ class Linux(object, ToDictMixin):
 
         if 'runtime' in kwargs:
             fio_command += " --time_based"
+
+        if 'randrepeat' in kwargs:
+            fio_command += " --norandommap"
 
         if 'output-format' not in kwargs:
             fio_command += " --output-format=json"

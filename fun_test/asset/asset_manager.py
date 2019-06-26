@@ -235,7 +235,7 @@ class AssetManager:
             result["message"] = asset_level_error_message
         elif in_progress_count >= credits:
             result["status"] = False
-            result["message"] = "Test-bed: {} In-progress count: {}, Credit: {}".format(test_bed_type, in_progress_count, credits)
+            result["message"] = "Test-bed: {0} locked by Suite: <a href='/regression/suite_detail/{1}'>{1}</a>".format(test_bed_type, in_progress_suites[0].execution_id)
             result["used_by_suite_id"] = in_progress_suites[0].execution_id
         elif in_use:  # Check if the required internal resources are used by another run
             result["status"] = False
@@ -371,35 +371,41 @@ class AssetManager:
         asset_request = custom_spec.get("asset_request", None)
         fun_test.simple_assert(asset_request, "asset_request in custom_spec")
 
-        specific_dut = None
+        assets_required_config = {AssetType.DUT: {}, AssetType.HOST: {}}
+        specific_duts = None
         num_duts_required = None
         if AssetType.DUT in asset_request:
             dut_info = asset_request[AssetType.DUT]
             num_duts_required = dut_info.get("num", None)
-            specific_dut = dut_info.get("name", None)
-            if specific_dut:
-                num_duts_required = 1
+            specific_duts = dut_info.get("names", None)
+            if specific_duts:
+                num_duts_required = len(specific_duts)
+            assets_required_config[AssetType.DUT] = {"num_required": num_duts_required, "specific": specific_duts}
 
-        specific_host = None
+        specific_hosts = None
         num_hosts_required = None
         if AssetType.HOST in asset_request:
             host_info = asset_request[AssetType.HOST]
             num_hosts_required = host_info.get("num", None)
-            specific_dut = host_info.get("name", None)
-            if specific_host:
-                num_duts_required = 1
+            specific_hosts = host_info.get("names", None)
+            if specific_hosts:
+                num_hosts_required = len(specific_hosts)
+            assets_required_config[AssetType.HOST] = {"num_required": num_hosts_required, "specific": specific_hosts}
 
         asset_category_unavailable = False
         error_message = ""
+
         for asset_type in [AssetType.DUT, AssetType.HOST]:
             if asset_category_unavailable:
                 break
             num_assets_available = 0
-            num_assets_required = None
-            if asset_type == AssetType.DUT:
-                num_assets_required = num_duts_required
-            if asset_type == AssetType.HOST:
-                num_assets_required = num_hosts_required
+            num_assets_required = assets_required_config[asset_type].get("num_required", None)
+
+            # if asset_type == AssetType.DUT:
+            #    num_assets_required = num_duts_required
+            # if asset_type == AssetType.HOST:
+            #    num_assets_required = num_hosts_required
+
             if num_assets_required is not None:
                 # print "Num Duts: {}".format(num_duts_required)
 
@@ -409,8 +415,19 @@ class AssetManager:
                 unavailable_assets = []
                 available_assets = []
                 for asset_in_test_bed in assets_in_test_bed:
-                    if specific_dut and asset_type == AssetType.DUT and specific_dut != asset_in_test_bed:
-                        fun_test.log("Specific DUT set: {}, so skipping {}".format(specific_dut, asset_in_test_bed))
+                    '''
+                    if specific_duts and asset_type == AssetType.DUT and asset_in_test_bed not in specific_duts:
+                        fun_test.log("Specific DUTs set: {}, so skipping {}".format(specific_duts, asset_in_test_bed))
+                        continue
+
+                    if specific_hosts and asset_type == AssetType.HOST and asset_in_test_bed not in specific_hosts:
+                        fun_test.log("Specific Hosts set: {}, so skipping {}".format(specific_hosts, asset_in_test_bed))
+                        continue
+                    '''
+
+                    specific_assets = assets_required_config[asset_type].get("specific", None)
+                    if specific_assets and asset_in_test_bed not in specific_assets:
+                        fun_test.log("Specific Assets set: {}, so skipping {}".format(specific_assets, asset_in_test_bed))
                         continue
                     asset = None
                     try:
@@ -444,7 +461,8 @@ class AssetManager:
                 elif num_assets_required <= num_assets_available:
                     if asset_type == AssetType.DUT:
                         self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
-                                                              duts_to_disable=unavailable_assets, duts_to_enable=available_assets)
+                                                              duts_to_disable=unavailable_assets,
+                                                              duts_to_enable=available_assets)
                         result["assets_required"][AssetType.DUT].extend(available_assets)
                     if asset_type == AssetType.HOST:
                         self._disable_assets_in_test_bed_spec(test_bed_spec=test_bed_spec,
@@ -505,6 +523,14 @@ if __name__ == "__main__":
     print "Hi"
     # get base test-bed
     custom_spec = {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}}}
+    """
+    custom_spec = {"base_test_bed": "fs-inspur",
+                   "asset_request":
+                       {
+                           "DUT": {"names": ["fs-42", "fs-41"]},
+
+                   "Host": {"names": ["mktg-server-01"]}}}
+    """
     spec = asset_manager.check_custom_test_bed_availability(custom_spec=custom_spec)
     i = 0
     # get requested DUT count

@@ -27,9 +27,9 @@
             &nbsp;
           </ng-container>
           <ng-container  *ngIf="i > 0 && queueOccupancy[category].length > 1">
-            <span class="pseudo-anchor" (click)="moveToTop(queueEntry.job_id, false)">T</span>&nbsp;
+            <span class="pseudo-anchor" (click)="moveToTop(queueEntry.job_id, false)">Move to top</span>&nbsp;
           </ng-container>
-          <span *ngIf="category === 'normal' || category === 'low' " class="pseudo-anchor" (click)="moveToNextQueue(queueEntry.job_id)">N</span>
+          <span *ngIf="category === 'normal' || category === 'low' " class="pseudo-anchor" (click)="moveToNextQueue(queueEntry.job_id)">Move to next Q</span>
 
 
         </td>
@@ -38,7 +38,7 @@
         <td>{{ queueEntry.test_bed_type }}</td>
         <td>{{ queueEntry.job_spec.suite_path }}</td>
         <td>{{ queueEntry.job_spec.email }}</td>
-        <td>{{ queueEntry.message }}</td>
+        <td [innerHTML]="queueEntry.message | safeHtml"></td>
 
       </tr>
     </table>

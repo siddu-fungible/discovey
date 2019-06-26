@@ -22,7 +22,6 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
-import { Demo1Component } from './demo1/demo1.component';
 import { CreateChartComponent } from './performance/create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
 import { ScrollToDirective } from './scroll-to.directive';
@@ -79,7 +78,6 @@ import { TooltipDirective } from './ui-elements/tooltip.directive';
     FunMetricChartComponent,
     SafeHtmlPipe,
     CreateChartComponent,
-    Demo1Component,
     PreviewFunMetricComponent,
     ScrollToDirective,
     RegressionComponent,

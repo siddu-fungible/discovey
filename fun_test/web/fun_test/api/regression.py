@@ -12,12 +12,13 @@ from datetime import datetime, timedelta
 from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
 from asset.asset_global import AssetType
-from asset.asset_manager import AssetManager
+
 
 @csrf_exempt
 @api_safe_json_response
 def test_beds(request, id):
     result = None
+    from asset.asset_manager import AssetManager
     am = AssetManager()
     if request.method == "GET":
         if not id:
@@ -206,7 +207,9 @@ def assets(request, name):
             for one_asset in all_assets:
                 one_record = {"name": one_asset.name,
                               "type": one_asset.type,
-                              "manual_lock_user": one_asset.manual_lock_user}
+                              "manual_lock_user": one_asset.manual_lock_user,
+                              "job_ids": one_asset.job_ids,
+                              "test_beds": one_asset.test_beds}
                 result.append(one_record)
     elif request.method == "PUT":
         request_json = json.loads(request.body)

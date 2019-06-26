@@ -8,6 +8,7 @@
     "syslog_level": 6,
     "command_timeout": 30,
     "reboot_timeout": 400,
+    "io_queues": 16,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -66,20 +67,43 @@
       "size": "100%",
       "rw": "write",
       "direct": 1,
+      "verify": "xxhash",
+      "do_verify": 1,
       "prio": 0,
-      "timeout": 600
+      "timeout": 1200
     }
   },
-  "ECTcpRandRead": {
+  "ECTcpRandRW": {
     "fio_cmd_args": {
       "bs": "4k",
       "size": "100%",
       "direct": 1,
       "prio": 0,
       "runtime": 30,
-      "timeout": 50
+      "verify": "xxhash",
+      "do_verify": 1,
+      "rwmixread": 70,
+      "timeout": 60
     },
-    "fio_mode": "randread",
+    "fio_mode": "randrw",
+    "fio_numjobs_iodepth": [
+      "(16, 4)"
+    ],
+    "fio_job_name": "ec_tcp_sanity"
+  },
+  "ECTcpSeqRW": {
+    "fio_cmd_args": {
+      "bs": "4k",
+      "size": "100%",
+      "direct": 1,
+      "prio": 0,
+      "runtime": 30,
+      "verify": "xxhash",
+      "do_verify": 1,
+      "rwmixread": 70,
+      "timeout": 60
+    },
+    "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
       "(16, 4)"
     ],

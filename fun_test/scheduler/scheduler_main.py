@@ -5,6 +5,7 @@ import re
 import subprocess
 from threading import Thread, Lock
 import threading
+import traceback
 
 from scheduler_helper import *
 import signal
@@ -289,6 +290,7 @@ def report_error(job_spec, error_message, local_logger=None):
 
 
 class SuiteWorker(Thread):
+    RUN_TIME_ROOT_VARIABLE = "scheduler"
     def __init__(self, job_spec):
         super(SuiteWorker, self).__init__()
         self.job_spec = job_spec
@@ -345,23 +347,23 @@ class SuiteWorker(Thread):
         if hasattr(job_spec, "email_on_failure_only"):
             self.job_email_on_failure_only = job_spec.email_on_failure_only
 
-        self.job_test_bed_type = job_spec.test_bed_type
-        self.current_script_process = None
-
-        self.suite_shutdown = False
-        self.abort_on_failure_requested = False
-        self.summary_extra_message = ""
-        self.local_scheduler_logger = None
-        self.job_state = JobStatusType.IN_PROGRESS
-        self.log_handler = None
-
-        self.at_least_one_failure = False
-        self.shutdown_reason = None
-        self.script_items = None
         self.initialized = False
-        self.current_script_item_index = 0
-        self.active_script_item_index = -1
-        self.suite_completed = False
+        self.job_test_bed_type = job_spec.test_bed_type
+        self.local_scheduler_logger = None
+        self.log_handler = None
+        self.script_items = None
+
+        self.current_script_process = None  # run-time # done
+        self.suite_shutdown = False  # run-time
+        self.abort_on_failure_requested = False  # run-time
+        self.summary_extra_message = ""
+        self.at_least_one_failure = False  # run-time # done
+        self.shutdown_reason = None
+        self.last_script_path = None  # run-time # done
+        self.current_script_item_index = 0  # run-time  # done
+        self.active_script_item_index = -1  # run-time  # done
+        self.suite_completed = False   # run-time
+        self.job_state = JobStatusType.IN_PROGRESS
         self.initialize()
 
     def initialize(self):
@@ -630,11 +632,31 @@ class SuiteWorker(Thread):
         elif self.current_script_item_index > self.active_script_item_index:
             self.start_script(script_item=script_item, script_item_index=self.current_script_item_index)  # schedule it
 
+    def update_suite_run_time(self, variable_name, value):
+        s = models_helper.get_suite_execution(suite_execution_id=self.job_id)
+        if s:
+            if self.RUN_TIME_ROOT_VARIABLE not in s.run_time:
+                s.add_run_time_variable(self.RUN_TIME_ROOT_VARIABLE, None)
+
+            rt = s.get_run_time_variable(self.RUN_TIME_ROOT_VARIABLE)
+            if not rt:
+                rt = {variable_name: value}
+            else:
+                rt[variable_name] = value
+            s.add_run_time_variable(self.RUN_TIME_ROOT_VARIABLE, rt)
+
+    def clear_run_time(self):
+        s = models_helper.get_suite_execution(suite_execution_id=self.job_id)
+        if self.RUN_TIME_ROOT_VARIABLE in s.run_time:
+            s.run_time["scheduler"] = None
+            s.save()
 
     def start_script(self, script_item, script_item_index):
         print ("Start_script: {}".format(script_item))
         script_path = SCRIPTS_DIR + "/" + script_item["path"]
         self.last_script_path = script_path
+        self.update_suite_run_time("last_script_path", self.last_script_path)
+
         if self.abort_on_failure_requested:
             self.error(message="Skipping, as abort_on_failure_requested", script_path=script_path)
             self.shutdown_suite(reason=ShutdownReason.ABORTED)
@@ -679,12 +701,16 @@ class SuiteWorker(Thread):
                 self.current_script_process = subprocess.Popen(popens,
                                                                stdout=console_log,
                                                                stderr=console_log)
+                self.update_suite_run_time("current_script_process_id", self.current_script_process.pid)
 
                 time.sleep(5)
                 self.active_script_item_index = script_item_index
+                self.update_suite_run_time("active_script_item_index", self.active_script_item_index)
+
         except Exception as ex:
             self.error("Script error {}, exception: {}".format(script_item, str(ex)))
             self.at_least_one_failure = True
+            self.update_suite_run_time("at_least_one_failure", self.at_least_one_failure)
             self.set_next_script_item_index()
 
     def is_suite_completed(self):
@@ -692,6 +718,7 @@ class SuiteWorker(Thread):
 
     def set_next_script_item_index(self):
         self.current_script_item_index += 1
+        self.update_suite_run_time("current_script_item_index", self.current_script_item_index)
         if self.current_script_item_index >= len(self.script_items):
 
             self.suite_complete()
@@ -905,12 +932,17 @@ def join_suite_workers():
     jobs_to_be_removed = []
     for job_id, t in job_id_threads.iteritems():
         try:
+
             if not t.is_suite_completed():
                 t.run_next()
             else:
                 jobs_to_be_removed.append(job_id)
+            if job_id not in job_id_threads:
+                jobs_to_be_removed.append(job_id)
         except Exception as ex:
+            traceback.print_exc()
             send_error_mail(submitter_email=t.submitter_email, job_id=job_id, message="Suite execution error at run_next. Exception: {}".format(str(ex)))
+
 
     for job_to_be_removed in jobs_to_be_removed:
         if job_to_be_removed in job_id_threads:
@@ -949,7 +981,6 @@ if __name__ == "__main__":
     ensure_singleton()
     initialize()
     scheduler_logger.info("Started Scheduler")
-
 
     run = True
     while run:

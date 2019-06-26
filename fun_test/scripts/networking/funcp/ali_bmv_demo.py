@@ -22,10 +22,10 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
+        pass
         # funcp_obj.cleanup_funcp()
         # for server in servers_mode:
         #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
-        pass
 
 
 class BringupSetup(FunTestCase):
@@ -51,7 +51,7 @@ class BringupSetup(FunTestCase):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=3 --mgmt --disable-wu-watchdog syslog=2"
 
@@ -63,7 +63,6 @@ class BringupSetup(FunTestCase):
 
         for server in servers_mode:
             print server
-            shut_all_vms(hostname=server)
             critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
             servers_list.append(server)
 
@@ -144,7 +143,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=16)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -153,7 +152,12 @@ class NicEmulation(FunTestCase):
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
             test_host_pings(host=host, ips=ping_dict[host])
-
+        fun_test.sleep(message="Wait for host to check ping again", seconds = 30)
+        # Ping hosts
+        ping_dict = self.server_key["fs"][fs_name]["host_pings"]
+        for host in ping_dict:
+            test_host_pings(host=host, ips=ping_dict[host], strict=True)
+            
     def cleanup(self):
         pass
 
@@ -541,56 +545,15 @@ class RemoteSSDTest(StorageConfiguration):
         pass
 
 
-class ConfigureVMs(FunTestCase):
-    server_key = {}
-
-    def describe(self):
-        self.set_test_details(id=6,
-                              summary="Bringup FS-45 with control plane",
-                              steps="""
-                              1. BringUP both F1s
-                              2. Bringup FunCP
-                              3. Create MPG Interfaces and assign static IPs
-                              """)
-
-    def setup(self):
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/fs_connected_servers.json')
-
-
-    def run(self):
-
-        fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
-
-        for server in servers_with_vms:
-            print server
-            configure_vms(server_name=server, vm_dict=servers_with_vms[server], yml="FS-ALIBABA-DEMO-VM",
-                          update_funeth_driver=False)
-            for vm in servers_with_vms[server]:
-                if servers_with_vms[server][vm]["vm_pings"]:
-                    test_host_pings(host=servers_with_vms[server][vm]["hostname"],
-                                    ips=servers_with_vms[server][vm]["vm_pings"],
-                                    username=servers_with_vms[server][vm]["user"],
-                                    password=servers_with_vms[server][vm]["password"])
-
-
-    def cleanup(self):
-        pass
-
-
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
 
     ts.add_test_case(NicEmulation())
-    ts.add_test_case(ConfigureVMs())
 
-    ts.add_test_case(LocalSSDTest())
+#     ts.add_test_case(LocalSSDTest())
 
-    ts.add_test_case(RemoteSSDTest())
-
-
+#     ts.add_test_case(RemoteSSDTest())
     # T1 : NIC emulation : ifconfig, Ethtool - move Host configs here, do a ping, netperf, tcpdump
     # T2 : Local SSD from FIO
     # T3 : Remote SSD FIO

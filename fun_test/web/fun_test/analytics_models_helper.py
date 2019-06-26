@@ -76,6 +76,7 @@ def is_same_day(current_time, data_collection_time):
 def _update_run_time(tag, value=None, date_time_details=None):
     current_time = get_data_collection_time()
     if date_time_details and value:
+        value[tag] = {}
         value[tag]["data_collection_time"] = str(current_time)
         date_time_details.value = value
         date_time_details.save()
@@ -331,8 +332,8 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency = read_95_latency
             entry.output_read_99_latency = read_99_latency
             entry.output_read_99_99_latency = read_99_99_latency
-            entry.output_write_iops_unit = write_iops
-            entry.output_read_iops_unit = read_iops
+            entry.output_write_iops_unit = write_iops_unit
+            entry.output_read_iops_unit = read_iops_unit
             entry.output_write_throughput_unit = write_throughput_unit
             entry.output_read_throughput_unit = read_throughput_unit
             entry.output_write_avg_latency_unit = write_avg_latency_unit

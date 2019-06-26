@@ -15,7 +15,7 @@
         </tr>
         <tr *ngFor="let chartInfo of modelInfo.value.charts, index as i">
           <td class="fun-center">
-            {{ chartInfo.chart_name }},&nbsp;{{ chartInfo.internal_chart_name }}&nbsp;
+            {{ chartInfo.chart_name }},&nbsp;{{ chartInfo.metric_id }}&nbsp;
             <a [routerLink]="" (click)="editChartClick(chartInfo.metric_id, modelInfo.key)">Edit</a>&nbsp;
             <a [routerLink]="" (click)="showData(chartInfo.metric_id)">Tables</a>&nbsp;
             <a [routerLink]="" (click)="showScores(chartInfo.metric_id)">Scores</a>

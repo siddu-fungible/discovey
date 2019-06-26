@@ -110,6 +110,10 @@ export class SuiteDetailComponent implements OnInit {
         });
       }
     });
+
+    setInterval(() => {
+      window.location.reload();
+    }, 60 * 1000);
   }
 
   fetchScriptInfo(scriptPath) {

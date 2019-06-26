@@ -89,6 +89,10 @@ class FunethPerformance(sanity.FunethSanity):
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx')
 
+        for nu in funeth_obj.nu_hosts:
+            linux_obj = funeth_obj.linux_obj_dict[nu]
+            perf_utils.mlx5_irq_affinity(linux_obj)
+
         netperf_manager_obj = nm.NetperfManager(linux_objs)
         fun_test.shared_variables['netperf_manager_obj'] = netperf_manager_obj
         fun_test.test_assert(netperf_manager_obj.setup(), 'Set up for throughput/latency test')
@@ -240,17 +244,19 @@ class FunethPerformanceBase(FunTestCase):
 
         if pingable and not sth_stuck_before:
 
-            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*2+10)
+            # TODO: calculate dpc stats collection duration and add it to test duration*2
+            perf_utils.collect_host_stats(funeth_obj, version, when='before', duration=duration*5)
 
             result = perf_manager_obj.run(*arg_dicts)
 
             fun_test.log('Collect stats after test')
-            perf_utils.collect_host_stats(funeth_obj, version, when='after')
             sth_stuck_after = perf_utils.collect_dpc_stats(network_controller_objs,
                                                            fpg_interfaces,
                                                            fpg_intf_dict,
                                                            version,
                                                            when='after')
+            # Collect host stats after dpc stats to give enough time for mpstat collection
+            perf_utils.collect_host_stats(funeth_obj, version, when='after')
             if sth_stuck_after:
                 result = {}
         else:
