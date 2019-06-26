@@ -19,6 +19,8 @@ class Node {
   styleUrls: ['./test.component.css']
 })
 export class TestComponent implements OnInit {
+  failed_list: any[] = [];
+
   tooltipContent = "";
 
   constructor(private apiService: ApiService, private logger: LoggerService, private renderer: Renderer2) {
@@ -30,13 +32,13 @@ export class TestComponent implements OnInit {
     const text = this.renderer.createText("ABCCCC");
     this.renderer.appendChild(this.tooltipContent, text);
     let s = 0;*/
-
+    return this.test();
   }
 
   tooltipCallback() {
     let content = this.renderer.createElement("span");
 
-    for (let i = 0; i <100; i++) {
+    for (let i = 0; i < 100; i++) {
       const text = this.renderer.createText("From callback");
       this.renderer.appendChild(content, text);
     }
@@ -48,4 +50,18 @@ export class TestComponent implements OnInit {
     return content;
   }
 
+  test() {
+    console.log("begin test");
+    let payload = {module: "networking"};
+    this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=10", payload).subscribe((response) => {
+      for (let i in response.data) {
+        if (response.data[i].result == 'FAILED') {
+          //console.log(response.data[i]);
+          this.failed_list.push(response.data[i]);
+          console.log('pushed');
+        }
+      }
+      console.log(this.failed_list.length);
+    });
+  }
 }
