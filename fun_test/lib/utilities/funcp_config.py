@@ -896,21 +896,41 @@ class FunControlPlaneBringup:
                                 stats = get_dut_output_stats_value(
                                     result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=spine),
                                     stat_type=FRAMES_TRANSMITTED_OK)
-                                fun_test.simple_assert(stats >= count, checkpoint)
+                                fun_test.simple_assert(stats >= count, "Check for spine FPG packets")
+
+                                stats = get_dut_output_stats_value(
+                                    result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=spine),
+                                    stat_type=OCTETS_TRANSMITTED_OK)
+                                fun_test.simple_assert(stats >= count, "Check for spine FPG octects")
+                            fun_test.add_checkpoint(checkpoint)
 
                             checkpoint = "Validate Source FPG fabric links Tx stats."
                             for fab in fab_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=fab),
                                     stat_type=FRAMES_TRANSMITTED_OK, tx=True)
-                                fun_test.simple_assert(stats >= (count * len(spine_links)), checkpoint)
+                                fun_test.simple_assert(stats >= (count * len(spine_links)),
+                                                       "Check for FPG fabric Tx packets")
+
+                                stats = get_dut_output_stats_value(
+                                    result_stats=source_dpc_obj.peek_fpg_port_stats(port_num=fab),
+                                    stat_type=OCTETS_TRANSMITTED_OK)
+                                fun_test.simple_assert(stats >= (count * len(spine_links)),
+                                                       "Check for FPG fabric Tx octects")
+                            fun_test.add_checkpoint(checkpoint)
 
                             checkpoint = "Validate Remote FPG spine links Rx stats."
                             for spine in remote_spine_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=spine),
                                     stat_type=FRAMES_RECEIVED_OK, tx=False)
-                                fun_test.simple_assert(stats >= count, checkpoint)
+                                fun_test.simple_assert(stats >= count, "Check for FPG spine Rx packets")
+
+                                stats = get_dut_output_stats_value(
+                                    result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=spine),
+                                    stat_type=OCTETS_RECEIVED_OK, tx=False)
+                                fun_test.simple_assert(stats >= count, "Check for FPG spine Rx octects")
+                            fun_test.add_checkpoint(checkpoint)
 
                             checkpoint = "Validate Remote FPG fabric links Rx stats."
                             for fab in remote_fabric_links:
