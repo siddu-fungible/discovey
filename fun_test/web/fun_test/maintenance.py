@@ -500,21 +500,22 @@ if __name__ == "__main_temp__":
         chart.save()
 
 if __name__ == "__main__":
-    data_sets = {"qdepths": [1, 8, 16, 32, 64, 128, 256], "names": ["read(8 vols)", "write(8 vols)"]}
-    xaxis_title = "log2(qDepth)"
-    yaxis_titles = [PerfUnit.UNIT_KOPS, PerfUnit.UNIT_USECS]
+    data_sets = {"names": ["read(8 vols)", "write(8 vols)"]}
+    xaxis_title = "log(qDepth)"
+    yaxis_titles = [PerfUnit.UNIT_OPS, PerfUnit.UNIT_USECS]
     metric_chart_type = MetricChartType.REGULAR
     fun_chart_type = FunChartType.LINE_CHART
     for yaxis_title in yaxis_titles:
         chart_id = LastCompanionChartId.get_next_id()
-        yaxis_title = "log10(" + yaxis_title + ")"
+        yaxis_title = "log(" + yaxis_title + ")"
         CompanionChart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
                        metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
-        if PerfUnit.UNIT_KOPS in yaxis_title:
+        if PerfUnit.UNIT_OPS in yaxis_title:
             chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host")
         else:
             chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host_6")
         if chart:
             chart.companion_charts = [chart_id]
             chart.save()
+        print "added chart id: {}",format(chart_id)
     print "added companion charts"

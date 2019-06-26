@@ -46,13 +46,19 @@ export class FunChartComponent implements OnInit, OnChanges {
           categories: this.xValues,
           labels: {
             formatter: function () {
-              return self.xAxisFormatter(this.value);
+              if (self.xAxisFormatter)
+                return self.xAxisFormatter(this.value);
+              else
+                return this.value;
             }
           },
         },
         tooltip: {
           formatter: function () {
-            return self.tooltipFormatter(this.x, this.y);
+            if (self.tooltipFormatter)
+              return self.tooltipFormatter(this.x, this.y);
+            else
+              return this.y;
           }
         },
         yAxis: {
@@ -193,53 +199,6 @@ export class FunChartComponent implements OnInit, OnChanges {
           enabled: false
         },
       };
-    }
-    else if (this.chartType === 'horizontal_bar_chart') {
-      chartOptions = {
-        chart: {
-        type: 'bar'
-    },
-    title: {
-        text: this.title
-    },
-    xAxis: {
-        categories: this.xValues,
-        title: {
-            text: this.xAxisLabel
-        }
-    },
-    yAxis: {
-        min: 0,
-        title: {
-            text: this.y1AxisLabel
-        },
-        labels: {
-            overflow: 'justify'
-        }
-    },
-    tooltip: {
-        valueSuffix: ' ' + this.y1AxisLabel
-    },
-    plotOptions: {
-        bar: {
-            dataLabels: {
-                enabled: true
-            }
-        }
-    },
-    legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'top',
-        floating: true,
-        borderWidth: 1,
-        shadow: true
-    },
-    credits: {
-        enabled: false
-    },
-    series: this.y1Values
-      }
     }
 
     this.chart = new Chart(chartOptions);

@@ -317,7 +317,7 @@
         <fun-metric-chart [id]="currentNode.metricId" [buildInfo]="buildInfo"></fun-metric-chart>
         <div *ngIf="currentNode.companionCharts && currentNode.companionCharts.length > 0">
           <div class="closed-section"></div>
-          <chart [ids]="currentNode.companionCharts" [metricId]="currentNode.metricId"></chart>
+          <data-set-chart [ids]="currentNode.companionCharts" [metricId]="currentNode.metricId"></data-set-chart>
         </div>
         <div class="closed-section"></div>
         <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class=""
