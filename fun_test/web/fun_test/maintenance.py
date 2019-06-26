@@ -508,7 +508,7 @@ if __name__ == "__main__":
     for yaxis_title in yaxis_titles:
         chart_id = LastCompanionChartId.get_next_id()
         yaxis_title = "log(" + yaxis_title + ")"
-        CompanionChart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
+        Chart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
                        metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
         if PerfUnit.UNIT_OPS in yaxis_title:
             chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host")

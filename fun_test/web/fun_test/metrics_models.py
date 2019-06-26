@@ -703,7 +703,7 @@ class LastTriageFlowId(models.Model):
         last.save()
         return last.last_id
 
-class CompanionChart(models.Model):
+class Chart(models.Model):
     metric_chart_type = models.TextField(default=MetricChartType.REGULAR)
     fun_chart_type = models.TextField(default=FunChartType.LINE_CHART)
     xaxis_title = models.TextField(default="")
