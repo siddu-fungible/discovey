@@ -270,7 +270,7 @@ class FunControlPlaneBringup:
 
         linux_obj.disconnect()
 
-        def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None, f1_0_mpg_netmask="255.255.255.0",
+    def assign_mpg_ips(self, static=False, f1_1_mpg=None, f1_0_mpg=None, f1_0_mpg_netmask="255.255.255.0",
                        f1_1_mpg_netmask="255.255.255.0"):
 
         self._get_docker_names()
