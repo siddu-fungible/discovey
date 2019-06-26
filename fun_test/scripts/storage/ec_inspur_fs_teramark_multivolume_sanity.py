@@ -83,35 +83,36 @@ class ECVolumeLevelScript(FunTestScript):
         self.total_avaialble_duts = len(self.testbed_config["dut_info"])
         fun_test.log("Total Avaialble Duts: {}".format(self.total_avaialble_duts))
 
+        # Declaring default values if not defined in config files
+        if not hasattr(self, "dut_start_index"):
+            self.dut_start_index = 0
+        if not hasattr(self, "host_start_index"):
+            self.host_start_index = 0
+        if not hasattr(self, "update_workspace"):
+            self.update_workspace = False
+        if not hasattr(self, "update_deploy_script"):
+            self.update_deploy_script = False
+
+        # Using Parameters passed during execution, this will override global and config parameters
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "dut_start_index" in job_inputs:
+            self.dut_start_index = job_inputs["dut_start_index"]
+        if "host_start_index" in job_inputs:
+            self.host_start_index = job_inputs["host_start_index"]
+        if "update_workspace" in job_inputs:
+            self.update_workspace = job_inputs["update_workspace"]
+        if "update_deploy_script" in job_inputs:
+            self.update_deploy_script = job_inputs["update_deploy_script"]
+        if "disable_wu_watchdog" in job_inputs:
+            self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+        else:
+            self.disable_wu_watchdog = True
+
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
-            # Declaring default values if not defined in config files
-            if not hasattr(self, "dut_start_index"):
-                self.dut_start_index = 0
-            if not hasattr(self, "host_start_index"):
-                self.host_start_index = 0
-            if not hasattr(self, "update_workspace"):
-                self.update_workspace = False
-            if not hasattr(self, "update_deploy_script"):
-                self.update_deploy_script = False
-
-            # Using Parameters passed during execution, this will override global and config parameters
-            job_inputs = fun_test.get_job_inputs()
-            if not job_inputs:
-                job_inputs = {}
-            fun_test.log("Provided job inputs: {}".format(job_inputs))
-            if "dut_start_index" in job_inputs:
-                self.dut_start_index = job_inputs["dut_start_index"]
-            if "host_start_index" in job_inputs:
-                self.host_start_index = job_inputs["host_start_index"]
-            if "update_workspace" in job_inputs:
-                self.update_workspace = job_inputs["update_workspace"]
-            if "update_deploy_script" in job_inputs:
-                self.update_deploy_script = job_inputs["update_deploy_script"]
-            if "disable_wu_watchdog" in job_inputs:
-                self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
-            else:
-                self.disable_wu_watchdog = True
 
             self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
             fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
