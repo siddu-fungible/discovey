@@ -663,7 +663,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         fun_test.join_thread(fun_test_thread_id=thread_id[i])
                         fun_test.log("FIO Command Output:")
                         fun_test.log(fun_test.shared_variables["fio"][i])
-                        fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded test")
+                        fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded warmup test")
                         fio_output[i] = {}
                         fio_output[i] = fun_test.shared_variables["fio"][i]
                         fun_test.shared_variables["blt"]["warmup_done"] = True
@@ -709,11 +709,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             end_host_thread = {}
             iostat_thread = {}
             thread_count = 1
+            final_fio_output = {}
 
             for i in range(0, self.blt_count):
                 key = self.host_ips[i]
                 fio_result[combo] = {}
                 fio_output[combo] = {}
+                final_fio_output[combo] = {}
                 internal_result[combo] = {}
                 initial_volume_status[combo] = {}
                 final_volume_status[combo] = {}
@@ -757,6 +759,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                     fio_output[combo][mode] = {}
+                    final_fio_output[combo][mode] = {}
                     """
                     if hasattr(self, "test_blt_count") and self.test_blt_count == 1:
                         fio_filename = fun_test.shared_variables["nvme_block_device_list"][0]
@@ -785,6 +788,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                             bs=fio_block_size,
                                                                             iodepth=fio_iodepth,
                                                                             name=fio_job_name,
+                                                                            cpus_allowed=cpus_allowed,
                                                                             **self.fio_cmd_args)
 
                     fun_test.sleep("Fio threadzz", seconds=1)
@@ -799,24 +803,30 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded test")
                 fio_output[combo][mode][i] = {}
                 fio_output[combo][mode][i] = fun_test.shared_variables["fio"][i]
+            final_fio_output[combo][mode] = fio_output[combo][mode][1]
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
-            for i in range(1, self.blt_count + 1):
-                latency_read = False
-                for op, stats in fio_output[combo][mode][i].items():
+            for i in range(2, self.blt_count + 1):
+                # Boosting the fio output with the testbed performance multiplier
+                multiplier = 1
+                for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
-                        if field == "latency" and not latency_read:
-                            actual = fio_output[combo][mode][i][op][field]
-                            row_data_dict[op + field] = actual
-                            latency_read = True
-                        else:
-                            if row_data_dict[op + field] is None:
-                                row_data_dict[op + field] = fio_output[combo][mode][i][op][field]
-                            else:
-                                row_data_dict[op + field] += fio_output[combo][mode][i][op][field]
-                        fun_test.log("raw_data[op + field] is: {}".format(row_data_dict[op + field]))
+                        if field == "latency":
+                            fio_output[combo][mode][i][op][field] = int(round(value / multiplier))
+                        final_fio_output[combo][mode][op][field] += fio_output[combo][mode][i][op][field]
+                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval))
+
+            # Comparing the FIO results with the expected value for the current block size and IO depth combo
+            for op, stats in self.expected_fio_result[combo][mode].items():
+                for field, value in stats.items():
+                    # fun_test.log("op is: {} and field is: {} ".format(op, field))
+                    actual = final_fio_output[combo][mode][op][field]
+                    if "latency" in str(field):
+                        actual = int(round(actual / self.blt_count))
+                    row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
+                                                int((value * (1 + self.fio_pass_threshold))))
 
             row_data_dict["fio_job_name"] = fio_job_name
 

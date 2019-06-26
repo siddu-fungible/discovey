@@ -292,7 +292,7 @@ def queue_job3(suite_path=None,
                requested_priority_category=SchedulerJobPriority.NORMAL,
                submitter_email=None,
                description=None):
-    time.sleep(0.1)
+    # time.sleep(0.1)
     result = -1
     if not tags:
         tags = []
@@ -302,7 +302,8 @@ def queue_job3(suite_path=None,
         inputs = {}
     if suite_type == SuiteType.DYNAMIC:
         original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
-        suite_path = "Re({})".format(original_suite_execution.suite_path)
+        # suite_path = "Re({})".format(original_suite_execution.suite_path)
+        suite_path = original_suite_execution.suite_path
 
     if suite_path and suite_path.replace(".json", "").endswith("_container"):
         suite_type = SuiteType.CONTAINER
@@ -624,30 +625,42 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
     content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
     if warning:
         content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
-        subject = "Manual-testing lock duration for Test-bed {} has exceeded".format(test_bed.name)
+        subject = "Manual-testing lock duration for test-bed {} has exceeded".format(test_bed.name)
     else:
         content += "Unlocking now" + "<br>"
-        subject = "Manual lock for Test-bed {} removed".format(test_bed.name)
+        subject = "Manual lock for test-bed {} removed".format(test_bed.name)
     content += "- Regression" + "<br>"
 
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
 
+
+def get_job_inputs(job_id):
+    job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
+    job_inputs = {}
+    if hasattr(job_spec, "inputs"):
+        if (job_spec.inputs):
+            job_inputs = json.loads(job_spec.inputs)
+    return job_inputs
 
 def get_suite_based_test_bed_spec(job_id):
     spec = None
     s = models_helper.get_suite_execution(suite_execution_id=job_id)
     suite_path = s.suite_path
     if suite_path:
-        suite_spec = parse_suite(suite_name=suite_path)
-        if suite_spec:
-            for item in suite_spec:
-                if "info" in item:
-                    info = item["info"]
-                    if "custom_test_bed_spec" in info:
-                        spec = info["custom_test_bed_spec"]
-                    else:
-                        print("Job: {} no custom_test_bed_spec in {}".format(job_id, suite_path))
-                    break
+        job_inputs = get_job_inputs(job_id=job_id)
+        if "custom_test_bed_spec" in job_inputs:
+            spec = job_inputs.get("custom_test_bed_spec", None)
+        else:
+            suite_spec = parse_suite(suite_name=suite_path)
+            if suite_spec:
+                for item in suite_spec:
+                    if "info" in item:
+                        info = item["info"]
+                        if "custom_test_bed_spec" in info:
+                            spec = info["custom_test_bed_spec"]
+                        else:
+                            print("Job: {} no custom_test_bed_spec in {}".format(job_id, suite_path))
+                        break
     return spec
 
 def lock_assets(job_id, assets):

@@ -203,6 +203,7 @@ class SuiteExecution(models.Model):
         run_time = self.run_time
         run_time[name] = value
         self.save()
+        return run_time
 
     def get_run_time_variable(self, name):
         result = None

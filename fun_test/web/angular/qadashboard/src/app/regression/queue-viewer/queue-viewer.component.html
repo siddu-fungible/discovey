@@ -38,7 +38,7 @@
         <td>{{ queueEntry.test_bed_type }}</td>
         <td>{{ queueEntry.job_spec.suite_path }}</td>
         <td>{{ queueEntry.job_spec.email }}</td>
-        <td>{{ queueEntry.message }}</td>
+        <td [innerHTML]="queueEntry.message | safeHtml"></td>
 
       </tr>
     </table>

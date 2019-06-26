@@ -1,5 +1,6 @@
 from lib.host.linux import *
 from scripts.networking.funeth.funeth import Funeth
+from lib.templates.storage.storage_fs_template import FunCpDockerContainer
 
 
 def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
@@ -216,3 +217,25 @@ def critical_log(expression, message):
 
     if not expression:
         fun_test.critical(message=message)
+
+
+def ensure_hping_install(host_ip, host_username, host_password):
+    result = False
+    linux_obj = Linux(host_ip=host_ip, ssh_username=host_username, ssh_password=host_password)
+    try:
+        cmd = "hping3 -v"
+        output = linux_obj.sudo_command(command=cmd, timeout=40)
+        if re.search(r'.*version.*', output):
+            result = True
+        else:
+            install_cmd = "apt install hping3 -y"
+            linux_obj.sudo_command(command=install_cmd, timeout=60)
+            output = linux_obj.sudo_command(command=cmd, timeout=40)
+            if re.search(r'.*version.*', output):
+                result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    finally:
+        linux_obj.disconnect()
+    return result
+

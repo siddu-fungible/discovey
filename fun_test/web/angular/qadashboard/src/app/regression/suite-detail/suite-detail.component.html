@@ -34,7 +34,7 @@
                 </td>
                 <td *ngSwitchCase="'Path'">
                   <ng-container *ngIf="suiteExecution">
-                    {{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
+                    {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
                   </ng-container>
                 </td>
                 <td *ngSwitchCase="'Completed Time'">

@@ -235,7 +235,7 @@ class AssetManager:
             result["message"] = asset_level_error_message
         elif in_progress_count >= credits:
             result["status"] = False
-            result["message"] = "Test-bed: {} In-progress count: {}, Credit: {}".format(test_bed_type, in_progress_count, credits)
+            result["message"] = "Test-bed: {0} locked by Suite: <a href='/regression/suite_detail/{1}'>{1}</a>".format(test_bed_type, in_progress_suites[0].execution_id)
             result["used_by_suite_id"] = in_progress_suites[0].execution_id
         elif in_use:  # Check if the required internal resources are used by another run
             result["status"] = False
