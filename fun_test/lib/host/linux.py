@@ -1723,6 +1723,9 @@ class Linux(object, ToDictMixin):
         if 'runtime' in kwargs:
             fio_command += " --time_based"
 
+        if 'randrepeat' in kwargs:
+            fio_command += " --norandommap"
+
         if 'output-format' not in kwargs:
             fio_command += " --output-format=json"
 
