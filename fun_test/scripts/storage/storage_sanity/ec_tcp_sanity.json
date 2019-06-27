@@ -87,7 +87,7 @@
       "timeout": 60
     },
     "fio_mode": "randrw",
-    "fio_numjobs_iodepth": "(16, 1)",
+    "fio_numjobs_iodepth": ["(16, 1)"],
     "fio_job_name": "ec_tcp_sanity"
   },
   "ECTcpSeqRW": {
