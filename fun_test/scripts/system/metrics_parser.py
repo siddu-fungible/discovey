@@ -799,7 +799,7 @@ class MetricParser():
     def voltest_lsv(self, logs, date_time, platform):
         self.initialize()
         for line in logs:
-            m = re.search(r'loadgen_aggregate\s+(?P<metric>\w+).*(?P<value_json>{.*})', line)
+            m = re.search(r'loadgen_aggregate\s+(?P<metric>\w+).*(?P<value_json>{.*})\s+\[(?P<metric_name>.*)\]', line)
             if m:
                 metric = m.group("metric")
                 if metric == "Bandwidth" or metric == "IOPS":
