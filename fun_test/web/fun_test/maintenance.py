@@ -272,53 +272,9 @@ if __name__ == "__main_nvols_to_8vols__":
                     print data_set["name"]
                     data_set["name"] = data_set["name"].replace("(N vols)", "(8 vols)")
             child_chart.data_sets = json.dumps(data_sets)
-            child_chart.save()
+            child_chart.save()       
             
-if __name__ == "__main_voltest_lsv__readwrite":
-    internal_chart_names = ["voltest_lsv_1instances_blt_readwrite_iops", "voltest_lsv_1instances_blt_readwrite_bandwidth",
-                            "voltest_lsv_4instances_blt_readwrite_iops", "voltest_lsv_4instances_blt_readwrite_bandwidth"]
-    base_line_date = datetime(year=2019, month=6, day=1, minute=0, hour=0, second=0)
-    for internal_chart_name in internal_chart_names:
-        if "1instances" in internal_chart_name:
-            model_name = "VoltestLsvPerformance"
-        else:
-            model_name = "VoltestLsv4Performance"
-        if "iops" in internal_chart_name:
-            chart_name = "BLT: IOPS"
-            y1_axis_title = PerfUnit.UNIT_OPS
-            output_name = "output_readwrite_iops"
-        else:
-            chart_name = "BLT: Bandwidth"
-            y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
-            output_name = "output_readwrite_bandwidth"
-        data_sets = []
-        one_data_set = {}
-        one_data_set["name"] = 'readwrite'
-        one_data_set["inputs"] = {}
-        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
-        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
-                                  "reference": -1, "unit": y1_axis_title}
-        data_sets.append(one_data_set)
-        metric_id = LastMetricId.get_next_id()
-        MetricChart(chart_name=chart_name,
-                    metric_id=metric_id,
-                    internal_chart_name=internal_chart_name,
-                    data_sets=json.dumps(data_sets),
-                    leaf=True,
-                    description="TBD",
-                    owner_info="Xiaoqin Ma (xiaoqin.ma@fungible.com)",
-                    source="https://github.com/fungible-inc/FunOS/blob/master/apps/voltest.c",
-                    positive=True,
-                    y1_axis_title=y1_axis_title,
-                    visualization_unit=y1_axis_title,
-                    metric_model_name=model_name,
-                    base_line_date=base_line_date,
-                    work_in_progress=False,
-                    platform=FunPlatform.F1).save()
-    print "added charts for 1 instance and 4 instance lsv voltest"
-            
-            
-if __name__ == "__main__":
+if __name__ == "__main__rand_qd_multi_host_nvmetcp_output_iops":
     model_name = "BltVolumePerformance"
     base_line_date = datetime(year=2019, month=6, day=20, minute=0, hour=0, second=0)
     internal_iops_chart_names = ["rand_read_qd_multi_host_nvmetcp_output_iops",
@@ -432,3 +388,46 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added latency charts"
+
+if __name__ == "__main__":
+    internal_chart_names = ["voltest_lsv_1instances_blt_readwrite_iops", "voltest_lsv_1instances_blt_readwrite_bandwidth",
+                            "voltest_lsv_4instances_blt_readwrite_iops", "voltest_lsv_4instances_blt_readwrite_bandwidth"]
+    base_line_date = datetime(year=2019, month=6, day=1, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "1instances" in internal_chart_name:
+            model_name = "VoltestLsvPerformance"
+        else:
+            model_name = "VoltestLsv4Performance"
+        if "iops" in internal_chart_name:
+            chart_name = "BLT: IOPS"
+            y1_axis_title = PerfUnit.UNIT_OPS
+            output_name = "output_readwrite_iops"
+        else:
+            chart_name = "BLT: Bandwidth"
+            y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
+            output_name = "output_readwrite_bandwidth"
+        data_sets = []
+        one_data_set = {}
+        one_data_set["name"] = 'readwrite'
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                  "reference": -1, "unit": y1_axis_title}
+        data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Xiaoqin Ma (xiaoqin.ma@fungible.com)",
+                    source="https://github.com/fungible-inc/FunOS/blob/master/apps/voltest.c",
+                    positive=True,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added charts for 1 instance and 4 instance lsv voltest"
