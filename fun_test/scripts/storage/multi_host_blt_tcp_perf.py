@@ -132,6 +132,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
             self.update_deploy_script = job_inputs["update_deploy_script"]
+        if "num_hosts" in job_inputs:
+            self.num_hosts = job_inputs["num_hosts"]
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
@@ -395,7 +397,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             fs.cleanup()
 
         self.storage_controller.disconnect()
-        fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()     # Why is this needed?
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
@@ -491,6 +492,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.remote_ip = self.host_ips[0]
         fun_test.shared_variables["remote_ip"] = self.remote_ip
         self.num_duts = fun_test.shared_variables["num_duts"]
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "blt_count" in job_inputs:
+            self.blt_count = job_inputs["blt_count"]
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
                 and (not fun_test.shared_variables["blt"]["warmup_done"]) :
