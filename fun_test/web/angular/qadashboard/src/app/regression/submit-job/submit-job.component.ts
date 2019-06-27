@@ -266,7 +266,7 @@ export class SubmitJobComponent implements OnInit {
 
       if (payload["environment"]["with_jenkins_build"]) {
         payload["environment"]["build_parameters"] = {};
-        if (this.bootArgs && this.bootArgs !== "" && this.selectedTestBedType.indexOf('fs') > -1) {
+        if (this.bootArgs && this.bootArgs !== "" && this.isTestBedFs()) {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;

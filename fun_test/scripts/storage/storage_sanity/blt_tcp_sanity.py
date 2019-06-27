@@ -4,9 +4,11 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
+from lib.host.linux import Linux
 
 '''
-Sanity Script for BLT Volume via PCI
+Sanity Script for BLT Volume via NVME/TCP
+Dependency: The script is tightly coupled with fs-6 and poc-server-01, while porting please take care of them.
 '''
 
 
@@ -33,6 +35,7 @@ class BLTVolumeSanityScript(FunTestScript):
             self.syslog_level = 6
             self.command_timeout = 5
             self.reboot_timeout = 300
+            self.end_host_name = "poc-server-01"
         else:
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
@@ -42,6 +45,9 @@ class BLTVolumeSanityScript(FunTestScript):
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
+        host_spec = fun_test.get_asset_manager().get_host_spec(name=self.end_host_name)
+        host_obj = Linux(**host_spec)
+        host_obj.reboot(non_blocking=True)
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -55,7 +61,7 @@ class BLTVolumeSanityScript(FunTestScript):
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                if testbed_type == "fs-6" and host_ip != "poc-server-01":
+                if testbed_type == "fs-6" and host_ip != self.end_host_name:
                     continue
                 end_host = host_info["host_obj"]
                 test_interface_name = end_host.extra_attributes["test_interface_name"]
@@ -78,7 +84,7 @@ class BLTVolumeSanityScript(FunTestScript):
 
         # configure end host
         # reboot host
-        fun_test.test_assert(end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
+        fun_test.test_assert(end_host.ensure_host_is_up(max_wait_time=self.reboot_timeout),
                              "End Host {} is up".format(end_host.host_ip))
 
         # end host network interface
@@ -172,7 +178,7 @@ class BLTVolumeSanityScript(FunTestScript):
                 fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                command_duration=self.command_timeout),
                                      message="Delete Controller uuid: {}".format(ctrlr_uuid))
-                fun_test.sleep(seconds=2, message="BLT volume detached from controller")
+                fun_test.sleep(seconds=1, message="BLT volume detached from controller")
                 # delete BLT
                 fun_test.test_assert(self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
                                                                            block_size=self.blt_details["block_size"],

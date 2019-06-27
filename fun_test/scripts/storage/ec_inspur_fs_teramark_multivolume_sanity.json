@@ -1,7 +1,8 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dpc-server --dpc-uart --all_100g --nofreeze",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dpc-server --dpc-uart --all_100g --nofreeze"],
+    "bootargs": [
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --memvol --dpc-server --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --memvol --dpc-server --dpc-uart --all_100g --nofreeze"],
     "dut_start_index": 2,
     "host_start_index": 1,
     "update_workspace": false,
@@ -82,13 +83,13 @@
     "io_queues": 16,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 1800},
-    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
+    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_runtime": 120,
     "fio_run_timeout": 150,
     "fio_size_timeout": 1800,
     "fio_modes": ["randrw"],
     "fio_iodepth": [64],
-    "full_run_iodepth": [32, 64, 128],
+    "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read_write",
     "mpstat_args": {"interval": 30, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 30}

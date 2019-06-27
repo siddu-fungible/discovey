@@ -19,7 +19,15 @@ export class TooltipDirective {
   }
 
   @HostListener('mouseleave') onMouseLeave() {
-    if (this.tooltip) { this.hide(); }
+    if (this.tooltip) {
+      this.hide();
+    }
+  }
+
+  @HostListener("window:scroll", []) onWindowScroll() {
+    if (this.tooltip) {
+      this.hide();
+    }
   }
 
   show() {
@@ -57,8 +65,8 @@ export class TooltipDirective {
     this.renderer.addClass(this.tooltip, `fun-tooltip-${this.placement}`);
     //this.renderer.setStyle(this.tooltip, 'line-height', 1.6);
     //this.renderer.setStyle(this.tooltip, 'position', 'fixed');
-    this.renderer.setStyle(this.tooltip, 'font-size', '14px');
-    this.renderer.setStyle(this.tooltip, 'font-weight', '1');
+    //this.renderer.setStyle(this.tooltip, 'font-size', '14px');
+    //this.renderer.setStyle(this.tooltip, 'font-weight', '1');
 
     /*this.renderer.setStyle(this.tooltip, '-webkit-transition', `opacity ${this.delay}ms`);
     this.renderer.setStyle(this.tooltip, '-moz-transition', `opacity ${this.delay}ms`);

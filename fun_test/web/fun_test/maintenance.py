@@ -272,9 +272,9 @@ if __name__ == "__main_nvols_to_8vols__":
                     print data_set["name"]
                     data_set["name"] = data_set["name"].replace("(N vols)", "(8 vols)")
             child_chart.data_sets = json.dumps(data_sets)
-            child_chart.save()       
-            
-if __name__ == "__main__rand_qd_multi_host_nvmetcp_output_iops":
+            child_chart.save()
+
+if __name__ == "__main_multi_host_nvmetcp__":
     model_name = "BltVolumePerformance"
     base_line_date = datetime(year=2019, month=6, day=20, minute=0, hour=0, second=0)
     internal_iops_chart_names = ["rand_read_qd_multi_host_nvmetcp_output_iops",
@@ -411,3 +411,54 @@ if __name__ == "__main__":
         data_sets_json = json.dumps([data_sets])
         chart.data_sets = data_sets_json
         chart.save()
+        
+if __name__=="__main__inspur_random_read_write_iodepth_vol":
+    internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
+    fio_job_names = ["inspur_8k_random_read_write_iodepth_8_vol_4", "inspur_8k_random_read_write_iodepth_16_vol_4",
+                     "inspur_8k_random_read_write_iodepth_32_vol_4", "inspur_8k_random_read_write_iodepth_64_vol_4",
+                     "inspur_8k_random_read_write_iodepth_128_vol_4", "inspur_8k_random_read_write_iodepth_256_vol_4"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            children = json.loads(chart.children)
+            for child in children:
+                child_chart = MetricChart.objects.get(metric_id=child)
+                if "_qd1_" not in child_chart.internal_chart_name:
+                    if "latency" in child_chart.internal_chart_name:
+                        output_names = ["output_read_avg_latency", "output_write_avg_latency"]
+                        name = "-avg(4 vols)"
+                        unit = PerfUnit.UNIT_USECS
+                    else:
+                        output_names = ["output_read_iops", "output_write_iops"]
+                        name = "(4 vols)"
+                        unit = PerfUnit.UNIT_OPS
+                    if "_qd8_" in child_chart.internal_chart_name:
+                        fio_job_name = "inspur_8k_random_read_write_iodepth_8_vol_4"
+                    elif "_qd16_" in child_chart.internal_chart_name:
+                        fio_job_name = "inspur_8k_random_read_write_iodepth_16_vol_4"
+                    elif "_qd32_" in child_chart.internal_chart_name:
+                        fio_job_name = "inspur_8k_random_read_write_iodepth_32_vol_4"
+                    elif "_qd64_" in child_chart.internal_chart_name:
+                        fio_job_name = "inspur_8k_random_read_write_iodepth_64_vol_4"
+                    elif "_qd128_" in child_chart.internal_chart_name:
+                        fio_job_name = "inspur_8k_random_read_write_iodepth_128_vol_4"
+                    else:
+                        fio_job_name = "inspur_8k_random_read_write_iodepth_256_vol_4"
+                    data_sets = json.loads(child_chart.data_sets)
+                    for output_name in output_names:
+                        if "read" in output_name:
+                            operation = "read"
+                        else:
+                            operation = "write"
+                        one_data_set = {}
+                        one_data_set["name"] = operation + name
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_platform"] = FunPlatform.F1
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
+                                      "reference": -1, "unit": unit}
+                        data_sets.append(one_data_set)
+                    child_chart.data_sets = json.dumps(data_sets)
+                    child_chart.save()
+                    print "added datasets for {}".format(child_chart.chart_name)
+    print "added datasets for inspur containers"
