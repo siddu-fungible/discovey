@@ -2491,10 +2491,10 @@ class VoltestLsvPerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    output_readwrite_iops = models.BigIntegerField(verbose_name="ReadWrite ops per sec", default=-1)
-    output_readwrite_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
-    output_readwrite_bandwidth = models.FloatField(verbose_name="ReadWrite Throughput in Mbps", default=-1)
-    output_readwrite_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_read_write_iops = models.BigIntegerField(verbose_name="ReadWrite ops per sec", default=-1)
+    output_read_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_write_bandwidth = models.FloatField(verbose_name="ReadWrite Throughput in Mbps", default=-1)
+    output_read_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
     input_platform = models.TextField(default=FunPlatform.F1)
     tag = "analytics"
 
