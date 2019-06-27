@@ -1,6 +1,7 @@
 [
   {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 1}}}}},
-  {"path": "storage/review/ec_inspur_fs_teramark_multivolume.py", "inputs": {"num_volumes": 8}},
-  {"path": "storage/review/ec_inspur_fs_teramark_multivolume.py", "inputs": {"num_volumes": 1, "io_depth": [1, 8, 16, 32, 64, 128]}},
-  {"path": "storage/review/ec_inspur_fs_teramark_multivolume.py", "inputs": {"num_volumes": 4}}
+  {"path": "storage/review/ec_inspur_fs_teramark.py", "test_case_ids": [3]},
+  {"path": "storage/review/ec_inspur_fs_teramark.py", "test_case_ids": [4]},
+  {"path": "storage/review/ec_inspur_fs_teramark.py", "test_case_ids": [5]},
+  {"path": "storage/review/ec_inspur_fs_teramark.py", "test_case_ids": [2]}
 ]
