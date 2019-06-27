@@ -314,7 +314,9 @@
               </td>
             </ng-container>
             <td>{{ suiteExecution.fields.test_bed_type }}</td>
-            <td>{{ suiteExecution.fields.disable_schedule ? "No": "Yes" }}</td>
+            <td>
+              <app-toggle-button [checked]="!suiteExecution.fields?.disable_schedule" (changed)="onChangeAutoSchedule($event, suiteExecution)"></app-toggle-button>
+            </td>
 
           </tr>
         </ng-container>
