@@ -393,7 +393,7 @@ if __name__ == "__main__":
     metric_id_list = [795, 796, 797, 798]
     for metric_id in metric_id_list:
         chart = MetricChart.objects.get(metric_id=metric_id)
-        chart.owner_info = "Sunil Vettukalppurathu (sunil.v@fungible.com)"
+        chart.owner_info = "Sunil Subramanya (sunil.subramanya@fungible.com)"
         print chart.chart_name
         data_sets_uni = chart.data_sets
         print data_sets_uni
