@@ -372,8 +372,7 @@ class AssetManager:
         fun_test.simple_assert(asset_request, "asset_request in custom_spec")
 
         assets_required_config = {AssetType.DUT: {}, AssetType.HOST: {}}
-        specific_duts = None
-        num_duts_required = None
+
         if AssetType.DUT in asset_request:
             dut_info = asset_request[AssetType.DUT]
             num_duts_required = dut_info.get("num", None)
@@ -382,8 +381,6 @@ class AssetManager:
                 num_duts_required = len(specific_duts)
             assets_required_config[AssetType.DUT] = {"num_required": num_duts_required, "specific": specific_duts}
 
-        specific_hosts = None
-        num_hosts_required = None
         if AssetType.HOST in asset_request:
             host_info = asset_request[AssetType.HOST]
             num_hosts_required = host_info.get("num", None)
@@ -401,11 +398,6 @@ class AssetManager:
             num_assets_available = 0
             num_assets_required = assets_required_config[asset_type].get("num_required", None)
 
-            # if asset_type == AssetType.DUT:
-            #    num_assets_required = num_duts_required
-            # if asset_type == AssetType.HOST:
-            #    num_assets_required = num_hosts_required
-
             if num_assets_required is not None:
                 # print "Num Duts: {}".format(num_duts_required)
 
@@ -415,15 +407,6 @@ class AssetManager:
                 unavailable_assets = []
                 available_assets = []
                 for asset_in_test_bed in assets_in_test_bed:
-                    '''
-                    if specific_duts and asset_type == AssetType.DUT and asset_in_test_bed not in specific_duts:
-                        fun_test.log("Specific DUTs set: {}, so skipping {}".format(specific_duts, asset_in_test_bed))
-                        continue
-
-                    if specific_hosts and asset_type == AssetType.HOST and asset_in_test_bed not in specific_hosts:
-                        fun_test.log("Specific Hosts set: {}, so skipping {}".format(specific_hosts, asset_in_test_bed))
-                        continue
-                    '''
 
                     specific_assets = assets_required_config[asset_type].get("specific", None)
                     if specific_assets and asset_in_test_bed not in specific_assets:

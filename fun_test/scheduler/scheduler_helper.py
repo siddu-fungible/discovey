@@ -57,6 +57,8 @@ if not DEBUG:
 else:
     handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+if len(scheduler_logger.handlers):
+    del scheduler_logger.handlers[:]
 scheduler_logger.addHandler(hdlr=handler)
 
 
