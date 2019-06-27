@@ -70,10 +70,7 @@ class MetricParser():
         elif "BcopyFloodDmaPerformance" in model_name:
             return self.bcopy_flood(logs=logs, date_time=date_time, platform=platform)
         elif "VoltestLsv" in model_name:
-            return self.
-        
-        
-        (logs=logs, date_time=date_time, platform=platform)
+            return self.voltest_lsv(logs=logs, date_time=date_time, platform=platform)
         elif "ChannelParallPerformance" in model_name:
             return self.channel_parall(logs=logs, date_time=date_time, platform=platform)
         elif "TeraMarkPkeRsaPerformance" in model_name:
