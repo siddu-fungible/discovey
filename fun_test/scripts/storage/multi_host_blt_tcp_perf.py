@@ -109,12 +109,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
-        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
-        fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
-        self.total_available_duts = len(self.testbed_config["dut_info"])
-        fun_test.log("Total Available Duts: {}".format(self.total_available_duts))
-
         # Declaring default values if not defined in config files
         if not hasattr(self, "dut_start_index"):
             self.dut_start_index = 0
