@@ -421,7 +421,7 @@ if __name__ == "__main__":
                     data_sets=json.dumps(data_sets),
                     leaf=True,
                     description="TBD",
-                    owner_info="Xiaoqin Ma (xiaoqin.ma@fungible.com)",
+                    owner_info="Sunil Vettukalppurathu (sunil.v@fungible.com)",
                     source="https://github.com/fungible-inc/FunOS/blob/master/apps/voltest.c",
                     positive=True,
                     y1_axis_title=y1_axis_title,
