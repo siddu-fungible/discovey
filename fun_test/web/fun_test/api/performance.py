@@ -95,7 +95,7 @@ def get_data_sets_value(request):
                                 data_set_dict = {}
                                 output_value = -1
                                 output_unit = ""
-                                date_range = [datetime.now() - timedelta(days=2), datetime.now()]
+                                date_range = [datetime.now() - timedelta(days=1), datetime.now()]
                                 entries = metric_model.objects.filter(**data_set[
                                     "inputs"]).order_by('-input_date_time')
                                 if entries:

@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 
@@ -14,12 +14,10 @@ export class DataSetChartComponent implements OnInit {
   @Input() metricId: Number = null;
   companionCharts: any = {};
   REGULAR: string = "Regular";
-  y1AxisLabel: string = null;
-  xAxisLabel: string = null;
   y1Values: any[] = [];
   xValues: any[] = [];
   children: any = null;
-  showBarChart: boolean = false;
+  showChart: boolean = false;
   dataSets: string[] = [];
   charts: any[] = [];
 
@@ -101,7 +99,7 @@ export class DataSetChartComponent implements OnInit {
         this.charts.push(chartDict);
       });
 
-      this.showBarChart = true;
+      this.showChart = true;
       return of(true);
     }));
   }

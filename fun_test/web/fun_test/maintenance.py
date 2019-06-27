@@ -500,20 +500,55 @@ if __name__ == "__main_temp__":
         chart.save()
 
 if __name__ == "__main__":
-    data_sets = {"names": ["read(8 vols)", "write(8 vols)"]}
+    # charts = ["iops", "latency"]
+    # for chart in charts:
+    #     if "iops" in chart:
+    #         names = ["read(8 vols)", "write(8 vols)"]
+    #         chart_name = "inspur_single_f1_host"
+    #     else:
+    #         names = ["read-avg(8 vols)", "write-avg(8 vols)"]
+    #         chart_name = "inspur_single_f1_host_6"
+    #     data_sets = []
+    #     for name in names:
+    #         if "iops" in chart:
+    #             if "read" in name:
+    #                 output_name = "output_read_iops"
+    #             else:
+    #                 output_name = "output_write_iops"
+    #         else:
+    #             if "read" in name:
+    #                 output_name = "output_read_avg_latency"
+    #             else:
+    #                 output_name = "output_write_avg_latency"
+    #         one_data_set = {}
+    #         one_data_set["name"] = name
+    #         one_data_set["inputs"] = {}
+    #         one_data_set["inputs"] = {1: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_1_vol_8"},
+    #                                   8: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_8_vol_8"},
+    #                                   16: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_16_vol_8"},
+    #                                   32: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_32_vol_8"},
+    #                                   64: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_64_vol_8"},
+    #                                   128: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_128_vol_8"},
+    #                                   256: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_vol_8"}}
+    #         one_data_set["output"] = {"name": output_name}
+    #         data_sets.append(one_data_set)
+
+
     xaxis_title = "log(qDepth)"
     yaxis_titles = [PerfUnit.UNIT_OPS, PerfUnit.UNIT_USECS]
     metric_chart_type = MetricChartType.REGULAR
     fun_chart_type = FunChartType.LINE_CHART
     for yaxis_title in yaxis_titles:
-        chart_id = LastCompanionChartId.get_next_id()
         yaxis_title = "log(" + yaxis_title + ")"
-        Chart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
-                       metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
         if PerfUnit.UNIT_OPS in yaxis_title:
             chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host")
+            data_sets = {"names": ["read(8 vols)", "write(8 vols)"]}
         else:
             chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host_6")
+            data_sets = {"names": ["read-avg(8 vols)", "write-avg(8 vols)"]}
+        chart_id = LastCompanionChartId.get_next_id()
+        Chart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
+              metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
         if chart:
             chart.companion_charts = [chart_id]
             chart.save()
