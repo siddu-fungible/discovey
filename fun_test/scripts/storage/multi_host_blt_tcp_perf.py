@@ -788,6 +788,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                             bs=fio_block_size,
                                                                             iodepth=fio_iodepth,
                                                                             name=fio_job_name,
+                                                                            cpus_allowed=cpus_allowed,
                                                                             **self.fio_cmd_args)
 
                     fun_test.sleep("Fio threadzz", seconds=1)

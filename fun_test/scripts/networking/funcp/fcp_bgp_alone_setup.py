@@ -81,9 +81,9 @@ class BringupSetup(FunTestCase):
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
             # Assign MPG IPs from dhcp
-            #funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']),
-            #                         f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']))
-            funcp_obj.assign_mpg_ips(static=False)
+            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']), f1_1_mpg_netmask=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1_netmask']),
+                                     f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']), f1_0_mpg_netmask=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0_netmask']))
+            #funcp_obj.assign_mpg_ips(static=False)
             #funcp_obj.fetch_mpg_ips() #Only if not running the full script
             #execute abstract file
 
