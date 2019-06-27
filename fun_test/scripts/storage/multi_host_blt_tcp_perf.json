@@ -83,6 +83,7 @@
       "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
+      "norandommap": "NO_VALUE",
       "randrepeat": 0,
       "timeout": 1200
     },
@@ -133,6 +134,7 @@
       "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
+      "norandommap": "NO_VALUE",
       "randrepeat": 0,
       "timeout": 1200
     },
