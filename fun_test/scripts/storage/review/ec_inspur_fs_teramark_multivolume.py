@@ -134,11 +134,11 @@ class ECVolumeLevelScript(FunTestScript):
         # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
         # suite-based
         elif self.testbed_type == "suite-based":
+            self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
             self.required_hosts = self.topology_helper.get_available_hosts()
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
-            self.topology_helper = TopologyHelper()
 
         fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
                              message="Testbed has enough DUTs")
@@ -899,7 +899,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            # post_results("Inspur Performance Test", test_method, *row_data_list)
+            post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running...If so killing it...
             mpstat_pid_check = self.end_host.get_process_id("mpstat")

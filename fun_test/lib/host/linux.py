@@ -57,7 +57,7 @@ class LinuxLogger:
 
     def write_now(self, message, stdout=True):
         fun_test.write(message=message, context=self.context)
-        fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=context)
+        fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=self.context)
 
     def write(self, message, stdout=True):
         fun_test.write(message=message, context=self.context)
@@ -1709,6 +1709,9 @@ class Linux(object, ToDictMixin):
 
             # Add group reporting option (in case numjobs > 1)
             fio_command += " --group_reporting"
+
+            if 'output-format' not in kwargs:
+                fio_command += " --output-format=json"
 
             if "multiple_jobs" not in kwargs and 'name' not in kwargs:
                 fio_command += " --name=nvme_pcie"

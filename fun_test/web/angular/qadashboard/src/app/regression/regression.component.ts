@@ -464,4 +464,13 @@ export class RegressionComponent implements OnInit {
 
   }
 
+  onChangeAutoSchedule(checked, suiteExecution) {
+    let enabled = checked;
+    this.regressionService.disableAutoSchedule(suiteExecution.fields.execution_id, !checked).subscribe((response) => {
+     this.logger.success("Suite disabled");
+    }, error => {
+      this.logger.error("Unable to disable suite");
+    })
+  }
+
 }

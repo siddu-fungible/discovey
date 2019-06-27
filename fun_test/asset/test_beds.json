@@ -1577,7 +1577,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "mktg15"
+              "name": "cab03-qa-05"
             }
           },
           "1": {
@@ -1596,7 +1596,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "mktg16"
+              "name": "cab03-qa-04"
             }
           },
           "15": {
