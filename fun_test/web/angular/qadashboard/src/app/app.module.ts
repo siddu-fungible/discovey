@@ -65,6 +65,7 @@ import { AdminComponent } from "./performance/admin/admin.component";
 import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { TooltipDirective } from './ui-elements/tooltip.directive';
+import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button.component';
 
 @NgModule({
   declarations: [
@@ -114,7 +115,8 @@ import { TooltipDirective } from './ui-elements/tooltip.directive';
     AdminComponent,
     ScoresTableComponent,
     PerformanceTableComponent,
-    TooltipDirective
+    TooltipDirective,
+    ToggleButtonComponent
   ],
   imports: [
     BsDropdownModule,

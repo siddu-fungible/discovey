@@ -4,6 +4,25 @@ router_mac:
 # HU host
 
 hu:
+  hostname: 10.1.105.17
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f8
+  vf_interface: hu2-f8
+  namespaces:
+    default:
+      interfaces:
+      - hu2-f8:
+          ipv4_addr: 18.1.1.3
+          ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu2:
   hostname: 10.1.105.18
   username: localadmin
   password: Precious1*
@@ -14,19 +33,15 @@ hu:
     default:
       interfaces:
         - hu2-f9:
-            ipv4_addr: 43.1.1.5
+            ipv4_addr: 18.1.1.4
             ipv4_netmask: 255.255.255.0
       routes:
-      - prefix: 42.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 41.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 44.1.1.0/24
-        nexthop: 43.1.1.1
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
       - prefix: 30.1.1.0/24
-        nexthop: 43.1.1.1
+        nexthop: 18.1.1.1
 
-hu2:
+hu3:
   hostname: 10.1.105.19
   username: localadmin
   password: Precious1*
@@ -37,40 +52,13 @@ hu2:
     default:
       interfaces:
         - hu2-f10:
-            ipv4_addr: 43.1.1.6
+            ipv4_addr: 18.1.1.5
             ipv4_netmask: 255.255.255.0
       routes:
-      - prefix: 42.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 41.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 44.1.1.0/24
-        nexthop: 43.1.1.1
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
       - prefix: 30.1.1.0/24
-        nexthop: 43.1.1.1
-
-hu3:
-  hostname: 10.1.105.17
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno3
-  pf_interface: hu2-f8
-  vf_interface: hu2-f8
-  namespaces:
-    default:
-      interfaces:
-        - hu2-f8:
-            ipv4_addr: 43.1.1.7
-            ipv4_netmask: 255.255.255.0
-      routes:
-      - prefix: 42.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 41.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 44.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 30.1.1.0/24
-        nexthop: 43.1.1.1
+        nexthop: 18.1.1.1
 
 hu4:
   hostname: 10.1.105.20
@@ -83,14 +71,487 @@ hu4:
     default:
       interfaces:
         - hu2-f11:
-            ipv4_addr: 43.1.1.8
+            ipv4_addr: 18.1.1.6
             ipv4_netmask: 255.255.255.0
       routes:
-      - prefix: 42.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 41.1.1.0/24
-        nexthop: 43.1.1.1
-      - prefix: 44.1.1.0/24
-        nexthop: 43.1.1.1
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
       - prefix: 30.1.1.0/24
-        nexthop: 43.1.1.1
+        nexthop: 18.1.1.1
+
+
+hu5:
+  hostname: 10.1.105.21
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f12
+  vf_interface: hu2-f12
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f12:
+            ipv4_addr: 18.1.1.7
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu6:
+  hostname: 10.1.105.22
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f13
+  vf_interface: hu2-f13
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f13:
+            ipv4_addr: 18.1.1.8
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu7:
+  hostname: 10.1.105.23
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f14
+  vf_interface: hu2-f14
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f14:
+            ipv4_addr: 18.1.1.9
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu8:
+  hostname: 10.1.105.24
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f15
+  vf_interface: hu2-f15
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f15:
+            ipv4_addr: 18.1.1.10
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu9:
+  hostname: 10.1.105.25
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f16
+  vf_interface: hu2-f16
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f16:
+            ipv4_addr: 18.1.1.11
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu10:
+  hostname: 10.1.105.26
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f17
+  vf_interface: hu2-f17
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f17:
+            ipv4_addr: 18.1.1.12
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu11:
+  hostname: 10.1.105.27
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f18
+  vf_interface: hu2-f18
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f18:
+            ipv4_addr: 18.1.1.13
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu12:
+  hostname: 10.1.105.28
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f19
+  vf_interface: hu2-f19
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f19:
+            ipv4_addr: 18.1.1.14
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+hu13:
+  hostname: 10.1.105.29
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f20
+  vf_interface: hu2-f20
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f20:
+            ipv4_addr: 18.1.1.15
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu14:
+  hostname: 10.1.105.30
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f21
+  vf_interface: hu2-f21
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f21:
+            ipv4_addr: 18.1.1.16
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu15:
+  hostname: 10.1.105.31
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f22
+  vf_interface: hu2-f22
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f22:
+            ipv4_addr: 18.1.1.17
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu16:
+  hostname: 10.1.105.32
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f23
+  vf_interface: hu2-f23
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f23:
+            ipv4_addr: 18.1.1.18
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu17:
+  hostname: 10.1.105.33
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f24
+  vf_interface: hu2-f24
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f24:
+            ipv4_addr: 18.1.1.19
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu18:
+  hostname: 10.1.105.34
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f25
+  vf_interface: hu2-f25
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f25:
+            ipv4_addr: 18.1.1.20
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu19:
+  hostname: 10.1.105.35
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f26
+  vf_interface: hu2-f26
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f26:
+            ipv4_addr: 18.1.1.21
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu20:
+  hostname: 10.1.105.36
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f27
+  vf_interface: hu2-f27
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f27:
+            ipv4_addr: 18.1.1.22
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu21:
+  hostname: 10.1.105.37
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f28
+  vf_interface: hu2-f28
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f28:
+            ipv4_addr: 18.1.1.23
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu22:
+  hostname: 10.1.105.38
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f29
+  vf_interface: hu2-f29
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f29:
+            ipv4_addr: 18.1.1.24
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu23:
+  hostname: 10.1.105.39
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f30
+  vf_interface: hu2-f30
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f30:
+            ipv4_addr: 18.1.1.25
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+
+hu24:
+  hostname: 10.1.105.40
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f31
+  vf_interface: hu2-f31
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f31:
+            ipv4_addr: 18.1.1.26
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu25:
+  hostname: 10.1.105.41
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f32
+  vf_interface: hu2-f32
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f32:
+            ipv4_addr: 18.1.1.27
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu26:
+  hostname: 10.1.105.42
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f33
+  vf_interface: hu2-f33
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f33:
+            ipv4_addr: 18.1.1.28
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu27:
+  hostname: 10.1.105.43
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f34
+  vf_interface: hu2-f34
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f34:
+            ipv4_addr: 18.1.1.29
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu28:
+  hostname: 10.1.105.44
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f35
+  vf_interface: hu2-f35
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f35:
+            ipv4_addr: 18.1.1.30
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+
+hu29:
+  hostname: 10.1.105.45
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno3
+  pf_interface: hu2-f36
+  vf_interface: hu2-f36
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f36:
+            ipv4_addr: 18.1.1.31
+            ipv4_netmask: 255.255.255.0
+      routes:
+      - prefix: 19.1.1.0/24
+        nexthop: 18.1.1.1
+      - prefix: 30.1.1.0/24
+        nexthop: 18.1.1.1
+

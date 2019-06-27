@@ -221,9 +221,7 @@ body {
     border: none;
 }
 
-
-
-
+/* toggle-button */
 .switch {
   position: relative;
   display: inline-block;
@@ -231,7 +229,9 @@ body {
   height: 16px;
 }
 
-.switch input {display:none;}
+.switch input {
+  display:none;
+}
 
 .slider {
   position: absolute;
