@@ -497,6 +497,9 @@ tr.text-center > th {
   opacity: 0;
   border: 1px solid;
   line-height: 1.6;
+  font-size: 14px;
+  font-weight: 100;
+  padding: 5px;
 }
 .fun-tooltip:after {
   content: "";
