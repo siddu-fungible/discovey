@@ -70,7 +70,10 @@ class MetricParser():
         elif "BcopyFloodDmaPerformance" in model_name:
             return self.bcopy_flood(logs=logs, date_time=date_time, platform=platform)
         elif "VoltestLsv" in model_name:
-            return self.voltest_lsv(logs=logs, date_time=date_time, platform=platform)
+            return self.
+        
+        
+        (logs=logs, date_time=date_time, platform=platform)
         elif "ChannelParallPerformance" in model_name:
             return self.channel_parall(logs=logs, date_time=date_time, platform=platform)
         elif "TeraMarkPkeRsaPerformance" in model_name:
@@ -805,7 +808,7 @@ class MetricParser():
                 if metric == "Bandwidth" or metric == "IOPS":
                     self.match_found = True
                     value_json = json.loads(m.group("value_json"))
-                    key = "output_readwrite_" + metric.lower()
+                    key = "output_read_write_" + metric.lower()
                     self.set_value_metrics(value_json=value_json, key=key, default=-1)
                     self.metrics["input_platform"] = platform
                     self.status = RESULTS["PASSED"]
