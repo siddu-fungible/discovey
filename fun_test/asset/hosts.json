@@ -103,7 +103,7 @@
     }
   },
    "cab03-qa-05": {
-    "host_ip": "cab03-qa-0",
+    "host_ip": "cab03-qa-05",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
