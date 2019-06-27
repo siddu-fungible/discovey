@@ -33,7 +33,7 @@ class PcieHost(FunTestScript):
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
         elif fs == 'fs-66':
-            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog --sris"
+            f1_0_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
             f1_1_boot_args = "app=hw_hsu_test retimer=0 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
             topology_helper.set_dut_parameters(dut_index=0,
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
