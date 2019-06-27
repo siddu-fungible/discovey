@@ -390,8 +390,8 @@ if __name__ == "__main__rand_qd_multi_host_nvmetcp_output_iops":
     print "added latency charts"
 
 if __name__ == "__main__":
-    internal_chart_names = ["voltest_lsv_1instances_blt_readwrite_iops", "voltest_lsv_1instances_blt_readwrite_bandwidth",
-                            "voltest_lsv_4instances_blt_readwrite_iops", "voltest_lsv_4instances_blt_readwrite_bandwidth"]
+    internal_chart_names = ["voltest_lsv_1instances_blt_iops", "voltest_lsv_1instances_blt_bandwidth",
+                            "voltest_lsv_4instances_blt_iops", "voltest_lsv_4instances_blt_bandwidth"]
     base_line_date = datetime(year=2019, month=6, day=1, minute=0, hour=0, second=0)
     for internal_chart_name in internal_chart_names:
         if "1instances" in internal_chart_name:
