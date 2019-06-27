@@ -394,20 +394,16 @@ if __name__ == "__main__":
     for metric_id in metric_id_list:
         chart = MetricChart.objects.get(metric_id=metric_id)
         chart.owner_info = "Sunil Subramanya (sunil.subramanya@fungible.com)"
-        print chart.chart_name
         data_sets_uni = chart.data_sets
-        print data_sets_uni
         data_sets = json.loads(data_sets_uni)[0]
-        print data_sets
         output_name = data_sets["output"]['name']
         data_sets['name'] = 'read_write'
+        data_sets['output']['reference'] = -1
         if 'iops' in output_name:
             data_sets["output"]['name'] = 'output_read_write_iops'
         else:
             data_sets['output']['name'] = 'output_read_write_bandwidth'
-
-        print data_sets
-
+            
         data_sets_json = json.dumps([data_sets])
         chart.data_sets = data_sets_json
         chart.save()
