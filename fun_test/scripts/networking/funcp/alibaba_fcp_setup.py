@@ -28,7 +28,8 @@ class ScriptSetup(FunTestScript):
         fun_test.shared_variables['testbed_info'] = testbed_info
 
     def cleanup(self):
-        pass
+
+        fun_test.shared_variables["topology"].cleanup()
 
 
 class BringupSetup(FunTestCase):
