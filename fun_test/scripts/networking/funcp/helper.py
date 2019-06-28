@@ -361,3 +361,37 @@ def enable_nvme_vfs(host, username="localadmin", password="Precious1*", pcie_vfs
     else:
         return False
 
+
+def check_nvme_driver(vm_dict, parallel=False):
+    threads_list = []
+    if parallel:
+        for vm in vm_dict:
+
+            thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=_nvme_driver,
+                                                      host=vm_dict[vm]["hostname"], name=vm,
+                                                      password=vm_dict[vm]["password"], username=vm_dict[vm]["user"])
+            threads_list.append(thread_id)
+        for thread_id in threads_list:
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+    if not parallel:
+        for vm in vm_dict:
+            critical_log(_nvme_driver(host=vm_dict[vm]["hostname"], name=vm, password=vm_dict[vm]["password"],
+                                      username=vm_dict[vm]["user"]), message="Check NVMe driver")
+
+
+def _nvme_driver(host, name, password="Precious1*", username="localadmin"):
+    linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    if not linux_obj.check_ssh():
+        return False
+    try:
+        nvme_list = linux_obj.sudo_command(command="nvme list")
+        if "nvme" not in nvme_list:
+            nvme_lsmod = linux_obj.command(command="lsmod | grep nvme")
+            if "nvme" in nvme_lsmod:
+                linux_obj.sudo_command(command="rmmod nvme")
+            linux_obj.sudo_command(command="modprobe nvme")
+        nvme_list = linux_obj.command(command="sudo nvme list")
+        critical_log(expression="nvme" in nvme_list, message="%s can see nvme drive" % name)
+        return True
+    except:
+        return False
