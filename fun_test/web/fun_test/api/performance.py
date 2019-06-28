@@ -1,7 +1,6 @@
 from web.fun_test.metrics_models import *
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.db_fixup import convert_to_base_unit
-import math
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -48,24 +47,20 @@ def charts(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def companion_charts(request):
+def companion_chart_info(request):
     result = {}
     if request.method == "POST":
         request_json = json.loads(request.body)
-        ids = request_json["chart_ids"]
-        for id in ids:
-            one_chart_info = {}
-            try:
-                chart = Chart.objects.get(chart_id=id)
-                if chart:
-                    one_chart_info = {}
-                    one_chart_info["yaxis_title"] = chart.yaxis_title
-                    one_chart_info["xaxis_title"] = chart.xaxis_title
-                    one_chart_info["data_sets"] = chart.data_sets
-                    one_chart_info["data_set_names"] = chart.data_sets["names"]
-                result[id] = one_chart_info
-            except ObjectDoesNotExist:
-                result[id] = one_chart_info
+        id = request_json["chart_id"]
+        try:
+            chart = Chart.objects.get(chart_id=id)
+            if chart:
+                result["yaxis_title"] = chart.yaxis_title
+                result["xaxis_title"] = chart.xaxis_title
+                result["data_sets"] = chart.data_sets
+                result["title"] = chart.title
+        except ObjectDoesNotExist:
+            result = {}
     return result
 
 
@@ -76,45 +71,34 @@ def get_data_sets_value(request):
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     if request.method == "POST":
         request_json = json.loads(request.body)
-        companion_charts = request_json["companion_charts"]
-        metric_id = int(request_json["metric_id"])
-        if metric_id:
-            chart = MetricChart.objects.get(metric_id=metric_id)
-            if chart:
-                children = json.loads(chart.children)
-                for companion_chart in companion_charts:
-                    result[companion_chart] = {}
-                    data_sets = companion_charts[companion_chart]["data_sets"]["names"]
-                    for child in children:
-                        child_chart = MetricChart.objects.get(metric_id=child)
-                        result[companion_chart][child_chart.chart_name] = []
-                        chart_data_sets = json.loads(child_chart.data_sets)
-                        metric_model = app_config.get_metric_models()[child_chart.metric_model_name]
-                        for data_set in chart_data_sets:
-                            if data_set["name"] in data_sets:
-                                data_set_dict = {}
-                                output_value = -1
-                                output_unit = ""
-                                date_range = [datetime.now() - timedelta(days=1), datetime.now()]
-                                entries = metric_model.objects.filter(**data_set[
-                                    "inputs"]).order_by('-input_date_time')
-                                if entries:
-                                    entry = entries[0]
-                                    output_name = data_set["output"]["name"]
-                                    if hasattr(entry, output_name):
-                                        output_value = getattr(entry, output_name)
-                                        unit_name = output_name + "_unit"
-                                        output_unit = getattr(entry, unit_name)
-                                        output_value = convert_to_base_unit(output_value=output_value,
-                                                                            output_unit=output_unit)
-                                        output_value = math.log10(output_value)
-                                        data_set_dict["name"] = data_set["name"]
-                                        data_set_dict["value"] = output_value
-                                        data_set_dict["unit"] = output_unit
-                                        result[companion_chart][child_chart.chart_name].append(data_set_dict)
-                                else:
-                                    data_set_dict["name"] = data_set["name"]
-                                    data_set_dict["value"] = None
-                                    data_set_dict["unit"] = ""
-                                    result[companion_chart][child_chart.chart_name].append(data_set_dict)
+        companion_chart_info = request_json["companion_chart_info"]
+        data_sets = companion_chart_info["data_sets"]
+        for data_set in data_sets:
+            data_set_name = data_set["name"]
+            result[data_set_name] = {}
+            inputs = data_set["inputs"]
+            output = data_set["output"]["name"]
+            data_set_dict = {}
+            data_set_dict["unit"] = None
+            data_set_dict["values"] = []
+            for input in inputs:
+                xvalue = input["name"]
+                model_name = input["model_name"]
+                metric_model = app_config.get_metric_models()[model_name]
+                date_range = [datetime.now() - timedelta(days=10), datetime.now()]
+                entries = metric_model.objects.filter(input_date_time__range=date_range,
+                                                      **input["filter"]).order_by('-input_date_time')
+                if entries:
+                    entry = entries[0]
+                    if hasattr(entry, output):
+                        output_value = getattr(entry, output)
+                        unit_name = output + "_unit"
+                        output_unit = getattr(entry, unit_name)
+                        data_set_dict["unit"] = output_unit
+                        data_set_dict["values"].append({"x": xvalue, "y": output_value})
+                    else:
+                        data_set_dict["values"].append({"x": xvalue, "y": None})
+                else:
+                    data_set_dict["values"].append({"x": xvalue, "y": None})
+            result[data_set_name] = data_set_dict
     return result

@@ -135,9 +135,9 @@ class FunPlatform:
     S1 = "S1"
     F11 = "F1.1"
 
-class MetricChartType:
-    REGULAR = "Regular"
-    FUN_METIRC = "Fun Metric"
+class ChartType:
+    REGULAR = "REGULAR"
+    FUN_METIRC = "FUN_METIRC"
 
 class FunChartType:
     VERTICAL_BAR_CHART = "vertical_colored_bar_chart"

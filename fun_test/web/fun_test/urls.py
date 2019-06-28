@@ -198,7 +198,7 @@ api_v1_urls = [
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
     url(r'^regression/assets/?(.*)?$', regression.assets),
     url(r'^performance/charts/?(.*)?$', performance.charts),
-    url(r'^performance/companion_charts$', performance.companion_charts),
+    url(r'^performance/companion_chart_info$', performance.companion_chart_info),
     url(r'^performance/get_data_sets_value$', performance.get_data_sets_value),
     url(r'^triages/?(\d+)?$', triaging.triagings),
     url(r'^triages/(\d+)/trials/?(\S+)?$', triaging.trials),

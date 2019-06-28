@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField, ArrayField
 from web.web_global import *
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult, TriagingTypes
-from fun_global import PerfUnit, MetricChartType, FunChartType
+from fun_global import PerfUnit, ChartType, FunChartType
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -704,7 +704,8 @@ class LastTriageFlowId(models.Model):
         return last.last_id
 
 class Chart(models.Model):
-    metric_chart_type = models.TextField(default=MetricChartType.REGULAR)
+    chart_type = models.TextField(default=ChartType.REGULAR)
+    title = models.TextField(default="")
     fun_chart_type = models.TextField(default=FunChartType.LINE_CHART)
     xaxis_title = models.TextField(default="")
     yaxis_title = models.TextField(default="")
@@ -712,18 +713,18 @@ class Chart(models.Model):
     chart_id = models.IntegerField(default=-1, unique=True)
 
     def __str__(self):
-        return "{}: {} : {} : {}".format(self.metric_chart_type, self.fun_chart_type, self.xaxis_title,
+        return "{}: {} : {} : {}".format(self.chart_type, self.fun_chart_type, self.xaxis_title,
                                          self.yaxis_title, self.chart_id)
 
 
-class LastCompanionChartId(models.Model):
+class LastChartId(models.Model):
     last_id = models.IntegerField(unique=True, default=100)
 
     @staticmethod
     def get_next_id():
-        if not LastCompanionChartId.objects.count():
-            LastCompanionChartId().save()
-        last = LastCompanionChartId.objects.all().last()
+        if not LastChartId.objects.count():
+            LastChartId().save()
+        last = LastChartId.objects.all().last()
         last.last_id = last.last_id + 1
         last.save()
         return last.last_id

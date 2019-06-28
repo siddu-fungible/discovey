@@ -65,8 +65,7 @@ import { AdminComponent } from "./performance/admin/admin.component";
 import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { TooltipDirective } from './ui-elements/tooltip.directive';
-import { DataSetChartComponent} from "./chart/data-set-chart/data-set-chart.component";
-import { ChartComponent } from './chart/chart.component';
+import { ChartComponent} from "./chart/chart.component";
 
 @NgModule({
   declarations: [
@@ -117,7 +116,6 @@ import { ChartComponent } from './chart/chart.component';
     ScoresTableComponent,
     PerformanceTableComponent,
     TooltipDirective,
-    DataSetChartComponent,
     ChartComponent
   ],
   imports: [

@@ -972,6 +972,11 @@ export class PerformanceComponent implements OnInit {
       }
       this.showBugPanel = false;
       this.currentNode = flatNode.node;
+      if (this.currentNode && this.currentNode.companionCharts) {
+        console.log(this.currentNode.companionCharts);
+        this.currentNode.companionCharts = [...this.currentNode.companionCharts];
+
+      }
       this.currentFlatNode = flatNode;
       this.mode = Mode.ShowingNonAtomicMetric;
       this.expandNode(flatNode);

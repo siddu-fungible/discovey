@@ -5,7 +5,7 @@ from web.fun_test.models_helper import add_jenkins_job_id_map
 from dateutil import parser
 from django.utils import timezone
 from fun_global import PerfUnit
-from fun_global import MetricChartType, FunChartType
+from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
@@ -18,23 +18,25 @@ bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBp
 packets_per_second_category = ["Mpps", "pps", "Kpps", "Gpps"]
 connections_per_second_category = ["Mcps", "cps", "Kcps", "Gcps"]
 
+
 def get_category(y1_axis_title):
-   if y1_axis_title in latency_category:
-       return latency_category
-   elif y1_axis_title in ops_category:
-       return ops_category
-   elif y1_axis_title in operations_category:
-       return operations_category
-   elif y1_axis_title in cycles_category:
-       return cycles_category
-   elif y1_axis_title in bits_bytes_category:
-       return bits_bytes_category
-   elif y1_axis_title in bandwidth_category:
-       return bandwidth_category
-   elif y1_axis_title in packets_per_second_category:
-       return packets_per_second_category
-   elif y1_axis_title in connections_per_second_category:
-       return connections_per_second_category
+    if y1_axis_title in latency_category:
+        return latency_category
+    elif y1_axis_title in ops_category:
+        return ops_category
+    elif y1_axis_title in operations_category:
+        return operations_category
+    elif y1_axis_title in cycles_category:
+        return cycles_category
+    elif y1_axis_title in bits_bytes_category:
+        return bits_bytes_category
+    elif y1_axis_title in bandwidth_category:
+        return bandwidth_category
+    elif y1_axis_title in packets_per_second_category:
+        return packets_per_second_category
+    elif y1_axis_title in connections_per_second_category:
+        return connections_per_second_category
+
 
 def get_base(category):
     if category == "latency_category":
@@ -53,6 +55,7 @@ def get_base(category):
         return "pps"
     elif category == "connections_per_second_category":
         return "cps"
+
 
 if __name__ == "__main_channel_parall__":
     internal_chart_names = ["channel_parall_performance_4_8_16", "channel_parall_performance_1000"]
@@ -333,11 +336,11 @@ if __name__ == "__main_multi_host_nvmetcp__":
         "rand_write_qd32_multi_host_nvmetcp_output_latency",
         "rand_write_qd64_multi_host_nvmetcp_output_latency"]
     fio_read_job_names = ["fio_tcp_randread_blt_1_1_nhosts",
-                     "fio_tcp_randread_blt_32_1_nhosts",
-                     "fio_tcp_randread_blt_32_2_nhosts"]
+                          "fio_tcp_randread_blt_32_1_nhosts",
+                          "fio_tcp_randread_blt_32_2_nhosts"]
     fio_write_job_names = ["fio_tcp_randwrite_blt_1_1_nhosts",
-                     "fio_tcp_randwrite_blt_32_1_nhosts",
-                     "fio_tcp_randwrite_blt_32_2_nhosts"]
+                           "fio_tcp_randwrite_blt_32_1_nhosts",
+                           "fio_tcp_randwrite_blt_32_2_nhosts"]
     output_read_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
     output_write_names = ["output_write_avg_latency", "output_write_99_latency", "output_write_99_99_latency"]
     for internal_iops_chart_name in internal_iops_chart_names:
@@ -362,7 +365,7 @@ if __name__ == "__main_multi_host_nvmetcp__":
             one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
             one_data_set["inputs"]["input_platform"] = FunPlatform.F1
             one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
-                                          "reference": -1, "unit": PerfUnit.UNIT_OPS}
+                                      "reference": -1, "unit": PerfUnit.UNIT_OPS}
             data_sets.append(one_data_set)
         metric_id = LastMetricId.get_next_id()
         MetricChart(chart_name=chart_name,
@@ -479,78 +482,72 @@ if __name__ == "__main_inspur_4vols__":
                         one_data_set["inputs"]["input_platform"] = FunPlatform.F1
                         one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
                         one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1,
-                                      "reference": -1, "unit": unit}
+                                                  "reference": -1, "unit": unit}
                         data_sets.append(one_data_set)
                     child_chart.data_sets = json.dumps(data_sets)
                     child_chart.save()
                     print "added datasets for {}".format(child_chart.chart_name)
     print "added datasets for inspur containers"
 
-if __name__ == "__main_temp__":
-    internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
-    for internal_chart_name in internal_chart_names:
-        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
-        unit = PerfUnit.UNIT_OPS if "_6" not in internal_chart_name else PerfUnit.UNIT_USECS
-        companion_charts = {}
-        companion_charts[MetricChartType.REGULAR] = {"add": True, "y1AxisLabel": unit, "xAxisLabel": "qdepth",
-                                                     "dataSets": ["read(8 vols)", "write(8 vols)"]}
-        companion_charts[MetricChartType.FUN_METIRC] = {}
-        print companion_charts
-        chart.companion_charts = companion_charts
-        chart.save()
-
 if __name__ == "__main__":
-    # charts = ["iops", "latency"]
-    # for chart in charts:
-    #     if "iops" in chart:
-    #         names = ["read(8 vols)", "write(8 vols)"]
-    #         chart_name = "inspur_single_f1_host"
-    #     else:
-    #         names = ["read-avg(8 vols)", "write-avg(8 vols)"]
-    #         chart_name = "inspur_single_f1_host_6"
-    #     data_sets = []
-    #     for name in names:
-    #         if "iops" in chart:
-    #             if "read" in name:
-    #                 output_name = "output_read_iops"
-    #             else:
-    #                 output_name = "output_write_iops"
-    #         else:
-    #             if "read" in name:
-    #                 output_name = "output_read_avg_latency"
-    #             else:
-    #                 output_name = "output_write_avg_latency"
-    #         one_data_set = {}
-    #         one_data_set["name"] = name
-    #         one_data_set["inputs"] = {}
-    #         one_data_set["inputs"] = {1: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_1_vol_8"},
-    #                                   8: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_8_vol_8"},
-    #                                   16: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_16_vol_8"},
-    #                                   32: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_32_vol_8"},
-    #                                   64: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_64_vol_8"},
-    #                                   128: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_128_vol_8"},
-    #                                   256: {"input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_vol_8"}}
-    #         one_data_set["output"] = {"name": output_name}
-    #         data_sets.append(one_data_set)
-
-
+    charts = ["iops", "latency"]
     xaxis_title = "log(qDepth)"
-    yaxis_titles = [PerfUnit.UNIT_OPS, PerfUnit.UNIT_USECS]
-    metric_chart_type = MetricChartType.REGULAR
+    chart_type = ChartType.REGULAR
     fun_chart_type = FunChartType.LINE_CHART
-    for yaxis_title in yaxis_titles:
-        yaxis_title = "log(" + yaxis_title + ")"
-        if PerfUnit.UNIT_OPS in yaxis_title:
-            chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host")
-            data_sets = {"names": ["read(8 vols)", "write(8 vols)"]}
+    title = "Today's Trend"
+    for chart in charts:
+        if "iops" in chart:
+            names = ["read(8 vols)", "write(8 vols)"]
+            chart_name = "inspur_single_f1_host"
+            yaxis_title = "log(" + PerfUnit.UNIT_OPS + ")"
         else:
-            chart = MetricChart.objects.get(internal_chart_name="inspur_single_f1_host_6")
-            data_sets = {"names": ["read-avg(8 vols)", "write-avg(8 vols)"]}
-        chart_id = LastCompanionChartId.get_next_id()
-        Chart(chart_id=chart_id, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
-              metric_chart_type=metric_chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
+            names = ["read-avg(8 vols)", "write-avg(8 vols)"]
+            chart_name = "inspur_single_f1_host_6"
+            yaxis_title = "log(" + PerfUnit.UNIT_USECS + ")"
+        data_sets = []
+        for name in names:
+            if "iops" in chart:
+                if "read" in name:
+                    output_name = "output_read_iops"
+                else:
+                    output_name = "output_write_iops"
+            else:
+                if "read" in name:
+                    output_name = "output_read_avg_latency"
+                else:
+                    output_name = "output_write_avg_latency"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"] = [{"name": 1, "model_name": "BltVolumePerformance", "filter": {
+                "input_fio_job_name": "inspur_8k_random_read_write_iodepth_1_vol_8",
+                "input_platform": FunPlatform.F1}},
+                                      {"name": 8, "model_name": "BltVolumePerformance", "filter": {
+                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_8_vol_8",
+                                          "input_platform": FunPlatform.F1}},
+                                      {"name": 16, "model_name": "BltVolumePerformance", "filter": {
+                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_16_vol_8",
+                                          "input_platform": FunPlatform.F1}},
+                                      {"name": 32, "model_name": "BltVolumePerformance", "filter": {
+                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_32_vol_8",
+                                          "input_platform": FunPlatform.F1}},
+                                      {"name": 64, "model_name": "BltVolumePerformance", "filter": {
+                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_64_vol_8",
+                                          "input_platform": FunPlatform.F1}},
+                                      {"name": 128, "model_name": "BltVolumePerformance", "filter": {
+                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_128_vol_8",
+                                          "input_platform": FunPlatform.F1}},
+                                      {"name": 256, "model_name": "BltVolumePerformance", "filter": {
+                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_vol_8",
+                                          "input_platform": FunPlatform.F1}}]
+            one_data_set["output"] = {"name": output_name}
+            data_sets.append(one_data_set)
+        chart_id = LastChartId.get_next_id()
+        Chart(chart_id=chart_id, title=title, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
+              chart_type=chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
+        chart = MetricChart.objects.get(internal_chart_name=chart_name)
         if chart:
             chart.companion_charts = [chart_id]
             chart.save()
-        print "added chart id: {}",format(chart_id)
+        print "added chart id: {}", format(chart_id)
     print "added companion charts"
