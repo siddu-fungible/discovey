@@ -4,7 +4,7 @@
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "syslog_level": 2,
-    "command_timeout": 5,
+    "command_timeout": 30,
     "reboot_timeout": 300,
     "blt_details": {
       "ns_id": 1,

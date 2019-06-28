@@ -58,7 +58,7 @@ class BLTVolumeSanityScript(FunTestScript):
         self.storage_controller = storage_controller
 
         # load nvme
-        load_nvme_module(end_host)
+        #load_nvme_module(end_host)
 
         #enable_counters(storage_controller, self.command_timeout)
 
@@ -93,7 +93,7 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.shared_variables["blt_uuid"] = blt_uuid
 
         # Set syslog level
-        set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
+        #set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
 
         # check nvme device is visible on end host
         fetch_nvme = fetch_nvme_device(end_host, self.ns_id)
@@ -256,7 +256,7 @@ if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
     #bltscript.add_test_case(BltPciSeqRead())
     #bltscript.add_test_case(BltPciRandRead())
-    bltscript.add_test_case(BltPciSeqRWMix())
+    #bltscript.add_test_case(BltPciSeqRWMix())
     #bltscript.add_test_case(BltPciSeqWRMix())
     bltscript.add_test_case(BltPciRandRWMix())
     #bltscript.add_test_case(BltPciRandWRMix())

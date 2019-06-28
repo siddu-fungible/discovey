@@ -288,7 +288,7 @@ class TestInterRackPings(FunTestCase):
 
 class TestHostPCIeLanes(FunTestCase):
     def describe(self):
-        self.set_test_details(id=5, summary="Test PCIe speeds for HU servers",
+        self.set_test_details(id=6, summary="Test PCIe speeds for HU servers",
                               steps="""
                                       1. SSH into each host
                                       2. Check PCIe link

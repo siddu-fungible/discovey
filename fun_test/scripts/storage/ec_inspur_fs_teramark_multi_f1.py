@@ -6,7 +6,7 @@ import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.templates.storage.storage_fs_template import *
-from storage_helper import *
+from scripts.storage.storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -76,6 +76,8 @@ class ECVolumeLevelScript(FunTestScript):
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
 
+        fun_test.log("Global Config: {}".format(self.__dict__))
+
         # Declaring default values if not defined in config files
         if not hasattr(self, "dut_start_index"):
             self.dut_start_index = 0
@@ -104,62 +106,82 @@ class ECVolumeLevelScript(FunTestScript):
         else:
             self.disable_wu_watchdog = True
 
+        # Deploying of DUTs
+        self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
+        fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
+
+        # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
+        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
+        if self.testbed_type != "suite-based":
+            self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
+            fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
+            self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
+            self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
+            self.full_dut_indexes = self.testbed_config["dut_info"]
+            # Skipping DUTs not required for this test
+            self.skip_dut_list = []
+            for index in xrange(0, self.dut_start_index):
+                self.skip_dut_list.append(index)
+            for index in xrange(self.dut_start_index + self.num_duts, len(self.full_dut_indexes)):
+                self.skip_dut_list.append(index)
+            fun_test.log("DUTs that will be skipped: {}".format(self.skip_dut_list))
+            self.available_dut_indexes = list(set(self.full_dut_indexes) - set(self.skip_dut_list))
+            self.available_dut_indexes = [int(i) for i in self.available_dut_indexes]
+            self.total_available_duts = len(self.available_dut_indexes)
+            fun_test.log("Total Available Duts: {}".format(self.total_available_duts))
+            self.topology_helper = TopologyHelper(spec=self.fs_hosts_map[self.testbed_type])
+            # Making topology helper to skip DUTs in this list to initialise
+            self.topology_helper.disable_duts(self.skip_dut_list)
+        # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
+        # suite-based
+        elif self.testbed_type == "suite-based":
+            self.topology_helper = TopologyHelper()
+            self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
+            self.required_hosts = self.topology_helper.get_available_hosts()
+            self.testbed_config = self.topology_helper.spec
+            self.total_available_duts = len(self.available_dut_indexes)
+
+        fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
+                             message="Testbed has enough DUTs")
+
         for i in range(len(self.bootargs)):
+            self.bootargs[i] += " --mgmt"
             if self.disable_wu_watchdog:
                 self.bootargs[i] += " --disable-wu-watchdog"
 
-        fun_test.log("Global Config: {}".format(self.__dict__))
-
-        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
-        fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
-        self.total_avaialble_duts = len(self.testbed_config["dut_info"])
-        fun_test.log("Total Avaialble Duts: {}".format(self.total_avaialble_duts))
-
-        self.num_duts = (self.num_f1s / self.num_f1_per_fs)
-        fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
-        fun_test.test_assert(expression=self.num_duts <= self.total_avaialble_duts, message="Testbed has enough DUTs")
-
-        # Skipping DUTs not required for this test
-        self.skip_dut_list = []
-        for index in xrange(0, self.dut_start_index):
-            self.skip_dut_list.append(index)
-        for index in xrange(self.dut_start_index+self.num_duts, self.total_avaialble_duts):
-            self.skip_dut_list.append(index)
-        fun_test.debug("DUTs that will be skipped: {}".format(self.skip_dut_list))
-
-        # Deploying of DUTs
-        topology_helper = TopologyHelper()
-        topology_helper.disable_duts(self.skip_dut_list)
-        topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                          1: {"boot_args": self.bootargs[1]}})
-        self.topology = topology_helper.deploy()
+        for dut_index in self.available_dut_indexes:
+            self.topology_helper.set_dut_parameters(dut_index=dut_index,
+                                                    f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                                   1: {"boot_args": self.bootargs[1]}})
+        self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
 
         # Datetime required for daily Dashboard data filter
-        self.db_log_time = get_data_collection_time()
+        self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
         fun_test.log("Data collection time: {}".format(self.db_log_time))
 
         # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
-        hosts = self.topology.get_hosts()
-        fun_test.log("Available hosts are: {}".format(hosts))
-        required_host_index = []
-        required_hosts = OrderedDict()
-        for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
-            required_host_index.append(i)
-        fun_test.debug("Host index required for scripts: {}".format(required_host_index))
-        for j, host_name in enumerate(sorted(hosts)):
-            if j in required_host_index:
-                required_hosts[host_name] = hosts[host_name]
-        fun_test.log("Hosts that will be used for current test: {}".format(required_hosts.keys()))
+        if self.testbed_type != "suite-based":
+            hosts = self.topology.get_hosts()
+            fun_test.log("Available hosts are: {}".format(hosts))
+            required_host_index = []
+            self.required_hosts = OrderedDict()
+            for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
+                required_host_index.append(i)
+            fun_test.debug("Host index required for scripts: {}".format(required_host_index))
+            for j, host_name in enumerate(sorted(hosts)):
+                if j in required_host_index:
+                    self.required_hosts[host_name] = hosts[host_name]
+
+        fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
         self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []
         self.host_numa_cpus = {}
-        for host_name, host_obj in required_hosts.items():
+        self.total_numa_cpus = {}
+        for host_name, host_obj in self.required_hosts.items():
             # Retrieving host ips
-            # test_interfaces = host.get_test_interfaces()
             if host_name not in self.hosts_test_interfaces:
                 self.hosts_test_interfaces[host_name] = []
             test_interface = host_obj.get_test_interface(index=0)
@@ -178,9 +200,16 @@ class ECVolumeLevelScript(FunTestScript):
                 self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
             else:
                 self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+
+            # Calculating the number of CPUs available in the given numa
+            self.total_numa_cpus[key] = 0
+            for cpu_group in self.host_numa_cpus[key].split(","):
+                cpu_range = cpu_group.split("-")
+                self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
             fun_test.log("Rebooting host: {}".format(key))
             self.host_handles[key].reboot(non_blocking=True)
         fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
+        fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -191,10 +220,9 @@ class ECVolumeLevelScript(FunTestScript):
         self.sc_obj = []
         self.f1_ips = []
         self.gateway_ips = []
-        for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
-            curr_index = i - self.dut_start_index
-            self.fs_obj.append(self.topology.get_dut_instance(index=i))
-            self.fs_spec.append(self.topology.get_dut(index=i))
+        for curr_index, dut_index in enumerate(self.available_dut_indexes):
+            self.fs_obj.append(self.topology.get_dut_instance(index=dut_index))
+            self.fs_spec.append(self.topology.get_dut(index=dut_index))
             self.come_obj.append(self.fs_obj[curr_index].get_come())
             self.f1_obj[curr_index] = []
             for j in xrange(self.num_f1_per_fs):

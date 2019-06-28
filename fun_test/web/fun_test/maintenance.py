@@ -390,6 +390,25 @@ if __name__ == "__main_multi_host_nvmetcp__":
     print "added latency charts"
 
 if __name__ == "__main__":
+    metric_id_list = [795, 796, 797, 798]
+    for metric_id in metric_id_list:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        chart.owner_info = "Sunil Subramanya (sunil.subramanya@fungible.com)"
+        data_sets_uni = chart.data_sets
+        data_sets = json.loads(data_sets_uni)[0]
+        output_name = data_sets["output"]['name']
+        data_sets['name'] = 'read_write'
+        data_sets['output']['reference'] = -1
+        if 'iops' in output_name:
+            data_sets["output"]['name'] = 'output_read_write_iops'
+        else:
+            data_sets['output']['name'] = 'output_read_write_bandwidth'
+            
+        data_sets_json = json.dumps([data_sets])
+        chart.data_sets = data_sets_json
+        chart.save()
+        
+if __name__=="__main__inspur_random_read_write_iodepth_vol":
     internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
     fio_job_names = ["inspur_8k_random_read_write_iodepth_8_vol_4", "inspur_8k_random_read_write_iodepth_16_vol_4",
                      "inspur_8k_random_read_write_iodepth_32_vol_4", "inspur_8k_random_read_write_iodepth_64_vol_4",
