@@ -62,7 +62,7 @@ class BringupSetup(FunTestCase):
             servers_mode = server_key["fs"][fs_name]
             for server in servers_mode:
                 print server
-                fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")  
+                critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
         print "\n\n\n Booting of FS started \n\n\n"
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') 
@@ -288,7 +288,7 @@ class TestInterRackPings(FunTestCase):
 
 class TestHostPCIeLanes(FunTestCase):
     def describe(self):
-        self.set_test_details(id=5, summary="Test PCIe speeds for HU servers",
+        self.set_test_details(id=6, summary="Test PCIe speeds for HU servers",
                               steps="""
                                       1. SSH into each host
                                       2. Check PCIe link
