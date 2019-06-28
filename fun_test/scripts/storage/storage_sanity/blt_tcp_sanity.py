@@ -314,7 +314,7 @@ if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
     # bltscript.add_test_case(BltTcpSeqRead())
     # bltscript.add_test_case(BltTcpRandRead())
-    bltscript.add_test_case(BltTcpSeqRWMix())
+    #bltscript.add_test_case(BltTcpSeqRWMix())
     # bltscript.add_test_case(BltTcpSeqWRMix())
     bltscript.add_test_case(BltTcpRandRWMix())
     # bltscript.add_test_case(BltTcpRandWRMix())
