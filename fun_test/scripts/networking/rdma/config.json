@@ -1,0 +1,28 @@
+{
+  "1_1": {
+    "name": "1_1",
+    "description": "RDMA Test between 1 Server and 1 Client",
+    "is_parallel": false,
+    "clients": [
+      {
+        "client_id": "c1",
+        "host_ip": "cab02-qa-05",
+        "hu_interface_ip": "41.1.1.2"
+      }
+    ],
+    "servers": [
+      {
+        "server_id": "s1",
+        "host_ip": "cab02-qa-08",
+        "hu_interface_ip": "42.1.1.2",
+        "rdma_port": 20000
+      }
+    ],
+    "client_server_map": {
+      "cab02-qa-05": "cab02-qa-08"
+    },
+    "size_in_bytes": 1,
+    "duration_in_secs": 10,
+    "inline_size": 64
+  }
+}
