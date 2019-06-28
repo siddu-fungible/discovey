@@ -1,4 +1,4 @@
 [
   {"path": "storage/storage_sanity/blt_pci_sanity.py"},
-  {"path": "storage/storage_sanity/blt_tcp_sanity.py"}
+  {"path": "storage/storage_sanity/ec_tcp_sanity.py"}
 ]

@@ -11,6 +11,7 @@ from lib.utilities.send_mail import send_mail
 from datetime import datetime, timedelta
 from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
+from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
 
 
@@ -166,6 +167,16 @@ def suite_executions(request, id):
                           "job_state_string": JobStatusType().code_to_string(JobStatusType.ERROR),
                           "message": "Job-id: {} does not exist".format(id)}
 
+    if request.method == "PUT":
+        try:
+            suite_execution = SuiteExecution.objects.get(execution_id=int(id))
+            request_json = json.loads(request.body)
+            if "disable_schedule" in request_json:
+                suite_execution.disable_schedule = request_json["disable_schedule"]
+            suite_execution.save()
+        except ObjectDoesNotExist:
+            # TODO
+            pass
     return result
 
 

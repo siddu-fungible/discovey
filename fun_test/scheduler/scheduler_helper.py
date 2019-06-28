@@ -57,6 +57,8 @@ if not DEBUG:
 else:
     handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+if len(scheduler_logger.handlers):
+    del scheduler_logger.handlers[:]
 scheduler_logger.addHandler(hdlr=handler)
 
 
@@ -622,7 +624,7 @@ def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 *
 
     user = User.objects.get(email=submitter_email)
     content = "Hi {},".format(user.first_name) + "<br>"
-    content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
+    content += "Manual-testing lock duration for test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
     if warning:
         content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
         subject = "Manual-testing lock duration for test-bed {} has exceeded".format(test_bed.name)

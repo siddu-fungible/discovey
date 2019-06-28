@@ -66,6 +66,7 @@ import { ScoresTableComponent } from './performance/scores-table/scores-table.co
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { TooltipDirective } from './ui-elements/tooltip.directive';
 import { ChartComponent} from "./chart/chart.component";
+import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button.component';
 
 @NgModule({
   declarations: [
@@ -116,7 +117,8 @@ import { ChartComponent} from "./chart/chart.component";
     ScoresTableComponent,
     PerformanceTableComponent,
     TooltipDirective,
-    ChartComponent
+    ChartComponent,
+    ToggleButtonComponent
   ],
   imports: [
     BsDropdownModule,

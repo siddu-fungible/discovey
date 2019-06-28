@@ -368,11 +368,12 @@ def disable_pcie(bus=None):
 def restart_serial_sockets():
     """ kill and restart the relay socket for serial consoles on BMC """
     with settings(hide('stdout'), warn_only=True ):
-        run("ps -ef | grep ttyS0 | awk '{print $2}' | xargs kill -9")
-        run("ps -ef | grep ttyS2 | awk '{print $2}' | xargs kill -9")
-        run("ps -ef | grep F1_CON | awk '{print $2}' | xargs kill -9")
+        run("ps -ef | grep -v grep | grep ttyS0 | awk '{print $2}' | xargs kill -9")
+        run("ps -ef | grep -v grep | grep ttyS2 | awk '{print $2}' | xargs kill -9")
+        run("ps -ef | grep -v grep | grep F1_CON | awk '{print $2}' | xargs kill -9")
         run("rm -rf /var/lock/LCK..ttyS0")
         run("rm -rf /var/lock/LCK..ttyS2")
+        time.sleep(3)
         run("ps -ef | grep tcp_serial")
         run("sh /mnt/sdmmc0p1/_install/web/fungible/RUN_TCP_PYSERIAL.sh", pty=False, combine_stderr=True)
         time.sleep(5)

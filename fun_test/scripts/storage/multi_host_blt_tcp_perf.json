@@ -1,8 +1,8 @@
 {
   "GlobalSetup": {
     "bootargs": [
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --serial --memvol --dpc-uart --all_100g --nofreeze --disable-wu-watchdog",
-      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --serial --memvol --dpc-uart --all_100g --nofreeze --disable-wu-watchdog"
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage --serial --memvol --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage --serial --memvol --dpc-uart --all_100g --nofreeze"
     ],
     "dut_start_index": 0,
     "host_start_index": 0,
@@ -58,7 +58,7 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 1000000000000,
+      "capacity": 99999997952,
       "block_size": 4096
     },
     "controllers": 1,
@@ -74,7 +74,7 @@
       "rw": "write", "bs": "8k",
       "iodepth": 1, "numjobs": 1,
       "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "10%", "timeout": 7200
+      "size": "100%", "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
@@ -83,6 +83,8 @@
       "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
+      "norandommap": "NO_VALUE",
+      "randrepeat": 0,
       "timeout": 1200
     },
     "fio_modes": [
@@ -107,7 +109,7 @@
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 1000000000000,
+      "capacity": 99999997952,
       "block_size": 4096
     },
     "controllers": 1,
@@ -123,7 +125,7 @@
       "rw": "write", "bs": "8k",
       "iodepth": 1, "numjobs": 1,
       "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "10%", "timeout": 7200
+      "size": "100%", "timeout": 7200
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
@@ -132,6 +134,8 @@
       "runtime": 900,
       "cpus_allowed_policy": "split",
       "group_reporting": 1,
+      "norandommap": "NO_VALUE",
+      "randrepeat": 0,
       "timeout": 1200
     },
     "fio_modes": [

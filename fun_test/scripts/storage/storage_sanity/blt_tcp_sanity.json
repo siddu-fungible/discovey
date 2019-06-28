@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 7,
@@ -31,6 +31,7 @@
         "f1_loopback_ip": "29.1.1.1"
       }
     },
+    "end_host_name": "poc-server-01",
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -158,5 +159,4 @@
     ],
     "fio_job_name": "blt_tcp_sanity"
   }
-
 }

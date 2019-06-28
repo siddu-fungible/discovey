@@ -50,13 +50,16 @@ DEFAULT_BUILD_PARAMS = {
 }
 
 class JenkinsManager():
+    CONNECT_TIMEOUT = 60
     JENKINS_BASE_URL = "http://jenkins-sw-master:8080"
     SERVICE_PASSWORD = JENKINS_PASSWORD
     SERVICE_USERNAME = JENKINS_USERNAME
 
     def __init__(self, job_name="emulation/fun_on_demand"):
-        self.jenkins_server = jenkins.Jenkins(self.JENKINS_BASE_URL, username=self.SERVICE_USERNAME,
-                                     password=self.SERVICE_PASSWORD)
+        self.jenkins_server = jenkins.Jenkins(self.JENKINS_BASE_URL,
+                                              username=self.SERVICE_USERNAME,
+                                              password=self.SERVICE_PASSWORD,
+                                              timeout=self.CONNECT_TIMEOUT)
         self.job_name = job_name
 
     def _apply_params(self, user_params):

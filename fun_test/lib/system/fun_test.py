@@ -487,7 +487,7 @@ class FunTest:
 
     def join_thread(self, fun_test_thread_id, sleep_time=5):
         thread_complete = False
-        while not thread_complete:
+        while not thread_complete and not fun_test.closed:
             thread_info = self.fun_test_threads[fun_test_thread_id]
             thread = thread_info["thread"]
             if thread:
