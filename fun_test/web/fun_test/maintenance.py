@@ -519,13 +519,13 @@ if __name__ == "__main__":
     metric_id_list = [762, 768]
     for metric_id in metric_id_list:
         chart = MetricChart.objects.get(metric_id=metric_id)
-        chart.chart_name = chart.chart_name.replace('8','128')
+        chart.chart_name = chart.chart_name.replace('=8', '=128')
+        chart.internal_chart_name = chart.internal_chart_name.replace('d8', 'd128')
         data_set_uni = chart.data_sets
         data_sets_list = json.loads(data_set_uni)
         for one_data_set in data_sets_list:
             one_data_set['inputs']['input_fio_job_name'] = \
-                one_data_set['inputs']['input_fio_job_name'].replace('8', '128')
-
+                one_data_set['inputs']['input_fio_job_name'].replace('_8', '_128')
         data_sets = json.dumps(data_sets_list)
         chart.data_sets = data_sets
         chart.save()
