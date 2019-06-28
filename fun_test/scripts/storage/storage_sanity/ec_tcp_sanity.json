@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 7,
@@ -31,6 +31,7 @@
         "f1_loopback_ip": "29.1.1.1"
       }
     },
+    "end_host_name":"poc-server-01",
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -62,8 +63,8 @@
     "ns_id": 1,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "bs": "8k",
-      "iodepth": 1,
+      "bs": "1024k",
+      "iodepth": 8,
       "size": "100%",
       "rw": "write",
       "direct": 1,
@@ -86,9 +87,7 @@
       "timeout": 60
     },
     "fio_mode": "randrw",
-    "fio_numjobs_iodepth": [
-      "(16, 4)"
-    ],
+    "fio_numjobs_iodepth": ["(16, 1)"],
     "fio_job_name": "ec_tcp_sanity"
   },
   "ECTcpSeqRW": {
@@ -104,9 +103,7 @@
       "timeout": 60
     },
     "fio_mode": "readwrite",
-    "fio_numjobs_iodepth": [
-      "(16, 4)"
-    ],
+    "fio_numjobs_iodepth": "(16, 4)",
     "fio_job_name": "ec_tcp_sanity"
   }
 }

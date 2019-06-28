@@ -26,13 +26,13 @@ hu2:
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
-  pcie_width: 8
-  pf_interface: hu0-f0
-  vf_interface: hu0-f8
+  pcie_width: 16
+  pf_interface: hu1-f0
+  vf_interface: hu1-f8
   namespaces:
     default:
       interfaces:
-        - hu0-f0:
+        - hu1-f0:
             ipv4_addr: 14.1.1.2
             ipv4_netmask: 255.255.255.0
       routes:

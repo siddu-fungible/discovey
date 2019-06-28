@@ -140,8 +140,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
 
-        fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
-                             message="Testbed has enough DUTs")
+        fun_test.test_assert(expression=self.num_duts <= self.total_available_duts, message="Testbed has enough DUTs")
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -301,7 +300,7 @@ class ECVolumeLevelScript(FunTestScript):
             # Ensuring connectivity from Host to F1's
             for key in self.host_handles:
                 for index, ip in enumerate(self.f1_ips):
-                    ping_status = self.host_handles[key].ping(dst=ip, max_percentage_loss=80)
+                    ping_status = self.host_handles[key].ping(dst=ip)
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                          format(key, self.funcp_spec[0]["container_names"][index], ip))
 
@@ -313,9 +312,10 @@ class ECVolumeLevelScript(FunTestScript):
                 if self.disable_wu_watchdog:
                     self.bootargs[i] += " --disable-wu-watchdog"
 
-            self.topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}})
-            self.topology = self.topology_helper.deploy()
+            topology_helper = TopologyHelper()
+            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                              1: {"boot_args": self.bootargs[1]}})
+            self.topology = topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
 
             self.fs = self.topology.get_dut_instance(index=0)
@@ -462,7 +462,7 @@ class ECVolumeLevelScript(FunTestScript):
                     stop_containers = self.funcp_obj[index].stop_container()
                     fun_test.test_assert_expected(expected=True, actual=stop_containers,
                                                   message="Docker containers are stopped")
-                    self.come_obj[index].command("sudo rmmod funeth")
+                    self.come_obj[index].command("sudo rmmod funeth", timeout=180)
                     fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
                                                   message="funeth module is unloaded")
             except Exception as ex:
@@ -476,6 +476,7 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
+        # fun_test.sleep("Allowing buffer time before clean-up", 30)
         self.topology.cleanup()
 
 
@@ -520,16 +521,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
-
-        # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
-        # to be used in this test. If so, override the script default with the user provided config
-        job_inputs = fun_test.get_job_inputs()
-        if not job_inputs:
-            job_inputs = {}
-        if "num_volumes" in job_inputs:
-            self.ec_info["num_volumes"] = job_inputs["num_volumes"]
-        if "vol_size" in job_inputs:
-            self.ec_info["capacity"] = job_inputs["vol_size"]
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -682,7 +673,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.shared_variables["volume_name"] = self.volume_name
                 fun_test.shared_variables["ec"]["nvme_connect"] = True
 
-                self.nvme_block_device_list.sort()
                 self.fio_filename = ":".join(self.nvme_block_device_list)
                 fun_test.shared_variables["self.fio_filename"] = self.fio_filename
 
@@ -721,66 +711,48 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
-        # If so, override the script default with the user provided config
-        job_inputs = fun_test.get_job_inputs()
-        if not job_inputs:
-            job_inputs = {}
-        if "io_depth" in job_inputs:
-            self.fio_iodepth = job_inputs["io_depth"]
-
-        if not isinstance(self.fio_iodepth, list):
-            self.fio_iodepth = [self.fio_iodepth]
-
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
         fio_output = {}
 
-        start_stats = True
+        start_mpstat = True
 
-        fio_job_args = ""
-        for index, volume_name in enumerate(self.nvme_block_device_list):
-            fio_job_args += " --name=job{} --filename={}".format(index, volume_name)
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = {}
             fio_output[iodepth] = {}
             fio_cmd_args = {}
-            fio_iodepth = iodepth / len(self.nvme_block_device_list)
-            fio_num_jobs = len(self.nvme_block_device_list)
 
-            if "multiple_jobs" in self.fio_cmd_args and self.fio_cmd_args["multiple_jobs"].count("name") > 0:
-                global_num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
-                fio_num_jobs = fio_num_jobs / global_num_jobs
+            # Deciding the numjobs and IO depth together will provide the target IO depth based on the available cores
+            if iodepth <= self.total_numa_cpus:
+                fio_num_jobs = iodepth
+                fio_iodepth = 1
             else:
-                if iodepth <= self.total_numa_cpus:
-                    global_num_jobs = iodepth / len(self.nvme_block_device_list)
-                    fio_iodepth = 1
-                else:
-                    io_factor = 2
-                    while True:
-                        if (iodepth / io_factor) <= self.total_numa_cpus:
-                            global_num_jobs = (iodepth / len(self.nvme_block_device_list)) / io_factor
-                            fio_iodepth = io_factor
-                            break
-                        else:
-                            io_factor += 1
+                io_factor = 2
+                while True:
+                    if (iodepth / io_factor) <= self.total_numa_cpus:
+                        fio_num_jobs = iodepth / io_factor
+                        fio_iodepth = io_factor
+                        break
+                    else:
+                        io_factor += 1
+
+            fio_job_name = self.fio_job_name + "_" + str(int(fio_iodepth) * int(fio_num_jobs))
+            fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
+
+            if "multiple_jobs" in self.fio_cmd_args:
+                num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
+                fio_num_jobs = fio_num_jobs / num_jobs
+            else:
+                num_jobs = 1
 
             fio_result[iodepth] = True
             row_data_dict = {}
-            row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
-            size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
+            row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_num_jobs)
+            size = self.ec_info["capacity"] / (1024 ** 3)
             row_data_dict["size"] = str(size) + "G"
 
             fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
-            if iodepth not in self.full_run_iodepth:
-                if "runtime" not in self.fio_cmd_args["multiple_jobs"]:
-                    self.fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}".format(self.fio_runtime)
-                    self.fio_cmd_args["timeout"] = self.fio_run_timeout
-            else:
-                self.fio_cmd_args["multiple_jobs"] = re.sub(r"--runtime=\d+", "", self.fio_cmd_args["multiple_jobs"])
-                self.fio_cmd_args["multiple_jobs"] = re.sub(r"--time_based", "", self.fio_cmd_args["multiple_jobs"])
-                self.fio_cmd_args["timeout"] = self.fio_size_timeout
             # Collecting mpstat during IO
             mpstat_cpu_list = self.mpstat_args["cpu_list"]  # To collect mpstat for all CPU's: recommended
             # mpstat_cpu_list = self.numa_cpus  # To collect mpstat for NUMA CPU's only
@@ -804,27 +776,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                         ramp_time = match.group(4)
                     mpstat_count = (int(runtime) + int(ramp_time)) / self.mpstat_args["interval"]
                 else:
-                    start_stats = False
+                    start_mpstat = False
             else:
-                start_stats = False
+                start_mpstat = False
 
-            if start_stats:
-                mpstat_post_fix_name = "mpstat_iodepth_{}.txt".format(row_data_dict["iodepth"])
-                vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(row_data_dict["iodepth"])
-                mpstat_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=mpstat_post_fix_name)
-                vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
-
+            if start_mpstat:
                 mpstat_pid = self.end_host.mpstat(cpu_list=mpstat_cpu_list, output_file=self.mpstat_args["output_file"],
                                                   interval=self.mpstat_args["interval"], count=int(mpstat_count))
-                thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
-                                                          storage_controller=self.storage_controller,
-                                                          output_file=vp_util_artifact_file,
-                                                          interval=self.vp_util_args["interval"],
-                                                          count=int(mpstat_count))
-                # collect_vp_utils_stats(self.storage_controller, vp_util_artifact_file,
-                #                        interval=30, count=4)
             else:
-                fun_test.critical("Not starting the stats collection because of lack of interval and count details")
+                fun_test.critical("Not starting the mpstat because of lack of interval and count details")
 
             # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
             if "bs" in self.fio_cmd_args:
@@ -838,40 +798,22 @@ class ECVolumeLevelTestcase(FunTestCase):
                 row_data_dict["mode"] = "Combined"
 
             row_data_dict["block_size"] = fio_block_size
-
             fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
-                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
-            if self.ec_info["num_volumes"] != 1:
-                fio_job_name = "{}_iodepth_{}_vol_{}".format(self.fio_job_name, row_data_dict["iodepth"],
-                                                             self.ec_info["num_volumes"])
-            else:
-                fio_job_name = "{}_{}".format(self.fio_job_name, row_data_dict["iodepth"])
+                         format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs))
 
-            fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
             fio_output[iodepth] = {}
-            try:
-                if "multiple_jobs" in self.fio_cmd_args:
-                    fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
-                        self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
-                    fio_cmd_args["multiple_jobs"] += fio_job_args
-                    fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
-                                                                 timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
-                else:
-                    fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename, numjobs=fio_num_jobs,
-                                                                 iodepth=fio_iodepth, name=fio_job_name,
-                                                                 cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
-            except Exception as ex:
-                fun_test.critical(str(ex))
-                # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-                if fun_test.fun_test_threads[thread_id]["thread"].is_alive():
-                    fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    fun_test.fun_test_threads[thread_id]["thread"]._Thread__stop()
-
+            if "multiple_jobs" in self.fio_cmd_args:
+                fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(self.numa_cpus, fio_num_jobs,
+                                                                                          fio_iodepth)
+                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename,
+                                                             timeout=self.fio_cmd_args["timeout"], **fio_cmd_args)
+            else:
+                fio_output[iodepth] = self.end_host.pcie_fio(filename=self.fio_filename, numjobs=fio_num_jobs,
+                                                             iodepth=fio_iodepth, name=fio_job_name,
+                                                             cpus_allowed=self.numa_cpus, **self.fio_cmd_args)
             fun_test.log("FIO Command Output:\n{}".format(fio_output[iodepth]))
-            fun_test.test_assert(fio_output[iodepth],
-                                 "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
-                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth,
-                                         fio_num_jobs * global_num_jobs))
+            fun_test.test_assert(fio_output[iodepth], "FIO {} test with the Block Size {} IO depth {} and Numjobs {}"
+                                 .format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * num_jobs    ))
 
             for op, stats in fio_output[iodepth].items():
                 for field, value in stats.items():
@@ -901,27 +843,12 @@ class ECVolumeLevelTestcase(FunTestCase):
             table_data_rows.append(row_data_list)
             post_results("Inspur Performance Test", test_method, *row_data_list)
 
-            # Checking if mpstat process is still running...If so killing it...
-            mpstat_pid_check = self.end_host.get_process_id("mpstat")
-            if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid):
-                self.end_host.kill_process(process_id=mpstat_pid)
-            # Saving the mpstat output to the mpstat_artifact_file file
-            """mpstat_data = self.end_host.read_file(file_name=self.mpstat_args["output_file"])
-            with open(mpstat_artifact_file, 'a') as f:
-                f.writelines(mpstat_data)"""
-            fun_test.scp(source_port=self.end_host.ssh_port, source_username=self.end_host.ssh_username,
-                         source_password=self.end_host.ssh_password, source_ip=self.end_host.host_ip,
-                         source_file_path=self.mpstat_args["output_file"], target_file_path=mpstat_artifact_file)
-            fun_test.add_auxillary_file(description="Host CPU Usage - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=mpstat_artifact_file)
-
-            # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-            if fun_test.fun_test_threads[thread_id]["thread"].is_alive():
-                fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                fun_test.fun_test_threads[thread_id]["thread"]._Thread__stop()
-            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-            fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
-                                        filename=vp_util_artifact_file)
+            # Checking if mpstat process is still running
+            if start_mpstat:
+                mpstat_pid_check = self.end_host.get_process_id("mpstat")
+                if mpstat_pid_check and int(mpstat_pid_check) == int(mpstat_pid):
+                    self.end_host.kill_process(process_id=mpstat_pid)
+                self.end_host.read_file(file_name=self.mpstat_args["output_file"])
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -942,8 +869,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of Multiple"
-                                      " EC volume",
+                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -969,7 +895,7 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
-                                      "of Multiple EC volume",
+                                      "of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -994,8 +920,7 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
 class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of Multiple"
-                                      " EC volume",
+                              summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -1020,7 +945,7 @@ class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
 class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of Multiple EC volume",
+                              summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -1045,7 +970,7 @@ class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
 class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of Multiple EC volume",
+                              summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of EC volume",
                               steps="""
         1. Bring up F1 in FS1600
         2. Bring up and configure Remote Host
@@ -1069,9 +994,9 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
-    # ecscript.add_test_case(MixedRandReadWriteIOPS())
-    # ecscript.add_test_case(OLTPModelReadWriteIOPS())
-    # ecscript.add_test_case(OLAPModelReadWri`teIOPS())
+    # ecscript.add_test_case(RandReadWrite8kBlocks())
+    ecscript.add_test_case(SequentialReadWrite1024kBlocks())
+    ecscript.add_test_case(MixedRandReadWriteIOPS())
+    ecscript.add_test_case(OLTPModelReadWriteIOPS())
+    ecscript.add_test_case(OLAPModelReadWriteIOPS())
     ecscript.run()
