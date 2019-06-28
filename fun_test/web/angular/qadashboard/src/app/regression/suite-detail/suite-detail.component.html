@@ -43,7 +43,7 @@
                   </ng-container>
                 </td>
                 <td *ngSwitchCase="'Started Time'">
-                  <ng-container *ngIf="suiteExecution && (suiteExecution.fields.state == stateMap.IN_PROGRESS) || (suiteExecution.fields.state <= stateMap.COMPLETED)">
+                  <ng-container *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state == stateMap.IN_PROGRESS) || (suiteExecution.fields.state <= stateMap.COMPLETED)">
                     {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                   </ng-container>
                 </td>
