@@ -24,8 +24,7 @@ class RdmaWriteBandwidthTest(FunTestCase):
     rdma_template = None
 
     def describe(self):
-        scenario_type = fun_test.shared_variables['scenario']
-        self.set_test_details(id=1, summary="Test RDMA Write Bandwidth Scenario: %s" % scenario_type,
+        self.set_test_details(id=1, summary="Test RDMA Write Bandwidth",
                               steps="""
                               1. Fetch Client/Server Map 
                               2. Setup clients and servers and load modules
@@ -48,9 +47,12 @@ class RdmaWriteBandwidthTest(FunTestCase):
         duration = self.rdma_helper.get_traffic_duration_in_secs()
         is_parallel = self.rdma_helper.is_parallel()
         inline_size = self.rdma_helper.get_inline_size()
-        self.rdma_template = RdmaTemplate(servers=client_server_objs.values(), clients=client_server_objs.keys(),
+        clients = self.rdma_helper.get_list_of_clients()
+        servers = self.rdma_helper.get_list_of_servers()
+        self.rdma_template = RdmaTemplate(servers=servers, clients=clients,
                                           test_type=IB_WRITE_BANDWIDTH_TEST, is_parallel=is_parallel,
-                                          size=size_in_bytes, duration=duration, inline_size=inline_size)
+                                          size=size_in_bytes, duration=duration, inline_size=inline_size,
+                                          client_server_objs=client_server_objs)
         result = self.rdma_template.setup_test()
         fun_test.test_assert(result, checkpoint)
 
@@ -66,3 +68,9 @@ class RdmaWriteBandwidthTest(FunTestCase):
 
     def cleanup(self):
         pass
+
+
+if __name__ == '__main__':
+    ts = BasicSetup()
+    ts.add_test_case(RdmaWriteBandwidthTest())
+    ts.run()
