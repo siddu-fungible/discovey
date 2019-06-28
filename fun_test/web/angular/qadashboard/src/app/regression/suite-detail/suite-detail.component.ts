@@ -109,11 +109,14 @@ export class SuiteDetailComponent implements OnInit {
           ctrl.fetchTestCaseInfo(testCaseExecutionId);
         });
       }
+      if (self.suiteExecution.fields.state >= self.stateMap.SUBMITTED) {
+        setInterval(() => {
+          window.location.reload();
+        }, 60 * 1000);
+      }
     });
 
-    setInterval(() => {
-      window.location.reload();
-    }, 60 * 1000);
+
   }
 
   fetchScriptInfo(scriptPath) {
