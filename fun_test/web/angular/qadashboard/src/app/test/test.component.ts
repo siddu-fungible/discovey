@@ -122,29 +122,31 @@ export class TestComponent implements OnInit {
     console.log('beginning test');
     let today = new Date();
     let payload = this.initialFilterData[index].payload;
-      return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=4", payload).pipe(switchMap((response) => {
+      return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=5", payload).pipe(switchMap((response) => {
       for (let i in response.data) {
         let historyTime = new Date(this.commonService.convertToLocalTimezone(response.data[i].started_time)); //.replace(/\s+/g, 'T')); // For Safari
-        if (this.commonService.isSameDay(historyTime, today)){
-          if (response.data[i].result == 'FAILED' && this.commonService.isSameDay(historyTime, today)) {
+        //console.log(historyTime + " " + today);
+        console.log('inside loop');
+      //  if (this.commonService.isSameDay(historyTime, today)){
+          if (response.data[i].result == 'FAILED') {
           ++this.numFailed;
           console.log(payload.module + " fails " + this.numFailed);
         }
         else if (response.data[i].result == 'PASSED'){
           ++this.numPassed
-          console.log(payload.module + " passes " + this.numPassed);
+          //console.log(payload.module + " passes " + this.numPassed);
         }
         else if (response.data[i].result == 'NOT_RUN'){
-          this.numNotRun = this.numNotRun + 1;
-          console.log(payload.module + " not run: " + this.numNotRun);
+          ++this.numNotRun;
+          //console.log(payload.module + " not run: " + this.numNotRun);
         }
         else if (response.data[i].result == 'IN_PROGRESS'){
           ++this.numInProgress;
         }
 
-        console.log(payload.module  + " " + response.data[i].started_time);
+        //console.log(payload.module  + " " + response.data[i].started_time);
 
-        }
+      //  }
       }
       //console.log('Inside request: ' + payload['module'] + ' num passed: ' + this.numPassed + ' num failed: ' + this.numFailed);
       this.populateResults();
@@ -158,7 +160,6 @@ export class TestComponent implements OnInit {
       this.y1Values[0].data.push(this.numPassed);
       this.y1Values[1].data.push(this.numFailed);
       this.y1Values[2].data.push(this.numNotRun);
-
       //this.donePopulation = true;
       this.y1Values = [...this.y1Values];
       console.log('end populate results');
