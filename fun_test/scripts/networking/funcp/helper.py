@@ -6,7 +6,8 @@ from scripts.networking.funeth.sanity import Funeth
 from lib.templates.storage.storage_fs_template import FunCpDockerContainer
 
 
-def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False):
+def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*", mode="x16", reboot=False,
+                          retry_by_powercycle=False):
     linux_obj = Linux(host_ip=hostname, ssh_username=username, ssh_password=password)
     if reboot:
         count = 1
@@ -56,6 +57,8 @@ def verify_host_pcie_link(hostname, username="localadmin", password="Precious1*"
             if "LnkSta" not in lspci_out:
                 fun_test.critical("PCIE link did not come up")
                 result = "0"
+                if not retry_by_powercycle:
+                    reboot_count = 2
                 if reboot_count < 2:
                     reboot_count += 1
                     power_cycle_host(hostname)
