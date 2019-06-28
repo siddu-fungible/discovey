@@ -189,15 +189,15 @@ class StripeVolumeLevelScript(FunTestScript):
             hosts = self.topology.get_hosts()
             fun_test.log("Available hosts are: {}".format(hosts))
             required_host_index = []
-            required_hosts = OrderedDict()
+            self.required_hosts = OrderedDict()
             for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
                 required_host_index.append(i)
-            fun_test.debug("Host index required for scripts: {}".format(required_host_index))
+            fun_test.debug("Host index required for scripts: {}".format(self.required_host_index))
             for j, host_name in enumerate(sorted(hosts)):
                 if j in required_host_index:
-                    required_hosts[host_name] = hosts[host_name]
+                    self.required_hosts[host_name] = hosts[host_name]
 
-        fun_test.log("Hosts that will be used for current test: {}".format(required_hosts.keys()))
+        fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
         fun_test.shared_variables["num_hosts"] = self.num_hosts
 
         self.hosts_test_interfaces = {}
@@ -205,7 +205,7 @@ class StripeVolumeLevelScript(FunTestScript):
         self.host_ips = []
         # self.host_numa_cpus = {}
         # self.total_numa_cpus = {}
-        for host_name, host_obj in required_hosts.items():
+        for host_name, host_obj in self.required_hosts.items():
             # Retrieving host ips
             # test_interfaces = host.get_test_interfaces()
             if host_name not in self.hosts_test_interfaces:
