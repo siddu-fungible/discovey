@@ -113,6 +113,9 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         # execute abstract Configs
+
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
                               self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
@@ -127,10 +130,12 @@ class NicEmulation(FunTestCase):
 
         # Ping QFX from both F1s
         ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-        for container in ping_dict:
-            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
+        # for container in ping_dict:
+        #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.test_cc_pings_fs()
         # Check PICe Link on host
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
@@ -146,14 +151,14 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=16, num_queues=4)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
         for server in self.server_key["fs"][fs_name]["vm_config"]:
             critical_log(enable_nvme_vfs
                          (host=server,
-                          pcie_vfs_count=16),
+                          pcie_vfs_count=32),
                          message="NVMe VFs enabled")
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
@@ -348,11 +353,11 @@ class CreateNamespaceVMs(FunTestCase):
         pass
 
 
-class LoadFunethVMs(FunTestCase):
+class LoadFunethOnVMs(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Test Pings from all VMs",
+                              summary="Load Funeth on all VMs",
                               steps="""
                               1. Login into each VM
                               2. show lspci output
@@ -471,12 +476,47 @@ class LocalNamespace(FunTestCase):
         pass
 
 
+class LoadNvmeOnVMs(FunTestCase):
+    spec_file = {}
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="Load Funeth on all VMs",
+                              steps="""
+                              1. Login into each VM
+                              2. show lspci output
+                              3. See Funeth interface
+                              4. See NVMe list output
+                              5. Ping to NU host(TOR connected NU server)
+                              """)
+
+    def setup(self):
+        self.spec_file = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                     '/fs_connected_servers.json')
+
+    def run(self):
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        for server in self.spec_file["fs"][fs_name]["vm_config"]:
+            servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"][server]["vms"]
+            check_nvme_driver(vm_dict=servers_with_vms, parallel=True)
+
+
+    def cleanup(self):
+        pass
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
-    # ts.add_test_case(LocalNamespace())
-    ts.add_test_case(CreateNamespaceVMs())
-    # ts.add_test_case(StartVMs())
-    # ts.add_test_case(LoadFunethVMs())
+    # ts.add_test_case(CreateNamespaceVMs())
+    ts.add_test_case(StartVMs())
+    ts.add_test_case(LocalNamespace())
+    ts.add_test_case(LoadFunethOnVMs())
+    ts.add_test_case(LoadNvmeOnVMs())
+
+    # ping test vm - vm same server
+    # ping test vm - vm diff server
+    # fio from vms
+
     ts.run()
