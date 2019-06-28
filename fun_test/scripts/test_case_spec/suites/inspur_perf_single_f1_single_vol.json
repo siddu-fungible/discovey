@@ -1,4 +1,5 @@
 [
+  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 1}, "Host": {"num": 1}}}}},
   {"path": "storage/ec_inspur_fs_teramark.py", "test_case_ids": [3]},
   {"path": "storage/ec_inspur_fs_teramark.py", "test_case_ids": [4]},
   {"path": "storage/ec_inspur_fs_teramark.py", "test_case_ids": [5]},
