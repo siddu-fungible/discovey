@@ -286,6 +286,33 @@ class TestInterRackPings(FunTestCase):
         pass
 
 
+class TestHostPCIeLanes(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=5, summary="Test PCIe speeds for HU servers",
+                              steps="""
+                                      1. SSH into each host
+                                      2. Check PCIe link
+                                      3. Make sure PCIe link speed is correct
+                                      """)
+
+    def setup(self):
+        pass
+    def run(self):
+        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            server_key = fun_test.parse_file_to_json(
+                fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
+            servers_mode = server_key["fs"][fs_name]
+            for server in servers_mode:
+                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+                fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
+                                                                         % server)
+
+
+    def cleanup(self):
+        pass
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
@@ -293,4 +320,5 @@ if __name__ == '__main__':
     ts.add_test_case(TestIntraF1Pings())
     ts.add_test_case(TestIntraFsPings())
     ts.add_test_case(TestInterRackPings())
+    ts.add_test_case(TestHostPCIeLanes())
     ts.run()
