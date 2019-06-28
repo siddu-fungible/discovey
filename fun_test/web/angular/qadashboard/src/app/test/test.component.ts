@@ -1,8 +1,9 @@
 import {Component, OnInit, Input, OnChanges, Output, EventEmitter, Renderer2} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
-import {Observable, of} from "rxjs";
-import {switchMap} from "rxjs/operators";
+import {from, Observable, of} from "rxjs";
+import {mergeMap, switchMap} from "rxjs/operators";
+import { CommonService } from "../services/common/common.service";
 
 class Node {
   uId: number;  // unique Id
@@ -45,7 +46,8 @@ export class TestComponent implements OnInit {
 
   tooltipContent = "";
 
-  constructor(private apiService: ApiService, private logger: LoggerService, private renderer: Renderer2) {
+  constructor(private apiService: ApiService, private logger: LoggerService,
+              private renderer: Renderer2, private commonService: CommonService) {
   }
 
   initializeY1Values() {
@@ -75,74 +77,88 @@ export class TestComponent implements OnInit {
     this.renderer.appendChild(this.tooltipContent, text);
     let s = 0;*/
     this.initializeY1Values();
-    let modules = ['networking','storage'];
-    for (let module of modules){
-      this.payload['module'] = module;
-    }
+    // let modules = ['networking','storage'];
+    // for (let module of modules){
+    //   this.payload['module'] = module;
+    // }
+    //
+    // new Observable(observer => {
+    //   observer.next(true);
+    //   observer.complete();
+    //   return () => {}
+    // }).pipe(switchMap(response => {
+    //   return this.test({module: 'networking'});
+    //   }),
+    //   switchMap(response => {
+    //     return this.test({module: 'storage'});
+    //   }),
+    //   switchMap(response => {
+    //     this.donePopulation = true;
+    //     return of(null);
+    //   })).subscribe(response => {}, error => {
+    // });
 
     new Observable(observer => {
       observer.next(true);
       observer.complete();
       return () => {}
     }).pipe(switchMap(response => {
-      return this.test({module: 'networking'});
-      }),
-      switchMap(response => {
-        return this.test({module: 'storage'});
-      }),
-      switchMap(response => {
-        this.donePopulation = true;
-        return of(null);
-      })).subscribe(response => {}, error => {
+      //console.log(response);
+      let numbers = [];
+      this.initialFilterData.map(filter => {numbers.push(numbers.length)});
+      return from(numbers).pipe(
+          mergeMap(filterIndex => this.test(filterIndex)));
+    })).subscribe(response => {}, error => {
     });
   }
 
+  //initialFilterData[filterIndex].payload
 
 
 
 
 
-  test(payload: any): any{
+  test(index: any): any{
     console.log('beginning test');
-
-      return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=3", payload).pipe(switchMap((response) => {
+    let today = new Date();
+    let payload = this.initialFilterData[index].payload;
+      return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=4", payload).pipe(switchMap((response) => {
       for (let i in response.data) {
-        if (response.data[i].result == 'FAILED') {
-          this.numFailed = this.numFailed + 1;
-          //console.log("fails " + this.numFailed);
+        let historyTime = new Date(this.commonService.convertToLocalTimezone(response.data[i].started_time)); //.replace(/\s+/g, 'T')); // For Safari
+        if (this.commonService.isSameDay(historyTime, today)){
+          if (response.data[i].result == 'FAILED' && this.commonService.isSameDay(historyTime, today)) {
+          ++this.numFailed;
+          console.log(payload.module + " fails " + this.numFailed);
         }
         else if (response.data[i].result == 'PASSED'){
-          this.numPassed = this.numPassed + 1;
-          //console.log("passes " + this.numPassed);
+          ++this.numPassed
+          console.log(payload.module + " passes " + this.numPassed);
         }
         else if (response.data[i].result == 'NOT_RUN'){
           this.numNotRun = this.numNotRun + 1;
-          //console.log("not run: " + this.numNotRun);
+          console.log(payload.module + " not run: " + this.numNotRun);
         }
-        else{
+        else if (response.data[i].result == 'IN_PROGRESS'){
           ++this.numInProgress;
         }
-        //console.log(response.data[i].started_time);
 
+        console.log(payload.module  + " " + response.data[i].started_time);
+
+        }
       }
       //console.log('Inside request: ' + payload['module'] + ' num passed: ' + this.numPassed + ' num failed: ' + this.numFailed);
       this.populateResults();
-
+      this.numPassed = this.numFailed = this.numNotRun = 0;
       return of(true);
     }));
   }
 
   populateResults() {
-      // this.numPassed = 4;
-      // this.numFailed = 7;
-      // this.numNotRun = 3;
       console.log('populating results');
       this.y1Values[0].data.push(this.numPassed);
       this.y1Values[1].data.push(this.numFailed);
       this.y1Values[2].data.push(this.numNotRun);
-      this.numPassed = 0;
-      this.numFailed = 0;
-      this.numNotRun = 0;
+
       //this.donePopulation = true;
       this.y1Values = [...this.y1Values];
       console.log('end populate results');
@@ -151,6 +167,10 @@ export class TestComponent implements OnInit {
 
 
   }
+
+
+
+
 
 }
 
