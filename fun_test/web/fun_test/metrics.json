@@ -2813,7 +2813,7 @@
                             "metric_model_name": "BltVolumePerformance",
                             "name": "read_iod8_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QDepth=8"
+                            "label": "Latency, QDepth=128"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
@@ -2857,7 +2857,7 @@
                             "metric_model_name": "BltVolumePerformance",
                             "name": "rand_read_iod8_durable_volume_ec_nvmetcp_output_latency",
                             "weight": 1,
-                            "label": "Latency, QDepth=8"
+                            "label": "Latency, QDepth=128"
                           },
                           {
                             "metric_model_name": "BltVolumePerformance",
