@@ -85,9 +85,7 @@ def get_data_sets_value(request):
                 xvalue = input["name"]
                 model_name = input["model_name"]
                 metric_model = app_config.get_metric_models()[model_name]
-                date_range = [datetime.now() - timedelta(days=10), datetime.now()]
-                entries = metric_model.objects.filter(input_date_time__range=date_range,
-                                                      **input["filter"]).order_by('-input_date_time')
+                entries = metric_model.objects.filter(**input["filter"]).order_by('-input_date_time')
                 if entries:
                     entry = entries[0]
                     if hasattr(entry, output):

@@ -580,19 +580,20 @@ if __name__ == "__main_durable_volume_ec__":
 
 if __name__ == "__main__":
     charts = ["iops", "latency"]
-    xaxis_title = "log(qDepth)"
+    xaxis_title = "log2(qDepth)"
     chart_type = ChartType.REGULAR
     fun_chart_type = FunChartType.LINE_CHART
-    title = "Today's Trend"
     for chart in charts:
         if "iops" in chart:
             names = ["read(8 vols)", "write(8 vols)"]
             chart_name = "inspur_single_f1_host"
-            yaxis_title = "log(" + PerfUnit.UNIT_OPS + ")"
+            yaxis_title = "log10(" + PerfUnit.UNIT_OPS + ")"
+            title = "qdepth vs ops"
         else:
             names = ["read-avg(8 vols)", "write-avg(8 vols)"]
             chart_name = "inspur_single_f1_host_6"
-            yaxis_title = "log(" + PerfUnit.UNIT_USECS + ")"
+            yaxis_title = "log10(" + PerfUnit.UNIT_USECS + ")"
+            title = "qdepth vs usecs"
         data_sets = []
         for name in names:
             if "iops" in chart:
