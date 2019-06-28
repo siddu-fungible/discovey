@@ -13,6 +13,13 @@ Script to track the Inspur Performance Cases of various read write combination o
 '''
 
 
+def fio_parser(arg1, host_index, **kwargs):
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"][host_index] = fio_output
+    fun_test.simple_assert(fio_output, "Fio test for thread {}".format(host_index))
+    arg1.disconnect()
+
+
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
@@ -136,7 +143,7 @@ class ECVolumeLevelScript(FunTestScript):
         elif self.testbed_type == "suite-based":
             self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
-            self.required_hosts = self.topology_helper.get_available_hosts()
+            self.required_hosts = OrderedDict(self.topology_helper.get_available_hosts())
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
 
@@ -176,12 +183,16 @@ class ECVolumeLevelScript(FunTestScript):
 
             fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
+            self.host_info = {}
             self.hosts_test_interfaces = {}
             self.host_handles = {}
             self.host_ips = []
             self.host_numa_cpus = {}
             self.total_numa_cpus = {}
             for host_name, host_obj in self.required_hosts.items():
+                if host_name not in self.host_info:
+                    self.host_info[host_name] = {}
+                    self.host_info[host_name]["ip"] = []
                 # Retrieving host ips
                 if host_name not in self.hosts_test_interfaces:
                     self.hosts_test_interfaces[host_name] = []
@@ -189,28 +200,40 @@ class ECVolumeLevelScript(FunTestScript):
                 self.hosts_test_interfaces[host_name].append(test_interface)
                 host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
                 self.host_ips.append(host_ip)
+                self.host_info[host_name]["ip"].append(host_ip)
                 fun_test.log("Host-IP: {}".format(host_ip))
                 # Retrieving host handles
                 host_instance = host_obj.get_instance()
                 self.host_handles[host_ip] = host_instance
+                self.host_info[host_name]["handle"] = host_instance
 
             # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
-            for key in self.host_handles:
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
                 if self.override_numa_node["override"]:
-                    self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
-                    self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                    # self.host_numa_cpus[key] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
                 else:
-                    self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+                    # self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
                 # Calculating the number of CPUs available in the given numa
-                self.total_numa_cpus[key] = 0
+                """self.total_numa_cpus[key] = 0
                 for cpu_group in self.host_numa_cpus[key].split(","):
                     cpu_range = cpu_group.split("-")
                     self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
                 fun_test.log("Rebooting host: {}".format(key))
-                self.host_handles[key].reboot(non_blocking=True)
-            fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+                self.host_handles[key].reboot(non_blocking=True)"""
+                self.host_info[host_name]["total_numa_cpus"] = 0
+                for cpu_group in self.host_info[host_name]["host_numa_cpus"].split(","):
+                    cpu_range = cpu_group.split("-")
+                    self.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+                fun_test.log("Rebooting host: {}".format(host_name))
+                host_handle.reboot(non_blocking=True)
+            # fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
+            # fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+            fun_test.log("Hosts info: {}".format(self.host_info))
 
             # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
             # for all the DUTs going to be used in the test
@@ -277,11 +300,13 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["num_duts"] = self.num_duts
             fun_test.shared_variables["syslog_level"] = self.syslog_level
             fun_test.shared_variables["db_log_time"] = self.db_log_time
+            fun_test.shared_variables["host_info"] = self.host_info
 
-            for key in self.host_handles:
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
                 # Ensure all hosts are up after reboot
-                fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                     message="Ensure Host {} is reachable after reboot".format(key))
+                fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                                     message="Ensure Host {} is reachable after reboot".format(host_name))
 
                 # TODO: enable after mpstat check is added
                 """
@@ -291,19 +316,20 @@ class ECVolumeLevelScript(FunTestScript):
                 """
                 # Ensure required modules are loaded on host server, if not load it
                 for module in self.load_modules:
-                    module_check = self.host_handles[key].lsmod(module)
+                    module_check = host_handle.lsmod(module)
                     if not module_check:
-                        self.host_handles[key].modprobe(module)
-                        module_check = self.host_handles[key].lsmod(module)
+                        host_handle.modprobe(module)
+                        module_check = host_handle.lsmod(module)
                         fun_test.sleep("Loading {} module".format(module))
                     fun_test.simple_assert(module_check, "{} module is loaded".format(module))
 
             # Ensuring connectivity from Host to F1's
-            for key in self.host_handles:
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
                 for index, ip in enumerate(self.f1_ips):
-                    ping_status = self.host_handles[key].ping(dst=ip, max_percentage_loss=80)
+                    ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                         format(key, self.funcp_spec[0]["container_names"][index], ip))
+                                         format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
@@ -518,9 +544,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["attach_transport"] = self.attach_transport
 
-        self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
-        self.volume_name = self.nvme_block_device.replace("/dev/", "")
-
         # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
         # to be used in this test. If so, override the script default with the user provided config
         job_inputs = fun_test.get_job_inputs()
@@ -538,17 +561,21 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.f1 = fun_test.shared_variables["f1_obj"][0][0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+            self.host_info = fun_test.shared_variables["host_info"]
+            """
             self.host_handles = fun_test.shared_variables["host_handles"]
             self.host_ips = fun_test.shared_variables["host_ips"]
             self.end_host = self.host_handles[self.host_ips[0]]
             self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
             self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
+            self.remote_ip = self.host_ips[0]
+            fun_test.shared_variables["remote_ip"] = self.remote_ip
+            """
             self.num_f1s = fun_test.shared_variables["num_f1s"]
             self.test_network = {}
             self.test_network["f1_loopback_ip"] = self.f1_ips
-            self.remote_ip = self.host_ips[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
             self.num_duts = fun_test.shared_variables["num_duts"]
+            self.num_hosts = len(self.host_info)
         elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["csr_replay"]:
             self.fs = fun_test.shared_variables["fs"]
@@ -582,22 +609,25 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("{}: {}".format(k, v))
 
             # Attaching/Exporting all the EC/LS volumes to the external server
-            self.ctrlr_uuid = utils.generate_uuid()
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                       transport=self.attach_transport,
-                                                                       remote_ip=self.remote_ip,
-                                                                       nqn=self.nvme_subsystem,
-                                                                       port=self.transport_port,
-                                                                       command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"],
-                                 "Create Storage Controller for {} with controller uuid {} on DUT".
-                                 format(self.attach_transport, self.ctrlr_uuid))
+            self.ctrlr_uuid = []
+            for host_name in self.host_info:
+                self.ctrlr_uuid.append(utils.generate_uuid())
+                command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
+                                                                           transport=self.attach_transport,
+                                                                           remote_ip=self.host_info[host_name]["ip"][0],
+                                                                           nqn=self.nvme_subsystem,
+                                                                           port=self.transport_port,
+                                                                           command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"],
+                                     "Create Storage Controller for {} with controller uuid {} on DUT".
+                                     format(self.attach_transport, self.ctrlr_uuid[-1]))
 
             for num in xrange(self.ec_info["num_volumes"]):
+                curr_ctrlr_index = num % self.num_hosts
                 command_result = self.storage_controller.attach_volume_to_controller(
-                    ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, vol_uuid=self.ec_info["attach_uuid"][num],
-                    command_duration=self.command_timeout)
+                    ctrlr_uuid=self.ctrlr_uuid[curr_ctrlr_index], ns_id=num + 1,
+                    vol_uuid=self.ec_info["attach_uuid"][num], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
 
@@ -630,83 +660,100 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
                                           message="Checking syslog level")
 
-            if not fun_test.shared_variables["ec"]["nvme_connect"]:
-                # Checking nvme-connect status
-                if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                        self.testbed_config["workarounds"]["enable_funcp"]:
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, self.remote_ip)
+            for host_name in self.host_info:
+                fun_test.shared_variables["ec"][host_name] = {}
+                host_handle = self.host_info[host_name]["handle"]
+                if not fun_test.shared_variables["ec"]["nvme_connect"]:
+                    # Checking nvme-connect status
+                    if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                            self.testbed_config["workarounds"]["enable_funcp"]:
+                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
+                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                       str(self.transport_port), self.nvme_subsystem,
+                                       self.host_info[host_name]["ip"][0])
+                        else:
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
+                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                       str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
+                                       self.host_info[host_name]["ip"][0])
                     else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues), self.remote_ip)
-                else:
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem)
-                    else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
+                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}". \
+                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                       str(self.transport_port), self.nvme_subsystem)
+                        else:
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}". \
+                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                       str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
 
-                nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
-                fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
-                fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                              message="NVME Connect Status")
+                    nvme_connect_status = host_handle.sudo_command(command=nvme_connect_cmd,
+                                                                   timeout=self.command_timeout)
+                    fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+                    fun_test.test_assert_expected(expected=0, actual=host_handle.exit_status(),
+                                                  message="{} - NVME Connect Status".format(host_name))
 
-                lsblk_output = self.end_host.lsblk("-b")
-                fun_test.simple_assert(lsblk_output, "Listing available volumes")
+                    lsblk_output = host_handle.lsblk("-b")
+                    fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
-                # Checking that the above created BLT volume is visible to the end host
-                self.nvme_block_device_list = []
-                for num in xrange(self.ec_info["num_volumes"]):
-                    volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(num + 1)
+                    # Checking that the above created BLT volume is visible to the end host
+                    self.host_info[host_name]["nvme_block_device_list"] = []
+                    volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
                     for volume_name in lsblk_output:
                         match = re.search(volume_pattern, volume_name)
                         if match:
-                            self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(num + 1)
-                            self.nvme_block_device_list.append(self.nvme_block_device)
-                            self.volume_name = self.nvme_block_device.replace("/dev/", "")
-                            fun_test.test_assert_expected(expected=self.volume_name,
-                                                          actual=lsblk_output[volume_name]["name"],
-                                                          message="{} device available".format(self.volume_name))
-                            break
-                    else:
-                        fun_test.test_assert(False, "{} device available".format(self.volume_name))
-                    fun_test.log("NVMe Block Device/s: {}".format(self.nvme_block_device_list))
+                            self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
+                                                     str(match.group(2))
+                            self.host_info[host_name]["nvme_block_device_list"].append(self.nvme_block_device)
+                            fun_test.log("NVMe Block Device/s: {}".
+                                         format(self.host_info[host_name]["nvme_block_device_list"]))
 
-                fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
-                fun_test.shared_variables["volume_name"] = self.volume_name
-                fun_test.shared_variables["ec"]["nvme_connect"] = True
+                    fun_test.test_assert_expected(expected=self.ec_info["num_volumes"] / self.num_hosts,
+                                                  actual=len(self.host_info[host_name]["nvme_block_device_list"]),
+                                                  message="Expected NVMe devices are available")
+                    fun_test.shared_variables["ec"][host_name]["nvme_connect"] = True
 
-                self.nvme_block_device_list.sort()
-                self.fio_filename = ":".join(self.nvme_block_device_list)
-                fun_test.shared_variables["self.fio_filename"] = self.fio_filename
+                    self.host_info[host_name]["nvme_block_device_list"].sort()
+                    self.host_info[host_name]["fio_filename"] = \
+                        ":".join(self.host_info[host_name]["nvme_block_device_list"])
+                    fun_test.shared_variables["host_info"] = self.host_info
+                    fun_test.log("Hosts info: {}".format(self.host_info))
 
             # Executing the FIO command to fill the volume to it's capacity
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
-                fun_test.log("Executing the FIO command to perform sequential write to volume")
-                fio_output = self.end_host.pcie_fio(filename=self.fio_filename, cpus_allowed=self.numa_cpus,
-                                                    **self.warm_up_fio_cmd_args)
-                fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                fun_test.test_assert(fio_output, "Pre-populating the volume")
+                host_clone = {}
+                warmup_thread_id = {}
+                for index, host_name in enumerate(self.host_info):
+                    wait_time = self.num_hosts - index
+                    host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                    warmup_thread_id[index] = fun_test.execute_thread_after(
+                        time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
+                        filename=self.host_info[host_name]["fio_filename"],
+                        cpus_allowed=self.host_info[host_name]["host_numa_cpus"], **self.warm_up_fio_cmd_args)
 
+                    fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
+                    fun_test.sleep("to start next thread", 1)
+
+                fun_test.sleep("Fio threads started", 10)
+                try:
+                    for index, host_name in enumerate(self.host_info):
+                        fun_test.log("Joining fio thread {}".format(index))
+                        fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index])
+                        fun_test.log("FIO Command Output:")
+                        fun_test.log(fun_test.shared_variables["fio"][index])
+                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Fio threaded warmup test")
+                        fun_test.shared_variables["ec"][host_name]["warmup"] = True
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+                fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
+                               self.iter_interval)
                 fun_test.shared_variables["ec"]["warmup_io_completed"] = True
 
     def run(self):
 
         testcase = self.__class__.__name__
         test_method = testcase[4:]
-
-        if "ec" in fun_test.shared_variables or fun_test.shared_variables["ec"]["setup_created"]:
-            self.nvme_block_device = fun_test.shared_variables["nvme_block_device"]
-            self.volume_name = fun_test.shared_variables["volume_name"]
-            self.fio_filename = fun_test.shared_variables["self.fio_filename"]
-        else:
-            fun_test.simple_assert(False, "Setup Section Status")
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
