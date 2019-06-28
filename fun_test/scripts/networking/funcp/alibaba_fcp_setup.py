@@ -62,7 +62,7 @@ class BringupSetup(FunTestCase):
             servers_mode = server_key["fs"][fs_name]
             for server in servers_mode:
                 print server
-                fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")  
+                critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
         print "\n\n\n Booting of FS started \n\n\n"
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') 
