@@ -22,7 +22,7 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        pass
+        fun_test.shared_variables["topology"].cleanup()
         # funcp_obj.cleanup_funcp()
         # for server in servers_mode:
         #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
