@@ -35,7 +35,7 @@ class ScriptSetup(FunTestScript):
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
-
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.cleanup_funcp()
