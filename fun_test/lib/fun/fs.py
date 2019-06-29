@@ -462,6 +462,10 @@ class ComEInitializationWorker(Thread):
         fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
                              message="ComE initialized",
                              context=self.fs.context)
+
+        if self.fs.fun_cp_callback:
+            fun_test.log("Calling fun CP callback from Fs")
+            self.fs.fun_cp_callback(self.fs.get_come())
         self.fs.come_initialized = True
         self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
@@ -689,7 +693,8 @@ class Fs(object, ToDictMixin):
                  non_blocking=None,
                  context=None,
                  setup_bmc_support_files=None,
-                 apc_info=None):
+                 apc_info=None,
+                 fun_cp_callback=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -717,6 +722,7 @@ class Fs(object, ToDictMixin):
         self.set_boot_phase(BootPhases.FS_BRING_UP_INIT)
         self.apc_info = apc_info
         self.original_context_description = None
+        self.fun_cp_callback = fun_cp_callback
         if self.context:
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
@@ -775,7 +781,8 @@ class Fs(object, ToDictMixin):
             f1_parameters=None,
             non_blocking=None,
             context=None,
-            setup_bmc_support_files=None):  #TODO
+            setup_bmc_support_files=None,
+            fun_cp_callback=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -821,7 +828,8 @@ class Fs(object, ToDictMixin):
                   non_blocking=non_blocking,
                   context=context,
                   setup_bmc_support_files=setup_bmc_support_files,
-                  apc_info=apc_info)
+                  apc_info=apc_info,
+                  fun_cp_callback=fun_cp_callback)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)

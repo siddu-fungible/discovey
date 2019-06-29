@@ -187,7 +187,7 @@ class QueueWorker(Thread):
                         else:
                             if not queued_job.test_bed_type.startswith("suite-based"):
                                 not_available[queued_job.test_bed_type] = availability["message"]
-                            print("Not available: {}".format(availability["message"]))
+                            # print("Not available: {}".format(availability["message"]))
                             queued_job.message = availability["message"]
                             queued_job.save()
                     else:

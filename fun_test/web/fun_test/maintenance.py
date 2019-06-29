@@ -389,7 +389,7 @@ if __name__ == "__main_multi_host_nvmetcp__":
                     platform=FunPlatform.F1).save()
     print "added latency charts"
 
-if __name__ == "__main__":
+if __name__ == "__main__lsv_charts_update":
     metric_id_list = [795, 796, 797, 798]
     for metric_id in metric_id_list:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -458,3 +458,74 @@ if __name__=="__main__inspur_random_read_write_iodepth_vol":
                     child_chart.save()
                     print "added datasets for {}".format(child_chart.chart_name)
     print "added datasets for inspur containers"
+
+
+if __name__ == "__main__":
+    # __main_1_change_from_0 % _to_no_compression_(aamir)
+    metric_id_list = [535, 536, 538, 539]
+    for metric_id in metric_id_list:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_set_uni = chart.data_sets
+        data_sets_list = json.loads(data_set_uni)
+        for one_data_set in data_sets_list:
+            name = one_data_set['name']
+            match_zero = re.search(r'\d+', name)
+            if match_zero:
+                if match_zero.group() == '0':
+                    one_data_set['name'] = name.replace("0%", "No Compression")
+                    print ("Metric id : {} name : {} changed to {}".format(metric_id, name, one_data_set['name']))
+
+        data_sets = json.dumps(data_sets_list)
+        chart.data_sets = data_sets
+        chart.save()
+
+    # __main__2_change_input_fio_job_name_and_remove_8_add_128_(aamir)
+
+    metric_id_list = [757, 758, 759, 760]
+    for metric_id in metric_id_list:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_set_uni = chart.data_sets
+        data_sets_list = json.loads(data_set_uni)
+        for one_data_set in data_sets_list:
+            input_fio_job_name = one_data_set['inputs']['input_fio_job_name']
+            input_fio_job_name = input_fio_job_name.replace('_comp_', '_').replace('p_8', 'p_128')
+            one_data_set['inputs']['input_fio_job_name'] = input_fio_job_name
+        data_sets = json.dumps(data_sets_list)
+        chart.data_sets = data_sets
+        chart.save()
+
+    # __main__3_iops_remove_8_add_128_(aamir)
+
+    metric_id_list = [766, 772]
+    for metric_id in metric_id_list:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        data_set_uni = chart.data_sets
+        data_sets_list = json.loads(data_set_uni)
+        for one_data_set in data_sets_list:
+            if one_data_set['name'] == '8':
+                data_sets_list.remove(one_data_set)
+                one_data_set['name'] = '128'
+                one_data_set['inputs']['input_fio_job_name'] =\
+                    one_data_set['inputs']['input_fio_job_name'].replace('8', '128')
+                data_sets_list.append(one_data_set)
+                break
+
+        data_sets = json.dumps(data_sets_list)
+        chart.data_sets = data_sets
+        chart.save()
+
+    # __main__4_latency_change_8_to_128_(aamir)
+
+    metric_id_list = [762, 768]
+    for metric_id in metric_id_list:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        chart.chart_name = chart.chart_name.replace('=8', '=128')
+        chart.internal_chart_name = chart.internal_chart_name.replace('d8', 'd128')
+        data_set_uni = chart.data_sets
+        data_sets_list = json.loads(data_set_uni)
+        for one_data_set in data_sets_list:
+            one_data_set['inputs']['input_fio_job_name'] = \
+                one_data_set['inputs']['input_fio_job_name'].replace('_8', '_128')
+        data_sets = json.dumps(data_sets_list)
+        chart.data_sets = data_sets
+        chart.save()
