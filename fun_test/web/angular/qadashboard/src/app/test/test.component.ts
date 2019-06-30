@@ -131,7 +131,7 @@ export class TestComponent implements OnInit {
 
         if (this.commonService.isSameDay(historyTime, today)){
           if (this.myDict[response.data[i].test_case_id] != response.data[i].script_path){
-            this.myDict[response.data[i].test_case_id] = response.data[i].script_path;
+            this.myDict[response.data[i].test_case_id].push(response.data[i].script_path);
             if (response.data[i].result == 'FAILED') {
               ++this.numFailed;
               //console.log(payload.module + " fails " + this.numFailed);
