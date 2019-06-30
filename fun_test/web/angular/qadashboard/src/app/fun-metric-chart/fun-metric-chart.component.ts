@@ -1277,7 +1277,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       marker: {
         radius: 3
       },
-      metaData: data
+      metaData: {originalValue: data}
     };
     if (data > maximum && maximum !== -1) {
       result.y = maximum;

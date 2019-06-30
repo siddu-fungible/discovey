@@ -52,7 +52,7 @@ export class FunChartComponent implements OnInit, OnChanges {
         },
         tooltip: {
           formatter: function () {
-            return self.tooltipFormatter(this.x, this.point.metaData);
+            return self.tooltipFormatter(this.x, this.point.metaData.originalValue);
           }
         },
         yAxis: {
@@ -77,7 +77,7 @@ export class FunChartComponent implements OnInit, OnChanges {
               events: {
                 select: function () {
                   if (self.pointClickCallback) {
-                    self.point = self.pointClickCallback(this.category, this.metaData);
+                    self.point = self.pointClickCallback(this.category, this.metaData.originalValue);
                     self.pointInfo.emit(self.point);
                   }
                 }
