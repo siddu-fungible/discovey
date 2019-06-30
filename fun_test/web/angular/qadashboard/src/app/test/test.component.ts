@@ -42,6 +42,7 @@ export class TestComponent implements OnInit {
   numNotRun: number = 0;
   numInProgress: number = 0;
   donePopulation: boolean = false;
+  myDict: any = {};
 
 
   tooltipContent = "";
@@ -126,27 +127,34 @@ export class TestComponent implements OnInit {
       for (let i in response.data) {
         let historyTime = new Date(this.commonService.convertToLocalTimezone(response.data[i].started_time)); //.replace(/\s+/g, 'T')); // For Safari
         //console.log(historyTime + " " + today);
-        console.log('inside loop');
-      //  if (this.commonService.isSameDay(historyTime, today)){
-          if (response.data[i].result == 'FAILED') {
-          ++this.numFailed;
-          console.log(payload.module + " fails " + this.numFailed);
-        }
-        else if (response.data[i].result == 'PASSED'){
-          ++this.numPassed
-          //console.log(payload.module + " passes " + this.numPassed);
-        }
-        else if (response.data[i].result == 'NOT_RUN'){
-          ++this.numNotRun;
-          //console.log(payload.module + " not run: " + this.numNotRun);
-        }
-        else if (response.data[i].result == 'IN_PROGRESS'){
-          ++this.numInProgress;
+        //console.log('inside loop');
+
+        if (this.commonService.isSameDay(historyTime, today)){
+          if (this.myDict[response.data[i].test_case_id] != response.data[i].script_path){
+            this.myDict[response.data[i].test_case_id] = response.data[i].script_path;
+            if (response.data[i].result == 'FAILED') {
+              ++this.numFailed;
+              //console.log(payload.module + " fails " + this.numFailed);
+            }
+            else if (response.data[i].result == 'PASSED'){
+              ++this.numPassed
+              //console.log(payload.module + " passes " + this.numPassed);
+            }
+            else if (response.data[i].result == 'NOT_RUN'){
+              ++this.numNotRun;
+              //console.log(payload.module + " not run: " + this.numNotRun);
+            }
+            else if (response.data[i].result == 'IN_PROGRESS'){
+              ++this.numInProgress;
+            }
+          //console.log(payload.module  + " " + response.data[i].started_time + ' ' + response.data[i].suite_execution_id);
+
+          }
+          else{
+            console.log('Detected duplicate: ' + response.data[i].test_case_id + ' ' + response.data[i].sript_path);
+          }
         }
 
-        //console.log(payload.module  + " " + response.data[i].started_time);
-
-      //  }
       }
       //console.log('Inside request: ' + payload['module'] + ' num passed: ' + this.numPassed + ' num failed: ' + this.numFailed);
       this.populateResults();
