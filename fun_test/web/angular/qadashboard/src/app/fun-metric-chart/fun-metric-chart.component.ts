@@ -254,7 +254,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   //formats the tooltip shown in the charts
-  tooltipFormatter(x, y): string {
+  tooltipFormatter(x, y, metaData): string {
     let softwareDate = "Unknown";
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
@@ -266,15 +266,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       softwareDate = this.buildInfo[key]["software_date"];
       if (Number(softwareDate) > 0)
         s = "<b>Software date:</b> " + softwareDate + "<br>";
-      s += "<b>Value:</b> " + y + "<br>";
+      s += "<b>Value:</b> " + metaData.originalValue + "<br>";
     } else {
-      s = "<b>Value:</b> " + y + "<br>";
+      s = "<b>Value:</b> " + metaData.originalValue + "<br>";
     }
     return s;
   }
 
   //display details about the points in the chart
-  pointDetail(x, y): any {
+  pointDetail(x, y, metaData): any {
     let softwareDate = "Unknown";
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
@@ -308,9 +308,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
       if (buildProperties !== "")
         s["Build Properties"] = buildProperties;
-      s["Value"] = y;
+      s["Value"] = metaData.originalValue;
     } else {
-      s["Value"] = y;
+      s["Value"] = metaData.originalValue;
     }
     return s;
   }
@@ -1276,7 +1276,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       y: data,
       marker: {
         radius: 3
-      }
+      },
+      metaData: {originalValue: data}
     };
     if (data > maximum && maximum !== -1) {
       result.y = maximum;

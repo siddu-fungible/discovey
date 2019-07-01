@@ -276,7 +276,7 @@ def configure_vms(server_name, vm_dict):
                                  message="Check NVME PF %s is present" % vm_dict[vm]["nvme_pci_device"])
                     if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
                         linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
-                fun_test.sleep(message="Waiting for VFs detach")
+                # fun_test.sleep(message="Waiting for VFs detach", seconds=1)
                 start_op = linux_obj.command(command="virsh start %s" % vm)
                 critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
             except Exception as ex:
