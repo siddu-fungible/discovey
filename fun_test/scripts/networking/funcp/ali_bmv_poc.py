@@ -9,53 +9,33 @@ from scripts.networking.funeth.sanity import Funeth
 from lib.host.storage_controller import StorageController
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
+import time
+vm_volume_map = {}
 
 
 class ScriptSetup(FunTestScript):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(steps="1. Make sure correct FS system is selected")
+        self.set_test_details(steps="""
+                                  1. BringUP both F1s
+                                  2. Bringup FunCP
+                                  3. Create MPG Interfaces and assign static IPs
+                                  """)
 
     def setup(self):
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/fs_connected_servers.json')
-
-    def cleanup(self):
-        # funcp_obj.cleanup_funcp()
-        # for server in servers_mode:
-        #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
-        pass
-
-
-class BringupSetup(FunTestCase):
-    server_key = {}
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Bringup FS-45 with control plane",
-                              steps="""
-                              1. BringUP both F1s
-                              2. Bringup FunCP
-                              3. Create MPG Interfaces and assign static IPs
-                              """)
-
-    def setup(self):
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/fs_connected_servers.json')
-
-    def run(self):
         # Last working parameter:
         # --environment={\"test_bed_type\":\"fs-alibaba_demo\",\"tftp_image_path\":\"divya_funos-f1.stripped_june5.gz\"}
-        #--environment={\"test_bed_type\":\"fs-alibaba-demo\",\"tftp_image_path\":\"ysingh/funos-f1.stripped_18jun.gz\"}
-
+        # --environment={\"test_bed_type\":\"fs-alibaba-demo\",\"tftp_image_path\":\"ysingh/funos-f1.stripped_18jun.gz\"}
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
-
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.cleanup_funcp()
@@ -82,18 +62,19 @@ class BringupSetup(FunTestCase):
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
-
+        fun_test.log("Lets go")
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script
 
     def cleanup(self):
-        pass
+        fun_test.log("Cleanup")
+        fun_test.shared_variables["topology"].cleanup()
 
 
 class NicEmulation(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=1,
                               summary="Bringup PCIe Connceted Hosts and test traffic",
                               steps="""
                               1. Reboot connected hosts
@@ -134,6 +115,9 @@ class NicEmulation(FunTestCase):
         #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
+        print("============================================")
+        raw_input("Press any key to continue to NIC Emulation:")
+        print("============================================")
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.test_cc_pings_fs()
@@ -155,6 +139,9 @@ class NicEmulation(FunTestCase):
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
+        print("============================================")
+        raw_input("Press any key to Enable NVMe VFs:")
+        print("============================================")
         for server in self.server_key["fs"][fs_name]["vm_config"]:
             critical_log(enable_nvme_vfs
                          (host=server,
@@ -173,7 +160,7 @@ class StartVMs(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=2,
                               summary="Configure VMs",
                               steps="""
                               1. Create NVMe VFs
@@ -203,7 +190,7 @@ class CreateNamespaceVMs(FunTestCase):
     spec_file = {}
 
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=10,
                               summary="CreateNamespaceVMs",
                               steps="""
                               1. BringUP both F1s
@@ -383,7 +370,7 @@ class LocalNamespace(FunTestCase):
     spec_file = {}
 
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=3,
                               summary="Local/Remote read & write from VM",
                               steps="""
                               1. Login into VM
@@ -396,6 +383,7 @@ class LocalNamespace(FunTestCase):
                                                      '/fs_connected_servers.json')
 
     def run(self):
+        global vm_volume_map
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.spec_file["fs"][fs_name]["fs-name"])
 
@@ -435,7 +423,7 @@ class LocalNamespace(FunTestCase):
                 local_volume_create(storage_controller=storage_controller,
                                     vm_dict=servers_with_vms[server]["vms"][vm]["local_storage"],
                                     uuid=blt_volume_dpu_0, count=i)
-                result_dict[vm]["blt_volume_dpu_0"] = blt_volume_dpu_0
+                result_dict[vm] = {"blt_volume_dpu_0": blt_volume_dpu_0, "controller_dpu_0": controller_dpu_0}
 
                 blt_volume_dpu_1 = utils.generate_uuid()
 
@@ -455,6 +443,7 @@ class LocalNamespace(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
                                      format(controller_dpu_0))
+                result_dict[vm]["controller_dpu_0"] = controller_dpu_0
 
                 print("\n")
                 print("===========================================")
@@ -471,6 +460,63 @@ class LocalNamespace(FunTestCase):
                              .format(blt_volume_dpu_0, controller_dpu_0))
                 i += 1
             fun_test.log(result_dict)
+            print "{:<20} | {:<18} | {:<18}".format('VM', 'Volume DPU0', 'Controller DPU0')
+            for vm in result_dict:
+                print "{:<20} | {:<18} | {:<18}".format(vm, result_dict[vm]['blt_volume_dpu_0'],
+                                                    result_dict[vm]['controller_dpu_0'])
+            vm_volume_map[server] = result_dict
+
+
+    def cleanup(self):
+        pass
+
+
+class CheckVMReachability(FunTestCase):
+    spec_file = {}
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Make sure we can ssh into each VM",
+                              steps="""
+                              1. SSH into list of all VMs
+                              2. Make a list of all VMs which can't be reached
+                              3. Do steps 1 & 2 until all VMs are up
+                              )
+                              """)
+
+    def setup(self):
+        self.spec_file = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                     '/fs_connected_servers.json')
+
+    def run(self):
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        for server in self.spec_file["fs"][fs_name]["vm_config"]:
+            servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"][server]["vms"]
+            not_reachable_vms = []
+
+            for vm in servers_with_vms:
+                linux_obj = Linux(host_ip=servers_with_vms[vm]["hostname"], ssh_username=servers_with_vms[vm]["user"],
+                                  ssh_password=servers_with_vms[vm]["password"])
+                if not linux_obj.check_ssh():
+                    not_reachable_vms.append(vm)
+                linux_obj.disconnect()
+            start_time = time.time()
+            while len(not_reachable_vms) > 0:
+                for vm in not_reachable_vms:
+                    linux_obj = Linux(host_ip=servers_with_vms[vm]["hostname"],
+                                      ssh_username=servers_with_vms[vm]["user"],
+                                      ssh_password=servers_with_vms[vm]["password"])
+                    if linux_obj.check_ssh():
+                        fun_test.log("%s is reachable" % vm)
+                        not_reachable_vms.remove(vm)
+                    linux_obj.disconnect()
+                if len(not_reachable_vms) > 0:
+                    fun_test.sleep(message="waiting for VMs to come up", seconds=30)
+                    fun_test.log("VMs not rebooted are:")
+                    fun_test.log(not_reachable_vms)
+                now_time = time.time()
+                if int(now_time - start_time) > 600:
+                    fun_test.test_assert(expression=False, message="VMs didnt come up in 10 minutes")
 
     def cleanup(self):
         pass
@@ -505,18 +551,44 @@ class LoadNvmeOnVMs(FunTestCase):
         pass
 
 
+class PingTestVmVmSameServer(FunTestCase):
+    spec_file = {}
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Load Funeth on all VMs",
+                              steps="""
+                              1. Login into each VM
+                              2. show lspci output
+                              3. See Funeth interface
+                              4. See NVMe list output
+                              5. Ping to NU host(TOR connected NU server)
+                              """)
+
+    def setup(self):
+        self.spec_file = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                     '/fs_connected_servers.json')
+
+    def run(self):
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        for server in self.spec_file["fs"][fs_name]["vm_config"]:
+            servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"][server]["vms"]
+            check_nvme_driver(vm_dict=servers_with_vms, parallel=True)
+
+
+    def cleanup(self):
+        pass
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
     # ts.add_test_case(CreateNamespaceVMs())
     ts.add_test_case(StartVMs())
     ts.add_test_case(LocalNamespace())
+    ts.add_test_case(CheckVMReachability())
     ts.add_test_case(LoadFunethOnVMs())
     ts.add_test_case(LoadNvmeOnVMs())
-
-    # ping test vm - vm same server
-    # ping test vm - vm diff server
-    # fio from vms
+    # ts.add_test_case(PingTestVmVmSameServer())
 
     ts.run()

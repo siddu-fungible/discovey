@@ -64,13 +64,12 @@ class BLTVolumeSanityScript(FunTestScript):
 
         # create controller
         ctrlr_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_controller(
-            ctrlr_uuid=ctrlr_uuid,
-            transport=self.transport,
-            huid=self.huid,
-            ctlid=self.ctlid,
-            fnid=self.fnid,
-            command_duration=self.command_timeout)['status'],
+        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                       transport=self.transport,
+                                                                       huid=self.huid,
+                                                                       ctlid=self.ctlid,
+                                                                       fnid=self.fnid,
+                                                                       command_duration=self.command_timeout)['status'],
                              message="Create Controller with UUID: {}".format(ctrlr_uuid))
         fun_test.shared_variables["ctrlr_uuid"] = ctrlr_uuid
 

@@ -56,7 +56,7 @@ export class FunChartComponent implements OnInit, OnChanges {
         tooltip: {
           formatter: function () {
             if (self.tooltipFormatter)
-              return self.tooltipFormatter(this.x, this.y);
+              return self.tooltipFormatter(this.x, this.y, this.point.metaData);
             else
               return this.y;
           }
@@ -83,7 +83,7 @@ export class FunChartComponent implements OnInit, OnChanges {
               events: {
                 select: function () {
                   if (self.pointClickCallback) {
-                    self.point = self.pointClickCallback(this.category, this.y);
+                    self.point = self.pointClickCallback(this.category, this.y, this.metaData);
                     self.pointInfo.emit(self.point);
                   }
                 }
