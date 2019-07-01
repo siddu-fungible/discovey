@@ -45,7 +45,7 @@ class Node {
   positive: boolean = true;
   workInProgress: boolean = false;
   tags: string = null;
-  companionCharts: any[] = null;
+  companionCharts: number[] = null;
 }
 
 class FlatNode {

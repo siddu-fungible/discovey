@@ -9,52 +9,6 @@ from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
-latency_category = ["nsecs", "usecs", "msecs", "secs"]
-ops_category = ["ops", "Kops", "Mops", "Gops"]
-operations_category = ["op", "Kop", "Mop", "Gop"]
-cycles_category = ["cycles"]
-bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
-bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
-packets_per_second_category = ["Mpps", "pps", "Kpps", "Gpps"]
-connections_per_second_category = ["Mcps", "cps", "Kcps", "Gcps"]
-
-
-def get_category(y1_axis_title):
-    if y1_axis_title in latency_category:
-        return latency_category
-    elif y1_axis_title in ops_category:
-        return ops_category
-    elif y1_axis_title in operations_category:
-        return operations_category
-    elif y1_axis_title in cycles_category:
-        return cycles_category
-    elif y1_axis_title in bits_bytes_category:
-        return bits_bytes_category
-    elif y1_axis_title in bandwidth_category:
-        return bandwidth_category
-    elif y1_axis_title in packets_per_second_category:
-        return packets_per_second_category
-    elif y1_axis_title in connections_per_second_category:
-        return connections_per_second_category
-
-
-def get_base(category):
-    if category == "latency_category":
-        return "secs"
-    elif category == "ops_category":
-        return "ops"
-    elif category == "operations_category":
-        return "op"
-    elif category == "cycles_category":
-        return "cycles"
-    elif category == "bits_bytes_category":
-        return "b"
-    elif category == "bandwidth_category":
-        return "bps"
-    elif category == "packets_per_second_category":
-        return "pps"
-    elif category == "connections_per_second_category":
-        return "cps"
 
 
 if __name__ == "__main_channel_parall__":
@@ -608,8 +562,8 @@ if __name__ == "__main__":
                     output_name = "output_write_avg_latency"
             one_data_set = {}
             one_data_set["name"] = name
-            one_data_set["inputs"] = {}
-            one_data_set["inputs"] = [{"name": 1, "model_name": "BltVolumePerformance", "filter": {
+            one_data_set["filters"] = {}
+            one_data_set["filters"] = [{"name": 1, "model_name": "BltVolumePerformance", "filter": {
                 "input_fio_job_name": "inspur_8k_random_read_write_iodepth_1_vol_8",
                 "input_platform": FunPlatform.F1}},
                                       {"name": 8, "model_name": "BltVolumePerformance", "filter": {
@@ -630,11 +584,12 @@ if __name__ == "__main__":
                                       {"name": 256, "model_name": "BltVolumePerformance", "filter": {
                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_vol_8",
                                           "input_platform": FunPlatform.F1}}]
-            one_data_set["output"] = {"name": output_name}
+            one_data_set["output_field"] = output_name
             data_sets.append(one_data_set)
+        print json.dumps(data_sets)
         chart_id = LastChartId.get_next_id()
-        Chart(chart_id=chart_id, title=title, xaxis_title=xaxis_title, yaxis_title=yaxis_title,
-              chart_type=chart_type, fun_chart_type=fun_chart_type, data_sets=data_sets).save()
+        Chart(chart_id=chart_id, title=title, x_axis_title=xaxis_title, y_axis_title=yaxis_title,
+              chart_type=chart_type, fun_chart_type=fun_chart_type, series_filters=data_sets).save()
         chart = MetricChart.objects.get(internal_chart_name=chart_name)
         if chart:
             chart.companion_charts = [chart_id]

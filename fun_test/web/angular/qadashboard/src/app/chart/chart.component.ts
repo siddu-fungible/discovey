@@ -15,7 +15,7 @@ export class ChartComponent implements OnInit {
   y1Values: any[] = [];
   xValues: any[] = [];
   showChart: boolean = false;
-  dataSets: any[] = [];
+  seriesFilters: any[] = [];
   xAxisLabel: string = null;
   y1AxisLabel: string = null;
   title: string = null;
@@ -45,13 +45,11 @@ export class ChartComponent implements OnInit {
   }
 
   fetchCharts() {
-    let payload = {};
-    payload["chart_id"] = this.id;
-    return this.apiService.post("/api/v1/performance/charts", payload).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/performance/charts/" + this.id).pipe(switchMap(response => {
       this.chartInfo = response.data;
-      this.dataSets = this.chartInfo.data_sets;
-      this.xAxisLabel = this.chartInfo.xaxis_title;
-      this.y1AxisLabel = this.chartInfo.yaxis_title;
+      this.seriesFilters = this.chartInfo.series_filters;
+      this.xAxisLabel = this.chartInfo.x_axis_title;
+      this.y1AxisLabel = this.chartInfo.y_axis_title;
       this.title = this.chartInfo.title;
       this.chartType = this.chartInfo.chart_type;
       this.funChartType = this.chartInfo.fun_chart_type;
@@ -96,9 +94,9 @@ export class ChartComponent implements OnInit {
 
   initializeY1Values() {
     this.y1Values = [];
-    for (let dataSet of this.dataSets) {
+    for (let filter of this.seriesFilters) {
       let oneDataSet = {
-        name: dataSet["name"],
+        name: filter["name"],
         data: [],
         metadata: {}
       };
