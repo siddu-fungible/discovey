@@ -183,7 +183,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             for i in fpg_interfaces:
                 fun_test.log('{} dpc: Get FPG stats'.format(f1))
                 r = nc_obj.peek_fpg_port_stats(port_num=i)
-                output_list.append({'FPG{}'.format(i): output})
+                output_list.append({'FPG{}'.format(i): r})
                 # TODO: handle None
                 #if not r:
                 #    r = [{}]
