@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+from lib.system.utils import MultiProcessingTasks
 from prettytable import PrettyTable
 import re
 
@@ -105,7 +106,7 @@ class RdmaTemplate(object):
                             self.test_type, self.connection_type, ibv_device['name'],
                             server_obj.rdma_server_port, self.size)
                     elif self.test_type == IB_WRITE_LATENCY_TEST:
-                        cmd = "%s -c %s -R -d %s -p %d -F -I %d -R -s %d" % (
+                        cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d" % (
                             self.test_type, self.connection_type, ibv_device['name'], server_obj.rdma_server_port,
                             self.inline_size, self.size)
                     else:
@@ -124,37 +125,58 @@ class RdmaTemplate(object):
             fun_test.critical(str(ex))
         return result
 
+    def start_test(self, client_obj, server_obj, iterations):
+        result_dict = {}
+        try:
+            fun_test.log_section("Run %s client" % (str(client_obj)))
+            ibv_device = self.get_ibv_device(host_obj=client_obj)
+            if self.test_type == IB_WRITE_BANDWIDTH_TEST:
+                cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (
+                    self.test_type, self.connection_type, ibv_device['name'], client_obj.rdma_port,
+                    self.size)
+            elif self.test_type == IB_WRITE_LATENCY_TEST:
+                cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (
+                    self.test_type, self.connection_type, ibv_device['name'], client_obj.rdma_port,
+                    self.inline_size, self.size)
+            else:
+                # TODO: Set default test
+                cmd = None
+            if iterations:
+                cmd += "-n %d %s" % (iterations, client_obj.server_ip)
+            else:
+                cmd += "-D %d %s" % (self.duration, client_obj.server_ip)
+
+            fun_test.log("Client Cmd Formed: %s" % cmd)
+            output = client_obj.command(command=cmd, timeout=90)
+            result_dict = self._parse_rdma_output(output=output)
+            result_dict['client'] = str(client_obj)
+            result_dict['server'] = str(server_obj)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result_dict
+
     def run(self, iterations=None):
         result = []
         try:
             if self.is_parallel:
-                pass
+                multi_task_obj = MultiProcessingTasks()
+                process_count = 0
+                for c_s_dict in self.client_server_objs:
+                    for client_obj, server_obj in c_s_dict.items():
+                        multi_task_obj.add_task(func=self.start_test,
+                                                func_args=(client_obj, server_obj, iterations),
+                                                task_key="process_%s" % process_count)
+                        process_count += 1
+                run_started = multi_task_obj.run(max_parallel_processes=process_count, parallel=True)
+                fun_test.simple_assert(run_started, "Ensure Clients initiated simultaneously")
+                for index in range(process_count):
+                    result_dict = multi_task_obj.get_result(task_key="process_%s" % index)
+                    result.append(result_dict)
             else:
                 for c_s_dict in self.client_server_objs:
                     for client_obj, server_obj in c_s_dict.items():
-                        fun_test.log_section("Run %s client" % (str(client_obj)))
-                        ibv_device = self.get_ibv_device(host_obj=client_obj)
-                        if self.test_type == IB_WRITE_BANDWIDTH_TEST:
-                            cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (
-                                self.test_type, self.connection_type, ibv_device['name'], client_obj.rdma_port,
-                                self.size)
-                        elif self.test_type == IB_WRITE_LATENCY_TEST:
-                            cmd = "%s -c %s -R -d %s -p %d -F -I %d -R -s %d " % (
-                                self.test_type, self.connection_type, ibv_device['name'], client_obj.rdma_port,
-                                self.inline_size, self.size)
-                        else:
-                            # TODO: Set default test
-                            cmd = None
-                        if iterations:
-                            cmd += "-n %d %s" % (iterations, client_obj.server_ip)
-                        else:
-                            cmd += "-D %d %s" % (self.duration, client_obj.server_ip)
-
-                        fun_test.log("Client Cmd Formed: %s" % cmd)
-                        output = client_obj.command(command=cmd, timeout=90)
-                        result_dict = self._parse_rdma_output(output=output)
-                        result_dict['client'] = str(client_obj)
-                        result_dict['server'] = str(server_obj)
+                        result_dict = self.start_test(client_obj=client_obj, server_obj=server_obj,
+                                                      iterations=iterations)
                         result.append(result_dict)
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -201,6 +223,15 @@ class RdmaTemplate(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return True
+
+    def cleanup(self):
+        try:
+            for c_s_dict in self.client_server_objs:
+                for client_obj, server_obj in c_s_dict.items():
+                    client_obj.disconnect()
+                    server_obj.disconnect()
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
 
 class RdmaHelper(object):
@@ -278,6 +309,18 @@ class RdmaHelper(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return duration_in_secs
+
+    def get_traffic_iterations(self):
+        iterations = None
+        try:
+            for key in self.config:
+                if key == self.scenario_type:
+                    iterations = self.config[key]['iterations']
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return iterations
+
 
     def get_inline_size(self):
         inline_size = None
