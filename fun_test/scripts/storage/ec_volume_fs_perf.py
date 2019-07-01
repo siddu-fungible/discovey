@@ -65,7 +65,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables['nsid'] = 0
         fun_test.shared_variables['db_log_time'] = get_current_time()
         fun_test.shared_variables["num_ssd"] = self.num_ssd
-        fun_test.shared_variables["num_volume"] = self.num_volume
+        fun_test.shared_variables["num_volumes"] = self.num_volume
 
         self.end_host = end_host
         self.storage_controller = storage_controller
