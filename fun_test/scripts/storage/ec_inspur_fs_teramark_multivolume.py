@@ -103,6 +103,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.dut_start_index = job_inputs["dut_start_index"]
         if "host_start_index" in job_inputs:
             self.host_start_index = job_inputs["host_start_index"]
+        if "num_hosts" in job_inputs:
+            self.num_hosts = job_inputs["num_hosts"]
         if "update_workspace" in job_inputs:
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
@@ -143,7 +145,13 @@ class ECVolumeLevelScript(FunTestScript):
         elif self.testbed_type == "suite-based":
             self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
-            self.required_hosts = OrderedDict(self.topology_helper.get_available_hosts())
+            required_hosts_tmp = OrderedDict(self.topology_helper.get_available_hosts())
+            self.required_hosts = OrderedDict()
+            for index, host_name in required_hosts_tmp.items():
+                if index < self.num_hosts:
+                    self.required_hosts[host_name] = required_hosts_tmp[host_name]
+                else:
+                    break
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
 
@@ -458,7 +466,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
                 self.ec_info = fun_test.shared_variables["ec_info"]
-                self.remote_ip = fun_test.shared_variables["remote_ip"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 # Detaching all the EC/LS volumes to the external server
@@ -650,16 +657,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                           message="Ensuring error_injection got disabled")
 
-            # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False, command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog_level))
-
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                          message="Checking syslog level")
-
             fun_test.shared_variables["fio"] = {}
             for host_name in self.host_info:
                 fun_test.shared_variables["ec"][host_name] = {}
@@ -689,7 +686,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                        str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
 
                     nvme_connect_status = host_handle.sudo_command(command=nvme_connect_cmd,
-                                                                   timeout=self.command_timeout)
+                                                                   timeout=60)
                     fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
                     fun_test.test_assert_expected(expected=0, actual=host_handle.exit_status(),
                                                   message="{} - NVME Connect Status".format(host_name))
@@ -720,6 +717,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
 
+            # Setting the syslog level
+            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
+                                                          legacy=False, command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"],
+                                 "Setting syslog level to {}".format(self.syslog_level))
+
+            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                          command_duration=self.command_timeout)
+            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+                                          message="Checking syslog level")
+
             # Executing the FIO command to fill the volume to it's capacity
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
                 host_clone = {}
@@ -739,7 +747,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 try:
                     for index, host_name in enumerate(self.host_info):
                         fun_test.log("Joining fio thread {}".format(index))
-                        fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index])
+                        fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index], sleep_time=1)
                         fun_test.log("FIO Command Output: \n{}".format(fun_test.shared_variables["fio"][index]))
                 except Exception as ex:
                     fun_test.critical(str(ex))
@@ -853,7 +861,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Starting the thread to collect the vp_utils stats for the current iteration
             if start_stats:
-                vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(row_data_dict["iodepth"])
+                vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
                 vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
                 stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
                                                                 storage_controller=self.storage_controller,
@@ -865,6 +873,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                   "details")
 
             for index, host_name in enumerate(self.host_info):
+                host_handle = self.host_info[host_name]["handle"]
                 nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
                 host_numa_cpus = self.host_info[host_name]["host_numa_cpus"]
                 total_numa_cpus = self.host_info[host_name]["total_numa_cpus"]
@@ -873,8 +882,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 wait_time = self.num_hosts - index
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
 
-                for index, volume_name in enumerate(nvme_block_device_list):
-                    fio_job_args += " --name=job{} --filename={}".format(index, volume_name)
+                for vindex, volume_name in enumerate(nvme_block_device_list):
+                    fio_job_args += " --name=job{} --filename={}".format(vindex, volume_name)
 
                 if "multiple_jobs" in self.fio_cmd_args and self.fio_cmd_args["multiple_jobs"].count("name") > 0:
                     global_num_jobs = self.fio_cmd_args["multiple_jobs"].count("name")
@@ -904,7 +913,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     mpstat_post_fix_name = "{}_mpstat_iodepth_{}.txt".format(host_name, row_data_dict["iodepth"])
                     mpstat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=mpstat_post_fix_name)
-                    mpstat_pid[host_name] = self.end_host.mpstat(cpu_list=mpstat_cpu_list,
+                    mpstat_pid[host_name] = host_handle.mpstat(cpu_list=mpstat_cpu_list,
                                                                  output_file=self.mpstat_args["output_file"],
                                                                  interval=self.mpstat_args["interval"],
                                                                  count=int(mpstat_count))
@@ -924,13 +933,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("fio_job_name used for current iteration: {}".format(fio_job_name))
                 if "multiple_jobs" in self.fio_cmd_args:
                     fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].format(
-                        self.numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
+                        host_numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
                     fio_cmd_args["multiple_jobs"] += fio_job_args
+                    fun_test.log("Current FIO args to be used: {}".format(fio_cmd_args))
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                            func=fio_parser,
-                                                                            arg1=host_clone[host_name],
-                                                                            host_index=index,
-                                                                            **fio_cmd_args)
+                                                                          func=fio_parser,
+                                                                          arg1=host_clone[host_name],
+                                                                          host_index=index,
+                                                                          filename="nofile",
+                                                                          timeout=self.fio_cmd_args["timeout"],
+                                                                          **fio_cmd_args)
                 else:
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
@@ -942,14 +954,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                           **self.fio_cmd_args)
             # Waiting for all the FIO test threads to complete
             try:
+                fun_test.log("Test Thread IDs: {}".format(test_thread_id))
                 for index, host_name in enumerate(self.host_info):
                     fio_output[iodepth][host_name] = {}
                     fun_test.log("Joining fio thread {}".format(index))
-                    fun_test.join_thread(fun_test_thread_id=test_thread_id[index])
+                    fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
                     fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                            fun_test.shared_variables["fio"][index]))
             except Exception as ex:
                 fun_test.critical(str(ex))
+                fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
+                                                                       fun_test.shared_variables["fio"][index]))
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
@@ -961,8 +976,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                                      "FIO {} test with the Block Size {} IO depth {} and Numjobs {} on {}"
                                      .format(row_data_dict["mode"], fio_block_size, fio_iodepth,
                                              fio_num_jobs * global_num_jobs, host_name))
-                aggr_fio_output[iodepth] = Counter(aggr_fio_output[iodepth]) + \
-                                           Counter(fun_test.shared_variables["fio"][index])
+                for op, stats in fun_test.shared_variables["fio"][index].items():
+                    if op not in aggr_fio_output[iodepth]:
+                        aggr_fio_output[iodepth][op] = {}
+                    aggr_fio_output[iodepth][op] = Counter(aggr_fio_output[iodepth][op]) + \
+                                           Counter(fun_test.shared_variables["fio"][index][op])
 
             fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
 
@@ -974,7 +992,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         # Converting the KBps to MBps
                         aggr_fio_output[iodepth][op][field] = int(round(value / 1000))
                     if field == "latency":
-                        aggr_fio_output[iodepth][op][field] = int(round(value))
+                        aggr_fio_output[iodepth][op][field] = int(round(value) / self.num_hosts)
                     row_data_dict[op + field] = aggr_fio_output[iodepth][op][field]
 
             if not aggr_fio_output[iodepth]:
@@ -992,7 +1010,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            # post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:
