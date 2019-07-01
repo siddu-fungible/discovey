@@ -124,7 +124,7 @@ class ECVolumeSanityScript(FunTestScript):
 
         # Create EC volume
         (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
-                                                                                       self.command_timeout)  # ToDo Assert it
+                                                                                       self.command_timeout)
         fun_test.test_assert(ec_config_status, message="Configure EC volume on F1")
         # attach volume to controller
         ec_uuid = self.ec_info["attach_uuid"][0]
