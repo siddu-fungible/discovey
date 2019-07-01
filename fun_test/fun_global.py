@@ -130,51 +130,6 @@ class PerfUnit:
     UNIT_KCPS = "Kcps"
     UNIT_GCPS = "Gcps"
 
-    latency_category = ["nsecs", "usecs", "msecs", "secs"]
-    ops_category = ["ops", "Kops", "Mops", "Gops"]
-    operations_category = ["op", "Kop", "Mop", "Gop"]
-    cycles_category = ["cycles"]
-    bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
-    bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
-    packets_per_second_category = ["Mpps", "pps", "Kpps", "Gpps"]
-    connections_per_second_category = ["Mcps", "cps", "Kcps", "Gcps"]
-
-    def get_category(self, y1_axis_title):
-        if y1_axis_title in self.latency_category:
-            return "latency_category"
-        elif y1_axis_title in self.ops_category:
-            return "ops_category"
-        elif y1_axis_title in self.operations_category:
-            return "operations_category"
-        elif y1_axis_title in self.cycles_category:
-            return "cycles_category"
-        elif y1_axis_title in self.bits_bytes_category:
-            return "bits_bytes_category"
-        elif y1_axis_title in self.bandwidth_category:
-            return "bandwidth_category"
-        elif y1_axis_title in self.packets_per_second_category:
-            return "packets_per_second_category"
-        elif y1_axis_title in self.connections_per_second_category:
-            return "connections_per_second_category"
-
-    def get_base(self, category):
-        if category == "latency_category":
-            return self.UNIT_SECS
-        elif category == "ops_category":
-            return self.UNIT_OPS
-        elif category == "operations_category":
-            return self.UNIT_OP
-        elif category == "cycles_category":
-            return self.UNIT_CYCLES
-        elif category == "bits_bytes_category":
-            return self.UNIT_BITS
-        elif category == "bandwidth_category":
-            return self.UNIT_BITS_PER_SEC
-        elif category == "packets_per_second_category":
-            return self.UNIT_PPS
-        elif category == "connections_per_second_category":
-            return self.UNIT_CPS
-
 class FunPlatform:
     F1 = "F1"
     S1 = "S1"
