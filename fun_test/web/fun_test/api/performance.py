@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 @api_safe_json_response
-def charts(request, id):
+def metric_charts(request, id):
     result = None
     if request.method == "GET":
         if id:
@@ -47,7 +47,7 @@ def charts(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def companion_chart_info(request):
+def charts(request):
     result = {}
     if request.method == "POST":
         request_json = json.loads(request.body)
@@ -59,6 +59,8 @@ def companion_chart_info(request):
                 result["xaxis_title"] = chart.xaxis_title
                 result["data_sets"] = chart.data_sets
                 result["title"] = chart.title
+                result["chart_type"] = chart.chart_type
+                result["fun_chart_type"] = chart.fun_chart_type
         except ObjectDoesNotExist:
             result = {}
     return result
@@ -66,13 +68,13 @@ def companion_chart_info(request):
 
 @csrf_exempt
 @api_safe_json_response
-def get_data_sets_value(request):
+def data(request):
     result = {}
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     if request.method == "POST":
         request_json = json.loads(request.body)
-        companion_chart_info = request_json["companion_chart_info"]
-        data_sets = companion_chart_info["data_sets"]
+        chart = request_json["chart_info"]
+        data_sets = chart["data_sets"]
         for data_set in data_sets:
             data_set_name = data_set["name"]
             result[data_set_name] = {}

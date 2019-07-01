@@ -3,7 +3,6 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
-import {OnChange} from "ngx-bootstrap";
 
 @Component({
   selector: 'chart',
@@ -12,17 +11,16 @@ import {OnChange} from "ngx-bootstrap";
 })
 export class ChartComponent implements OnInit {
   @Input() id: Number = null;
-  companionChartInfo: any = {};
-  REGULAR: string = "Regular";
+  chartInfo: any = {};
   y1Values: any[] = [];
   xValues: any[] = [];
-  children: any = null;
   showChart: boolean = false;
   dataSets: any[] = [];
-  charts: any = {};
   xAxisLabel: string = null;
   y1AxisLabel: string = null;
   title: string = null;
+  chartType: string = null;
+  funChartType: string = null;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
   }
@@ -35,7 +33,7 @@ export class ChartComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
-        return self.fetchCompanionCharts();
+        return self.fetchCharts();
       }),
       switchMap(response => {
         return this.fetchYValues();
@@ -46,23 +44,25 @@ export class ChartComponent implements OnInit {
     });
   }
 
-  fetchCompanionCharts() {
+  fetchCharts() {
     let payload = {};
     payload["chart_id"] = this.id;
-    return this.apiService.post("/api/v1/performance/companion_chart_info", payload).pipe(switchMap(response => {
-      this.companionChartInfo = response.data;
-      this.dataSets = this.companionChartInfo.data_sets;
-      this.xAxisLabel = this.companionChartInfo.xaxis_title;
-      this.y1AxisLabel = this.companionChartInfo.yaxis_title;
-      this.title = this.companionChartInfo.title;
+    return this.apiService.post("/api/v1/performance/charts", payload).pipe(switchMap(response => {
+      this.chartInfo = response.data;
+      this.dataSets = this.chartInfo.data_sets;
+      this.xAxisLabel = this.chartInfo.xaxis_title;
+      this.y1AxisLabel = this.chartInfo.yaxis_title;
+      this.title = this.chartInfo.title;
+      this.chartType = this.chartInfo.chart_type;
+      this.funChartType = this.chartInfo.fun_chart_type;
       return of(true);
     }));
   }
 
   fetchYValues() {
     let payload = {};
-    payload["companion_chart_info"] = this.companionChartInfo;
-    return this.apiService.post("/api/v1/performance/get_data_sets_value", payload).pipe(switchMap(response => {
+    payload["chart_info"] = this.chartInfo;
+    return this.apiService.post("/api/v1/performance/data", payload).pipe(switchMap(response => {
       let values = response.data;
       this.initializeY1Values();
       Object.keys(values).forEach((dataSetName) => {
