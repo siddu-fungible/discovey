@@ -742,6 +742,51 @@ if __name__ == "__main2__":
 
 if __name__ == "__main__":
     # prepare_status_db()
+    value_dict = {
+    date_time
+    volume_type
+    test
+    block_size
+    io_depth
+    io_size
+    operation
+    num_ssd
+    num_volume
+    num_threads
+    platform
+    version
+    write_iops
+    read_iops
+    write_throughput
+    read_throughput
+    write_avg_latency
+    write_90_latency
+    write_95_latency
+    write_99_99_latency
+    write_99_latency
+    read_avg_latency
+    read_90_latency
+    read_95_latency
+    read_99_99_latency
+    read_99_latency
+    }
+
+    unit_dict = {
+    "write_iops_unit": PerfUnit.UNIT_OPS,
+    "read_iops_unit": PerfUnit.UNIT_OPS,
+    "write_throughput_unit"
+    read_throughput_unit
+    write_avg_latency_unit
+    write_90_latency_unit
+    write_95_latency_unit
+    write_99_99_latency_unit
+    write_99_latency_unit
+    read_avg_latency_unit
+    read_90_latency_unit
+    read_95_latency_unit
+    read_99_99_latency_unit
+    read_99_latency_unit
+    }
     json_text = [{
         "flow_type": "HU_HU_NFCP",
         "frame_size": 1500,

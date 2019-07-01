@@ -895,6 +895,7 @@ class BltVolumePerformance(models.Model):
 class AlibabaPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_volume_type = models.TextField(verbose_name="Volume type")
     input_test = models.TextField(verbose_name="Test type")
@@ -904,7 +905,9 @@ class AlibabaPerformance(models.Model):
     input_operation = models.TextField(verbose_name="Operation type")
     input_num_ssd = models.IntegerField(verbose_name="Number of SSD(s)")
     input_num_volume = models.IntegerField(verbose_name="Number of volume(s)")
-    input_fio_job_name = models.TextField(verbose_name="Input FIO job name", default="")
+    input_num_threads = models.IntegerField(verbose_name="Threads")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
     output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
     output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
     output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
@@ -933,8 +936,6 @@ class AlibabaPerformance(models.Model):
     output_read_95_latency_unit = models.TextField(default="usecs")
     output_read_99_99_latency_unit = models.TextField(default="usecs")
     output_read_99_latency_unit = models.TextField(default="usecs")
-    input_platform = models.TextField(default=FunPlatform.F1)
-    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
     tag = "analytics"
 
     def __str__(self):
