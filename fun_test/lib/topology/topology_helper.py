@@ -52,6 +52,7 @@ class TopologyHelper:
                 self.spec = spec
 
         self.expanded_topology = ExpandedTopology(spec=self.spec)
+        fun_test.register_topologies(self.expanded_topology)
         spec = self.spec
 
         disabled_hosts = spec.get("disabled_hosts", [])
