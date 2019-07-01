@@ -98,22 +98,22 @@ class RdmaTemplate(object):
             for c_s_dict in self.client_server_objs:
                 for client_obj, server_obj in c_s_dict.items():
                     fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
-                                                                                server_obj.rdma_remote_port))
+                                                                                server_obj.rdma_server_port))
                     ibv_device = self.get_ibv_device(host_obj=server_obj)
                     if self.test_type == IB_WRITE_BANDWIDTH_TEST:
                         cmd = "%s -c %s -R -d %s -p %d -F -s %d" % (
                             self.test_type, self.connection_type, ibv_device['name'],
-                            server_obj.rdma_remote_port, self.size)
+                            server_obj.rdma_server_port, self.size)
                     elif self.test_type == IB_WRITE_LATENCY_TEST:
                         cmd = "%s -c %s -R -d %s -p %d -F -I %d -R -s %d" % (
-                            self.test_type, self.connection_type, ibv_device['name'], server_obj.rdma_remote_port,
+                            self.test_type, self.connection_type, ibv_device['name'], server_obj.rdma_server_port,
                             self.inline_size, self.size)
                     else:
                         # TODO: Set default test
                         cmd = None
                     fun_test.log("Server cmd formed: %s " % cmd)
-                    tmp_output_file = "/tmp/%s_server_process_%d_%d.log" % (
-                        self.test_type, server_obj.rdma_remote_port, server_obj.server_id)
+                    tmp_output_file = "/tmp/%s_server_process_%d.log" % (
+                        self.test_type, server_obj.rdma_server_port)
                     process_id = server_obj.start_bg_process(command=cmd, output_file=tmp_output_file)
                     fun_test.log("Server Process Started: %s" % process_id)
                     fun_test.simple_assert(process_id, "Rdma server process started")
@@ -181,13 +181,23 @@ class RdmaTemplate(object):
 
     def create_table(self, records, scenario_type):
         try:
-            columns = ['Client', 'Server']
-            columns.extend(records[0].keys())
+            columns = records[0].keys()
             table_obj = PrettyTable(columns)
+            rows = []
             for record in records:
                 table_obj.add_row(record.values())
+                rows.append(record.values())
             fun_test.log_section("Result table for %s test Scenario: %s" % (self.test_type, scenario_type))
+            fun_test.log_disable_timestamps()
+            fun_test.log("\n")
             fun_test.log(table_obj)
+            fun_test.log_enable_timestamps()
+
+            headers = columns
+            table_name = "Aggregate Result of %s test scenario %s" % (self.test_type, scenario_type)
+            table_data = {'headers': headers, 'rows': rows}
+            fun_test.add_table(panel_header='RDMA %s Test Result Table' % self.test_type,
+                               table_name=table_name, table_data=table_data)
         except Exception as ex:
             fun_test.critical(str(ex))
         return True

@@ -22,6 +22,7 @@ class BasicSetup(FunTestScript):
 class RdmaWriteBandwidthTest(FunTestCase):
     rdma_helper = None
     rdma_template = None
+    test_type = IB_WRITE_BANDWIDTH_TEST
 
     def describe(self):
         self.set_test_details(id=1, summary="Test RDMA Write Bandwidth",
@@ -50,7 +51,7 @@ class RdmaWriteBandwidthTest(FunTestCase):
         clients = self.rdma_helper.get_list_of_clients()
         servers = self.rdma_helper.get_list_of_servers()
         self.rdma_template = RdmaTemplate(servers=servers, clients=clients,
-                                          test_type=IB_WRITE_BANDWIDTH_TEST, is_parallel=is_parallel,
+                                          test_type=self.test_type, is_parallel=is_parallel,
                                           size=size_in_bytes, duration=duration, inline_size=inline_size,
                                           client_server_objs=client_server_objs)
         result = self.rdma_template.setup_test()
@@ -58,6 +59,11 @@ class RdmaWriteBandwidthTest(FunTestCase):
 
     def run(self):
         scenario_type = fun_test.shared_variables['scenario']
+
+        checkpoint = "Start RDMA servers"
+        result = self.rdma_template.setup_servers()
+        fun_test.test_assert(result, checkpoint)
+
         checkpoint = "Connect to each client and initiate RDMA write bandwidth traffic towards each server"
         records = self.rdma_template.run()
         fun_test.test_assert(records, checkpoint)
@@ -70,7 +76,23 @@ class RdmaWriteBandwidthTest(FunTestCase):
         pass
 
 
+class RdmaWriteLatencyTest(RdmaWriteBandwidthTest):
+    test_type = IB_WRITE_LATENCY_TEST
+    rdma_helper = None
+    rdma_template = None
+
+    def describe(self):
+        self.set_test_details(id=2, summary="Test RDMA Write Latency",
+                              steps="""
+                              1. Fetch Client/Server Map 
+                              2. Setup clients and servers and load modules
+                              3. Connect to each client and initiate RDMA traffic towards each server
+                              4. Collect all results from each client and display it  
+                              """)
+
+
 if __name__ == '__main__':
     ts = BasicSetup()
     ts.add_test_case(RdmaWriteBandwidthTest())
+    ts.add_test_case(RdmaWriteLatencyTest())
     ts.run()
