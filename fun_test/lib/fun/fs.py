@@ -61,6 +61,7 @@ class BootPhases:
     FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
     FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD = "FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
+    FS_BRING_UP_ERROR = "FS_BRING_UP_ERROR"
 
 
 
@@ -450,24 +451,28 @@ class ComEInitializationWorker(Thread):
         self.fs = fs
 
     def run(self):
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
-        come = self.fs.get_come()
-        bmc = self.fs.get_bmc()
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
-        fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True),
-                             message="Ensure ComE is up",
-                             context=self.fs.context)
+        try:
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
+            come = self.fs.get_come()
+            bmc = self.fs.get_bmc()
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
+            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True),
+                                 message="Ensure ComE is up",
+                                 context=self.fs.context)
 
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-        fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
-                             message="ComE initialized",
-                             context=self.fs.context)
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+            fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
+                                 message="ComE initialized",
+                                 context=self.fs.context)
 
-        if self.fs.fun_cp_callback:
-            fun_test.log("Calling fun CP callback from Fs")
-            self.fs.fun_cp_callback(self.fs.get_come())
-        self.fs.come_initialized = True
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+            if self.fs.fun_cp_callback:
+                fun_test.log("Calling fun CP callback from Fs")
+                self.fs.fun_cp_callback(self.fs.get_come())
+            self.fs.come_initialized = True
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+        except Exception as ex:
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
+            raise ex
 
 
 class ComE(Linux):
@@ -899,6 +904,9 @@ class Fs(object, ToDictMixin):
         bmc.command("gpiotool 57 --set-data-high")
         bmc.command("sleep 2")
         fun_test.add_checkpoint(checkpoint="Retimer workarounds applied", context=self.context)
+
+    def is_boot_up_error(self):
+        return self.boot_phase == BootPhases.FS_BRING_UP_ERROR
 
     def is_ready(self):
         fun_test.log(message="Boot-phase: {}".format(self.get_boot_phase()), context=self.context)
