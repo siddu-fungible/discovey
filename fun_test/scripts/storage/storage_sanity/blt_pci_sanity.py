@@ -42,6 +42,7 @@ class BLTVolumeSanityScript(FunTestScript):
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
+        fun_test.shared_variables['topology'] = topology_helper.expanded_topology
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -61,6 +62,7 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = storage_controller
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables['topology'] = topology
+
         self.end_host = end_host
         self.storage_controller = storage_controller
 
@@ -143,8 +145,14 @@ class BLTVolumeSanityScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(ex.message)
         finally:
-            self.storage_controller.disconnect()
-            fun_test.shared_variables["topology"].cleanup()
+            try:
+                self.storage_controller.disconnect()
+            except:
+                pass
+            try:
+                fun_test.shared_variables["topology"].cleanup()
+            except:
+                pass
 
 
 class BltPciSanityTestcase(FunTestCase):

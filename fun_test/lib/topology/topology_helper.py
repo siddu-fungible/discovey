@@ -52,6 +52,7 @@ class TopologyHelper:
                 self.spec = spec
 
         self.expanded_topology = ExpandedTopology(spec=self.spec)
+        fun_test.register_topologies(self.expanded_topology)
         spec = self.spec
 
         disabled_hosts = spec.get("disabled_hosts", [])
@@ -236,6 +237,8 @@ class TopologyHelper:
             while not dut_ready_timer.is_expired() and not dut_ready:
                 dut_instance = dut_obj.get_instance()
                 dut_ready = dut_instance.is_ready()
+                fun_test.simple_assert(not dut_instance.is_boot_up_error(), "bootup error")
+
                 fun_test.sleep("DUT: {} readiness check. Remaining time: {}".format(dut_index, dut_ready_timer.remaining_time()))
                 dut_instance.post_bootup()
             fun_test.test_assert(dut_ready, "DUT: {} ready".format(dut_index))
