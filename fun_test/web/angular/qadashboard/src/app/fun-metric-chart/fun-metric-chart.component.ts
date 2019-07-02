@@ -124,6 +124,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   message: any = null;
   readonly DECIMAL_PRECISION: number = 5;
 
+  containerMax: number = 200;
+
   public formatter: Function;
   public tooltip: Function;
   public pointClickCallback: Function;
@@ -483,7 +485,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       if (!dataSet.output.max && this.leaf)
         dataSet.output.max = -1;
       if (!dataSet.output.max && !this.leaf)
-        dataSet.output.max = 200;
+        dataSet.output.max = this.containerMax;
       if (!dataSet.output.min)
         dataSet.output.min = 0;
       if (!dataSet.output.reference && this.leaf)
