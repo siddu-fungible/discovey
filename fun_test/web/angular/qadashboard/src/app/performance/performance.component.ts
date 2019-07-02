@@ -46,6 +46,7 @@ class Node {
   positive: boolean = true;
   workInProgress: boolean = false;
   tags: string = null;
+  companionCharts: number[] = null;
   chartInfo: any = null;
   pastStatus: any = null;
 }
@@ -283,7 +284,8 @@ export class PerformanceComponent implements OnInit {
           }
 
         }
-      })
+      });
+
     }, error => {
       this.loggerService.error("fetchDag");
     });
@@ -332,6 +334,7 @@ export class PerformanceComponent implements OnInit {
     node.showAddJira = false;
     node.positive = dagEntry.positive;
     node.workInProgress = dagEntry.work_in_progress;
+    node.companionCharts = dagEntry.companion_charts;
     if (metricId in this.tagsForId) {
       node.tags = this.tagsForId[metricId];
     }
@@ -998,6 +1001,9 @@ export class PerformanceComponent implements OnInit {
       }
       this.showBugPanel = false;
       this.currentNode = flatNode.node;
+      if (this.currentNode && this.currentNode.companionCharts) {
+        this.currentNode.companionCharts = [...this.currentNode.companionCharts];
+      }
       this.currentFlatNode = flatNode;
       this.mode = Mode.ShowingNonAtomicMetric;
       this.expandNode(flatNode);

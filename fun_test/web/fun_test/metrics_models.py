@@ -9,15 +9,15 @@ import json
 # from web.fun_test.site_state import site_state
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
-from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
+from web.fun_test.settings import COMMON_WEB_LOGGER_NAME, TEAM_REGRESSION_EMAIL
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
 import datetime
 from datetime import datetime, timedelta
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from web.web_global import *
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult, TriagingTypes
-from fun_global import PerfUnit
+from fun_global import PerfUnit, ChartType, FunChartType
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -201,6 +201,8 @@ class MetricChart(models.Model):
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
     platform = models.TextField(default=FunPlatform.F1)
+    companion_charts = ArrayField(models.IntegerField(default=-1), default=[])
+    creator = models.TextField(default=TEAM_REGRESSION_EMAIL)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
@@ -700,6 +702,35 @@ class LastTriageFlowId(models.Model):
         last.last_id = last.last_id + 1
         last.save()
         return last.last_id
+
+class Chart(models.Model):
+    chart_type = models.TextField(default=ChartType.REGULAR)
+    title = models.TextField(default="")
+    fun_chart_type = models.TextField(default=FunChartType.LINE_CHART)
+    x_axis_title = models.TextField(default="")
+    y_axis_title = models.TextField(default="")
+    series_filters = JSONField(default=[])
+    chart_id = models.IntegerField(default=-1, unique=True)
+    x_scale = models.TextField(default="")
+    y_scale = models.TextField(default="")
+
+    def __str__(self):
+        return "{}: {} : {} : {}".format(self.chart_type, self.fun_chart_type, self.xaxis_title,
+                                         self.yaxis_title, self.chart_id)
+
+
+class LastChartId(models.Model):
+    last_id = models.IntegerField(unique=True, default=100)
+
+    @staticmethod
+    def get_next_id():
+        if not LastChartId.objects.count():
+            LastChartId().save()
+        last = LastChartId.objects.all().last()
+        last.last_id = last.last_id + 1
+        last.save()
+        return last.last_id
+
 
 class ModelMapping(models.Model):
     module = models.TextField()
