@@ -260,16 +260,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
     let key = this._getBuildKey(x);
-    let s = "Error";
-    if (this.buildInfo && key in this.buildInfo) {
-      s = "";
-      softwareDate = this.buildInfo[key]["software_date"];
-      if (Number(softwareDate) > 0)
-        s = "<b>Software date:</b> " + softwareDate + "<br>";
+    let s = "";
+    if (x)
+      s += "<b>Date:</b> " + x.substring(0, 5) + "<br>";
+    if (metaData.originalValue)
       s += "<b>Value:</b> " + metaData.originalValue + "<br>";
-    } else {
-      s = "<b>Value:</b> " + metaData.originalValue + "<br>";
-    }
+    else
+      s += "<b>Value:</b> " + y + "<br>";
     return s;
   }
 
@@ -308,10 +305,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
       if (buildProperties !== "")
         s["Build Properties"] = buildProperties;
-      s["Value"] = metaData.originalValue;
-    } else {
-      s["Value"] = metaData.originalValue;
     }
+    if (x)
+      s["Date"] = x.substring(0, 5);
+    if (metaData.originalValue)
+      s["Value"] = metaData.originalValue;
+    else
+      s["Value"] = y;
     return s;
   }
 
@@ -1140,7 +1140,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   onUnitChange(newUnit) {
-    console.log(newUnit);
+    // console.log(newUnit);
     this.chart1YaxisTitle = newUnit;
     let maximum = null;
     this.selectedUnit = newUnit;
@@ -1277,12 +1277,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       marker: {
         radius: 3
       },
-      metaData: {originalValue: data}
+      metaData: {}
     };
     if (data > maximum && maximum !== -1) {
       result.y = maximum;
       result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";
       result.marker.radius = 3;
+      result.metaData["originalValue"] = data;
     }
     return result;
   }
