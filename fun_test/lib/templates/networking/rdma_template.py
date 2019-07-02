@@ -2,20 +2,22 @@ from lib.system.fun_test import *
 from lib.host.linux import Linux
 from lib.system.utils import MultiProcessingTasks
 from prettytable import PrettyTable
+from collections import OrderedDict
 import re
 
 IB_WRITE_BANDWIDTH_TEST = "ib_write_bw"
 IB_WRITE_LATENCY_TEST = "ib_write_lat"
-LD_LIBRARY_PATH = "/home/localadmin/mks/workspace/fungible-rdma-core/build/lib"
-PATH = "/home/localadmin/mks/workspace/fungible-rdma-core/build/bin/:/home/localadmin/mks/workspace/fungible-perftest/"
+LD_LIBRARY_PATH = "/mnt/ws/fungible-rdma-core/build/lib/"
+PATH = "/home/localadmin/mks/workspace/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
 
 
 class RdmaClient(Linux):
 
-    def __init__(self, host_ip, ssh_username, ssh_password, server_ip, rdma_port):
+    def __init__(self, host_ip, ssh_username, ssh_password, server_ip, rdma_port, client_id):
         super(RdmaClient, self).__init__(host_ip=host_ip, ssh_username=ssh_username, ssh_password=ssh_password)
         self.server_ip = server_ip
         self.rdma_port = rdma_port
+        self.client_id = client_id
         self.add_path(additional_path=PATH)
         self.set_ld_library_path()
 
@@ -25,15 +27,22 @@ class RdmaClient(Linux):
 
 class RdmaServer(Linux):
 
-    def __init__(self, host_ip, ssh_username, ssh_password, server_port=20000):
+    def __init__(self, host_ip, ssh_username, ssh_password, server_id, server_port=20000):
         super(RdmaServer, self).__init__(host_ip=host_ip, ssh_username=ssh_username, ssh_password=ssh_password)
         self.rdma_process_id = None
+        self.server_id = server_id
         self.rdma_server_port = server_port
         self.add_path(additional_path=PATH)
         self.set_ld_library_path()
 
     def set_ld_library_path(self):
         self.command(command="export LD_LIBRARY_PATH=%s" % LD_LIBRARY_PATH)
+
+    def __hash__(self):
+        return self.server_id
+
+    def __eq__(self, other):
+        return self.server_id == other.server_id
 
 
 class RdmaTemplate(object):
@@ -101,6 +110,7 @@ class RdmaTemplate(object):
                     fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
                                                                                 server_obj.rdma_server_port))
                     ibv_device = self.get_ibv_device(host_obj=server_obj)
+                    # TODO: Add cmd args
                     if self.test_type == IB_WRITE_BANDWIDTH_TEST:
                         cmd = "%s -c %s -R -d %s -p %d -F -s %d" % (
                             self.test_type, self.connection_type, ibv_device['name'],
@@ -132,9 +142,10 @@ class RdmaTemplate(object):
             if set_paths:
                 client_obj.add_path(additional_path=PATH)
                 client_obj.set_ld_library_path()
-                server_obj.add_path(additional_path=PATH)
-                server_obj.set_ld_library_path()
+                # server_obj.add_path(additional_path=PATH)
+                # server_obj.set_ld_library_path()
             ibv_device = self.get_ibv_device(host_obj=client_obj)
+            # TODO: Add cmd args
             if self.test_type == IB_WRITE_BANDWIDTH_TEST:
                 cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (
                     self.test_type, self.connection_type, ibv_device['name'], client_obj.rdma_port,
@@ -201,7 +212,7 @@ class RdmaTemplate(object):
                         keys.insert(i, v[0])
                         keys.insert(i + 1, v[1])
                 values = list(map(float, re.split(r'\s+', chunk.split('\n')[1].strip())))
-                result = dict(zip(keys, values))
+                result = OrderedDict(zip(keys, values))
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -326,7 +337,6 @@ class RdmaHelper(object):
             fun_test.critical(str(ex))
         return iterations
 
-
     def get_inline_size(self):
         inline_size = None
         try:
@@ -371,20 +381,12 @@ class RdmaHelper(object):
             fun_test.critical(str(ex))
         return hu_interface_ip
 
-    def _get_rdma_port(self, server_name):
-        rdma_port = None
-        try:
-            for server in self.get_list_of_servers():
-                if server['host_ip'] == server_name:
-                    rdma_port = server['rdma_port']
-                    break
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return rdma_port
-
     def create_client_server_objects(self, client_server_map):
         result = []
         try:
+            rdma_port = 20000
+            client_id = 1
+            server_id = 1
             for client, server in client_server_map.items():
                 client_dict = self._fetch_client_dict(client)
                 fun_test.simple_assert(client_dict, "Unable to find client %s info in hosts.json under asset. " %
@@ -393,13 +395,16 @@ class RdmaHelper(object):
                 fun_test.simple_assert(server_dict, "Unable to find server %s info in hosts.json under asset. " %
                                        server)
                 hu_interface_ip = self._get_hu_interface_ip(server_name=server)
-                rdma_port = self._get_rdma_port(server_name=server)
                 client_obj = RdmaClient(host_ip=client_dict['host_ip'], ssh_username=client_dict['ssh_username'],
                                         ssh_password=client_dict['ssh_password'], server_ip=hu_interface_ip,
-                                        rdma_port=rdma_port)
+                                        rdma_port=rdma_port, client_id=client_id)
                 server_obj = RdmaServer(host_ip=server_dict['host_ip'], ssh_password=server_dict['ssh_password'],
-                                        ssh_username=server_dict['ssh_username'], server_port=rdma_port)
+                                        ssh_username=server_dict['ssh_username'], server_port=rdma_port,
+                                        server_id=server_id)
                 result.append({client_obj: server_obj})
+                rdma_port += 1
+                client_id += 1
+                server_id += 1
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

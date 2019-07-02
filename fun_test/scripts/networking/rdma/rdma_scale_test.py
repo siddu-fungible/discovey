@@ -6,14 +6,18 @@ class BasicSetup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="""
-        1. Bringup FS1600 
-        2. Configure Hosts nad bringup topo
+        1. Bringup FS1600
+        2. Bringup FunCP
+        3. Apply abstract configs  
+        4. Configure Hosts and bringup topo
         """)
 
     def setup(self):
         inputs = fun_test.get_job_inputs()
         scenario_type = inputs['scenario']
         fun_test.shared_variables['scenario'] = scenario_type
+
+        # TODO: Add Bringup Logic
 
     def cleanup(self):
         pass
@@ -104,5 +108,5 @@ class RdmaWriteLatencyTest(RdmaWriteBandwidthTest):
 if __name__ == '__main__':
     ts = BasicSetup()
     ts.add_test_case(RdmaWriteBandwidthTest())
-    ts.add_test_case(RdmaWriteLatencyTest())
+    # ts.add_test_case(RdmaWriteLatencyTest())
     ts.run()
