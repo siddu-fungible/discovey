@@ -124,6 +124,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   message: any = null;
   readonly DECIMAL_PRECISION: number = 5;
 
+  containerMax: number = 200;
+
   public formatter: Function;
   public tooltip: Function;
   public pointClickCallback: Function;
@@ -480,13 +482,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   _setDataSetsDefaults(): void {
     for (let dataSet of this.previewDataSets) {
-      if (!dataSet.output.max)
+      if (!dataSet.output.max && this.leaf)
         dataSet.output.max = -1;
+      if (!dataSet.output.max && !this.leaf)
+        dataSet.output.max = this.containerMax;
       if (!dataSet.output.min)
         dataSet.output.min = 0;
-      if (!dataSet.output.reference)
+      if (!dataSet.output.reference && this.leaf)
         dataSet.output.reference = -1;
-      if (!dataSet.output.expected)
+      if (!dataSet.output.expected && this.leaf)
         dataSet.output.expected = -1;
     }
   }
@@ -765,7 +769,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (this.modelName !== 'MetricContainer') {
       this.fetchLeafData(chartInfo, previewDataSets, tableInfo, payload);
     } else {
-      this.fetchContainerData(payload);
+      this.fetchContainerData(chartInfo, previewDataSets, payload);
     }
   }
 
@@ -1189,13 +1193,23 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
 
   //fetching container data
-  fetchContainerData(payload): void {
+  fetchContainerData(chartInfo, previewDataSets, payload): void {
     //console.log("Fetch Scores");
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
       if (response.data.length === 0) {
         this.values = null;
         return;
       }
+      let filterDataSets = [];
+      if (previewDataSets) {
+        filterDataSets = previewDataSets;
+      } else {
+        if (chartInfo) {
+          filterDataSets = chartInfo['data_sets'];
+        }
+      }
+      let thisMinimum = filterDataSets[0].output.min;
+      let thisMaximum = filterDataSets[0].output.max;
       let values = [];
       let series = [];
       let keyValue = {};
@@ -1241,7 +1255,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
           if (count !== 0) {
             let average = total / count;
-            let result = this.getValidatedData(average, 0, 200);
+            let result = this.getValidatedData(average, thisMinimum, thisMaximum);
             values.push(result);
           } else {
             values.push(null);
