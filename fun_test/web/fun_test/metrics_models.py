@@ -715,8 +715,8 @@ class Chart(models.Model):
     y_scale = models.TextField(default="")
 
     def __str__(self):
-        return "{}: {} : {} : {}".format(self.chart_type, self.fun_chart_type, self.xaxis_title,
-                                         self.yaxis_title, self.chart_id)
+        return "{}: {} : {} : {}".format(self.chart_type, self.fun_chart_type, self.x_axis_title,
+                                         self.y_axis_title, self.chart_id)
 
 
 class LastChartId(models.Model):
