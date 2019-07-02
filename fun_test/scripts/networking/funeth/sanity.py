@@ -128,8 +128,9 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables["test_bed_type"] = test_bed_type
 
         # Boot up FS1600
-        if test_bed_type == 'fs-11':
-
+        if test_bed_type != 'fs-11':
+            fun_test.test_assert(False, 'This test only runs in FS-11.')
+        else:
             if control_plane:
                 f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"

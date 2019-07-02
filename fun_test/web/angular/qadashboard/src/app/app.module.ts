@@ -66,6 +66,7 @@ import { ScoresTableComponent } from './performance/scores-table/scores-table.co
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { TooltipDirective } from './ui-elements/tooltip.directive';
 import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button.component';
+import { RegressionSummaryWidgetComponent } from './regression/regression-summary-widget/regression-summary-widget.component';
 
 @NgModule({
   declarations: [
@@ -116,7 +117,8 @@ import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button
     ScoresTableComponent,
     PerformanceTableComponent,
     TooltipDirective,
-    ToggleButtonComponent
+    ToggleButtonComponent,
+    RegressionSummaryWidgetComponent
   ],
   imports: [
     BsDropdownModule,

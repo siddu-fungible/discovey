@@ -260,15 +260,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
     let key = this._getBuildKey(x);
-    let s = "Error";
-    if (this.buildInfo && key in this.buildInfo) {
-      s = "";
-      softwareDate = this.buildInfo[key]["software_date"];
-      if (Number(softwareDate) > 0)
-        s = "<b>Software date:</b> " + softwareDate + "<br>";
+    let s = "";
+    if (x) {
+      s += "<b>Date:</b> " + x.substring(0, 5) + "<br>";
+    }
+    if (metaData.originalValue) {
       s += "<b>Value:</b> " + metaData.originalValue + "<br>";
     } else {
-      s = "<b>Value:</b> " + metaData.originalValue + "<br>";
+      s += "<b>Value:</b> " + y + "<br>";
     }
     return s;
   }
@@ -289,28 +288,39 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let lsfJobId = this.buildInfo[key]["lsf_job_id"];
       let version = this.buildInfo[key]["sdk_version"];
       let suite_execution_id = this.buildInfo[key]["suite_execution_id"];
-      if (sdkBranch !== "")
+      if (sdkBranch !== "") {
         s["SDK branch"] = sdkBranch;
-      if (lsfJobId !== "")
+      }
+      if (lsfJobId !== "") {
         s["Lsf job id"] = lsfJobId;
+      }
       if (suite_execution_id !== -1) {
         s["Suite execution detail"] = suite_execution_id;
         s["Suite log directory"] = suite_execution_id;
       }
-      if (Number(softwareDate) > 0)
+      if (Number(softwareDate) > 0) {
         s["Software date"] = softwareDate;
-      if (hardwareVersion !== "")
+      }
+      if (hardwareVersion !== "") {
         s["Hardware version"] = hardwareVersion;
+      }
       if (version !== "") {
         s["SDK version"] = "bld_" + version;
       }
-      if (this.buildInfo[key]["git_commit"] !== "")
+      if (this.buildInfo[key]["git_commit"] !== "") {
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
-      if (buildProperties !== "")
+      }
+      if (buildProperties !== "") {
         s["Build Properties"] = buildProperties;
+      }
+    }
+    if (x) {
+      s["Date"] = x.substring(0, 5);
+    }
+    if (metaData.originalValue) {
       s["Value"] = metaData.originalValue;
     } else {
-      s["Value"] = metaData.originalValue;
+      s["Value"] = y;
     }
     return s;
   }
@@ -1140,7 +1150,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   onUnitChange(newUnit) {
-    console.log(newUnit);
+    // console.log(newUnit);
     this.chart1YaxisTitle = newUnit;
     let maximum = null;
     this.selectedUnit = newUnit;
@@ -1277,12 +1287,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       marker: {
         radius: 3
       },
-      metaData: {originalValue: data}
+      metaData: {}
     };
     if (data > maximum && maximum !== -1) {
       result.y = maximum;
       result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";
       result.marker.radius = 3;
+      result.metaData["originalValue"] = data;
     }
     return result;
   }
