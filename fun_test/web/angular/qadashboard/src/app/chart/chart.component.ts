@@ -23,6 +23,9 @@ export class ChartComponent implements OnInit {
   xScale: string = null;
   yScale: string = null;
 
+  SCALE_LOG2: string = "log2";
+  SCALE_LOG10: string = "log10";
+
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
   }
 
@@ -70,16 +73,16 @@ export class ChartComponent implements OnInit {
         let sortedValues = [];
         series["values"].forEach(function (value, i) {
           let oneValue = {};
-          oneValue["name"] = value.x;
-          oneValue["value"] = value.y;
+          oneValue["x"] = value.x;
+          oneValue["y"] = value.y;
           sortedValues.push(oneValue);
         });
-        sortedValues.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+        sortedValues.sort((a, b) => (a.x > b.x) ? 1 : ((b.x > a.x) ? -1 : 0));
         this.xValues = [];
         for (let sortedValue of sortedValues) {
           let xValue, yValue;
-          xValue = this.setXYValues(this.xScale, sortedValue.name);
-          yValue = this.setXYValues(this.yScale, sortedValue.value);
+          xValue = this.setXYValues(this.xScale, sortedValue.x);
+          yValue = this.setXYValues(this.yScale, sortedValue.y);
           this.xValues.push(xValue);
           for (let y1Value of this.y1Values) {
             if (y1Value.name === seriesName) {
@@ -93,11 +96,11 @@ export class ChartComponent implements OnInit {
     }));
   }
 
-  setXYValues(scale, originalValue): number{
+  setXYValues(scale, originalValue): number {
     let value;
-    if (scale.startsWith('log2')) {
+    if (scale.startsWith(this.SCALE_LOG2)) {
       value = Math.log2(Number(originalValue));
-    } else if (scale.startsWith('log10')) {
+    } else if (scale.startsWith(this.SCALE_LOG10)) {
       value = Math.log10(Number(originalValue));
     } else {
       value = originalValue;
