@@ -147,7 +147,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
             required_hosts_tmp = OrderedDict(self.topology_helper.get_available_hosts())
             self.required_hosts = OrderedDict()
-            for index, host_name in required_hosts_tmp.items():
+            for index, host_name in enumerate(required_hosts_tmp):
                 if index < self.num_hosts:
                     self.required_hosts[host_name] = required_hosts_tmp[host_name]
                 else:
@@ -796,11 +796,11 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         start_stats = True
 
-        fio_job_args = ""
         for iodepth in self.fio_iodepth:
             fio_result[iodepth] = True
             fio_output[iodepth] = {}
             aggr_fio_output[iodepth] = {}
+            fio_job_args = ""
             fio_cmd_args = {}
             mpstat_pid = {}
             mpstat_artifact_file = {}
@@ -873,6 +873,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                   "details")
 
             for index, host_name in enumerate(self.host_info):
+                fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
                 nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
                 host_numa_cpus = self.host_info[host_name]["host_numa_cpus"]
@@ -895,7 +896,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     else:
                         io_factor = 2
                         while True:
-                            if (iodepth / io_factor) <= self.total_numa_cpus:
+                            if (iodepth / io_factor) <= total_numa_cpus:
                                 global_num_jobs = (iodepth / len(nvme_block_device_list)) / io_factor
                                 fio_iodepth = io_factor
                                 break
