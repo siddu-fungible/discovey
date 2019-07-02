@@ -124,6 +124,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   message: any = null;
   readonly DECIMAL_PRECISION: number = 5;
 
+  containerMin: number = 0;
+  containerMax: number = 200;
+
   public formatter: Function;
   public tooltip: Function;
   public pointClickCallback: Function;
@@ -1241,7 +1244,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
           if (count !== 0) {
             let average = total / count;
-            let result = this.getValidatedData(average, 0, 200);
+            let result = this.getValidatedData(average, this.containerMin, this.containerMax);
             values.push(result);
           } else {
             values.push(null);
