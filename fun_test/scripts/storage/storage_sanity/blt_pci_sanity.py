@@ -50,6 +50,13 @@ class BLTVolumeSanityScript(FunTestScript):
         storage_controller = StorageController(target_ip=end_host.host_ip,
                                                target_port=end_host.get_dpc_port(self.f1_in_use))
 
+        if not check_come_health(storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            end_host = topology.get_dut_instance(index=0).get_come()
+            storage_controller = StorageController(target_ip=end_host.host_ip,
+                                                   target_port=end_host.get_dpc_port(self.f1_in_use))
+
         fun_test.shared_variables["end_host"] = end_host
         fun_test.shared_variables["storage_controller"] = storage_controller
         fun_test.shared_variables["syslog_level"] = self.syslog_level
@@ -58,9 +65,9 @@ class BLTVolumeSanityScript(FunTestScript):
         self.storage_controller = storage_controller
 
         # load nvme
-        #load_nvme_module(end_host)
+        # load_nvme_module(end_host)
 
-        #enable_counters(storage_controller, self.command_timeout)
+        # enable_counters(storage_controller, self.command_timeout)
 
         # create controller
         ctrlr_uuid = utils.generate_uuid()
@@ -92,7 +99,7 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.shared_variables["blt_uuid"] = blt_uuid
 
         # Set syslog level
-        #set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
+        # set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
 
         # check nvme device is visible on end host
         fetch_nvme = fetch_nvme_device(end_host, self.ns_id)
@@ -253,11 +260,11 @@ class BltPciRandWRMix(BltPciSanityTestcase):
 
 if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
-    #bltscript.add_test_case(BltPciSeqRead())
-    #bltscript.add_test_case(BltPciRandRead())
-    #bltscript.add_test_case(BltPciSeqRWMix())
-    #bltscript.add_test_case(BltPciSeqWRMix())
+    # bltscript.add_test_case(BltPciSeqRead())
+    # bltscript.add_test_case(BltPciRandRead())
+    # bltscript.add_test_case(BltPciSeqRWMix())
+    # bltscript.add_test_case(BltPciSeqWRMix())
     bltscript.add_test_case(BltPciRandRWMix())
-    #bltscript.add_test_case(BltPciRandWRMix())
+    # bltscript.add_test_case(BltPciRandWRMix())
 
     bltscript.run()

@@ -269,7 +269,7 @@ def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3
     return output
 
 
-def check_come_health(fs_obj, f1_in_use):
+def check_come_health(storage_controller):
     blt_vol_info = {
         "type": "VOL_TYPE_BLK_LOCAL_THIN",
         "capacity": 10485760,
@@ -277,16 +277,12 @@ def check_come_health(fs_obj, f1_in_use):
         "name": "thin-block1"}
     result = False
     try:
-        come_obj = fs_obj.get_come()
         blt_uuid = utils.generate_uuid()
-        dpc_cli = StorageController(target_ip=come_obj.host_ip,
-                                    target_port=come_obj.get_dpc_port(f1_in_use))
-        response = dpc_cli.create_thin_block_volume(capacity=blt_vol_info["capacity"],
-                                                    block_size=blt_vol_info["block_size"],
-                                                    name=blt_vol_info['name'],
-                                                    uuid=blt_uuid,
-                                                    command_duration=30)
-        dpc_cli.disconnect()
+        response = storage_controller.create_thin_block_volume(capacity=blt_vol_info["capacity"],
+                                                               block_size=blt_vol_info["block_size"],
+                                                               name=blt_vol_info['name'],
+                                                               uuid=blt_uuid,
+                                                               command_duration=30)
         if response["status"]:
             result = True
     except Exception as ex:
