@@ -212,10 +212,30 @@ export class SuiteDetailComponent implements OnInit {
 
   applyAdditionalAttributes(item) {
     item["showingDetails"] = false;
+    item["showingInputs"] = false;
+    item["showingEnvironment"] = false;
+    if (item.hasOwnProperty('fields') && item.fields.hasOwnProperty('inputs')) {
+      let inputs = JSON.parse(item.fields.inputs);
+      item["parsedInputs"] = inputs;
+    }
+
+    if (item.hasOwnProperty('fields') && item.fields.hasOwnProperty('environment')) {
+      let environment = JSON.parse(item.fields.environment);
+      item["parsedEnvironment"] = environment;
+    }
+
   }
 
   showDetailsClick(item) {
     item["showingDetails"] = !item["showingDetails"];
+  }
+
+  showInputsClick(item) {
+    item["showingInputs"] = !item["showingInputs"];
+  }
+
+  showEnvironmentClick(item) {
+    item["showingEnvironment"] = !item["showingEnvironment"];
   }
 
   getSchedulerLog(suiteId) {

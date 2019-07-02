@@ -39,6 +39,7 @@
     "ng-multiselect-dropdown": "^0.2.1",
     "ngx-bootstrap": "^3.0.1",
     "ngx-clipboard": "^11.1.9",
+    "ngx-json-viewer": "^2.4.0",
     "popper.js": "^1.14.4",
     "rxjs": "6.0.0",
     "stacktrace-js": "^2.0.0",
