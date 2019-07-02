@@ -480,13 +480,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   _setDataSetsDefaults(): void {
     for (let dataSet of this.previewDataSets) {
-      if (!dataSet.output.max)
+      if (!dataSet.output.max && this.leaf)
         dataSet.output.max = -1;
+      if (!dataSet.output.max && !this.leaf)
+        dataSet.output.max = 200;
       if (!dataSet.output.min)
         dataSet.output.min = 0;
-      if (!dataSet.output.reference)
+      if (!dataSet.output.reference && this.leaf)
         dataSet.output.reference = -1;
-      if (!dataSet.output.expected)
+      if (!dataSet.output.expected && this.leaf)
         dataSet.output.expected = -1;
     }
   }

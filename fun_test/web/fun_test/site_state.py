@@ -134,11 +134,16 @@ class SiteState():
                 m.save()
 
         except ObjectDoesNotExist:
+            data_sets = []
+            one_data_set = {}
+            one_data_set["name"] = "Scores"
+            one_data_set["output"] = {"min": 0, "max": 200}
+            data_sets.append(one_data_set)
             m = MetricChart(metric_model_name="MetricContainer",
                                 internal_chart_name=metric["name"],
                                 chart_name=metric["label"],
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
-                                description=description)
+                                description=description, data_sets=json.dumps(data_sets))
             m.save()
         if "reference" in metric and metric["reference"]:
             pass
