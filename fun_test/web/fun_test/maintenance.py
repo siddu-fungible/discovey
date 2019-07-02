@@ -532,6 +532,21 @@ if __name__ == "__main_durable_volume_ec__":
         chart.data_sets = data_sets
         chart.save()
 
+if __name__=="__main_container_data_sets__":
+    entries = MetricChart.objects.all()
+    leafCount = 0
+    modelCount = 0
+    for entry in entries:
+        if not entry.leaf and entry.metric_model_name == "MetricContainer":
+            data_sets = []
+            one_data_set = {}
+            one_data_set["name"] = "Scores"
+            one_data_set["output"] = {"min": 0, "max": 200}
+            data_sets.append(one_data_set)
+            entry.data_sets = json.dumps(data_sets)
+            entry.save()
+    print "Added datasets for containers"
+
 if __name__ == "__main__":
     charts = ["iops", "latency"]
     xaxis_title = "log2(qDepth)"
