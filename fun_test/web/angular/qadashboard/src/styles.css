@@ -221,9 +221,7 @@ body {
     border: none;
 }
 
-
-
-
+/* toggle-button */
 .switch {
   position: relative;
   display: inline-block;
@@ -231,7 +229,9 @@ body {
   height: 16px;
 }
 
-.switch input {display:none;}
+.switch input {
+  display:none;
+}
 
 .slider {
   position: absolute;
@@ -489,7 +489,7 @@ tr.text-center > th {
 .fun-tooltip {
   position: fixed;
   /*font-size: 14px;*/
-  text-align: center;
+  text-align: left;
   color: #000000;
   /*padding: 3px 8px;*/
   background: #fff8ba;
@@ -497,6 +497,9 @@ tr.text-center > th {
   opacity: 0;
   border: 1px solid;
   line-height: 1.6;
+  font-size: 14px;
+  font-weight: 100;
+  padding: 5px;
 }
 .fun-tooltip:after {
   content: "";

@@ -78,6 +78,8 @@ class SiteState():
                 for asset in assets:
                     (o, created) = Asset.objects.get_or_create(type=asset_type,
                                                                name=asset)
+                    if not created:
+                        o.test_beds = []
                     if test_bed_name not in o.test_beds:
                         o.test_beds.append(test_bed_name)
                     o.save()

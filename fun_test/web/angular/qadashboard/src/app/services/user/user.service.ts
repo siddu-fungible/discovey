@@ -8,7 +8,8 @@ import {LoggerService} from "../logger/logger.service";
   providedIn: 'root'
 })
 export class UserService {
-
+  allUsers: any = null;
+  userMap: {[email: string]: any} = null;
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
   users() {
@@ -16,5 +17,23 @@ export class UserService {
     return this.apiService.get(url).pipe(switchMap((response)=> {
       return of(response.data);
     }))
+  }
+
+  getUserMap() {
+
+    if (!this.userMap) {
+      return this.users().pipe(switchMap(((response) => {
+        this.allUsers = response;
+        this.userMap = {};
+        this.allUsers.map((user) => {
+          this.userMap[user.email] = user;
+        });
+        return of(this.userMap)
+      })))
+
+    } else {
+      return of(this.userMap);
+    }
+
   }
 }

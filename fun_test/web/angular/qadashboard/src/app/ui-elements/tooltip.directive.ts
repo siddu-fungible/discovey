@@ -1,4 +1,5 @@
 import { Directive, Input, ElementRef, HostListener, Renderer2 } from '@angular/core';
+import {CommonService} from 'src/app/services/common/common.service';
 
 @Directive({
   selector: '[tooltip]'
@@ -12,14 +13,22 @@ export class TooltipDirective {
   tooltip: HTMLElement;
   offset = 0;
 
-  constructor(private el: ElementRef, private renderer: Renderer2) { }
+  constructor(private el: ElementRef, private renderer: Renderer2, private commonService: CommonService) { }
 
   @HostListener('mouseenter') onMouseEnter() {
     if (!this.tooltip) { this.show(); }
   }
 
   @HostListener('mouseleave') onMouseLeave() {
-    if (this.tooltip) { this.hide(); }
+    if (this.tooltip) {
+      this.hide();
+    }
+  }
+
+  @HostListener("window:scroll", []) onWindowScroll() {
+    if (this.tooltip) {
+      this.hide();
+    }
   }
 
   show() {
@@ -45,7 +54,12 @@ export class TooltipDirective {
         this.renderer.createText(this.tooltipContentString)
       );
     } else if (this.tooltipContentCallback) {
-      this.renderer.appendChild(this.tooltip, this.tooltipContentCallback())
+      if (!this.tooltipContentCallbackArg) {
+        this.renderer.appendChild(this.tooltip, this.tooltipContentCallback())
+      } else {
+        this.renderer.appendChild(this.tooltip, this.tooltipContentCallback(this.el, this.tooltipContentCallbackArg));
+      }
+
     }
 
 
@@ -57,8 +71,8 @@ export class TooltipDirective {
     this.renderer.addClass(this.tooltip, `fun-tooltip-${this.placement}`);
     //this.renderer.setStyle(this.tooltip, 'line-height', 1.6);
     //this.renderer.setStyle(this.tooltip, 'position', 'fixed');
-    this.renderer.setStyle(this.tooltip, 'font-size', '14px');
-    this.renderer.setStyle(this.tooltip, 'font-weight', '1');
+    //this.renderer.setStyle(this.tooltip, 'font-size', '14px');
+    //this.renderer.setStyle(this.tooltip, 'font-weight', '1');
 
     /*this.renderer.setStyle(this.tooltip, '-webkit-transition', `opacity ${this.delay}ms`);
     this.renderer.setStyle(this.tooltip, '-moz-transition', `opacity ${this.delay}ms`);

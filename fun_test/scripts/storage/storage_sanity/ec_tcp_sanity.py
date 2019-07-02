@@ -4,9 +4,11 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
 from lib.fun.fs import Fs
 from scripts.storage.storage_helper import *
+from lib.host.linux import Linux
 
 '''
 Sanity Script for EC Volume via NVME/TCP
+Dependency: The script is tightly coupled with fs-6 and poc-server-01, while porting please take care of them.
 '''
 
 
@@ -35,6 +37,7 @@ class ECVolumeSanityScript(FunTestScript):
             self.syslog_level = 6
             self.command_timeout = 5
             self.reboot_timeout = 300
+            self.end_host_name = "poc-server-01"
         else:
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
@@ -44,6 +47,16 @@ class ECVolumeSanityScript(FunTestScript):
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
+        '''topology = topology_helper.expanded_topology
+        dut = topology.get_dut(index=0)
+        fpg_interfaces = dut.fpg_interfaces
+        for fpg_interface_index, fpg_interface in fpg_interfaces.items():
+            peer_instance = fpg_interface[0].get_peer_instance()
+            host_name = peer_instance.host_info["name"]
+            break'''
+        host_spec = fun_test.get_asset_manager().get_host_spec(name=self.end_host_name)
+        host_obj = Linux(**host_spec)
+        host_obj.reboot(non_blocking=True)
 
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
@@ -52,13 +65,19 @@ class ECVolumeSanityScript(FunTestScript):
         come = fs.get_come()
         storage_controller = StorageController(target_ip=come.host_ip,
                                                target_port=come.get_dpc_port(self.f1_in_use))
+        if not check_come_health(storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            come = topology.get_dut_instance(index=0).get_come()
+            storage_controller = StorageController(target_ip=come.host_ip,
+                                                   target_port=come.get_dpc_port(self.f1_in_use))
 
         end_host = None
         test_interface_name = None
         fpg_connected_hosts = topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
         for host_ip, host_info in fpg_connected_hosts.iteritems():
             if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                if testbed_type == "fs-6" and host_ip != "poc-server-01":
+                if testbed_type == "fs-6" and host_ip != self.end_host_name:
                     continue
                 end_host = host_info["host_obj"]
                 test_interface_name = end_host.extra_attributes["test_interface_name"]
@@ -81,9 +100,7 @@ class ECVolumeSanityScript(FunTestScript):
 
         # configure end host
         # Ensure host is up
-        fun_test.test_assert(self.end_host.reboot(max_wait_time=self.reboot_timeout),
-                             message="End Host is up")
-
+        fun_test.test_assert(host_obj.ensure_host_is_up(max_wait_time=self.reboot_timeout), message="End host is up")
         # end host network interface
         configure_endhost_interface(end_host=end_host, test_network=test_network,
                                     interface_name=test_interface_name)
@@ -113,7 +130,7 @@ class ECVolumeSanityScript(FunTestScript):
 
         # Create EC volume
         (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
-                                                                                       self.command_timeout)  # ToDo Assert it
+                                                                                       self.command_timeout)
         fun_test.test_assert(ec_config_status, message="Configure EC volume on F1")
         # attach volume to controller
         ec_uuid = self.ec_info["attach_uuid"][0]
@@ -123,7 +140,7 @@ class ECVolumeSanityScript(FunTestScript):
                              message="Attaching EC Vol nsid: {} with uuid {} to controller".format(self.ns_id, ec_uuid))
 
         # Set syslog level
-        set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
+        # set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
 
         # execute nvme connect
         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
@@ -165,7 +182,7 @@ class ECVolumeSanityScript(FunTestScript):
                 fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
                                                                                command_duration=self.command_timeout),
                                      message="Delete Controller uuid: {}".format(ctrlr_uuid))
-                fun_test.sleep(seconds=2, message="EC volume detached from controller")
+                fun_test.sleep(seconds=1, message="EC volume detached from controller")
 
                 # delete EC
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
@@ -231,11 +248,10 @@ class ECTcpSeqRW(ECTcpSanityTestcase):
         self.set_test_details(id=2,
                               summary="Test sequential read-write queries on 4:2 EC volume over nvme-tcp fabric",
                               steps='''
-        1. Execute sequential read-write traffic on a 4:2 EC volume via nvme-tcp fabric.''')
+                              1. Execute sequential read-write traffic on a 4:2 EC volume via nvme-tcp fabric.''')
 
 
 if __name__ == "__main__":
     ecscript = ECVolumeSanityScript()
     ecscript.add_test_case(ECTcpRandRW())
-    ecscript.add_test_case(ECTcpSeqRW())
     ecscript.run()

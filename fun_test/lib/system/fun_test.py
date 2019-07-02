@@ -242,6 +242,7 @@ class FunTest:
         self.last_context_id = 0
         self.profiling = False
         self.profiling_timer = None
+        self.topologies = []
         self.closed = False
 
     def initialize_output_files(self, absolute_script_file_name):
@@ -487,7 +488,7 @@ class FunTest:
 
     def join_thread(self, fun_test_thread_id, sleep_time=5):
         thread_complete = False
-        while not thread_complete:
+        while not thread_complete and not fun_test.closed:
             thread_info = self.fun_test_threads[fun_test_thread_id]
             thread = thread_info["thread"]
             if thread:
@@ -623,6 +624,12 @@ class FunTest:
 
     def set_topology_json_filename(self, filename):
         self.fun_xml_obj.set_topology_json_filename(filename=filename)
+
+    def register_topologies(self, topology):
+        self.topologies.append(topology)
+
+    def get_topologies(self):
+        return self.topologies
 
     def get_environment_variable(self, variable):
         result = None
@@ -1381,8 +1388,17 @@ class FunTestScript(object):
             models_helper.report_re_run_result(execution_id=setup_te.execution_id, re_run_info=fun_test.get_re_run_info())
         fun_test._end_test(result=script_result)
 
-
         return script_result == FunTest.PASSED
+
+    def _cleanup_topologies(self):
+        topologies = fun_test.get_topologies()
+        for topology in topologies:
+            if not topology.is_cleaned_up():
+                fun_test.log("Topology was not cleaned up. Attempting ...")
+                try:
+                    topology.cleanup()
+                except Exception as ex:
+                    fun_test.critical(ex)
 
     @abc.abstractmethod
     def cleanup(self):
@@ -1392,7 +1408,12 @@ class FunTestScript(object):
         result = FunTest.FAILED
         try:
             self.cleanup()
+
             result = FunTest.PASSED
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self._cleanup_topologies()
         except Exception as ex:
             fun_test.critical(ex)
         fun_test._end_test(result=result)

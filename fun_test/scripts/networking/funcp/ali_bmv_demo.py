@@ -22,7 +22,7 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        pass
+        fun_test.shared_variables["topology"].cleanup()
         # funcp_obj.cleanup_funcp()
         # for server in servers_mode:
         #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
@@ -33,7 +33,7 @@ class BringupSetup(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Bringup FS-45 with control plane",
+                              summary="Bringup FS with control plane",
                               steps="""
                               1. BringUP both F1s
                               2. Bringup FunCP
@@ -53,7 +53,7 @@ class BringupSetup(FunTestCase):
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=3 --mgmt --disable-wu-watchdog syslog=2"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
 
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -124,9 +124,9 @@ class NicEmulation(FunTestCase):
         fun_test.sleep(message="Waiting before ping tests", seconds=10)
 
         # Ping QFX from both F1s
-        ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-        for container in ping_dict:
-            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
+        # ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
+        # for container in ping_dict:
+        #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
@@ -143,7 +143,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
+        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -152,7 +152,7 @@ class NicEmulation(FunTestCase):
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
             test_host_pings(host=host, ips=ping_dict[host])
-        fun_test.sleep(message="Wait for host to check ping again", seconds = 30)
+        fun_test.sleep(message="Wait for host to check ping again", seconds=30)
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:

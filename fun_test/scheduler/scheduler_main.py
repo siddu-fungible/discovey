@@ -185,8 +185,9 @@ class QueueWorker(Thread):
                                                                                             custom_test_bed_spec=custom_test_bed_spec)
 
                         else:
-                            not_available[queued_job.test_bed_type] = availability["message"]
-                            print("Not available: {}".format(availability["message"]))
+                            if not queued_job.test_bed_type.startswith("suite-based"):
+                                not_available[queued_job.test_bed_type] = availability["message"]
+                            # print("Not available: {}".format(availability["message"]))
                             queued_job.message = availability["message"]
                             queued_job.save()
                     else:
@@ -378,6 +379,8 @@ class SuiteWorker(Thread):
                                                                     backupCount=5)
             self.log_handler.setFormatter(
                 logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+            if len(local_scheduler_logger.handlers):
+                del local_scheduler_logger.handlers[:]
             local_scheduler_logger.addHandler(hdlr=self.log_handler)
             self.local_scheduler_logger = local_scheduler_logger
             models_helper.update_suite_execution(suite_execution_id=self.job_id,

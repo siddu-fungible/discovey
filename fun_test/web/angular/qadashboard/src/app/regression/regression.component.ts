@@ -12,6 +12,7 @@ import {LoggerService} from '../services/logger/logger.service';
 import {RegressionService} from "./regression.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
+import {UserService} from "../services/user/user.service";
 
 class FilterButton {
   displayString: string = null;
@@ -82,6 +83,7 @@ export class RegressionComponent implements OnInit {
   stateMap: any = null;
   queryParameters: any = null;
   filterButtons: FilterButton [] = [];
+  userMap: any = null;
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
@@ -90,7 +92,8 @@ export class RegressionComponent implements OnInit {
               private reRunService: ReRunService,
               private logger: LoggerService,
               private regressionService: RegressionService,
-              private router: Router) {
+              private router: Router,
+              private userService: UserService) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
@@ -167,6 +170,12 @@ export class RegressionComponent implements OnInit {
         self.logDir = "/static/logs/s_";
       });
     }
+
+    this.userService.getUserMap().subscribe((response) => {
+      this.userMap = response;
+    }, error => {
+      this.logger.error("Unable to fetch usermap");
+    });
     this.status = null;
   }
 
@@ -462,6 +471,15 @@ export class RegressionComponent implements OnInit {
     }, {});
     this.router.navigate(['/regression'], {queryParams: this.prepareBaseQueryParams(null)});
 
+  }
+
+  onChangeAutoSchedule(checked, suiteExecution) {
+    let enabled = checked;
+    this.regressionService.disableAutoSchedule(suiteExecution.fields.execution_id, !checked).subscribe((response) => {
+     this.logger.success("Suite disabled");
+    }, error => {
+      this.logger.error("Unable to disable suite");
+    })
   }
 
 }

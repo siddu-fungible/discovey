@@ -180,7 +180,7 @@
               </td>
               <td>
               <span class="pseudo-anchor"
-                    (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})">{{ suiteExecution.fields.submitter_email }}
+                    (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})">{{ userMap[suiteExecution.fields.submitter_email].first_name }} {{ userMap[suiteExecution.fields.submitter_email].last_name.charAt(0)}}
               </span>
               </td>
 
@@ -314,7 +314,9 @@
               </td>
             </ng-container>
             <td>{{ suiteExecution.fields.test_bed_type }}</td>
-            <td>{{ suiteExecution.fields.disable_schedule ? "No": "Yes" }}</td>
+            <td>
+              <app-toggle-button [checked]="!suiteExecution.fields?.disable_schedule" (changed)="onChangeAutoSchedule($event, suiteExecution)"></app-toggle-button>
+            </td>
 
           </tr>
         </ng-container>

@@ -153,5 +153,11 @@ export class RegressionService implements OnInit{
     }));
   }
 
+  disableAutoSchedule(suiteId, disable_schedule) {
+    let payload = {"disable_schedule": disable_schedule};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteId, payload).pipe(switchMap(response => {
+      return of(true);
+    }))
+  }
 
 }

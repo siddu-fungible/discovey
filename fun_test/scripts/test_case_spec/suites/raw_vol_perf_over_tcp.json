@@ -1,4 +1,8 @@
 [
+  {"info":
+    {"custom_test_bed_spec":
+      {"base_test_bed": "fs-inspur",
+        "asset_request": {"DUT": {"num": 1}, "Host": {"num": 1}}}}},
   {"path": "storage/multi_blt_read_tcp_perf.py"},
   {"path": "storage/multi_blt_write_tcp_perf.py"}
 ]

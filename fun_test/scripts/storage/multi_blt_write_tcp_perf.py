@@ -101,134 +101,154 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
+        # Declaring default values if not defined in config files
+        if not hasattr(self, "dut_start_index"):
+            self.dut_start_index = 0
+        if not hasattr(self, "host_start_index"):
+            self.host_start_index = 0
+        if not hasattr(self, "update_workspace"):
+            self.update_workspace = False
+        if not hasattr(self, "update_deploy_script"):
+            self.update_deploy_script = False
+
+        # Using Parameters passed during execution, this will override global and config parameters
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "dut_start_index" in job_inputs:
+            self.dut_start_index = job_inputs["dut_start_index"]
+        if "host_start_index" in job_inputs:
+            self.host_start_index = job_inputs["host_start_index"]
+        if "update_workspace" in job_inputs:
+            self.update_workspace = job_inputs["update_workspace"]
+        if "update_deploy_script" in job_inputs:
+            self.update_deploy_script = job_inputs["update_deploy_script"]
+
+        self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
+        fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
+
+        # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
-        fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
-        self.total_avaialble_duts = len(self.testbed_config["dut_info"])
-        fun_test.log("Total Avaialble Duts: {}".format(self.total_avaialble_duts))
-
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            # Declaring default values if not defined in config files
-            if not hasattr(self, "dut_start_index"):
-                self.dut_start_index = 0
-            if not hasattr(self, "host_start_index"):
-                self.host_start_index = 0
-            if not hasattr(self, "update_workspace"):
-                self.update_workspace = False
-            if not hasattr(self, "update_deploy_script"):
-                self.update_deploy_script = False
-
-            # Using Parameters passed during execution, this will override global and config parameters
-            job_inputs = fun_test.get_job_inputs()
-            fun_test.log("Provided job inputs: {}".format(job_inputs))
-            if "dut_start_index" in job_inputs:
-                self.dut_start_index = job_inputs["dut_start_index"]
-            if "host_start_index" in job_inputs:
-                self.host_start_index = job_inputs["host_start_index"]
-            if "update_workspace" in job_inputs:
-                self.update_workspace = job_inputs["update_workspace"]
-            if "update_deploy_script" in job_inputs:
-                self.update_deploy_script = job_inputs["update_deploy_script"]
-
-            self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
-            fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
-            fun_test.test_assert(expression=self.num_duts <= self.total_avaialble_duts,
-                                 message="Testbed has enough DUTs")
-
+        if self.testbed_type != "suite-based":
+            self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
+            fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
+            self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
+            self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
+            self.full_dut_indexes = self.testbed_config["dut_info"]
             # Skipping DUTs not required for this test
             self.skip_dut_list = []
             for index in xrange(0, self.dut_start_index):
                 self.skip_dut_list.append(index)
-            for index in xrange(self.dut_start_index + self.num_duts, self.total_avaialble_duts):
+            for index in xrange(self.dut_start_index + self.num_duts, len(self.full_dut_indexes)):
                 self.skip_dut_list.append(index)
-            fun_test.debug("DUTs that will be skipped: {}".format(self.skip_dut_list))
+            fun_test.log("DUTs that will be skipped: {}".format(self.skip_dut_list))
+            self.available_dut_indexes = list(set(self.full_dut_indexes) - set(self.skip_dut_list))
+            self.available_dut_indexes = [int(i) for i in self.available_dut_indexes]
+            self.total_available_duts = len(self.available_dut_indexes)
+            fun_test.log("Total Available Duts: {}".format(self.total_available_duts))
+            self.topology_helper = TopologyHelper(spec=self.fs_hosts_map[self.testbed_type])
+            # Making topology helper to skip DUTs in this list to initialise
+            self.topology_helper.disable_duts(self.skip_dut_list)
+        # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
+        # suite-based
+        elif self.testbed_type == "suite-based":
+            self.topology_helper = TopologyHelper()
+            self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
+            self.required_hosts = self.topology_helper.get_available_hosts()
+            self.testbed_config = self.topology_helper.spec
+            self.total_available_duts = len(self.available_dut_indexes)
 
-            for i in range(len(self.bootargs)):
-                self.bootargs[i] += " --mgmt"
+        fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
+                             message="Testbed has enough DUTs")
 
-            # Deploying of DUTs
-            topology_helper = TopologyHelper()
-            topology_helper.disable_duts(self.skip_dut_list)
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                              1: {"boot_args": self.bootargs[1]}})
-            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
-            self.topology = topology_helper.deploy()
-            fun_test.test_assert(self.topology, "Topology deployed")
+        for i in range(len(self.bootargs)):
+            self.bootargs[i] += " --mgmt"
 
-            # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time()
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
+        # Deploying of DUTs
+        for dut_index in self.available_dut_indexes:
+            self.topology_helper.set_dut_parameters(dut_index=dut_index,
+                                                    f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                                   1: {"boot_args": self.bootargs[1]}})
+        self.topology = self.topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
 
-            # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
+        # Datetime required for daily Dashboard data filter
+        self.db_log_time = get_data_collection_time()
+        fun_test.log("Data collection time: {}".format(self.db_log_time))
+
+        # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
+        if self.testbed_type != "suite-based":
             hosts = self.topology.get_hosts()
             fun_test.log("Available hosts are: {}".format(hosts))
             required_host_index = []
-            required_hosts = OrderedDict()
+            self.required_hosts = OrderedDict()
             for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
                 required_host_index.append(i)
             fun_test.debug("Host index required for scripts: {}".format(required_host_index))
             for j, host_name in enumerate(sorted(hosts)):
                 if j in required_host_index:
-                    required_hosts[host_name] = hosts[host_name]
-            fun_test.log("Hosts that will be used for current test: {}".format(required_hosts.keys()))
+                    self.required_hosts[host_name] = hosts[host_name]
 
-            self.hosts_test_interfaces = {}
-            self.host_handles = {}
-            self.host_ips = []
-            self.host_numa_cpus = {}
-            self.total_numa_cpus = {}
-            for host_name, host_obj in required_hosts.items():
-                # Retrieving host ips
-                # test_interfaces = host.get_test_interfaces()
-                if host_name not in self.hosts_test_interfaces:
-                    self.hosts_test_interfaces[host_name] = []
-                test_interface = host_obj.get_test_interface(index=0)
-                self.hosts_test_interfaces[host_name].append(test_interface)
-                host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
-                self.host_ips.append(host_ip)
-                fun_test.log("Host-IP: {}".format(host_ip))
-                # Retrieving host handles
-                host_instance = host_obj.get_instance()
-                self.host_handles[host_ip] = host_instance
+        fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
-            # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
-            for key in self.host_handles:
-                if self.override_numa_node["override"]:
-                    self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
-                    self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
-                else:
-                    self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+        self.hosts_test_interfaces = {}
+        self.host_handles = {}
+        self.host_ips = []
+        self.host_numa_cpus = {}
+        self.total_numa_cpus = {}
+        for host_name, host_obj in self.required_hosts.items():
+            # Retrieving host ips
+            # test_interfaces = host.get_test_interfaces()
+            if host_name not in self.hosts_test_interfaces:
+                self.hosts_test_interfaces[host_name] = []
+            test_interface = host_obj.get_test_interface(index=0)
+            self.hosts_test_interfaces[host_name].append(test_interface)
+            host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
+            self.host_ips.append(host_ip)
+            fun_test.log("Host-IP: {}".format(host_ip))
+            # Retrieving host handles
+            host_instance = host_obj.get_instance()
+            self.host_handles[host_ip] = host_instance
 
-                # Calculating the number of CPUs available in the given numa
-                self.total_numa_cpus[key] = 0
-                for cpu_group in self.host_numa_cpus[key].split(","):
-                    cpu_range = cpu_group.split("-")
-                    self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-                fun_test.log("Rebooting host: {}".format(key))
-                self.host_handles[key].reboot(non_blocking=True)
-            fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+        # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
+        for key in self.host_handles:
+            if self.override_numa_node["override"]:
+                self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
+                self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+            else:
+                self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
 
-            # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
-            # for all the DUTs going to be used in the test
-            self.fs_objs = []
-            self.fs_spec = []
-            self.come_obj = []
-            self.f1_objs = {}
-            self.sc_objs = []
-            self.f1_ips = []
-            self.gateway_ips = []
-            for i in xrange(self.dut_start_index, self.dut_start_index + self.num_duts):
-                curr_index = i - self.dut_start_index
-                self.fs_objs.append(self.topology.get_dut_instance(index=i))
-                self.fs_spec.append(self.topology.get_dut(index=i))
-                self.come_obj.append(self.fs_objs[curr_index].get_come())
-                self.f1_objs[curr_index] = []
-                for j in xrange(self.num_f1_per_fs):
-                    self.f1_objs[curr_index].append(self.fs_objs[curr_index].get_f1(index=j))
-                    self.sc_objs.append(self.f1_objs[curr_index][j].get_dpc_storage_controller())
+            # Calculating the number of CPUs available in the given numa
+            self.total_numa_cpus[key] = 0
+            for cpu_group in self.host_numa_cpus[key].split(","):
+                cpu_range = cpu_group.split("-")
+                self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+            fun_test.log("Rebooting host: {}".format(key))
+            self.host_handles[key].reboot(non_blocking=True)
+        fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
+        fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
 
+        # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
+        # for all the DUTs going to be used in the test
+        self.fs_objs = []
+        self.fs_spec = []
+        self.come_obj = []
+        self.f1_objs = {}
+        self.sc_objs = []
+        self.f1_ips = []
+        self.gateway_ips = []
+        for curr_index, dut_index in enumerate(self.available_dut_indexes):
+            self.fs_objs.append(self.topology.get_dut_instance(index=dut_index))
+            self.fs_spec.append(self.topology.get_dut(index=dut_index))
+            self.come_obj.append(self.fs_objs[curr_index].get_come())
+            self.f1_objs[curr_index] = []
+            for j in xrange(self.num_f1_per_fs):
+                self.f1_objs[curr_index].append(self.fs_objs[curr_index].get_f1(index=j))
+                self.sc_objs.append(self.f1_objs[curr_index][j].get_dpc_storage_controller())
+
+        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
+                self.testbed_config["workarounds"]["enable_funcp"]:
             # Bringing up of FunCP docker container if it is needed
             self.funcp_obj = {}
             self.funcp_spec = {}

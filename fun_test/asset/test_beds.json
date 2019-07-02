@@ -595,10 +595,7 @@
           }
         }
       }
-    },
-    "host_info": [
-      "mktg-server-01"
-    ]
+    }
   },
   "fs-42": {
     "workarounds": {
@@ -709,11 +706,7 @@
           }
         }
       }
-    },
-    "host_info": [
-      "mktg-server-02",
-      "mktg-server-03"
-    ]
+    }
   },
   "fs-43": {
     "workarounds": {
@@ -824,10 +817,7 @@
           }
         }
       }
-    },
-    "host_info": [
-      "mktg-server-04"
-    ]
+    }
   },
   "fs-44": {
     "workarounds": {
@@ -938,19 +928,7 @@
           }
         }
       }
-    },
-    "host_info": [
-      "mktg-server-05",
-      "mktg-server-06",
-      "mktg-server-07",
-      "mktg-server-08",
-      "mktg-server-09",
-      "mktg-server-10",
-      "mktg-server-11",
-      "mktg-server-12",
-      "mktg-server-13",
-      "mktg-server-14"
-    ]
+    }
   },
   "fs-45": {
     "dut_info": {
@@ -1599,7 +1577,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "mktg15"
+              "name": "cab03-qa-05"
             }
           },
           "1": {
@@ -1618,7 +1596,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1,
             "host_info": {
-              "name": "mktg16"
+              "name": "cab03-qa-04"
             }
           },
           "15": {

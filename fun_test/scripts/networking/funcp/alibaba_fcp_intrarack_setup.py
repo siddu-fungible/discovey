@@ -11,14 +11,17 @@ from lib.topology.topology_helper import TopologyHelper
 import time 
 import datetime
 
+
 class ScriptSetup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="1. Make sure correct FS system is selected")
 
     def setup(self):
-
-        pass
+        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        fun_test.shared_variables['testbed_info'] = testbed_info
+        fun_test.shared_variables['test_bed_type'] = test_bed_type
 
     def cleanup(self):
         pass
@@ -37,18 +40,17 @@ class BringupSetup(FunTestCase):
                               """)
 
     def setup(self):
-
         pass
 
     def run(self):
-        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
-        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        test_bed_type = fun_test.shared_variables['test_bed_type']
+        testbed_info = fun_test.shared_variables['testbed_info']
+
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
-        fun_test.shared_variables["test_bed_type"] = test_bed_type
 
         # Removing any funeth driver from COMe and and all the connected server
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
             funcp_obj.cleanup_funcp()
             server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fs_connected_servers.json')
             servers_mode = server_key["fs"][fs_name]
@@ -76,7 +78,7 @@ class BringupSetup(FunTestCase):
         print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
-            funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
 
             print "\n\n\n Booting of Control Plane  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -110,12 +112,150 @@ class BringupSetup(FunTestCase):
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
     def cleanup(self):
+        pass
 
+
+class TestCcCcPing(FunTestCase):
+    hosts_info = {}
+    host_username = "localadmin"
+    host_password = "Precious1*"
+
+    def describe(self):
+        self.set_test_details(id=2, summary="Test CC --> CC Ping",
+                              steps="""
+                              1. Fetch all vlan ips from each docker container
+                              2. Ensure all vlans can ping each other 
+                              """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        test_bed_type = fun_test.shared_variables['test_bed_type']
+        testbed_info = fun_test.shared_variables['testbed_info']
+
+        checkpoint = "Ensure all vlans can ping its neighbour vlan"
+        for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
+            funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
+            res = funcp_obj.test_cc_pings_fs()
+            fun_test.simple_assert(res, checkpoint)
+        fun_test.add_checkpoint(checkpoint)
+
+    def cleanup(self):
+        pass
+
+
+class TestIntraF1Pings(FunTestCase):
+    hosts = []
+    dpc_info = None
+
+    def describe(self):
+        self.set_test_details(id=3, summary="Test Intra F1 Ping",
+                              steps="""
+                              1. Fetch all hosts attached to each F1 of each FS
+                              2. Find the HU interface ip of each host
+                              3. Do full mesh ping between hosts which are connected to single F1
+                              4. Ensure ping is working
+                              5. Validate ERP stats and vppkts 
+                              """)
+
+    def setup(self):
+        topology_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/topo_description.json')
+        self.hosts = FunControlPlaneBringup.get_list_of_hosts_connected_each_f1(topology_info=topology_info)
+        self.dpc_info = FunControlPlaneBringup.get_dpc_ip_port_for_each_f1(topology_info=topology_info)
+
+        fun_test.log("Hosts connected to each F1 in topology: %s" % self.hosts)
+
+    def run(self):
+        checkpoint = "Ensure Intra F1 ping works"
+        funcp_obj = FunControlPlaneBringup(fs_name='FS-48')
+        result = funcp_obj.validate_intra_f1_ping(dpc_info=self.dpc_info, hosts=self.hosts)
+        fun_test.test_assert(result, checkpoint)
+
+    def cleanup(self):
+        pass
+
+
+class TestIntraFsPings(FunTestCase):
+    hosts = []
+    dpc_info = None
+
+    def describe(self):
+        self.set_test_details(id=4, summary="Test Intra FS pings",
+                              steps="""
+                              1. Fetch hosts connected to each F1 within a FS
+                              2. Do a ping from hosts connected to F1_0 to hosts connected to F1_1
+                              3. Ensure ping is working fine
+                              4. Do a hping3 between hosts
+                              5. Validate dpcsh stats
+                              """)
+
+    def setup(self):
+        global CHECK_HPING3_ON_HOSTS
+        topology_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/topo_description.json')
+        self.hosts = FunControlPlaneBringup.get_list_of_hosts_connected_each_f1(topology_info=topology_info)
+        self.dpc_info = FunControlPlaneBringup.get_dpc_ip_port_for_each_f1(topology_info=topology_info)
+
+        if CHECK_HPING3_ON_HOSTS:
+            all_hosts = FunControlPlaneBringup.get_list_of_all_hosts(topology_info=topology_info)
+            for host in all_hosts:
+                hping_installed = ensure_hping_install(host_ip=host['name'], host_username=host['ssh_username'],
+                                                       host_password=host['ssh_password'])
+                fun_test.simple_assert(hping_installed, "Ensure Hping3 is installed on host: %s" % host['name'])
+
+        fun_test.log("Hosts connected to each F1 in topology: %s" % self.hosts)
+
+    def run(self):
+        checkpoint = "Ensure Intra FS ping works"
+        funcp_obj = FunControlPlaneBringup(fs_name='FS-48')
+        result = funcp_obj.validate_intra_fs_ping(dpc_info=self.dpc_info, hosts=self.hosts)
+        fun_test.test_assert(result, checkpoint)
+
+    def cleanup(self):
+        pass
+
+
+class TestInterRackPings(FunTestCase):
+    fs_per_rack = None
+
+    def describe(self):
+        self.set_test_details(id=5, summary="Test Intra Rack pings",
+                              steps="""
+                              1. Fetch hosts connected to both FS (FS-48 is in 1 rack and FS-60 is in different rack)
+                              2. Do a ping from hosts connected to FS-48 to hosts connected to FS-60 across racks
+                              3. Ensure ping is working fine
+                              4. Do a hping3 between hosts
+                              5. Validate dpcsh stats
+                              """)
+
+    def setup(self):
+        global CHECK_HPING3_ON_HOSTS
+        topology_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/topo_description.json')
+        self.fs_per_rack = FunControlPlaneBringup.get_list_of_fs_per_rack(topology_info=topology_info)
+
+        if CHECK_HPING3_ON_HOSTS:
+            all_hosts = FunControlPlaneBringup.get_list_of_all_hosts(topology_info=topology_info)
+            for host in all_hosts:
+                hping_installed = ensure_hping_install(host_ip=host['name'], host_username=host['ssh_username'],
+                                                       host_password=host['ssh_password'])
+                fun_test.simple_assert(hping_installed, "Ensure Hping3 is installed on host: %s" % host['name'])
+
+        fun_test.log("FS per rack: %s" % self.fs_per_rack)
+
+    def run(self):
+        checkpoint = "Ensure Intra Rack ping works"
+        funcp_obj = FunControlPlaneBringup(fs_name='FS-48')
+        result = funcp_obj.validate_intra_rack_ping(all_fs=self.fs_per_rack)
+        fun_test.test_assert(result, checkpoint)
+
+    def cleanup(self):
         pass
 
 
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
-    # ts.add_test_case(SetupVMs)
+    ts.add_test_case(TestCcCcPing())
+    ts.add_test_case(TestIntraF1Pings())
+    ts.add_test_case(TestIntraFsPings())
     ts.run()

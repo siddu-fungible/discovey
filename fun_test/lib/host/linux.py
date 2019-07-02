@@ -57,7 +57,7 @@ class LinuxLogger:
 
     def write_now(self, message, stdout=True):
         fun_test.write(message=message, context=self.context)
-        fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=context)
+        fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=self.context)
 
     def write(self, message, stdout=True):
         fun_test.write(message=message, context=self.context)
@@ -511,6 +511,25 @@ class Linux(object, ToDictMixin):
                 output = self.sudo_command(command, timeout=timeout)
             else:
                 output = self.command(command, timeout=timeout)
+            m = re.search(r'(\d+)%\s+packet\s+loss', output)
+            if m:
+                percentage_loss = int(m.group(1))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        if percentage_loss <= max_percentage_loss:
+            result = True
+        return result
+
+    @fun_test.safe
+    def hping(self, dst, count=5, mode='faster', protocol_mode='icmp', max_percentage_loss=50, timeout=10,
+              data_bytes=80):
+        result = False
+        percentage_loss = 100
+        try:
+            cmd = "hping3 %s --%s -d %d --%s -c %d" % (dst, protocol_mode, data_bytes, mode, count)
+            output = self.sudo_command(command=cmd, timeout=timeout)
             m = re.search(r'(\d+)%\s+packet\s+loss', output)
             if m:
                 percentage_loss = int(m.group(1))
@@ -1683,140 +1702,149 @@ class Linux(object, ToDictMixin):
         fio_result = ""
         fio_dict = {}
 
-        fun_test.debug(kwargs)
+        try:
+            fun_test.debug(kwargs)
 
-        # Building the fio command
+            # Building the fio command
 
-        # Add group reporting option (in case numjobs > 1)
-        fio_command += " --group_reporting"
+            # Add group reporting option (in case numjobs > 1)
+            fio_command += " --group_reporting"
 
-        if "multiple_jobs" not in kwargs and 'name' not in kwargs:
-            fio_command += " --name=nvme_pcie"
+            if 'output-format' not in kwargs:
+                fio_command += " --output-format=json"
 
-        if 'ioengine' not in kwargs:
-            fio_command += " --ioengine=libaio"
+            if "multiple_jobs" not in kwargs and 'name' not in kwargs:
+                fio_command += " --name=nvme_pcie"
 
-        fio_command += " --filename={}".format(filename)
+            if 'ioengine' not in kwargs:
+                fio_command += " --ioengine=libaio"
 
-        if 'numjobs' not in kwargs:
-            fio_command += " --numjobs=1"
+            fio_command += " --filename={}".format(filename)
 
-        if 'runtime' in kwargs:
-            fio_command += " --time_based"
+            if 'numjobs' not in kwargs:
+                fio_command += " --numjobs=1"
 
-        if 'output-format' not in kwargs:
-            fio_command += " --output-format=json"
+            if 'runtime' in kwargs:
+                fio_command += " --time_based"
 
-        if kwargs:
-            for key in kwargs:
-                if key == "multiple_jobs":
-                    fio_command += " " + str(kwargs[key])
-                    # In case of multiple jobs scenario if global filename exists, removing it
-                    if fio_command.count("filename") >= 2:
-                        fio_command = re.sub(r"--filename=\S+", "", fio_command, 1)
-                else:
-                    fio_command += " --" + key + "=" + str(kwargs[key])
+            if 'output-format' not in kwargs:
+                fio_command += " --output-format=json"
 
-        fun_test.debug(fio_command)
+            if kwargs:
+                for key, value in kwargs.iteritems():
+                    if key == "multiple_jobs":
+                        fio_command += " " + str(value)
+                        # In case of multiple jobs scenario if global filename exists, removing it
+                        if fio_command.count("filename") >= 2:
+                            fio_command = re.sub(r"--filename=\S+", "", fio_command, 1)
+                    else:
+                        if value != "NO_VALUE":
+                            fio_command += " --" + key + "=" + str(value)
+                        else:
+                            fio_command += " --" + key
 
-        # Executing the fio command
-        fio_result = self.sudo_command(command=fio_command, timeout=timeout)
-        # fio_result += '\n'
-        fun_test.debug(fio_result)
+            fun_test.debug(fio_command)
 
-        # Trimming initial few lines to convert the output into a valid json format
-        before, sep, after = fio_result.partition("{")
-        trim_fio_result = sep + after
-        fun_test.debug(trim_fio_result)
+            # Executing the fio command
+            fio_result = self.sudo_command(command=fio_command, timeout=timeout)
+            # fio_result += '\n'
+            fun_test.debug(fio_result)
 
-        # Checking there is no error occurred during the FIO test
-        for pattern in err_pat_list:
-            match = ""
-            match = re.search(pattern, before, re.I)
-            if match:
-                fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
-                return fio_dict
+            # Trimming initial few lines to convert the output into a valid json format
+            before, sep, after = fio_result.partition("{")
+            trim_fio_result = sep + after
+            fun_test.debug(trim_fio_result)
 
-        # Converting the json into python dictionary
-        fio_result_dict = json.loads(trim_fio_result)
-        fun_test.debug(fio_result_dict)
+            # Checking there is no error occurred during the FIO test
+            for pattern in err_pat_list:
+                match = ""
+                match = re.search(pattern, before, re.I)
+                if match:
+                    fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+                    return fio_dict
 
-        # Populating the resultant fio_dict dictionary
-        for operation in ["write", "read"]:
-            fio_dict[operation] = {}
-            for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99",
-                         "latency9950", "latency9999"]:
-                if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
-                                "latency9999"):
-                    fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
-                elif stat in ("latency", "clatency"):
-                    for key in fio_result_dict["jobs"][0][operation].keys():
-                        if key.startswith("lat"):
-                            stat = "latency"
-                            # Extracting the latency unit
-                            unit = key[-2:]
-                            # Converting the units into microseconds
-                            if unit == "ns":
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value /= 1000
-                                fio_dict[operation][stat] = value
-                            elif unit == "us":
-                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                            else:
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value *= 1000
-                                fio_dict[operation][stat] = value
-                        if key.startswith("clat"):
-                            stat = "clatency"
-                            # Extracting the latency unit
-                            unit = key[-2:]
-                            # Converting the units into microseconds
-                            if unit == "ns":
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value /= 1000
-                                fio_dict[operation][stat] = value
-                            elif unit == "us":
-                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                            else:
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value *= 1000
-                                fio_dict[operation][stat] = value
-                elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
-                    for key in fio_result_dict["jobs"][0][operation].keys():
-                        if key == "clat_ns":
-                            for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
-                                if key.startswith("90.00"):
-                                    stat = "latency90"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
+            # Converting the json into python dictionary
+            fio_result_dict = json.loads(trim_fio_result)
+            fun_test.debug(fio_result_dict)
+
+            # Populating the resultant fio_dict dictionary
+            for operation in ["write", "read"]:
+                fio_dict[operation] = {}
+                for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99",
+                             "latency9950", "latency9999"]:
+                    if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
+                                    "latency9999"):
+                        fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
+                    elif stat in ("latency", "clatency"):
+                        for key in fio_result_dict["jobs"][0][operation].keys():
+                            if key.startswith("lat"):
+                                stat = "latency"
+                                # Extracting the latency unit
+                                unit = key[-2:]
+                                # Converting the units into microseconds
+                                if unit == "ns":
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value /= 1000
                                     fio_dict[operation][stat] = value
-                                if key.startswith("95.00"):
-                                    stat = "latency95"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
+                                elif unit == "us":
+                                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                else:
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                    value *= 1000
+                                    fio_dict[operation][stat] = value
+                            if key.startswith("clat"):
+                                stat = "clatency"
+                                # Extracting the latency unit
+                                unit = key[-2:]
+                                # Converting the units into microseconds
+                                if unit == "ns":
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value /= 1000
                                     fio_dict[operation][stat] = value
-                                if key.startswith("99.00"):
-                                    stat = "latency99"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
-                                    value /= 1000
+                                elif unit == "us":
+                                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                else:
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                    value *= 1000
                                     fio_dict[operation][stat] = value
-                                if key.startswith("99.50"):
-                                    stat = "latency9950"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
-                                    value /= 1000
-                                    fio_dict[operation][stat] = value
-                                if key.startswith("99.99"):
-                                    stat = "latency9999"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
-                                    value /= 1000
-                                    fio_dict[operation][stat] = value
+                    elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
+                        for key in fio_result_dict["jobs"][0][operation].keys():
+                            if key == "clat_ns":
+                                for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                    if key.startswith("90.00"):
+                                        stat = "latency90"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("95.00"):
+                                        stat = "latency95"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("99.00"):
+                                        stat = "latency99"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("99.50"):
+                                        stat = "latency9950"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("99.99"):
+                                        stat = "latency9999"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+            fun_test.debug(fio_dict)
+        except Exception as ex:
+            fun_test.critical(ex.message)
 
-        fun_test.debug(fio_dict)
         return fio_dict
 
     @fun_test.safe

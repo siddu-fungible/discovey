@@ -1,101 +1,10 @@
 from lib.system.fun_test import *
-from lib.system import utils
-from lib.topology.dut import Dut, DutInterface
-from lib.fun.f1 import F1
-from lib.host.traffic_generator import TrafficGenerator
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
-from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
+from lib.topology.topology_helper import TopologyHelper
 from lib.fun.fs import Fs
-from datetime import datetime
-import re
+from storage_helper import *
 import fun_global
 
-'''
-Script to measure performance for a Compression enabled Durable Volume 4:2 EC with Compression Effort Auto 
-and Compression Precentages (1%, 50% & 80%).
-'''
-
-tb_config = {
-    "name": "Basic Storage",
-    "dut_info": {
-        0: {
-            "mode": Dut.MODE_EMULATION,
-            "type": Dut.DUT_TYPE_FSU,
-            "num_f1s": 1,
-            "disable_f1_index": 1,
-            "ip": "server26",
-            "user": REGRESSION_USER,
-            "passwd": REGRESSION_USER_PASSWORD,
-            "emu_target": "palladium",
-            "model": "StorageNetwork2",
-            "run_mode": "build_only",
-            "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dpc-server --dpc-uart --csr-replay",
-            "huid": 3,
-            "ctlid": 2,
-            "fnid": 2,
-            "interface_info": {
-                0: {
-                    "vms": 0,
-                    "type": DutInterface.INTERFACE_TYPE_PCIE
-                }
-            },
-            "start_mode": F1.START_MODE_DPCSH_ONLY,
-            "perf_multiplier": 1
-        },
-    },
-    "dpcsh_proxy": {
-        "ip": "10.1.21.213",
-        "user": "fun",
-        "passwd": "123",
-        "dpcsh_port": 40220,
-        "dpcsh_tty": "/dev/ttyUSB8"
-    },
-    "tg_info": {
-        0: {
-            "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
-            "ip": "10.1.21.213",
-            "user": "fun",
-            "passwd": "123",
-            "ipmi_name": "cadence-pc-5-ilo",
-            "ipmi_iface": "lanplus",
-            "ipmi_user": "ADMIN",
-            "ipmi_passwd": "ADMIN",
-        }
-    }
-}
-
-
-# Todo Check Requrement of all the routines
-def get_ec_vol_cap(num_data_vol, lsv_size):
-    return align_8mb(int((lsv_size / num_data_vol) * 1.3)) * num_data_vol
-
-
-def get_blt_vol_cap(num_data_vol, lsv_size, block_size):
-    return align_8mb(int((lsv_size / num_data_vol) * 1.3)) + block_size
-
-
-def align_8mb(size):
-    align_sz = 8 << 20
-    return size + int(align_sz - (size % align_sz))
-
-
-def get_bytes_int(str_size):
-    resp = re.search(r'(\d*)([a-zA-Z])', str_size, re.M)
-    final_sz = None
-    if resp:
-        ordinal = int(resp.group(1))
-        if resp.group(2) == 'K':
-            final_sz = ordinal << 10
-        if resp.group(2) == 'M':
-            final_sz = ordinal << 20
-        if resp.group(2) == 'G':
-            final_sz = ordinal << 30
-    return final_sz
-
-
-def get_comp_percent(orig_size, comp_size):
-    return ((orig_size - comp_size) / float(orig_size)) * 100
+VOL_TYPE = "EC_COMP_FS_VOL"
 
 
 def parse_perf_stats(perf_dict):
@@ -107,243 +16,149 @@ def parse_perf_stats(perf_dict):
     return perf_dict
 
 
-VOL_TYPE = "EC_COMP_FS_VOL"
-
-
 class ECVolumeLevelScript(FunTestScript):
+    end_host = None
+    storage_controller = None
+
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy F1's.
-        2. Depoy End Host.
-        3. Launch DPC terminal.
-        4. Set Syslog Level to 2(CRIT).
+        1. Deploy the topology. i.e Bring up FS
+        2. Setup COMe, launch DPC cli
+        3. Configure Network interface between F1 and remote host.
+        4. Create 4:2 EC volume and attach it to remote host.
+        5. Execute write traffic to populate the EC volume.
         """)
 
     def setup(self):
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"],
-                    disable_f1_index=tb_config["dut_info"][0]["disable_f1_index"])
-        fun_test.shared_variables["fs"] = fs
+        config_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Config file being used: {}".format(config_file))
+        config_dict = utils.parse_file_to_json(config_file)
 
-        fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
-        f1 = fs.get_f1(index=0)
-        fun_test.shared_variables["f1"] = f1
-
-        self.db_log_time = get_current_time()
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
-
-        self.storage_controller = f1.get_dpc_storage_controller()
-
-        # Setting the syslog level to 2
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2],
-                                                      legacy=False,
-                                                      command_duration=5)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
-
-        command_result = self.storage_controller.peek(props_tree="params/syslog/level",
-                                                      legacy=False,
-                                                      command_duration=5)
-        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
-
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables["run_time"] = get_current_time()
-
-    def cleanup(self):
-        try:
-            self.storage_controller.disconnect()
-            fs = fun_test.shared_variables["fs"]
-            fs.cleanup()
-        except Exception as ex:
-            fun_test.critical(ex.message)
-
-
-class ECVolumeLevelTestcase(FunTestCase):
-    def setup(self):
-
-        testcase = self.__class__.__name__
-
-        # parse benchmark dictionary
-        benchmark_file = ""
-        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
-        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
-        benchmark_dict = utils.parse_file_to_json(benchmark_file)
-        fun_test.test_assert((testcase in benchmark_dict) or benchmark_dict[testcase],
-                             "Test Case: {0} not Present in Benchmark Json: {1}".format(testcase, benchmark_file),
-                             ignore_on_success=True)
-        # set attr variables
-        for k, v in benchmark_dict[testcase].iteritems():
-            setattr(self, k, v)
+        if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
+            fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
+            fun_test.log("Going to use the script level defaults")
+            self.bootargs = Fs.DEFAULT_BOOT_ARGS
+            self.disable_f1_index = None
+            self.f1_in_use = 0
+            self.syslog_level = 2
+            self.command_timeout = 5
+            self.reboot_timeout = 300
+        else:
+            for k, v in config_dict["GlobalSetup"].items():
+                setattr(self, k, v)
         if not hasattr(self, "num_ssd"):
-            self.num_ssd = 1
+            self.num_ssd = 6
         if not hasattr(self, "num_volume"):
             self.num_volume = 1
 
-        # generate vol_attributes
+        fun_test.log("Global Config: {}".format(self.__dict__))
 
-        # compute BLT, EC vol size
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
-        fs = fun_test.shared_variables["fs"]
-        self.end_host = fs.get_come()
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(dut_index=0,
+                                           custom_boot_args=self.bootargs,
+                                           disable_f1_index=self.disable_f1_index)
+        topology = topology_helper.deploy()
+        fun_test.test_assert(topology, "Topology deployed")
 
-        fun_test.shared_variables["ec_coding"] = self.ec_coding
-        num_blts = self.ec_coding["ndata"] + self.ec_coding["nparity"]
+        fs = topology.get_dut_instance(index=0)
 
-        self.vols_created = {}  # dict to record all uuids
-        for vtype in self.volume_types:
-            self.vols_created[vtype] = []
+        end_host = fs.get_come()
+        storage_controller = StorageController(target_ip=end_host.host_ip,
+                                               target_port=end_host.get_dpc_port(self.f1_in_use))
+        if not check_come_health(storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            end_host = topology.get_dut_instance(index=0).get_come()
+            storage_controller = StorageController(target_ip=end_host.host_ip,
+                                                   target_port=end_host.get_dpc_port(self.f1_in_use))
 
-        self.volume_info["raw"]["capacity"] = get_blt_vol_cap(self.ec_coding["ndata"],
-                                                              self.volume_info["lsv"]["capacity"],
-                                                              self.volume_info["lsv"]["block_size"])
-        self.volume_info["ec"]["capacity"] = get_ec_vol_cap(self.ec_coding["ndata"],
-                                                            self.volume_info["lsv"]["capacity"])
+        fun_test.shared_variables["end_host"] = end_host
+        fun_test.shared_variables["topology"] = topology
+        fun_test.shared_variables["storage_controller"] = storage_controller
+        fun_test.shared_variables['nsid'] = 0
+        fun_test.shared_variables['db_log_time'] = get_current_time()
+        fun_test.shared_variables["num_ssd"] = self.num_ssd
+        fun_test.shared_variables["num_volume"] = self.num_volume
 
-        # Create BLT's
-        for i in xrange(num_blts):
-            raw_vol_uuid = utils.generate_uuid()
-            raw_vol_name = "raw_vol_{}".format(i)
-            fun_test.test_assert(self.storage_controller.create_volume(type=self.volume_info["raw"]["type"],
-                                                                       capacity=self.volume_info["raw"]["capacity"],
-                                                                       block_size=self.volume_info["raw"]["block_size"],
-                                                                       name=raw_vol_name,
-                                                                       uuid=raw_vol_uuid,
+        self.end_host = end_host
+        self.storage_controller = storage_controller
+
+        # create controller
+        ctrlr_uuid = utils.generate_uuid()
+        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                       transport=self.transport,
+                                                                       huid=self.huid,
+                                                                       ctlid=self.ctlid,
+                                                                       fnid=self.fnid,
                                                                        command_duration=self.command_timeout)['status'],
-                                 message="Create BLT volume, uuid: {0}, name: {1}".format(raw_vol_uuid, raw_vol_name))
-            self.vols_created["raw"].append({"name": raw_vol_name, "uuid": raw_vol_uuid})
-        plex_ids = [x['uuid'] for x in self.vols_created["raw"]]
+                             message="Create Controller with UUID: {}".format(ctrlr_uuid))
+        fun_test.shared_variables["ctrlr_uuid"] = ctrlr_uuid
 
-        # create EC_vol
-        ec_vol_name = "ec_vol1"
-        ec_vol_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_volume(type=self.volume_info["ec"]["type"],
-                                                                   capacity=self.volume_info["ec"]["capacity"],
-                                                                   block_size=self.volume_info["ec"]["block_size"],
-                                                                   name=ec_vol_name,
-                                                                   uuid=ec_vol_uuid,
-                                                                   ndata=self.ec_coding["ndata"],
-                                                                   nparity=self.ec_coding["nparity"],
-                                                                   pvol_id=plex_ids,
-                                                                   command_duration=self.command_timeout)['status'],
-                             message="Create EC volume, uuid: {0}, name: {1}".format(ec_vol_uuid, ec_vol_name))
-        self.vols_created["ec"].append({"name": ec_vol_name, "uuid": ec_vol_uuid})
+    def cleanup(self):
+        try:
+            ctrlr_uuid = fun_test.shared_variables['ctrlr_uuid']
+            # Detaching all the EC/LS volumes to the external server
 
-        # Create jvol
-        jvol_name = "jvol1"
-        jvol_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_volume(type=self.volume_info["jvol"]["type"],
-                                                                   capacity=self.volume_info["jvol"]["capacity"],
-                                                                   block_size=self.volume_info["jvol"]["block_size"],
-                                                                   name=jvol_name,
-                                                                   uuid=jvol_uuid,
-                                                                   command_duration=self.command_timeout)['status'],
-                             message="Create Journal volume, uuid: {0}, name: {1}".format(jvol_uuid, jvol_name))
-        self.vols_created["jvol"].append({"name": jvol_name, "uuid": jvol_uuid})
+            fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                           command_duration=self.command_timeout),
+                                 message="Delete Controller uuid: {}".format(ctrlr_uuid))
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
-        # Create required LSV
-        lsv_vol_name = "lsv_vol1"
-        lsv_vol_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_volume(name=lsv_vol_name,
-                                                                   uuid=lsv_vol_uuid,
-                                                                   group=self.ec_coding["ndata"],
-                                                                   jvol_uuid=jvol_uuid,
-                                                                   pvol_id=[ec_vol_uuid],
-                                                                   command_duration=self.command_timeout,
-                                                                   **self.volume_info['lsv'])['status'],
-                             message="Create Lsv volume, uuid: {0}, name: {1}".format(lsv_vol_uuid, lsv_vol_name))
-        self.vols_created["lsv"].append({"name": lsv_vol_name, "uuid": lsv_vol_uuid})
+        self.storage_controller.disconnect()
+        fun_test.sleep("Allowing buffer time before clean-up", 30)
+        fun_test.shared_variables["topology"].cleanup()
 
-        # Create Controller
-        fun_test.shared_variables['cntrlr_uuid'] = utils.generate_uuid()
-        fun_test.test_assert(
-            self.storage_controller.create_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
-                                                      transport=self.transport,
-                                                      huid=tb_config['dut_info'][0]['huid'],
-                                                      ctlid=tb_config['dut_info'][0]['ctlid'],
-                                                      fnid=tb_config['dut_info'][0]['fnid'],
-                                                      command_duration=self.command_timeout)['status'],
-            message="Create Controller with UUID: {}".format(fun_test.shared_variables['cntrlr_uuid']))
-        fun_test.test_assert(
-            self.storage_controller.attach_volume_to_controller(ctrlr_uuid=fun_test.shared_variables['cntrlr_uuid'],
-                                                                ns_id=self.volume_info["ctrlr"]["nsid"],
-                                                                vol_uuid=lsv_vol_uuid,
-                                                                command_duration=self.command_timeout)['status'],
-            message="Attach LSV Volume {0} to the Controller with uuid: {1}".format(lsv_vol_uuid,
-                                                                                    fun_test.shared_variables[
-                                                                                        'cntrlr_uuid']))
 
-        # Disable error injection and verify
-        fun_test.test_assert(self.storage_controller.poke(props_tree=["params/ecvol/error_inject", 0],
-                                                          legacy=False,
-                                                          command_duration=self.command_timeout)['status'],
-                             message="Disabling error_injection for EC volume on DUT")
-        fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
+class ECVolumeLevelTestcase(FunTestCase):
 
-        fun_test.test_assert_expected(
-            actual=self.storage_controller.peek(props_tree="params/ecvol", legacy=False)["data"]["error_inject"],
-            expected=0,
-            message="Error injection variable set",
-            ignore_on_success=True)
+    def describe(self):
+        pass
 
-        # Check nvme device is visible to end host
-        lsblk_output = self.end_host.lsblk()
+    def setup(self):
 
-        volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n" + str(self.volume_info["ctrlr"]["nsid"])
-        for volume_name in lsblk_output:
-            match = re.search(volume_pattern, volume_name)
-            if match:
-                self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + str(
-                    self.volume_info["ctrlr"]["nsid"])
-                self.volume_name = self.nvme_block_device.replace("/dev/", "")
-                fun_test.test_assert_expected(expected=self.volume_name,
-                                              actual=lsblk_output[volume_name]["name"],
-                                              message="{} device available".format(self.volume_name))
-        fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
-        fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                      message="{} device type check".format(self.volume_name))
+        testcase = self.__class__.__name__
+        self.end_host = fun_test.shared_variables["end_host"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_parsing = True
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
 
-        # Check Compression enabled on LSV before starting performance test
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
 
-        # Get write count on LSV
-        if 'compress' in self.volume_info['lsv'].keys():
-            resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
-            fun_test.test_assert(resp, message="Get LSV stats before copmpression", ignore_on_success=True)
-            fun_test.test_assert(resp['data'][self.vols_created['lsv'][0]['uuid']]['compression'],
-                                 message="Check compression related params are seen on LSV",
-                                 ignore_on_success=True)
-            init_write_count = resp['data'][lsv_vol_uuid]['stats']['write_bytes']
+        if testcase not in benchmark_dict:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
 
-            # Do fio write for 16K
-            fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device, **self.write_ut_fio_cmd_args),
-                                 message="Execute {0} write on nvme device {1}".format(
-                                     self.write_ut_fio_cmd_args['size'],
-                                     self.nvme_block_device))
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
 
-            # Get updated write count
-            resp = self.storage_controller.peek(props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))
-            fun_test.test_assert(resp, message="Get LSV stats before compression", ignore_on_success=True)
-            fun_test.test_assert(resp['data'][lsv_vol_uuid]['compression'],
-                                 message="Check compression related params are seen on LSV",
-                                 ignore_on_success=True)
-            new_write_count = resp['data'][lsv_vol_uuid]['stats']['write_bytes']
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
 
-            bytes_sent = get_bytes_int(self.write_ut_fio_cmd_args['size'])
-            bytes_written = new_write_count - init_write_count
+        # create ec_vol
+        (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
+                                                                                       self.command_timeout)
+        fun_test.test_assert(ec_config_status, message="Configure EC volume on F1")
+        ec_uuid = self.ec_info["attach_uuid"][0]
+        ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+        fun_test.test_assert(self.storage_controller.attach_volume_to_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                                 ns_id=self.ns_id,
+                                                                                 vol_uuid=ec_uuid),
+                             message="Attaching EC Vol nsid: {} with uuid {} to controller".format(self.ns_id, ec_uuid))
 
-            percnt_comp = get_comp_percent(bytes_sent, bytes_written)
-            exp_comp_percent = self.write_ut_fio_cmd_args['buffer_compress_percentage']
-            diff = abs(exp_comp_percent - percnt_comp)
-            fun_test.test_assert(diff <= 10,
-                                 message="Compression percentage achieved: {0:04.2f}%, Input bytes sent: {1}, Compression"
-                                         " percentage achieved within 10% of error margin".format(percnt_comp,
-                                                                                                  bytes_sent))
+        # fetch nvme device
+        fetch_nvme = fetch_nvme_device(end_host=self.end_host, nsid=self.ns_id)
+        fun_test.test_assert(fetch_nvme['status'], message="Check: nvme device visible on end host")
+        self.nvme_device = fetch_nvme['nvme_device']
 
-        # Disable the udev daemon which will skew the read stats of the volume during the test
-        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-        for service in udev_services:
-            fun_test.test_assert(self.end_host.systemctl(service_name=service, action="stop"),
-                                 "Stopping {} service".format(service))
+        # set syslog level
+        set_syslog_level(self.storage_controller, self.syslog_level)
 
     def run(self):
-
+        table_data_header = None
         testcase = self.__class__.__name__
         stats_table_lst = []
         job_perfix = self.read_fio_cmd_args['name']
@@ -353,27 +168,24 @@ class ECVolumeLevelTestcase(FunTestCase):
             table_rows = []
             # Perform Writes With specified % of Compressible data
             self.write_fio_cmd_args['buffer_compress_percentage'] = test['compress_percent']
-            fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_block_device, **self.write_fio_cmd_args),
+            fun_test.test_assert(self.end_host.pcie_fio(filename=self.nvme_device, **self.write_fio_cmd_args),
                                  message="Execute {0} write on nvme device {1} compress percentage: {2}%".format(
                                      self.write_fio_cmd_args['size'],
-                                     self.nvme_block_device,
+                                     self.nvme_device,
                                      self.write_fio_cmd_args['buffer_compress_percentage']))
             # Do seq and rand read for the writes
-            for mode in self.read_modes:
+            for mode in self.fio_modes:
                 self.read_fio_cmd_args['rw'] = mode
                 self.read_fio_cmd_args['name'] = "{0}_{1}_{2}".format(job_perfix,
                                                                       mode,
                                                                       self.write_fio_cmd_args[
                                                                           'buffer_compress_percentage'])
-                fio_read_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.read_fio_cmd_args)
+                fio_read_output = self.end_host.pcie_fio(filename=self.nvme_device, **self.read_fio_cmd_args)
                 fun_test.test_assert(fio_read_output,
                                      message="Execute {0} {1} on nvme device {2} ".format(
                                          self.read_fio_cmd_args['size'],
                                          self.read_fio_cmd_args['rw'],
-                                         self.nvme_block_device))
-                fun_test.test_assert(self.storage_controller.peek(
-                    props_tree="storage/volumes/{}".format(self.volume_info["lsv"]["type"]))['status'],
-                                     message="Execute peek to check F1 status", ignore_on_success=True)
+                                         self.nvme_device))
                 perf_stats = parse_perf_stats(fio_read_output['read'])
                 if set_header:
                     set_header = False
@@ -403,15 +215,15 @@ class ECVolumeLevelTestcase(FunTestCase):
     def post_results(self, test, test_stats):
         blt = BltVolumePerformanceHelper()
 
-        blt.add_entry(date_time=fun_test.shared_variables['run_time'],
+        blt.add_entry(date_time=fun_test.shared_variables['db_log_time'],
                       volume=VOL_TYPE,
                       test=test,
                       block_size=test_stats['block_size'],
                       io_depth=test_stats['iodepth'],
                       size=test_stats['size'],
                       operation=test_stats['operation'],
-                      num_ssd=self.num_ssd,
-                      num_volume=self.num_volume,
+                      num_ssd=fun_test.shared_variables["num_ssd"],
+                      num_volume=fun_test.shared_variables["num_volume"],
                       fio_job_name=test_stats['job_name'],
                       read_iops=test_stats['iops'],
                       read_throughput=test_stats['bw'],
@@ -429,69 +241,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                       read_99_99_latency_unit="usecs")
 
     def cleanup(self):
-        try:
-            # Detach LSV from Controller
-            lsv_uuid = self.vols_created['lsv'][0]['uuid']
-            lsv_name = self.vols_created['lsv'][0]['name']
-            jvol_uuid = self.vols_created['jvol'][0]['uuid']
-            jvol_name = self.vols_created['jvol'][0]['name']
-            ec_uuid = self.vols_created['ec'][0]['uuid']
-            ec_name = self.vols_created['ec'][0]['name']
-            plex_ids = [x['uuid'] for x in self.vols_created["raw"]]
-            num_blts = self.ec_coding["ndata"] + self.ec_coding["nparity"]
-            ctrlr_uuid = fun_test.shared_variables['cntrlr_uuid']
-
-            fun_test.test_assert(self.storage_controller.detach_volume_from_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                                       ns_id=self.volume_info['ctrlr'][
-                                                                                           'nsid'],
-                                                                                       command_duration=self.command_timeout)[
-                                     'status'],
-                                 message="Detach nsid: {} from controller: {}".format(self.volume_info['ctrlr']['nsid'],
-                                                                                      ctrlr_uuid))
-
-            fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                           command_duration=self.command_timeout)[
-                                     'status'],
-                                 message="Delete Controller uuid: {}".format(ctrlr_uuid))
-
-            # Delete LSV Volume
-            self.storage_controller.delete_volume(name=lsv_name,
-                                                  uuid=lsv_uuid,
-                                                  group=self.ec_coding["ndata"],
-                                                  jvol_uuid=jvol_uuid,
-                                                  pvol_id=[ec_uuid],
-                                                  command_duration=self.command_timeout,
-                                                  **self.volume_info['lsv'])
-            # Delete the Jvol
-            self.storage_controller.delete_volume(type=self.volume_info["jvol"]["type"],
-                                                  capacity=self.volume_info["jvol"]["capacity"],
-                                                  block_size=self.volume_info["jvol"]["block_size"],
-                                                  name=jvol_name,
-                                                  uuid=jvol_uuid,
-                                                  command_duration=self.command_timeout)
-            # Delete the EC vol
-            self.storage_controller.delete_volume(type=self.volume_info["ec"]["type"],
-                                                  capacity=self.volume_info["ec"]["capacity"],
-                                                  block_size=self.volume_info["ec"]["block_size"],
-                                                  name=ec_name,
-                                                  uuid=ec_uuid,
-                                                  ndata=self.ec_coding["ndata"],
-                                                  nparity=self.ec_coding["nparity"],
-                                                  pvol_id=plex_ids,
-                                                  command_duration=self.command_timeout)
-            # Delete all blt vols.
-            for i in xrange(num_blts):
-                blt_name = self.vols_created['raw'][i]['name']
-                blt_uuid = self.vols_created['raw'][i]['uuid']
-                self.storage_controller.delete_volume(type=self.volume_info["raw"]["type"],
-                                                      capacity=self.volume_info["raw"]["capacity"],
-                                                      block_size=self.volume_info["raw"]["block_size"],
-                                                      name=blt_name,
-                                                      uuid=blt_uuid,
-                                                      command_duration=self.command_timeout)
-
-        except Exception as ex:
-            fun_test.critical(ex.message)
+        # detach volume from controller
+        ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+        fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
+            ctrlr_uuid=ctrlr_uuid,
+            ns_id=self.ns_id,
+            command_duration=self.command_timeout)['status'],
+                             message="Detach nsid: {} from controller: {}".format(self.ns_id, ctrlr_uuid))
+        self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                      command_timeout=self.command_timeout)
+        # delete volume
 
 
 class EC42FioReadEffortAuto(ECVolumeLevelTestcase):
@@ -547,6 +306,4 @@ if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(EC42FioReadEffortAuto())
     ecscript.add_test_case(EC42FioReadCompDisabled())
-    init_time = time.time()
     ecscript.run()
-    fun_test.add_checkpoint("Script Run time: {}", time.time() - init_time)

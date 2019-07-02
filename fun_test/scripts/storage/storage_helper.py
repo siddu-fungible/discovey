@@ -4,6 +4,8 @@ import re
 from prettytable import PrettyTable
 import time
 from collections import OrderedDict
+from lib.host.storage_controller import StorageController
+from lib.system import utils
 
 DPCSH_COMMAND_TIMEOUT = 5
 
@@ -265,3 +267,24 @@ def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+def check_come_health(storage_controller):
+    blt_vol_info = {
+        "type": "VOL_TYPE_BLK_LOCAL_THIN",
+        "capacity": 10485760,
+        "block_size": 4096,
+        "name": "thin-block1"}
+    result = False
+    try:
+        blt_uuid = utils.generate_uuid()
+        response = storage_controller.create_thin_block_volume(capacity=blt_vol_info["capacity"],
+                                                               block_size=blt_vol_info["block_size"],
+                                                               name=blt_vol_info['name'],
+                                                               uuid=blt_uuid,
+                                                               command_duration=30)
+        if response["status"]:
+            result = True
+    except Exception as ex:
+        fun_test.critical(ex.message)
+    return result
