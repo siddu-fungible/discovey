@@ -65,6 +65,12 @@ class ECVolumeSanityScript(FunTestScript):
         come = fs.get_come()
         storage_controller = StorageController(target_ip=come.host_ip,
                                                target_port=come.get_dpc_port(self.f1_in_use))
+        if not check_come_health(storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            come = topology.get_dut_instance(index=0).get_come()
+            storage_controller = StorageController(target_ip=come.host_ip,
+                                                   target_port=come.get_dpc_port(self.f1_in_use))
 
         end_host = None
         test_interface_name = None

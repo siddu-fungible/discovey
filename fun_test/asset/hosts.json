@@ -122,6 +122,11 @@
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
   },
+  "nu-lab-06": {
+    "host_ip": "nu-lab-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
   "mktg-server-01": {
     "host_ip": "mktg01",
     "ssh_username": "localadmin",
