@@ -353,6 +353,8 @@ def get_past_build_status(request):
               "failed_git_commit": previous_entry.git_commit}
     return result
 
+
+
 @csrf_exempt
 @api_safe_json_response
 def get_first_degrade(request):
