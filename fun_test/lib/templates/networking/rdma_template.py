@@ -125,10 +125,15 @@ class RdmaTemplate(object):
             fun_test.critical(str(ex))
         return result
 
-    def start_test(self, client_obj, server_obj, iterations):
+    def start_test(self, client_obj, server_obj, iterations, set_paths=False):
         result_dict = {}
         try:
             fun_test.log_section("Run %s client" % (str(client_obj)))
+            if set_paths:
+                client_obj.add_path(additional_path=PATH)
+                client_obj.set_ld_library_path()
+                server_obj.add_path(additional_path=PATH)
+                server_obj.set_ld_library_path()
             ibv_device = self.get_ibv_device(host_obj=client_obj)
             if self.test_type == IB_WRITE_BANDWIDTH_TEST:
                 cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (
@@ -164,7 +169,7 @@ class RdmaTemplate(object):
                 for c_s_dict in self.client_server_objs:
                     for client_obj, server_obj in c_s_dict.items():
                         multi_task_obj.add_task(func=self.start_test,
-                                                func_args=(client_obj, server_obj, iterations),
+                                                func_args=(client_obj, server_obj, iterations, True),
                                                 task_key="process_%s" % process_count)
                         process_count += 1
                 run_started = multi_task_obj.run(max_parallel_processes=process_count, parallel=True)

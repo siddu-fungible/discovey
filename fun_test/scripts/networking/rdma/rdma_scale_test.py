@@ -57,9 +57,8 @@ class RdmaWriteBandwidthTest(FunTestCase):
                                           size=size_in_bytes, duration=duration, inline_size=inline_size,
                                           client_server_objs=client_server_objs)
         if self.setup_test:
-            pass
-            # result = self.rdma_template.setup_test()
-            # fun_test.test_assert(result, checkpoint)
+            result = self.rdma_template.setup_test()
+            fun_test.test_assert(result, checkpoint)
 
     def run(self):
         scenario_type = fun_test.shared_variables['scenario']
@@ -68,7 +67,7 @@ class RdmaWriteBandwidthTest(FunTestCase):
         result = self.rdma_template.setup_servers()
         fun_test.test_assert(result, checkpoint)
 
-        checkpoint = "Connect to each client and initiate RDMA write bandwidth traffic towards each server"
+        checkpoint = "Connect to each client and initiate RDMA traffic towards each server"
         if self.iterations:
             val = self.rdma_helper.get_traffic_iterations() if self.rdma_helper.get_traffic_iterations() else 100
         else:
