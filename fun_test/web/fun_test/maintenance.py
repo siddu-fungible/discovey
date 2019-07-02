@@ -460,7 +460,7 @@ if __name__=="__main__inspur_random_read_write_iodepth_vol":
     print "added datasets for inspur containers"
 
 
-if __name__ == "__main__":
+if __name__ == "__main_durable_volume_ec__":
     # __main_1_change_from_0 % _to_no_compression_(aamir)
     metric_id_list = [535, 536, 538, 539]
     for metric_id in metric_id_list:
@@ -529,3 +529,18 @@ if __name__ == "__main__":
         data_sets = json.dumps(data_sets_list)
         chart.data_sets = data_sets
         chart.save()
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    leafCount = 0
+    modelCount = 0
+    for entry in entries:
+        if not entry.leaf and entry.metric_model_name == "MetricContainer":
+            data_sets = []
+            one_data_set = {}
+            one_data_set["name"] = "Scores"
+            one_data_set["output"] = {"min": 0, "max": 200}
+            data_sets.append(one_data_set)
+            entry.data_sets = json.dumps(data_sets)
+            entry.save()
+    print "Added datasets for containers"
