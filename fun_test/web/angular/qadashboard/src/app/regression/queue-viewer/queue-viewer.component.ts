@@ -3,6 +3,7 @@ import {ApiService} from "../../services/api/api.service";
 import {Observable, of, interval, timer} from "rxjs";
 import {switchMap, switchMapTo} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
+import {UserService} from "../../services/user/user.service";
 
 class JobSpec {
   suite_type: string;
@@ -34,8 +35,8 @@ export class QueueViewerComponent implements OnInit {
   highPriorityQueueOccupancy: QueueEntry[] = [];
   normalPriorityQueueOccupancy: QueueEntry[] = [];
   lowPriorityQueueOccupancy: QueueEntry[] = [];
-
-  constructor(private apiService: ApiService, private loggerService: LoggerService) { }
+  userMap: any = null;
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private userService: UserService) { }
 
   ngOnInit() {
     this.priorityCategories.forEach(category => {
@@ -44,6 +45,13 @@ export class QueueViewerComponent implements OnInit {
 
     this.getQueueInfo().subscribe(response => {
     });
+
+    this.userService.getUserMap().subscribe(response => {
+      this.userMap = response;
+    }, error => {
+      this.loggerService.error("Unable to fetch user map");
+    })
+
   }
 
   getQueueInfo(): Observable<boolean> {

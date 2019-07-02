@@ -944,7 +944,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   fetchChartInfo(flatNode) {
-    if (flatNode.node.leaf && (!flatNode.node.chartInfo || !flatNode.node.chartInfo)) {
+    if (flatNode.node.leaf && (!flatNode.node.chartInfo || !flatNode.node.pastStatus)) {
       this.service.chartInfo(flatNode.node.metricId).subscribe((response) => {
       flatNode.node.chartInfo = response;
       this.service.pastStatus(flatNode.node.metricId).subscribe((response) => {
