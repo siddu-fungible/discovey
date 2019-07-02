@@ -1,18 +1,15 @@
 import {Component, OnInit, Input, OnChanges, Output, EventEmitter, Renderer2} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 import {from, Observable, of} from "rxjs";
 import {mergeMap, switchMap} from "rxjs/operators";
-import { CommonService } from "../services/common/common.service";
-
+import { CommonService } from "../../services/common/common.service";
 @Component({
-  selector: 'app-test',
-  templateUrl: './test.component.html',
-  styleUrls: ['./test.component.css']
+  selector: 'app-regression-summary-widget',
+  templateUrl: './regression-summary-widget.component.html',
+  styleUrls: ['./regression-summary-widget.component.css']
 })
-
-
-export class TestComponent implements OnInit {
+export class RegressionSummaryWidgetComponent implements OnInit {
 
   initialFilterData = [{info: "Networking overall", payload: {module: "networking"}}, {info: "Storage overall", payload: {module: "storage"}}];
 
