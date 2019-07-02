@@ -54,17 +54,17 @@ export class TestComponent implements OnInit {
     console.log('initializing y1values');
     this.y1Values = [{
         name: 'Passed',
-        data: [],
+        data: [null, null], //length of initial filter data
         color: 'green'
     }
     ,  {
         name: 'Failed',
-        data: [],
+        data: [null, null],
         color: 'red'
 
     }, {
         name: 'Not-run',
-        data: [],
+        data: [null, null],
         color: 'grey'
 
     }];
@@ -115,7 +115,7 @@ export class TestComponent implements OnInit {
   //initialFilterData[filterIndex].payload
 
 
-  test(index: any): any{
+  test(index: number): any{
     console.log('beginning test');
     let today = new Date();
     let payload = this.initialFilterData[index].payload;
@@ -123,7 +123,7 @@ export class TestComponent implements OnInit {
       for (let i in response.data) {
         let historyTime = new Date(this.commonService.convertToLocalTimezone(response.data[i].started_time)); //.replace(/\s+/g, 'T')); // For Safari
         if (this.commonService.isSameDay(historyTime, today) && response.data[i].is_re_run == false){
-          if (response.data[i].result == 'FAILED' && this.commonService.isSameDay(historyTime, today)) {
+          if (response.data[i].result == 'FAILED') {
           ++this.numFailed;
           console.log(payload.module + " fails " + this.numFailed);
         }
@@ -144,17 +144,17 @@ export class TestComponent implements OnInit {
         }
       }
       //console.log('Inside request: ' + payload['module'] + ' num passed: ' + this.numPassed + ' num failed: ' + this.numFailed);
-      this.populateResults();
+      this.populateResults(index);
       this.numPassed = this.numFailed = this.numNotRun = 0;
       return of(true);
     }));
   }
 
-  populateResults() {
+  populateResults(index: number) {
       console.log('populating results');
-      this.y1Values[0].data.push(this.numPassed);
-      this.y1Values[1].data.push(this.numFailed);
-      this.y1Values[2].data.push(this.numNotRun);
+      this.y1Values[0].data[index] = this.numPassed;
+      this.y1Values[1].data[index] = this.numFailed;
+      this.y1Values[2].data[index] = this.numNotRun;
 
       //this.donePopulation = true;
       this.y1Values = [...this.y1Values];
