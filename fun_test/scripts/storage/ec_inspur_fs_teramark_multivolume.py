@@ -996,6 +996,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                         aggr_fio_output[iodepth][op][field] = int(round(value) / self.num_hosts)
                     row_data_dict[op + field] = aggr_fio_output[iodepth][op][field]
 
+            fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
+
             if not aggr_fio_output[iodepth]:
                 fio_result[iodepth] = False
                 fun_test.critical("No output from FIO test, hence moving to the next variation")
