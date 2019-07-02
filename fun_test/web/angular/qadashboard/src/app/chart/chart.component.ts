@@ -21,6 +21,8 @@ export class ChartComponent implements OnInit {
   title: string = null;
   chartType: string = null;
   funChartType: string = null;
+  xScale: string = null;
+  yScale: string = null;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
   }
@@ -53,6 +55,8 @@ export class ChartComponent implements OnInit {
       this.title = this.chartInfo.title;
       this.chartType = this.chartInfo.chart_type;
       this.funChartType = this.chartInfo.fun_chart_type;
+      this.xScale = this.chartInfo.x_scale;
+      this.yScale = this.chartInfo.y_scale;
       return of(true);
     }));
   }
@@ -63,8 +67,8 @@ export class ChartComponent implements OnInit {
     return this.apiService.post("/api/v1/performance/data", payload).pipe(switchMap(response => {
       let values = response.data;
       this.initializeY1Values();
-      Object.keys(values).forEach((dataSetName) => {
-        let dataSet = values[dataSetName];
+      Object.keys(values).forEach((seriesName) => {
+        let dataSet = values[seriesName];
         let sortedValues = [];
         dataSet["values"].forEach(function (value, i) {
           let oneValue = {};
@@ -75,13 +79,24 @@ export class ChartComponent implements OnInit {
         sortedValues.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
         this.xValues = [];
         for (let sortedValue of sortedValues) {
-          let xValue = Math.log2(Number(sortedValue.name));
-          // let xValue = sortedValue.name;
+          let xValue, yValue;
+          if (this.xScale.includes('log2')) {
+            xValue = Math.log2(Number(sortedValue.name));
+          } else if (this.xScale.includes('log10')) {
+            xValue = Math.log10(Number(sortedValue.name));
+          } else {
+            xValue = sortedValue.name;
+          }
+          if (this.yScale.includes('log2')) {
+            yValue = Math.log2(Number(sortedValue.value));
+          } else if (this.yScale.includes('log10')) {
+            yValue = Math.log10(Number(sortedValue.value));
+          } else {
+            yValue = sortedValue.value;
+          }
           this.xValues.push(xValue);
-          let yValue = Math.log10(Number(sortedValue.value));
-          // let yValue = sortedValue.value;
           for (let y1Value of this.y1Values) {
-            if (y1Value.name === dataSetName) {
+            if (y1Value.name === seriesName) {
               y1Value.data.push(yValue);
             }
           }

@@ -17,6 +17,8 @@ def charts(request, id):
                 result["title"] = chart.title
                 result["chart_type"] = chart.chart_type
                 result["fun_chart_type"] = chart.fun_chart_type
+                result["x_scale"] = chart.x_scale
+                result["y_scale"] = chart.y_scale
         except ObjectDoesNotExist:
             result = {}
     return result

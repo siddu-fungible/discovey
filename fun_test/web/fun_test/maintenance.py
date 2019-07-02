@@ -589,7 +589,8 @@ if __name__ == "__main__":
         print json.dumps(data_sets)
         chart_id = LastChartId.get_next_id()
         Chart(chart_id=chart_id, title=title, x_axis_title=xaxis_title, y_axis_title=yaxis_title,
-              chart_type=chart_type, fun_chart_type=fun_chart_type, series_filters=data_sets).save()
+              chart_type=chart_type, fun_chart_type=fun_chart_type, series_filters=data_sets, x_scale="log2",
+              y_scale="log10").save()
         chart = MetricChart.objects.get(internal_chart_name=chart_name)
         if chart:
             chart.companion_charts = [chart_id]

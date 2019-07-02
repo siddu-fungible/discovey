@@ -711,6 +711,8 @@ class Chart(models.Model):
     y_axis_title = models.TextField(default="")
     series_filters = JSONField(default=[])
     chart_id = models.IntegerField(default=-1, unique=True)
+    x_scale = models.TextField(default="")
+    y_scale = models.TextField(default="")
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.chart_type, self.fun_chart_type, self.xaxis_title,
