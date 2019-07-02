@@ -115,18 +115,15 @@ export class TestComponent implements OnInit {
   //initialFilterData[filterIndex].payload
 
 
-
-
-
   test(index: any): any{
     console.log('beginning test');
     let today = new Date();
     let payload = this.initialFilterData[index].payload;
-      return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=4", payload).pipe(switchMap((response) => {
+      return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=1", payload).pipe(switchMap((response) => {
       for (let i in response.data) {
         let historyTime = new Date(this.commonService.convertToLocalTimezone(response.data[i].started_time)); //.replace(/\s+/g, 'T')); // For Safari
-        if (this.commonService.isSameDay(historyTime, today)){
-          if (response.data[i].result == 'FAILED') {
+        if (this.commonService.isSameDay(historyTime, today) && response.data[i].is_re_run == false){
+          if (response.data[i].result == 'FAILED' && this.commonService.isSameDay(historyTime, today)) {
           ++this.numFailed;
           console.log(payload.module + " fails " + this.numFailed);
         }
@@ -162,16 +159,12 @@ export class TestComponent implements OnInit {
       //this.donePopulation = true;
       this.y1Values = [...this.y1Values];
       console.log('end populate results');
-      
-
-
-
 
   }
 
 
 
 
-}
 
+}
 
