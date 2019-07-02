@@ -49,13 +49,15 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(topology, "Topology deployed")
 
         fs = topology.get_dut_instance(index=0)
-        if not check_come_health(fs_obj=fs, f1_in_use=self.f1_in_use):
-            topology = topology_helper.deploy()
-            fun_test.test_assert(topology, "Topology deployed")
-
         end_host = fs.get_come()
         storage_controller = StorageController(target_ip=end_host.host_ip,
                                                target_port=end_host.get_dpc_port(self.f1_in_use))
+        if not check_come_health(storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            end_host = topology.get_dut_instance(index=0).get_come()
+            storage_controller = StorageController(target_ip=end_host.host_ip,
+                                                   target_port=end_host.get_dpc_port(self.f1_in_use))
 
         fun_test.shared_variables["end_host"] = end_host
         fun_test.shared_variables["topology"] = topology

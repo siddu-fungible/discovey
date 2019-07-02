@@ -253,8 +253,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.f1_ips = []
         self.gateway_ips = []
         for curr_index, dut_index in enumerate(self.available_dut_indexes):
-            self.fs_objs.append(self.topology.get_dut_instance(index=i))
-            self.fs_spec.append(self.topology.get_dut(index=i))
+            self.fs_objs.append(self.topology.get_dut_instance(index=dut_index))
+            self.fs_spec.append(self.topology.get_dut(index=dut_index))
             self.come_obj.append(self.fs_objs[curr_index].get_come())
             self.f1_objs[curr_index] = []
             for j in xrange(self.num_f1_per_fs):
