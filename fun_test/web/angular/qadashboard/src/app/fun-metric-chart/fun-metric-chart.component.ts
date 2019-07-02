@@ -261,12 +261,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let gitCommit = "Unknown";
     let key = this._getBuildKey(x);
     let s = "";
-    if (x)
+    if (x) {
       s += "<b>Date:</b> " + x.substring(0, 5) + "<br>";
-    if (metaData.originalValue)
+    }
+    if (metaData.originalValue) {
       s += "<b>Value:</b> " + metaData.originalValue + "<br>";
-    else
+    } else {
       s += "<b>Value:</b> " + y + "<br>";
+    }
     return s;
   }
 
@@ -286,32 +288,40 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let lsfJobId = this.buildInfo[key]["lsf_job_id"];
       let version = this.buildInfo[key]["sdk_version"];
       let suite_execution_id = this.buildInfo[key]["suite_execution_id"];
-      if (sdkBranch !== "")
+      if (sdkBranch !== "") {
         s["SDK branch"] = sdkBranch;
-      if (lsfJobId !== "")
+      }
+      if (lsfJobId !== "") {
         s["Lsf job id"] = lsfJobId;
+      }
       if (suite_execution_id !== -1) {
         s["Suite execution detail"] = suite_execution_id;
         s["Suite log directory"] = suite_execution_id;
       }
-      if (Number(softwareDate) > 0)
+      if (Number(softwareDate) > 0) {
         s["Software date"] = softwareDate;
-      if (hardwareVersion !== "")
+      }
+      if (hardwareVersion !== "") {
         s["Hardware version"] = hardwareVersion;
+      }
       if (version !== "") {
         s["SDK version"] = "bld_" + version;
       }
-      if (this.buildInfo[key]["git_commit"] !== "")
+      if (this.buildInfo[key]["git_commit"] !== "") {
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
-      if (buildProperties !== "")
+      }
+      if (buildProperties !== "") {
         s["Build Properties"] = buildProperties;
+      }
     }
-    if (x)
+    if (x) {
       s["Date"] = x.substring(0, 5);
-    if (metaData.originalValue)
+    }
+    if (metaData.originalValue) {
       s["Value"] = metaData.originalValue;
-    else
+    } else {
       s["Value"] = y;
+    }
     return s;
   }
 
