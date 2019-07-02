@@ -175,9 +175,11 @@
               <th *ngIf="leaf">Field</th>
               <th>Min</th>
               <th>Max</th>
-              <th *ngIf="leaf">Expected</th>
-              <th *ngIf="leaf">Reference</th>
-              <th *ngIf="leaf">Unit</th>
+              <ng-container *ngIf="leaf">
+                <th>Expected</th>
+              <th>Reference</th>
+              <th>Unit</th>
+              </ng-container>
             </tr>
             <tr *ngFor="let dataSet of previewDataSets">
               <td>{{ dataSet.name }}</td>
@@ -186,13 +188,15 @@
                          style="width: 100px"></td>
               <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
                          style="width: 100px"></td>
-              <td *ngIf="leaf"><input type="number" [(ngModel)]="dataSet.output.expected"
+              <ng-container *ngIf="leaf">
+              <td><input type="number" [(ngModel)]="dataSet.output.expected"
                          [value]="dataSet.output.expected"
                          style="width: 100px"></td>
-              <td *ngIf="leaf"><input type="number" [(ngModel)]="dataSet.output.reference"
+              <td><input type="number" [(ngModel)]="dataSet.output.reference"
                          [value]="dataSet.output.reference"
                          style="width: 100px"></td>
-              <td *ngIf="leaf">{{ dataSet.output.unit }}</td>
+              <td>{{ dataSet.output.unit }}</td>
+              </ng-container>
             </tr>
           </table>
           <table class="table table-nonfluid table-borderless">
@@ -225,11 +229,13 @@
               </td>
             </tr>
           </table>
-          <p *ngIf="leaf"><input type="checkbox" [checked]="negativeGradient"
+          <ng-container *ngIf="leaf">
+          <p><input type="checkbox" [checked]="negativeGradient"
                               [(ngModel)]="inner.negativeGradient">&nbsp;Negative
             gradient
           </p>
-          <p *ngIf="leaf"><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+          <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+          </ng-container>
           <p class="no-margin"><a target="_blank" href="/admin/fun_test/metricchart/{{ chartInfo.pk }}/change/">Admin
             link</a></p>
           <div class="row">
