@@ -867,7 +867,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                 storage_controller=self.storage_controller,
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
-                                                                count=int(mpstat_count))
+                                                                count=int(mpstat_count), threaded=True)
             else:
                 fun_test.critical("Not starting the vp_utils stats collection because of lack of interval and count "
                                   "details")
@@ -969,6 +969,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                    global vp_stats_thread_stop_status
+                    vp_stats_thread_stop_status[self.storage_controller] = True
                     fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
 
             # Summing up the FIO stats from all the hosts
@@ -1033,6 +1035,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Checking whether the vp_util stats collection thread is still running...If so stopping it...
             if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                 fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                global vp_stats_thread_stop_status
+                vp_stats_thread_stop_status[self.storage_controller] = True
                 fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
             fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
