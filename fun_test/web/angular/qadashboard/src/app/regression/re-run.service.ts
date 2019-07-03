@@ -170,7 +170,7 @@ export class ReRunService {
           result["numTotal"] += 1;
           let reRunState = reRunInfo[index].re_run.attributes.result;
 
-          if (reRunState >= 30) {
+          if (reRunState >= 30) { // TODO
             result["numActive"] += 1;
           } else {
             result["numCompleted"] += 1;

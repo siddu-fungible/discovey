@@ -46,13 +46,19 @@ export class FunChartComponent implements OnInit, OnChanges {
           categories: this.xValues,
           labels: {
             formatter: function () {
-              return self.xAxisFormatter(this.value);
+              if (self.xAxisFormatter)
+                return self.xAxisFormatter(this.value);
+              else
+                return this.value;
             }
           },
         },
         tooltip: {
           formatter: function () {
-            return self.tooltipFormatter(this.x, this.y, this.point.metaData);
+            if (self.tooltipFormatter)
+              return self.tooltipFormatter(this.x, this.y, this.point.metaData);
+            else
+              return this.y;
           }
         },
         yAxis: {

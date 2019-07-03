@@ -325,6 +325,11 @@ export class RegressionComponent implements OnInit {
           }
         }
       }
+      item["parsedEnvironment"] = environment;
+    }
+    if (item.hasOwnProperty('fields') && item.fields.hasOwnProperty('inputs')) {
+      let inputs = JSON.parse(item.fields.inputs);
+      item["parsedInputs"] = inputs;
     }
   }
 

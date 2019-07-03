@@ -8,7 +8,7 @@
         <a (click)="setTimeMode('week')"> Week </a>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <b><u><a (click)="setTimeMode('all')"> All </a></u></b>
-        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit"
+        <select *ngIf="leaf" [(ngModel)]="selectedUnit"
                 (ngModelChange)="onUnitChange($event)" style="float: right">
           <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
         </select>
@@ -17,7 +17,7 @@
         <b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <a (click)="setTimeMode('all')"> All </a>
-        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit"
+        <select *ngIf="leaf" [(ngModel)]="selectedUnit"
                 (ngModelChange)="onUnitChange($event)" style="float: right">
           <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
         </select>
@@ -26,7 +26,7 @@
         <a (click)="setTimeMode('week')"> Week </a>/
         <b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/
         <a (click)="setTimeMode('all')"> All </a>
-        <select *ngIf="modelName !== 'MetricContainer'" [(ngModel)]="selectedUnit"
+        <select *ngIf="leaf" [(ngModel)]="selectedUnit"
                 (ngModelChange)="onUnitChange($event)" style="float: right">
           <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
         </select>
@@ -42,7 +42,7 @@
                [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"
                [pointClickCallback]="pointClickCallback" (pointInfo)="showPointDetails($event)"></fun-chart>
     <!--showing clicked point details when selected on a chart-->
-    <div class="card" *ngIf="pointClicked && modelName !== 'MetricContainer'">
+    <div class="card" *ngIf="pointClicked && leaf">
       <div class="properties-margin">
         <table>
           <tr *ngFor="let point of pointInfo">
@@ -80,9 +80,9 @@
         <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
       </div>
     </div>
-    <!-- showing owner info and description only when leaf charts are clicked -->
+    <!-- showing owner info only when leaf charts are clicked -->
     <div *ngIf="!minimal">
-      <div *ngIf="modelName !== 'MetricContainer'">
+      <div *ngIf="leaf">
         <i *ngIf="!editingOwner" class="grey-text">Owner: <span
           (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
         <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text"
@@ -113,7 +113,7 @@
       </div>
       <br>
       <br>
-      <div *ngIf="modelName !== 'MetricContainer'">
+      <div *ngIf="leaf">
         <b>Show expected values:</b>&nbsp;
         <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select
           All</a>
@@ -143,7 +143,7 @@
     <br>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->
-    <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+    <div *ngIf="!minimal && leaf" style="padding-top: 10px; padding-bottom: 10px;">
       <div *ngIf="!minimal">
     <span class="a-text">
       <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
@@ -160,32 +160,35 @@
       </div>
     </div>
     <!-- configure button below the leaf chart -->
-    <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+    <div *ngIf="!minimal" style="padding-top: 10px; padding-bottom: 10px;">
       <div *ngIf="!minimal">
-    <span class="a-text">
-      <a [routerLink]="" (click)="showConfigure()">Configure </a>
-      <a [routerLink]="" (click)="showConfigure()"><span *ngIf="!showingConfigure" class="arrow-right"></span>
-        <span *ngIf="showingConfigure" class="arrow-down"></span>
-      </a>
-    </span>
+        <span class="a-text">
+          <a [routerLink]="" (click)="showConfigure()">Configure </a>
+          <a [routerLink]="" (click)="showConfigure()"><span *ngIf="!showingConfigure" class="arrow-right"></span>
+            <span *ngIf="showingConfigure" class="arrow-down"></span>
+          </a>
+        </span>
         <div *ngIf="showingConfigure">
           <table class="table table-nonfluid table-borderless">
             <tr>
               <th>Name</th>
-              <th>Field</th>
+              <th *ngIf="leaf">Field</th>
               <th>Min</th>
               <th>Max</th>
-              <th>Expected</th>
+              <ng-container *ngIf="leaf">
+                <th>Expected</th>
               <th>Reference</th>
               <th>Unit</th>
+              </ng-container>
             </tr>
             <tr *ngFor="let dataSet of previewDataSets">
               <td>{{ dataSet.name }}</td>
-              <td>{{ dataSet.output.name }}</td>
+              <td *ngIf="leaf">{{ dataSet.output.name }}</td>
               <td><input type="number" [(ngModel)]="dataSet.output.min" [value]="dataSet.output.min"
                          style="width: 100px"></td>
               <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
                          style="width: 100px"></td>
+              <ng-container *ngIf="leaf">
               <td><input type="number" [(ngModel)]="dataSet.output.expected"
                          [value]="dataSet.output.expected"
                          style="width: 100px"></td>
@@ -193,6 +196,7 @@
                          [value]="dataSet.output.reference"
                          style="width: 100px"></td>
               <td>{{ dataSet.output.unit }}</td>
+              </ng-container>
             </tr>
           </table>
           <table class="table table-nonfluid table-borderless">
@@ -214,7 +218,7 @@
                 </select>
               </td>
             </tr>
-            <tr>
+            <tr *ngIf="leaf">
               <td>
                 Visualization Unit:&nbsp;
               </td>
@@ -225,10 +229,13 @@
               </td>
             </tr>
           </table>
-          <p><input type="checkbox" [checked]="negativeGradient" [(ngModel)]="inner.negativeGradient">&nbsp;Negative
+          <ng-container *ngIf="leaf">
+          <p><input type="checkbox" [checked]="negativeGradient"
+                              [(ngModel)]="inner.negativeGradient">&nbsp;Negative
             gradient
           </p>
           <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+          </ng-container>
           <p class="no-margin"><a target="_blank" href="/admin/fun_test/metricchart/{{ chartInfo.pk }}/change/">Admin
             link</a></p>
           <div class="row">
@@ -237,7 +244,6 @@
               <a (click)="showConfigure()"> Cancel</a>
             </div>
           </div>
-
         </div>
       </div>
     </div>
