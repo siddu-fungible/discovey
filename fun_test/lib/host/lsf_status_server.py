@@ -98,7 +98,7 @@ class LsfStatusServer:
         jobs_by_tag_response = self.get_jobs_by_tag(tag=tag)
         if jobs_by_tag_response:
             response_dict = json.loads(jobs_by_tag_response)
-            fun_test.log(json.dumps(response_dict, indent=4))
+            # fun_test.log(json.dumps(response_dict, indent=4))
             past_jobs = response_dict["past_jobs"]
 
         if add_info_to_db:
@@ -119,7 +119,7 @@ class LsfStatusServer:
                 response = self.get_job_by_id(job_id=job_info["job_id"])  # Workaround
                 try:
                     response_dict = json.loads(response)
-                    fun_test.log(json.dumps(response_dict, indent=4))
+                    # fun_test.log(json.dumps(response_dict, indent=4))
                     output_text = response_dict["output_text"]
                     past_job["date_time"] = dt
                     past_job["output_text"] = output_text
