@@ -547,7 +547,7 @@ if __name__=="__main_container_data_sets__":
             entry.save()
     print "Added datasets for containers"
 
-if __name__ == "__main__":
+if __name__ == "__main_companion_charts__":
     charts = ["iops", "latency"]
     xaxis_title = "log2(qDepth)"
     chart_type = ChartType.REGULAR

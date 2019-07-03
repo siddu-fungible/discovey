@@ -125,7 +125,6 @@ class SiteState():
 
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
-            # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
             m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
             m.chart_name = metric["label"]
             m.save()
@@ -152,19 +151,16 @@ class SiteState():
                 m.children = "[]"
             except Exception as ex:
                 pass
-            m.children_weights = "{}"
+            # m.children_weights = "{}"
             m.save()
             for child in children:
                 c = self._do_register_metric(metric=child)
                 if c:
                     m.add_child(child_id=c.metric_id)
-                    child_weight = 0
-                    if "weight" in child:
-                        child_weight = child["weight"]
-                    m.add_child_weight(child_id=c.metric_id, weight=child_weight)
                     if "metric_model_name" in child and child["metric_model_name"] != "MetricContainer":
                         all_metrics_chart.add_child(child_id=c.metric_id)
                         all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
+            m.save()
         if "extensible_references" in metric:
             references = metric["extensible_references"]
             if len(references):
@@ -172,14 +168,12 @@ class SiteState():
                     try:
                         reference_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name=reference)
                         reference_children = json.loads(reference_chart.children)
-                        reference_weights = json.loads(reference_chart.children_weights)
                         for child in reference_children:
                             m.add_child(child_id=child)
-                        for child_weight in reference_weights:
-                            m.add_child_weight(child_id=child_weight, weight=reference_weights[child_weight])
                         m.save()
                     except Exception as ex:
                         pass
+        m.update_children_weights()
 
         return m
 
