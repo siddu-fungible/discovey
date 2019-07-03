@@ -465,7 +465,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
-                self.storage_controller.verbose = True
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
@@ -779,8 +778,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "fio_job_name"]
         table_data_rows = []
 
-        self.storage_controller.verbose = False
-
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
         # If so, override the script default with the user provided config
         job_inputs = fun_test.get_job_inputs()
@@ -870,7 +867,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                 storage_controller=self.storage_controller,
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
-                                                                count=int(mpstat_count))
+                                                                count=int(mpstat_count), threaded=True)
             else:
                 fun_test.critical("Not starting the vp_utils stats collection because of lack of interval and count "
                                   "details")
@@ -972,6 +969,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                    global vp_stats_thread_stop_status
+                    vp_stats_thread_stop_status[self.storage_controller] = True
                     fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
 
             # Summing up the FIO stats from all the hosts
@@ -1040,6 +1039,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Checking whether the vp_util stats collection thread is still running...If so stopping it...
             if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                 fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                global vp_stats_thread_stop_status
+                vp_stats_thread_stop_status[self.storage_controller] = True
                 fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
             fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
