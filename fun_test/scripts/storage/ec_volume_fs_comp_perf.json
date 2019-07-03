@@ -62,7 +62,7 @@
     "read_fio_cmd_args": {
       "bs": "4k",
       "numjobs": 8,
-      "cpumask": 1,
+      "cpus_allowed": "0-7",
       "iodepth": 16,
       "size": "100%",
       "rw": "read",
@@ -150,9 +150,9 @@
     "read_fio_cmd_args": {
       "bs": "4k",
       "numjobs": 8,
-      "cpumask": 1,
+      "cpus_allowed": "0-7",
       "iodepth": 16,
-      "size": "25G",
+      "size": "100%",
       "rw": "read",
       "name": "ec_fio_25G_comp_disabled",
       "direct": 1,
