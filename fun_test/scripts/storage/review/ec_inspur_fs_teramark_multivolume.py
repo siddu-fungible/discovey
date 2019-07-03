@@ -465,6 +465,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
+                self.storage_controller.verbose = True
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
@@ -777,6 +778,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
+
+        self.storage_controller.verbose = False
 
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
         # If so, override the script default with the user provided config
