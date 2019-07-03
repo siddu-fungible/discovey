@@ -173,7 +173,7 @@ class SiteState():
                         m.save()
                     except Exception as ex:
                         pass
-        m.update_children_weights()
+        m.fix_children_weights()
 
         return m
 
