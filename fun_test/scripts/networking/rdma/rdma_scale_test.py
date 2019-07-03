@@ -108,5 +108,5 @@ class RdmaWriteLatencyTest(RdmaWriteBandwidthTest):
 if __name__ == '__main__':
     ts = BasicSetup()
     ts.add_test_case(RdmaWriteBandwidthTest())
-    # ts.add_test_case(RdmaWriteLatencyTest())
+    ts.add_test_case(RdmaWriteLatencyTest())
     ts.run()

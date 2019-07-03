@@ -39,11 +39,6 @@
         "client_id": "c2",
         "host_ip": "cab02-qa-06",
         "hu_interface_ip": "41.1.1.3"
-      },
-      {
-        "client_id": "c3",
-        "host_ip": "cab02-qa-07",
-        "hu_interface_ip": "41.1.1.4"
       }
     ],
     "servers": [
@@ -55,8 +50,7 @@
     ],
     "client_server_map": {
       "cab02-qa-05": "cab02-qa-08",
-      "cab02-qa-06": "cab02-qa-08",
-      "cab02-qa-07": "cab02-qa-08"
+      "cab02-qa-06": "cab02-qa-08"
     },
     "size_in_bytes": 1,
     "duration_in_secs": 10,
