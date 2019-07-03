@@ -37,12 +37,14 @@ export class TestBedComponent implements OnInit {
   assets = null;
   driver = null;
   refreshing: string = null;
+  userMap: any = null;
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
               private loggerService: LoggerService,
               private commonService: CommonService,
-              private service: TestBedService
+              private service: TestBedService,
+              private userService: UserService
   ) { }
 
   ngOnInit() {
@@ -64,6 +66,10 @@ export class TestBedComponent implements OnInit {
         return this.getUsers();
       }),
       switchMap(response => {
+        return this.userService.getUserMap();
+      }),
+      switchMap(response => {
+        this.userMap = response;
         return this.fetchAssets();
       })
       );

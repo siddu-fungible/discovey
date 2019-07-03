@@ -134,3 +134,13 @@ class FunPlatform:
     F1 = "F1"
     S1 = "S1"
     F11 = "F1.1"
+
+class ChartType:
+    REGULAR = "REGULAR"
+    FUN_METIRC = "FUN_METIRC"
+
+class FunChartType:
+    VERTICAL_BAR_CHART = "vertical_colored_bar_chart"
+    HORIZONTAL_BAR_CHART = "horizontal_bar_chart"
+    LINE_CHART = "line"
+    PIE_CHART = "pie_chart"

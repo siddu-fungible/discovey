@@ -21,6 +21,7 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                        "fio_job_name"]
 
+vp_stats_thread_stop_status = {}
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
                  read_iops,
@@ -235,9 +236,14 @@ def build_simple_table(data, column_headers=[]):
 
 
 def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3, non_zero_stats_only=True,
-                           command_timeout=DPCSH_COMMAND_TIMEOUT):
+                           threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
     output = False
     column_headers = ["VP", "Utilization"]
+
+    # If threaded is enabled
+    if threaded:
+        global vp_stats_thread_stop_status
+        vp_stats_thread_stop_status[storage_controller] = False
     try:
         with open(output_file, 'a') as f:
             timer = FunTimer(max_time=interval * count)
@@ -262,6 +268,9 @@ def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3
                 lines.append(table_data.get_string())
                 lines.append("\n\n")
                 f.writelines(lines)
+                if threaded and vp_stats_thread_stop_status[storage_controller]:
+                    fun_test.log("I was asked to stop....So I'm exiting now...")
+                    break
                 fun_test.sleep("for the next iteration", seconds=interval)
         output = True
     except Exception as ex:

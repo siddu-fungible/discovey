@@ -465,6 +465,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
+                self.storage_controller.verbose = True
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
@@ -765,18 +766,20 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+        table_data_headers = ["Num Hosts", "Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
+        table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
                            "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
                            "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                            "fio_job_name"]
         table_data_rows = []
+
+        self.storage_controller.verbose = False
 
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
         # If so, override the script default with the user provided config
@@ -867,7 +870,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                 storage_controller=self.storage_controller,
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
-                                                                count=int(mpstat_count), threaded=True)
+                                                                count=int(mpstat_count))
             else:
                 fun_test.critical("Not starting the vp_utils stats collection because of lack of interval and count "
                                   "details")
@@ -969,8 +972,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    global vp_stats_thread_stop_status
-                    vp_stats_thread_stop_status[self.storage_controller] = True
                     fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
 
             # Summing up the FIO stats from all the hosts
@@ -1006,6 +1007,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 continue
 
             row_data_dict["fio_job_name"] = fio_job_name
+            try:
+                row_data_dict["num_hosts"] = self.num_hosts
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
             # Building the table raw for this variation
             row_data_list = []
@@ -1015,7 +1020,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            # post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:
@@ -1035,8 +1040,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             # Checking whether the vp_util stats collection thread is still running...If so stopping it...
             if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                 fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                global vp_stats_thread_stop_status
-                vp_stats_thread_stop_status[self.storage_controller] = True
                 fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
             fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),

@@ -65,7 +65,10 @@ import { AdminComponent } from "./performance/admin/admin.component";
 import { ScoresTableComponent } from './performance/scores-table/scores-table.component';
 import { PerformanceTableComponent } from './performance/performance-table/performance-table.component';
 import { TooltipDirective } from './ui-elements/tooltip.directive';
+import { ChartComponent} from "./chart/chart.component";
 import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button.component';
+import { RegressionSummaryWidgetComponent } from './regression/regression-summary-widget/regression-summary-widget.component';
+import {NgxJsonViewerModule} from "ngx-json-viewer";
 
 @NgModule({
   declarations: [
@@ -116,7 +119,9 @@ import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button
     ScoresTableComponent,
     PerformanceTableComponent,
     TooltipDirective,
-    ToggleButtonComponent
+    ChartComponent,
+    ToggleButtonComponent,
+    RegressionSummaryWidgetComponent
   ],
   imports: [
     BsDropdownModule,
@@ -134,6 +139,7 @@ import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button
     ReactiveFormsModule,
     NgbModule,
     NgbTooltipModule,
+    NgxJsonViewerModule,
     ToasterModule.forRoot()
   ],
 

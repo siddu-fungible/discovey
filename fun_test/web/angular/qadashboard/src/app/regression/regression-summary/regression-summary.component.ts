@@ -43,6 +43,7 @@ export class RegressionSummaryComponent implements OnInit {
   scriptSuiteBaselineMap = {};
   globalJiraMap: any = null;
   queryParameters: any = null;
+  executionIds: any = [];
 
 
   /*initialFilterData = [{info: "Networking overall", payload: {module: "networking"}},
@@ -57,8 +58,9 @@ export class RegressionSummaryComponent implements OnInit {
     {info: "Storage sanity", payload: {module: "storage", test_case_execution_tags: ["storage-sanity"]}},
     {info: "Accelerators", payload: {test_case_execution_tags: ["palladium-apps"]}},
     {info: "Storage regression", payload: {test_case_execution_tags: ["storage-regression"]}},
-    {info: "Storage performance", payload: {test_case_execution_tags: ["storage-performance"]}}
-  ];
+    {info: "Storage performance", payload: {test_case_execution_tags: ["storage-performance"]}}];
+
+  //initialFilterData = [{info: "Networking overall", payload: {module: "networking"}}];
 
 
   filters = [];
@@ -99,10 +101,13 @@ export class RegressionSummaryComponent implements OnInit {
       }),
       switchMap(response => {
         return of(true);
-      })).subscribe(response => {}, error => {
+      })).subscribe(response => {
+        console.log(this.executionIds);
+    }, error => {
         console.trace();
         this.loggerService.error("Unable to initialize regression summary");
     });
+
 
   }
 
@@ -425,11 +430,13 @@ export class RegressionSummaryComponent implements OnInit {
     } else if (historyElement.result === "NOT_RUN") {
       result.numNotRun += 1;
     }
+
     return result;
   }
 
 
   populateResults(entry, historyInputElement) {
+
     let scriptDetailedInfo = entry.scriptDetailedInfo;
     let scriptPath = historyInputElement.script_path;
     if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
@@ -555,6 +562,9 @@ export class RegressionSummaryComponent implements OnInit {
   addToTimeBucket(index, d, history) {
     let timeBucketSet = this.filters[index].timeBucketSet;
     let timeBucket = this.dateTimeToBucket(d);
+      if (history.execution_id == 202348){
+      let e = 0;
+    }
     //console.log("Time bucket:" + "," + d + "," + timeBucket);
     let byDateTime = this.filters[index].byDateTime;
     if (!this.filters[index].byDateTime.hasOwnProperty(timeBucket)) {
@@ -565,6 +575,11 @@ export class RegressionSummaryComponent implements OnInit {
         numNotRun: 0
       };
     }
+    let today = new Date();
+    let historyTime = new Date(this.commonService.convertToLocalTimezone(history.started_time));
+    if (this.commonService.isSameDay(historyTime, today) && history.result == 'PASSED'){
+          this.executionIds.push(history.execution_id);
+    }
     let scriptDetailedInfo = byDateTime[timeBucket].scriptDetailedInfo;
     let dateTimeBucketEntry = byDateTime[timeBucket];
     let historyResults = this.populateResults(dateTimeBucketEntry, history);
@@ -573,7 +588,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   addHistoryToDateTimeBuckets(index, history) {
-    if (history.execution_id === 69570) {
+    if (history.execution_id === 202348) {
       let i = 0;
     }
     let currentDate = this.filters[index].currentDate;
@@ -608,13 +623,11 @@ export class RegressionSummaryComponent implements OnInit {
     return this.apiService.post(url, this.filters[index].payload).pipe(switchMap((response) => {
       this.filters[index].testCaseExecutions = response.data;
       this.filters[index].testCaseExecutions.forEach((historyElement) => {
-        if (historyElement.script_path === "/networking/qos/test_cir_1.py") {
-          if (historyElement.suite_execution_id === 6111)
+          if (historyElement.execution_id === 202348)
           {
             let i = 0;
           }
-        }
-        //console.log(historyElement);
+        //console.log(historyElement.script_path);
         if (!historyElement.is_re_run) {
           let elementSuiteExecutionId = historyElement.suite_execution_id;
           let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];

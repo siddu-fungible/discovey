@@ -325,7 +325,7 @@ def scores(request):
 @api_safe_json_response
 def get_past_build_status(request):
     result = {}
-    previous_entry = {}
+    previous_entry = None
     request_json = json.loads(request.body)
     metric_id = int(request_json["metric_id"])
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
@@ -335,12 +335,14 @@ def get_past_build_status(request):
                       "passed_suite_execution_id": entry.suite_execution_id,
                       "passed_lsf_job_id": entry.lsf_job_id,
                       "passed_date_time": entry.date_time,
-                      "passed_git_commit": entry.git_commit,
-                      "failed_jenkins_job_id": previous_entry.jenkins_job_id,
-                      "failed_suite_execution_id": previous_entry.suite_execution_id,
-                      "failed_lsf_job_id": previous_entry.lsf_job_id,
-                      "failed_date_time": previous_entry.date_time,
-                      "failed_git_commit": previous_entry.git_commit}
+                      "passed_git_commit": entry.git_commit}
+
+            if previous_entry:
+                result.update({"failed_jenkins_job_id": previous_entry.jenkins_job_id,
+                               "failed_suite_execution_id": previous_entry.suite_execution_id,
+                               "failed_lsf_job_id": previous_entry.lsf_job_id,
+                               "failed_date_time": previous_entry.date_time,
+                               "failed_git_commit": previous_entry.git_commit})
             return result
         else:
             previous_entry = entry
@@ -350,6 +352,8 @@ def get_past_build_status(request):
               "failed_date_time": previous_entry.date_time,
               "failed_git_commit": previous_entry.git_commit}
     return result
+
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -810,6 +814,7 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
     result["work_in_progress"] = chart.work_in_progress
+    result["companion_charts"] = chart.companion_charts
     result["jira_ids"] = json.loads(chart.jira_ids)
     result["metric_id"] = chart.metric_id
 

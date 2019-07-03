@@ -9,15 +9,15 @@ import json
 # from web.fun_test.site_state import site_state
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
-from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
+from web.fun_test.settings import COMMON_WEB_LOGGER_NAME, TEAM_REGRESSION_EMAIL
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
 import datetime
 from datetime import datetime, timedelta
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from web.web_global import *
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingResult, TriagingTypes
-from fun_global import PerfUnit
+from fun_global import PerfUnit, ChartType, FunChartType
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -201,6 +201,8 @@ class MetricChart(models.Model):
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
     platform = models.TextField(default=FunPlatform.F1)
+    companion_charts = ArrayField(models.IntegerField(default=-1), default=[])
+    creator = models.TextField(default=TEAM_REGRESSION_EMAIL)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
@@ -701,6 +703,35 @@ class LastTriageFlowId(models.Model):
         last.save()
         return last.last_id
 
+class Chart(models.Model):
+    chart_type = models.TextField(default=ChartType.REGULAR)
+    title = models.TextField(default="")
+    fun_chart_type = models.TextField(default=FunChartType.LINE_CHART)
+    x_axis_title = models.TextField(default="")
+    y_axis_title = models.TextField(default="")
+    series_filters = JSONField(default=[])
+    chart_id = models.IntegerField(default=-1, unique=True)
+    x_scale = models.TextField(default="")
+    y_scale = models.TextField(default="")
+
+    def __str__(self):
+        return "{}: {} : {} : {}".format(self.chart_type, self.fun_chart_type, self.x_axis_title,
+                                         self.y_axis_title, self.chart_id)
+
+
+class LastChartId(models.Model):
+    last_id = models.IntegerField(unique=True, default=100)
+
+    @staticmethod
+    def get_next_id():
+        if not LastChartId.objects.count():
+            LastChartId().save()
+        last = LastChartId.objects.all().last()
+        last.last_id = last.last_id + 1
+        last.save()
+        return last.last_id
+
+
 class ModelMapping(models.Model):
     module = models.TextField()
     component = models.TextField()
@@ -890,6 +921,67 @@ class BltVolumePerformance(models.Model):
                                                 self.output_write_throughput,
                                                 self.output_write_avg_latency,
                                                 self.output_read_avg_latency)
+
+
+class AlibabaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_volume_type = models.TextField(verbose_name="Volume type")
+    input_test = models.TextField(verbose_name="Test type")
+    input_block_size = models.TextField(verbose_name="Block size")
+    input_io_depth = models.IntegerField(verbose_name="IO depth")
+    input_io_size = models.TextField(verbose_name="IO size")
+    input_operation = models.TextField(verbose_name="Operation type")
+    input_num_ssd = models.IntegerField(verbose_name="Number of SSD(s)")
+    input_num_volume = models.IntegerField(verbose_name="Number of volume(s)")
+    input_num_threads = models.IntegerField(verbose_name="Threads")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
+    output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
+    output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
+    output_read_throughput = models.FloatField(verbose_name="Read throughput", default=-1)
+    output_write_avg_latency = models.IntegerField(verbose_name="Write avg latency", default=-1)
+    output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency", default=-1)
+    output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency", default=-1)
+    output_write_99_99_latency = models.IntegerField(verbose_name="Write 99.99% latency", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99% latency", default=-1)
+    output_read_avg_latency = models.IntegerField(verbose_name="Read avg latency", default=-1)
+    output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency", default=-1)
+    output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency", default=-1)
+    output_read_99_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency", default=-1)
+    output_write_iops_unit = models.TextField(default="ops")
+    output_read_iops_unit = models.TextField(default="ops")
+    output_write_throughput_unit = models.TextField(default="Mbps")
+    output_read_throughput_unit = models.TextField(default="Mbps")
+    output_write_avg_latency_unit = models.TextField(default="usecs")
+    output_write_90_latency_unit = models.TextField(default="usecs")
+    output_write_95_latency_unit = models.TextField(default="usecs")
+    output_write_99_99_latency_unit = models.TextField(default="usecs")
+    output_write_99_latency_unit = models.TextField(default="usecs")
+    output_read_avg_latency_unit = models.TextField(default="usecs")
+    output_read_90_latency_unit = models.TextField(default="usecs")
+    output_read_95_latency_unit = models.TextField(default="usecs")
+    output_read_99_99_latency_unit = models.TextField(default="usecs")
+    output_read_99_latency_unit = models.TextField(default="usecs")
+    tag = "analytics"
+
+    def __str__(self):
+        return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
+                                                self.input_volume_type,
+                                                self.input_test,
+                                                self.input_block_size,
+                                                self.input_io_size,
+                                                self.input_operation,
+                                                self.output_write_iops,
+                                                self.output_read_iops,
+                                                self.output_write_throughput,
+                                                self.output_write_avg_latency,
+                                                self.output_read_avg_latency)
+
 
 class InspurZipCompressionRatiosPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
