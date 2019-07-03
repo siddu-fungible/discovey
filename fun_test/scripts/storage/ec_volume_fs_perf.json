@@ -61,7 +61,7 @@
       "prio": 0,
       "cpus_allowed": "0-7",
       "runtime": 300,
-      "timeout": 200,
+      "timeout": 360,
       "bs": "4k",
       "numjobs": 1,
       "iodepth": 1,
