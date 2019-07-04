@@ -12,11 +12,11 @@ import re
 network_controller_obj = None
 nu_lab_handle = None
 app = "tcp_server"
-host_name1 = "nu-lab-06"
-host_name2 = "nu-lab-04"
+host_name1 = "nu-lab-04"
+host_name2 = "nu-lab-06"
 hosts_json_file = ASSET_DIR + "/hosts.json"
-setup_fpg1_file = "setup_fpg12.sh"
-setup_fpg0_file = "fpg0.sh"
+setup_fpg1_file = "fpg0.sh"
+setup_fpg0_file = "setup_fpg12.sh"
 setup_fpg1_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg1_file
 setup_fpg0_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg0_file
 TIMESTAMP = None
