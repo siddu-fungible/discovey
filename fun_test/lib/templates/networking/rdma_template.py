@@ -47,19 +47,20 @@ class RdmaServer(Linux):
 
 class RdmaTemplate(object):
     CONNECTION_TYPE_RC = "RC"
-    SCENARIO_TYPE_1_1 = "1_1"
 
-    def __init__(self, servers, clients, client_server_objs, test_type, is_parallel=True,
+    def __init__(self, client_server_objs, test_type, is_parallel=True,
                  connection_type=CONNECTION_TYPE_RC, size=100, inline_size=64, duration=10):
         """
-        RDMA Scale Tool template
-        :param servers: List of all RDMA server objs
-        :param clients: List of all RDMA client objs
-        :param test_type: Can be IB_WRITE_BANDWIDTH_TEST or IB_WRITE_LATENCY_TEST
-        :param is_parallel: Default True. Flag to start traffic in parallel from all clients
+        RDMA Template for Scale Tool
+
+        :param client_server_objs: List of Clients/Server Map objects
+        :param test_type: RDMA Test Type can be IB_WRITE_BANDWIDTH_TEST or IB_WRITE_LATENCY_TEST test
+        :param is_parallel: True/False  True if run traffic in parallel from all clients
+        :param connection_type: RDMA tool connection type RC
+        :param size: size in bytes for test
+        :param inline_size: Inline size for latency test in bytes
+        :param duration: Test duration in secs
         """
-        self.clients = clients
-        self.servers = servers
         self.is_parallel = is_parallel
         self.test_type = test_type
         self.connection_type = connection_type
@@ -75,6 +76,7 @@ class RdmaTemplate(object):
                            'sudo modprobe rdma_ucm']
             for c_s_dict in self.client_server_objs:
                 hosts = c_s_dict.keys() + c_s_dict.values()
+                # TODO: Update setup test to include list of servers N_N scenario
                 for host_obj in hosts:
                     fun_test.log_section("Configure %s host load all modules and export necessary paths" %
                                          str(host_obj))
@@ -107,6 +109,7 @@ class RdmaTemplate(object):
             checkpoint = "Configure all servers and start the tool %s" % self.test_type
             for c_s_dict in self.client_server_objs:
                 for client_obj, server_obj in c_s_dict.items():
+                    # TODO: Update for list of server_objs N_N scenario
                     fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
                                                                                 server_obj.rdma_server_port))
                     ibv_device = self.get_ibv_device(host_obj=server_obj)
@@ -138,7 +141,8 @@ class RdmaTemplate(object):
     def start_test(self, client_obj, server_obj, iterations, set_paths=False):
         result_dict = {}
         try:
-            fun_test.log_section("Run %s client" % (str(client_obj)))
+            # TODO: Update this for N_N scenario list of server_obj and set client_obj.server_ip for each server
+            fun_test.log_section("Run traffic %s client -----> %s server" % (str(client_obj), str(server_obj)))
             if set_paths:
                 client_obj.add_path(additional_path=PATH)
                 client_obj.set_ld_library_path()
@@ -252,6 +256,8 @@ class RdmaTemplate(object):
 
 class RdmaHelper(object):
     SCENARIO_TYPE_1_1 = "1_1"
+    SCENARIO_TYPE_N_1 = "N_1"
+    SCENARIO_TYPE_N_N = "N_N"
     CONFIG_JSON = SCRIPTS_DIR + "/networking/rdma/config.json"
     HOSTS_ASSET = ASSET_DIR + "/hosts.json"
 
@@ -381,30 +387,80 @@ class RdmaHelper(object):
             fun_test.critical(str(ex))
         return hu_interface_ip
 
-    def create_client_server_objects(self, client_server_map):
+    def _get_all_hosts_full_mesh(self):
+        hosts = None
+        try:
+            for key in self.config:
+                if key == self.scenario_type:
+                    hosts = self.config[key]['hosts']
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return hosts
+
+    def create_client_server_map_full_mesh(self):
         result = []
         try:
-            rdma_port = 20000
             client_id = 1
             server_id = 1
-            for client, server in client_server_map.items():
-                client_dict = self._fetch_client_dict(client)
-                fun_test.simple_assert(client_dict, "Unable to find client %s info in hosts.json under asset. " %
-                                       client)
-                server_dict = self._fetch_server_dict(server)
-                fun_test.simple_assert(server_dict, "Unable to find server %s info in hosts.json under asset. " %
-                                       server)
-                hu_interface_ip = self._get_hu_interface_ip(server_name=server)
-                client_obj = RdmaClient(host_ip=client_dict['host_ip'], ssh_username=client_dict['ssh_username'],
-                                        ssh_password=client_dict['ssh_password'], server_ip=hu_interface_ip,
-                                        rdma_port=rdma_port, client_id=client_id)
-                server_obj = RdmaServer(host_ip=server_dict['host_ip'], ssh_password=server_dict['ssh_password'],
-                                        ssh_username=server_dict['ssh_username'], server_port=rdma_port,
-                                        server_id=server_id)
-                result.append({client_obj: server_obj})
-                rdma_port += 1
+            rdma_port = 20000
+            clients = []
+            servers = []
+            for host in self._get_all_hosts_full_mesh():
+                host_dict = self._fetch_client_dict(client_name=host['host_ip'])
+                fun_test.simple_assert(host_dict, "Unable to find host %s info in hosts.json under asset" %
+                                       host['host_ip'])
+                client_obj = RdmaClient(host_ip=host_dict['host_ip'], ssh_username=host_dict['ssh_username'],
+                                        ssh_password=host_dict['ssh_password'], server_ip=None, rdma_port=rdma_port,
+                                        client_id=client_id)
+                server_obj = RdmaServer(host_ip=host_dict['host_ip'], ssh_username=host_dict['ssh_username'],
+                                        ssh_password=host_dict['ssh_password'], server_id=server_id,
+                                        server_port=rdma_port)
+                clients.append(client_obj)
+                servers.append(server_obj)
                 client_id += 1
                 server_id += 1
+                rdma_port += 1
+
+            for client_obj in clients:
+                server_objs = []
+                for server_obj in servers:
+                    if client_obj.host_ip == server_obj.host_ip:
+                        continue
+                    server_objs.append(server_obj)
+                result.append({client_obj: server_objs})
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def create_client_server_objects(self):
+        result = []
+        try:
+            if self.scenario_type == self.SCENARIO_TYPE_N_N:
+                result = self.create_client_server_map_full_mesh()
+            else:
+                rdma_port = 20000
+                client_id = 1
+                server_id = 1
+                client_server_map = self.get_client_server_map()
+                for client, server in client_server_map.items():
+                    client_dict = self._fetch_client_dict(client)
+                    fun_test.simple_assert(client_dict, "Unable to find client %s info in hosts.json under asset. " %
+                                           client)
+                    server_dict = self._fetch_server_dict(server)
+                    fun_test.simple_assert(server_dict, "Unable to find server %s info in hosts.json under asset. " %
+                                           server)
+                    hu_interface_ip = self._get_hu_interface_ip(server_name=server)
+                    client_obj = RdmaClient(host_ip=client_dict['host_ip'], ssh_username=client_dict['ssh_username'],
+                                            ssh_password=client_dict['ssh_password'], server_ip=hu_interface_ip,
+                                            rdma_port=rdma_port, client_id=client_id)
+                    server_obj = RdmaServer(host_ip=server_dict['host_ip'], ssh_password=server_dict['ssh_password'],
+                                            ssh_username=server_dict['ssh_username'], server_port=rdma_port,
+                                            server_id=server_id)
+                    result.append({client_obj: server_obj})
+                    rdma_port += 1
+                    client_id += 1
+                    server_id += 1
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

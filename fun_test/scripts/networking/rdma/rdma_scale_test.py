@@ -42,11 +42,9 @@ class RdmaWriteBandwidthTest(FunTestCase):
     def setup(self):
         scenario_type = fun_test.shared_variables['scenario']
         self.rdma_helper = RdmaHelper(scenario_type=scenario_type)
-        client_server_map = self.rdma_helper.get_client_server_map()
-        fun_test.simple_assert(client_server_map, "Fetch client-server map in json for %s scenario" % scenario_type)
 
         checkpoint = "Fetch Client/Server Map Objects"
-        client_server_objs = self.rdma_helper.create_client_server_objects(client_server_map=client_server_map)
+        client_server_objs = self.rdma_helper.create_client_server_objects()
         fun_test.test_assert(client_server_objs, checkpoint)
 
         checkpoint = "Setup clients/servers and load modules"
@@ -54,10 +52,7 @@ class RdmaWriteBandwidthTest(FunTestCase):
         duration = self.rdma_helper.get_traffic_duration_in_secs()
         is_parallel = self.rdma_helper.is_parallel()
         inline_size = self.rdma_helper.get_inline_size()
-        clients = self.rdma_helper.get_list_of_clients()
-        servers = self.rdma_helper.get_list_of_servers()
-        self.rdma_template = RdmaTemplate(servers=servers, clients=clients,
-                                          test_type=self.test_type, is_parallel=is_parallel,
+        self.rdma_template = RdmaTemplate(test_type=self.test_type, is_parallel=is_parallel,
                                           size=size_in_bytes, duration=duration, inline_size=inline_size,
                                           client_server_objs=client_server_objs)
         if self.setup_test:
