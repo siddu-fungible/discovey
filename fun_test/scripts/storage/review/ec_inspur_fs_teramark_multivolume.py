@@ -722,15 +722,19 @@ class ECVolumeLevelTestcase(FunTestCase):
                                        str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
 
                     try:
-                        nvme_connect_status = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
-                        fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+                        nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
+                        nvme_connect_exit_status = host_handle.exit_status()
+                        fun_test.log("nvme_connect_output output is: {}".format(nvme_connect_output))
+                        if nvme_connect_exit_status and pcap_started[host_name]:
+                            host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                            pcap_stopped[host_name] = True
                     except Exception as ex:
                         # Stopping the packet capture if it is started
                         if pcap_started[host_name]:
                             host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
                             pcap_stopped[host_name] = True
 
-                    fun_test.test_assert_expected(expected=0, actual=host_handle.exit_status(),
+                    fun_test.test_assert_expected(expected=0, actual=nvme_connect_exit_status,
                                                   message="{} - NVME Connect Status".format(host_name))
 
                     lsblk_output = host_handle.lsblk("-b")
