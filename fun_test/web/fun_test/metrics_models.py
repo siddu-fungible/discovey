@@ -968,8 +968,8 @@ class AlibabaPerformance(models.Model):
 
     output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
     output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
-    output_write_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBYTES_PER_SEC)
-    output_read_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBYTES_PER_SEC)
+    output_write_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_read_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
     output_write_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_90_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
