@@ -20,7 +20,7 @@ def fio_parser(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 
-def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
+def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
@@ -645,11 +645,15 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.ec_info["num_volumes"]):
                 curr_ctrlr_index = num % self.num_hosts
+                curr_host_name = self.host_info.keys()[curr_ctrlr_index]
+                if "num_volumes" not in self.host_info[curr_host_name]:
+                    self.host_info[curr_host_name]["num_volumes"] = 0
                 command_result = self.storage_controller.attach_volume_to_controller(
                     ctrlr_uuid=self.ctrlr_uuid[curr_ctrlr_index], ns_id=num + 1,
                     vol_uuid=self.ec_info["attach_uuid"][num], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
+                self.host_info[curr_host_name]["num_volumes"] += 1
 
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
@@ -744,7 +748,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fun_test.log("NVMe Block Device/s: {}".
                                          format(self.host_info[host_name]["nvme_block_device_list"]))
 
-                    fun_test.test_assert_expected(expected=self.ec_info["num_volumes"] / self.num_hosts,
+                    fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
                                                   actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                                   message="Expected NVMe devices are available")
                     fun_test.shared_variables["ec"][host_name]["nvme_connect"] = True
@@ -777,6 +781,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
                 host_clone = {}
                 warmup_thread_id = {}
+                actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
+                aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
+                self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
                 for index, host_name in enumerate(self.host_info):
                     wait_time = self.num_hosts - index
                     host_clone[host_name] = self.host_info[host_name]["handle"].clone()
@@ -810,17 +817,17 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
+        table_data_headers = ["Num Hosts", "Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           "fio_job_name"]
+        table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw",
+                           "readbw", "writeclatency", "writelatency90", "writelatency95", "writelatency99",
+                           "writelatency9999", "readclatency", "readlatency90", "readlatency95", "readlatency99",
+                           "readlatency9999", "fio_job_name"]
         table_data_rows = []
 
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
@@ -856,6 +863,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             row_data_dict = {}
             size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
             row_data_dict["size"] = str(size) + "G"
+            row_data_dict["num_hosts"] = self.num_hosts
 
             # Deciding whether the fio command has to run for the entire volume size or for a certain period of time,
             # based on if the current IO depth is in self.full_run_iodepth
