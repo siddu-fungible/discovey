@@ -491,10 +491,14 @@ class Funeth:
 
     def get_interrupts(self, nu_or_hu):
         """Get HU host funeth interface interrupts."""
+        intf_bus_dict = self.get_bus_info_from_ethtool(nu_or_hu)
         output_dict = {}
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                #cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                # TODO: workaround for http://jira.fungible.local/browse/SWLINUX-746
+                bus_info = intf_bus_dict.get(intf)
+                cmd = 'cat /proc/interrupts | egrep "{}|{}"'.format(intf, bus_info)
                 if ns is None or 'netns' in cmd:
                     cmds = ['sudo {}'.format(cmd), ]
                 else:
