@@ -20,7 +20,7 @@ def fio_parser(arg1, host_index, **kwargs):
     arg1.disconnect()
 
 
-def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
+def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
@@ -206,6 +206,7 @@ class ECVolumeLevelScript(FunTestScript):
                     self.hosts_test_interfaces[host_name] = []
                 test_interface = host_obj.get_test_interface(index=0)
                 self.hosts_test_interfaces[host_name].append(test_interface)
+                self.host_info[host_name]["test_interface"] = test_interface
                 host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
                 self.host_ips.append(host_ip)
                 self.host_info[host_name]["ip"].append(host_ip)
@@ -465,6 +466,18 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
+                # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
+                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
+
+                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                                 source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
+                    fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
+                                                filename=pcap_artifact_file)
+
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
@@ -632,11 +645,15 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.ec_info["num_volumes"]):
                 curr_ctrlr_index = num % self.num_hosts
+                curr_host_name = self.host_info.keys()[curr_ctrlr_index]
+                if "num_volumes" not in self.host_info[curr_host_name]:
+                    self.host_info[curr_host_name]["num_volumes"] = 0
                 command_result = self.storage_controller.attach_volume_to_controller(
                     ctrlr_uuid=self.ctrlr_uuid[curr_ctrlr_index], ns_id=num + 1,
                     vol_uuid=self.ec_info["attach_uuid"][num], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
+                self.host_info[curr_host_name]["num_volumes"] += 1
 
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
@@ -656,6 +673,25 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                           message="Ensuring error_injection got disabled")
+
+            # Starting packet capture in all the hosts
+            pcap_started = {}
+            pcap_stopped = {}
+            pcap_pid = {}
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
+                test_interface = self.host_info[host_name]["test_interface"].name
+                pcap_started[host_name] = False
+                pcap_stopped[host_name] = True
+                pcap_pid[host_name] = {}
+                pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
+                                                             tcpdump_filename="/tmp/nvme_connect.pcap")
+                if pcap_pid[host_name]:
+                    fun_test.log("Started packet capture in {}".format(host_name))
+                    pcap_started[host_name] = True
+                    pcap_stopped[host_name] = False
+                else:
+                    fun_test.critical("Unable to start packet capture in {}".format(host_name))
 
             fun_test.shared_variables["fio"] = {}
             for host_name in self.host_info:
@@ -685,9 +721,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
                                        str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
 
-                    nvme_connect_status = host_handle.sudo_command(command=nvme_connect_cmd,
-                                                                   timeout=60)
-                    fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+                    try:
+                        nvme_connect_status = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
+                        fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
+                    except Exception as ex:
+                        # Stopping the packet capture if it is started
+                        if pcap_started[host_name]:
+                            host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                            pcap_stopped[host_name] = True
+
                     fun_test.test_assert_expected(expected=0, actual=host_handle.exit_status(),
                                                   message="{} - NVME Connect Status".format(host_name))
 
@@ -706,7 +748,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             fun_test.log("NVMe Block Device/s: {}".
                                          format(self.host_info[host_name]["nvme_block_device_list"]))
 
-                    fun_test.test_assert_expected(expected=self.ec_info["num_volumes"] / self.num_hosts,
+                    fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
                                                   actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                                   message="Expected NVMe devices are available")
                     fun_test.shared_variables["ec"][host_name]["nvme_connect"] = True
@@ -716,6 +758,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                         ":".join(self.host_info[host_name]["nvme_block_device_list"])
                     fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
+
+            # Stopping the packet capture
+            for host_name in self.host_info:
+                host_handle = self.host_info[host_name]["handle"]
+                if pcap_started[host_name]:
+                    host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                    pcap_stopped[host_name] = True
 
             # Setting the syslog level
             command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
@@ -732,6 +781,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
                 host_clone = {}
                 warmup_thread_id = {}
+                actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
+                aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
+                self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
                 for index, host_name in enumerate(self.host_info):
                     wait_time = self.num_hosts - index
                     host_clone[host_name] = self.host_info[host_name]["handle"].clone()
@@ -772,10 +824,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           "fio_job_name"]
+        table_data_cols = ["num_hosts", "block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw",
+                           "readbw", "writeclatency", "writelatency90", "writelatency95", "writelatency99",
+                           "writelatency9999", "readclatency", "readlatency90", "readlatency95", "readlatency99",
+                           "readlatency9999", "fio_job_name"]
         table_data_rows = []
 
         # Checking whether the job's inputs argument is having the list of io_depths to be used in this test.
@@ -811,6 +863,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             row_data_dict = {}
             size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
             row_data_dict["size"] = str(size) + "G"
+            row_data_dict["num_hosts"] = self.num_hosts
 
             # Deciding whether the fio command has to run for the entire volume size or for a certain period of time,
             # based on if the current IO depth is in self.full_run_iodepth
@@ -1006,10 +1059,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 continue
 
             row_data_dict["fio_job_name"] = fio_job_name
-            try:
-                row_data_dict["num_hosts"] = self.num_hosts
-            except Exception as ex:
-                fun_test.critical(str(ex))
 
             # Building the table raw for this variation
             row_data_list = []
