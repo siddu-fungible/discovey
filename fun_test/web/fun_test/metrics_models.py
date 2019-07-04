@@ -941,6 +941,7 @@ class AlibabaPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_volume_type = models.TextField(verbose_name="Volume type")
     input_test = models.TextField(verbose_name="Test type")
+
     input_block_size = models.TextField(verbose_name="Block size")
     input_io_depth = models.IntegerField(verbose_name="IO depth")
     input_io_size = models.TextField(verbose_name="IO size")
@@ -964,20 +965,21 @@ class AlibabaPerformance(models.Model):
     output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency", default=-1)
     output_read_99_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
     output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency", default=-1)
-    output_write_iops_unit = models.TextField(default="ops")
-    output_read_iops_unit = models.TextField(default="ops")
-    output_write_throughput_unit = models.TextField(default="Mbps")
-    output_read_throughput_unit = models.TextField(default="Mbps")
-    output_write_avg_latency_unit = models.TextField(default="usecs")
-    output_write_90_latency_unit = models.TextField(default="usecs")
-    output_write_95_latency_unit = models.TextField(default="usecs")
-    output_write_99_99_latency_unit = models.TextField(default="usecs")
-    output_write_99_latency_unit = models.TextField(default="usecs")
-    output_read_avg_latency_unit = models.TextField(default="usecs")
-    output_read_90_latency_unit = models.TextField(default="usecs")
-    output_read_95_latency_unit = models.TextField(default="usecs")
-    output_read_99_99_latency_unit = models.TextField(default="usecs")
-    output_read_99_latency_unit = models.TextField(default="usecs")
+
+    output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_write_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBYTES_PER_SEC)
+    output_read_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBYTES_PER_SEC)
+    output_write_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_90_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_90_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     tag = "analytics"
 
     def __str__(self):
@@ -2689,6 +2691,51 @@ class NuTransitPerformanceSerializer(ModelSerializer):
     class Meta:
         model = NuTransitPerformance
         fields = "__all__"
+
+class RdmaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    input_test = models.TextField(verbose_name="Test type")
+    input_operation = models.TextField(verbose_name="operation type")
+    input_size_latency = models.IntegerField(verbose_name="Size in bytes")
+    input_size_bandwidth = models.IntegerField(verbose_name="Size in bytes")
+
+    output_read_t_avg_latency = models.IntegerField(verbose_name="Avg (usec)")
+    output_write_t_avg_latency = models.IntegerField(verbose_name="Avg (usec)")
+    output_read_t_min_latency = models.IntegerField(verbose_name="Min (usec)")
+    output_write_t_min_latency = models.IntegerField(verbose_name="Min (usec)")
+    output_read_t_max_latency = models.IntegerField(verbose_name="Max (usec)")
+    output_write_t_max_latency = models.IntegerField(verbose_name="Max (usec)")
+    output_read_99_latency = models.IntegerField(verbose_name="99% latency", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="99% latency", default=-1)
+    output_read_99_99_latency = models.IntegerField(verbose_name="99.99% latency", default=-1)
+    output_write_99_99_latency = models.IntegerField(verbose_name="99.99% latency", default=-1)
+    output_read_bandwidth = models.IntegerField(verbose_name="output bandwidth", default=-1)
+    output_write_bandwidth = models.IntegerField(verbose_name="output bandwidth", default=-1)
+    output_read_msg_rate = models.IntegerField(verbose_name="Message rate (Mpps)")
+    output_write_msg_rate = models.IntegerField(verbose_name="Message rate (Mpps)")
+
+    output_read_t_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_t_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_t_min_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_t_min_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_t_max_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_t_max_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_write_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_GBITS_PER_SEC)
+    output_read_msg_rate_unit = models.TextField(default=PerfUnit.UNIT_MPPS)
+    output_write_msg_rate_unit = models.TextField(default=PerfUnit.UNIT_MPPS)
+
+    def __str__(self):
+        return (str(self.__dict__))
 '''
 ANALYTICS_MAP = {
     "Performance1": {
