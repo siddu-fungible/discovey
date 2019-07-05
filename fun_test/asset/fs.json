@@ -335,7 +335,7 @@
     "name": "fs-66",
     "gateway_ip": "10.1.105.1",
     "bmc": {
-      "mgmt_ip": "10.1.105.53",
+      "mgmt_ip": "fs66-bmc",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
