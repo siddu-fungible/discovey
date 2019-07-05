@@ -118,6 +118,18 @@
         "ctlid":0,
         "huid":2,
         "pcie_vfs": 32,
+        "vm_ping_tests":
+        {
+          "vm_vm_same_server":
+          {
+            "cab03-qa-01-vm01":["cab03-qa-01-vm03","cab03-qa-01-vm02"],
+            "cab03-qa-01-vm02":["cab03-qa-01-vm01","cab03-qa-01-vm30"]
+          },
+          "vm_vm_diff_server":
+          {
+            "cab03-qa-01-vm01":["19.1.1.10"]
+          }
+        },
         "vms":{
 
         "cab03-qa-01-vm01":{

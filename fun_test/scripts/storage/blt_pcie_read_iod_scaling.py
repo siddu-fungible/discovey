@@ -270,6 +270,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fetch_nvme = fetch_nvme_device(self.end_host, self.blt_details["ns_id"])
             fun_test.test_assert(fetch_nvme['status'], message="Check: nvme device visible on end host")
             self.nvme_block_device = fetch_nvme['nvme_device']
+            fun_test.shared_variables["nvme_device"] = fetch_nvme['nvme_device']
 
             # Writing Preconditioning the vol ezfio logic
             if self.warm_up_traffic:
@@ -286,7 +287,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
-
+        self.nvme_block_device = fun_test.shared_variables["nvme_device"]
         # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
         fio_result = {}
