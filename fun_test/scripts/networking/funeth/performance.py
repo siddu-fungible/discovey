@@ -115,7 +115,7 @@ class FunethPerformance(sanity.FunethSanity):
             nc_obj.get_qos_egress_buffer_pool()
 
             for port_num in FPG_INTERFACES:
-                port_buffer_set = nc_obj.set_qos_egress_port_buffer(port_num, min_threshold=4000, shared_thr=16383)
+                port_buffer_set = nc_obj.set_qos_egress_port_buffer(port_num, min_threshold=4000, shared_threshold=16383)
                 fun_test.test_assert(port_buffer_set, '{}: Configure QoS egress port {} buffer'.format(f1, port_num))
                 nc_obj.get_qos_egress_port_buffer(port_num)
 
