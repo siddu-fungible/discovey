@@ -82,7 +82,7 @@ class LsfStatusServer:
                         return_code = int(response_dict["return_code"])
                         # fun_test.test_assert(not return_code, "Valid return code")
                         result = last_job
-                        result["output_text"] = self.get_raw_file(job_id=job_id, console_name=FUNOS_CONSOLE)
+                        result["output_text"] = self.get_human_file(job_id=job_id, console_name=FUNOS_CONSOLE)
                     except Exception as ex:
                         fun_test.log("Actual response:" + response)
                         fun_test.critical(str(ex))
@@ -122,7 +122,7 @@ class LsfStatusServer:
                 try:
                     response_dict = json.loads(response)
                     # fun_test.log(json.dumps(response_dict, indent=4))
-                    output_text = self.get_raw_file(job_id=job_info["job_id"], console_name=FUNOS_CONSOLE)
+                    output_text = self.get_human_file(job_id=job_info["job_id"], console_name=FUNOS_CONSOLE)
                     past_job["date_time"] = dt
                     past_job["output_text"] = output_text
                 except Exception as ex:
@@ -138,7 +138,7 @@ class LsfStatusServer:
         url = "{}/job/{}/human_file/{}".format(self.base_url, job_id, log_path)
         return self._get(url=url)
 
-    def get_raw_file(self, job_id, file_name=None, console_name=None):
+    def get_human_file(self, job_id, file_name=None, console_name=None):
         result = None
         response = self.get_job_by_id(job_id=job_id)
         try:
@@ -205,7 +205,7 @@ class LsfStatusServer:
                 fun_test.log("Actual response:" + response)
                 fun_test.critical(str(ex))
 
-            output_text = self.get_raw_file(job_id=job_info["job_id"], console_name=FUNOS_CONSOLE)
+            output_text = self.get_human_file(job_id=job_info["job_id"], console_name=FUNOS_CONSOLE)
             result["date_time"] = dt
             result["output_text"] = output_text
         else:

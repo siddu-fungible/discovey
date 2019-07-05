@@ -592,7 +592,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         reset_cut_done = False
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
+            log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
             fun_test.test_assert(log, "fetched boot time uart log")
             log = log.split("\n")
             for line in log:
@@ -684,7 +684,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
                         metrics["output_boot_success_boot_time_unit"] = "msecs"
 
-            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
+            log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
             fun_test.test_assert(log, "fetched mmc time uart log")
             log = log.split("\n")
             for line in log:
@@ -929,7 +929,7 @@ class FlowTestPerformanceTc(PalladiumPerformanceTc):
     def run(self):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            lines = self.lsf_status_server.get_raw_file(job_id=self.job_id, console_name="PCI Script Output")
+            lines = self.lsf_status_server.get_human_file(job_id=self.job_id, console_name="PCI Script Output")
             self.lines = lines.split("\n")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
                                              auto_add_to_db=True, date_time=self.dt, platform=self.platform)
