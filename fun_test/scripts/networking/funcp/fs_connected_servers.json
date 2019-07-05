@@ -48,9 +48,9 @@
       "cab03-qa-05": "x16"
     },
       "mpg_ips":{
-        "static":false,
-        "mpg0":"",
-        "mpg1":""
+        "static":true,
+        "mpg0":"10.1.105.181",
+        "mpg1":"10.1.105.182"
       },
 
        "cc_pings":{
