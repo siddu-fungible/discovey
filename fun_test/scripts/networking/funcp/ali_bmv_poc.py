@@ -572,8 +572,12 @@ class PingTestVmVmSameServer(FunTestCase):
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         for server in self.spec_file["fs"][fs_name]["vm_config"]:
             servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"][server]["vms"]
-            check_nvme_driver(vm_dict=servers_with_vms, parallel=True)
-
+            same_server_pings = self.spec_file["fs"][fs_name]["vm_config"][server]["vm_ping_tests"]["vm_vm_same_server"]
+            for vm in same_server_pings:
+                dest_vm_ips = []
+                for dest_vm in same_server_pings[vm]:
+                    dest_vm_ips.append(dest_vm)
+                test_host_pings(host=servers_with_vms[vm]["hostname"], strict=True, ips=dest_vm_ips)
 
     def cleanup(self):
         pass
