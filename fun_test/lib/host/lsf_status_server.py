@@ -135,7 +135,7 @@ class LsfStatusServer:
         return self._get(url=url)
 
     def get_job_text_by_path(self, job_id, log_path):
-        url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log_path)
+        url = "{}/job/{}/human_file/{}".format(self.base_url, job_id, log_path)
         return self._get(url=url)
 
     def get_raw_file(self, job_id, file_name=None, console_name=None):
