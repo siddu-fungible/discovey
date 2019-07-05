@@ -191,7 +191,7 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
                 VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL]
-        # self.lsf_status_server.workaround(tags=tags)
+        self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
