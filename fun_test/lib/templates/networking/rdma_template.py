@@ -3,6 +3,7 @@ from lib.host.linux import Linux
 from lib.system.utils import MultiProcessingTasks
 from prettytable import PrettyTable
 from collections import OrderedDict
+from random import randint
 import re
 
 IB_WRITE_BANDWIDTH_TEST = "ib_write_bw"
@@ -24,14 +25,21 @@ class RdmaClient(Linux):
     def set_ld_library_path(self):
         self.command(command="export LD_LIBRARY_PATH=%s" % LD_LIBRARY_PATH)
 
+    def __hash__(self):
+        return self.client_id
+
+    def __eq__(self, other):
+        return self.client_id == other.client_id
+
 
 class RdmaServer(Linux):
 
-    def __init__(self, host_ip, ssh_username, ssh_password, server_id, server_port=20000):
+    def __init__(self, host_ip, ssh_username, ssh_password, server_id, server_port=None, interface_ip=None):
         super(RdmaServer, self).__init__(host_ip=host_ip, ssh_username=ssh_username, ssh_password=ssh_password)
         self.rdma_process_id = None
         self.server_id = server_id
         self.rdma_server_port = server_port
+        self.interface_ip = interface_ip
         self.add_path(additional_path=PATH)
         self.set_ld_library_path()
 
@@ -48,18 +56,20 @@ class RdmaServer(Linux):
 class RdmaTemplate(object):
     CONNECTION_TYPE_RC = "RC"
 
-    def __init__(self, client_server_objs, test_type, is_parallel=True,
-                 connection_type=CONNECTION_TYPE_RC, size=100, inline_size=64, duration=10):
+    def __init__(self, client_server_objs, test_type, hosts, is_parallel=True,
+                 connection_type=CONNECTION_TYPE_RC, size=100, inline_size=64, duration=10, iterations=100):
         """
         RDMA Template for Scale Tool
 
         :param client_server_objs: List of Clients/Server Map objects
         :param test_type: RDMA Test Type can be IB_WRITE_BANDWIDTH_TEST or IB_WRITE_LATENCY_TEST test
+        :param hosts: List of all hosts objects
         :param is_parallel: True/False  True if run traffic in parallel from all clients
         :param connection_type: RDMA tool connection type RC
         :param size: size in bytes for test
         :param inline_size: Inline size for latency test in bytes
         :param duration: Test duration in secs
+        :param iterations: No of iterations needed for Latency test
         """
         self.is_parallel = is_parallel
         self.test_type = test_type
@@ -68,20 +78,19 @@ class RdmaTemplate(object):
         self.inline_size = inline_size
         self.duration = duration
         self.client_server_objs = client_server_objs
+        self.hosts = hosts
+        self.iterations = iterations
 
     def setup_test(self):
         result = False
         try:
             module_cmds = ['sudo insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko',
                            'sudo modprobe rdma_ucm']
-            for c_s_dict in self.client_server_objs:
-                hosts = c_s_dict.keys() + c_s_dict.values()
-                # TODO: Update setup test to include list of servers N_N scenario
-                for host_obj in hosts:
-                    fun_test.log_section("Configure %s host load all modules and export necessary paths" %
-                                         str(host_obj))
-                    for cmd in module_cmds:
-                        host_obj.command(cmd, timeout=90)
+            for host_obj in self.hosts:
+                fun_test.log_section("Configure %s host load all modules and export necessary paths" %
+                                     str(host_obj))
+                for cmd in module_cmds:
+                    host_obj.command(cmd, timeout=90)
             fun_test.add_checkpoint(checkpoint="Setup RDMA Test")
             result = True
         except Exception as ex:
@@ -103,70 +112,89 @@ class RdmaTemplate(object):
             fun_test.critical(str(ex))
         return ibv_device
 
+    def create_rdma_cmd(self, ibv_device, port_num, client_cmd=False, server_ip=None, **kwargs):
+        cmd = None
+        try:
+            if self.test_type == IB_WRITE_BANDWIDTH_TEST:
+                cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (self.test_type, self.connection_type, ibv_device,
+                                                             port_num, self.size)
+                for key, val in kwargs.items():
+                    if type(val) == list:
+                        for op in val:
+                            cmd += "%s" % op
+                    else:
+                        cmd += "%s %s " % (key, val)
+                if client_cmd:
+                    cmd += "-D %d %s " % (self.duration, server_ip)
+            elif self.test_type == IB_WRITE_LATENCY_TEST:
+                cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (self.test_type, self.connection_type, ibv_device,
+                                                                   port_num, self.inline_size, self.size)
+                for key, val in kwargs.items():
+                    if type(val) == list:
+                        for op in val:
+                            cmd += "%s" % op
+                    else:
+                        cmd += "%s %s " % (key, val)
+                if client_cmd:
+                    cmd += "-n %d %s " % (self.iterations, server_ip)
+            fun_test.log('Cmd Formed: %s' % cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return cmd
+
+    def _setup_server(self, server_obj, **kwargs):
+        result = False
+        try:
+            fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
+                                                                        server_obj.rdma_server_port))
+            ibv_device = self.get_ibv_device(host_obj=server_obj)
+            cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], port_num=server_obj.rdma_server_port, client_cmd=False,
+                                       **kwargs)
+            tmp_output_file = "/tmp/%s_server_process_%d.log" % (
+                self.test_type, server_obj.rdma_server_port)
+            process_id = server_obj.start_bg_process(command=cmd, output_file=tmp_output_file)
+            fun_test.log("Server Process Started: %s" % process_id)
+            fun_test.simple_assert(process_id, "Rdma server process started")
+            server_obj.rdma_process_id = process_id
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def setup_servers(self):
         result = False
         try:
             checkpoint = "Configure all servers and start the tool %s" % self.test_type
             for c_s_dict in self.client_server_objs:
                 for client_obj, server_obj in c_s_dict.items():
-                    # TODO: Update for list of server_objs N_N scenario
-                    fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
-                                                                                server_obj.rdma_server_port))
-                    ibv_device = self.get_ibv_device(host_obj=server_obj)
-                    # TODO: Add cmd args
-                    if self.test_type == IB_WRITE_BANDWIDTH_TEST:
-                        cmd = "%s -c %s -R -d %s -p %d -F -s %d" % (
-                            self.test_type, self.connection_type, ibv_device['name'],
-                            server_obj.rdma_server_port, self.size)
-                    elif self.test_type == IB_WRITE_LATENCY_TEST:
-                        cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d" % (
-                            self.test_type, self.connection_type, ibv_device['name'], server_obj.rdma_server_port,
-                            self.inline_size, self.size)
+                    if type(server_obj) == list:
+                        for obj in server_obj:
+                            result = self._setup_server(server_obj=obj)
                     else:
-                        # TODO: Set default test
-                        cmd = None
-                    fun_test.log("Server cmd formed: %s " % cmd)
-                    tmp_output_file = "/tmp/%s_server_process_%d.log" % (
-                        self.test_type, server_obj.rdma_server_port)
-                    process_id = server_obj.start_bg_process(command=cmd, output_file=tmp_output_file)
-                    fun_test.log("Server Process Started: %s" % process_id)
-                    fun_test.simple_assert(process_id, "Rdma server process started")
-                    server_obj.rdma_process_id = process_id
+                        result = self._setup_server(server_obj=server_obj)
             fun_test.add_checkpoint(checkpoint)
-            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def start_test(self, client_obj, server_obj, iterations, set_paths=False):
+    def start_test(self, client_obj, server_obj, set_paths=False, cmd_args=None):
         result_dict = {}
         try:
-            # TODO: Update this for N_N scenario list of server_obj and set client_obj.server_ip for each server
-            fun_test.log_section("Run traffic %s client -----> %s server" % (str(client_obj), str(server_obj)))
+            fun_test.log_section("Run traffic from %s client -----> %s server" % (str(client_obj), str(server_obj)))
+            port_no = RdmaHelper.generate_random_port_no()
+            server_obj.rdma_server_port = port_no
+            client_obj.rdma_port = port_no
+            client_obj.server_ip = server_obj.interface_ip
             if set_paths:
                 client_obj.add_path(additional_path=PATH)
                 client_obj.set_ld_library_path()
-                # server_obj.add_path(additional_path=PATH)
-                # server_obj.set_ld_library_path()
+                server_obj.add_path(additional_path=PATH)
+                server_obj.set_ld_library_path()
+            res = self._setup_server(server_obj=server_obj, **cmd_args)
+            fun_test.simple_assert(res, "Ensure on %s server process started" % str(server_obj))
             ibv_device = self.get_ibv_device(host_obj=client_obj)
-            # TODO: Add cmd args
-            if self.test_type == IB_WRITE_BANDWIDTH_TEST:
-                cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (
-                    self.test_type, self.connection_type, ibv_device['name'], client_obj.rdma_port,
-                    self.size)
-            elif self.test_type == IB_WRITE_LATENCY_TEST:
-                cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (
-                    self.test_type, self.connection_type, ibv_device['name'], client_obj.rdma_port,
-                    self.inline_size, self.size)
-            else:
-                # TODO: Set default test
-                cmd = None
-            if iterations:
-                cmd += "-n %d %s" % (iterations, client_obj.server_ip)
-            else:
-                cmd += "-D %d %s" % (self.duration, client_obj.server_ip)
-
-            fun_test.log("Client Cmd Formed: %s" % cmd)
+            cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], port_num=client_obj.rdma_port, client_cmd=True,
+                                       server_ip=client_obj.server_ip, **cmd_args)
             output = client_obj.command(command=cmd, timeout=90)
             result_dict = self._parse_rdma_output(output=output)
             result_dict['client'] = str(client_obj)
@@ -175,7 +203,7 @@ class RdmaTemplate(object):
             fun_test.critical(str(ex))
         return result_dict
 
-    def run(self, iterations=None):
+    def run(self, **kwargs):
         result = []
         try:
             if self.is_parallel:
@@ -183,10 +211,17 @@ class RdmaTemplate(object):
                 process_count = 0
                 for c_s_dict in self.client_server_objs:
                     for client_obj, server_obj in c_s_dict.items():
-                        multi_task_obj.add_task(func=self.start_test,
-                                                func_args=(client_obj, server_obj, iterations, True),
-                                                task_key="process_%s" % process_count)
-                        process_count += 1
+                        if type(server_obj) == list:
+                            for obj in server_obj:
+                                multi_task_obj.add_task(func=self.start_test,
+                                                        func_args=(client_obj, obj, True, kwargs),
+                                                        task_key="process_%s" % process_count)
+                                process_count += 1
+                        else:
+                            multi_task_obj.add_task(func=self.start_test,
+                                                    func_args=(client_obj, server_obj, True, kwargs),
+                                                    task_key="process_%s" % process_count)
+                            process_count += 1
                 run_started = multi_task_obj.run(max_parallel_processes=process_count, parallel=True)
                 fun_test.simple_assert(run_started, "Ensure Clients initiated simultaneously")
                 for index in range(process_count):
@@ -195,9 +230,15 @@ class RdmaTemplate(object):
             else:
                 for c_s_dict in self.client_server_objs:
                     for client_obj, server_obj in c_s_dict.items():
-                        result_dict = self.start_test(client_obj=client_obj, server_obj=server_obj,
-                                                      iterations=iterations)
-                        result.append(result_dict)
+                        if type(server_obj) == list:
+                            for obj in server_obj:
+                                result_dict = self.start_test(client_obj=client_obj, server_obj=obj,
+                                                              cmd_args=kwargs)
+                                result.append(result_dict)
+                        else:
+                            result_dict = self.start_test(client_obj=client_obj, server_obj=server_obj,
+                                                          cmd_args=kwargs)
+                            result.append(result_dict)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -249,7 +290,11 @@ class RdmaTemplate(object):
             for c_s_dict in self.client_server_objs:
                 for client_obj, server_obj in c_s_dict.items():
                     client_obj.disconnect()
-                    server_obj.disconnect()
+                    if type(server_obj) == list:
+                        for obj in server_obj:
+                            obj.disconnect()
+                    else:
+                        server_obj.disconnect()
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -265,6 +310,7 @@ class RdmaHelper(object):
         self.scenario_type = scenario_type
         self.config = fun_test.parse_file_to_json(file_name=self.CONFIG_JSON)
         self.hosts = fun_test.parse_file_to_json(file_name=self.HOSTS_ASSET)
+        self.host_objs = []
 
     def get_list_of_servers(self):
         servers = []
@@ -287,6 +333,10 @@ class RdmaHelper(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return clients
+
+    @staticmethod
+    def generate_random_port_no():
+        return randint(20000, 30000)
 
     def get_client_server_map(self):
         client_server_map = {}
@@ -403,25 +453,24 @@ class RdmaHelper(object):
         try:
             client_id = 1
             server_id = 1
-            rdma_port = 20000
             clients = []
             servers = []
             for host in self._get_all_hosts_full_mesh():
                 host_dict = self._fetch_client_dict(client_name=host['host_ip'])
+                hu_interface_ip = host['hu_interface_ip']
                 fun_test.simple_assert(host_dict, "Unable to find host %s info in hosts.json under asset" %
                                        host['host_ip'])
                 client_obj = RdmaClient(host_ip=host_dict['host_ip'], ssh_username=host_dict['ssh_username'],
-                                        ssh_password=host_dict['ssh_password'], server_ip=None, rdma_port=rdma_port,
+                                        ssh_password=host_dict['ssh_password'], server_ip=None, rdma_port=None,
                                         client_id=client_id)
                 server_obj = RdmaServer(host_ip=host_dict['host_ip'], ssh_username=host_dict['ssh_username'],
                                         ssh_password=host_dict['ssh_password'], server_id=server_id,
-                                        server_port=rdma_port)
+                                        interface_ip=hu_interface_ip, server_port=None)
                 clients.append(client_obj)
                 servers.append(server_obj)
                 client_id += 1
                 server_id += 1
-                rdma_port += 1
-
+            self.host_objs.extend(clients)
             for client_obj in clients:
                 server_objs = []
                 for server_obj in servers:
@@ -439,7 +488,6 @@ class RdmaHelper(object):
             if self.scenario_type == self.SCENARIO_TYPE_N_N:
                 result = self.create_client_server_map_full_mesh()
             else:
-                rdma_port = 20000
                 client_id = 1
                 server_id = 1
                 client_server_map = self.get_client_server_map()
@@ -452,13 +500,14 @@ class RdmaHelper(object):
                                            server)
                     hu_interface_ip = self._get_hu_interface_ip(server_name=server)
                     client_obj = RdmaClient(host_ip=client_dict['host_ip'], ssh_username=client_dict['ssh_username'],
-                                            ssh_password=client_dict['ssh_password'], server_ip=hu_interface_ip,
-                                            rdma_port=rdma_port, client_id=client_id)
+                                            ssh_password=client_dict['ssh_password'], server_ip=None,
+                                            rdma_port=None, client_id=client_id)
                     server_obj = RdmaServer(host_ip=server_dict['host_ip'], ssh_password=server_dict['ssh_password'],
-                                            ssh_username=server_dict['ssh_username'], server_port=rdma_port,
-                                            server_id=server_id)
+                                            ssh_username=server_dict['ssh_username'], interface_ip=hu_interface_ip,
+                                            server_port=None, server_id=server_id)
                     result.append({client_obj: server_obj})
-                    rdma_port += 1
+                    self.host_objs.append(client_obj)
+                    self.host_objs.append(server_obj)
                     client_id += 1
                     server_id += 1
         except Exception as ex:

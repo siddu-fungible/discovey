@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.templates.networking.rdma_template import *
+import argparse
 
 
 class BasicSetup(FunTestScript):
@@ -15,6 +16,9 @@ class BasicSetup(FunTestScript):
     def setup(self):
         inputs = fun_test.get_job_inputs()
         scenario_type = inputs['scenario']
+        if 'cmd_args' in inputs:
+            cmd_args = inputs['cmd_args']
+            fun_test.shared_variables['cmd_args'] = cmd_args
         fun_test.shared_variables['scenario'] = scenario_type
 
         # TODO: Add Bringup Logic
@@ -54,25 +58,20 @@ class RdmaWriteBandwidthTest(FunTestCase):
         inline_size = self.rdma_helper.get_inline_size()
         self.rdma_template = RdmaTemplate(test_type=self.test_type, is_parallel=is_parallel,
                                           size=size_in_bytes, duration=duration, inline_size=inline_size,
-                                          client_server_objs=client_server_objs)
+                                          client_server_objs=client_server_objs, hosts=self.rdma_helper.host_objs)
         if self.setup_test:
             result = self.rdma_template.setup_test()
             fun_test.test_assert(result, checkpoint)
 
     def run(self):
         scenario_type = fun_test.shared_variables['scenario']
-
-        checkpoint = "Start RDMA servers"
-        result = self.rdma_template.setup_servers()
-        fun_test.test_assert(result, checkpoint)
+        if 'cmd_args' in fun_test.shared_variables:
+            cmd_args = fun_test.shared_variables['cmd_args']
+        else:
+            cmd_args = {}
 
         checkpoint = "Connect to each client and initiate RDMA traffic towards each server"
-        if self.iterations:
-            val = self.rdma_helper.get_traffic_iterations() if self.rdma_helper.get_traffic_iterations() else 100
-        else:
-            val = None
-
-        records = self.rdma_template.run(iterations=val)
+        records = self.rdma_template.run(**cmd_args)
         fun_test.test_assert(records, checkpoint)
 
         checkpoint = "Result table for %s scenario" % scenario_type
