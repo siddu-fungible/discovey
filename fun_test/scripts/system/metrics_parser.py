@@ -146,6 +146,7 @@ class MetricParser():
         self.status = RESULTS["FAILED"]
         input_dev_access = ""
         for line in logs:
+            line = line.strip()
             if not start_rcnvme:
                 m = re.search(
                     r'RC NVMe test:\s+(?P<value>{.*})',
