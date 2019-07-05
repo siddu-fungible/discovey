@@ -66,7 +66,7 @@ class LsfStatusServer:
                 result["job_id"] = job_id
                 result["jenkins_build_number"] = jenkins_job_id
                 fun_test.add_checkpoint("Validating Job: {}".format(job_id))
-                fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
+                # fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
                 if validate:
                     fun_test.add_checkpoint("Fetching return code for: {}".format(job_id))
                     response = self.get_job_by_id(job_id=job_id)
