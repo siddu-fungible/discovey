@@ -115,12 +115,12 @@ class NicEmulation(FunTestCase):
         #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
-        print("============================================")
-        raw_input("Press any key to continue to NIC Emulation:")
-        print("============================================")
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.test_cc_pings_fs()
+        print("\n===========================")
+        print ("Continue to NIC Emulation:")
+        print("===========================")
         # Check PICe Link on host
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         for server in servers_mode:
@@ -139,9 +139,9 @@ class NicEmulation(FunTestCase):
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
-        print("============================================")
-        raw_input("Press any key to Enable NVMe VFs:")
-        print("============================================")
+        print("\n=================")
+        print ("Enable NVMe VFs:")
+        print("=================")
         for server in self.server_key["fs"][fs_name]["vm_config"]:
             critical_log(enable_nvme_vfs
                          (host=server,
@@ -515,7 +515,7 @@ class CheckVMReachability(FunTestCase):
                     fun_test.log("VMs not rebooted are:")
                     fun_test.log(not_reachable_vms)
                 now_time = time.time()
-                if int(now_time - start_time) > 600:
+                if int(now_time - start_time) > 1200:
                     fun_test.test_assert(expression=False, message="VMs didnt come up in 10 minutes")
 
     def cleanup(self):
@@ -545,7 +545,6 @@ class LoadNvmeOnVMs(FunTestCase):
         for server in self.spec_file["fs"][fs_name]["vm_config"]:
             servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"][server]["vms"]
             check_nvme_driver(vm_dict=servers_with_vms, parallel=True)
-
 
     def cleanup(self):
         pass
