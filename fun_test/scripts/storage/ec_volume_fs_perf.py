@@ -269,7 +269,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 class EC42FioSeqRandRead(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sequential Read only performance of EC volume",
+                              summary="Sequential and Random Read performance of EC volume",
                               steps=""" 
         1. Run the FIO sequential and random read test(without verify) for required block size and IO depth from the 
         EP host.

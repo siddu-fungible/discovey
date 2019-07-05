@@ -335,17 +335,17 @@
     "name": "fs-66",
     "gateway_ip": "10.1.105.1",
     "bmc": {
-      "mgmt_ip": "10.1.105.53",
+      "mgmt_ip": "fs66-bmc",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.105.51",
+      "mgmt_ip": "fs66-fpga",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.105.52",
+      "mgmt_ip": "fs66-come",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }

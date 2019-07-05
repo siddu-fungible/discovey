@@ -227,6 +227,17 @@ class MetricChart(models.Model):
         self.children_weights = json.dumps(children_weights)
         self.save()
 
+    def fix_children_weights(self):
+        children = json.loads(self.children)
+        children_weights = json.loads(self.children_weights)
+        children_weights = {int(x): y for x, y in children_weights.iteritems()}
+        new_children_weights = {}
+        for child in children:
+            child_id = int(child)
+            new_children_weights[child_id] = children_weights.get(child_id, 1)
+        self.children_weights = json.dumps(new_children_weights)
+        self.save()
+
     def goodness(self):
         children = json.loads(self.children)
         goodness = 0

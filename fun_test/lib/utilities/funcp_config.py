@@ -510,7 +510,7 @@ class FunControlPlaneBringup:
             linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                              ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                              ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-            for ips in dest_ips.values():
+            for ips in dest_ips:
                 result = False
                 percentage_loss = 100
                 if from_vlan:

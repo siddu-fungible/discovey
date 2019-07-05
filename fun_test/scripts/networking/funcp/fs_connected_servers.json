@@ -9,9 +9,9 @@
 
     },
     "fs-60": {
-      "cab02-qa-01": "x16",
+      "cab02-qa-01": "x8",
       "cab02-qa-02": "x16",
-      "cab02-qa-03": "x8",
+      "cab02-qa-03": "x16",
       "cab02-qa-04": "x16"
     },
      "fs-7": {
@@ -48,9 +48,9 @@
       "cab03-qa-05": "x16"
     },
       "mpg_ips":{
-        "static":false,
-        "mpg0":"",
-        "mpg1":""
+        "static":true,
+        "mpg0":"10.1.105.181",
+        "mpg1":"10.1.105.182"
       },
 
        "cc_pings":{
@@ -118,6 +118,18 @@
         "ctlid":0,
         "huid":2,
         "pcie_vfs": 32,
+        "vm_ping_tests":
+        {
+          "vm_vm_same_server":
+          {
+            "cab03-qa-01-vm01":["cab03-qa-01-vm03","cab03-qa-01-vm02"],
+            "cab03-qa-01-vm02":["cab03-qa-01-vm01","cab03-qa-01-vm30"]
+          },
+          "vm_vm_diff_server":
+          {
+            "cab03-qa-01-vm01":["19.1.1.10"]
+          }
+        },
         "vms":{
 
         "cab03-qa-01-vm01":{

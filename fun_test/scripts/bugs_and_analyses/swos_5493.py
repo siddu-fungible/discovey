@@ -169,23 +169,30 @@ class ECVolumeLevelScript(FunTestScript):
                 if j in required_host_index:
                     self.required_hosts[host_name] = hosts[host_name]
 
+        self.host_info = {}
         self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []
         self.host_numa_cpus = {}
+        self.total_numa_cpus = {}
         for host_name, host_obj in self.required_hosts.items():
+            if host_name not in self.host_info:
+                self.host_info[host_name] = {}
+                self.host_info[host_name]["ip"] = []
             # Retrieving host ips
-            # test_interfaces = host.get_test_interfaces()
             if host_name not in self.hosts_test_interfaces:
                 self.hosts_test_interfaces[host_name] = []
             test_interface = host_obj.get_test_interface(index=0)
             self.hosts_test_interfaces[host_name].append(test_interface)
+            self.host_info[host_name]["test_interface"] = test_interface
             host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
             self.host_ips.append(host_ip)
+            self.host_info[host_name]["ip"].append(host_ip)
             fun_test.log("Host-IP: {}".format(host_ip))
             # Retrieving host handles
             host_instance = host_obj.get_instance()
             self.host_handles[host_ip] = host_instance
+            self.host_info[host_name]["handle"] = host_instance
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
         for key in self.host_handles:
