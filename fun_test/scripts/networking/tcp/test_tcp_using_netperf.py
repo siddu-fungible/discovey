@@ -89,8 +89,8 @@ class TcpPerformance(FunTestScript):
         syslog = network_controller_obj.set_syslog_level(level=2)
         fun_test.simple_assert(syslog, "Set syslog level to 2")
 
-        # exec_app = network_controller_obj.execute_app(name=app)
-        # fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
+        exec_app = network_controller_obj.execute_app(name=app)
+        fun_test.test_assert(expression=exec_app['status'], message="Ensure TCP server App started")
 
         # Setup fpg1
         host_info = get_nu_lab_host(file_path=hosts_json_file, host_name=host_name)
