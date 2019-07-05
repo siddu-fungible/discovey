@@ -163,7 +163,7 @@ def setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4):
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
 
-        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=8),
+        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=num_queues),
                      'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
