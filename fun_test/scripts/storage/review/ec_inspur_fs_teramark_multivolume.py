@@ -783,35 +783,44 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Executing the FIO command to fill the volume to it's capacity
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
-                host_clone = {}
-                warmup_thread_id = {}
-                actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
-                aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
-                self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
-                for index, host_name in enumerate(self.host_info):
-                    wait_time = self.num_hosts - index
-                    host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-                    warmup_thread_id[index] = fun_test.execute_thread_after(
-                        time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
-                        filename=self.host_info[host_name]["fio_filename"],
-                        cpus_allowed=self.host_info[host_name]["host_numa_cpus"], **self.warm_up_fio_cmd_args)
-
-                    fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
-                    fun_test.sleep("to start next thread", 1)
-
-                fun_test.sleep("Fio threads started", 10)
-                try:
+                if self.parallel_warm_up:
+                    host_clone = {}
+                    warmup_thread_id = {}
+                    actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
+                    aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
+                    self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
                     for index, host_name in enumerate(self.host_info):
-                        fun_test.log("Joining fio thread {}".format(index))
-                        fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index], sleep_time=1)
-                        fun_test.log("FIO Command Output: \n{}".format(fun_test.shared_variables["fio"][index]))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
+                        wait_time = self.num_hosts - index
+                        host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                        warmup_thread_id[index] = fun_test.execute_thread_after(
+                            time_in_seconds=wait_time, func=fio_parser, arg1=host_clone[host_name], host_index=index,
+                            filename=self.host_info[host_name]["fio_filename"],
+                            cpus_allowed=self.host_info[host_name]["host_numa_cpus"], **self.warm_up_fio_cmd_args)
 
-                for index, host_name in enumerate(self.host_info):
-                    fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
-                                         format(host_name))
-                    fun_test.shared_variables["ec"][host_name]["warmup"] = True
+                        fun_test.log("Started FIO command to perform sequential write on {}".format(host_name))
+                        fun_test.sleep("to start next thread", 1)
+
+                    fun_test.sleep("Fio threads started", 10)
+                    try:
+                        for index, host_name in enumerate(self.host_info):
+                            fun_test.log("Joining fio thread {}".format(index))
+                            fun_test.join_thread(fun_test_thread_id=warmup_thread_id[index], sleep_time=1)
+                            fun_test.log("FIO Command Output: \n{}".format(fun_test.shared_variables["fio"][index]))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
+                    for index, host_name in enumerate(self.host_info):
+                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
+                                             format(host_name))
+                        fun_test.shared_variables["ec"][host_name]["warmup"] = True
+                else:
+                    for index, host_name in enumerate(self.host_info):
+                        host_handle = self.host_info[host_name]["handle"]
+                        fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
+                                                          cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
+                                                          **self.warm_up_fio_cmd_args)
+                        fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                        fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
 
                 fun_test.sleep("before actual test",self.iter_interval)
                 fun_test.shared_variables["ec"]["warmup_io_completed"] = True
