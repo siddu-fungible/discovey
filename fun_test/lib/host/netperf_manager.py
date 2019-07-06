@@ -251,9 +251,9 @@ class NetperfManager:
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
                         task_key='{}_{}'.format(direction, i))
                 if test == 3:
-                    if num_flows == 1:
-                        cpu -= 1
-                        cpu_list.append(cpu)
+                    #if num_flows == 1:
+                    #    cpu -= 1
+                    #    cpu_list.append(cpu)
                     measure_latency = True
                     mp_task_obj.add_task(
                         func=do_test,
