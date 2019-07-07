@@ -39,7 +39,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
                             boot_args=boot_args,
                             f1_parameters=f1_parameters,
                             context=context,
-                            fun_cp_callback=fun_cp_callback)
+                            fun_cp_callback=fun_cp_callback, power_cycle_come=True)
             self.dut_instance = fs_obj
             # Start Fs
             fun_test.test_assert(fs_obj.bootup(non_blocking=True), "FS bootup non-blocking initiated")

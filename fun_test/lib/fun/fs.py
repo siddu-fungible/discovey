@@ -787,7 +787,8 @@ class Fs(object, ToDictMixin):
             non_blocking=None,
             context=None,
             setup_bmc_support_files=None,
-            fun_cp_callback=None):  #TODO
+            fun_cp_callback=None,
+            power_cycle_come=False):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -834,7 +835,8 @@ class Fs(object, ToDictMixin):
                   context=context,
                   setup_bmc_support_files=setup_bmc_support_files,
                   apc_info=apc_info,
-                  fun_cp_callback=fun_cp_callback)
+                  fun_cp_callback=fun_cp_callback,
+                  power_cycle_come=power_cycle_come)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
