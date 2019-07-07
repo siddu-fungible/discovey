@@ -243,6 +243,7 @@ class FunTest:
         self.profiling = False
         self.profiling_timer = None
         self.topologies = []
+        self.hosts = []
         self.closed = False
 
     def initialize_output_files(self, absolute_script_file_name):
@@ -628,8 +629,14 @@ class FunTest:
     def register_topologies(self, topology):
         self.topologies.append(topology)
 
+    def register_hosts(self, host):
+        self.hosts.append(host)
+
     def get_topologies(self):
         return self.topologies
+
+    def get_hosts(self):
+        return self.hosts
 
     def get_environment_variable(self, variable):
         result = None
@@ -1400,6 +1407,13 @@ class FunTestScript(object):
                 except Exception as ex:
                     fun_test.critical(ex)
 
+    def _cleanup_hosts(self):
+        for host in fun_test.get_hosts():
+            try:
+                host.disconnect()
+            except:
+                pass
+
     @abc.abstractmethod
     def cleanup(self):
         fun_test._start_test(id=FunTest.CLEANUP_TC_ID,
@@ -1414,6 +1428,11 @@ class FunTestScript(object):
             fun_test.critical(ex)
         try:
             self._cleanup_topologies()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+        try:
+            self._cleanup_hosts()
         except Exception as ex:
             fun_test.critical(ex)
         fun_test._end_test(result=result)
