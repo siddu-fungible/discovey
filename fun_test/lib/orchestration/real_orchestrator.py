@@ -21,6 +21,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
         disable_f1_index = None
         boot_args = None
         f1_parameters = None
+
         if "dut" in dut_obj.spec:
             dut_name = dut_obj.spec["dut"]
             fs_spec = fun_test.get_asset_manager().get_fs_by_name(dut_name)
@@ -39,6 +40,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
                             f1_parameters=f1_parameters,
                             context=context,
                             fun_cp_callback=fun_cp_callback)
+            self.dut_instance = fs_obj
             # Start Fs
             fun_test.test_assert(fs_obj.bootup(non_blocking=True), "FS bootup non-blocking initiated")
 
@@ -48,7 +50,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
             dpc_port = come.get_dpc_port(0)
             fs_obj.host_ip = host_ip
             fs_obj.external_dpcsh_port = dpc_port
-            self.dut_instance = fs_obj
+
         return fs_obj
 
     def launch_linux_instance(self, index):
