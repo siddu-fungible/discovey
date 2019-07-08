@@ -2692,7 +2692,7 @@ class NuTransitPerformanceSerializer(ModelSerializer):
         model = NuTransitPerformance
         fields = "__all__"
 
-class RdmaPerformance(models.Model):
+class AlibabaRdmaPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
@@ -2704,12 +2704,12 @@ class RdmaPerformance(models.Model):
     input_size_latency = models.IntegerField(verbose_name="latency size in bytes")
     input_size_bandwidth = models.IntegerField(verbose_name="bandwidth size in bytes")
 
-    output_read_time_avg_latency = models.IntegerField(verbose_name="read time average latency (usec)")
-    output_write_time_avg_latency = models.IntegerField(verbose_name="write time average latency (usec)")
-    output_read_time_min_latency = models.IntegerField(verbose_name="read time min latency(usec)")
-    output_write_time_min_latency = models.IntegerField(verbose_name="write time min latency (usec)")
-    output_read_time_max_latency = models.IntegerField(verbose_name="read time max latency(usec)")
-    output_write_time_max_latency = models.IntegerField(verbose_name="write time max latency(usec)")
+    output_read_avg_latency = models.IntegerField(verbose_name="read average latency (usec)")
+    output_write_avg_latency = models.IntegerField(verbose_name="write average latency (usec)")
+    output_read_min_latency = models.IntegerField(verbose_name="read min latency(usec)")
+    output_write_min_latency = models.IntegerField(verbose_name="write min latency (usec)")
+    output_read_max_latency = models.IntegerField(verbose_name="read max latency(usec)")
+    output_write_max_latency = models.IntegerField(verbose_name="write max latency(usec)")
     output_read_99_latency = models.IntegerField(verbose_name="read 99% latency", default=-1)
     output_write_99_latency = models.IntegerField(verbose_name="write 99% latency", default=-1)
     output_read_99_99_latency = models.IntegerField(verbose_name="read 99.99% latency", default=-1)
@@ -2719,12 +2719,12 @@ class RdmaPerformance(models.Model):
     output_read_msg_rate = models.IntegerField(verbose_name="read Message rate (Mpps)")
     output_write_msg_rate = models.IntegerField(verbose_name="write Message rate (Mpps)")
 
-    output_read_time_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    output_write_time_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    output_read_time_min_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    output_write_time_min_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    output_read_time_max_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
-    output_write_time_max_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_min_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_min_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_max_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_max_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
