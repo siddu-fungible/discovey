@@ -47,7 +47,7 @@ import { AlertsComponent } from './alerts/alerts.component';
 import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.component';
 import { ToasterModule, ToasterService } from "angular2-toaster";
 import { LogViewerComponent } from './log-viewer/log-viewer.component';
-import { SmartLabelComponent } from './smart-label/smart-label.component';
+import { SmartLabelComponent } from './ui-elements/smart-label/smart-label.component';
 import {QueueViewerComponent} from "./regression/queue-viewer/queue-viewer.component";
 import { TriageComponent } from './triage/triage.component';
 import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-line/section-horizontal-line.component";
