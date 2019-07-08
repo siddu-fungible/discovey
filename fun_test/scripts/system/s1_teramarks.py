@@ -121,7 +121,7 @@ class DfaTeramarkTc(PalladiumTC):
     fun_os_make_flags = "PM_TESTS=1"
 
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=4,
                               summary="Schedule DFA teramark app on Jenkins",
                               steps="""
             1. Steps 1
@@ -137,7 +137,7 @@ class NfaTeramarkTc(PalladiumTC):
     fun_os_make_flags = "PM_TESTS=1"
 
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=5,
                               summary="Schedule NFA teramark app on Jenkins",
                               steps="""
             1. Steps 1
