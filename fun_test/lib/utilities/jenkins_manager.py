@@ -20,7 +20,7 @@ DEFAULT_BUILD_PARAMS = {
     "NOTE": "",
     "FAST_EXIT": "true",
     "TAGS": "",
-    "EXTRA_EMAIL": "john.abraham@fungible.com",
+    "EXTRA_EMAIL": "team-regression@fungible.com",
     "BRANCH_FunOS": "",
     "DISABLE_ASSERTIONS": "false",
     "PCI_MODE": "",

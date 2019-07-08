@@ -61,8 +61,7 @@ class PalladiumTC(FunTestCase):
                   "RUN_TARGET": self.run_target,
                   "HW_MODEL": self.hw_model}
 
-        build_result = jenkins_manager.build(params=params, extra_emails=[
-            "team-regression@fungible.com"])
+        build_result = jenkins_manager.build(params=params)
         fun_test.test_assert(build_result, "Build completed normally")
 
 
