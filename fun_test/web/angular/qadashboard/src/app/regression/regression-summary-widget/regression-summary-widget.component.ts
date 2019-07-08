@@ -41,7 +41,14 @@ export class RegressionSummaryWidgetComponent implements OnInit {
         data: Array(this.x1Values.length).fill(0),
         color: 'grey'
 
-    }];
+    },
+      {
+        name: 'In-progress',
+        data: Array(this.x1Values.length).fill(0),
+        color: 'yellow'
+      }
+
+    ];
   }
 
   ngOnInit() {
@@ -88,15 +95,16 @@ export class RegressionSummaryWidgetComponent implements OnInit {
           }
         }
       }
-      this.populateResults(index, numPassed, numFailed, numNotRun);
+      this.populateResults(index, numPassed, numFailed, numNotRun, numInProgress);
       return of(true);
     }));
   }
 
-  populateResults(index, numPassed, numFailed, numNotRun) {
+  populateResults(index, numPassed, numFailed, numNotRun, numInProgress) {
       this.y1Values[0].data[index] = numPassed; //make these local vars, pass to populateResults
       this.y1Values[1].data[index] = numFailed;
       this.y1Values[2].data[index] = numNotRun;
+      this.y1Values[3].data[index] = numInProgress;
       this.y1Values = [...this.y1Values];
   }
 }

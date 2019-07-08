@@ -139,7 +139,9 @@ export class FunChartComponent implements OnInit, OnChanges {
           type: "column"
         },
         title: {
-          text: this.title
+          text: this.title,
+          useHTML: true
+
         },
         xAxis: {
           categories: this.xValues,
