@@ -69,6 +69,7 @@ import { ChartComponent} from "./chart/chart.component";
 import { ToggleButtonComponent } from './ui-elements/toggle-button/toggle-button.component';
 import { RegressionSummaryWidgetComponent } from './regression/regression-summary-widget/regression-summary-widget.component';
 import {NgxJsonViewerModule} from "ngx-json-viewer";
+import { AnnouncementComponent } from './announcement/announcement.component';
 
 @NgModule({
   declarations: [
@@ -121,7 +122,8 @@ import {NgxJsonViewerModule} from "ngx-json-viewer";
     TooltipDirective,
     ChartComponent,
     ToggleButtonComponent,
-    RegressionSummaryWidgetComponent
+    RegressionSummaryWidgetComponent,
+    AnnouncementComponent
   ],
   imports: [
     BsDropdownModule,

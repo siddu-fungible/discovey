@@ -140,6 +140,7 @@ class Linux(object, ToDictMixin):
         if self.extra_attributes:
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
+        fun_test.register_hosts(host=self)
         self.post_init()
 
     @staticmethod

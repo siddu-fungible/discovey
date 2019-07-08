@@ -17,7 +17,8 @@ COALESCE_TX_FRAMES = 32
 class Funeth:
     """Funeth driver class"""
 
-    def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/ws'):
+    def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, fundrv_commit=None,
+                 funsdk_commit=None, ws='/mnt/ws'):
         self.tb_config_obj = tb_config_obj
         self.linux_obj_dict = {}
         self.nu_hosts = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('nu')])
@@ -32,6 +33,8 @@ class Funeth:
         self.funos_branch = funos_branch
         self.fundrv_branch = fundrv_branch
         self.funsdk_branch = funsdk_branch
+        self.fundrv_commit = fundrv_commit
+        self.funsdk_commit = funsdk_commit
         self.ws = ws
         #self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
         #self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
@@ -116,8 +119,16 @@ class Funeth:
             # clone FunSDK, host-drivers, FunOS
             linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
                               timeout=300)
+            if self.fundrv_branch:
+                linux_obj.command('cd {}; git checkout {}'.format(drvdir, self.fundrv_branch))
+            if self.fundrv_commit:
+                linux_obj.command('cd {}; git reset --hard {}'.format(drvdir, self.fundrv_commit))
             linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
                               timeout=300)
+            if self.funsdk_branch:
+                linux_obj.command('cd {}; git checkout {}'.format(sdkdir, self.funsdk_branch))
+            if self.funsdk_commit:
+                linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
 
             output = linux_obj.command(
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)

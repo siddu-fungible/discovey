@@ -9,3 +9,7 @@ body, .dropdown-item{
   background-color: red;
 
 }
+
+nav {
+  height: 70px;
+}

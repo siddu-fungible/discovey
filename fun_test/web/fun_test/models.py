@@ -27,6 +27,7 @@ TAG_LENGTH = 50
 
 class SiteConfig(models.Model):
     version = models.IntegerField(default=101)
+    announcement = models.TextField(default="", null=True, blank=True)
 
     def bump_version(self):
         self.version += 1

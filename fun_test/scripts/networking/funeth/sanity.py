@@ -45,10 +45,18 @@ try:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
+        fundrv_branch = inputs.get('fundrv_branch', None)
+        fundrv_commit = inputs.get('fundrv_commit', None)
+        funsdk_branch = inputs.get('funsdk_branch', None)
+        funsdk_commit = inputs.get('funsdk_commit', None)
     else:
         enable_tso = True  # default True
         control_plane = False  # default False
         update_driver = True  # default True
+        fundrv_branch = None
+        fundrv_commit = None
+        funsdk_branch = None
+        funsdk_commit = None
 except:
     enable_tso = True
     control_plane = False
@@ -173,7 +181,8 @@ class FunethSanity(FunTestScript):
             # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = Funeth(tb_config_obj)
+        funeth_obj = Funeth(tb_config_obj, fundrv_branch=fundrv_branch, funsdk_branch=funsdk_branch,
+                            fundrv_commit=fundrv_commit, funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
