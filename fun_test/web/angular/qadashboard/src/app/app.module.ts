@@ -70,6 +70,7 @@ import {ToggleButtonComponent} from './ui-elements/toggle-button/toggle-button.c
 import {RegressionSummaryWidgetComponent} from './regression/regression-summary-widget/regression-summary-widget.component';
 import {NgxJsonViewerModule} from "ngx-json-viewer";
 import {AnnouncementComponent} from './announcement/announcement.component';
+import { PerformanceSummaryWidgetComponent } from './performance/performance-summary-widget/performance-summary-widget.component';
 
 @NgModule({
   declarations: [
@@ -123,6 +124,7 @@ import {AnnouncementComponent} from './announcement/announcement.component';
     ChartComponent,
     ToggleButtonComponent,
     RegressionSummaryWidgetComponent,
+    PerformanceSummaryWidgetComponent,
     AnnouncementComponent
   ],
   imports: [
