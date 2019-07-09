@@ -583,7 +583,8 @@ class Funeth:
                 if tx_or_rx == 'tx':
                     irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
                 elif tx_or_rx == 'rx':
-                    irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)[1:]  # exclude Q0, admin queue
+                    irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+                    #irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)[1:]  # exclude Q0, admin queue
 
                 # cat irq affinity
                 cmds_cat = []
