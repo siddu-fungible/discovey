@@ -158,7 +158,8 @@ export class FunChartComponent implements OnInit, OnChanges {
           },
         },
         legend: {
-          reversed: true
+          reversed: true,
+          enabled: this.enableLegend
         },
         plotOptions: {
           series: {
