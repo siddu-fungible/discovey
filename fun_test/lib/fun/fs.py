@@ -89,6 +89,7 @@ class Fpga(Linux):
         fun_test.simple_assert(expression="F1_{} is out of reset".format(f1_index) in output,
                                message="F1 {} out of reset".format(f1_index),
                                context=self.context)
+        # fun_test.sleep("After FPGA reset", seconds=20)
 
     def _set_term_settings(self):
         self.command("stty cols %d" % 1024)
@@ -206,7 +207,7 @@ class Bmc(Linux):
         fun_test.log(message=output, context=self.context)
         if expected:
             fun_test.simple_assert(expression=expected in output,
-                                   message="{} not in output".format(expected),
+                                   message="{} in output".format(expected),
                                    context=self.context)
         output = nc.close()
         self.u_boot_logs[f1_index] += output
@@ -787,7 +788,8 @@ class Fs(object, ToDictMixin):
             non_blocking=None,
             context=None,
             setup_bmc_support_files=None,
-            fun_cp_callback=None):  #TODO
+            fun_cp_callback=None,
+            power_cycle_come=False):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -834,7 +836,8 @@ class Fs(object, ToDictMixin):
                   context=context,
                   setup_bmc_support_files=setup_bmc_support_files,
                   apc_info=apc_info,
-                  fun_cp_callback=fun_cp_callback)
+                  fun_cp_callback=fun_cp_callback,
+                  power_cycle_come=power_cycle_come)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)

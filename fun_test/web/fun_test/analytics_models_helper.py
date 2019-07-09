@@ -22,7 +22,7 @@ from lib.system.fun_test import *
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from django.utils import timezone
 from dateutil import parser
-from fun_global import PerfUnit
+from fun_global import PerfUnit, FunPlatform
 
 
 def get_time_from_timestamp(timestamp):
@@ -742,139 +742,58 @@ if __name__ == "__main2__":
 
 if __name__ == "__main__":
     # prepare_status_db()
-    json_text = [{
-        "flow_type": "HU_HU_NFCP",
-        "frame_size": 1500,
-        "latency_P50_h2h": 105000.0,
-        "latency_P50_h2n": -1,
-        "latency_P50_n2h": -1,
-        "latency_P50_uload_h2h": 518.0,
-        "latency_P50_uload_h2n": -1,
-        "latency_P50_uload_n2h": -1,
-        "latency_P90_h2h": 109020.0,
-        "latency_P90_h2n": -1,
-        "latency_P90_n2h": -1,
-        "latency_P90_uload_h2h": 107347.0,
-        "latency_P90_uload_h2n": -1,
-        "latency_P90_uload_n2h": -1,
-        "latency_P99_h2h": 109930.0,
-        "latency_P99_h2n": -1,
-        "latency_P99_n2h": -1,
-        "latency_P99_uload_h2h": 109749.0,
-        "latency_P99_uload_h2n": -1,
-        "latency_P99_uload_n2h": -1,
-        "latency_avg_h2h": 104305.7,
-        "latency_avg_h2n": -1,
-        "latency_avg_n2h": -1,
-        "latency_avg_uload_h2h": 39909.5,
-        "latency_avg_uload_h2n": -1,
-        "latency_avg_uload_n2h": -1,
-        "latency_max_h2h": 187764.0,
-        "latency_max_h2n": -1,
-        "latency_max_n2h": -1,
-        "latency_max_uload_h2h": 187542.0,
-        "latency_max_uload_h2n": -1,
-        "latency_max_uload_n2h": -1,
-        "latency_min_h2h": 103984.0,
-        "latency_min_h2n": -1,
-        "latency_min_n2h": -1,
-        "latency_min_uload_h2h": 90.0,
-        "latency_min_uload_h2n": -1,
-        "latency_min_uload_n2h": -1,
-        "num_flows": 8,
-        "num_hosts": 1,
-        "offloads": True,
-        "pps_h2h": 15796.23,
-        "pps_h2n": -1,
-        "pps_n2h": -1,
-        "protocol": "TCP",
-        "throughput_h2h": 194.357,
-        "throughput_h2n": -1,
-        "throughput_n2h": -1,
-        "timestamp": "2019-05-27 22:28:37.972976-07:00",
-        "version": "6631-5-g77928a6db0"
-    }]
-
-    unit = {
-        "latency_P50_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P50_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_P50_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P50_uload_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P50_uload_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_P50_uload_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P90_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P90_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_P90_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P90_uload_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P90_uload_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_P90_uload_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P99_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P99_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_P99_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P99_uload_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_P99_uload_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_P99_uload_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_uload_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_uload_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_uload_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_max_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_max_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_max_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_max_uload_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_max_uload_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_max_uload_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_min_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_min_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_min_n2h_unit": PerfUnit.UNIT_USECS,
-        "latency_min_uload_h2h_unit": PerfUnit.UNIT_USECS,
-        "latency_min_uload_h2n_unit": PerfUnit.UNIT_USECS,
-        "latency_min_uload_n2h_unit": PerfUnit.UNIT_USECS,
-        "pps_h2h_unit": PerfUnit.UNIT_PPS,
-        "pps_h2n_unit": PerfUnit.UNIT_PPS,
-        "pps_n2h_unit": PerfUnit.UNIT_PPS,
-        "throughput_h2h_unit": PerfUnit.UNIT_MBITS_PER_SEC,
-        "throughput_h2n_unit": PerfUnit.UNIT_MBITS_PER_SEC,
-        "throughput_n2h_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+    value_dict = {
+    "date_time": get_data_collection_time(),
+    "volume_type": "BLT",
+    "test": "FioSeqRead",
+    "block_size": "4K",
+    "io_depth": 128,
+    "io_size": "8G",
+    "operation": "read",
+    "num_ssd": 1,
+    "num_volume": 1,
+    "num_threads": 4,
+    "platform": FunPlatform.F1,
+    "version": fun_test.get_version(),
+    "write_iops": 100,
+    "read_iops": 200,
+    "write_throughput": 300,
+    "read_throughput": 400,
+    "write_avg_latency": 500,
+    "write_90_latency": 600,
+    "write_95_latency": 700,
+    "write_99_99_latency": 800,
+    "write_99_latency": 900,
+    "read_avg_latency": 1000,
+    "read_90_latency": 1100,
+    "read_95_latency": 1200,
+    "read_99_99_latency": 1300,
+    "read_99_latency": 1400
     }
-    model_names = ["HuThroughputPerformance", "HuLatencyPerformance", "HuLatencyUnderLoadPerformance"]
-    for line in json_text:
-        status = fun_test.PASSED
-        try:
-            for model_name in model_names:
-                generic_helper = ModelHelper(model_name=model_name)
-                generic_helper.set_units(validate=False, **unit)
-                generic_helper.add_entry(**line)
-                generic_helper.set_status(status)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        print "used generic helper to add an entry"
-    # unit["pps_unit"] = "pps"
-    # unit["throughput_unit"] = "Mbps"
-    # unit["latency_min_unit"] = "usecs"
-    # unit["latency_max_unit"] = "usecs"
-    # unit["latency_avg_unit"] = "usecs"
-    # unit["jitter_min_unit"] = "usecs"
-    # unit["jitter_max_unit"] = "usecs"
-    # unit["jitter_avg_unit"] = "usecs"
-    # json_text = [{'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 53.345219, 'corpus_name': u'enwik8'},
-    #  {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 56.596281870070456, 'corpus_name': u'misc'},
-    #  {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 49.54274645518411, 'corpus_name': u'silesia'},
-    #  {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 61.89778920481539, 'corpus_name': u'large'},
-    #  {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 58.000550449492884, 'corpus_name': u'calgary'},
-    #  {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 68.64279844752751, 'corpus_name': u'cantrbry'},
-    #  {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 74.07162314967105, 'corpus_name': u'artificl'}]
-    #
-    # unit_dict = {"f1_compression_ratio_unit": "number"}
-    # try:
-    #     for d in json_text:
-    #         generic_helper = ModelHelper(model_name="InspurZipCompressionRatiosPerformance")
-    #         generic_helper.set_units(**unit_dict)
-    #         d["date_time"] = get_data_collection_time()
-    #         generic_helper.add_entry(**d)
-    #         generic_helper.set_status(fun_test.PASSED)
-    #         fun_test.log("Result posted to database: {}".format(d))
-    # except Exception as ex:
-    #     fun_test.critical(ex.message)
+
+    unit_dict = {
+    "write_iops_unit": PerfUnit.UNIT_OPS,
+    "read_iops_unit": PerfUnit.UNIT_OPS,
+    "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "write_90_latency_unit": PerfUnit.UNIT_USECS,
+    "write_95_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "read_90_latency_unit": PerfUnit.UNIT_USECS,
+    "read_95_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_latency_unit": PerfUnit.UNIT_USECS
+    }
+    model_name = "AlibabaPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=False, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"

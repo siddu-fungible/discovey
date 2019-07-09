@@ -111,16 +111,17 @@ class NicEmulation(FunTestCase):
 
         # Ping QFX from both F1s
         ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-        # for container in ping_dict:
-        #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
+        for container in ping_dict:
+            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
-        print("============================================")
-        raw_input("Press any key to continue to NIC Emulation:")
-        print("============================================")
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.test_cc_pings_fs()
+
+        print("\n===========================")
+        print ("Continue to NIC Emulation:")
+        print("===========================")
         # Check PICe Link on host
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         for server in servers_mode:
@@ -137,15 +138,20 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
 
+        tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
+        funeth_obj = Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
+        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=4)
+
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
-        print("============================================")
-        raw_input("Press any key to Enable NVMe VFs:")
-        print("============================================")
+        print("\n=================")
+        print ("Enable NVMe VFs:")
+        print("=================")
         for server in self.server_key["fs"][fs_name]["vm_config"]:
             critical_log(enable_nvme_vfs
                          (host=server,
-                          pcie_vfs_count=32),
+                          pcie_vfs_count=self.server_key["fs"][fs_name]["vm_config"][server]["pcie_vfs"]),
                          message="NVMe VFs enabled")
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
@@ -181,6 +187,8 @@ class StartVMs(FunTestCase):
 
         for server in servers_with_vms:
             configure_vms(server_name=server, vm_dict=servers_with_vms[server]["vms"])
+
+        fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
     def cleanup(self):
         pass
@@ -515,8 +523,8 @@ class CheckVMReachability(FunTestCase):
                     fun_test.log("VMs not rebooted are:")
                     fun_test.log(not_reachable_vms)
                 now_time = time.time()
-                if int(now_time - start_time) > 600:
-                    fun_test.test_assert(expression=False, message="VMs didnt come up in 10 minutes")
+                if int(now_time - start_time) > 1200:
+                    fun_test.test_assert(expression=False, message="VMs didnt come up in 20 minutes")
 
     def cleanup(self):
         pass
@@ -546,7 +554,6 @@ class LoadNvmeOnVMs(FunTestCase):
             servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"][server]["vms"]
             check_nvme_driver(vm_dict=servers_with_vms, parallel=True)
 
-
     def cleanup(self):
         pass
 
@@ -573,8 +580,12 @@ class PingTestVmVmSameServer(FunTestCase):
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         for server in self.spec_file["fs"][fs_name]["vm_config"]:
             servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"][server]["vms"]
-            check_nvme_driver(vm_dict=servers_with_vms, parallel=True)
-
+            same_server_pings = self.spec_file["fs"][fs_name]["vm_config"][server]["vm_ping_tests"]["vm_vm_same_server"]
+            for vm in same_server_pings:
+                dest_vm_ips = []
+                for dest_vm in same_server_pings[vm]:
+                    dest_vm_ips.append(dest_vm)
+                test_host_pings(host=servers_with_vms[vm]["hostname"], strict=True, ips=dest_vm_ips)
 
     def cleanup(self):
         pass
@@ -590,5 +601,7 @@ if __name__ == '__main__':
     ts.add_test_case(LoadFunethOnVMs())
     ts.add_test_case(LoadNvmeOnVMs())
     # ts.add_test_case(PingTestVmVmSameServer())
-
+    # ts.add_test_case(PingFioTestAllVMs())
+    # ts.add_test_case(TempNvmeCmds())
+    # ts.add_test_case(FindVMBootTime())
     ts.run()

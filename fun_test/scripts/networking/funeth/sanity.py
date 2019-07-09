@@ -45,10 +45,18 @@ try:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
+        fundrv_branch = inputs.get('fundrv_branch', None)
+        fundrv_commit = inputs.get('fundrv_commit', None)
+        funsdk_branch = inputs.get('funsdk_branch', None)
+        funsdk_commit = inputs.get('funsdk_commit', None)
     else:
         enable_tso = True  # default True
         control_plane = False  # default False
         update_driver = True  # default True
+        fundrv_branch = None
+        fundrv_commit = None
+        funsdk_branch = None
+        funsdk_commit = None
 except:
     enable_tso = True
     control_plane = False
@@ -71,6 +79,9 @@ def setup_nu_host(funeth_obj):
         #if TB in ('FS7', 'FS11'):
             #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
         fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        # TODO: temp workaround
+        if linux_obj.host_ip == 'poc-server-06':
+            linux_obj.sudo_command('sudo ethtool --offload fpg0 lro on; sudo ethtool -k fpg0')
         fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
@@ -98,8 +109,9 @@ def setup_hu_host(funeth_obj, update_driver=True):
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
         fun_test.test_assert(
-            funeth_obj.enable_multi_txq(hu, num_queues=NUM_QUEUES_TX),
-            'Enable HU host {} funeth interfaces multi Tx queues: {}.'.format(linux_obj.host_ip, NUM_QUEUES_TX))
+            funeth_obj.enable_multi_queues(hu, num_queues_tx=NUM_QUEUES_TX, num_queues_rx=NUM_QUEUES_RX),
+            'Enable HU host {} funeth interfaces {} Tx queues, {} Rx queues.'.format(linux_obj.host_ip, NUM_QUEUES_TX,
+                                                                                     NUM_QUEUES_RX))
         fun_test.test_assert(
             funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
@@ -170,7 +182,8 @@ class FunethSanity(FunTestScript):
             # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = Funeth(tb_config_obj)
+        funeth_obj = Funeth(tb_config_obj, fundrv_branch=fundrv_branch, funsdk_branch=funsdk_branch,
+                            fundrv_commit=fundrv_commit, funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host

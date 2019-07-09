@@ -62,7 +62,7 @@
     "read_fio_cmd_args": {
       "bs": "4k",
       "numjobs": 8,
-      "cpumask": 1,
+      "cpus_allowed": "0-7",
       "iodepth": 16,
       "size": "100%",
       "rw": "read",
@@ -80,22 +80,6 @@
       {
         "name": "Performance stats for 1% compressed data",
         "compress_percent": 1
-      },
-      {
-        "name": "Performance stats for 5% compressed data",
-        "compress_percent": 5
-      },
-      {
-        "name": "Performance stats for 10% compressed data",
-        "compress_percent": 10
-      },
-      {
-        "name": "Performance stats for 20% compressed data",
-        "compress_percent": 20
-      },
-      {
-        "name": "Performance stats for 30% compressed data",
-        "compress_percent": 30
       },
       {
         "name": "Performance stats for 50% compressed data",
@@ -150,9 +134,9 @@
     "read_fio_cmd_args": {
       "bs": "4k",
       "numjobs": 8,
-      "cpumask": 1,
+      "cpus_allowed": "0-7",
       "iodepth": 16,
-      "size": "25G",
+      "size": "100%",
       "rw": "read",
       "name": "ec_fio_25G_comp_disabled",
       "direct": 1,

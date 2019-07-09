@@ -38,6 +38,7 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 ml = MetricLib()
 
+
 def index(request):
     return render(request, 'qa_dashboard/metrics.html', locals())
 
@@ -47,6 +48,7 @@ def invalidate_goodness_cache():
     for chart in charts:
         chart.goodness_cache_valid = False
         chart.save()
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -248,6 +250,7 @@ def summary_page(request):
     return render(request, 'qa_dashboard/angular_home.html', locals())
 '''
 
+
 @csrf_exempt
 def initialize(request):
     call_command('initialize')
@@ -325,7 +328,7 @@ def scores(request):
 @api_safe_json_response
 def get_past_build_status(request):
     result = {}
-    previous_entry = {}
+    previous_entry = None
     request_json = json.loads(request.body)
     metric_id = int(request_json["metric_id"])
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
@@ -335,12 +338,14 @@ def get_past_build_status(request):
                       "passed_suite_execution_id": entry.suite_execution_id,
                       "passed_lsf_job_id": entry.lsf_job_id,
                       "passed_date_time": entry.date_time,
-                      "passed_git_commit": entry.git_commit,
-                      "failed_jenkins_job_id": previous_entry.jenkins_job_id,
-                      "failed_suite_execution_id": previous_entry.suite_execution_id,
-                      "failed_lsf_job_id": previous_entry.lsf_job_id,
-                      "failed_date_time": previous_entry.date_time,
-                      "failed_git_commit": previous_entry.git_commit}
+                      "passed_git_commit": entry.git_commit}
+
+            if previous_entry:
+                result.update({"failed_jenkins_job_id": previous_entry.jenkins_job_id,
+                               "failed_suite_execution_id": previous_entry.suite_execution_id,
+                               "failed_lsf_job_id": previous_entry.lsf_job_id,
+                               "failed_date_time": previous_entry.date_time,
+                               "failed_git_commit": previous_entry.git_commit})
             return result
         else:
             previous_entry = entry
@@ -350,6 +355,7 @@ def get_past_build_status(request):
               "failed_date_time": previous_entry.date_time,
               "failed_git_commit": previous_entry.git_commit}
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -374,21 +380,22 @@ def get_first_degrade(request):
             previous_entry = entry
 
     result = {"passed_jenkins_job_id": current_entry.jenkins_job_id,
-                      "passed_suite_execution_id": current_entry.suite_execution_id,
-                      "passed_lsf_job_id": current_entry.lsf_job_id,
-                      "passed_date_time": current_entry.date_time,
-                      "passed_git_commit": current_entry.git_commit,
-                      "passed_score": current_entry.score,
-                      "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
-                      "degraded_suite_execution_id": previous_entry.suite_execution_id,
-                      "degraded_lsf_job_id": previous_entry.lsf_job_id,
-                      "degraded_date_time": previous_entry.date_time,
-                      "degraded_git_commit": previous_entry.git_commit,
-                      "degraded_score": previous_entry.score,
+              "passed_suite_execution_id": current_entry.suite_execution_id,
+              "passed_lsf_job_id": current_entry.lsf_job_id,
+              "passed_date_time": current_entry.date_time,
+              "passed_git_commit": current_entry.git_commit,
+              "passed_score": current_entry.score,
+              "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
+              "degraded_suite_execution_id": previous_entry.suite_execution_id,
+              "degraded_lsf_job_id": previous_entry.lsf_job_id,
+              "degraded_date_time": previous_entry.date_time,
+              "degraded_git_commit": previous_entry.git_commit,
+              "degraded_score": previous_entry.score,
               "boot_args": "",
               "metric_type": "SCORES"
               }
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -402,7 +409,7 @@ def get_triage_info(request):
     from_date = datetime(year=from_dict["year"], month=from_dict["month"], day=from_dict["day"])
     to_date = datetime(year=to_dict["year"], month=to_dict["month"], day=to_dict["day"])
     boot_args = request_json["boot_args"]
-    metric_type= request_json["metric_type"]
+    metric_type = request_json["metric_type"]
     fun_os_make_flags = request_json["fun_os_make_flags"]
     email = request_json["email"]
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
@@ -419,22 +426,23 @@ def get_triage_info(request):
             else:
                 to_date = to_date - timedelta(days=1)
     result = {"passed_jenkins_job_id": current_entry.jenkins_job_id,
-                      "passed_suite_execution_id": current_entry.suite_execution_id,
-                      "passed_lsf_job_id": current_entry.lsf_job_id,
-                      "passed_date_time": current_entry.date_time,
-                      "passed_git_commit": current_entry.git_commit,
-                      "passed_score": current_entry.score,
-                      "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
-                      "degraded_suite_execution_id": previous_entry.suite_execution_id,
-                      "degraded_lsf_job_id": previous_entry.lsf_job_id,
-                      "degraded_date_time": previous_entry.date_time,
-                      "degraded_git_commit": previous_entry.git_commit,
-                      "degraded_score": previous_entry.score,
+              "passed_suite_execution_id": current_entry.suite_execution_id,
+              "passed_lsf_job_id": current_entry.lsf_job_id,
+              "passed_date_time": current_entry.date_time,
+              "passed_git_commit": current_entry.git_commit,
+              "passed_score": current_entry.score,
+              "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
+              "degraded_suite_execution_id": previous_entry.suite_execution_id,
+              "degraded_lsf_job_id": previous_entry.lsf_job_id,
+              "degraded_date_time": previous_entry.date_time,
+              "degraded_git_commit": previous_entry.git_commit,
+              "degraded_score": previous_entry.score,
               "boot_args": boot_args,
               "metric_type": metric_type,
               "fun_os_make_flags": fun_os_make_flags,
               "email": email}
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -444,29 +452,32 @@ def get_triage_info_from_commits(request):
     from_commit = request_json["from_commit"]
     to_commit = request_json["to_commit"]
     boot_args = request_json["boot_args"]
-    metric_type= request_json["metric_type"]
+    metric_type = request_json["metric_type"]
     fun_os_make_flags = request_json["fun_os_make_flags"]
     email = request_json["email"]
     result = {"passed_jenkins_job_id": -1,
-                      "passed_suite_execution_id": -1,
-                      "passed_lsf_job_id": -1,
-                      "passed_date_time": -1,
-                      "passed_git_commit": to_commit,
-                      "passed_score": -1,
-                      "degraded_jenkins_job_id": -1,
-                      "degraded_suite_execution_id": -1,
-                      "degraded_lsf_job_id": -1,
-                      "degraded_date_time": -1,
-                      "degraded_git_commit": from_commit,
-                      "degraded_score": -1,
+              "passed_suite_execution_id": -1,
+              "passed_lsf_job_id": -1,
+              "passed_date_time": -1,
+              "passed_git_commit": to_commit,
+              "passed_score": -1,
+              "degraded_jenkins_job_id": -1,
+              "degraded_suite_execution_id": -1,
+              "degraded_lsf_job_id": -1,
+              "degraded_date_time": -1,
+              "degraded_git_commit": from_commit,
+              "degraded_score": -1,
               "boot_args": boot_args,
               "metric_type": metric_type,
               "fun_os_make_flags": fun_os_make_flags,
               "email": email}
     return result
 
+
 def same_day(from_to_date, current_date):
-    return (from_to_date.day == current_date.day) and (from_to_date.month == current_date.month) and (from_to_date.year == current_date.year)
+    return (from_to_date.day == current_date.day) and (from_to_date.month == current_date.month) and (
+                from_to_date.year == current_date.year)
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -514,9 +525,11 @@ def table_data(request, page=None, records_per_page=10):
     data["data"] = s.data
     return data
 
+
 def get_time_from_timestamp(timestamp):
     time_obj = parse(timestamp)
     return time_obj
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -595,6 +608,7 @@ def update_chart(request):
         invalidate_goodness_cache()
     return c.metric_id
 
+
 def update_expected(chart, expected_operation):
     if expected_operation:
         current_data_sets = ml.get_data_sets(metric_id=chart.metric_id)
@@ -604,7 +618,8 @@ def update_expected(chart, expected_operation):
             data_sets = json.loads(peer_chart.data_sets)
             for data_set in data_sets:
                 if data_set["output"]["expected"] != -1:
-                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"], data_set["output"]["unit"], expected_operation)
+                    set_expected(current_data_sets, data_set["name"], data_set["output"]["expected"],
+                                 data_set["output"]["unit"], expected_operation)
                 else:
                     model_name = chart.metric_model_name
                     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -621,10 +636,12 @@ def update_expected(chart, expected_operation):
 
                         set_expected(current_data_sets, data_set["name"], output_value, output_unit, expected_operation)
                     else:
-                        set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit, expected_operation)
+                        set_expected(current_data_sets, data_set["name"], -1, chart.visualization_unit,
+                                     expected_operation)
         return current_data_sets
     else:
         return ml.get_data_sets(metric_id=chart.metric_id)
+
 
 def set_expected(current_data_sets, name, value, unit, expected_operation):
     for current_data_set in current_data_sets:
@@ -635,6 +652,7 @@ def set_expected(current_data_sets, name, value, unit, expected_operation):
             else:
                 current_data_set["output"]["expected"] = value / 4
                 current_data_set["output"]["unit"] = unit
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -724,7 +742,8 @@ def data(request):
             # today = today.replace(hour=0, minute=0, second=1)
             # d["input_date_time__lt"] = today
             try:
-                result = model.objects.filter(input_date_time__range=date_range, **d).order_by("input_date_time")  # unpack, pack
+                result = model.objects.filter(input_date_time__range=date_range, **d).order_by(
+                    "input_date_time")  # unpack, pack
                 data.append([model_to_dict(x) for x in result])
             except ObjectDoesNotExist:
                 logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
@@ -792,7 +811,7 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
+def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
     result = {}
     if metric_id not in metric_chart_entries:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -801,7 +820,10 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
 
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
-    result["children"] = json.loads(chart.children)
+    if levels < 1:
+        result['children'] = []
+    else:
+        result["children"] = json.loads(chart.children)
     result["children_info"] = {}
     result["children_weights"] = json.loads(chart.children_weights)
     result["leaf"] = chart.leaf
@@ -810,6 +832,7 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
     result["work_in_progress"] = chart.work_in_progress
+    result["companion_charts"] = chart.companion_charts
     result["jira_ids"] = json.loads(chart.jira_ids)
     result["metric_id"] = chart.metric_id
 
@@ -819,7 +842,8 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
         result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
     else:
         result["last_two_scores"] = [0, 0]
-    if not chart.leaf or chart.chart_name == "All metrics":
+    if levels >= 1 and not chart.leaf:
+        levels = levels - 1
         children_info = result["children_info"]
         for child_id in result["children"]:
             if child_id in metric_chart_entries:
@@ -827,18 +851,22 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
             else:
                 child_chart = MetricChart.objects.get(metric_id=child_id)
                 metric_chart_entries[child_id] = child_chart
-            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id, metric_chart_entries=metric_chart_entries)
+            children_info[child_chart.metric_id] = traverse_dag(levels, metric_id=child_chart.metric_id, metric_chart_entries=metric_chart_entries)
         if sort_by_name:
             result["children"] = map(lambda item: item[0],
                                      sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
     return result
 
 
+
+
+
 @csrf_exempt
 @api_safe_json_response
 def dag(request):
     result = []
-    chart_names = ["F1", "S1", "All metrics"]
+    levels = int(request.GET.get("levels", 15))
+    chart_names = request.GET.getlist("chart_names", ["F1", "S1", "All metrics"])
     metric_model_name = "MetricContainer"
     metric_chart_entries = {}
     for chart_name in chart_names:
@@ -848,8 +876,9 @@ def dag(request):
             sort_by_name = False
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
         metric_chart_entries[chart.metric_id] = chart
-        result.append(traverse_dag(metric_id=chart.metric_id, sort_by_name=sort_by_name, metric_chart_entries=metric_chart_entries))
+        result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name, metric_chart_entries=metric_chart_entries))
     return result
+
 
 
 @csrf_exempt
