@@ -384,12 +384,12 @@ class Funeth:
             # Configure XPS CPU mapping to have CPU-Txq one to one mapping
             if xps_cpus:
                 cmds = []
-                for i in range(num_queues):
+                for i in range(num_queues_tx):
                     cpu_id = (1 << CPU_LIST[i%len(CPU_LIST)])
                     cmds.append('echo {:04x} > /sys/class/net/{}/queues/tx-{}/xps_cpus'.format(cpu_id, intf, i))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds))
                 self.linux_obj_dict[nu_or_hu].command(
-                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues-1, intf))
+                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues_tx-1, intf))
 
         return result
 
