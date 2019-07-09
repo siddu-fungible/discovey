@@ -865,7 +865,7 @@ def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
 @api_safe_json_response
 def dag(request):
     result = []
-    levels = int(request.GET.get("levels", 100))
+    levels = int(request.GET.get("levels", 15))
     chart_names = request.GET.getlist("chart_names", ["F1", "S1", "All metrics"])
     metric_model_name = "MetricContainer"
     metric_chart_entries = {}
