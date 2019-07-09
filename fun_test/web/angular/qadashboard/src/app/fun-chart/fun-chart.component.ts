@@ -132,14 +132,15 @@ export class FunChartComponent implements OnInit, OnChanges {
           }
         }
       }
-    }
-    else if (this.chartType === 'vertical_colored_bar_chart') {
+    } else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
         chart: {
           type: "column"
         },
         title: {
-          text: this.title
+          text: this.title,
+          useHTML: true
+
         },
         xAxis: {
           categories: this.xValues,
