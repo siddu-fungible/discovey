@@ -466,6 +466,12 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
+                self.storage_controller.verbose = True
+                fun_test.log(
+                    "Setting storage controller Verbose value to: {}".format(self.storage_controller.verbose))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            try:
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
@@ -522,7 +528,7 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        self.topology.cleanup()
+        # self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -830,6 +836,12 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
+        try:
+            self.storage_controller.verbose = False
+            fun_test.log("Setting storage controller Verbose value to: {}".format(self.storage_controller.verbose))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
         table_data_headers = ["Num Hosts", "Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
@@ -1081,7 +1093,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            # post_results("Inspur Performance Test", test_method, *row_data_list)
+            post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:
