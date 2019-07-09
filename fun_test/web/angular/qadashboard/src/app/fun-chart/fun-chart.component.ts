@@ -22,6 +22,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
   @Output() pointInfo: EventEmitter<any> = new EventEmitter();
+  @Input() enableLegend: boolean = true;
   chart: any;
   point: any = null;
 
