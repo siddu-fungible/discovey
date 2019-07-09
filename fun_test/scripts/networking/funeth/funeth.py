@@ -381,6 +381,15 @@ class Funeth:
                               output, re.DOTALL)
             result &= match is not None
 
+            # Configure Rx flow hash
+            cmd = 'ethtool -X {} equal {} hfunc toeplitz'.format(intf, num_queues_tx)
+            cmd_chk = 'ethtool -x {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
             # Configure XPS CPU mapping to have CPU-Txq one to one mapping
             if xps_cpus:
                 cmds = []
