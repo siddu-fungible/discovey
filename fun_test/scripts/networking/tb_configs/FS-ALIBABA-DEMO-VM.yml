@@ -5,7 +5,7 @@ router_mac:
 
 
 hu30:
-  hostname: 10.1.105.51
+  hostname: 10.1.105.59
   username: localadmin
   password: Precious1*
   mgmt_interface: eno3
