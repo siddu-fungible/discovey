@@ -811,7 +811,7 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
+def traverse_dag(levels, metric_id, metric_chart_entries, sort_by_name=True):
     result = {}
     if metric_id not in metric_chart_entries:
         chart = MetricChart.objects.get(metric_id=metric_id)
@@ -820,7 +820,10 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
 
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
-    result["children"] = json.loads(chart.children)
+    if levels < 1:
+        result['children'] = []
+    else:
+        result["children"] = json.loads(chart.children)
     result["children_info"] = {}
     result["children_weights"] = json.loads(chart.children_weights)
     result["leaf"] = chart.leaf
@@ -839,7 +842,8 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
         result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
     else:
         result["last_two_scores"] = [0, 0]
-    if not chart.leaf or chart.chart_name == "All metrics":
+    if levels >= 1 and not chart.leaf:
+        levels = levels - 1
         children_info = result["children_info"]
         for child_id in result["children"]:
             if child_id in metric_chart_entries:
@@ -847,19 +851,22 @@ def traverse_dag(metric_id, metric_chart_entries, sort_by_name=True):
             else:
                 child_chart = MetricChart.objects.get(metric_id=child_id)
                 metric_chart_entries[child_id] = child_chart
-            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id,
-                                                                metric_chart_entries=metric_chart_entries)
+            children_info[child_chart.metric_id] = traverse_dag(levels, metric_id=child_chart.metric_id, metric_chart_entries=metric_chart_entries)
         if sort_by_name:
             result["children"] = map(lambda item: item[0],
                                      sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
     return result
 
 
+
+
+
 @csrf_exempt
 @api_safe_json_response
 def dag(request):
     result = []
-    chart_names = ["F1", "S1", "All metrics"]
+    levels = int(request.GET.get("levels", 100))
+    chart_names = request.GET.getlist("chart_names", ["F1", "S1", "All metrics"])
     metric_model_name = "MetricContainer"
     metric_chart_entries = {}
     for chart_name in chart_names:
@@ -869,9 +876,9 @@ def dag(request):
             sort_by_name = False
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
         metric_chart_entries[chart.metric_id] = chart
-        result.append(traverse_dag(metric_id=chart.metric_id, sort_by_name=sort_by_name,
-                                   metric_chart_entries=metric_chart_entries))
+        result.append(traverse_dag(levels=levels, metric_id=chart.metric_id, sort_by_name=sort_by_name, metric_chart_entries=metric_chart_entries))
     return result
+
 
 
 @csrf_exempt
