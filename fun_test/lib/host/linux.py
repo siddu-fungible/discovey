@@ -140,6 +140,7 @@ class Linux(object, ToDictMixin):
         if self.extra_attributes:
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
+        fun_test.register_hosts(host=self)
         self.post_init()
 
     @staticmethod
@@ -1211,9 +1212,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60):
+    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60, sudo=False, sudo_password=None):
         transfer_complete = False
-        scp_command = "scp -P %d %s %s@%s:%s" % (target_port, source_file_path, target_username, target_ip, target_file_path)
+        sudo_string = ""
+        if sudo:
+            sudo_string = "sudo "
+        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
@@ -1225,6 +1229,9 @@ class Linux(object, ToDictMixin):
         expects[0] = '[pP]assword:'
         expects[1] = self.prompt_terminator + r'$'
         expects[2] = '\(yes/no\)?'
+
+        if sudo:
+            expects[3] = '{}@.*password'.format(sudo_password)
 
         max_retry_count = 10
         max_loop_count = 10
@@ -1247,6 +1254,9 @@ class Linux(object, ToDictMixin):
                         if i == 1:
                             transfer_complete = True
                             break
+                        if i == 3 and sudo and sudo_password:
+                            handle.sendline(sudo_password)
+                            current_loop_count += 1
                     except pexpect.exceptions.EOF:
                         transfer_complete = True
                         break

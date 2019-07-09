@@ -6,12 +6,13 @@ from scripts.networking.helper import *
 from lib.utilities.funcp_config import *
 
 fs = "fs-11"
-image = "s_15385_funos-f1.stripped.gz"
-boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
-#boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart "
-#boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart "
-boot_args_f1_0 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
-boot_args_f1_1 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+image = "s_17034_funos-f1.stripped.gz"
+boot_args_f1_0 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+boot_args_f1_1 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+#boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+#boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+#boot_args_f1_0 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+#boot_args_f1_1 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
 
 
 class ScriptSetup(FunTestScript):
@@ -46,14 +47,15 @@ class BringupFS(FunTestCase):
                                            boot_args_f1_1=boot_args_f1_1)
         funcp_obj.boot_both_f1(power_cycle_come=True)
 
-        funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
-        funcp_obj.bringup_funcp(prepare_docker=False)
-        funcp_obj.assign_mpg_ips()
-        abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
-        abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
-        funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
-                                        abstract_config_f1_1=abstract_json_file_f1_1)
-        fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
+        if 'cc_huid' in boot_args_f1_0:
+            funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
+            funcp_obj.bringup_funcp(prepare_docker=False)
+            funcp_obj.assign_mpg_ips()
+            abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+            abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+            funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                            abstract_config_f1_1=abstract_json_file_f1_1)
+            fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
 
     def cleanup(self):
         pass

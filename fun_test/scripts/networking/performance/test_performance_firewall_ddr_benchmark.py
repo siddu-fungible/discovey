@@ -28,7 +28,10 @@ class ScriptSetup(FunTestScript):
         if not f1_index:
             f1_index = 0
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get(disable_f1_index=f1_index)
+            bootargs = fun_test.get_build_parameter('BOOTARGS')
+            bootargs = bootargs + ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
+            #fs = Fs.get(disable_f1_index=f1_index)
+            fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 

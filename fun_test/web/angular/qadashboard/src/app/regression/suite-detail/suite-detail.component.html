@@ -1,4 +1,4 @@
-<div class="this-component component">
+<div class="component">
   <div class="row">
     <div class="col">
       <div class="card">
@@ -43,7 +43,7 @@
                   </ng-container>
                 </td>
                 <td *ngSwitchCase="'Started Time'">
-                  <ng-container *ngIf="suiteExecution && (suiteExecution.fields.state == stateMap.IN_PROGRESS) || (suiteExecution.fields.state <= stateMap.COMPLETED)">
+                  <ng-container *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state == stateMap.IN_PROGRESS || suiteExecution.fields.state <= stateMap.COMPLETED)">
                     {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                   </ng-container>
                 </td>
@@ -56,12 +56,10 @@
 
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler
-                txt</a></td>
+              <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler log</a></td>
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log
-                directory</a>
+              <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory</a>
             </tr>
             <tr *ngIf="environment">
               <td>Branch_FunOS</td>
@@ -75,7 +73,30 @@
               <td>Description</td>
               <td>{{ suiteExecution.fields.description }}</td>
             </tr>
+
+
+
           </table>
+          <ng-container *ngIf="suiteExecution">
+            <div class="pseudo-anchor" (click)="showInputsClick(suiteExecution)">{{ suiteExecution.showingInputs? "Hide": "Show" }} inputs</div>
+            <ng-container *ngIf="suiteExecution.showingInputs">
+              <div><b>Inputs</b></div>
+              <td *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
+                  <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
+              </td>
+            </ng-container>
+          </ng-container>
+
+
+          <ng-container *ngIf="suiteExecution">
+            <div class="pseudo-anchor" (click)="showEnvironmentClick(suiteExecution)">{{ suiteExecution.showingEnvironment? "Hide": "Show" }} environment</div>
+              <ng-container *ngIf="suiteExecution.showingEnvironment">
+                <div><b>Environment</b></div>
+                <td *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
+                    <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
+                </td>
+              </ng-container>
+          </ng-container>
         </div>
       </div>
 

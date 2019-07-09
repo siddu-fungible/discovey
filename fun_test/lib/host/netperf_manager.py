@@ -223,6 +223,7 @@ class NetperfManager:
             mp_task_obj = MultiProcessingTasks()
 
             direction_list = []
+            dip_list = []
             for arg_dict in arg_dicts:
                 num_flows = arg_dict.get('num_flows', 1)
                 linux_obj = arg_dict.get('linux_obj')
@@ -230,6 +231,7 @@ class NetperfManager:
                 direction = arg_dict.get('suffix')
                 direction_list.append(direction)
                 dip = arg_dict.get('dip')
+                dip_list.append(dip)
                 protocol = arg_dict.get('protocol', 'tcp')
                 duration = arg_dict.get('duration', 30)
                 frame_size = arg_dict.get('frame_size', 800)
@@ -249,16 +251,16 @@ class NetperfManager:
                     mp_task_obj.add_task(
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
-                        task_key='{}_{}'.format(direction, i))
+                        task_key='{}_{}_{}'.format(direction, dip, i))
                 if test == 3:
-                    if num_flows == 1:
-                        cpu -= 1
-                        cpu_list.append(cpu)
+                    #if num_flows == 1:
+                    #    cpu -= 1
+                    #    cpu_list.append(cpu)
                     measure_latency = True
                     mp_task_obj.add_task(
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
-                        task_key='{}_{}_latency'.format(direction, i))
+                        task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
                 if not self.start_netserver(linux_obj_dst, cpu_list=cpu_list):
@@ -284,10 +286,11 @@ class NetperfManager:
                 rdict.update(
                     {direction: []}
                 )
-                for i in range(0, num_processes):
-                    rdict[direction].append(mp_task_obj.get_result('{}_{}'.format(direction, i)))
-                if test == 3:
-                    rdict[direction].append(mp_task_obj.get_result('{}_{}_latency'.format(direction, i)))
+                for dip in dip_list:
+                    for i in range(0, num_processes):
+                        rdict[direction].append(mp_task_obj.get_result('{}_{}_{}'.format(direction, dip, i)))
+                    if test == 3:
+                        rdict[direction].append(mp_task_obj.get_result('{}_{}_{}_latency'.format(direction, dip, i)))
                 fun_test.log('NetperfManager aggregated netperf result of {}\n{}'.format(direction, rdict[direction]))
 
                 if test == 2:

@@ -11,7 +11,10 @@ class ExpandedTopology(ToDictMixin):
         self.switches = {}
         self.hosts = {}
         self.spec = spec
+        self.cleaned_up = False
 
+    def is_cleaned_up(self):
+        return self.cleaned_up
 
     def add_active_orchestrator(self, orchestrator):
         self.active_orchestrators.append(orchestrator)
@@ -123,4 +126,5 @@ class ExpandedTopology(ToDictMixin):
     def cleanup(self):
         for active_orchestrator in self.active_orchestrators:
             active_orchestrator.cleanup()
+        self.cleaned_up = True
 

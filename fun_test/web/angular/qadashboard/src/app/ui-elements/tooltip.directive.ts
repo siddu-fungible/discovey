@@ -1,4 +1,5 @@
 import { Directive, Input, ElementRef, HostListener, Renderer2 } from '@angular/core';
+import {CommonService} from 'src/app/services/common/common.service';
 
 @Directive({
   selector: '[tooltip]'
@@ -12,7 +13,7 @@ export class TooltipDirective {
   tooltip: HTMLElement;
   offset = 0;
 
-  constructor(private el: ElementRef, private renderer: Renderer2) { }
+  constructor(private el: ElementRef, private renderer: Renderer2, private commonService: CommonService) { }
 
   @HostListener('mouseenter') onMouseEnter() {
     if (!this.tooltip) { this.show(); }
@@ -53,7 +54,12 @@ export class TooltipDirective {
         this.renderer.createText(this.tooltipContentString)
       );
     } else if (this.tooltipContentCallback) {
-      this.renderer.appendChild(this.tooltip, this.tooltipContentCallback())
+      if (!this.tooltipContentCallbackArg) {
+        this.renderer.appendChild(this.tooltip, this.tooltipContentCallback())
+      } else {
+        this.renderer.appendChild(this.tooltip, this.tooltipContentCallback(this.el, this.tooltipContentCallbackArg));
+      }
+
     }
 
 

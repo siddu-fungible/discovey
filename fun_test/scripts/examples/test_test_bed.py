@@ -2,6 +2,12 @@ from lib.system.fun_test import *
 from lib.host.dpcsh_client import DpcshClient
 from lib.topology.topology_helper import TopologyHelper
 
+
+class SomeClass():
+    def some_callback(self, come):
+        fun_test.log("inside callback")
+        fun_test.log("ComE: callback: {}".format(come.command("date")))
+
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -41,6 +47,11 @@ class FunTestCase1(FunTestCase):
         # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --retimer --all_100g")
         # topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay retimer=0,1 --all_100g")
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=hw_hsu_test --dpc-uart --dpc-server --csr-replay --all_100g")
+
+        """ For FunCP callback only"""
+        # s = SomeClass()
+        # topology_helper.set_dut_parameters(dut_index=0, fun_cp_callback=s.some_callback)
+
 
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")

@@ -9,6 +9,7 @@ from datetime import datetime
 from dateutil import parser
 
 LSF_WEB_SERVER_BASE_URL = "http://palladium-jobs.fungible.local:8080"
+FUNOS_CONSOLE = "FunOS Console"
 
 
 class LsfStatusServer:
@@ -66,7 +67,7 @@ class LsfStatusServer:
                 result["job_id"] = job_id
                 result["jenkins_build_number"] = jenkins_job_id
                 fun_test.add_checkpoint("Validating Job: {}".format(job_id))
-                fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
+                # fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
                 if validate:
                     fun_test.add_checkpoint("Fetching return code for: {}".format(job_id))
                     response = self.get_job_by_id(job_id=job_id)
@@ -81,6 +82,7 @@ class LsfStatusServer:
                         return_code = int(response_dict["return_code"])
                         # fun_test.test_assert(not return_code, "Valid return code")
                         result = last_job
+                        result["output_text"] = self.get_human_file(job_id=job_id, console_name=FUNOS_CONSOLE)
                     except Exception as ex:
                         fun_test.log("Actual response:" + response)
                         fun_test.critical(str(ex))
@@ -98,7 +100,7 @@ class LsfStatusServer:
         jobs_by_tag_response = self.get_jobs_by_tag(tag=tag)
         if jobs_by_tag_response:
             response_dict = json.loads(jobs_by_tag_response)
-            fun_test.log(json.dumps(response_dict, indent=4))
+            # fun_test.log(json.dumps(response_dict, indent=4))
             past_jobs = response_dict["past_jobs"]
 
         if add_info_to_db:
@@ -119,8 +121,8 @@ class LsfStatusServer:
                 response = self.get_job_by_id(job_id=job_info["job_id"])  # Workaround
                 try:
                     response_dict = json.loads(response)
-                    fun_test.log(json.dumps(response_dict, indent=4))
-                    output_text = response_dict["output_text"]
+                    # fun_test.log(json.dumps(response_dict, indent=4))
+                    output_text = self.get_human_file(job_id=job_info["job_id"], console_name=FUNOS_CONSOLE)
                     past_job["date_time"] = dt
                     past_job["output_text"] = output_text
                 except Exception as ex:
@@ -132,19 +134,34 @@ class LsfStatusServer:
         url = "{}/job/{}?format=json".format(self.base_url, job_id)
         return self._get(url=url)
 
-    def get_raw_file(self, job_id, file_name):
+    def get_job_text_by_path(self, job_id, log_path):
+        url = "{}/job/{}/human_file/{}".format(self.base_url, job_id, log_path)
+        return self._get(url=url)
+
+    def get_human_file(self, job_id, file_name=None, console_name=None):
         result = None
         response = self.get_job_by_id(job_id=job_id)
         try:
             response_dict = json.loads(response)
             logs = response_dict["basic_outputs"]
             for item in logs:
-                for name in item:
-                    if 'basename' in name:
-                        if file_name in name['basename']:
-                            log = name['basename']
-                            url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log)
-                            result = self._get(url=url)
+                log_info = None
+                log_path = None
+                if console_name:
+                    name = item[0]
+                    if console_name in name:
+                        log_info = item[1]
+                else:
+                    log_info = item[1]
+                if log_info:
+                    if 'basename' in log_info:
+                        if console_name:
+                            log_path = log_info['basename']
+                        else:
+                            if file_name in log_info['basename']:
+                                log_path = log_info['basename']
+                        if log_path:
+                            result = self.get_job_text_by_path(job_id=job_id, log_path=log_path)
                             break
         except Exception as ex:
             fun_test.log("Actual response:" + response)
@@ -188,7 +205,7 @@ class LsfStatusServer:
                 fun_test.log("Actual response:" + response)
                 fun_test.critical(str(ex))
 
-            output_text = response_dict["output_text"]
+            output_text = self.get_human_file(job_id=job_info["job_id"], console_name=FUNOS_CONSOLE)
             result["date_time"] = dt
             result["output_text"] = output_text
         else:

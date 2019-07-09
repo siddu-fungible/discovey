@@ -242,6 +242,8 @@ class FunTest:
         self.last_context_id = 0
         self.profiling = False
         self.profiling_timer = None
+        self.topologies = []
+        self.hosts = []
         self.closed = False
 
     def initialize_output_files(self, absolute_script_file_name):
@@ -525,7 +527,7 @@ class FunTest:
             build_parameters["BOOTARGS"] = build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
 
             boot_args = build_parameters["BOOTARGS"]
-        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
+        # fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
@@ -623,6 +625,18 @@ class FunTest:
 
     def set_topology_json_filename(self, filename):
         self.fun_xml_obj.set_topology_json_filename(filename=filename)
+
+    def register_topologies(self, topology):
+        self.topologies.append(topology)
+
+    def register_hosts(self, host):
+        self.hosts.append(host)
+
+    def get_topologies(self):
+        return self.topologies
+
+    def get_hosts(self):
+        return self.hosts
 
     def get_environment_variable(self, variable):
         result = None
@@ -1381,8 +1395,24 @@ class FunTestScript(object):
             models_helper.report_re_run_result(execution_id=setup_te.execution_id, re_run_info=fun_test.get_re_run_info())
         fun_test._end_test(result=script_result)
 
-
         return script_result == FunTest.PASSED
+
+    def _cleanup_topologies(self):
+        topologies = fun_test.get_topologies()
+        for topology in topologies:
+            if not topology.is_cleaned_up():
+                fun_test.log("Topology was not cleaned up. Attempting ...")
+                try:
+                    topology.cleanup()
+                except Exception as ex:
+                    fun_test.critical(ex)
+
+    def _cleanup_hosts(self):
+        for host in fun_test.get_hosts():
+            try:
+                host.disconnect()
+            except:
+                pass
 
     @abc.abstractmethod
     def cleanup(self):
@@ -1392,7 +1422,17 @@ class FunTestScript(object):
         result = FunTest.FAILED
         try:
             self.cleanup()
+
             result = FunTest.PASSED
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self._cleanup_topologies()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+        try:
+            self._cleanup_hosts()
         except Exception as ex:
             fun_test.critical(ex)
         fun_test._end_test(result=result)

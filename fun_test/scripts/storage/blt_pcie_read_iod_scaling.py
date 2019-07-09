@@ -6,8 +6,10 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
+from storage_helper import *
 from datetime import datetime
 from lib.templates.storage.fio_performance_helper import FioPerfHelper
+from fun_global import is_production_mode
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
@@ -90,14 +92,6 @@ class BLTVolumePerformanceScript(FunTestScript):
 
         self.storage_controller = f1.get_dpc_storage_controller()
 
-        # Setting the syslog level to 2
-        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False)
-        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
-
-        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                      command_duration=5)
-        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
-
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["sysstat_install"] = False
 
@@ -138,11 +132,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         testcase = self.__class__.__name__
 
         benchmark_parsing = True
-        benchmark_file = ""
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
 
-        benchmark_dict = {}
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
 
         if testcase not in benchmark_dict or not benchmark_dict[testcase]:
@@ -196,14 +188,10 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fun_test.shared_variables["num_ssd"] = num_ssd
         num_volume = self.num_volume
         fun_test.shared_variables["num_volume"] = num_volume
-
-        self.nvme_block_device = self.nvme_device + "n" + str(self.blt_details["ns_id"])
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
-
         fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
 
-        f1 = fun_test.shared_variables["f1"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
@@ -267,30 +255,39 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
                                  format(self.thin_uuid, self.ctrlr_uuid))
+            set_syslog_level(self.storage_controller, log_level=2)
 
             # Checking that the above created BLT volume is visible to the end host
-            fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
-            self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.blt_details["ns_id"])
+            fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 1)
+
+            '''self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.blt_details["ns_id"])
+
             lsblk_output = self.end_host.lsblk()
             fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
-                                          message="{} device type check".format(self.volume_name))
+                                          message="{} device type check".format(self.volume_name))'''
 
-            # Writing 20GB data on volume (one time task)
+            fetch_nvme = fetch_nvme_device(self.end_host, self.blt_details["ns_id"])
+            fun_test.test_assert(fetch_nvme['status'], message="Check: nvme device visible on end host")
+            self.nvme_block_device = fetch_nvme['nvme_device']
+            fun_test.shared_variables["nvme_device"] = fetch_nvme['nvme_device']
+
+            # Writing Preconditioning the vol ezfio logic
             if self.warm_up_traffic:
-                fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
-                fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
-                fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                fun_test.test_assert(fio_output, "Pre-populating the volume")
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
+                for i in xrange(2):
+                    fun_test.log("Write IO to volume, this might take long time depending on fio --size provided")
+                    fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
+                    fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                    fun_test.test_assert(fio_output, "Pre-populating the volume")
+                    fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                                   self.iter_interval)
             fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
-
+        self.nvme_block_device = fun_test.shared_variables["nvme_device"]
         # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
         fio_result = {}
@@ -348,7 +345,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     fio_job_iodepth = 64
                 elif combo == "(8, 16)":
                     fio_job_iodepth = 128
-
+                self.fio_cmd_args["runtime"] = self.optimum_run_time if fio_job_iodepth in self.optimum_iodepth_list else self.default_run_time
+                self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 10
                 self.end_host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 fun_test.log("Running FIO...")
                 # Job name will be fio_pcie_read_blt_X_iod_scaling
@@ -429,7 +427,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                post_results("BLT_PCIE_IO_Scaling", test_method, *row_data_list)
+                if is_production_mode():
+                    post_results("BLT_PCIE_IO_Scaling", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="BLT PCIe IO Scaling", table_name=self.summary, table_data=table_data)
