@@ -1040,24 +1040,6 @@
             "label": "Nucleus",
             "children": [
               {
-                "metric_model_name": "AllocSpeedPerformance",
-                "name": "Best time for 1 malloc/free (WU)",
-                "label": "Best time for 1 malloc/free (WU)",
-                "children": []
-              },
-              {
-                "metric_model_name": "AllocSpeedPerformance",
-                "name": "Best time for 1 malloc/free (Threaded)",
-                "label": "Best time for 1 malloc/free (Threaded)",
-                "children": []
-              },
-              {
-                "metric_model_name": "AllocSpeedPerformance",
-                "name": "Best time for 1 malloc/free (Classic)",
-                "label": "Best time for 1 malloc/free (Classic)",
-                "children": []
-              },
-              {
                 "metric_model_name": "WuLatencyAllocStack",
                 "name": "WU Latency: Alloc Stack",
                 "label": "WU Latency: Alloc Stack",
@@ -1067,42 +1049,6 @@
                 "metric_model_name": "WuLatencyUngated",
                 "name": "WU Latency: Ungated",
                 "label": "WU Latency: Ungated",
-                "children": []
-              },
-              {
-                "name": "Bcopy: Plain: Avg Bandwidth",
-                "label": "Bcopy: Plain: Avg Bandwidth",
-                "metric_model_name": "BcopyPerformance",
-                "children": []
-              },
-              {
-                "name": "Bcopy: Plain: Avg Latency",
-                "label": "Bcopy: Plain: Avg Latency",
-                "metric_model_name": "BcopyPerformance",
-                "children": []
-              },
-              {
-                "name": "Bcopy: DMA: Avg Bandwidth",
-                "label": "Bcopy: DMA: Avg Bandwidth",
-                "metric_model_name": "BcopyPerformance",
-                "children": []
-              },
-              {
-                "name": "Bcopy: DMA: Avg Latency",
-                "label": "Bcopy: DMA: Avg Latency",
-                "metric_model_name": "BcopyPerformance",
-                "children": []
-              },
-              {
-                "name": "Bcopy: Flood DMA: Avg Bandwidth",
-                "label": "Bcopy: Flood DMA: Avg Bandwidth",
-                "metric_model_name": "BcopyFloodDmaPerformance",
-                "children": []
-              },
-              {
-                "name": "Bcopy: Flood DMA: Avg Latency",
-                "label": "Bcopy: Flood DMA: Avg Latency",
-                "metric_model_name": "BcopyFloodDmaPerformance",
                 "children": []
               },
               {
@@ -1118,21 +1064,9 @@
                 "children": []
               },
               {
-                "metric_model_name": "FunMagentPerformanceTest",
-                "name": "Malloc agent rate",
-                "label": "Malloc agent rate",
-                "children": []
-              },
-              {
-                "metric_model_name": "SoakClassicMallocPerformance",
-                "name": "Soak test for malloc",
-                "label": "Soak test for malloc",
-                "children": []
-              },
-              {
-                "metric_model_name": "SoakFunMallocPerformance",
-                "name": "Soak test for fun_malloc",
-                "label": "Soak test for fun_malloc",
+                "metric_model_name": "SoakFlows",
+                "name": "soak_flows_busy_loop_10usecs",
+                "label": "Max busy loops 10usecs",
                 "children": []
               },
               {
@@ -1244,6 +1178,12 @@
             "name": "MovingBits",
             "label": "MovingBits",
             "children": [
+              {
+                "metric_model_name": "SoakFlows",
+                "name": "soak_flows_dma_memcpy_test_1MB",
+                "label": "Max DMA 1MB",
+                "children": []
+              },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
                 "name": "memcpy_coherent_output_bandwidth_below_4k",
