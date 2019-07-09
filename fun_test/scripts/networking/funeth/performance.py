@@ -106,10 +106,10 @@ class FunethPerformance(sanity.FunethSanity):
         # Configure small DF/Non-FCP thr to workaround SWOS-4771
         for nc_obj in network_controller_objs:
             f1 = 'F1_{}'.format(network_controller_objs.index(nc_obj))
-            buffer_pool_set = nc_obj.set_qos_egress_buffer_pool(sf_thr=9000,
-                                                                sf_xoff_thr=8000,
-                                                                nonfcp_thr=9000,
-                                                                nonfcp_xoff_thr=8000,
+            buffer_pool_set = nc_obj.set_qos_egress_buffer_pool(sf_thr=11000,
+                                                                sf_xoff_thr=10000,
+                                                                nonfcp_thr=11000,
+                                                                nonfcp_xoff_thr=10000,
                                                                 mode='nu')
             fun_test.test_assert(buffer_pool_set, '{}: Configure QoS egress buffer pool'.format(f1))
             nc_obj.get_qos_egress_buffer_pool()
