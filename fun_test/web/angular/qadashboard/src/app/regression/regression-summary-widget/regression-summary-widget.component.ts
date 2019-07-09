@@ -49,7 +49,7 @@ export class RegressionSummaryWidgetComponent implements OnInit {
       {
         name: 'In-progress',
         data: Array(this.x1Values.length).fill(0),
-        color: 'yellow'
+        color: '#ffc200'
       }
 
     ];
