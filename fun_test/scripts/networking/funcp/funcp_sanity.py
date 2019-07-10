@@ -12,8 +12,12 @@ class ScriptSetup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="""
-        Verify FS-name
-        """)
+                              1. Cleanup FunCP
+                              2. Remove Funeth from Hosts
+                              3. BringUP both F1s
+                              4. Reboot COMe
+                              5. Reboot Hosts
+                              """)
 
     def setup(self):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
@@ -30,27 +34,6 @@ class ScriptSetup(FunTestScript):
             shut_all_vms(hostname=server)
             critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
-    def cleanup(self):
-        funcp_obj.cleanup_funcp()
-        fun_test.shared_variables["topology"].cleanup()
-        # pass
-
-
-class BootF1(FunTestCase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Bringup both F1s and Reboot COMe",
-                              steps="""
-                              1. BringUP both F1s
-                              2. Reboot COMe
-                              """)
-
-    def setup(self):
-        pass
-
-    def run(self):
-
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
@@ -62,12 +45,13 @@ class BootF1(FunTestCase):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
-
-        # Bringup FunCP
+        b = topology_helper.get_expanded_topology()
 
 
     def cleanup(self):
-        pass
+        funcp_obj.cleanup_funcp()
+        fun_test.shared_variables["topology"].cleanup()
+        # pass
 
 
 class BringupControlPlane(FunTestCase):
@@ -244,7 +228,6 @@ class TestScp(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BootF1())
     ts.add_test_case(BringupControlPlane())
     ts.add_test_case(CheckPCIeWidth())
     ts.add_test_case(NicEmulation())
