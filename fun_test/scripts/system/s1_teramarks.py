@@ -101,7 +101,7 @@ class EcTeramarkTc(PalladiumTC):
     boot_args = "app=qa_ec_stress min_ndata=8 max_ndata=8 min_nparity=4 max_nparity=4 min_stridelen=4096 max_stridelen=4096 syslog=2 --seq_fail --enable_multi_pcs num_pcs=8"
     tags = "qa_s1_ec_teramark"
     note = "EC teramark app on S1"
-    max_duration = 1800
+    max_duration = 2700
 
     def describe(self):
         self.set_test_details(id=3,
@@ -144,6 +144,37 @@ class NfaTeramarkTc(PalladiumTC):
             3. Steps 3
                                   """)
 
+class JpegTeramarkTc(PalladiumTC):
+    boot_args = "app=jpeg_perf_test"
+    tags = "qa_s1_jpeg_teramark"
+    note = "JPEG teramark app on S1"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="Schedule JPEG teramark app on Jenkins",
+                              steps="""
+            1. Steps 1
+            2. Steps 2
+            3. Steps 3
+                                  """)
+
+class ZipTeramarkTc(PalladiumTC):
+    boot_args = "app=deflate_perf_multi,lzma_perf_multi --serial"
+    tags = "qa_s1_zip_teramark"
+    note = "ZIP teramark app on S1"
+    fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/zip_inputs/compress_perf_input.list"
+    max_duration = 2700
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Schedule Zip teramark app on Jenkins",
+                              steps="""
+            1. Steps 1
+            2. Steps 2
+            3. Steps 3
+                                  """)
+
 if __name__ == "__main__":
     myscript = MyScript()
     myscript.add_test_case(CryptoTeramarkTc())
@@ -151,4 +182,6 @@ if __name__ == "__main__":
     myscript.add_test_case(EcTeramarkTc())
     myscript.add_test_case(DfaTeramarkTc())
     myscript.add_test_case(NfaTeramarkTc())
+    myscript.add_test_case(JpegTeramarkTc())
+    myscript.add_test_case(ZipTeramarkTc())
     myscript.run()
