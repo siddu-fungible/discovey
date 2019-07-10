@@ -7,7 +7,8 @@
       "host_ip": "poc-server-05-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
-    }
+    },
+    "reboot_time": 600
   },
   "poc-server-01": {
     "host_ip": "poc-server-01",
