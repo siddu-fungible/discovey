@@ -85,13 +85,13 @@ class BLTVolumePerformanceScript(FunTestScript):
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
         f1 = fs.get_f1(index=0)
-        fun_test.shared_variables["f1"] = f1
-
-        self.db_log_time = get_current_time()
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
-
         self.storage_controller = f1.get_dpc_storage_controller()
-
+        if not check_come_health(storage_controller=self.storage_controller):
+            fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cycle_come=False), "FS bootup")
+            f1 = fs.get_f1(index=0)
+            self.storage_controller = f1.get_dpc_storage_controller()
+        fun_test.shared_variables["f1"] = f1
+        fun_test.shared_variables["db_log_time"] = get_current_time()
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["sysstat_install"] = False
 
@@ -360,7 +360,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  bs=fio_block_size,
                                                                  iodepth=fio_iodepth,
                                                                  numjobs=fio_numjobs,
-                                                                 cpumask=254,
                                                                  name=fio_job_name,
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
