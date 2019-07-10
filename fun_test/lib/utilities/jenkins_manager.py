@@ -14,7 +14,7 @@ DEFAULT_BUILD_PARAMS = {
     "HW_VERSION": "Ignored",
     "RUN_MODE": "Build only",
     "PRIORITY": "high_priority",
-    "BOOTARGS": "app=jpeg_perf_test --test-exit-fast",
+    "BOOTARGS": "",
     "MAX_DURATION": 3,
     "SECURE_BOOT": "fungible",
     "NOTE": "",
