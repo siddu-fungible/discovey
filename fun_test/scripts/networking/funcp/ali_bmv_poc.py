@@ -67,8 +67,30 @@ class ScriptSetup(FunTestScript):
 
     def cleanup(self):
         fun_test.log("Cleanup")
-        fun_test.shared_variables["topology"].cleanup()
+        # fun_test.shared_variables["topology"].cleanup()
 
+
+class ScriptSetup2(FunTestScript):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(steps="""
+                                  1. BringUP both F1s
+                                  2. Bringup FunCP
+                                  3. Create MPG Interfaces and assign static IPs
+                                  """)
+
+    def setup(self):
+        global funcp_obj, servers_mode, servers_list, fs_name
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        # fs_name = "fs-45"
+        funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
+
+    def cleanup(self):
+        fun_test.log("Cleanup")
+        # fun_test.shared_variables["topology"].cleanup()
 
 class NicEmulation(FunTestCase):
     server_key = {}
@@ -111,13 +133,14 @@ class NicEmulation(FunTestCase):
 
         # Ping QFX from both F1s
         ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-        # for container in ping_dict:
-        #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
+        for container in ping_dict:
+            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
         funcp_obj.test_cc_pings_fs()
+
         print("\n===========================")
         print ("Continue to NIC Emulation:")
         print("===========================")
@@ -137,6 +160,11 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, sriov=32, num_queues=4)
 
+        tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
+        funeth_obj = Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
+        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=4)
+
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
         print("\n=================")
@@ -145,7 +173,7 @@ class NicEmulation(FunTestCase):
         for server in self.server_key["fs"][fs_name]["vm_config"]:
             critical_log(enable_nvme_vfs
                          (host=server,
-                          pcie_vfs_count=32),
+                          pcie_vfs_count=self.server_key["fs"][fs_name]["vm_config"][server]["pcie_vfs"]),
                          message="NVMe VFs enabled")
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
@@ -181,6 +209,8 @@ class StartVMs(FunTestCase):
 
         for server in servers_with_vms:
             configure_vms(server_name=server, vm_dict=servers_with_vms[server]["vms"])
+
+        fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
     def cleanup(self):
         pass
@@ -360,7 +390,7 @@ class LoadFunethOnVMs(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs("FS-ALIBABA-DEMO-VM")
         funeth_obj = Funeth(tb_config_obj, ws='/home/localadmin/ws')
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_vm(funeth_obj, update_driver=False)
+        setup_hu_vm(funeth_obj, update_driver=True)
 
     def cleanup(self):
         pass
@@ -516,7 +546,7 @@ class CheckVMReachability(FunTestCase):
                     fun_test.log(not_reachable_vms)
                 now_time = time.time()
                 if int(now_time - start_time) > 1200:
-                    fun_test.test_assert(expression=False, message="VMs didnt come up in 10 minutes")
+                    fun_test.test_assert(expression=False, message="VMs didnt come up in 20 minutes")
 
     def cleanup(self):
         pass
@@ -584,14 +614,16 @@ class PingTestVmVmSameServer(FunTestCase):
 
 
 if __name__ == '__main__':
-    ts = ScriptSetup()
-    ts.add_test_case(NicEmulation())
-    # ts.add_test_case(CreateNamespaceVMs())
-    ts.add_test_case(StartVMs())
-    ts.add_test_case(LocalNamespace())
-    ts.add_test_case(CheckVMReachability())
+    ts = ScriptSetup2()
+    # ts.add_test_case(NicEmulation())
+    # # ts.add_test_case(CreateNamespaceVMs()) // Dont use this
+    # ts.add_test_case(StartVMs())
+    # ts.add_test_case(LocalNamespace())
+    # ts.add_test_case(CheckVMReachability())
     ts.add_test_case(LoadFunethOnVMs())
     ts.add_test_case(LoadNvmeOnVMs())
     # ts.add_test_case(PingTestVmVmSameServer())
-
+    # ts.add_test_case(PingFioTestAllVMs())
+    # ts.add_test_case(TempNvmeCmds())
+    # ts.add_test_case(FindVMBootTime())
     ts.run()

@@ -156,6 +156,14 @@
       }
     }
   },
+  "fs-21": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-21"
+      }
+    }
+  },
   "fs-11-alibaba-demo": {
     "dut_info": {
       "0": {
@@ -218,6 +226,25 @@
             "dual": 0
           },
           "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "cab03-qa-02"
+            }
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "17": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           }

@@ -17,7 +17,10 @@ o = linux_obj.get_process_id("init")
 i = 0
 '''
 
-linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123", use_paramiko=False)
+linux_obj = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123", use_paramiko=False)
+linux_obj.scp(source_file_path="/tmp/a.sh", target_ip="qa-ubuntu-02", target_username="auto_admin", target_password="fun123", target_file_path="/tmp/1234.txt", sudo=True, sudo_password="fun123")
+
+#linux_obj = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_password="fun123", use_paramiko=False)
 # linux_obj.logger = NoLogger()
 output = linux_obj.command(command="grep ATTENTION /root/parser.log", include_last_line=True)
 

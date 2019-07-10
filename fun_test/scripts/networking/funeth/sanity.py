@@ -65,7 +65,7 @@ except:
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
-MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
+MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
@@ -109,8 +109,9 @@ def setup_hu_host(funeth_obj, update_driver=True):
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
         fun_test.test_assert(
-            funeth_obj.enable_multi_txq(hu, num_queues=NUM_QUEUES_TX),
-            'Enable HU host {} funeth interfaces multi Tx queues: {}.'.format(linux_obj.host_ip, NUM_QUEUES_TX))
+            funeth_obj.enable_multi_queues(hu, num_queues_tx=NUM_QUEUES_TX, num_queues_rx=NUM_QUEUES_RX),
+            'Enable HU host {} funeth interfaces {} Tx queues, {} Rx queues.'.format(linux_obj.host_ip, NUM_QUEUES_TX,
+                                                                                     NUM_QUEUES_RX))
         fun_test.test_assert(
             funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
