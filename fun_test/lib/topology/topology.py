@@ -69,12 +69,23 @@ class ExpandedTopology(ToDictMixin):
         host = self.hosts.get(name, None)
         return host
 
-    def get_host_instance(self, dut_index, name=None, host_index=None, interface_index=None, ssd_interface_index=None, fpg_interface_index=None, f1_index=0):
+    def get_host_instance(self,
+                          dut_index,
+                          name=None,
+                          host_index=None,
+                          interface_index=None,
+                          ssd_interface_index=None,
+                          pcie_interface_index=None,
+                          fpg_interface_index=None,
+                          f1_index=0):
         host = None
-        if interface_index is not None and host_index is not None:
+
+        if (interface_index is not None or ssd_interface_index is not None or pcie_interface_index is not None or fpg_interface_index is not None) and host_index is not None:
             dut = self.get_dut(index=dut_index)
             if ssd_interface_index is not None:  # Backward compatibility
                 interface_index = ssd_interface_index
+            if pcie_interface_index is not None:  # Backward compatibility
+                interface_index = pcie_interface_index
             host = None
             fun_test.simple_assert(interface_index is not None or fpg_interface_index is not None, "Provide SSD interface or FPG interface")
             if interface_index is not None:
