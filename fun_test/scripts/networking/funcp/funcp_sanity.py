@@ -204,7 +204,7 @@ class TestPings(FunTestCase):
         if not funcp_obj.docker_names:
             funcp_obj._get_docker_names()
         fun_test.test_assert(cc_sanity_pings(docker_names=funcp_obj.docker_names, vlan_ips=funcp_obj.vlan1_ips,
-                                             fs_spec=fs_spec, ping_count=500,
+                                             fs_spec=fs_spec, ping_count=5000,
                                              nu_hosts=self.server_key["fs"][fs_name]["nu_host_data_ip"],
                                              hu_hosts_0=self.server_key["fs"][fs_name]["hu_host_data_ip_f1_0"],
                                              hu_hosts_1=self.server_key["fs"][fs_name]["hu_host_data_ip_f1_1"]),
