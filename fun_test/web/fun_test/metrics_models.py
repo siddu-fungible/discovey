@@ -2738,21 +2738,55 @@ class AlibabaRdmaPerformance(models.Model):
         return (str(self.__dict__))
 
 
-class SoakFlows(models.Model):
+class SoakFlowsBusyLoop10usecs(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
 
-    input_app = models.CharField(max_length=30, verbose_name="soak flows app names", default="")
-    input_metric_name = models.CharField(max_length=30, verbose_name='Metric name', default="")
+    input_name = models.CharField(max_length=30, verbose_name="soak flows busy loop 10usecs app name", default="busy_loop_10usecs")
+    input_metric_name = models.CharField(max_length=30, verbose_name='Metric name', default="busy_loop_10usecs")
     input_platform = models.TextField(default=FunPlatform.F1)
-    output_value = models.FloatField(verbose_name="Output value", default=-1)
+    input_variation = models.FloatField(verbose_name='variation', default=-1)
+    input_max_variation = models.FloatField(verbose_name='maximum variation', default=-1)
+    input_min_duration = models.FloatField(verbose_name='minimum duration', default=-1)
+    input_max_duration = models.FloatField(verbose_name='maximum duration', default=-1)
+    input_duration = models.FloatField(verbose_name='duration', default=-1)
+    input_num_flows = models.FloatField(verbose_name='Number of flows', default=-1)
+
+    output_busy_loops_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
     output_num_ops = models.IntegerField(verbose_name="number of operations per second", default=-1)
 
-    output_value_unit = models.TextField(default=PerfUnit.UNIT_OP)
-    output_num_ops_unit = models.TextField(default=PerfUnit.UNIT_OP)
+    output_busy_loops_value_unit = models.TextField(default=PerfUnit.UNIT_OP)
+    output_num_ops_unit = models.TextField(default=PerfUnit.UNIT_NUMBER)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+
+class SoakFlowsMemcpy1MBNonCoh(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_name = models.CharField(max_length=30, verbose_name="soak flows dma memcpy test 1MB", default="soak_flows_dma_memcpy_test_1MB")
+    input_metric_name = models.CharField(max_length=30, verbose_name='Metric name', default="soak_flows_dma_memcpy_test_1MB")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_variation = models.FloatField(verbose_name='variation', default=-1)
+    input_max_variation = models.FloatField(verbose_name='maximum variation', default=-1)
+    input_min_duration = models.FloatField(verbose_name='minimum duration', default=-1)
+    input_max_duration = models.FloatField(verbose_name='maximum duration', default=-1)
+    input_duration = models.FloatField(verbose_name='duration', default=-1)
+    input_num_flows = models.FloatField(verbose_name='Number of flows', default=-1)
+
+    output_dma_memcpy_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
+    output_num_ops = models.IntegerField(verbose_name="number of operations per second", default=-1)
+
+    output_dma_memcpy_value_unit = models.TextField(default=PerfUnit.UNIT_OP)
+    output_num_ops_unit = models.TextField(default=PerfUnit.UNIT_NUMBER)
 
     def __str__(self):
         return (str(self.__dict__))

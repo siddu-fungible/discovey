@@ -88,7 +88,7 @@ class MetricParser():
         elif "SoakDmaMem" in model_name:
             return self.soak_dma_memcpy_memset(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         elif "SoakFlows" in model_name:
-            return self.soak_flows(logs=logs, date_time=date_time, platform=platform)
+            return self.soak_flows(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         else:
             return {}
 
@@ -974,7 +974,7 @@ class MetricParser():
         self.result["status"] = self.status == RESULTS["PASSED"]
         return self.result
 
-    def soak_flows(self, logs, date_time, platform):
+    def soak_flows(self, logs, date_time, platform, model_name):
         self.initialize()
         for line in logs:
             m = re.search(r'CRIT\s+nucleus\s+"Experiment completed:\s+(?P<exp_value>[0-9.]+)'
@@ -982,16 +982,24 @@ class MetricParser():
             if m:
                 self.match_found = True
                 value_json = json.loads(m.group("value_json"))
-                metric_app = value_json['name']
-                if metric_app  == 'busy_loop_10usecs':
-                    metric_app = "soak_flows_busy_loop_10usecs"
-                self.metrics['input_app'] = metric_app
+                self.metrics['input_name'] = value_json['name']
                 self.metrics['input_metric_name'] = m.group('metric_name')
                 self.metrics["input_platform"] = platform
-                self.metrics['output_value'] = value_json.get('value', -1)
+                self.metrics['input_variation'] = value_json.get('variation', -1)
+                self.metrics['input_max_variation'] = value_json.get('max_variation', -1)
+                self.metrics['input_min_duration'] = value_json.get('min_duration', -1)
+                self.metrics['input_max_duration'] = value_json.get('max_duration', -1)
+                self.metrics['input_duration'] = value_json.get('duration', -1)
+                self.metrics['input_num_flows'] = value_json.get('num_flows', -1)
                 self.metrics['output_num_ops'] = value_json.get('num_ops', -1)
-                self.metrics['output_value_unit'] = value_json.get('unit', 'op')
-                self.metrics['output_num_ops_unit'] = value_json.get('unit', 'op')
+
+                if model_name == "SoakFlowsBusyLoop10usecs":
+                    self.metrics['output_busy_loops_value'] = value_json.get('value', -1)
+                    self.metrics['output_busy_loops_value_unit'] = value_json.get('unit', 'op')
+                elif model_name == "SoakFlowsMemcpy1MBNonCoh":
+                    self.metrics['output_dma_memcpy_value'] = value_json.get('value', -1)
+                    self.metrics['output_dma_memcpy_value_unit'] = value_json.get('unit', 'op')
+
                 self.status = RESULTS["PASSED"]
                 d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
                 self.result["data"].append(d)

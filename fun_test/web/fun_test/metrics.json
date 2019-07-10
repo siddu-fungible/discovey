@@ -1064,7 +1064,7 @@
                 "children": []
               },
               {
-                "metric_model_name": "SoakFlows",
+                "metric_model_name": "SoakFlowsBusyLoop10usecs",
                 "name": "soak_flows_busy_loop_10usecs",
                 "label": "Max busy loops 10usecs",
                 "children": []
@@ -1179,7 +1179,7 @@
             "label": "MovingBits",
             "children": [
               {
-                "metric_model_name": "SoakFlows",
+                "metric_model_name": "SoakFlowsMemcpy1MBNonCoh",
                 "name": "soak_flows_dma_memcpy_test_1MB",
                 "label": "Max DMA 1MB",
                 "children": []

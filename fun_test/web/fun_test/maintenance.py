@@ -619,13 +619,25 @@ if __name__ == "__main__":
         data_sets = []
         if internal_chart_name == "soak_flows_busy_loop_10usecs":
             chart_name = "Busy Loops 10usecs"
-            one_data_set["name"] = "10usec busy loop"
+            input_name = "busy_loop_10usecs"
+            one_data_set["name"] = "10usecs busy loop on a VP"
+            model_name = "SoakFlowsBusyLoop10usecs"
+            description = "Maximum number of ops across the entire chip, an op being a 10usecs busy loop on a VP." \
+                          " Ideally, with 200 VPs, one would expect 20Kops. The real number is much lower though," \
+                          " because not all VP participate, and because of overhead, so a reasonable expected number" \
+                          " is 7Kops"
+            output_field = "output_busy_loops_value"
         else:
             chart_name = "Soak Flows Busy Loop 10usecs"
+            input_name = internal_chart_name
             one_data_set["name"] = "1MB non-coherent DMA memcpy"
+            model_name = "SoakFlowsMemcpy1MBNonCoh"
+            description = "Maximum number of ops across the entire chip, an op being a 1MB non-coherent DMA memcpy." \
+                          " Ideally, the HBM bandwidth is 4Tb/s, but we are doing a read and a write, so one would" \
+                          " expect 2Tb/8Mb = 250Kops. There may be other limiting factors though."
+            output_field = "output_dma_memcpy_value"
 
-        model_name = "SoakFlows"
-        description = "soak_flows_2_new_apps"
+
         metric_id = LastMetricId.get_next_id()
         positive = True
         y1_axis_title = 'op'
@@ -633,9 +645,9 @@ if __name__ == "__main__":
         source = 'https://github.com/fungible-inc/FunOS/blob/79f82e7a330220295afbaf5b3b28bf9296915131/tests/soak_flows_test.c'
         platform = FunPlatform.F1
 
-        inputs = {"input_app": internal_chart_name,
+        inputs = {"input_name": input_name,
                   "input_platform": "F1"}
-        output = {"name": "output_value",
+        output = {"name": output_field,
                   "unit": PerfUnit.UNIT_OP,
                   "min": 0,
                   "max": -1}

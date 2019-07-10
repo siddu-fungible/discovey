@@ -1506,7 +1506,7 @@ class ChannelParallPerformanceTc(PalladiumPerformanceTc):
 
 class SoakFlowsBusyLoopPerformanceTc(PalladiumPerformanceTc):
     tag = SOAKFLOWSBUSYLOOP
-    model = "SoakFlows"
+    model = "SoakFlowsBusyLoop10usecs"
     platform = F1
 
     def describe(self):
@@ -1517,7 +1517,7 @@ class SoakFlowsBusyLoopPerformanceTc(PalladiumPerformanceTc):
 
 class SoakFlowsMemcpy1MbNonCohPerformanceTc(PalladiumPerformanceTc):
     tag = SOAKFLOWSMEMCPY
-    model = "SoakFlows"
+    model = "SoakFlowsMemcpy1MBNonCoh"
     platform = F1
 
     def describe(self):
