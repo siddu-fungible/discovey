@@ -465,12 +465,7 @@ class ECVolumeLevelScript(FunTestScript):
                     self.testbed_config["workarounds"]["csr_replay"]:
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
-            try:
-                self.storage_controller.verbose = True
-                fun_test.log(
-                    "Setting storage controller Verbose value to: {}".format(self.storage_controller.verbose))
-            except Exception as ex:
-                fun_test.critical(str(ex))
+
             try:
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
@@ -792,9 +787,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if self.parallel_warm_up:
                     host_clone = {}
                     warmup_thread_id = {}
+                    '''
                     actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
                     aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
                     self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
+                    '''
                     for index, host_name in enumerate(self.host_info):
                         wait_time = self.num_hosts - index
                         host_clone[host_name] = self.host_info[host_name]["handle"].clone()
@@ -835,12 +832,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
         test_method = testcase[4:]
-
-        try:
-            self.storage_controller.verbose = False
-            fun_test.log("Setting storage controller Verbose value to: {}".format(self.storage_controller.verbose))
-        except Exception as ex:
-            fun_test.critical(str(ex))
 
         table_data_headers = ["Num Hosts", "Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",

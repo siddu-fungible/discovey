@@ -65,7 +65,7 @@ except:
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
-MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
+MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
