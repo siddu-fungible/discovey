@@ -2745,8 +2745,8 @@ class SoakFlows(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
 
-    input_app = models.CharField(max_length=30, verbose_name="soak flows app names")
-    input_metric_name = models.CharField(max_length=30, verbose_name='Metric name')
+    input_app = models.CharField(max_length=30, verbose_name="soak flows app names", default="")
+    input_metric_name = models.CharField(max_length=30, verbose_name='Metric name', default="")
     input_platform = models.TextField(default=FunPlatform.F1)
     output_value = models.FloatField(verbose_name="Output value", default=-1)
     output_num_ops = models.IntegerField(verbose_name="number of operations per second", default=-1)
