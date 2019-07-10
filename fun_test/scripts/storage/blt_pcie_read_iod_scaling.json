@@ -2,7 +2,7 @@
   "BLTFioSeqRead": {
     "num_ssd": 1,
     "num_volume": 1,
-    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1649267441664, "block_size": 4096,
+    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1099511627776, "block_size": 4096,
                        "name": "thin-block1"},
     "controllers": 1,
     "command_timeout": 30,
@@ -33,7 +33,7 @@
   "BLTFioRandRead": {
     "num_ssd": 1,
     "num_volume": 1,
-    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1649267441664, "block_size": 4096,
+    "blt_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1099511627776, "block_size": 4096,
                        "name": "thin-block1"},
     "controllers": 1,
     "command_timeout": 30,
