@@ -58,7 +58,7 @@ class BringupControlPlane(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=1,
                               summary="Bringup Control Plane",
                               steps="""
                                   1. Prepare Docker
@@ -101,7 +101,7 @@ class CheckPCIeWidth(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=2,
                               summary="Check no of PCIe lanes on HU host",
                               steps="""
                                   1. Login into host
@@ -128,7 +128,7 @@ class NicEmulation(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=3,
                               summary="Setup HU host",
                               steps="""
                                   1. Prepare Docker
@@ -164,7 +164,7 @@ class TestPings(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=4,
                               summary="Test Pings",
                               steps="""
                                   1. Test Pings from docker
@@ -202,7 +202,7 @@ class TestScp(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=5,
                               summary="Scp file from HU to NU and Vice Verca",
                               steps="""
                                   1. Scp 100MB file form HU host to NU host
