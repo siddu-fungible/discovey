@@ -203,7 +203,7 @@ class TestScp(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Scp file from HU to NU and Vice Verca",
+                              summary="Scp file from HU to NU and Vice Versa",
                               steps="""
                                   1. Scp 100MB file form HU host to NU host
                                   2. Scp 100MB file form NU host to HU host
