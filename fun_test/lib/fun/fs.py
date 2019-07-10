@@ -89,6 +89,7 @@ class Fpga(Linux):
         fun_test.simple_assert(expression="F1_{} is out of reset".format(f1_index) in output,
                                message="F1 {} out of reset".format(f1_index),
                                context=self.context)
+        # fun_test.sleep("After FPGA reset", seconds=20)
 
     def _set_term_settings(self):
         self.command("stty cols %d" % 1024)
@@ -206,7 +207,7 @@ class Bmc(Linux):
         fun_test.log(message=output, context=self.context)
         if expected:
             fun_test.simple_assert(expression=expected in output,
-                                   message="{} not in output".format(expected),
+                                   message="{} in output".format(expected),
                                    context=self.context)
         output = nc.close()
         self.u_boot_logs[f1_index] += output

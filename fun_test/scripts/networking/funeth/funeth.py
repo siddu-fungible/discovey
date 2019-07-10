@@ -361,14 +361,15 @@ class Funeth:
 
         return result
 
-    def enable_namespace_interfaces_multi_txq(self, nu_or_hu, num_queues=8, ns=None, xps_cpus=True):
-        """Enable interfaces multi tx queue in a namespace."""
+    def enable_namespace_interfaces_multi_queues(self, nu_or_hu, num_queues_tx=8, num_queues_rx=8, ns=None,
+                                                 xps_cpus=True):
+        """Enable interfaces multi tx/rx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
             # VF interface, TODO: have a better way to tell it's VF interface
             if not intf.endswith('f0'):
                 continue
-            cmd = 'ethtool -L {} tx {}'.format(intf, num_queues)
+            cmd = 'ethtool -L {} tx {} rx {}'.format(intf, num_queues_tx, num_queues_rx)
             cmd_chk = 'ethtool -l {}'.format(intf)
             if ns is None or 'netns' in cmd:
                 cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
@@ -376,26 +377,38 @@ class Funeth:
                 cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
             output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
 
-            match = re.search(r'Current hardware settings:.*RX:\s+\d+.*TX:\s+{}'.format(num_queues), output, re.DOTALL)
+            match = re.search(r'Current hardware settings:.*RX:\s+{}.*TX:\s+{}'.format(num_queues_rx, num_queues_tx),
+                              output, re.DOTALL)
             result &= match is not None
+
+            # Configure Rx flow hash
+            cmd = 'ethtool -X {} equal {} hfunc toeplitz'.format(intf, num_queues_tx)
+            cmd_chk = 'ethtool -x {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
 
             # Configure XPS CPU mapping to have CPU-Txq one to one mapping
             if xps_cpus:
                 cmds = []
-                for i in range(num_queues):
+                for i in range(num_queues_tx):
                     cpu_id = (1 << CPU_LIST[i%len(CPU_LIST)])
                     cmds.append('echo {:04x} > /sys/class/net/{}/queues/tx-{}/xps_cpus'.format(cpu_id, intf, i))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds))
                 self.linux_obj_dict[nu_or_hu].command(
-                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues-1, intf))
+                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues_tx-1, intf))
 
         return result
 
-    def enable_multi_txq(self, nu_or_hu, num_queues=8, xps_cpus=True):
-        """Enable multi tx queue to the interfaces."""
+    def enable_multi_queues(self, nu_or_hu, num_queues_tx=8, num_queues_rx=8, xps_cpus=True):
+        """Enable multi tx/rx queue to the interfaces."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            result &= self.enable_namespace_interfaces_multi_txq(nu_or_hu, num_queues, ns, xps_cpus=xps_cpus)
+            result &= self.enable_namespace_interfaces_multi_queues(nu_or_hu, num_queues_tx=num_queues_tx,
+                                                                    num_queues_rx=num_queues_rx, ns=None,
+                                                                    xps_cpus=xps_cpus)
 
         return result
 
@@ -579,7 +592,8 @@ class Funeth:
                 if tx_or_rx == 'tx':
                     irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
                 elif tx_or_rx == 'rx':
-                    irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)[1:]  # exclude Q0, admin queue
+                    irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+                    #irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)[1:]  # exclude Q0, admin queue
 
                 # cat irq affinity
                 cmds_cat = []

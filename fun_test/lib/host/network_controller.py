@@ -1784,3 +1784,39 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def peek_cdu_stats(self):
+        stats = None
+        try:
+            cmd = 'stats/cdu'
+            fun_test.debug("Getting cdu stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get cdu stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_ca_stats(self):
+        stats = None
+        try:
+            cmd = 'stats/ca'
+            fun_test.debug("Getting ca stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get ca stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_ddr_stats(self):
+        stats = None
+        try:
+            cmd = 'stats/ddr'
+            fun_test.debug("Getting ddr stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get ddr stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats

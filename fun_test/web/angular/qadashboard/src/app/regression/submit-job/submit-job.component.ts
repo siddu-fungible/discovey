@@ -43,7 +43,9 @@ export class SubmitJobComponent implements OnInit {
   testBedNames: string[] = [];
   submitting: string = null;
   tftpImagePath: string = "stable-funos-f1.stripped.gz";
-  bootArgs: string = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
+  // bootArgs: string = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
+  bootArgs: string = "";
+
   withJenkinsBuild: boolean = true;
 
   disableAssertions: boolean = true;

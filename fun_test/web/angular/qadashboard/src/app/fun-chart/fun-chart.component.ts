@@ -22,6 +22,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
   @Output() pointInfo: EventEmitter<any> = new EventEmitter();
+  @Input() enableLegend: boolean = true;
   chart: any;
   point: any = null;
 
@@ -132,14 +133,15 @@ export class FunChartComponent implements OnInit, OnChanges {
           }
         }
       }
-    }
-    else if (this.chartType === 'vertical_colored_bar_chart') {
+    } else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
         chart: {
           type: "column"
         },
         title: {
-          text: this.title
+          text: this.title,
+          useHTML: true
+
         },
         xAxis: {
           categories: this.xValues,
@@ -156,7 +158,8 @@ export class FunChartComponent implements OnInit, OnChanges {
           },
         },
         legend: {
-          reversed: true
+          reversed: true,
+          enabled: this.enableLegend
         },
         plotOptions: {
           series: {

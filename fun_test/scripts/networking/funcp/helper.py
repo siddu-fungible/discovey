@@ -163,7 +163,7 @@ def setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4):
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
 
-        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=num_queues),
+        critical_log(funeth_obj.enable_multi_queues(hu, num_queues_tx=num_queues, num_queues_rx=num_queues),
                      'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
@@ -194,7 +194,7 @@ def setup_hu_vm(funeth_obj, update_driver=True, sriov=0, num_queues=1):
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
 
-        critical_log(funeth_obj.enable_multi_txq(hu, num_queues=8),
+        critical_log(funeth_obj.enable_multi_queues(hu, num_queues_tx=num_queues, num_queues_rx=num_queues),
                      'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
         critical_log(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
             linux_obj.host_ip))
@@ -382,6 +382,42 @@ def check_nvme_driver(vm_dict, parallel=False):
                                       username=vm_dict[vm]["user"]), message="Check NVMe driver")
 
 
+def ping_all_vms(vm_dict, parallel=False):
+    # test_host_pings(host, ips, username="localadmin", password="Precious1*", strict=False)
+    threads_list = []
+    if parallel:
+        for vm in vm_dict:
+            if "vm_pings" in vm_dict[vm]:
+                thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=test_host_pings,
+                                                          host=vm_dict[vm]["hostname"], ips=vm_dict[vm]["vm_pings"],
+                                                          password=vm_dict[vm]["password"],
+                                                          username=vm_dict[vm]["user"])
+                threads_list.append(thread_id)
+        for thread_id in threads_list:
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+    if not parallel:
+        for vm in vm_dict:
+            if "vm_pings" in vm_dict[vm]:
+                test_host_pings(host=vm_dict[vm]["hostname"], ips=vm_dict[vm]["vm_pings"],
+                                password=vm_dict[vm]["password"], username=vm_dict[vm]["user"])
+
+
+def fio_all_vms(vm_dict, parallel=False):
+    threads_list = []
+    if parallel:
+        for vm in vm_dict:
+            thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=test_host_fio,
+                                                      host=vm_dict[vm]["hostname"],
+                                                      password=vm_dict[vm]["password"],
+                                                      username=vm_dict[vm]["user"])
+            threads_list.append(thread_id)
+        for thread_id in threads_list:
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+    if not parallel:
+        for vm in vm_dict:
+            test_host_fio(host=vm_dict[vm]["hostname"], password=vm_dict[vm]["password"], username=vm_dict[vm]["user"])
+
+
 def _nvme_driver(host, name, password="Precious1*", username="localadmin"):
     linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
     if not linux_obj.check_ssh():
@@ -398,3 +434,96 @@ def _nvme_driver(host, name, password="Precious1*", username="localadmin"):
         return True
     except:
         return False
+
+
+def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_hosts_1, ping_count=10000,
+                    ping_interval=0.005):
+    result = True
+    for docker in docker_names:
+        container = FunCpDockerContainer(name=docker, host_ip=fs_spec['come']['mgmt_ip'],
+                                         ssh_username=fs_spec['come']['mgmt_ssh_username'],
+                                         ssh_password=fs_spec['come']['mgmt_ssh_password'])
+        for nu_host in nu_hosts:
+            # result &= container.ping(dst=nu_host, count=ping_count, max_percentage_loss=1, timeout=60,
+            #                          interval=ping_interval, sudo=True)
+            output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], nu_host,
+                                                                                   ping_interval, ping_count),
+                                       timeout=300)
+            m = re.search(r'(\d+)%\s+packet\s+loss', output)
+            if m:
+                percentage_loss = int(m.group(1))
+                if percentage_loss <= 1:
+                    result &= True
+                else:
+                    result &= False
+            container.disconnect()
+        if docker.split("-")[-1] == "0":
+            for hu_host in hu_hosts_0:
+                container = FunCpDockerContainer(name=docker, host_ip=fs_spec['come']['mgmt_ip'],
+                                                 ssh_username=fs_spec['come']['mgmt_ssh_username'],
+                                                 ssh_password=fs_spec['come']['mgmt_ssh_password'])
+                # result &= container.ping(dst=hu_host, count=ping_count, max_percentage_loss=1, timeout=60,
+                #                          interval=ping_interval, sudo=True)
+                output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], hu_host,
+                                                                                       ping_interval, ping_count),
+                                           timeout=300)
+                m = re.search(r'(\d+)%\s+packet\s+loss', output)
+                if m:
+                    percentage_loss = int(m.group(1))
+                    if percentage_loss <= 1:
+                        result &= True
+                    else:
+                        result &= False
+
+                container.disconnect()
+        elif docker.split("-")[-1] == "1":
+            for hu_host in hu_hosts_1:
+                container = FunCpDockerContainer(name=docker, host_ip=fs_spec['come']['mgmt_ip'],
+                                                 ssh_username=fs_spec['come']['mgmt_ssh_username'],
+                                                 ssh_password=fs_spec['come']['mgmt_ssh_password'])
+                # result &= container.ping(dst=hu_host, count=ping_count, max_percentage_loss=1, timeout=60,
+                #                          interval=ping_interval, sudo=True)
+                output = container.command(command="sudo ping -I %s %s -i %s -c %s" % (vlan_ips[docker], hu_host,
+                                                                                       ping_interval, ping_count),
+                                           timeout=300)
+                m = re.search(r'(\d+)%\s+packet\s+loss', output)
+                if m:
+                    percentage_loss = int(m.group(1))
+                    if percentage_loss <= 1:
+                        result &= True
+                    else:
+                        result &= False
+                container.disconnect()
+    return result
+
+
+def test_scp(source, dest):
+    host_file = ASSET_DIR + "/hosts.json"
+    all_hosts_specs = parse_file_to_json(file_name=host_file)
+    source_host_spec = all_hosts_specs[source]
+    dest_host_spec = all_hosts_specs[dest]
+    source_linux = Linux(host_ip=source_host_spec["host_ip"], ssh_username=source_host_spec["ssh_username"],
+                         ssh_password=source_host_spec["ssh_password"])
+    dest_linux = Linux(host_ip=dest_host_spec["host_ip"], ssh_username=dest_host_spec["ssh_username"],
+                         ssh_password=dest_host_spec["ssh_password"])
+    source_linux.sudo_command("cd ~; rm -fr scp_testl")
+    source_linux.command("cd ~; mkdir scp_test; cd ~/scp_test")
+    source_linux.dd(input_file="/dev/zero", output_file="scp_test_file_source.txt", count=1048576, block_size=100,
+                    timeout=120, sudo=True)
+    dest_linux.sudo_command("cd ~; rm -fr scp_test;")
+    dest_linux.command("cd ~; mkdir scp_test; cd ~/scp_test")
+    result = source_linux.scp(source_file_path="~/scp_test/scp_test_file_source.txt",
+                              target_ip=dest_host_spec["host_ip"],target_file_path="~/scp_test",
+                              target_username=dest_host_spec["ssh_username"],
+                              target_password=dest_host_spec["ssh_password"])
+    return result
+
+
+def test_host_fio(host, username="localadmin", password="Precious1*", strict=False, filename="/dev/nvme0n1",
+                  rw="readwrite", direct="1", bs="4k", ioengine="libaio", iodepth="16", name="local_fio_readwrite",
+                  runtime="10"):
+    if not strict:
+        linux_obj = Linux(host_ip=host, username=username, password=password)
+        fio_dict = linux_obj.fio(filename=filename, rw=rw, direct=direct, bs=bs, ioengine=ioengine, iodepth=iodepth,
+                      name=name, runtime=runtime)
+        critical_log(expression=fio_dict, message="Fio Result")

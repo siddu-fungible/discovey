@@ -527,7 +527,7 @@ class FunTest:
             build_parameters["BOOTARGS"] = build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
 
             boot_args = build_parameters["BOOTARGS"]
-        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
+        # fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
