@@ -9,6 +9,7 @@ from web.fun_test.metrics_models import MetricsGlobalSettings
 from web.fun_test.models import Asset
 from django.apps import apps
 from web.fun_test.metrics_models import MetricChart, LastMetricId
+from web.fun_test.metrics_lib import *
 import json
 import os
 
@@ -193,6 +194,8 @@ class SiteState():
                 global_setting = MetricsGlobalSettings.objects.first()
                 global_setting.cache_valid = False
                 global_setting.save()
+            ml = MetricLib()
+            ml.update_weights_for_wip()
 
     def set_metrics_settings(self):
         if MetricsGlobalSettings.objects.count() == 0:
