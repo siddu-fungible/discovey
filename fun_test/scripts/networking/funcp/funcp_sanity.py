@@ -114,11 +114,12 @@ class CheckPCIeWidth(FunTestCase):
                                                       '/fs_connected_servers.json')
 
     def run(self):
+        output = True
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         for server in servers_mode:
             result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
-            fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
-                                                                     % server)
+            output &= (result == "1")
+        fun_test.test_assert(expression=output, message="Make sure that PCIe links on hosts went up with correct speed")
 
     def cleanup(self):
         pass
