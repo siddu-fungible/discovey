@@ -51,6 +51,13 @@ class PcieHost(FunTestScript):
                                                f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                               1: {"boot_args": f1_1_boot_args}})
 
+        elif fs == 'fs-20':
+            f1_0_boot_args = "app=hw_hsu_test cc_huid=3 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+            f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --all_100g --dpc-server --dpc-uart retimer=0 --disable-wu-watchdog"
+            topology_helper.set_dut_parameters(dut_index=0,
+                                               f1_parameters={0: {"boot_args": f1_0_boot_args},
+                                                              1: {"boot_args": f1_1_boot_args}})
+
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
         fun_test.shared_variables["topology"] = topology

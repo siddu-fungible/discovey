@@ -517,13 +517,12 @@ class FunControlPlaneBringup:
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(dest_ips[ips])),
+                fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(ips)),
                                        "Ensure valid vlan ip address")
                 if from_vlan:
-                    command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()],
-                                                                   dest_ips[ips])
+                    command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()], ips)
                 else:
-                    command = "sudo ping -c 5 -i %s %s " % (interval, dest_ips[ips])
+                    command = "sudo ping -c 5 -i %s %s " % (interval, ips)
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:
