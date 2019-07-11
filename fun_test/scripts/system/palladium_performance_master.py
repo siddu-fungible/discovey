@@ -1563,6 +1563,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkNfaPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
     myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
     myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTc())
     myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTc())
