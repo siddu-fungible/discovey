@@ -22,8 +22,10 @@ class Funeth:
         self.tb_config_obj = tb_config_obj
         self.linux_obj_dict = {}
         self.nu_hosts = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('nu')])
-        self.hu_hosts = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('hu')])
-        for nu_or_hu in self.nu_hosts + self.hu_hosts:
+        self.hu_hosts = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('hu') and 'vm' not in host])
+        self.hu_ul_vms = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('hu') and 'vm' in host and 'ul' in host])
+        self.hu_ol_vms = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('hu') and 'vm' in host and 'ol' in host])
+        for nu_or_hu in self.nu_hosts + self.hu_hosts + self.hu_ul_vms + self.hu_ol_vms:
             self.linux_obj_dict.update(
                 {nu_or_hu: Linux(host_ip=tb_config_obj.get_hostname(nu_or_hu),
                                  ssh_username=tb_config_obj.get_username(nu_or_hu),
