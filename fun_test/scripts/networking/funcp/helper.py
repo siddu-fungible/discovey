@@ -313,7 +313,7 @@ def remote_storage_config(storage_controller, vm_dict, vol_uuid, count, ctrl_uui
 
     print("\n")
     print("==============================================")
-    print("Attaching Local Volume to Controller on DPU 1")
+    print("Attaching Local Volume to Controller on remote DPU")
     print("==============================================\n")
     result = storage_controller.attach_volume_to_controller(ctrlr_uuid=ctrl_uuid,
                                                             vol_uuid=vol_uuid,
@@ -506,7 +506,7 @@ def test_scp(source, dest):
                          ssh_password=source_host_spec["ssh_password"])
     dest_linux = Linux(host_ip=dest_host_spec["host_ip"], ssh_username=dest_host_spec["ssh_username"],
                          ssh_password=dest_host_spec["ssh_password"])
-    source_linux.sudo_command("cd ~; rm -fr scp_testl")
+    source_linux.sudo_command("cd ~; rm -fr scp_test")
     source_linux.command("cd ~; mkdir scp_test; cd ~/scp_test")
     source_linux.dd(input_file="/dev/zero", output_file="scp_test_file_source.txt", count=1048576, block_size=100,
                     timeout=120, sudo=True)
