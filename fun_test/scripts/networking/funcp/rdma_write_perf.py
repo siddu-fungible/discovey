@@ -263,7 +263,7 @@ class IBWriteBW(FunTestCase):
         # Start ib_write_bw server on F1_0
         host_obj["f1_0"][0].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
                                         "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["f1_0"][0].start_bg_process(command="sh -c 'for size in 1 128 256 512 1024 4096;do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 160 -R;sleep 2;done'", timeout=300)
+        host_obj["f1_0"][0].start_bg_process(command="sh -c 'for size in 1 128 256 512 1024 4096;do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 160 -R;sleep 2;done'", timeout=1200)
         server_interface_name = host_obj["f1_0"][0].command("ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
 
         server_ip_address = host_obj["f1_0"][0].command("ip addr list {} |grep \"inet \" |cut -d\' \' -f6|cut -d/ -f1".format(server_interface_name.rstrip()))
@@ -274,7 +274,7 @@ class IBWriteBW(FunTestCase):
             "export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
             "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
         host_obj["f1_1"][0].command(
-            "for size in 1 128 256 512 1024 4096;do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 160 -R {} >> /tmp/ib_bw_$size.txt;sleep 5;done".format(server_ip_address.rstrip()), timeout=300)
+            "for size in 1 128 256 512 1024 4096;do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 160 -R {} >> /tmp/ib_bw_$size.txt;sleep 5;done".format(server_ip_address.rstrip()), timeout=1200)
 
         # host_obj["f1_1"][0].sudo_command("rmmod funrdma")
         # host_obj["f1_0"][0].sudo_command("rmmod funrdma")
@@ -355,7 +355,7 @@ class IBWriteLat(FunTestCase):
         # Start ib_write_bw server on F1_0 host
         host_obj["f1_0"][0].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
                                         "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["f1_0"][0].start_bg_process(command="sh -c 'for size in 1 128 256 512 1024 4096;do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R;sleep 2;done'", timeout=300)
+        host_obj["f1_0"][0].start_bg_process(command="sh -c 'for size in 1 128 256 512 1024 4096;do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R;sleep 2;done'", timeout=500)
         server_interface_name = host_obj["f1_0"][0].command(
             "ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
 
@@ -368,7 +368,7 @@ class IBWriteLat(FunTestCase):
             "export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
             "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
         host_obj["f1_1"][0].command(
-            "for size in 1 128 256 512 1024 4096;do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R {} >> /tmp/ib_lat_$size.txt;sleep 5;done".format(server_ip_address.rstrip()), timeout=300)
+            "for size in 1 128 256 512 1024 4096;do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R {} >> /tmp/ib_lat_$size.txt;sleep 5;done".format(server_ip_address.rstrip()), timeout=500)
 
         host_obj["f1_1"][0].sudo_command("rmmod funrdma")
         host_obj["f1_0"][0].sudo_command("rmmod funrdma")
