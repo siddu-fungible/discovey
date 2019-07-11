@@ -991,15 +991,15 @@ class MetricParser():
                 self.metrics['input_max_duration'] = value_json.get('max_duration', -1)
                 self.metrics['input_duration'] = value_json.get('duration', -1)
                 self.metrics['input_num_flows'] = value_json.get('num_flows', -1)
-                self.metrics['output_num_ops'] = value_json.get('num_ops', -1)
+                self.metrics['input_num_ops'] = value_json.get('num_ops', -1)
+                self.metrics['input_warm_up'] = value_json.get('warm_up', -1)
 
                 if model_name == "SoakFlowsBusyLoop10usecs":
-                    self.metrics['output_busy_loops_value'] = value_json.get('value', -1)
-                    self.metrics['output_busy_loops_value_unit'] = value_json.get('unit', 'op')
+                    key = 'output_busy_loops_value'
                 elif model_name == "SoakFlowsMemcpy1MBNonCoh":
-                    self.metrics['output_dma_memcpy_value'] = value_json.get('value', -1)
-                    self.metrics['output_dma_memcpy_value_unit'] = value_json.get('unit', 'op')
+                    key = 'output_dma_memcpy_value'
 
+                self.set_value_metrics(value_json=value_json, key=key, default=-1)
                 self.status = RESULTS["PASSED"]
                 d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
                 self.result["data"].append(d)

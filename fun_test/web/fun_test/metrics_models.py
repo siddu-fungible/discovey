@@ -2754,12 +2754,11 @@ class SoakFlowsBusyLoop10usecs(models.Model):
     input_max_duration = models.FloatField(verbose_name='maximum duration', default=-1)
     input_duration = models.FloatField(verbose_name='duration', default=-1)
     input_num_flows = models.FloatField(verbose_name='Number of flows', default=-1)
+    input_num_ops = models.FloatField(verbose_name='Number of operations', default=-1)
+    input_warm_up = models.FloatField(verbose_name="warm up", default=-1)
 
     output_busy_loops_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
-    output_num_ops = models.IntegerField(verbose_name="number of operations per second", default=-1)
-
-    output_busy_loops_value_unit = models.TextField(default=PerfUnit.UNIT_OP)
-    output_num_ops_unit = models.TextField(default=PerfUnit.UNIT_NUMBER)
+    output_busy_loops_value_unit = models.TextField(default=PerfUnit.UNIT_OPS)
 
     def __str__(self):
         return (str(self.__dict__))
@@ -2781,12 +2780,11 @@ class SoakFlowsMemcpy1MBNonCoh(models.Model):
     input_max_duration = models.FloatField(verbose_name='maximum duration', default=-1)
     input_duration = models.FloatField(verbose_name='duration', default=-1)
     input_num_flows = models.FloatField(verbose_name='Number of flows', default=-1)
+    input_num_ops = models.FloatField(verbose_name='Number of operations', default=-1)
+    input_warm_up = models.FloatField(verbose_name="warm up", default=-1)
 
     output_dma_memcpy_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
-    output_num_ops = models.IntegerField(verbose_name="number of operations per second", default=-1)
-
-    output_dma_memcpy_value_unit = models.TextField(default=PerfUnit.UNIT_OP)
-    output_num_ops_unit = models.TextField(default=PerfUnit.UNIT_NUMBER)
+    output_dma_memcpy_value_unit = models.TextField(default=PerfUnit.UNIT_OPS)
 
     def __str__(self):
         return (str(self.__dict__))

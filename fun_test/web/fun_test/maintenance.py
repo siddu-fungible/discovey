@@ -640,7 +640,7 @@ if __name__ == "__main__":
 
         metric_id = LastMetricId.get_next_id()
         positive = True
-        y1_axis_title = 'op'
+        y1_axis_title = PerfUnit.UNIT_OPS
         owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"
         source = 'https://github.com/fungible-inc/FunOS/blob/79f82e7a330220295afbaf5b3b28bf9296915131/tests/soak_flows_test.c'
         platform = FunPlatform.F1
@@ -648,7 +648,7 @@ if __name__ == "__main__":
         inputs = {"input_name": input_name,
                   "input_platform": "F1"}
         output = {"name": output_field,
-                  "unit": PerfUnit.UNIT_OP,
+                  "unit": PerfUnit.UNIT_OPS,
                   "min": 0,
                   "max": -1}
 
