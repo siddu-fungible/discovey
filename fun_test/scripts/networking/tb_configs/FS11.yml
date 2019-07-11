@@ -69,6 +69,27 @@ hu:
         #- ipv4_addr: 53.1.1.254
         #  mac_addr: 00:f1:1d:ad:00:3e
 
+hu_vm1_ul:
+  hostname: poc-server-05-vm-01
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  pci_info: pci_0000_d8_01_0
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f8:
+            mac_addr: 00:de:ad:be:ef:51
+            ipv4_addr: 53.1.1.8
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 20.1.1.0/24
+          nexthop: 53.1.1.254
+        - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.254
+        - prefix: 54.1.1.0/24
+          nexthop: 53.1.1.254
+
 hu2:
   hostname: poc-server-10
   username: localadmin
@@ -108,6 +129,27 @@ hu2:
 #        - prefix: 53.1.1.0/24
 #          nexthop: 53.1.9.254
 
+hu2_vm1_ul:
+  hostname: poc-server-10-vm-01
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  pci_info: pci_0000_d8_01_0
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f0:
+            mac_addr: 00:de:ad:be:ef:61
+            ipv4_addr: 53.1.1.18
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 20.1.1.0/24
+          nexthop: 53.1.1.254
+        - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.254
+        - prefix: 54.1.1.0/24
+          nexthop: 53.1.1.254
+
 hu3:
   hostname: poc-server-08
   username: localadmin
@@ -130,6 +172,23 @@ hu3:
       #  - ipv4_addr: 54.1.1.253
       #    mac_addr: 00:f1:1d:ad:00:3e
 
+hu3_vm1_ul:
+  hostname: poc-server-08-vm-01
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  pci_info: pci_0000_d8_01_0
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f8:
+            mac_addr: 00:de:ad:be:ef:51
+            ipv4_addr: 54.1.1.8
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 53.1.1.0/24
+          nexthop: 54.1.1.254
+
 hu4:
   hostname: poc-server-09
   username: localadmin
@@ -151,3 +210,20 @@ hu4:
       #arps:
       #  - ipv4_addr: 54.1.1.253
       #    mac_addr: 00:f1:1d:ad:00:3e
+
+hu4_vm1_ul:
+  hostname: poc-server-09-vm-01
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  pci_info: pci_0000_d8_01_0
+  namespaces:
+    default:
+      interfaces:
+        - hu3-f8:
+            mac_addr: 00:de:ad:be:ef:61
+            ipv4_addr: 54.1.1.18
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 53.1.1.0/24
+          nexthop: 54.1.1.254
