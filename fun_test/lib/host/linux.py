@@ -2063,9 +2063,9 @@ class Linux(object, ToDictMixin):
         while not host_is_up and not max_reboot_timer.is_expired() and not fun_test.closed:
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
-                if ping_result:
-                    max_reboot_timer = FunTimer(max_time=30)
-                    fun_test.log("Lowered max_reboot_timer as ping is working")
+                # if ping_result:  # TODO: Experimenting this on fs-11
+                #    max_reboot_timer = FunTimer(max_time=30)
+                #    fun_test.log("Lowered max_reboot_timer as ping is working")
             if ping_result or not service_host:
                 try:
                     fun_test.log("Attempting SSH")
