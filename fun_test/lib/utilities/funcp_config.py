@@ -517,12 +517,13 @@ class FunControlPlaneBringup:
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(ips)),
+                fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(dest_ips[ips])),
                                        "Ensure valid vlan ip address")
                 if from_vlan:
-                    command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()], ips)
+                    command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()],
+                                                                   dest_ips[ips])
                 else:
-                    command = "sudo ping -c 5 -i %s %s " % (interval, ips)
+                    command = "sudo ping -c 5 -i %s %s " % (interval, dest_ips[ips])
                 output = linux_obj.command(command, timeout=30)
                 m = re.search(r'(\d+)%\s+packet\s+loss', output)
                 if m:
@@ -1076,13 +1077,13 @@ class FunControlPlaneBringup:
             if int(expected) == int(actual):
                 result = True
             else:
-                delta = expected * tolerance_in_percent
+                delta = expected * float(tolerance_in_percent)
                 lower_limit = expected - delta
                 upper_limit = expected + delta
 
-                fun_test.simple_assert(expression=(lower_limit <= actual >= upper_limit),
-                                       message="Assert with tolerance failed Expected: %d Actual: %d Delta: %d "
-                                               "Tolerance: %d percent" % (expected, actual, delta,
+                fun_test.simple_assert(expression=(lower_limit <= actual <= upper_limit),
+                                       message="Assert with tolerance failed Expected: %s Actual: %s Delta: %s "
+                                               "Tolerance: %s percent" % (expected, actual, delta,
                                                                           tolerance_in_percent))
                 result = True
         except Exception as ex:
