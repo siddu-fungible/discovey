@@ -297,3 +297,68 @@ def check_come_health(storage_controller):
     except Exception as ex:
         fun_test.critical(ex.message)
     return result
+
+
+def collect_resource_bam_stats(storage_controller, output_file, interval=10, count=3, threaded=False,
+                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+    output = False
+    column_headers = ["Field Name", "Counters"]
+
+    # If threaded is enabled
+    if threaded:
+        global resource_bam_stats_thread_stop_status
+        resource_bam_stats_thread_stop_status[storage_controller] = False
+    try:
+        with open(output_file, 'a') as f:
+            timer = FunTimer(max_time=interval * count)
+            while not timer.is_expired():
+                lines = []
+                dpcsh_result = storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                fun_test.simple_assert(dpcsh_result["status"], "Pulling Resource BAM Stats")
+                if dpcsh_result["data"] is not None:
+                    resource_bam_stats = dpcsh_result["data"]
+                else:
+                    resource_bam_stats = {}
+
+                table_data = build_simple_table(data=resource_bam_stats, column_headers=column_headers)
+                lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                lines.append(table_data.get_string())
+                lines.append("\n\n")
+                f.writelines(lines)
+                if threaded and resource_bam_stats_thread_stop_status[storage_controller]:
+                    fun_test.log("I was asked to stop....So I'm exiting now...")
+                    break
+                fun_test.sleep("for the next iteration - resource bam stats collection", seconds=interval)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def get_stats_diff(initial_stats, final_stats, stats_list=[]):
+    result = {}
+    try:
+        if stats_list:
+            for stat in stats_list:
+                fun_test.simple_assert(stat in final_stats, "Stat %s not present in new stats" % stat)
+                if (stat in initial_stats) and (initial_stats[stat] is not None):
+                    result[stat] = int(final_stats[stat]) - int(initial_stats[stat])
+                else:
+                    result[stat] = int(final_stats[stat])
+        else:
+            for key, val in final_stats.iteritems():
+                if isinstance(val, dict):
+                    result[key] = get_stats_diff(initial_stats=initial_stats[key], final_stats=final_stats[key])
+                elif key in initial_stats:
+                    try:
+                        result[key] = int(final_stats[key]) - int(initial_stats[key])
+                    except TypeError:
+                        result[key] = None
+                else:
+                    try:
+                        result[key] = int(final_stats[key])
+                    except TypeError:
+                        result[key] = None
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result

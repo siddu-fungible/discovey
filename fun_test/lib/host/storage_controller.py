@@ -1,9 +1,10 @@
 from lib.host.dpcsh_client import DpcshClient
+from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
 
 
-class StorageController(DpcshClient):
+class StorageController(DpcshClient, NetworkController):
     TIMEOUT = 2
 
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
