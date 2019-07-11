@@ -282,7 +282,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         end_host_tmp_dir = "/tmp/"
         lsv_uuid = test_case_info['lsv_uuid']
 
-        end_host.flush_cache_mem()
+        end_host.flush_cache_mem(timeout=120)
         init_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
 
         table_rows = []
