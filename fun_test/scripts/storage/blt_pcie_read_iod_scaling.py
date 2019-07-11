@@ -72,6 +72,34 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
+def create_large_blt(storage_controller, blt_args, timeout):
+    # peek storage
+    max_capacity = 0
+    select_drive_id = None
+    resp = storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives", command_duration=timeout)
+    fun_test.simple_assert(resp["status"], "peek storage")
+    drive_info = resp["data"]
+    for drive in drive_info:
+        if drive_info[drive]["capacity_bytes"] > max_capacity:
+            select_drive_id = drive
+            max_capacity = drive_info[drive]["capacity_bytes"]
+    fun_test.simple_assert(select_drive_id, message="Ensure atleast one drive is present and selected")
+    blt_args["capacity"] = max_capacity
+    blt_args["capacity"] = blt_args["capacity"] - blt_args["capacity"] % blt_args["block_size"]
+    blt_args["drive_uuid"] = select_drive_id
+    uuid = utils.generate_uuid()
+    fun_test.test_assert(storage_controller.create_volume(capacity=blt_args["capacity"],
+                                                          type=blt_args["type"],
+                                                          block_size=blt_args["block_size"],
+                                                          name=blt_args["name"],
+                                                          uuid=uuid,
+                                                          drive_uuid=select_drive_id,
+                                                          command_duration=timeout),
+                         message="Create Thin Block Vol with Size: {}, on Drive id: {}".format(blt_args["capacity"],
+                                                                                               select_drive_id))
+    return uuid
+
+
 class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -221,16 +249,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.test_assert(install_sysstat, "Sysstat installation")
                 fun_test.shared_variables["sysstat_install"] = True
 
-            self.thin_uuid = utils.generate_uuid()
-            fun_test.shared_variables["thin_uuid"] = self.thin_uuid
-            command_result = self.storage_controller.create_thin_block_volume(
-                capacity=self.blt_details["capacity"],
-                block_size=self.blt_details["block_size"],
-                name=self.blt_details["name"],
-                uuid=self.thin_uuid,
-                command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
+            fun_test.shared_variables["thin_uuid"] = create_large_blt(self.storage_controller, self.blt_details,
+                                                                      self.command_timeout)
 
             # Create the controller
             self.ctrlr_uuid = utils.generate_uuid()
@@ -245,16 +265,16 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
                                  format(self.ctrlr_uuid))
 
-            fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
+            fun_test.shared_variables["blt"]["thin_uuid"] = fun_test.shared_variables["thin_uuid"]
 
             # Attach controller
             command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                                 vol_uuid=self.thin_uuid,
+                                                                                 vol_uuid=fun_test.shared_variables["thin_uuid"],
                                                                                  ns_id=self.blt_details["ns_id"],
                                                                                  command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}".
-                                 format(self.thin_uuid, self.ctrlr_uuid))
+                                 format(fun_test.shared_variables["thin_uuid"], self.ctrlr_uuid))
             set_syslog_level(self.storage_controller, log_level=2)
 
             # Checking that the above created BLT volume is visible to the end host
@@ -345,7 +365,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     fio_job_iodepth = 64
                 elif combo == "(8, 16)":
                     fio_job_iodepth = 128
-                self.fio_cmd_args["runtime"] = self.optimum_run_time if fio_job_iodepth in self.optimum_iodepth_list else self.default_run_time
+                self.fio_cmd_args[
+                    "runtime"] = self.optimum_run_time if fio_job_iodepth in self.optimum_iodepth_list else self.default_run_time
                 self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 10
                 self.end_host.sudo_command("sync && echo 3 > /proc/sys/vm/drop_caches")
                 fun_test.log("Running FIO...")
