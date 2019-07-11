@@ -45,7 +45,7 @@ class ScriptSetup(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
-        b = topology_helper.get_expanded_topology()
+        # b = topology_helper.get_expanded_topology()
 
 
     def cleanup(self):
@@ -151,11 +151,12 @@ class NicEmulation(FunTestCase):
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
         get_ethtool_on_hu_host(funeth_obj)
 
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
-        get_ethtool_on_hu_host(funeth_obj)
+        if fs_name == "fs-alibaba-demo":
+            tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
+            get_ethtool_on_hu_host(funeth_obj)
 
     def cleanup(self):
         pass
