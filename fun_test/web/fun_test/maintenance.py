@@ -10,7 +10,6 @@ from web.fun_test.metrics_models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
-
 if __name__ == "__main_channel_parall__":
     internal_chart_names = ["channel_parall_performance_4_8_16", "channel_parall_performance_1000"]
     base_line_date = datetime(year=2019, month=6, day=8, minute=0, hour=0, second=0)
@@ -406,12 +405,12 @@ if __name__ == "__main__lsv_charts_update":
             data_sets["output"]['name'] = 'output_read_write_iops'
         else:
             data_sets['output']['name'] = 'output_read_write_bandwidth'
-            
+
         data_sets_json = json.dumps([data_sets])
         chart.data_sets = data_sets_json
         chart.save()
-        
-if __name__=="__main__inspur_random_read_write_iodepth_vol":
+
+if __name__ == "__main__inspur_random_read_write_iodepth_vol":
     internal_chart_names = ["inspur_single_f1_host", "inspur_single_f1_host_6"]
     fio_job_names = ["inspur_8k_random_read_write_iodepth_8_vol_4", "inspur_8k_random_read_write_iodepth_16_vol_4",
                      "inspur_8k_random_read_write_iodepth_32_vol_4", "inspur_8k_random_read_write_iodepth_64_vol_4",
@@ -507,7 +506,7 @@ if __name__ == "__main_durable_volume_ec__":
             if one_data_set['name'] == '8':
                 data_sets_list.remove(one_data_set)
                 one_data_set['name'] = '128'
-                one_data_set['inputs']['input_fio_job_name'] =\
+                one_data_set['inputs']['input_fio_job_name'] = \
                     one_data_set['inputs']['input_fio_job_name'].replace('8', '128')
                 data_sets_list.append(one_data_set)
                 break
@@ -532,7 +531,7 @@ if __name__ == "__main_durable_volume_ec__":
         chart.data_sets = data_sets
         chart.save()
 
-if __name__=="__main_container_data_sets__":
+if __name__ == "__main_container_data_sets__":
     entries = MetricChart.objects.all()
     leafCount = 0
     modelCount = 0
@@ -581,24 +580,24 @@ if __name__ == "__main_companion_charts__":
             one_data_set["filters"] = [{"name": 1, "model_name": "BltVolumePerformance", "filter": {
                 "input_fio_job_name": "inspur_8k_random_read_write_iodepth_1_vol_8",
                 "input_platform": FunPlatform.F1}},
-                                      {"name": 8, "model_name": "BltVolumePerformance", "filter": {
-                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_8_vol_8",
-                                          "input_platform": FunPlatform.F1}},
-                                      {"name": 16, "model_name": "BltVolumePerformance", "filter": {
-                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_16_vol_8",
-                                          "input_platform": FunPlatform.F1}},
-                                      {"name": 32, "model_name": "BltVolumePerformance", "filter": {
-                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_32_vol_8",
-                                          "input_platform": FunPlatform.F1}},
-                                      {"name": 64, "model_name": "BltVolumePerformance", "filter": {
-                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_64_vol_8",
-                                          "input_platform": FunPlatform.F1}},
-                                      {"name": 128, "model_name": "BltVolumePerformance", "filter": {
-                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_128_vol_8",
-                                          "input_platform": FunPlatform.F1}},
-                                      {"name": 256, "model_name": "BltVolumePerformance", "filter": {
-                                          "input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_vol_8",
-                                          "input_platform": FunPlatform.F1}}]
+                                       {"name": 8, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_8_vol_8",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 16, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_16_vol_8",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 32, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_32_vol_8",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 64, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_64_vol_8",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 128, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_128_vol_8",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 256, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_vol_8",
+                                           "input_platform": FunPlatform.F1}}]
             one_data_set["output_field"] = output_name
             data_sets.append(one_data_set)
         print json.dumps(data_sets)
@@ -612,3 +611,67 @@ if __name__ == "__main_companion_charts__":
             chart.save()
         print "added chart id: {}", format(chart_id)
     print "added companion charts"
+
+if __name__ == "__main__":
+    internal_chart_names = ['soak_flows_busy_loop_10usecs', 'soak_flows_dma_memcpy_test_1MB']
+    for internal_chart_name in internal_chart_names:
+        one_data_set = {}
+        data_sets = []
+        if internal_chart_name == "soak_flows_busy_loop_10usecs":
+            chart_name = "Busy Loops 10usecs"
+            input_name = "busy_loop_10usecs"
+            one_data_set["name"] = "10usecs busy loop on a VP"
+            model_name = "SoakFlowsBusyLoop10usecs"
+            description = "Maximum number of ops across the entire chip, an op being a 10usecs busy loop on a VP." \
+                          " Ideally, with 200 VPs, one would expect 20Kops. The real number is much lower though," \
+                          " because not all VP participate, and because of overhead, so a reasonable expected number" \
+                          " is 7Kops"
+            output_field = "output_busy_loops_value"
+        else:
+            chart_name = "Soak Flows Busy Loop 10usecs"
+            input_name = internal_chart_name
+            one_data_set["name"] = "1MB non-coherent DMA memcpy"
+            model_name = "SoakFlowsMemcpy1MBNonCoh"
+            description = "Maximum number of ops across the entire chip, an op being a 1MB non-coherent DMA memcpy." \
+                          " Ideally, the HBM bandwidth is 4Tb/s, but we are doing a read and a write, so one would" \
+                          " expect 2Tb/8Mb = 250Kops. There may be other limiting factors though."
+            output_field = "output_dma_memcpy_value"
+
+
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        y1_axis_title = PerfUnit.UNIT_OPS
+        owner_info = "Bertrand Serlet (bertrand.serlet@fungible.com)"
+        source = 'https://github.com/fungible-inc/FunOS/blob/79f82e7a330220295afbaf5b3b28bf9296915131/tests/soak_flows_test.c'
+        platform = FunPlatform.F1
+
+        inputs = {"input_name": input_name,
+                  "input_platform": "F1"}
+        output = {"name": output_field,
+                  "unit": PerfUnit.UNIT_OPS,
+                  "min": 0,
+                  "max": -1,
+                  "expected": -1,
+                  "reference": -1}
+
+        one_data_set["inputs"] = inputs
+        one_data_set['output'] = output
+
+        data_sets.append(one_data_set)
+
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print data_sets
+        print ("Metric id: {}".format(metric_id))
