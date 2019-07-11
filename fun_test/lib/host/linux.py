@@ -2616,12 +2616,12 @@ class Linux(object, ToDictMixin):
         return file_info
 
     @fun_test.safe
-    def flush_cache_mem(self):
+    def flush_cache_mem(self, timeout=60):
         flush_cmd = """
         sync; echo 1 > /proc/sys/vm/drop_caches; 
         sync; echo 2 > /proc/sys/vm/drop_caches; 
         sync; echo 3 > /proc/sys/vm/drop_caches"""
-        self.sudo_command(flush_cmd)
+        self.sudo_command(flush_cmd, timeout=timeout)
 
     def mpstat(self, cpu_list=None, numa_node=None, interval=5, count=2, background=True,
                output_file="/tmp/mpstat.out"):
