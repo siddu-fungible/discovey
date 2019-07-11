@@ -190,7 +190,6 @@ class Bmc(Linux):
         return True
 
     def ensure_come_is_up(self, come, max_wait_time=240, power_cycle=True):
-        come_up = False
         come_up = come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=self._get_ipmi_details(), power_cycle=power_cycle)
         return come_up
 
