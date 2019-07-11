@@ -113,8 +113,8 @@
       "cab03-qa-01": "x16",
       "cab03-qa-02": "x16"
     },
-         "nu_host":["cab03-qa-03"],
-         "hu_host":["cab03-qa-02", "cab03-qa-01"],
+          "nu_host":{"cab03-qa-03":"30.1.1.2"},
+         "hu_host":{"cab03-qa-02":"19.1.1.2", "cab03-qa-01":"18.1.1.2"},
          "nu_host_data_ip":["30.1.1.2"],
          "hu_host_data_ip_f1_0":["18.1.1.2"],
          "hu_host_data_ip_f1_1":["19.1.1.2"],
