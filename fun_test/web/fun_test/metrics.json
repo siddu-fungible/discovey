@@ -326,55 +326,270 @@
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "juniper_NU_VP_NU_FWD_NFCP",
-                    "label": "Basic FWD",
+                    "name": "teramarks_customer_juniper_old",
+                    "label": "Old",
                     "children": [
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
-                        "label": "Throughput"
+                        "metric_model_name": "MetricContainer",
+                        "name": "juniper_NU_VP_NU_FWD_NFCP",
+                        "label": "Basic FWD",
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                            "label": "Packets per sec"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                            "label": "Latency - Full Load"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
+                            "label": "Latency - Half Load"
+                          }
+                        ]
                       },
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
-                        "label": "Packets per sec"
+                        "metric_model_name": "MetricContainer",
+                        "name": "juniper_NU_LE_VP_NU_FW",
+                        "label": "Flow Based Firewall, HBM",
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_output_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_output_pps",
+                            "label": "Packets per sec"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
+                            "label": "Latency - Full Load"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
+                            "label": "Latency - Half Load"
+                          }
+                        ]
                       },
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
-                        "label": "Latency - Full Load"
+                        "metric_model_name": "MetricContainer",
+                        "name": "juniper_NU_LE_VP_NU_FW_DDR",
+                        "label": "Flow Based Firewall, DDR",
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_DDR_output_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_DDR_output_pps",
+                            "label": "Packets per sec"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_DDR_output_latency_avg",
+                            "label": "Latency - Full Load"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_NU_LE_VP_NU_FW_DDR_output_half_load_latency_avg",
+                            "label": "Latency - Half Load"
+                          }
+                        ]
                       },
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_half_load_latency_avg",
-                        "label": "Latency - Half Load"
-                      }
-                    ]
-                  },
-                  {
-                    "metric_model_name": "MetricContainer",
-                    "name": "juniper_NU_LE_VP_NU_FW",
-                    "label": "Flow Based Firewall, HBM",
-                    "children": [
-                      {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_output_throughput",
-                        "label": "Throughput"
+                        "metric_model_name": "MetricContainer",
+                        "name": "juniper_ipsec",
+                        "label": "Crypto",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_ipsec_crypto_single_tunnel",
+                            "label": "Single Tunnel",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperCryptoTunnelPerformance",
+                                "name": "juniper_crypto_single_tunnel_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperCryptoTunnelPerformance",
+                                "name": "juniper_crypto_single_tunnel_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_ipsec_crypto_multi_tunnel",
+                            "label": "Multi Tunnel",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperCryptoTunnelPerformance",
+                                "name": "juniper_crypto_multi_tunnel_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperCryptoTunnelPerformance",
+                                "name": "juniper_crypto_multi_tunnel_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          }
+                        ]
                       },
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_output_pps",
-                        "label": "Packets per sec"
+                        "metric_model_name": "MetricContainer",
+                        "name": "juniper_ipsec_encryption",
+                        "label": "IPSEC - Encryption",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_ipsec_enc_single_tunnel",
+                            "label": "Single Tunnel",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                                "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
+                                "name": "juniper_ipsec_enc_single_tunnel_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_ipsec_enc_multi_tunnel",
+                            "label": "Multi Tunnel",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                                "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
+                                "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          }
+                        ]
                       },
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
-                        "label": "Latency - Full Load"
+                        "metric_model_name": "MetricContainer",
+                        "name": "juniper_ipsec_decryption",
+                        "label": "IPSEC - Decryption",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_ipsec_dec_single_tunnel",
+                            "label": "Single Tunnel",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                                "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
+                                "name": "juniper_ipsec_dec_single_tunnel_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_ipsec_dec_multi_tunnel",
+                            "label": "Multi Tunnel",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                                "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
+                                "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          }
+                        ]
                       },
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_output_half_load_latency_avg",
-                        "label": "Latency - Half Load"
+                        "metric_model_name": "MetricContainer",
+                        "name": "juniper_tls",
+                        "label": "TLS",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_tls_1tunnel",
+                            "label": "1 Tunnel(s)",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperTlsTunnelPerformance",
+                                "name": "juniper_tls_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperTlsTunnelPerformance",
+                                "name": "juniper_tls_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_tls_32tunnel",
+                            "label": "32 Tunnel(s)",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperTlsTunnelPerformance",
+                                "name": "juniper_tls_32_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperTlsTunnelPerformance",
+                                "name": "juniper_tls_32_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "juniper_tls_64tunnel",
+                            "label": "64 Tunnel(s)",
+                            "children": [
+                              {
+                                "metric_model_name": "JuniperTlsTunnelPerformance",
+                                "name": "juniper_tls_64_output_throughput",
+                                "label": "Throughput"
+                              },
+                              {
+                                "metric_model_name": "JuniperTlsTunnelPerformance",
+                                "name": "juniper_tls_64_output_pps",
+                                "label": "Packets per sec"
+                              }
+                            ]
+                          }
+                        ]
                       }
                     ]
                   }
@@ -390,6 +605,12 @@
                 "children": []
               }
             ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "alibaba_rdma",
+            "label": "RDMA",
+            "reference": true
           }
         ]
       },
@@ -2551,209 +2772,58 @@
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "juniper_NU_LE_VP_NU_FW_DDR",
-                    "label": "Flow Based Firewall, DDR",
+                    "name": "teramarks_customer_juniper_l4_firewall_flow",
+                    "label": "L4 Firewall Flow",
                     "children": [
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_throughput",
-                        "label": "Throughput"
+                        "metric_model_name": "MetricContainer",
+                        "name": "l4_firewall_flow_4m_flows",
+                        "label": "4M Flows",
+                        "children": []
                       },
                       {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_pps",
-                        "label": "Packets per sec"
-                      },
-                      {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_latency_avg",
-                        "label": "Latency - Full Load"
-                      },
-                      {
-                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
-                        "name": "juniper_NU_LE_VP_NU_FW_DDR_output_half_load_latency_avg",
-                        "label": "Latency - Half Load"
+                        "metric_model_name": "MetricContainer",
+                        "name": "l4_firewall_flow_128m_flows",
+                        "label": "128M Flows",
+                        "children": []
                       }
                     ]
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "juniper_ipsec",
-                    "label": "Crypto",
-                    "children": [
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_crypto_single_tunnel",
-                        "label": "Single Tunnel",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "name": "juniper_crypto_single_tunnel_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "name": "juniper_crypto_single_tunnel_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_crypto_multi_tunnel",
-                        "label": "Multi Tunnel",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "name": "juniper_crypto_multi_tunnel_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperCryptoTunnelPerformance",
-                            "name": "juniper_crypto_multi_tunnel_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "metric_model_name": "MetricContainer",
-                    "name": "juniper_ipsec_encryption",
+                    "name": "teramarks_customer_juniper_ipsec_encryption",
                     "label": "IPSEC - Encryption",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_enc_single_tunnel",
+                        "name": "ipsec_encryption_single_tunnel",
                         "label": "Single Tunnel",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                            "name": "juniper_ipsec_enc_single_tunnel_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperIpsecEncryptionSingleTunnelPerformance",
-                            "name": "juniper_ipsec_enc_single_tunnel_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
+                        "children": []
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_enc_multi_tunnel",
+                        "name": "ipsec_encryption_multi_tunnel",
                         "label": "Multi Tunnel",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                            "name": "juniper_ipsec_enc_multi_tunnel_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperIpsecEncryptionMultiTunnelPerformance",
-                            "name": "juniper_ipsec_enc_multi_tunnel_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
+                        "children": []
                       }
                     ]
                   },
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "juniper_ipsec_decryption",
+                    "name": "teramarks_customer_juniper_ipsec_decryption",
                     "label": "IPSEC - Decryption",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_dec_single_tunnel",
+                        "name": "ipsec_decryption_single_tunnel",
                         "label": "Single Tunnel",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                            "name": "juniper_ipsec_dec_single_tunnel_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperIpsecDecryptionSingleTunnelPerformance",
-                            "name": "juniper_ipsec_dec_single_tunnel_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
+                        "children": []
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "juniper_ipsec_dec_multi_tunnel",
+                        "name": "ipsec_decryption_multi_tunnel",
                         "label": "Multi Tunnel",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                            "name": "juniper_ipsec_dec_multi_tunnel_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperIpsecDecryptionMultiTunnelPerformance",
-                            "name": "juniper_ipsec_dec_multi_tunnel_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "metric_model_name": "MetricContainer",
-                    "name": "juniper_tls",
-                    "label": "TLS",
-                    "children": [
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_tls_1tunnel",
-                        "label": "1 Tunnel(s)",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "name": "juniper_tls_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "name": "juniper_tls_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_tls_32tunnel",
-                        "label": "32 Tunnel(s)",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "name": "juniper_tls_32_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "name": "juniper_tls_32_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "juniper_tls_64tunnel",
-                        "label": "64 Tunnel(s)",
-                        "children": [
-                          {
-                            "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "name": "juniper_tls_64_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "JuniperTlsTunnelPerformance",
-                            "name": "juniper_tls_64_output_pps",
-                            "label": "Packets per sec"
-                          }
-                        ]
+                        "children": []
                       }
                     ]
                   }
@@ -3200,6 +3270,76 @@
                     "name": "HU_HU_FCP_2f1_teramark",
                     "label": "Host->Host FCP (2 F1s)",
                     "reference": true
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "alibaba_rdma",
+                    "label": "RDMA",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "alibaba_bmv",
+                    "label": "BMV",
+                    "children": [
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_bmv_storage",
+                        "label": "Storage",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_bmv_storage_local_ssd",
+                            "label": "Local-SSD",
+                            "children": []
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_bmv_storage_remote_ssd",
+                            "label": "Remote-SSD",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_bmv_networking",
+                        "label": "Networking",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_bmv_networking_underlay",
+                            "label": "Underlay",
+                            "children": []
+                          },
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_bmv_networking_overlay",
+                            "label": "Overlay",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "alibaba_fcp",
+                    "label": "FCP",
+                    "children": [
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_fcp_interrack",
+                        "label": "Interrack",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_fcp_intrarack",
+                        "label": "Intrarack",
+                        "children": []
+                      }
+                    ]
                   }
                 ]
               }
