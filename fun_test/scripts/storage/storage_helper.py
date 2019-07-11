@@ -22,6 +22,7 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "fio_job_name"]
 
 vp_stats_thread_stop_status = {}
+resource_bam_stats_thread_stop_status = {}
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
                  read_iops,

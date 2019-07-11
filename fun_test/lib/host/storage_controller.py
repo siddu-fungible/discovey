@@ -4,12 +4,11 @@ from lib.system.fun_test import *
 from lib.system import utils
 
 
-class StorageController(DpcshClient, NetworkController):
+class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
-        super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port,
-                                                verbose=verbose)
+        DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
 
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
