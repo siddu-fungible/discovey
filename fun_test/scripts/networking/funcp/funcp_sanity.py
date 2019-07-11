@@ -219,8 +219,10 @@ class TestScp(FunTestCase):
         result = True
         for nu_host in self.server_key["fs"][fs_name]["nu_host"]:
             for hu_host in self.server_key["fs"][fs_name]["hu_host"]:
-                result &= test_scp(source=nu_host, dest=hu_host)
-                result &= test_scp(source=hu_host, dest=nu_host)
+                nu_ip = self.server_key["fs"][fs_name]["nu_host"][nu_host]
+                hu_ip = self.server_key["fs"][fs_name]["hu_host"][hu_host]
+                result &= test_scp(source_host=nu_host, dest_host=hu_host, source_data_ip=nu_ip, dest_data_ip=hu_ip)
+                result &= test_scp(source_host=hu_host, dest_host=nu_host, source_data_ip=hu_ip, dest_data_ip=nu_ip)
 
         fun_test.test_assert(expression=result, message="SCP result")
 

@@ -497,25 +497,32 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
     return result
 
 
-def test_scp(source, dest):
+def test_scp(source_host, dest_host, source_data_ip, dest_data_ip):
+    result = True
     host_file = ASSET_DIR + "/hosts.json"
     all_hosts_specs = parse_file_to_json(file_name=host_file)
-    source_host_spec = all_hosts_specs[source]
-    dest_host_spec = all_hosts_specs[dest]
+    source_host_spec = all_hosts_specs[source_host]
+    dest_host_spec = all_hosts_specs[dest_host]
     source_linux = Linux(host_ip=source_host_spec["host_ip"], ssh_username=source_host_spec["ssh_username"],
                          ssh_password=source_host_spec["ssh_password"])
     dest_linux = Linux(host_ip=dest_host_spec["host_ip"], ssh_username=dest_host_spec["ssh_username"],
                          ssh_password=dest_host_spec["ssh_password"])
+    dest_linux.sudo_command("cd ~; rm -fr scp_test;")
+    dest_linux.command("cd ~; mkdir scp_test;")
+    dest_linux.disconnect()
     source_linux.sudo_command("cd ~; rm -fr scp_test")
     source_linux.command("cd ~; mkdir scp_test; cd ~/scp_test")
     source_linux.dd(input_file="/dev/zero", output_file="scp_test_file_source.txt", count=1048576, block_size=100,
                     timeout=120, sudo=True)
-    dest_linux.sudo_command("cd ~; rm -fr scp_test;")
-    dest_linux.command("cd ~; mkdir scp_test; cd ~/scp_test")
-    result = source_linux.scp(source_file_path="~/scp_test/scp_test_file_source.txt",
-                              target_ip=dest_host_spec["host_ip"],target_file_path="~/scp_test",
-                              target_username=dest_host_spec["ssh_username"],
-                              target_password=dest_host_spec["ssh_password"])
+    source_linux.scp(source_file_path="~/scp_test/scp_test_file_source.txt",
+                     target_ip=dest_data_ip, target_file_path="~/scp_test/scp_test_file_dest.txt",
+                     target_username=dest_host_spec["ssh_username"],
+                     target_password=dest_host_spec["ssh_password"])
+
+    op = dest_linux.command("ls ~/scp_test")
+    if "scp_test_file_dest.txt" not in op:
+        result = False
+    critical_log(expression=result, message="SCP successful over data IP from %s to %s" % (source_host, dest_host))
     return result
 
 
