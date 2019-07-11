@@ -300,8 +300,7 @@ def check_come_health(storage_controller):
     return result
 
 
-def collect_resource_bam_stats(storage_controller, output_file, interval=10, count=3, threaded=False,
-                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+def collect_resource_bam_stats(storage_controller, output_file, interval=10, count=3, threaded=False):
     output = False
     column_headers = ["Field Name", "Counters"]
 
@@ -314,10 +313,9 @@ def collect_resource_bam_stats(storage_controller, output_file, interval=10, cou
             timer = FunTimer(max_time=interval * count)
             while not timer.is_expired():
                 lines = []
-                dpcsh_result = storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
-                fun_test.simple_assert(dpcsh_result["status"], "Pulling Resource BAM Stats")
-                if dpcsh_result["data"] is not None:
-                    resource_bam_stats = dpcsh_result["data"]
+                dpcsh_result = storage_controller.peek_resource_bam_stats()
+                if dpcsh_result is not None:
+                    resource_bam_stats = dpcsh_result
                 else:
                     resource_bam_stats = {}
 
