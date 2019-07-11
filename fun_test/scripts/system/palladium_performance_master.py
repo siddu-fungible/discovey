@@ -1585,7 +1585,7 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestLsvPerformanceTc())
     myscript.add_test_case(VoltestLsv4PerformanceTc())
     myscript.add_test_case(ChannelParallPerformanceTc())
-    # myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
-    # myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
+    myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
+    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
 
     myscript.run()
