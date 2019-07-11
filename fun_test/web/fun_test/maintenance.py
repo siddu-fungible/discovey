@@ -650,7 +650,9 @@ if __name__ == "__main__":
         output = {"name": output_field,
                   "unit": PerfUnit.UNIT_OPS,
                   "min": 0,
-                  "max": -1}
+                  "max": -1,
+                  "expected": -1,
+                  "reference": -1}
 
         one_data_set["inputs"] = inputs
         one_data_set['output'] = output
