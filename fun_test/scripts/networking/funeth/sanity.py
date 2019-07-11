@@ -45,7 +45,6 @@ try:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
-        hu_host_vm = (inputs.get('hu_vm', 0) == 1)  # HU host runs VMs or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -54,7 +53,6 @@ try:
         enable_tso = True  # default True
         control_plane = False  # default False
         update_driver = True  # default True
-        hu_host_vm = False  # default False
         fundrv_branch = None
         fundrv_commit = None
         funsdk_branch = None
@@ -91,11 +89,11 @@ def setup_nu_host(funeth_obj):
             linux_obj.host_ip))
 
 
-def setup_hu_host(funeth_obj, update_driver=True, ul_vm=False, ol_vm=False):
+def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        if ul_vm or ol_vm:
+        if is_vm:
             lspci_result = funeth_obj.lspci(check_pcie_width=False)
         else:
             lspci_result = funeth_obj.lspci(check_pcie_width=True)
@@ -105,30 +103,12 @@ def setup_hu_host(funeth_obj, update_driver=True, ul_vm=False, ol_vm=False):
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    if ul_vm or ol_vm:
+    if is_vm:
         load_result = funeth_obj.load(sriov=0)
     else:
         load_result = funeth_obj.load(sriov=NUM_VFs)
     fun_test.test_assert(load_result, 'Load funeth driver.')
-
-    targets = []
-    if ul_vm or ol_vm:
-        if ul_vm:
-            targets.extend(funeth_obj.hu_ul_vms)
-        elif ol_vm:
-            targets.extend(funeth_obj.hu_ol_vms)
-        # Start VMs
-        for h in targets:
-            vm_pci_info = tb_configs.get_vm_pci_info(h)
-            vm_hostname = tb_configs.get_hostname(h)
-            linux_obj = funeth_obj.linux_obj_dict[tb_configs.get_vm_host(h)]
-            linux_obj.sudo_command('virsh nodedev-dettach {}'.format(vm_pci_info))
-            linux_obj.sudo_command('virsh start {}'.format(vm_hostname))
-        fun_test.sleep("Sleeping for a while waiting for VMs booting up", seconds=15)
-    else:
-        targets.extend(funeth_obj.hu_hosts)
-
-    for hu in targets:
+    for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if enable_tso:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=False),
@@ -220,10 +200,6 @@ class FunethSanity(FunTestScript):
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
-
-        # HU VM - must follow HU host setup
-        if hu_host_vm:
-            setup_hu_host(funeth_obj, update_driver=update_driver, ul_vm=True, ol_vm=True)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
