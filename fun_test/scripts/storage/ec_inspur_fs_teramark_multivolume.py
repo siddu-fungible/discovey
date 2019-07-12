@@ -6,6 +6,7 @@ import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
+from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 
 '''
@@ -1158,32 +1159,35 @@ class ECVolumeLevelTestcase(FunTestCase):
                     iodepth, initial_stats[iodepth]))
 
                 # Stats diff between final stats and initial stats
-                resultant_stats[iodepth]["peek_psw_global_stats"] = get_stats_diff(
-                    final_stats=final_stats[iodepth]["peek_psw_global_stats"],
-                    initial_stats=initial_stats[iodepth]["peek_psw_global_stats"])
+                resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["peek_psw_global_stats"],
+                    old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
                 fun_test.log(
                     "\nStat difference for peek_psw_global_stats at the end iteration for iodepth {} is: \n{}\n".format(
-                        iodepth, resultant_stats[iodepth]["peek_psw_global_stats"]))
+                        iodepth, json.dumps(resultant_stats[iodepth]["peek_psw_global_stats"], indent=2)))
 
-                resultant_stats[iodepth]["peek_vp_packets"] = get_stats_diff(
-                    final_stats=final_stats[iodepth]["peek_vp_packets"],
-                    initial_stats=initial_stats[iodepth]["peek_vp_packets"])
+                resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["peek_vp_packets"],
+                    old_stats=initial_stats[iodepth]["peek_vp_packets"])
                 fun_test.log("\nStat difference for peek_vp_packets at the end iteration for iodepth {} is: \n{}\n".format(
-                    iodepth, resultant_stats[iodepth]["peek_vp_packets"]))
+                    iodepth, json.dumps(resultant_stats[iodepth]["peek_vp_packets"], indent=2)))
 
-                resultant_stats[iodepth]["cdu"] = get_stats_diff(
-                    final_stats=final_stats[iodepth]["cdu"], initial_stats=initial_stats[iodepth]["cdu"])
+                resultant_stats[iodepth]["cdu"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
                 fun_test.log("\nStat difference for cdu at the end iteration for iodepth {} is: \n{}\n".format(
-                    iodepth, resultant_stats[iodepth]["cdu"]))
+                    iodepth, json.dumps(resultant_stats[iodepth]["cdu"], indent=2)))
 
-                resultant_stats[iodepth]["ca"] = get_stats_diff(
-                    final_stats=final_stats[iodepth]["ca"], initial_stats=initial_stats[iodepth]["ca"])
+                resultant_stats[iodepth]["ca"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
                 fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
-                    iodepth, resultant_stats[iodepth]["ca"]))
+                    iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
 
-                aggregate_resultant_stats[iodepth] = get_stats_diff(
-                    final_stats=final_stats[iodepth], initial_stats=initial_stats[iodepth])
-                fun_test.log("\nAggregate Stats diff: \n{}\n".format(aggregate_resultant_stats[iodepth]))
+                '''
+                aggregate_resultant_stats[iodepth] = get_diff_stats(
+                    new_stats=final_stats[iodepth], old_stats=initial_stats[iodepth])
+                fun_test.log("\nAggregate Stats diff: \n{}\n".format(json.dumps(aggregate_resultant_stats[iodepth],
+                                                                                indent=2)))
+                '''
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
