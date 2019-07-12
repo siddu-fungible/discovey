@@ -119,8 +119,13 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
         else:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        if is_vm:
+            cpu_list = Funeth.CPU_LIST_VM
+        else:
+            cpu_list = Funeth.CPU_LIST_HOST
         fun_test.test_assert(
-            funeth_obj.enable_multi_queues(hu, num_queues_tx=NUM_QUEUES_TX, num_queues_rx=NUM_QUEUES_RX),
+            funeth_obj.enable_multi_queues(hu, num_queues_tx=NUM_QUEUES_TX, num_queues_rx=NUM_QUEUES_RX,
+                                           cpu_list=cpu_list),
             'Enable HU host {} funeth interfaces {} Tx queues, {} Rx queues.'.format(linux_obj.host_ip, NUM_QUEUES_TX,
                                                                                      NUM_QUEUES_RX))
         fun_test.test_assert(
@@ -146,7 +151,6 @@ def start_vm(funeth_obj_hosts, funeth_obj_vms):
                 cmds = ['virsh nodedev-dettach {}'.format(pci_info), 'virsh start {}'.format(vm_name)]
                 for cmd in cmds:
                     linux_obj.sudo_command(cmd)
-    fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
 
 
 class FunethSanity(FunTestScript):
@@ -208,19 +212,15 @@ class FunethSanity(FunTestScript):
             # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
-        tb_config_obj_ul_vm = tb_configs.TBConfigs('{}_ul_vm'.format(TB))
         funeth_obj = Funeth(tb_config_obj,
                             fundrv_branch=fundrv_branch,
                             funsdk_branch=funsdk_branch,
                             fundrv_commit=fundrv_commit,
                             funsdk_commit=funsdk_commit)
-        funeth_obj_ul_vm = Funeth(tb_config_obj_ul_vm,
-                                  fundrv_branch=fundrv_branch,
-                                  funsdk_branch=funsdk_branch,
-                                  fundrv_commit=fundrv_commit,
-                                  funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
+
+        if hu_host_vm:
+
 
         # NU host
         setup_nu_host(funeth_obj)
@@ -231,9 +231,28 @@ class FunethSanity(FunTestScript):
 
         # HU host VMs
         if hu_host_vm:
+            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ul'))
+            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ol'))
+            funeth_obj_ul_vm = Funeth(tb_config_obj_ul_vm,
+                                      fundrv_branch=fundrv_branch,
+                                      funsdk_branch=funsdk_branch,
+                                      fundrv_commit=fundrv_commit,
+                                      funsdk_commit=funsdk_commit)
+            funeth_obj_ol_vm = Funeth(tb_config_obj_ol_vm,
+                                      fundrv_branch=fundrv_branch,
+                                      funsdk_branch=funsdk_branch,
+                                      fundrv_commit=fundrv_commit,
+                                      funsdk_commit=funsdk_commit)
+            fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
+            fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
+
             # start VMs
             start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ul_vm)
+            start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ol_vm)
+            fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
+
             setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
@@ -254,14 +273,18 @@ class FunethSanity(FunTestScript):
             topology = fun_test.shared_variables["topology"]
             topology.cleanup()
             try:
-                funeth_obj = fun_test.shared_variables['funeth_obj']
-                funeth_obj.cleanup_workspace()
-                fun_test.log("Collect syslog from HU hosts")
-                funeth_obj.collect_syslog()
-                fun_test.log("Collect dmesg from HU hosts")
-                funeth_obj.collect_dmesg()
-                fun_test.log("Unload funeth driver")
-                funeth_obj.unload()
+                funeth_obj_descs = ['funeth_obj', ]
+                if hu_host_vm:
+                    funeth_obj_descs.extend(['funeth_obj_ul_vm', 'funeth_obj_ul_vm'])
+                for funeth_obj_desc in funeth_obj_descs:
+                    funeth_obj = fun_test.shared_variables[funeth_obj_desc]
+                    funeth_obj.cleanup_workspace()
+                    fun_test.log("Collect syslog from HU hosts")
+                    funeth_obj.collect_syslog()
+                    fun_test.log("Collect dmesg from HU hosts")
+                    funeth_obj.collect_dmesg()
+                    fun_test.log("Unload funeth driver")
+                    funeth_obj.unload()
             except:
                 hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                 for host_ip, host_info in hu_hosts.iteritems():

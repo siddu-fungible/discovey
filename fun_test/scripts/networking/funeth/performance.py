@@ -25,12 +25,20 @@ else:
 
 TIMESTAMP = get_data_collection_time()
 
-FLOW_TYPES_DICT = OrderedDict([  # TODO: add FCP
-    ('HU_NU_NFCP', 'HU -> NU non-FCP'), # test case id: 1xxxx
-    ('NU_HU_NFCP', 'NU -> HU non-FCP'), # test case id: 2xxxx
-    ('HU_HU_NFCP', 'HU -> HU non-FCP'), # test case id: 3xxxx
-    ('HU_HU_FCP', 'HU -> HU FCP'),      # test case id: 4xxxx
-#    ('NU2HU_NFCP', 'NU <-> HU non-FCP'),  # TODO: enable it
+FLOW_TYPES_DICT = OrderedDict([
+    ('HU_NU_NFCP',              'HU -> NU non-FCP'),  # test case id: 1xxxx
+    ('NU_HU_NFCP',              'NU -> HU non-FCP'),  # test case id: 2xxxx
+    ('HU_HU_NFCP',              'HU -> HU non-FCP under 1 F1'),  # test case id: 3xxxx
+    ('HU_HU_FCP',               'HU -> HU FCP under 2 F1s'),      # test case id: 4xxxx
+    ('HU_HU_NFCP_2F1',          'HU -> HU non-FCP under 2 F1s'),  # test case id: 5xxxx
+    ('HU_NU_NFCP_UL_VM',        'HU Underlay VM -> NU non-FCP'),  # test case id: 6xxxx
+    ('NU_HU_NFCP_UL_VM',        'NU -> HU Underlay VM non-FCP'),  # test case id: 7xxxx
+    ('HU_HU_NFCP_UL_VM',        'HU -> HU Underlay VM non-FCP under 1 F1'),  # test case id: 8xxxx
+    ('HU_HU_FCP_UL_VM',         'HU -> HU Underlay VM FCP under 2 F1s'),  # test case id: 9xxxx
+    ('HU_HU_NFCP_2F1_UL_VM',    'HU -> HU Underlay VM non-FCP under 2 F1s'),  # test case id: 10xxxx
+    ('HU_HU_NFCP_OL_VM',        'HU -> HU Overlay VM non-FCP under 2 F1s'),  # test case id: 11xxxx
+    ('HU_HU_FCP_OL_VM',         'HU -> HU Overlay VM FCP under 2 F1s'),  # test case id: 12xxxx
+    # TODO: Enable bi-direction
 ])
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
@@ -86,8 +94,8 @@ class FunethPerformance(sanity.FunethSanity):
 
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx')
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx')
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.Funeth.CPU_LIST_HOST)
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.Funeth.CPU_LIST_HOST)
 
         for nu in funeth_obj.nu_hosts:
             linux_obj = funeth_obj.linux_obj_dict[nu]
@@ -96,6 +104,34 @@ class FunethPerformance(sanity.FunethSanity):
         netperf_manager_obj = nm.NetperfManager(linux_objs)
         fun_test.shared_variables['netperf_manager_obj'] = netperf_manager_obj
         fun_test.test_assert(netperf_manager_obj.setup(), 'Set up for throughput/latency test')
+
+        # HU host is VM
+        if sanity.hu_host_vm:
+            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ul'))
+            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ol'))
+            funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
+            funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
+            fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
+            fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
+
+            fun_test.log("Configure irq affinity in underlay VMs")
+            for hu in funeth_obj_ul_vm.hu_hosts:
+                funeth_obj_ul_vm.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.Funeth.CPU_LIST_VM)
+                funeth_obj_ul_vm.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.Funeth.CPU_LIST_VM)
+
+            fun_test.log("Configure irq affinity in overlay VMs")
+            for hu in funeth_obj_ol_vm.hu_hosts:
+                funeth_obj_ol_vm.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.Funeth.CPU_LIST_VM)
+                funeth_obj_ol_vm.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.Funeth.CPU_LIST_VM)
+
+            linux_objs_ul_vm = funeth_obj_ul_vm.linux_obj_dict.values()
+            linux_objs_ol_vm = funeth_obj_ol_vm.linux_obj_dict.values()
+            netperf_manager_obj_ul_vm = nm.NetperfManager(linux_objs_ul_vm)
+            netperf_manager_obj_ol_vm = nm.NetperfManager(linux_objs_ol_vm)
+            fun_test.shared_variables['netperf_manager_obj_ul_vm'] = netperf_manager_obj_ul_vm
+            fun_test.shared_variables['netperf_manager_obj_ol_vm'] = netperf_manager_obj_ol_vm
+            fun_test.test_assert(netperf_manager_obj_ul_vm.setup(), 'Set up for throughput/latency test with underlay VMs')
+            fun_test.test_assert(netperf_manager_obj_ol_vm.setup(), 'Set up for throughput/latency test with overlay VMs')
 
         network_controller_objs = []
         network_controller_objs.append(NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
@@ -158,31 +194,37 @@ class FunethPerformanceBase(FunTestCase):
         pass
 
     def cleanup(self):
-        if TB == 'SN2':
-            interval = 60
-        else:
-            interval = 5
-        #fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
+        pass
 
     def _run(self, flow_type, tool='netperf', protocol='tcp', num_flows=1, num_hosts=1, frame_size=1500, duration=30):
-        funeth_obj = fun_test.shared_variables['funeth_obj']
-        perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
+        # Underlay VMs
+        if 'UL_VM' in flow_type.upper():
+            funeth_obj = fun_test.shared_variables['funeth_obj_ul_vm']
+            perf_manager_obj = fun_test.shared_variables['netperf_manager_obj_ul_vm']
+        # Overlay VMs
+        elif 'OL_VM' in flow_type.upper():
+            funeth_obj = fun_test.shared_variables['funeth_obj_ol_vm']
+            perf_manager_obj = fun_test.shared_variables['netperf_manager_obj_ol_vm']
+        # Hosts
+        else:
+            funeth_obj = fun_test.shared_variables['funeth_obj']
+            perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
 
         host_pairs = []
-        bi_dir = False
+        bi_dir = False  # TODO: enable bi-direction
         if flow_type.startswith('HU_HU'):  # HU --> HU
             # TODO: handle exception if hu_hosts len is 1
             num_hu_hosts = len(funeth_obj.hu_hosts)
-            if flow_type == 'HU_HU_NFCP':
-                for i in range(0, num_hu_hosts, 2):
-                    host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1]])
+            if flow_type.startswith('HU_HU_NFCP_2F1') or flow_type.startswith('HU_HU_FCP'):  # Under 2 F1s
+                for i in range(0, num_hu_hosts/2):
+                    host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+2]])
                     if num_flows == 1:
                         break
                     elif len(host_pairs) == num_hosts:
                         break
-            elif flow_type == 'HU_HU_FCP':
-                for i in range(0, num_hu_hosts/2):
-                    host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i + 2]])
+            elif flow_type.startswith('HU_HU_NFCP'):  # Under 1 F1
+                for i in range(0, num_hu_hosts, 2):
+                    host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+1]])
                     if num_flows == 1:
                         break
                     elif len(host_pairs) == num_hosts:
@@ -372,14 +414,19 @@ if __name__ == "__main__":
                     sub_id_num_flows = sub_id_frame_size
                     for num_flows in NUM_FLOWS:
                         for num_hosts in NUM_HOSTS:
-                            summary = "{}: performance test by {}, with {}, {}-byte packets and {} flows {} {} PCIe hosts".format(
+                            if 'VM' in flow_type.upper():
+                                host_desc = 'VMs'
+                            else:
+                                host_desc = 'hosts'
+                            summary = "{}: performance test by {}, with {}, {}-byte packets and {} flows {} {} PCIe {}".format(
                                 FLOW_TYPES_DICT.get(flow_type),
                                 tool,
                                 protocol,
                                 frame_size,
                                 num_flows,
                                 'from' if flow_type.startswith('HU') else 'to',
-                                num_hosts
+                                num_hosts,
+                                host_desc
                             )
                             steps = summary
                             #print sub_id_num_flows, summary
@@ -387,7 +434,7 @@ if __name__ == "__main__":
                                 sub_id_num_flows, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size)
                             )
                             sub_id_num_flows += 1
-                            if num_flows == 1 or flow_type == 'HU_HU_NFCP':
+                            if num_flows == 1 or flow_type in ('HU_HU_NFCP', 'HU_HU_NFCP_UL_VM'):  # Under 1 F1
                                 break
                     sub_id_frame_size += 10
                 sub_id_protocol += 100
@@ -397,6 +444,3 @@ if __name__ == "__main__":
         ts.add_test_case(tc())
     ts.run()
 
-    with open(RESULT_FILE) as f:
-        r = json.load(f)
-        fun_test.log('Performance results:\n{}'.format(pprint.pformat(r)))
