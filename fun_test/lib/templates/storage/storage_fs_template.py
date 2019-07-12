@@ -146,8 +146,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         # ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
 
         if "use_lsv" in ec_info and ec_info["use_lsv"]:
-            fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
-                         "rounding that to the nearest 8KB value")
+            fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by {}% and "
+                         "rounding that to the nearest 4KB value".format(int(ec_info["lsv_pct"] * 100)))
             ec_info["volume_capacity"][num]["jvol"] = ec_info["lsv_chunk_size"] * ec_info["volume_block"]["lsv"] * \
                                                       ec_info["jvol_size_multiplier"]
 
