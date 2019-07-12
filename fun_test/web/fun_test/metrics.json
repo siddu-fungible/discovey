@@ -3245,7 +3245,77 @@
                     "metric_model_name": "MetricContainer",
                     "name": "alibaba_rdma",
                     "label": "RDMA",
-                    "children": []
+                    "children": [
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "alibaba_rdma_host",
+                        "label": "Host -> Host (2F1s)",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "alibaba_rdma_host_host_2F1s_ib_write",
+                            "label": "IB_Write",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "alibaba_rdma_host_host_2F1s_ib_write_latency",
+                                "label": "Latency",
+                                "children": [
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "ib_write_latency_size_1b",
+                                    "label": "Size_1B",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "ib_write_latency_size_128b",
+                                    "label": "Size_128B",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "ib_write_latency_size_256b",
+                                    "label": "Size_256B",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "ib_write_latency_size_512b",
+                                    "label": "Size_512B",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "ib_write_latency_size_1024b",
+                                    "label": "Size_1024B",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "ib_write_latency_size_4096b",
+                                    "label": "Size_4096B",
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "rdma_ib_write_bw",
+                                    "label": "Bandwidth",
+                                    "children": []
+                              },
+                              {
+                                    "metric_model_name": "AlibabaRdmaPerformance",
+                                    "name": "rdma_ib_msg_rate",
+                                    "label": "Packet rate",
+                                    "children": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
                   },
                   {
                     "metric_model_name": "MetricContainer",
