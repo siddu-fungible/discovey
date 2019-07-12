@@ -203,11 +203,9 @@ class RdmaTemplate(object):
         return result
 
     def start_test(self, client_obj, server_obj, set_paths=False, cmd_args=None):
-        result_dict = OrderedDict()
+        result_dict = {}
         try:
             fun_test.log_section("Run traffic from %s client -----> %s server" % (str(client_obj), str(server_obj)))
-            result_dict['client'] = str(client_obj)
-            result_dict['server'] = str(server_obj)
             port_no = RdmaHelper.generate_random_port_no()
             server_obj.rdma_server_port = port_no
             client_obj.rdma_port = port_no
@@ -224,6 +222,8 @@ class RdmaTemplate(object):
                                        server_ip=client_obj.server_ip, **cmd_args)
             output = client_obj.command(command=cmd, timeout=90)
             result_dict = self._parse_rdma_output(output=output)
+            result_dict.update({'client': str(client_obj)})
+            result_dict.update({'server': str(server_obj)})
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_dict
@@ -376,7 +376,7 @@ class RdmaHelper(object):
                         servers = self.get_list_of_servers()
                         for client in clients:
                             for server in servers:
-                                client_server_map[client] = server
+                                client_server_map[client['host_ip']] = server['host_ip']
         except Exception as ex:
             fun_test.critical(str(ex))
         return client_server_map

@@ -17,9 +17,6 @@
         "hu_interface_ip": "42.1.1.2"
       }
     ],
-    "client_server_map": {
-      "cab02-qa-05": "cab02-qa-08"
-    },
     "size_in_bytes": 1,
     "duration_in_secs": 10,
     "iterations": 100,
