@@ -3,8 +3,8 @@ from lib.utilities.funcp_config import *
 from scripts.networking.funcp.helper import *
 from scripts.networking.funeth.sanity import Funeth
 from lib.topology.topology_helper import TopologyHelper
-from web.fun_test.analytics_models_helper import ModelHelper
-from fun_global import PerfUnit
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
+from fun_global import PerfUnit, FunPlatform
 
 def add_to_data_base(value_dict):
     unit_dict = {
@@ -25,8 +25,8 @@ def add_to_data_base(value_dict):
     }
     # This dictionary is just for reference
     default_value_dict = {
-    # "date_time": get_data_collection_time(),
-    # "platform": FunPlatform.F1,
+    "date_time": get_data_collection_time(),
+    "platform": FunPlatform.F1,
     "version": fun_test.get_version(),
     "test": "RDMA_test",
     "operation": "read",
@@ -48,7 +48,8 @@ def add_to_data_base(value_dict):
     "read_msg_rate": 100,
     "write_msg_rate": 100
     }
-
+    
+    value_dict["date_time"]  = get_data_collection_time()
     model_name = "AlibabaRdmaPerformance"
     status = fun_test.PASSED
     try:
