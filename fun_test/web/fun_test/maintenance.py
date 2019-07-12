@@ -688,7 +688,7 @@ if __name__ == "__main__":
     owner_info = "Manu K S  (manu.ks@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/93cbceb27e5be0dfb3b79325c813d36789c5fe3d/fun_test" \
              "/scripts/networking/funcp/rdma_write_perf.py"
-    positive = True
+    positive = False
     y1_axis_title = PerfUnit.UNIT_USECS
     platform = FunPlatform.F1
 
