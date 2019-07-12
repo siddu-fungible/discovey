@@ -116,25 +116,50 @@ class RdmaTemplate(object):
         cmd = None
         try:
             if self.test_type == IB_WRITE_BANDWIDTH_TEST:
+                if '-c' in kwargs:
+                    self.connection_type = kwargs['-c']
+
+                if '-D' in kwargs and client_cmd:
+                    self.duration = kwargs['-D']
+
+                if '-s' in kwargs:
+                    self.size = kwargs['-s']
+
                 cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (self.test_type, self.connection_type, ibv_device,
                                                              port_num, self.size)
                 for key, val in kwargs.items():
                     if type(val) == list:
                         for op in val:
-                            cmd += "%s" % op
+                            if op not in cmd:
+                                cmd += "%s" % op
                     else:
-                        cmd += "%s %s " % (key, val)
+                        if key not in cmd:
+                            cmd += "%s %s " % (key, val)
                 if client_cmd:
                     cmd += "-D %d %s " % (self.duration, server_ip)
             elif self.test_type == IB_WRITE_LATENCY_TEST:
+                if '-c' in kwargs:
+                    self.connection_type = kwargs['-c']
+
+                if '-s' in kwargs:
+                    self.size = kwargs['-s']
+
+                if '-I' in kwargs:
+                    self.inline_size = kwargs['-I']
+
+                if '-n' in kwargs and client_cmd:
+                    self.iterations = kwargs['-n']
+
                 cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (self.test_type, self.connection_type, ibv_device,
                                                                    port_num, self.inline_size, self.size)
                 for key, val in kwargs.items():
                     if type(val) == list:
                         for op in val:
-                            cmd += "%s" % op
+                            if op not in cmd:
+                                cmd += "%s" % op
                     else:
-                        cmd += "%s %s " % (key, val)
+                        if key not in cmd:
+                            cmd += "%s %s " % (key, val)
                 if client_cmd:
                     cmd += "-n %d %s " % (self.iterations, server_ip)
             fun_test.log('Cmd Formed: %s' % cmd)
@@ -178,9 +203,11 @@ class RdmaTemplate(object):
         return result
 
     def start_test(self, client_obj, server_obj, set_paths=False, cmd_args=None):
-        result_dict = {}
+        result_dict = OrderedDict()
         try:
             fun_test.log_section("Run traffic from %s client -----> %s server" % (str(client_obj), str(server_obj)))
+            result_dict['client'] = str(client_obj)
+            result_dict['server'] = str(server_obj)
             port_no = RdmaHelper.generate_random_port_no()
             server_obj.rdma_server_port = port_no
             client_obj.rdma_port = port_no
@@ -197,8 +224,6 @@ class RdmaTemplate(object):
                                        server_ip=client_obj.server_ip, **cmd_args)
             output = client_obj.command(command=cmd, timeout=90)
             result_dict = self._parse_rdma_output(output=output)
-            result_dict['client'] = str(client_obj)
-            result_dict['server'] = str(server_obj)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_dict
@@ -343,8 +368,15 @@ class RdmaHelper(object):
         try:
             for key in self.config:
                 if key == self.scenario_type:
-                    client_server_map = self.config[key]['client_server_map']
-                    break
+                    if 'client_server_map' in self.config[key]:
+                        client_server_map = self.config[key]['client_server_map']
+                        break
+                    else:
+                        clients = self.get_list_of_clients()
+                        servers = self.get_list_of_servers()
+                        for client in clients:
+                            for server in servers:
+                                client_server_map[client] = server
         except Exception as ex:
             fun_test.critical(str(ex))
         return client_server_map
