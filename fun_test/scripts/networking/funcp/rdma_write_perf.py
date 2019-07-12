@@ -23,6 +23,7 @@ def add_to_data_base(value_dict):
         "read_msg_rate_unit": PerfUnit.UNIT_MPPS,
         "write_msg_rate_unit": PerfUnit.UNIT_MPPS
     }
+    # This dictionary is just for reference
     default_value_dict = {
     # "date_time": get_data_collection_time(),
     # "platform": FunPlatform.F1,
@@ -52,7 +53,7 @@ def add_to_data_base(value_dict):
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
-        generic_helper.set_units(validate=False, **unit_dict)
+        generic_helper.set_units(validate=True, **unit_dict)
         generic_helper.add_entry(**value_dict)
         generic_helper.set_status(status)
         print "used generic helper to add an entry"
