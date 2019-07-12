@@ -114,6 +114,10 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "disable_dsld" in job_inputs:
+            self.disable_dsld = job_inputs["disable_dsld"]
+        else:
+            self.disable_dsld = False
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -165,6 +169,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
                     self.bootargs[i] += " --disable-wu-watchdog"
+                if self.disable_dsld:
+                    self.bootargs[i] += " --disable-dsld"
 
             for dut_index in self.available_dut_indexes:
                 self.topology_helper.set_dut_parameters(dut_index=dut_index,
