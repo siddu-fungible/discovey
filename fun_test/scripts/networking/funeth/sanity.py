@@ -45,6 +45,7 @@ try:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
+        hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -53,6 +54,7 @@ try:
         enable_tso = True  # default True
         control_plane = False  # default False
         update_driver = True  # default True
+        hu_host_vm = False  # default False
         fundrv_branch = None
         fundrv_commit = None
         funsdk_branch = None
@@ -61,6 +63,7 @@ except:
     enable_tso = True
     control_plane = False
     update_driver = True
+    hu_host_vm = False
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
@@ -132,6 +135,20 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
 
+def start_vm(funeth_obj_hosts, funeth_obj_vms):
+    for vm in funeth_obj_vms.hu_hosts:
+        vm_host = funeth_obj_vms.tb_config_obj.get_vm_host(vm)
+        vm_name = funeth_obj_vms.tb_config_obj.get_hostname(vm)  # VM name and VM's hostname are kept same
+        pci_info = funeth_obj_vms.tb_config_obj.get_vm_host_pci_info(vm)
+        for hu in funeth_obj_hosts.hu_hosts:
+            if funeth_obj_hosts.tb_config_obj.get_hostname(hu) == vm_host:
+                linux_obj = funeth_obj_hosts.linux_obj_dict[hu]
+                cmds = ['virsh nodedev-dettach {}'.format(pci_info), 'virsh start {}'.format(vm_name)]
+                for cmd in cmds:
+                    linux_obj.sudo_command(cmd)
+    fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
+
+
 class FunethSanity(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -151,6 +168,7 @@ class FunethSanity(FunTestScript):
         if test_bed_type != 'fs-11':
             fun_test.test_assert(False, 'This test only runs in FS-11.')
         else:
+            TB = 'FS11'
             if control_plane:
                 f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
@@ -190,9 +208,19 @@ class FunethSanity(FunTestScript):
             # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = Funeth(tb_config_obj, fundrv_branch=fundrv_branch, funsdk_branch=funsdk_branch,
-                            fundrv_commit=fundrv_commit, funsdk_commit=funsdk_commit)
+        tb_config_obj_ul_vm = tb_configs.TBConfigs('{}_ul_vm'.format(TB))
+        funeth_obj = Funeth(tb_config_obj,
+                            fundrv_branch=fundrv_branch,
+                            funsdk_branch=funsdk_branch,
+                            fundrv_commit=fundrv_commit,
+                            funsdk_commit=funsdk_commit)
+        funeth_obj_ul_vm = Funeth(tb_config_obj_ul_vm,
+                                  fundrv_branch=fundrv_branch,
+                                  funsdk_branch=funsdk_branch,
+                                  fundrv_commit=fundrv_commit,
+                                  funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
+        fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
 
         # NU host
         setup_nu_host(funeth_obj)
@@ -200,6 +228,12 @@ class FunethSanity(FunTestScript):
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
+
+        # HU host VMs
+        if hu_host_vm:
+            # start VMs
+            start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ul_vm)
+            setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)

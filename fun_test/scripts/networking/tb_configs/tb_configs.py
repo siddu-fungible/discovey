@@ -148,3 +148,9 @@ class TBConfigs:
         if ns is None:
             ns = 'default'
         return self.configs[nu_or_hu]['namespaces'][ns].get('arps', [])
+
+    def get_vm_host(self, vm):
+        return self.configs[vm].get('host')
+
+    def get_vm_host_pci_info(self, vm):
+        return self.configs[vm].get('pci_info')
