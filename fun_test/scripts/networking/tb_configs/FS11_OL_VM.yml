@@ -1,0 +1,142 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# NU host - the keyword must start with "nu"
+nu:
+  hostname: poc-server-06
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  namespaces:
+    default:
+      interfaces:
+        - fpg0:
+            mac_addr: fe:dc:ba:44:66:30
+            ipv4_addr: 20.1.1.1
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 53.1.1.0/24
+          nexthop: 20.1.1.2
+        - prefix: 21.1.1.0/24
+          nexthop: 20.1.1.2
+
+nu2:
+  hostname: poc-server-07
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  namespaces:
+    default:
+      interfaces:
+        - fpg4:
+            mac_addr: fe:dc:ba:44:66:31
+            ipv4_addr: 21.1.1.1
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 53.1.1.0/24
+          nexthop: 21.1.1.2
+        - prefix: 53.1.9.0/24
+          nexthop: 21.1.1.2
+        - prefix: 20.1.1.0/24
+          nexthop: 21.1.1.2
+
+# HU host - the keyword must start with "hu"
+hu:
+  hostname: poc-server-05-vm-02
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  host: poc-server-05
+  pci_info: pci_0000_d8_01_1
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f9:
+            mac_addr: 00:de:ad:be:ef:31
+            ipv4_addr: 50.1.1.8
+            ipv4_netmask: 255.255.255.0
+      #routes:
+      #  - prefix: 20.1.1.0/24
+      #    nexthop: 53.1.1.254
+      #  - prefix: 21.1.1.0/24
+      #    nexthop: 53.1.1.254
+      #  - prefix: 54.1.1.0/24
+      #    nexthop: 53.1.1.254
+      arps:
+        - ipv4_addr: 50.1.2.8
+          mac_addr: 00:de:ad:be:ef:51
+        - ipv4_addr: 50.1.2.9
+          mac_addr: 00:de:ad:be:ef:61
+
+hu2:
+  hostname: poc-server-10-vm-02
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  host: poc-server-10
+  pci_info: pci_0000_d8_01_1
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f9:
+            mac_addr: 00:de:ad:be:ef:41
+            ipv4_addr: 50.1.1.9
+            ipv4_netmask: 255.255.255.0
+      #routes:
+      #  - prefix: 20.1.1.0/24
+      #    nexthop: 53.1.1.254
+      #  - prefix: 21.1.1.0/24
+      #    nexthop: 53.1.1.254
+      #  - prefix: 54.1.1.0/24
+      #    nexthop: 53.1.1.254
+      arps:
+        - ipv4_addr: 50.1.2.8
+          mac_addr: 00:de:ad:be:ef:51
+        - ipv4_addr: 50.1.2.9
+          mac_addr: 00:de:ad:be:ef:61
+
+hu3:
+  hostname: poc-server-08-vm-02
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  host: poc-server-08
+  pci_info: pci_0000_d8_01_1
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f9:
+            mac_addr: 00:de:ad:be:ef:51
+            ipv4_addr: 50.1.2.8
+            ipv4_netmask: 255.255.255.0
+      #routes:
+      #  - prefix: 53.1.1.0/24
+      #    nexthop: 54.1.1.254
+      arps:
+        - ipv4_addr: 50.1.1.8
+          mac_addr: 00:de:ad:be:ef:31
+        - ipv4_addr: 50.1.1.9
+          mac_addr: 00:de:ad:be:ef:41
+
+hu4:
+  hostname: poc-server-09-vm-02
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: ens3
+  host: poc-server-09
+  pci_info: pci_0000_d8_01_1
+  namespaces:
+    default:
+      interfaces:
+        - hu3-f9:
+            mac_addr: 00:de:ad:be:ef:61
+            ipv4_addr: 50.1.2.9
+            ipv4_netmask: 255.255.255.0
+      #routes:
+      #  - prefix: 53.1.1.0/24
+      #    nexthop: 54.1.1.254
+      arps:
+        - ipv4_addr: 50.1.1.8
+          mac_addr: 00:de:ad:be:ef:31
+        - ipv4_addr: 50.1.1.9
+          mac_addr: 00:de:ad:be:ef:41
