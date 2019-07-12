@@ -6,6 +6,7 @@ import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
+from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 
 '''
@@ -465,7 +466,6 @@ class ECVolumeLevelScript(FunTestScript):
                     self.testbed_config["workarounds"]["csr_replay"]:
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
-
             try:
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
@@ -523,7 +523,7 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        # self.topology.cleanup()
+        self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -787,11 +787,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if self.parallel_warm_up:
                     host_clone = {}
                     warmup_thread_id = {}
-                    '''
                     actual_block_size = int(self.warm_up_fio_cmd_args["bs"].strip("k"))
                     aligned_block_size = int((int(actual_block_size / self.num_hosts) + 3) / 4) * 4
                     self.warm_up_fio_cmd_args["bs"] = str(aligned_block_size) + "k"
-                    '''
                     for index, host_name in enumerate(self.host_info):
                         wait_time = self.num_hosts - index
                         host_clone[host_name] = self.host_info[host_name]["handle"].clone()
@@ -861,6 +859,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         fio_result = {}
         fio_output = {}
         aggr_fio_output = {}
+        initial_stats = {}
+        final_stats = {}
+        resultant_stats = {}
+        aggregate_resultant_stats = {}
 
         start_stats = True
 
@@ -872,6 +874,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_cmd_args = {}
             mpstat_pid = {}
             mpstat_artifact_file = {}
+            initial_stats[iodepth] = {}
+            final_stats[iodepth] = {}
+            resultant_stats[iodepth] = {}
+            aggregate_resultant_stats[iodepth] = {}
 
             test_thread_id = {}
             host_clone = {}
@@ -928,7 +934,16 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             row_data_dict["block_size"] = fio_block_size
 
-            # Starting the thread to collect the vp_utils stats for the current iteration
+            # Collecting initial network stats
+            if self.collect_network_stats:
+                initial_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
+                    iodepth, initial_stats[iodepth]))
+
+            # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
                 vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
                 vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
@@ -937,9 +952,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
                                                                 count=int(mpstat_count), threaded=True)
+                resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
+                resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name=resource_bam_post_fix_name)
+                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_resource_bam_stats,
+                                                                     storage_controller=self.storage_controller,
+                                                                     output_file=resource_bam_artifact_file,
+                                                                     interval=self.resource_bam_args["interval"],
+                                                                     count=int(mpstat_count), threaded=True)
             else:
-                fun_test.critical("Not starting the vp_utils stats collection because of lack of interval and count "
-                                  "details")
+                fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
+                                  "interval and count details")
 
             for index, host_name in enumerate(self.host_info):
                 fio_job_args = ""
@@ -1041,6 +1064,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                     global vp_stats_thread_stop_status
                     vp_stats_thread_stop_status[self.storage_controller] = True
                     fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+                # Checking whether the resource bam stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
+                    fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
+                    global resource_bam_stats_thread_stop_status
+                    resource_bam_stats_thread_stop_status[self.storage_controller] = True
+                    fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
@@ -1110,6 +1139,55 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)
+            # Checking whether the resource_bam stats collection thread is still running...If so stopping it...
+            if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
+                fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
+                global resource_bam_stats_thread_stop_status
+                resource_bam_stats_thread_stop_status[self.storage_controller] = True
+                fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+            fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
+            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
+                                        filename=resource_bam_artifact_file)
+
+            # Collecting final network stats and finding diff between final and initial stats
+            if self.collect_network_stats:
+                final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
+                    iodepth, initial_stats[iodepth]))
+
+                # Stats diff between final stats and initial stats
+                resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["peek_psw_global_stats"],
+                    old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
+                fun_test.log(
+                    "\nStat difference for peek_psw_global_stats at the end iteration for iodepth {} is: \n{}\n".format(
+                        iodepth, json.dumps(resultant_stats[iodepth]["peek_psw_global_stats"], indent=2)))
+
+                resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["peek_vp_packets"],
+                    old_stats=initial_stats[iodepth]["peek_vp_packets"])
+                fun_test.log("\nStat difference for peek_vp_packets at the end iteration for iodepth {} is: \n{}\n".format(
+                    iodepth, json.dumps(resultant_stats[iodepth]["peek_vp_packets"], indent=2)))
+
+                resultant_stats[iodepth]["cdu"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
+                fun_test.log("\nStat difference for cdu at the end iteration for iodepth {} is: \n{}\n".format(
+                    iodepth, json.dumps(resultant_stats[iodepth]["cdu"], indent=2)))
+
+                resultant_stats[iodepth]["ca"] = get_diff_stats(
+                    new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
+                fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
+                    iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
+
+                '''
+                aggregate_resultant_stats[iodepth] = get_diff_stats(
+                    new_stats=final_stats[iodepth], old_stats=initial_stats[iodepth])
+                fun_test.log("\nAggregate Stats diff: \n{}\n".format(json.dumps(aggregate_resultant_stats[iodepth],
+                                                                                indent=2)))
+                '''
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
