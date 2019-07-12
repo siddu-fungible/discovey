@@ -186,7 +186,7 @@ class FunControlPlaneBringup:
 
             linux_obj_come.command(command="cd /mnt/keep/")
             linux_obj_come.sudo_command(command="rm -rf FunSDK")
-            git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK")
+            git_pull = linux_obj_come.command("git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK", timeout=120)
             linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
             prepare_docker_output = linux_obj_come.command("./integration_test/emulation/test_system.py --prepare "
                                                            "--docker", timeout=1200)
