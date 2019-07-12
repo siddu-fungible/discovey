@@ -488,26 +488,25 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "dut": "fs-20",
-        "disable_f1_index": 1,
-        "fpg_interface_info": {
-          "0": {
-            "4": {
-              "type": "INTERFACE_TYPE_ETHERNET",
-              "hosts": 1,
-              "host_info": {
-                "name": "poc-server-03"
-              }
-            },
-            "20": {
-              "type": "INTERFACE_TYPE_ETHERNET",
-              "dut_info": {
-                "dut_index": 0,
-                "fpg_interface_info": {
-                  "f1_index": 1,
-                  "interface_index": 4
-                }
-              }
+      "pcie_interface_info": {
+         "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "mktg16"
             }
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
           }
         }
       }
