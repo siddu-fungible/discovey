@@ -1,14 +1,14 @@
 from lib.host.dpcsh_client import DpcshClient
+from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
 
 
-class StorageController(DpcshClient):
+class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
-        super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port,
-                                                verbose=verbose)
+        DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
 
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
@@ -403,6 +403,13 @@ class StorageController(DpcshClient):
         try:
             cmd = ['vp_util']
             return self.json_execute(verb='debug', data=cmd, command_duration=command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+    def peek_resource_bam_stats(self, command_timeout=TIMEOUT):
+        try:
+            cmd = "stats/resource/bam"
+            return self.json_execute(verb="peek", data=cmd, command_duration=command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
 
