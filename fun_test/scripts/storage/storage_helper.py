@@ -315,8 +315,8 @@ def collect_resource_bam_stats(storage_controller, output_file, interval=10, cou
             while not timer.is_expired():
                 lines = []
                 dpcsh_result = storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
-                if dpcsh_result["status"] and dpcsh_result is not None:
-                    resource_bam_stats = dpcsh_result
+                if dpcsh_result["status"] and dpcsh_result["data"] is not None:
+                    resource_bam_stats = dpcsh_result["data"]
                 else:
                     resource_bam_stats = {}
 
