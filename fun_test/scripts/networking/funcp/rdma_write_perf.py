@@ -6,6 +6,7 @@ from lib.topology.topology_helper import TopologyHelper
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from fun_global import PerfUnit, FunPlatform
 
+
 def add_to_data_base(value_dict):
     unit_dict = {
         "read_avg_latency_unit": PerfUnit.UNIT_USECS,
@@ -60,6 +61,7 @@ def add_to_data_base(value_dict):
         print "used generic helper to add an entry"
     except Exception as ex:
         fun_test.critical(str(ex))
+
 
 class ScriptSetup(FunTestScript):
     server_key = {}
@@ -226,7 +228,7 @@ class NicEmulation(FunTestCase):
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
-            test_host_pings(host=host, ips=ping_dict[host], strict=True)
+            test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
     def cleanup(self):
         pass
