@@ -222,27 +222,17 @@ class ECVolumeLevelScript(FunTestScript):
                 host_handle = self.host_info[host_name]["handle"]
                 if self.override_numa_node["override"]:
                     host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    # self.host_numa_cpus[key] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
                     self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
                 else:
-                    # self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
                     self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
                 # Calculating the number of CPUs available in the given numa
-                """self.total_numa_cpus[key] = 0
-                for cpu_group in self.host_numa_cpus[key].split(","):
-                    cpu_range = cpu_group.split("-")
-                    self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-                fun_test.log("Rebooting host: {}".format(key))
-                self.host_handles[key].reboot(non_blocking=True)"""
                 self.host_info[host_name]["total_numa_cpus"] = 0
                 for cpu_group in self.host_info[host_name]["host_numa_cpus"].split(","):
                     cpu_range = cpu_group.split("-")
                     self.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
                 fun_test.log("Rebooting host: {}".format(host_name))
                 host_handle.reboot(non_blocking=True)
-            # fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-            # fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
             fun_test.log("Hosts info: {}".format(self.host_info))
 
             # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
@@ -287,7 +277,6 @@ class ECVolumeLevelScript(FunTestScript):
                                                                    slave_interface_list=slave_interface_list)
                     # Configuring route
                     route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
-                    # self.funcp_obj[index].container_info[container_name].command("hostname")
                     cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
                     route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
                     fun_test.test_assert_expected(expected=0,
@@ -583,15 +572,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             self.f1_ips = fun_test.shared_variables["f1_ips"][0]
             self.host_info = fun_test.shared_variables["host_info"]
-            """
-            self.host_handles = fun_test.shared_variables["host_handles"]
-            self.host_ips = fun_test.shared_variables["host_ips"]
-            self.end_host = self.host_handles[self.host_ips[0]]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
-            self.remote_ip = self.host_ips[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
-            """
             self.num_f1s = fun_test.shared_variables["num_f1s"]
             self.test_network = {}
             self.test_network["f1_loopback_ip"] = self.f1_ips
@@ -1070,6 +1050,43 @@ class ECVolumeLevelTestcase(FunTestCase):
                     global resource_bam_stats_thread_stop_status
                     resource_bam_stats_thread_stop_status[self.storage_controller] = True
                     fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+            finally:
+                # Collecting final network stats and finding diff between final and initial stats
+                if self.collect_network_stats:
+                    final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                    final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                    final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                    final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                    fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
+                        iodepth, initial_stats[iodepth]))
+
+                    # Stats diff between final stats and initial stats
+                    resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["peek_psw_global_stats"],
+                        old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
+                    fun_test.log("\nStat difference for peek_psw_global_stats at the end iteration for iodepth {} is: "
+                                 "\n{}\n".format(iodepth, json.dumps(resultant_stats[iodepth]["peek_psw_global_stats"],
+                                                                     indent=2)))
+                    resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["peek_vp_packets"],
+                        old_stats=initial_stats[iodepth]["peek_vp_packets"])
+                    fun_test.log(
+                        "\nStat difference for peek_vp_packets at the end iteration for iodepth {} is: \n{}\n".format(
+                            iodepth, json.dumps(resultant_stats[iodepth]["peek_vp_packets"], indent=2)))
+                    resultant_stats[iodepth]["cdu"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
+                    fun_test.log("\nStat difference for cdu at the end iteration for iodepth {} is: \n{}\n".format(
+                        iodepth, json.dumps(resultant_stats[iodepth]["cdu"], indent=2)))
+                    resultant_stats[iodepth]["ca"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
+                    fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
+                        iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
+                    '''
+                    aggregate_resultant_stats[iodepth] = get_diff_stats(
+                        new_stats=final_stats[iodepth], old_stats=initial_stats[iodepth])
+                    fun_test.log("\nAggregate Stats diff: \n{}\n".format(json.dumps(aggregate_resultant_stats[iodepth],
+                                                                                    indent=2)))
+                    '''
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
@@ -1148,46 +1165,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=resource_bam_artifact_file)
-
-            # Collecting final network stats and finding diff between final and initial stats
-            if self.collect_network_stats:
-                final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
-                final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
-                final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
-                final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
-                fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
-                    iodepth, initial_stats[iodepth]))
-
-                # Stats diff between final stats and initial stats
-                resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
-                    new_stats=final_stats[iodepth]["peek_psw_global_stats"],
-                    old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
-                fun_test.log(
-                    "\nStat difference for peek_psw_global_stats at the end iteration for iodepth {} is: \n{}\n".format(
-                        iodepth, json.dumps(resultant_stats[iodepth]["peek_psw_global_stats"], indent=2)))
-
-                resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
-                    new_stats=final_stats[iodepth]["peek_vp_packets"],
-                    old_stats=initial_stats[iodepth]["peek_vp_packets"])
-                fun_test.log("\nStat difference for peek_vp_packets at the end iteration for iodepth {} is: \n{}\n".format(
-                    iodepth, json.dumps(resultant_stats[iodepth]["peek_vp_packets"], indent=2)))
-
-                resultant_stats[iodepth]["cdu"] = get_diff_stats(
-                    new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
-                fun_test.log("\nStat difference for cdu at the end iteration for iodepth {} is: \n{}\n".format(
-                    iodepth, json.dumps(resultant_stats[iodepth]["cdu"], indent=2)))
-
-                resultant_stats[iodepth]["ca"] = get_diff_stats(
-                    new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
-                fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
-                    iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
-
-                '''
-                aggregate_resultant_stats[iodepth] = get_diff_stats(
-                    new_stats=final_stats[iodepth], old_stats=initial_stats[iodepth])
-                fun_test.log("\nAggregate Stats diff: \n{}\n".format(json.dumps(aggregate_resultant_stats[iodepth],
-                                                                                indent=2)))
-                '''
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
