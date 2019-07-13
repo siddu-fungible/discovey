@@ -7,7 +7,8 @@
       "host_ip": "poc-server-05-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
-    }
+    },
+    "reboot_time": 600
   },
   "poc-server-01": {
     "host_ip": "poc-server-01",
@@ -428,7 +429,7 @@
     }
   },
       "mktg16": {
-    "host_ip": "mktg16",
+    "host_ip": "10.1.22.135",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {

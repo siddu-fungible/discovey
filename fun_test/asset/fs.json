@@ -95,17 +95,17 @@
   {
     "name": "fs-20",
     "bmc": {
-      "mgmt_ip": "10.1.20.132",
+      "mgmt_ip": "10.1.20.36",
       "mgmt_ssh_username": "sysadmin",
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.21.28",
+      "mgmt_ip": "10.1.20.32",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.20.151",
+      "mgmt_ip": "10.1.20.30",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }

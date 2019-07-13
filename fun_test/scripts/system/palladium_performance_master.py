@@ -65,6 +65,8 @@ IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 VOLTEST_LSV = "qa_voltest_lsv_performance"
 VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
 CHANNEL_PARALL = "qa_channel_parall"
+SOAKFLOWSBUSYLOOP = "qa_soak_flows_busy_loop"
+SOAKFLOWSMEMCPY = "qa_soak_flows_memcpy_non_coh"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -190,7 +192,7 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL]
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAKFLOWSBUSYLOOP, SOAKFLOWSMEMCPY]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1479,6 +1481,7 @@ class VoltestLsvPerformanceTc(PalladiumPerformanceTc):
                               summary="Voltest LSV Performance with numinstance 1",
                               steps="Steps 1")
 
+
 class VoltestLsv4PerformanceTc(PalladiumPerformanceTc):
     tag = VOLTEST_LSV_4
     model = "VoltestLsv4Performance"
@@ -1498,6 +1501,28 @@ class ChannelParallPerformanceTc(PalladiumPerformanceTc):
     def describe(self):
         self.set_test_details(id=58,
                               summary="Channel parall Performance on F1",
+                              steps="Steps 1")
+
+
+class SoakFlowsBusyLoopPerformanceTc(PalladiumPerformanceTc):
+    tag = SOAKFLOWSBUSYLOOP
+    model = "SoakFlowsBusyLoop10usecs"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=59,
+                              summary="soak flows busy loop 10 usecs performance",
+                              steps="Steps 1")
+
+
+class SoakFlowsMemcpy1MbNonCohPerformanceTc(PalladiumPerformanceTc):
+    tag = SOAKFLOWSMEMCPY
+    model = "SoakFlowsMemcpy1MBNonCoh"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=60,
+                              summary="soak flows memcpy 1MB non coh performance",
                               steps="Steps 1")
 
 
@@ -1560,5 +1585,7 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestLsvPerformanceTc())
     myscript.add_test_case(VoltestLsv4PerformanceTc())
     myscript.add_test_case(ChannelParallPerformanceTc())
+    myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
+    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
 
     myscript.run()

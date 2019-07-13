@@ -22,6 +22,7 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "fio_job_name"]
 
 vp_stats_thread_stop_status = {}
+resource_bam_stats_thread_stop_status = {}
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
                  read_iops,
@@ -250,8 +251,8 @@ def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3
             while not timer.is_expired():
                 lines = []
                 dpcsh_result = storage_controller.debug_vp_util(command_timeout=command_timeout)
-                fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                if dpcsh_result["data"] is not None:
+                # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
+                if dpcsh_result["status"] and dpcsh_result["data"] is not None:
                     vp_util = dpcsh_result["data"]
                 else:
                     vp_util = {}
@@ -297,3 +298,38 @@ def check_come_health(storage_controller):
     except Exception as ex:
         fun_test.critical(ex.message)
     return result
+
+
+def collect_resource_bam_stats(storage_controller, output_file, interval=10, count=3, threaded=False,
+                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+    output = False
+    column_headers = ["Field Name", "Counters"]
+
+    # If threaded is enabled
+    if threaded:
+        global resource_bam_stats_thread_stop_status
+        resource_bam_stats_thread_stop_status[storage_controller] = False
+    try:
+        with open(output_file, 'a') as f:
+            timer = FunTimer(max_time=interval * count)
+            while not timer.is_expired():
+                lines = []
+                dpcsh_result = storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                if dpcsh_result["status"] and dpcsh_result["data"] is not None:
+                    resource_bam_stats = dpcsh_result["data"]
+                else:
+                    resource_bam_stats = {}
+
+                table_data = build_simple_table(data=resource_bam_stats, column_headers=column_headers)
+                lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                lines.append(table_data.get_string())
+                lines.append("\n\n")
+                f.writelines(lines)
+                if threaded and resource_bam_stats_thread_stop_status[storage_controller]:
+                    fun_test.log("Resource BAM stats collection was asked to stop....So exiting now...")
+                    break
+                fun_test.sleep("for the next iteration - Resource BAM stats collection", seconds=interval)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output

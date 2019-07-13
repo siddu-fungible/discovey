@@ -67,8 +67,30 @@ class ScriptSetup(FunTestScript):
 
     def cleanup(self):
         fun_test.log("Cleanup")
-        fun_test.shared_variables["topology"].cleanup()
+        # fun_test.shared_variables["topology"].cleanup()
 
+
+class ScriptSetup2(FunTestScript):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(steps="""
+                                  1. BringUP both F1s
+                                  2. Bringup FunCP
+                                  3. Create MPG Interfaces and assign static IPs
+                                  """)
+
+    def setup(self):
+        global funcp_obj, servers_mode, servers_list, fs_name
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        # fs_name = "fs-45"
+        funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
+
+    def cleanup(self):
+        fun_test.log("Cleanup")
+        # fun_test.shared_variables["topology"].cleanup()
 
 class NicEmulation(FunTestCase):
     server_key = {}
@@ -368,7 +390,7 @@ class LoadFunethOnVMs(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs("FS-ALIBABA-DEMO-VM")
         funeth_obj = Funeth(tb_config_obj, ws='/home/localadmin/ws')
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_vm(funeth_obj, update_driver=False)
+        setup_hu_vm(funeth_obj, update_driver=True)
 
     def cleanup(self):
         pass
@@ -592,12 +614,12 @@ class PingTestVmVmSameServer(FunTestCase):
 
 
 if __name__ == '__main__':
-    ts = ScriptSetup()
-    ts.add_test_case(NicEmulation())
-    # ts.add_test_case(CreateNamespaceVMs())
-    ts.add_test_case(StartVMs())
-    ts.add_test_case(LocalNamespace())
-    ts.add_test_case(CheckVMReachability())
+    ts = ScriptSetup2()
+    # ts.add_test_case(NicEmulation())
+    # # ts.add_test_case(CreateNamespaceVMs()) // Dont use this
+    # ts.add_test_case(StartVMs())
+    # ts.add_test_case(LocalNamespace())
+    # ts.add_test_case(CheckVMReachability())
     ts.add_test_case(LoadFunethOnVMs())
     ts.add_test_case(LoadNvmeOnVMs())
     # ts.add_test_case(PingTestVmVmSameServer())

@@ -219,3 +219,18 @@ class MetricLib():
             old_chart.peer_ids = json.dumps([metric_id])
             old_chart.save()
 
+    def update_weights_for_wip(self):
+        charts = MetricChart.objects.filter(metric_model_name="MetricContainer")
+        for container in charts:
+            children = json.loads(container.children)
+            for child in children:
+                chart = MetricChart.objects.get(metric_id=child)
+                if chart and chart.work_in_progress:
+                    container.add_child_weight(child_id=child, weight=0)
+
+
+if __name__ == "__main__":
+    ml = MetricLib()
+    ml.update_weights_for_wip()
+
+

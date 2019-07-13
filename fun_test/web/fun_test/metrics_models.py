@@ -2699,25 +2699,25 @@ class AlibabaRdmaPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_platform = models.TextField(default=FunPlatform.F1)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
-    input_test = models.TextField(verbose_name="Test type")
-    input_operation = models.TextField(verbose_name="operation type")
-    input_size_latency = models.IntegerField(verbose_name="latency size in bytes")
-    input_size_bandwidth = models.IntegerField(verbose_name="bandwidth size in bytes")
-
-    output_read_avg_latency = models.IntegerField(verbose_name="read average latency (usec)")
-    output_write_avg_latency = models.IntegerField(verbose_name="write average latency (usec)")
-    output_read_min_latency = models.IntegerField(verbose_name="read min latency(usec)")
-    output_write_min_latency = models.IntegerField(verbose_name="write min latency (usec)")
-    output_read_max_latency = models.IntegerField(verbose_name="read max latency(usec)")
-    output_write_max_latency = models.IntegerField(verbose_name="write max latency(usec)")
-    output_read_99_latency = models.IntegerField(verbose_name="read 99% latency", default=-1)
-    output_write_99_latency = models.IntegerField(verbose_name="write 99% latency", default=-1)
-    output_read_99_99_latency = models.IntegerField(verbose_name="read 99.99% latency", default=-1)
-    output_write_99_99_latency = models.IntegerField(verbose_name="write 99.99% latency", default=-1)
-    output_read_bandwidth = models.IntegerField(verbose_name="read output bandwidth", default=-1)
-    output_write_bandwidth = models.IntegerField(verbose_name="write output bandwidth", default=-1)
-    output_read_msg_rate = models.IntegerField(verbose_name="read Message rate (Mpps)")
-    output_write_msg_rate = models.IntegerField(verbose_name="write Message rate (Mpps)")
+    input_test = models.TextField(verbose_name="Test type", default="")
+    input_operation = models.TextField(verbose_name="operation type", default="")
+    input_size_latency = models.IntegerField(verbose_name="latency size in bytes", default=-1)
+    input_size_bandwidth = models.IntegerField(verbose_name="bandwidth size in bytes", default=-1)
+    
+    output_read_avg_latency = models.FloatField(verbose_name="read average latency (usec)", default=-1)
+    output_write_avg_latency = models.FloatField(verbose_name="write average latency (usec)", default=-1)
+    output_read_min_latency = models.FloatField(verbose_name="read min latency(usec)", default=-1)
+    output_write_min_latency = models.FloatField(verbose_name="write min latency (usec)", default=-1)
+    output_read_max_latency = models.FloatField(verbose_name="read max latency(usec)", default=-1)
+    output_write_max_latency = models.FloatField(verbose_name="write max latency(usec)", default=-1)
+    output_read_99_latency = models.FloatField(verbose_name="read 99% latency", default=-1)
+    output_write_99_latency = models.FloatField(verbose_name="write 99% latency", default=-1)
+    output_read_99_99_latency = models.FloatField(verbose_name="read 99.99% latency", default=-1)
+    output_write_99_99_latency = models.FloatField(verbose_name="write 99.99% latency", default=-1)
+    output_read_bandwidth = models.FloatField(verbose_name="read output bandwidth", default=-1)
+    output_write_bandwidth = models.FloatField(verbose_name="write output bandwidth", default=-1)
+    output_read_msg_rate = models.FloatField(verbose_name="read Message rate (Mpps)", default=-1)
+    output_write_msg_rate = models.FloatField(verbose_name="write Message rate (Mpps)", default=-1)
 
     output_read_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
     output_write_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
@@ -2736,6 +2736,59 @@ class AlibabaRdmaPerformance(models.Model):
 
     def __str__(self):
         return (str(self.__dict__))
+
+
+class SoakFlowsBusyLoop10usecs(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_name = models.CharField(max_length=30, verbose_name="soak flows busy loop 10usecs app name", default="busy_loop_10usecs")
+    input_metric_name = models.CharField(max_length=30, verbose_name='Metric name', default="busy_loop_10usecs")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_variation = models.FloatField(verbose_name='variation', default=-1)
+    input_max_variation = models.FloatField(verbose_name='maximum variation', default=-1)
+    input_min_duration = models.FloatField(verbose_name='minimum duration', default=-1)
+    input_max_duration = models.FloatField(verbose_name='maximum duration', default=-1)
+    input_duration = models.FloatField(verbose_name='duration', default=-1)
+    input_num_flows = models.FloatField(verbose_name='Number of flows', default=-1)
+    input_num_ops = models.FloatField(verbose_name='Number of operations', default=-1)
+    input_warm_up = models.FloatField(verbose_name="warm up", default=-1)
+
+    output_busy_loops_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
+    output_busy_loops_value_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+
+class SoakFlowsMemcpy1MBNonCoh(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_name = models.CharField(max_length=30, verbose_name="soak flows dma memcpy test 1MB", default="soak_flows_dma_memcpy_test_1MB")
+    input_metric_name = models.CharField(max_length=30, verbose_name='Metric name', default="soak_flows_dma_memcpy_test_1MB")
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_variation = models.FloatField(verbose_name='variation', default=-1)
+    input_max_variation = models.FloatField(verbose_name='maximum variation', default=-1)
+    input_min_duration = models.FloatField(verbose_name='minimum duration', default=-1)
+    input_max_duration = models.FloatField(verbose_name='maximum duration', default=-1)
+    input_duration = models.FloatField(verbose_name='duration', default=-1)
+    input_num_flows = models.FloatField(verbose_name='Number of flows', default=-1)
+    input_num_ops = models.FloatField(verbose_name='Number of operations', default=-1)
+    input_warm_up = models.FloatField(verbose_name="warm up", default=-1)
+
+    output_dma_memcpy_value = models.FloatField(verbose_name="maximum number of busy-loops", default=-1)
+    output_dma_memcpy_value_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
 '''
 ANALYTICS_MAP = {
     "Performance1": {

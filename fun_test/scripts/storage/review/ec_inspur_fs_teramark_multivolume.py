@@ -6,6 +6,7 @@ import re
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
+from scripts.networking.helper import *
 from collections import OrderedDict, Counter
 
 '''
@@ -113,6 +114,10 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "disable_dsld" in job_inputs:
+            self.disable_dsld = job_inputs["disable_dsld"]
+        else:
+            self.disable_dsld = False
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -164,6 +169,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
                     self.bootargs[i] += " --disable-wu-watchdog"
+                if self.disable_dsld:
+                    self.bootargs[i] += " --disable-dsld"
 
             for dut_index in self.available_dut_indexes:
                 self.topology_helper.set_dut_parameters(dut_index=dut_index,
@@ -221,27 +228,17 @@ class ECVolumeLevelScript(FunTestScript):
                 host_handle = self.host_info[host_name]["handle"]
                 if self.override_numa_node["override"]:
                     host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    # self.host_numa_cpus[key] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
                     self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[self.override_numa_node["override_node"]]
                 else:
-                    # self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
                     self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
                 # Calculating the number of CPUs available in the given numa
-                """self.total_numa_cpus[key] = 0
-                for cpu_group in self.host_numa_cpus[key].split(","):
-                    cpu_range = cpu_group.split("-")
-                    self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-                fun_test.log("Rebooting host: {}".format(key))
-                self.host_handles[key].reboot(non_blocking=True)"""
                 self.host_info[host_name]["total_numa_cpus"] = 0
                 for cpu_group in self.host_info[host_name]["host_numa_cpus"].split(","):
                     cpu_range = cpu_group.split("-")
                     self.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
                 fun_test.log("Rebooting host: {}".format(host_name))
                 host_handle.reboot(non_blocking=True)
-            # fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-            # fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
             fun_test.log("Hosts info: {}".format(self.host_info))
 
             # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
@@ -286,7 +283,6 @@ class ECVolumeLevelScript(FunTestScript):
                                                                    slave_interface_list=slave_interface_list)
                     # Configuring route
                     route = self.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)]["route"][0]
-                    # self.funcp_obj[index].container_info[container_name].command("hostname")
                     cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"], bond_name)
                     route_add_status = self.funcp_obj[index].container_info[container_name].command(cmd)
                     fun_test.test_assert_expected(expected=0,
@@ -466,12 +462,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs = fun_test.shared_variables["fs"]
                 self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
-                self.storage_controller.verbose = True
-                fun_test.log(
-                    "Setting storage controller Verbose value to: {}".format(self.storage_controller.verbose))
-            except Exception as ex:
-                fun_test.critical(str(ex))
-            try:
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
@@ -528,7 +518,7 @@ class ECVolumeLevelScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        # self.topology.cleanup()
+        self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -588,15 +578,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             self.f1_ips = fun_test.shared_variables["f1_ips"][0]
             self.host_info = fun_test.shared_variables["host_info"]
-            """
-            self.host_handles = fun_test.shared_variables["host_handles"]
-            self.host_ips = fun_test.shared_variables["host_ips"]
-            self.end_host = self.host_handles[self.host_ips[0]]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
-            self.remote_ip = self.host_ips[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
-            """
             self.num_f1s = fun_test.shared_variables["num_f1s"]
             self.test_network = {}
             self.test_network["f1_loopback_ip"] = self.f1_ips
@@ -836,12 +817,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
-        try:
-            self.storage_controller.verbose = False
-            fun_test.log("Setting storage controller Verbose value to: {}".format(self.storage_controller.verbose))
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
         table_data_headers = ["Num Hosts", "Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
@@ -870,6 +845,10 @@ class ECVolumeLevelTestcase(FunTestCase):
         fio_result = {}
         fio_output = {}
         aggr_fio_output = {}
+        initial_stats = {}
+        final_stats = {}
+        resultant_stats = {}
+        aggregate_resultant_stats = {}
 
         start_stats = True
 
@@ -881,6 +860,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fio_cmd_args = {}
             mpstat_pid = {}
             mpstat_artifact_file = {}
+            initial_stats[iodepth] = {}
+            final_stats[iodepth] = {}
+            resultant_stats[iodepth] = {}
+            aggregate_resultant_stats[iodepth] = {}
 
             test_thread_id = {}
             host_clone = {}
@@ -937,7 +920,16 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             row_data_dict["block_size"] = fio_block_size
 
-            # Starting the thread to collect the vp_utils stats for the current iteration
+            # Collecting initial network stats
+            if self.collect_network_stats:
+                initial_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
+                    iodepth, initial_stats[iodepth]))
+
+            # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
                 vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
                 vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
@@ -946,9 +938,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
                                                                 count=int(mpstat_count), threaded=True)
+                resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
+                resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name=resource_bam_post_fix_name)
+                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_resource_bam_stats,
+                                                                     storage_controller=self.storage_controller,
+                                                                     output_file=resource_bam_artifact_file,
+                                                                     interval=self.resource_bam_args["interval"],
+                                                                     count=int(mpstat_count), threaded=True)
             else:
-                fun_test.critical("Not starting the vp_utils stats collection because of lack of interval and count "
-                                  "details")
+                fun_test.critical("Not starting the vp_utils and resource_bam stats collection because of lack of "
+                                  "interval and count details")
 
             for index, host_name in enumerate(self.host_info):
                 fio_job_args = ""
@@ -1050,6 +1050,49 @@ class ECVolumeLevelTestcase(FunTestCase):
                     global vp_stats_thread_stop_status
                     vp_stats_thread_stop_status[self.storage_controller] = True
                     fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+                # Checking whether the resource bam stats collection thread is still running...If so stopping it...
+                if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
+                    fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
+                    global resource_bam_stats_thread_stop_status
+                    resource_bam_stats_thread_stop_status[self.storage_controller] = True
+                    fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+            finally:
+                # Collecting final network stats and finding diff between final and initial stats
+                if self.collect_network_stats:
+                    final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                    final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                    final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                    final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                    fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
+                        iodepth, initial_stats[iodepth]))
+
+                    # Stats diff between final stats and initial stats
+                    resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["peek_psw_global_stats"],
+                        old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
+                    fun_test.log("\nStat difference for peek_psw_global_stats at the end iteration for iodepth {} is: "
+                                 "\n{}\n".format(iodepth, json.dumps(resultant_stats[iodepth]["peek_psw_global_stats"],
+                                                                     indent=2)))
+                    resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["peek_vp_packets"],
+                        old_stats=initial_stats[iodepth]["peek_vp_packets"])
+                    fun_test.log(
+                        "\nStat difference for peek_vp_packets at the end iteration for iodepth {} is: \n{}\n".format(
+                            iodepth, json.dumps(resultant_stats[iodepth]["peek_vp_packets"], indent=2)))
+                    resultant_stats[iodepth]["cdu"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
+                    fun_test.log("\nStat difference for cdu at the end iteration for iodepth {} is: \n{}\n".format(
+                        iodepth, json.dumps(resultant_stats[iodepth]["cdu"], indent=2)))
+                    resultant_stats[iodepth]["ca"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
+                    fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
+                        iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
+                    '''
+                    aggregate_resultant_stats[iodepth] = get_diff_stats(
+                        new_stats=final_stats[iodepth], old_stats=initial_stats[iodepth])
+                    fun_test.log("\nAggregate Stats diff: \n{}\n".format(json.dumps(aggregate_resultant_stats[iodepth],
+                                                                                    indent=2)))
+                    '''
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
@@ -1119,6 +1162,15 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)
+            # Checking whether the resource_bam stats collection thread is still running...If so stopping it...
+            if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
+                fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
+                global resource_bam_stats_thread_stop_status
+                resource_bam_stats_thread_stop_status[self.storage_controller] = True
+                fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+            fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
+            fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
+                                        filename=resource_bam_artifact_file)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

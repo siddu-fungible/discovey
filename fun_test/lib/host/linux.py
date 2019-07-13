@@ -2063,9 +2063,9 @@ class Linux(object, ToDictMixin):
         while not host_is_up and not max_reboot_timer.is_expired() and not fun_test.closed:
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
-                if ping_result:
-                    max_reboot_timer = FunTimer(max_time=30)
-                    fun_test.log("Lowered max_reboot_timer")
+                # if ping_result:  # TODO: Experimenting this on fs-11
+                #    max_reboot_timer = FunTimer(max_time=30)
+                #    fun_test.log("Lowered max_reboot_timer as ping is working")
             if ping_result or not service_host:
                 try:
                     fun_test.log("Attempting SSH")
@@ -2616,12 +2616,12 @@ class Linux(object, ToDictMixin):
         return file_info
 
     @fun_test.safe
-    def flush_cache_mem(self):
+    def flush_cache_mem(self, timeout=60):
         flush_cmd = """
         sync; echo 1 > /proc/sys/vm/drop_caches; 
         sync; echo 2 > /proc/sys/vm/drop_caches; 
         sync; echo 3 > /proc/sys/vm/drop_caches"""
-        self.sudo_command(flush_cmd)
+        self.sudo_command(flush_cmd, timeout=timeout)
 
     def mpstat(self, cpu_list=None, numa_node=None, interval=5, count=2, background=True,
                output_file="/tmp/mpstat.out"):

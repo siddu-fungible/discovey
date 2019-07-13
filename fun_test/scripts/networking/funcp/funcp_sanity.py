@@ -12,8 +12,12 @@ class ScriptSetup(FunTestScript):
 
     def describe(self):
         self.set_test_details(steps="""
-        Verify FS-name
-        """)
+                              1. Cleanup FunCP
+                              2. Remove Funeth from Hosts
+                              3. BringUP both F1s
+                              4. Reboot COMe
+                              5. Reboot Hosts
+                              """)
 
     def setup(self):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
@@ -30,27 +34,6 @@ class ScriptSetup(FunTestScript):
             shut_all_vms(hostname=server)
             critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
 
-    def cleanup(self):
-        funcp_obj.cleanup_funcp()
-        fun_test.shared_variables["topology"].cleanup()
-        # pass
-
-
-class BootF1(FunTestCase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Bringup both F1s and Reboot COMe",
-                              steps="""
-                              1. BringUP both F1s
-                              2. Reboot COMe
-                              """)
-
-    def setup(self):
-        pass
-
-    def run(self):
-
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
@@ -62,19 +45,20 @@ class BootF1(FunTestCase):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
-
-        # Bringup FunCP
+        # b = topology_helper.get_expanded_topology()
 
 
     def cleanup(self):
-        pass
+        funcp_obj.cleanup_funcp()
+        fun_test.shared_variables["topology"].cleanup()
+        # pass
 
 
 class BringupControlPlane(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=1,
                               summary="Bringup Control Plane",
                               steps="""
                                   1. Prepare Docker
@@ -117,7 +101,7 @@ class CheckPCIeWidth(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=2,
                               summary="Check no of PCIe lanes on HU host",
                               steps="""
                                   1. Login into host
@@ -130,11 +114,12 @@ class CheckPCIeWidth(FunTestCase):
                                                       '/fs_connected_servers.json')
 
     def run(self):
+        output = True
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         for server in servers_mode:
             result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
-            fun_test.test_assert(expression=(result == "1"), message="Make sure that PCIe links on host %s went up"
-                                                                     % server)
+            output &= (result == "1")
+        fun_test.test_assert(expression=output, message="Make sure that PCIe links on hosts went up with correct speed")
 
     def cleanup(self):
         pass
@@ -144,7 +129,7 @@ class NicEmulation(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=3,
                               summary="Setup HU host",
                               steps="""
                                   1. Prepare Docker
@@ -166,11 +151,12 @@ class NicEmulation(FunTestCase):
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
         get_ethtool_on_hu_host(funeth_obj)
 
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
-        get_ethtool_on_hu_host(funeth_obj)
+        if fs_name == "fs-alibaba-demo":
+            tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
+            get_ethtool_on_hu_host(funeth_obj)
 
     def cleanup(self):
         pass
@@ -180,7 +166,7 @@ class TestPings(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=4,
                               summary="Test Pings",
                               steps="""
                                   1. Test Pings from docker
@@ -204,7 +190,7 @@ class TestPings(FunTestCase):
         if not funcp_obj.docker_names:
             funcp_obj._get_docker_names()
         fun_test.test_assert(cc_sanity_pings(docker_names=funcp_obj.docker_names, vlan_ips=funcp_obj.vlan1_ips,
-                                             fs_spec=fs_spec, ping_count=500,
+                                             fs_spec=fs_spec, ping_count=5000,
                                              nu_hosts=self.server_key["fs"][fs_name]["nu_host_data_ip"],
                                              hu_hosts_0=self.server_key["fs"][fs_name]["hu_host_data_ip_f1_0"],
                                              hu_hosts_1=self.server_key["fs"][fs_name]["hu_host_data_ip_f1_1"]),
@@ -218,8 +204,8 @@ class TestScp(FunTestCase):
     server_key = {}
 
     def describe(self):
-        self.set_test_details(id=6,
-                              summary="Scp file from HU to NU and Vice Verca",
+        self.set_test_details(id=5,
+                              summary="Scp file from HU to NU and Vice Versa",
                               steps="""
                                   1. Scp 100MB file form HU host to NU host
                                   2. Scp 100MB file form NU host to HU host
@@ -233,8 +219,10 @@ class TestScp(FunTestCase):
         result = True
         for nu_host in self.server_key["fs"][fs_name]["nu_host"]:
             for hu_host in self.server_key["fs"][fs_name]["hu_host"]:
-                result &= test_scp(source=nu_host, dest=hu_host)
-                result &= test_scp(source=hu_host, dest=nu_host)
+                nu_ip = self.server_key["fs"][fs_name]["nu_host"][nu_host]
+                hu_ip = self.server_key["fs"][fs_name]["hu_host"][hu_host]
+                result &= test_scp(source_host=nu_host, dest_host=hu_host, source_data_ip=nu_ip, dest_data_ip=hu_ip)
+                result &= test_scp(source_host=hu_host, dest_host=nu_host, source_data_ip=hu_ip, dest_data_ip=nu_ip)
 
         fun_test.test_assert(expression=result, message="SCP result")
 
@@ -244,7 +232,6 @@ class TestScp(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BootF1())
     ts.add_test_case(BringupControlPlane())
     ts.add_test_case(CheckPCIeWidth())
     ts.add_test_case(NicEmulation())

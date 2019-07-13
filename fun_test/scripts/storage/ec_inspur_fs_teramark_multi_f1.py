@@ -137,7 +137,13 @@ class ECVolumeLevelScript(FunTestScript):
         elif self.testbed_type == "suite-based":
             self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
-            self.required_hosts = self.topology_helper.get_available_hosts()
+            required_hosts_tmp = OrderedDict(self.topology_helper.get_available_hosts())
+            self.required_hosts = OrderedDict()
+            for index, host_name in enumerate(required_hosts_tmp):
+                if index < self.num_hosts:
+                    self.required_hosts[host_name] = required_hosts_tmp[host_name]
+                else:
+                    break
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
 

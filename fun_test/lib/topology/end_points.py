@@ -88,7 +88,7 @@ class BareMetalEndPoint(EndPoint, ToDictMixin):
                     if "ipmi_info" in host_instance.extra_attributes:
                         ipmi_details = host_instance.extra_attributes["ipmi_info"]
                 instance_ready = host_instance.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
-                host_instance.lspci(grep_filter="1dad")
+                # host_instance.lspci(grep_filter="1dad")
         return instance_ready
 
 

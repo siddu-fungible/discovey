@@ -783,9 +783,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     elif int(fio_numjobs) > 4:
                         cpus_allowed = "1-19,40-59"
 
+                    """
                     # Flush cache before read test
                     self.end_host.sudo_command("sync")
                     self.end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
+                    """
 
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
