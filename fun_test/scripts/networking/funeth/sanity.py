@@ -257,6 +257,9 @@ class FunethSanity(FunTestScript):
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
+
+        # TODO: Configure overlay
+
         if test_bed_type == 'fs-11':
             nu = 'nu2'
             hu = 'hu2'
