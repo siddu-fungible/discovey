@@ -527,3 +527,26 @@ def test_host_fio(host, username="localadmin", password="Precious1*", strict=Fal
         fio_dict = linux_obj.fio(filename=filename, rw=rw, direct=direct, bs=bs, ioengine=ioengine, iodepth=iodepth,
                       name=name, runtime=runtime)
         critical_log(expression=fio_dict, message="Fio Result")
+
+
+def reload_nvme_driver(host, username="localadmin", password="Precious1*"):
+    host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    host_obj.sudo_command("rmmod nvme; rmmod nvme_core", timeout=120)
+    fun_test.sleep("Waiting for 10 seconds before loading driver", 10)
+    host_obj.sudo_command("modprobe nvme")
+
+
+def get_nvme_dev(host, username="localadmin", password="Precious1*"):
+    linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+
+    # Get the BDF number for the F1 NVMe device
+    bdf = linux_obj.sudo_command("lspci -D -d 1dad: | grep 'Non-Volatile memory controller' | awk '{print $1}'")
+
+    # use bdf number to get the nvme char & block device
+    nvme_char = linux_obj.sudo_command("ls /sys/bus/pci/devices/{}/nvme/".format(str(bdf)))
+    nvme_cntlid = linux_obj.sudo_command("cat /sys/class/nvme/{}/cntlid".format(str(nvme_char)))
+    ns_id = linux_obj.sudo_command("cat /sys/class/nvme/{}/{}c{}*/nsid".
+                                   format(str(nvme_char), str(nvme_char), str(nvme_cntlid)))
+    nvme_device = "/dev/" + str(nvme_char) + str(ns_id)
+
+    return nvme_device
