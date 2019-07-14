@@ -237,6 +237,7 @@ class NetperfManager:
                 frame_size = arg_dict.get('frame_size', 800)
                 sip = arg_dict.get('sip', None)
                 ns = arg_dict.get('ns', None)
+                cpu_list = sorted(arg_dict.get('cpu_list'))[::-1]  # reversed order
 
                 if test == 2:
                     num_processes = 1
@@ -244,10 +245,11 @@ class NetperfManager:
                 else:
                     num_processes = num_flows
                     measure_latency = False
-                cpu_list = []
+                process_cpu_list = []
                 for i in range(0, num_processes):
-                    cpu = 15 - i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
-                    cpu_list.append(cpu)
+                    #cpu = 15 - i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
+                    cpu = cpu_list[i % len(cpu_list)]
+                    process_cpu_list.append(cpu)
                     mp_task_obj.add_task(
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
@@ -263,7 +265,7 @@ class NetperfManager:
                         task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
-                if not self.start_netserver(linux_obj_dst, cpu_list=cpu_list):
+                if not self.start_netserver(linux_obj_dst, cpu_list=process_cpu_list):
                     fun_test.critical('Failed to start netserver!')
                     netserver_ready = False
                     break

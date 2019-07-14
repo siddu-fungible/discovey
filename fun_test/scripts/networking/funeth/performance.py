@@ -201,14 +201,17 @@ class FunethPerformanceBase(FunTestCase):
         if 'UL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ul_vm']
             perf_manager_obj = fun_test.shared_variables['netperf_manager_obj_ul_vm']
+            cpu_list = funeth.CPU_LIST_VM
         # Overlay VMs
         elif 'OL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ol_vm']
             perf_manager_obj = fun_test.shared_variables['netperf_manager_obj_ol_vm']
+            cpu_list = funeth.CPU_LIST_VM
         # Hosts
         else:
             funeth_obj = fun_test.shared_variables['funeth_obj']
             perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
+            cpu_list = funeth.CPU_LIST_HOST
 
         host_pairs = []
         bi_dir = False  # TODO: enable bi-direction
@@ -275,6 +278,7 @@ class FunethPerformanceBase(FunTestCase):
                  'duration': duration,
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
+                 'cpu_list': cpu_list,
                  }
             )
 
