@@ -43,7 +43,7 @@ FLOW_TYPES_DICT = OrderedDict([
 TOOLS = ('netperf',)
 PROTOCOLS = ('tcp', )  # TODO: add UDP
 FRAME_SIZES = (1500,)  # It's actually IP packet size in bytes
-NUM_FLOWS = (1, 8, 4, )  # TODO: May add more
+NUM_FLOWS = (1, 8, 4, 2, )  # TODO: May add more
 NUM_HOSTS = (1, 2, )  # Number of PCIe hosts, TODO: may keep 2 hosts only in the future
 FPG_MTU_DEFAULT = 1518
 PERF_RESULT_KEYS = (nm.THROUGHPUT,
@@ -146,6 +146,7 @@ class FunethPerformance(sanity.FunethSanity):
                                                                 sf_xoff_thr=10000,
                                                                 nonfcp_thr=11000,
                                                                 nonfcp_xoff_thr=10000,
+                                                                df_thr=128,
                                                                 mode='nu')
             fun_test.test_assert(buffer_pool_set, '{}: Configure QoS egress buffer pool'.format(f1))
             nc_obj.get_qos_egress_buffer_pool()

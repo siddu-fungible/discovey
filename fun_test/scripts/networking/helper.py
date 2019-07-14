@@ -84,6 +84,7 @@ FCB_TDP2_REQ = "tdp2_req"
 FCB_DST_FCP_PKT_RCVD = "FCB_DST_FCP_PKT_RCVD"
 FCB_DST_REQ_MSG_RCVD = "FCB_DST_REQ_MSG_RCVD"
 FCB_SRC_GNT_MSG_RCVD = "FCB_SRC_GNT_MSG_RCVD"
+FCB_SRC_REQ_MSG_XMTD = "FCB_SRC_REQ_MSG_XMTD"
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1

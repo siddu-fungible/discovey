@@ -1,0 +1,81 @@
+{
+  "1_1": {
+    "name": "1_1",
+    "description": "RDMA Test between 1 Server and 1 Client",
+    "is_parallel": false,
+    "clients": [
+      {
+        "client_id": "c1",
+        "host_ip": "cab02-qa-05",
+        "hu_interface_ip": "41.1.1.2"
+      }
+    ],
+    "servers": [
+      {
+        "server_id": "s1",
+        "host_ip": "cab02-qa-08",
+        "hu_interface_ip": "42.1.1.2"
+      }
+    ],
+    "size_in_bytes": 1,
+    "duration_in_secs": 10,
+    "iterations": 100,
+    "inline_size": 64
+  },
+  "N_1": {
+    "name": "N_1",
+    "description": "RDMA test between N clients and 1 server",
+    "is_parallel": true,
+    "clients": [
+      {
+        "client_id": "c1",
+        "host_ip": "cab02-qa-05",
+        "hu_interface_ip": "41.1.1.2"
+      },
+      {
+        "client_id": "c2",
+        "host_ip": "cab02-qa-06",
+        "hu_interface_ip": "41.1.1.3"
+      }
+    ],
+    "servers": [
+      {
+        "server_id": "s1",
+        "host_ip": "cab02-qa-08",
+        "hu_interface_ip": "42.1.1.2"
+      }
+    ],
+    "client_server_map": {
+      "cab02-qa-05": "cab02-qa-08",
+      "cab02-qa-06": "cab02-qa-08"
+    },
+    "size_in_bytes": 1,
+    "duration_in_secs": 10,
+    "iterations": 100,
+    "inline_size": 64
+  },
+  "N_N": {
+    "name": "N_N",
+    "description": "RDMA test between N clients and N servers",
+    "is_parallel": true,
+    "hosts": [
+      {
+        "host_ip": "cab02-qa-05",
+        "hu_interface_ip": "41.1.1.2"
+      },
+      {
+        "host_ip": "cab02-qa-06",
+        "hu_interface_ip": "41.1.1.3"
+      },
+      {
+        "host_ip": "cab02-qa-08",
+        "hu_interface_ip": "42.1.1.2"
+      }
+    ],
+    "size_in_bytes": 1,
+    "duration_in_secs": 10,
+    "iterations": 100,
+    "inline_size": 64
+  }
+
+}
