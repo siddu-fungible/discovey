@@ -1,57 +1,48 @@
-from lib.system.fun_test import *
-from lib.system import utils
-from lib.host.traffic_generator import TrafficGenerator
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
-from lib.fun.fs import Fs
-from lib.host.linux import Linux
-from scripts.storage.funcp_deploy import FunCpDockerContainer
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from lib.topology.topology_helper import TopologyHelper
-from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from collections import OrderedDict
 from scripts.networking.funcp.helper import *
 from scripts.networking.funeth.sanity import Funeth
 from lib.utilities.funcp_config import *
+from fun_global import PerfUnit, FunPlatform
 
 '''
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
 
-def post_results(volume, test, block_size, numjobs, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+def post_results(value_dict):
+    unit_dict = {
+        "write_iops_unit": PerfUnit.UNIT_OPS,
+        "read_iops_unit": PerfUnit.UNIT_OPS,
+        "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+        "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+        "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+        "write_90_latency_unit": PerfUnit.UNIT_USECS,
+        "write_95_latency_unit": PerfUnit.UNIT_USECS,
+        "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+        "write_99_latency_unit": PerfUnit.UNIT_USECS,
+        "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+        "read_90_latency_unit": PerfUnit.UNIT_USECS,
+        "read_95_latency_unit": PerfUnit.UNIT_USECS,
+        "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
+        "read_99_latency_unit": PerfUnit.UNIT_USECS
+    }
 
-    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
-              "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
-              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
-        if eval("type({}) is tuple".format(i)):
-            exec ("{0} = {0}[0]".format(i))
+    value_dict["date_time"] = get_data_collection_time()
+    value_dict["volume_type"] = "BLT"
+    value_dict["platform"] = FunPlatform.F1
+    value_dict["version"] = fun_test.get_version()
+    model_name = "AlibabaPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
 
-    db_log_time = fun_test.shared_variables["db_log_time"]
-    num_ssd = fun_test.shared_variables["num_ssd"]
-    num_volume = fun_test.shared_variables["blt_count"]
-
-    blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
-                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
-                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
-                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
-                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
-                  read_99_99_latency_unit="usecs")
-
-    result = []
-    arg_list = post_results.func_code.co_varnames[:12]
-    for arg in arg_list:
-        result.append(str(eval(arg)))
-    result = ",".join(result)
-    fun_test.log("Result: {}".format(result))
 
 class RawVolumePerfScript(FunTestScript):
     server_key = {}
@@ -280,7 +271,6 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                                       ssh_password="Precious1*")
                 fun_test.shared_variables["end_host_obj"] = self.end_host
 
-                """
                 # Run warmup
                 if self.warm_up_traffic:
                     fun_test.log(
@@ -293,7 +283,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
 
                     fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                    self.iter_interval)
-                """
+
                 i += 1
 
     def run(self):
@@ -312,46 +302,48 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
         final_stats = {}
         diff_stats = {}
 
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
-                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+        table_data_headers = ["Block Size", "IO Depth", "Numjobs", "Size", "Test", "Operation",
+                              "Write IOPS", "Read IOPS", "Write Throughput in MB/s", "Read Throughput in MB/s",
+                              "Avg Write Latency in uSecs", "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
-                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
-                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           "fio_job_name"]
+                              "Avg Read Latency in uSecs", "Read Latency 90 Percentile in uSecs", "Read Latency 95 Percentile in uSecs",
+                              "Read Latency 99 Percentile in uSecs", "Read Latency 99.99 Percentile in uSecs"]
+        table_data_cols = ["block_size", "io_depth", "num_threads", "io_size", "test", "operation",
+                           "write_iops", "read_iops", "write_throughput", "read_throughput",
+                           "write_avg_latency", "write_90_latency", "write_95_latency",
+                           "write_99_latency", "write_99_99_latency",
+                           "read_avg_latency", "read_90_latency", "read_95_latency",
+                           "read_99_latency", "read_99_99_latency"]
         table_data_rows = []
 
         self.end_host = fun_test.shared_variables["end_host_obj"]
 
         for mode in self.fio_modes:
+            fio_result[mode] = {}
+            internal_result[mode] = {}
+            fio_output[mode] = {}
+            initial_volume_status[mode] = {}
+            final_volume_status[mode] = {}
+            diff_volume_stats[mode] = {}
+            initial_stats[mode] = {}
+            final_stats[mode] = {}
+            diff_stats[mode] = {}
             for combo in self.fio_jobs_iodepth:
-                fio_result[combo] = {}
-                fio_output[combo] = {}
-                internal_result[combo] = {}
-                initial_volume_status[combo] = {}
-                final_volume_status[combo] = {}
-                diff_volume_stats[combo] = {}
-                initial_stats[combo] = {}
-                final_stats[combo] = {}
-                diff_stats[combo] = {}
-
                 tmp = combo.split(',')
                 fio_block_size = self.fio_bs
                 fio_numjobs = tmp[0].strip('() ')
                 fio_iodepth = tmp[1].strip('() ')
-                fio_result[combo][mode] = True
-                internal_result[combo][mode] = True
-                row_data_dict = {}
-                row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = fio_block_size
-                row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_numjobs)
-                row_data_dict["num_jobs"] = fio_numjobs
+                fio_result[mode][combo] = True
+                internal_result[mode][combo] = True
+                value_dict = {}
+                value_dict["test"] = mode
+                value_dict["block_size"] = fio_block_size
+                value_dict["io_depth"] = int(fio_iodepth)
+                value_dict["num_threads"] = int(fio_numjobs)
                 file_size_in_gb = fun_test.shared_variables["vol_size"] / 1073741824
-                row_data_dict["size"] = str(file_size_in_gb) + "GB"
+                value_dict["io_size"] = str(file_size_in_gb) + "GB"
+                value_dict["num_ssd"] = 1
+                value_dict["num_volume"] = 1
 
                 fun_test.log("Running FIO {} only test for block size: {} using num_jobs: {}, IO depth: {}".
                              format(mode, fio_block_size, fio_numjobs, fio_iodepth))
@@ -361,9 +353,9 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 fun_test.log("Running FIO...")
                 fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-                fio_output[combo][mode] = {}
+                fio_output[mode][combo] = {}
                 fio_filename = fun_test.shared_variables["nvme_block_device"]
-                fio_output[combo][mode] = self.end_host.pcie_fio(filename=fio_filename,
+                fio_output[mode][combo] = self.end_host.pcie_fio(filename=fio_filename,
                                                                  numjobs=fio_numjobs,
                                                                  rw=mode,
                                                                  bs=fio_block_size,
@@ -374,33 +366,44 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                                                                  **self.fio_cmd_args)
 
                 fun_test.log("FIO Command Output:")
-                fun_test.log(fio_output[combo][mode])
-                fun_test.test_assert(fio_output[combo][mode], "Fio {} test for numjobs {} & iodepth {}".
+                fun_test.log(fio_output[mode][combo])
+                fun_test.test_assert(fio_output[mode][combo], "Fio {} test for numjobs {} & iodepth {}".
                                      format(mode, fio_numjobs, fio_iodepth))
 
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
-                for op, stats in fio_output[combo][mode].items():
-                    for field, value in stats.items():
-                        row_data_dict[op + field] = value
-                        fun_test.log("raw_data[op + field] is: {}".format(row_data_dict[op + field]))
+                for op, stats in fio_output[mode][combo].items():
+                    value_dict["operation"] = op
+                    if op == "read":
+                        value_dict["read_iops"] = stats["iops"]
+                        value_dict["read_throughput"] = int(round(stats["bw"] / 1000))
+                        value_dict["read_avg_latency"] = stats["clatency"]
+                        value_dict["read_90_latency"] = stats["latency90"]
+                        value_dict["read_95_latency"] = stats["latency95"]
+                        value_dict["read_99_99_latency"] = stats["latency9999"]
+                        value_dict["read_99_latency"] = stats["latency99"]
+                    else:
+                        value_dict["write_iops"] = stats["iops"]
+                        value_dict["write_throughput"] = int(round(stats["bw"] / 1000))
+                        value_dict["write_avg_latency"] = stats["clatency"]
+                        value_dict["write_90_latency"] = stats["latency90"]
+                        value_dict["write_95_latency"] = stats["latency95"]
+                        value_dict["write_99_99_latency"] = stats["latency9999"]
+                        value_dict["write_99_latency"] = stats["latency99"]
 
-                row_data_dict["fio_job_name"] = fio_job_name
-
-                # Building the table row for this variation for both the script table and performance dashboard
                 row_data_list = []
                 for i in table_data_cols:
-                    if i not in row_data_dict:
+                    if i not in value_dict:
                         row_data_list.append(-1)
                     else:
-                        row_data_list.append(row_data_dict[i])
-
+                        row_data_list.append(value_dict[i])
                 table_data_rows.append(row_data_list)
-                #post_results("VM_Raw_Vol_PCIe", test_method, *row_data_list)
+
+                post_results(value_dict)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="VM raw vol over PCIe Perf Table", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="Ali BMV BLT over PCIe Perf Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -408,7 +411,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
         fun_test.log(internal_result)
         for combo in self.fio_jobs_iodepth:
             for mode in self.fio_modes:
-                if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                if not fio_result[mode][combo] or not internal_result[mode][combo]:
                     test_result = False
 
         fun_test.log("Test Result: {}".format(test_result))
@@ -424,10 +427,10 @@ class LocalSSDVM(RawVolumeLocalPerfTestcase):
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
         1. Create 1 BLT volumes on F1 attached
-        2. Create a storage controller for TCP and attach above volumes to this controller   
-        3. Connect to this volume from remote host
-        4. Run the FIO Sequential Read test(without verify) for various block size and IO depth from the 
-        remote host and check the performance are inline with the expected threshold. 
+        2. Create a storage controller for PCIe and attach above volumes to this controller   
+        3. Pass this associated PF to a VM on the PCIe attached host
+        4. Run the FIO Random Read & Write test(without verify) for block size of 4k and IO depth from the 
+        host and check the performance are inline with the expected threshold. 
         ''')
 
 if __name__ == "__main__":

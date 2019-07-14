@@ -137,7 +137,7 @@
       "ioengine": "libaio", "direct": 1, "thread": "NO_VALUE",
       "invalidate": 1, "end_fsync": 0, "offset": "0G",
       "norandommap": "NO_VALUE", "randrepeat": 0,
-      "runtime": 30, "group_reporting": 1,
+      "runtime": 120, "group_reporting": 1,
       "timeout": 600
     },
     "fio_modes": [
@@ -148,17 +148,6 @@
     "fio_job_name": {
       "randread": "ali_bmv_local_f1",
       "randwrite": "ali_bmv_local_f1"
-    },
-    "expected_fio_result": {
-      "(1, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(2, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(4, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(8, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(16, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(64, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(128, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(256, 1)": {"readread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     }
   }
 }
