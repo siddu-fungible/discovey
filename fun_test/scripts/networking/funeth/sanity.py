@@ -251,8 +251,8 @@ class FunethSanity(FunTestScript):
             start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ol_vm)
             fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
 
-            setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver)
-            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver)
+            setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                    verbose=True)
