@@ -220,7 +220,7 @@ class NicEmulation(FunTestCase):
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
+        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
 
         # Using the first host instance of f1_0 & f1_1 object for all tests
         host_objs = fun_test.shared_variables["hosts_obj"]
