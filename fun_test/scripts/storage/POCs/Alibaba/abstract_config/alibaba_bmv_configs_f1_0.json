@@ -1,0 +1,20 @@
+{
+    "Description": "F1-0 abstract cfg",
+    "F1Index" : 1,
+    "Interfaces" : [
+        {
+            "name" : "fpg0",
+            "address" : "1.1.1.2",
+            "prefix length" : 24,
+            "spine_index" : 0,
+            "gph_index" : 7,
+            "enable" : true
+        },
+      	{
+	    "name" : "vlan1",
+	    "address" : "18.1.1.1",
+	    "prefix length" : 24,
+	    "enable" : true
+	    }
+    ]
+}
