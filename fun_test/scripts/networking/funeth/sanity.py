@@ -279,9 +279,10 @@ class FunethSanity(FunTestScript):
             topology = fun_test.shared_variables["topology"]
             topology.cleanup()
             try:
-                funeth_obj_descs = ['funeth_obj', ]
                 if hu_host_vm:
-                    funeth_obj_descs.extend(['funeth_obj_ul_vm', 'funeth_obj_ul_vm'])
+                    funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ul_vm', 'funeth_obj']
+                else:
+                    funeth_obj_descs = ['funeth_obj', ]
                 for funeth_obj_desc in funeth_obj_descs:
                     funeth_obj = fun_test.shared_variables[funeth_obj_desc]
                     funeth_obj.cleanup_workspace()
