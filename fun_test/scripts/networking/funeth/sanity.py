@@ -198,10 +198,17 @@ class FunethSanity(FunTestScript):
                 come = fs.get_come()
                 global DPC_PROXY_IP
                 global DPC_PROXY_PORT
+                global DPC_PROXY_PORT2
                 DPC_PROXY_IP = come.host_ip
                 fun_test.shared_variables["come_ip"] = come.host_ip
                 DPC_PROXY_PORT = come.get_dpc_port(0)
                 DPC_PROXY_PORT2 = come.get_dpc_port(1)
+
+        network_controller_obj_f1_0 = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
+                                                        verbose=True)
+        network_controller_obj_f1_1 = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT2,
+                                                        verbose=True)
+        fun_test.shared_variables['network_controller_obj'] = network_controller_obj_f1_0
 
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
@@ -254,11 +261,7 @@ class FunethSanity(FunTestScript):
             setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
             setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
-        network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
-                                                   verbose=True)
-        fun_test.shared_variables['network_controller_obj'] = network_controller_obj
-
-        # TODO: Configure overlay
+            # TODO: Configure overlay
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'
