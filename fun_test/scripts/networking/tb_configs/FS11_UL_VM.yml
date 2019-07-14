@@ -48,6 +48,7 @@ hu:
   mgmt_interface: ens3
   host: poc-server-05
   pci_info: pci_0000_d8_01_0
+  pf_interface: hu1-f8  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:
@@ -70,6 +71,7 @@ hu2:
   mgmt_interface: ens3
   host: poc-server-10
   pci_info: pci_0000_d8_01_0
+  pf_interface: hu2-f8  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:
@@ -92,6 +94,7 @@ hu3:
   mgmt_interface: ens3
   host: poc-server-08
   pci_info: pci_0000_d8_01_0
+  pf_interface: hu1-f8  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:
@@ -110,6 +113,7 @@ hu4:
   mgmt_interface: ens3
   host: poc-server-09
   pci_info: pci_0000_d8_01_0
+  pf_interface: hu3-f8  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:

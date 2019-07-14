@@ -7,7 +7,7 @@ def get_tb_name_vm(tb, ul_or_ol):
     "Get TB (test bed) config file name for VM underlay or overlay."
     if ul_or_ol.lower() in ('ul', 'underlay'):
         return '{}_UL_VM'.format(tb)
-    elif ul_or_ol.lower in ('ol', 'overlay'):
+    elif ul_or_ol.lower() in ('ol', 'overlay'):
         return '{}_OL_VM'.format(tb)
 
 

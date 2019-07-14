@@ -94,8 +94,8 @@ class FunethPerformance(sanity.FunethSanity):
 
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.Funeth.CPU_LIST_HOST)
-            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.Funeth.CPU_LIST_HOST)
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_HOST)
+            funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.CPU_LIST_HOST)
 
         for nu in funeth_obj.nu_hosts:
             linux_obj = funeth_obj.linux_obj_dict[nu]
@@ -107,8 +107,8 @@ class FunethPerformance(sanity.FunethSanity):
 
         # HU host is VM
         if sanity.hu_host_vm:
-            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ul'))
-            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ol'))
+            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
+            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
             funeth_obj_ul_vm = funeth.Funeth(tb_config_obj_ul_vm)
             funeth_obj_ol_vm = funeth.Funeth(tb_config_obj_ol_vm)
             fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
@@ -116,13 +116,13 @@ class FunethPerformance(sanity.FunethSanity):
 
             fun_test.log("Configure irq affinity in underlay VMs")
             for hu in funeth_obj_ul_vm.hu_hosts:
-                funeth_obj_ul_vm.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.Funeth.CPU_LIST_VM)
-                funeth_obj_ul_vm.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.Funeth.CPU_LIST_VM)
+                funeth_obj_ul_vm.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_VM)
+                funeth_obj_ul_vm.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.CPU_LIST_VM)
 
             fun_test.log("Configure irq affinity in overlay VMs")
             for hu in funeth_obj_ol_vm.hu_hosts:
-                funeth_obj_ol_vm.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.Funeth.CPU_LIST_VM)
-                funeth_obj_ol_vm.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.Funeth.CPU_LIST_VM)
+                funeth_obj_ol_vm.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_VM)
+                funeth_obj_ol_vm.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=funeth.CPU_LIST_VM)
 
             linux_objs_ul_vm = funeth_obj_ul_vm.linux_obj_dict.values()
             linux_objs_ol_vm = funeth_obj_ol_vm.linux_obj_dict.values()
@@ -146,7 +146,6 @@ class FunethPerformance(sanity.FunethSanity):
                                                                 sf_xoff_thr=10000,
                                                                 nonfcp_thr=11000,
                                                                 nonfcp_xoff_thr=10000,
-                                                                df_thr=128,
                                                                 mode='nu')
             fun_test.test_assert(buffer_pool_set, '{}: Configure QoS egress buffer pool'.format(f1))
             nc_obj.get_qos_egress_buffer_pool()

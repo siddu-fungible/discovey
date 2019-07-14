@@ -4,7 +4,7 @@ from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.network_controller import NetworkController
 from lib.utilities.funcp_config import FunControlPlaneBringup
-from scripts.networking.funeth.funeth import Funeth
+from scripts.networking.funeth.funeth import Funeth, CPU_LIST_HOST, CPU_LIST_VM
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import perf_utils
 
@@ -120,9 +120,9 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
         if is_vm:
-            cpu_list = Funeth.CPU_LIST_VM
+            cpu_list = CPU_LIST_VM
         else:
-            cpu_list = Funeth.CPU_LIST_HOST
+            cpu_list = CPU_LIST_HOST
         fun_test.test_assert(
             funeth_obj.enable_multi_queues(hu, num_queues_tx=NUM_QUEUES_TX, num_queues_rx=NUM_QUEUES_RX,
                                            cpu_list=cpu_list),
@@ -151,7 +151,6 @@ def start_vm(funeth_obj_hosts, funeth_obj_vms):
                 cmds = ['virsh nodedev-dettach {}'.format(pci_info), 'virsh start {}'.format(vm_name)]
                 for cmd in cmds:
                     linux_obj.sudo_command(cmd)
-
 
 class FunethSanity(FunTestScript):
     def describe(self):
@@ -219,9 +218,6 @@ class FunethSanity(FunTestScript):
                             funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
-        if hu_host_vm:
-
-
         # NU host
         setup_nu_host(funeth_obj)
 
@@ -231,8 +227,8 @@ class FunethSanity(FunTestScript):
 
         # HU host VMs
         if hu_host_vm:
-            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ul'))
-            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm('ol'))
+            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
+            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
             funeth_obj_ul_vm = Funeth(tb_config_obj_ul_vm,
                                       fundrv_branch=fundrv_branch,
                                       funsdk_branch=funsdk_branch,

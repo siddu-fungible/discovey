@@ -48,13 +48,14 @@ hu:
   mgmt_interface: ens3
   host: poc-server-05
   pci_info: pci_0000_d8_01_1
+  pf_interface: hu1-f9  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:
         - hu1-f9:
             mac_addr: 00:de:ad:be:ef:31
             ipv4_addr: 50.1.1.8
-            ipv4_netmask: 255.255.255.0
+            ipv4_netmask: 255.255.0.0
       #routes:
       #  - prefix: 20.1.1.0/24
       #    nexthop: 53.1.1.254
@@ -75,13 +76,14 @@ hu2:
   mgmt_interface: ens3
   host: poc-server-10
   pci_info: pci_0000_d8_01_1
+  pf_interface: hu2-f9  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:
         - hu2-f9:
             mac_addr: 00:de:ad:be:ef:41
             ipv4_addr: 50.1.1.9
-            ipv4_netmask: 255.255.255.0
+            ipv4_netmask: 255.255.0.0
       #routes:
       #  - prefix: 20.1.1.0/24
       #    nexthop: 53.1.1.254
@@ -102,13 +104,14 @@ hu3:
   mgmt_interface: ens3
   host: poc-server-08
   pci_info: pci_0000_d8_01_1
+  pf_interface: hu1-f9  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:
         - hu1-f9:
             mac_addr: 00:de:ad:be:ef:51
             ipv4_addr: 50.1.2.8
-            ipv4_netmask: 255.255.255.0
+            ipv4_netmask: 255.255.0.0
       #routes:
       #  - prefix: 53.1.1.0/24
       #    nexthop: 54.1.1.254
@@ -125,13 +128,14 @@ hu4:
   mgmt_interface: ens3
   host: poc-server-09
   pci_info: pci_0000_d8_01_1
+  pf_interface: hu3-f9  # Not really a PF, actually a VF
   namespaces:
     default:
       interfaces:
         - hu3-f9:
             mac_addr: 00:de:ad:be:ef:61
             ipv4_addr: 50.1.2.9
-            ipv4_netmask: 255.255.255.0
+            ipv4_netmask: 255.255.0.0
       #routes:
       #  - prefix: 53.1.1.0/24
       #    nexthop: 54.1.1.254
