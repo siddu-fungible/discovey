@@ -336,8 +336,11 @@ class FunethPerformanceBase(FunTestCase):
 
         fun_test.shared_variables['results'].append(result)
         tc_ids.append(fun_test.current_test_case_id)
+        fun_test.simple_assert(pingable, '{} ping {} with packet size {}'.format(
+            linux_obj_src.host_ip, dip, frame_size))
+        fun_test.simple_assert(not sth_stuck_before, 'Something is stuck before test')
         fun_test.test_assert(passed, 'Get throughput/pps/latency test result')
-        fun_test.simple_assert(not sth_stuck_after,'Something is stuck after test')
+        fun_test.simple_assert(not sth_stuck_after, 'Something is stuck after test')
 
 
 def create_testcases(id, summary, steps, flow_type, tool, protocol, num_flows, num_hosts, frame_size):
