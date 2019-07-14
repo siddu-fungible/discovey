@@ -74,8 +74,13 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        fun_test.log("pass")
-        pass
+        host_obj = fun_test.shared_variables["hosts_obj"]
+
+        # Check if funeth is loaded or else bail out
+        for obj in host_obj:
+            host_obj[obj][0].sudo_command("rmmod funrdma")
+        fun_test.log("Unload funrdma drivers")
+        # pass
         # funcp_obj.cleanup_funcp()
         # for server in servers_mode:
         #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
@@ -217,9 +222,10 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
 
-        # host_objs = fun_test.shared_variables["hosts_obj"]
-        # for obj in host_objs:
-        #     host_objs[obj][0].command("/home/localadmin/mks/update_rdma.sh update update")
+        # Using the first host instance of f1_0 & f1_1 object for all tests
+        host_objs = fun_test.shared_variables["hosts_obj"]
+        for obj in host_objs:
+            host_objs[obj][0].command("/home/localadmin/mks/update_rdma.sh update update")
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -258,6 +264,11 @@ class IBWriteBW(FunTestCase):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         host_obj = fun_test.shared_variables["hosts_obj"]
+
+        # Check if funeth is loaded or else bail out
+        for obj in host_obj:
+            check_funeth = host_obj[obj][0].lsmod("funeth")
+            fun_test.test_assert(check_funeth, "Check funeth load status")
 
         # Load drivers on host
         for obj in host_obj:
@@ -366,6 +377,12 @@ class IBWriteLat(FunTestCase):
 
     def run(self):
         host_obj = fun_test.shared_variables["hosts_obj"]
+
+        # Check if funeth is loaded or else bail out
+        for obj in host_obj:
+            check_funeth = host_obj[obj][0].lsmod("funeth")
+            fun_test.test_assert(check_funeth, "Check funeth load status")
+
         # Load drivers on host
         for obj in host_obj:
             host_obj[obj][0].sudo_command("dmesg -c > /dev/null")
@@ -373,6 +390,9 @@ class IBWriteLat(FunTestCase):
             if not check_module:
                 host_obj[obj][0].sudo_command("insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko "
                                               "&& modprobe rdma_ucm")
+                check_load_module = host_obj[obj][0].lsmod("funrdma")
+                fun_test.test_assert(check_load_module, "Funrdma load")
+                host_obj[obj][0].sudo_command("/etc/init.d/irqbalance stop")
                 host_obj[obj][0].sudo_command("tuned-adm profile network-throughput")
 
         # Start ib_write_bw server on F1_0 host
