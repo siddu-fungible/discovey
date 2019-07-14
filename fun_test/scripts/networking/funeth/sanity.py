@@ -46,6 +46,7 @@ try:
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
+        bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -55,6 +56,7 @@ try:
         control_plane = False  # default False
         update_driver = True  # default True
         hu_host_vm = False  # default False
+        bootup_funos = True # default True
         fundrv_branch = None
         fundrv_commit = None
         funsdk_branch = None
@@ -64,6 +66,7 @@ except:
     control_plane = False
     update_driver = True
     hu_host_vm = False
+    bootup_funos = True
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
@@ -186,18 +189,19 @@ class FunethSanity(FunTestScript):
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
 
-            topology = topology_helper.deploy()
-            fun_test.shared_variables["topology"] = topology
-            fun_test.test_assert(topology, "Topology deployed")
-            fs = topology.get_dut_instance(index=0)
+            if bootup_funos:
+                topology = topology_helper.deploy()
+                fun_test.shared_variables["topology"] = topology
+                fun_test.test_assert(topology, "Topology deployed")
+                fs = topology.get_dut_instance(index=0)
 
-            come = fs.get_come()
-            global DPC_PROXY_IP
-            global DPC_PROXY_PORT
-            DPC_PROXY_IP = come.host_ip
-            fun_test.shared_variables["come_ip"] = come.host_ip
-            DPC_PROXY_PORT = come.get_dpc_port(0)
-            DPC_PROXY_PORT2 = come.get_dpc_port(1)
+                come = fs.get_come()
+                global DPC_PROXY_IP
+                global DPC_PROXY_PORT
+                DPC_PROXY_IP = come.host_ip
+                fun_test.shared_variables["come_ip"] = come.host_ip
+                DPC_PROXY_PORT = come.get_dpc_port(0)
+                DPC_PROXY_PORT2 = come.get_dpc_port(1)
 
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")

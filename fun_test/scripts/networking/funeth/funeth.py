@@ -367,9 +367,6 @@ class Funeth:
         """Enable interfaces multi tx/rx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-            # VF interface, TODO: have a better way to tell it's VF interface
-            if not intf.endswith('f0'):
-                continue
             cmd = 'ethtool -L {} tx {} rx {}'.format(intf, num_queues_tx, num_queues_rx)
             cmd_chk = 'ethtool -l {}'.format(intf)
             if ns is None or 'netns' in cmd:

@@ -26,18 +26,18 @@ else:
 TIMESTAMP = get_data_collection_time()
 
 FLOW_TYPES_DICT = OrderedDict([
-    ('HU_NU_NFCP',              'HU -> NU non-FCP'),  # test case id: 1xxxx
-    ('NU_HU_NFCP',              'NU -> HU non-FCP'),  # test case id: 2xxxx
-    ('HU_HU_NFCP',              'HU -> HU non-FCP under 1 F1'),  # test case id: 3xxxx
-    ('HU_HU_FCP',               'HU -> HU FCP under 2 F1s'),      # test case id: 4xxxx
-    ('HU_HU_NFCP_2F1',          'HU -> HU non-FCP under 2 F1s'),  # test case id: 5xxxx
-    ('HU_NU_NFCP_UL_VM',        'HU Underlay VM -> NU non-FCP'),  # test case id: 6xxxx
-    ('NU_HU_NFCP_UL_VM',        'NU -> HU Underlay VM non-FCP'),  # test case id: 7xxxx
-    ('HU_HU_NFCP_UL_VM',        'HU -> HU Underlay VM non-FCP under 1 F1'),  # test case id: 8xxxx
-    ('HU_HU_FCP_UL_VM',         'HU -> HU Underlay VM FCP under 2 F1s'),  # test case id: 9xxxx
-    ('HU_HU_NFCP_2F1_UL_VM',    'HU -> HU Underlay VM non-FCP under 2 F1s'),  # test case id: 10xxxx
-    ('HU_HU_NFCP_OL_VM',        'HU -> HU Overlay VM non-FCP under 2 F1s'),  # test case id: 11xxxx
-    ('HU_HU_FCP_OL_VM',         'HU -> HU Overlay VM FCP under 2 F1s'),  # test case id: 12xxxx
+    ('HU_NU_NFCP',              'HU -> NU non-FCP'),  # test case id: 1xxx
+    ('NU_HU_NFCP',              'NU -> HU non-FCP'),  # test case id: 2xxx
+    ('HU_HU_NFCP',              'HU -> HU non-FCP under 1 F1'),  # test case id: 3xxx
+    ('HU_HU_FCP',               'HU -> HU FCP under 2 F1s'),      # test case id: 4xxx
+    ('HU_HU_NFCP_2F1',          'HU -> HU non-FCP under 2 F1s'),  # test case id: 5xxx
+    ('HU_NU_NFCP_UL_VM',        'HU Underlay VM -> NU non-FCP'),  # test case id: 6xxx
+    ('NU_HU_NFCP_UL_VM',        'NU -> HU Underlay VM non-FCP'),  # test case id: 7xxx
+    ('HU_HU_NFCP_UL_VM',        'HU -> HU Underlay VM non-FCP under 1 F1'),  # test case id: 8xxx
+    ('HU_HU_FCP_UL_VM',         'HU -> HU Underlay VM FCP under 2 F1s'),  # test case id: 9xxx
+    ('HU_HU_NFCP_2F1_UL_VM',    'HU -> HU Underlay VM non-FCP under 2 F1s'),  # test case id: 10xxx
+    ('HU_HU_NFCP_OL_VM',        'HU -> HU Overlay VM non-FCP under 2 F1s'),  # test case id: 11xxx
+    ('HU_HU_FCP_OL_VM',         'HU -> HU Overlay VM FCP under 2 F1s'),  # test case id: 12xxx
     # TODO: Enable bi-direction
 ])
 TOOLS = ('netperf',)
