@@ -161,12 +161,12 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
     # TODO: Define overlay args in config file
     overlay_config_dict = {
         network_controller_obj_f1_0: [
-            {'lport_num': 265, 'vtep': '53.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.1.8', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:31', ]},
-            {'lport_num': 393, 'vtep': '53.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.1.9', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:41', ]},
+            {'lport_num': 265, 'vtep': '53.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.1.8', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:31', ]},
+            {'lport_num': 393, 'vtep': '53.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.1.9', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:41', ]},
         ],
         network_controller_obj_f1_1: [
-            {'lport_num': 265, 'vtep': '54.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.2.8', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:51', ]},
-            {'lport_num': 521, 'vtep': '54.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.2.9', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:61', ]},
+            {'lport_num': 265, 'vtep': '54.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.2.8', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:51', ]},
+            {'lport_num': 521, 'vtep': '54.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.2.9', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:61', ]},
         ]
     }
 
@@ -180,7 +180,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 dst_vtep = dst['vtep']
                 src_flows = src['flows']
                 dst_flows = dst['flows']
-                vif_table_mac_addrs = src['vif_table']
+                vif_table_mac_entries = src['vif_table_mac_entries']
             else:
                 lport_num = dst['lport_num']
                 vnids = dst['vnids']
@@ -188,7 +188,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 dst_vtep = src['vtep']
                 src_flows = dst['flows']
                 dst_flows = src['flows']
-                vif_table_mac_addrs = dst['vif_table']
+                vif_table_mac_entries = dst['vif_table_mac_entries']
             # vif
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
@@ -215,7 +215,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                                     flow_proto=6
                                 )
                 # vif_table
-                for mac_addr in vif_table_mac_addrs:
+                for mac_addr in vif_table_mac_entries:
                     nc_obj.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=mac_addr, egress_vif=lport_num)
             # vtep
             nc_obj.overlay_vtep_add(ipaddr=src_vtep)
