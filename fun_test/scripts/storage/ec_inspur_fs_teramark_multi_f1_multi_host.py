@@ -13,6 +13,12 @@ Script to track the Inspur Performance Cases of various read write combination o
 '''
 
 
+def deploy_funcp_container(obj, fs_index, update_deploy_script, update_workspace, mode):
+    deploy_output = obj.deploy_funcp_container(update_deploy_script=update_deploy_script,
+                                                update_workspace=update_workspace, mode=mode)
+    fun_test.shared_variables["funcp_deploy"][fs_index] = deploy_output
+
+
 def fio_parser(arg1, host_index, **kwargs):
     fio_output = arg1.pcie_fio(**kwargs)
     fun_test.shared_variables["fio"][host_index] = fio_output
@@ -135,7 +141,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.skip_dut_list.append(index)
             fun_test.log("DUTs that will be skipped: {}".format(self.skip_dut_list))
             self.available_dut_indexes = list(set(self.full_dut_indexes) - set(self.skip_dut_list))
-            print "**** Available DUT Indexes: {}".format(self.available_dut_indexes)
             self.total_available_duts = len(self.available_dut_indexes)
             fun_test.log("Total Available Duts: {}".format(self.total_available_duts))
             self.topology_helper = TopologyHelper(spec=self.fs_hosts_map[self.testbed_type])
@@ -247,16 +252,34 @@ class ECVolumeLevelScript(FunTestScript):
                 self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
 
         # Bringing up of FunCP docker container if it is needed
+        deploy_thread_id = {}
         self.funcp_obj = {}
         self.funcp_spec = {}
+        fun_test.shared_variables["funcp_deploy"] = {}
         for index in xrange(self.num_duts):
             self.funcp_obj[index] = StorageFsTemplate(self.come_obj[index])
-            self.funcp_spec[index] = self.funcp_obj[index].deploy_funcp_container(
-                update_deploy_script=self.update_deploy_script, update_workspace=self.update_workspace,
-                mode=self.funcp_mode)
+            deploy_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=1, obj=self.funcp_obj[index],
+                                                                    func=deploy_funcp_container, fs_index=index,
+                                                                    update_deploy_script=self.update_deploy_script,
+                                                                    update_workspace=self.update_workspace,
+                                                                    mode=self.funcp_mode)
+        fun_test.log("Deploy Thread IDs: {}".format(deploy_thread_id))
+        for index in xrange(self.num_duts):
+            try:
+                fun_test.log("Joining deploy thread for DUT {}".format(index))
+                fun_test.join_thread(fun_test_thread_id=deploy_thread_id[index], sleep_time=1)
+                fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
+                                                                      fun_test.shared_variables["funcp_deploy"][index]))
+            except Exception as ex:
+                fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
+                                                                      fun_test.shared_variables["funcp_deploy"][index]))
+                fun_test.critical(str(ex))
+            self.funcp_spec[index] = fun_test.shared_variables["funcp_deploy"][index]
             fun_test.test_assert(self.funcp_spec[index]["status"],
                                  "Starting FunCP docker container in DUT {}".format(index))
             self.funcp_spec[index]["container_names"].sort()
+
+        for index in xrange(self.num_duts):
             for f1_index, container_name in enumerate(self.funcp_spec[index]["container_names"]):
                 bond_interfaces = self.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
                 bond_name = "bond0"
