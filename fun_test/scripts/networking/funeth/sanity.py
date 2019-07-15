@@ -155,6 +155,71 @@ def start_vm(funeth_obj_hosts, funeth_obj_vms):
                 for cmd in cmds:
                     linux_obj.sudo_command(cmd)
 
+
+def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
+
+    # TODO: Define overlay args in config file
+    overlay_config_dict = {
+        network_controller_obj_f1_0: [
+            {'lport_num': 265, 'vtep': '53.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.1.8', ], 'vif_table': ['00:de:ad:be:ef:31', ]},
+            {'lport_num': 393, 'vtep': '53.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.1.9', ], 'vif_table': ['00:de:ad:be:ef:41', ]},
+        ],
+        network_controller_obj_f1_1: [
+            {'lport_num': 265, 'vtep': '54.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.2.8', ], 'vif_table': ['00:de:ad:be:ef:51', ]},
+            {'lport_num': 521, 'vtep': '54.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.2.9', ], 'vif_table': ['00:de:ad:be:ef:61', ]},
+        ]
+    }
+
+    nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
+    for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
+
+        # src - vif, nh, flows, vtep, vif_table
+        nc_obj_src.overlay_vif_add(src['lport_num'])
+        for vnid in src['vnids']:
+            nc_obj_src.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src['vtep'], dst_vtep=dst['vtep'],
+                                      vnid=vnid)
+            nc_obj_src.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst['vtep'], dst_vtep=src['vtep'],
+                                      vnid=vnid)
+            for i in range(8):
+                for j in (10000, 20000):  # for Netperf control and data
+                    for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                        nc_obj_src.overlay_flow_add(
+                            flow_type=flow_type,
+                            nh_index=nh_index,
+                            vif=src['lport_num'],
+                            flow_sip=src['flows'][0],  # TODO: support multiple flows
+                            flow_dip=dst['flows'][0],  # TODO: support multiple flows
+                            flow_sport=i+j,
+                            flow_dport=i+j,
+                            flow_proto=6
+                        )
+            nc_obj_src.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=src['vif_table'][0], egress_vif=src['lport_num'])
+        nc_obj_src.overlay_vtep_add(ipaddr=src['vtep'])
+
+        # dst - vif, nh, flows, vtep, vif_table
+        nc_obj_dst.overlay_vif_add(dst['lport_num'])
+        for vnid in dst['vnids']:
+            nc_obj_dst.overlay_nh_add(nh_type='vxlan_encap', src_vtep=dst['vtep'], dst_vtep=src['vtep'],
+                                      vnid=vnid)
+            nc_obj_dst.overlay_nh_add(nh_type='vxlan_decap', src_vtep=src['vtep'], dst_vtep=dst['vtep'],
+                                      vnid=vnid)
+            for i in range(8):
+                for j in (10000, 20000):  # for Netperf control and data
+                    for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                        nc_obj_dst.overlay_flow_add(
+                            flow_type=flow_type,
+                            nh_index=nh_index,
+                            vif=dst['lport_num'],
+                            flow_sip=dst['flows'][0],  # TODO: support multiple flows
+                            flow_dip=src['flows'][0],  # TODO: support multiple flows
+                            flow_sport=i+j,
+                            flow_dport=i+j,
+                            flow_proto=6
+                        )
+            nc_obj_dst.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=dst['vif_table'][0], egress_vif=dst['lport_num'])
+        nc_obj_dst.overlay_vtep_add(ipaddr=dst['vtep'])
+
+
 class FunethSanity(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -261,7 +326,8 @@ class FunethSanity(FunTestScript):
             setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
             setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
-            # TODO: Configure overlay
+            # Configure overlay
+            configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'

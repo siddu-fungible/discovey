@@ -1847,11 +1847,15 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def overlay_flow_add(self, flow_type, nh_index, ingress_vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto):
+    def overlay_flow_add(self, flow_type, nh_index, vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto):
         stats = None
         try:
-            cmd = 'flow_add flow_type {} nh_index {} ingress_vif {} flow "{}" "{}" {} {} {}'.format(
-                flow_type, nh_index, ingress_vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto)
+            if flow_type == 'vxlan_encap':
+                vif_desc = 'ingress_vif'
+            elif flow_type == 'vxlan_decap':
+                vif_desc = 'egress_vif'
+            cmd = 'flow_add flow_type {} nh_index {} {} {} flow "{}" "{}" {} {} {}'.format(
+                flow_type, nh_index, vif_desc, vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto)
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
