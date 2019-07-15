@@ -57,7 +57,8 @@ class RdmaTemplate(object):
     CONNECTION_TYPE_RC = "RC"
 
     def __init__(self, client_server_objs, test_type, hosts, is_parallel=True,
-                 connection_type=CONNECTION_TYPE_RC, size=100, inline_size=64, duration=10, iterations=100):
+                 connection_type=CONNECTION_TYPE_RC, size=100, inline_size=64, duration=10, iterations=100,
+                 run_infinitely=10):
         """
         RDMA Template for Scale Tool
 
@@ -70,16 +71,18 @@ class RdmaTemplate(object):
         :param inline_size: Inline size for latency test in bytes
         :param duration: Test duration in secs
         :param iterations: No of iterations needed for Latency test
+        :param run_infinitely: To run the tool infinitely and dump stats at certain interval Default 10 secs.
         """
         self.is_parallel = is_parallel
         self.test_type = test_type
         self.connection_type = connection_type
-        self.size = size
+        self.size = size if size else 1
         self.inline_size = inline_size
-        self.duration = duration
+        self.duration = duration if duration else 10
         self.client_server_objs = client_server_objs
         self.hosts = hosts
-        self.iterations = iterations
+        self.iterations = iterations if iterations else 100
+        self.run_infinitely = run_infinitely
 
     def setup_test(self):
         result = False
@@ -119,6 +122,9 @@ class RdmaTemplate(object):
                 if '-c' in kwargs:
                     self.connection_type = kwargs['-c']
 
+                if 'run_infinitely' in kwargs and client_cmd:
+                    self.run_infinitely = kwargs['--run_infinitely']
+
                 if '-D' in kwargs and client_cmd:
                     self.duration = kwargs['-D']
 
@@ -136,10 +142,16 @@ class RdmaTemplate(object):
                         if key not in cmd:
                             cmd += "%s %s " % (key, val)
                 if client_cmd:
-                    cmd += "-D %d %s " % (self.duration, server_ip)
+                    if self.run_infinitely:
+                        cmd += "--run_infinitely -D %d %s" % (self.run_infinitely, server_ip)
+                    else:
+                        cmd += "-D %d %s " % (self.duration, server_ip)
             elif self.test_type == IB_WRITE_LATENCY_TEST:
                 if '-c' in kwargs:
                     self.connection_type = kwargs['-c']
+
+                if 'run_infinitely' in kwargs and client_cmd:
+                    self.run_infinitely = kwargs['--run_infinitely']
 
                 if '-s' in kwargs:
                     self.size = kwargs['-s']
@@ -161,7 +173,10 @@ class RdmaTemplate(object):
                         if key not in cmd:
                             cmd += "%s %s " % (key, val)
                 if client_cmd:
-                    cmd += "-n %d %s " % (self.iterations, server_ip)
+                    if self.run_infinitely:
+                        cmd += "--run_infinitely -D %d -n %d %s " % (self.run_infinitely, self.iterations, server_ip)
+                    else:
+                        cmd += "-n %d %s " % (self.iterations, server_ip)
             fun_test.log('Cmd Formed: %s' % cmd)
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -205,7 +220,7 @@ class RdmaTemplate(object):
     def start_test(self, client_obj, server_obj, set_paths=False, cmd_args=None):
         result_dict = {}
         try:
-            fun_test.log_section("Run traffic from %s client -----> %s server" % (str(client_obj), str(server_obj)))
+            fun_test.log_section("Run traffic from %s -----> %s" % (str(client_obj), str(server_obj)))
             port_no = RdmaHelper.generate_random_port_no()
             server_obj.rdma_server_port = port_no
             client_obj.rdma_port = port_no
@@ -220,8 +235,18 @@ class RdmaTemplate(object):
             ibv_device = self.get_ibv_device(host_obj=client_obj)
             cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], port_num=client_obj.rdma_port, client_cmd=True,
                                        server_ip=client_obj.server_ip, **cmd_args)
-            output = client_obj.command(command=cmd, timeout=90)
-            result_dict = self._parse_rdma_output(output=output)
+            if self.run_infinitely:
+                tmp_output_file = "/tmp/%s_client_process_%d.log" % (
+                    self.test_type, server_obj.rdma_server_port)
+                process_id = client_obj.start_bg_process(command=cmd, output_file=tmp_output_file, nohup=True)
+                fun_test.log('Client Process Started: %s' % process_id)
+                fun_test.sleep(message="Client cmd running infinitely", seconds=120)
+                client_obj.kill_process(process_id=process_id, signal=9)
+                output = client_obj.read_file(file_name=tmp_output_file, include_last_line=True)
+                result_dict = self._parse_rdma_output(output=output)
+            else:
+                output = client_obj.command(command=cmd, timeout=2100)
+                result_dict = self._parse_rdma_output(output=output)
             result_dict.update({'client': str(client_obj)})
             result_dict.update({'server': str(server_obj)})
         except Exception as ex:
@@ -274,6 +299,10 @@ class RdmaTemplate(object):
             m = re.search(r'(#bytes.*)', output, re.DOTALL)
             if m:
                 chunk = m.group(1).strip()
+                m1 = re.search(r'\d+(\w+@.*)', chunk.strip(), re.DOTALL)
+                if m1:
+                    pat = m1.group(1)
+                    chunk = re.sub(pat, "", chunk)
                 keys = re.split(r'\s\s+', chunk.split('\n')[0].strip())
                 for i in range(0, len(keys)):
                     if '#bytes #iterations' in keys[i]:
@@ -281,7 +310,7 @@ class RdmaTemplate(object):
                         keys.pop(i)
                         keys.insert(i, v[0])
                         keys.insert(i + 1, v[1])
-                values = list(map(float, re.split(r'\s+', chunk.split('\n')[1].strip())))
+                values = list(map(float, re.split(r'\s+', chunk.split('\n')[-1].strip())))
                 result = OrderedDict(zip(keys, values))
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -328,6 +357,7 @@ class RdmaHelper(object):
     SCENARIO_TYPE_1_1 = "1_1"
     SCENARIO_TYPE_N_1 = "N_1"
     SCENARIO_TYPE_N_N = "N_N"
+    SCENARIO_TYPE_LATENCY_UNDER_LOAD = 'latency_under_load'
     CONFIG_JSON = SCRIPTS_DIR + "/networking/rdma/config.json"
     HOSTS_ASSET = ASSET_DIR + "/hosts.json"
 
@@ -397,8 +427,9 @@ class RdmaHelper(object):
         try:
             for key in self.config:
                 if key == self.scenario_type:
-                    size = self.config[key]['size_in_bytes']
-                    break
+                    if 'size_in_bytes' in self.config[key]:
+                        size = self.config[key]['size_in_bytes']
+                        break
         except Exception as ex:
             fun_test.critical(str(ex))
         return size
@@ -408,8 +439,9 @@ class RdmaHelper(object):
         try:
             for key in self.config:
                 if key == self.scenario_type:
-                    duration_in_secs = self.config[key]['duration_in_secs']
-                    break
+                    if 'duration_in_secs' in self.config[key]:
+                        duration_in_secs = self.config[key]['duration_in_secs']
+                        break
         except Exception as ex:
             fun_test.critical(str(ex))
         return duration_in_secs
@@ -435,6 +467,30 @@ class RdmaHelper(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return inline_size
+
+    def get_run_infinetly(self):
+        run_infinitely = None
+        try:
+            for key in self.config:
+                if key == self.scenario_type:
+                    if 'run_infinitely' in self.config[key]:
+                        run_infinitely = self.config[key]['run_infinitely']
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return run_infinitely
+
+    def get_iterations(self):
+        iterations = None
+        try:
+            for key in self.config:
+                if key == self.scenario_type:
+                    if 'iterations' in self.config[key]:
+                        iterations = self.config[key]['iterations']
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return iterations
 
     def _fetch_client_dict(self, client_name):
         result = None
