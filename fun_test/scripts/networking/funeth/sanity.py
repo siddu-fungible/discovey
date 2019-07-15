@@ -161,63 +161,64 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
     # TODO: Define overlay args in config file
     overlay_config_dict = {
         network_controller_obj_f1_0: [
-            {'lport_num': 265, 'vtep': '53.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.1.8', ], 'vif_table': ['00:de:ad:be:ef:31', ]},
-            {'lport_num': 393, 'vtep': '53.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.1.9', ], 'vif_table': ['00:de:ad:be:ef:41', ]},
+            {'lport_num': 265, 'vtep': '53.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.1.8', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:31', ]},
+            {'lport_num': 393, 'vtep': '53.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.1.9', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:41', ]},
         ],
         network_controller_obj_f1_1: [
-            {'lport_num': 265, 'vtep': '54.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.2.8', ], 'vif_table': ['00:de:ad:be:ef:51', ]},
-            {'lport_num': 521, 'vtep': '54.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.2.9', ], 'vif_table': ['00:de:ad:be:ef:61', ]},
+            {'lport_num': 265, 'vtep': '54.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.2.8', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:51', ]},
+            {'lport_num': 521, 'vtep': '54.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.2.9', ], 'vif_table_mac_addrs': ['00:de:ad:be:ef:61', ]},
         ]
     }
 
     nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
     for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
-
-        # src - vif, nh, flows, vtep, vif_table
-        nc_obj_src.overlay_vif_add(src['lport_num'])
-        for vnid in src['vnids']:
-            nc_obj_src.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src['vtep'], dst_vtep=dst['vtep'],
-                                      vnid=vnid)
-            nc_obj_src.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst['vtep'], dst_vtep=src['vtep'],
-                                      vnid=vnid)
-            for i in range(8):
-                for j in (10000, 20000):  # for Netperf control and data
-                    for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
-                        nc_obj_src.overlay_flow_add(
-                            flow_type=flow_type,
-                            nh_index=nh_index,
-                            vif=src['lport_num'],
-                            flow_sip=src['flows'][0],  # TODO: support multiple flows
-                            flow_dip=dst['flows'][0],  # TODO: support multiple flows
-                            flow_sport=i+j,
-                            flow_dport=i+j,
-                            flow_proto=6
-                        )
-            nc_obj_src.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=src['vif_table'][0], egress_vif=src['lport_num'])
-        nc_obj_src.overlay_vtep_add(ipaddr=src['vtep'])
-
-        # dst - vif, nh, flows, vtep, vif_table
-        nc_obj_dst.overlay_vif_add(dst['lport_num'])
-        for vnid in dst['vnids']:
-            nc_obj_dst.overlay_nh_add(nh_type='vxlan_encap', src_vtep=dst['vtep'], dst_vtep=src['vtep'],
-                                      vnid=vnid)
-            nc_obj_dst.overlay_nh_add(nh_type='vxlan_decap', src_vtep=src['vtep'], dst_vtep=dst['vtep'],
-                                      vnid=vnid)
-            for i in range(8):
-                for j in (10000, 20000):  # for Netperf control and data
-                    for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
-                        nc_obj_dst.overlay_flow_add(
-                            flow_type=flow_type,
-                            nh_index=nh_index,
-                            vif=dst['lport_num'],
-                            flow_sip=dst['flows'][0],  # TODO: support multiple flows
-                            flow_dip=src['flows'][0],  # TODO: support multiple flows
-                            flow_sport=i+j,
-                            flow_dport=i+j,
-                            flow_proto=6
-                        )
-            nc_obj_dst.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=dst['vif_table'][0], egress_vif=dst['lport_num'])
-        nc_obj_dst.overlay_vtep_add(ipaddr=dst['vtep'])
+        for nc_obj in (nc_obj_src, nc_obj_dst):
+            if nc_obj == nc_obj_src:
+                lport_num = src['lport_num']
+                vnids = src['vnids']
+                src_vtep = src['vtep']
+                dst_vtep = dst['vtep']
+                src_flows = src['flows']
+                dst_flows = dst['flows']
+                vif_table_mac_addrs = src['vif_table']
+            else:
+                lport_num = dst['lport_num']
+                vnids = dst['vnids']
+                src_vtep = dst['vtep']
+                dst_vtep = src['vtep']
+                src_flows = dst['flows']
+                dst_flows = src['flows']
+                vif_table_mac_addrs = dst['vif_table']
+            # vif
+            nc_obj.overlay_vif_add(lport_num=lport_num)
+            for vnid in vnids:
+                # nh
+                nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
+                nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                for i in range(8):
+                    for j in (10000, 20000):  # TODO: for Netperf control (1000x) and data (2000x), remove after port range support is in
+                        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                            for sip, dip in zip(src_flows, dst_flows):
+                                if flow_type == 'vxlan_encap':
+                                    flow_sip, flow_dip = sip, dip
+                                else:
+                                    flow_sip, flow_dip = dip, sip
+                                # flows
+                                nc_obj.overlay_flow_add(
+                                    flow_type=flow_type,
+                                    nh_index=nh_index,
+                                    vif=lport_num,
+                                    flow_sip=flow_sip,
+                                    flow_dip=flow_dip,
+                                    flow_sport=i+j,
+                                    flow_dport=i+j,
+                                    flow_proto=6
+                                )
+                # vif_table
+                for mac_addr in vif_table_mac_addrs:
+                    nc_obj.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=mac_addr, egress_vif=lport_num)
+            # vtep
+            nc_obj.overlay_vtep_add(ipaddr=src_vtep)
 
 
 class FunethSanity(FunTestScript):
