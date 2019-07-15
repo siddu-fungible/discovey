@@ -40,6 +40,10 @@ class ECVolumeLevelScript(FunTestScript):
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
 
+        job_inputs = fun_test.get_job_inputs()
+        if job_inputs and "boot_args" in job_inputs:
+            self.bootargs = job_inputs["boot_args"]
+
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0,
                                            custom_boot_args=self.bootargs,

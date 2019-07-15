@@ -8,6 +8,9 @@ import json
 import re
 
 
+NETWORK_PC_LIST = (1, 2)
+
+
 def get_diff_stats(old_stats, new_stats):
     result = {}
     try:
@@ -212,6 +215,12 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output = nc_obj.peek_vp_packets()
         output_list.append({'VP': output})
 
+        # Per VP stats
+        for pc_id in NETWORK_PC_LIST:
+            fun_test.log('{} dpc: Get per VP pkts stats from PC {}'.format(f1, pc_id))
+            output = nc_obj.peek_per_vppkts_stats(pc_id)
+            output_list.append({'Per VP for PC {}'.format(pc_id): output})
+
         # NWQM
         #fun_test.log('{} dpc: Get NWQM stats'.format(f1))
         #output = nc_obj.peek_nwqm_stats()
@@ -264,7 +273,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output_list.append({'EQM': eqm_output})
 
         # Check VP stuck
-        for pc_id in (1, 2):
+        for pc_id in NETWORK_PC_LIST:
             fun_test.log('{} dpc: Get resource PC {} stats'.format(f1, pc_id))
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
             output_list.append({'resource pc {}'.format(pc_id): output})

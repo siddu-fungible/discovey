@@ -43,20 +43,6 @@ class ECVolumeLevelScript(FunTestScript):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
 
-        """NewChange
-        topology_helper = TopologyHelper()
-        fun_test.log("topology_helper output is: {}".format(topology_helper))
-        fun_test.log("Setting dut params")
-        topology_helper.set_dut_parameters(dut_index=self.f1_in_use, custom_boot_args=self.bootargs)
-        fun_test.log("Started topology deploy")
-        topology = topology_helper.deploy()
-        fun_test.log("topology output is: {}".format(topology))
-        fun_test.test_assert(topology, "Topology deployed")
-
-        fs = topology.get_dut_instance(index=self.f1_in_use)
-        fun_test.shared_variables["fs"] = fs
-        NewChange"""
-
         # Pulling the testbed type and its config
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         fun_test.log("Testbed-type: {}".format(self.testbed_type))
@@ -67,60 +53,51 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.simple_assert(self.fs_spec, "FS Spec for {}".format(self.testbed_type))
         fun_test.simple_assert(self.testbed_config, "Testbed Config for {}".format(self.testbed_type))
 
-        # Getting the first network host
-        for interface in self.testbed_config["dut_info"][str(self.f1_in_use)]["fpg_interface_info"]:
-            if "host_info" in self.testbed_config["dut_info"][str(self.f1_in_use)]["fpg_interface_info"][interface]:
-                self.nw_hostname = \
-                    self.testbed_config["dut_info"][str(self.f1_in_use)]["fpg_interface_info"][interface]["host_info"]["name"]
-                break
+        self.topology_helper = TopologyHelper()
+        self.topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
+                                           disable_f1_index=self.disable_f1_index)
+        self.topology = self.topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
 
-        self.host_config = fun_test.get_asset_manager().get_host_spec(self.nw_hostname)
-        fun_test.log("{} Host Config: {}".format(self.nw_hostname, self.host_config))
-        fun_test.simple_assert(self.host_config, "Host Config for {}".format(self.nw_hostname))
+        self.fs = self.topology.get_dut_instance(index=self.f1_in_use)
+        self.f1 = self.fs.get_f1(index=self.f1_in_use)
+        self.storage_controller = self.f1.get_dpc_storage_controller()
+
+        # Fetching Linux host with test interface name defined
+        fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0)
+        for host_ip, host_info in fpg_connected_hosts.iteritems():
+            if "test_interface_name" in host_info["host_obj"].extra_attributes:
+                self.end_host = host_info["host_obj"]
+                self.end_host.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
+                self.fpg_inteface_index = host_info["interfaces"][0].index
+                fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
+                break
+        else:
+            fun_test.test_assert(False, "Host found with Test Interface")
+
+        self.test_network = self.csr_network[str(self.fpg_inteface_index)]
 
         fun_test.shared_variables["testbed_type"] = self.testbed_type
+        fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["fs_spec"] = self.fs_spec
         fun_test.shared_variables["testbed_config"] = self.testbed_config
-        fun_test.shared_variables["host_config"] = self.host_config
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["attach"] = self.attach
         fun_test.shared_variables["test_network"] = self.test_network
-
-        # Initializing the FS
-        self.fs = Fs.get(boot_args=self.bootargs, disable_f1_index=self.disable_f1_index)
-        fun_test.test_assert(self.fs.bootup(reboot_bmc=False, power_cycle_come=True), "FS bootup")
-
-        self.f1 = self.fs.get_f1(index=self.f1_in_use)
         fun_test.shared_variables["fs"] = self.fs
         fun_test.shared_variables["f1"] = self.f1
-
-        self.db_log_time = datetime.now()
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
+        fun_test.shared_variables["end_host"] = self.end_host
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
 
         # Initializing the Network attached host
-        end_host_ip = self.host_config["host_ip"]
-        end_host_user = self.host_config["ssh_username"]
-        end_host_passwd = self.host_config["ssh_password"]
-
-        """NewChange
-        fun_test.log("End host object formation")
-        self.end_host = topology.get_host_instance(dut_index=0, host_index=0, fpg_interface_index=0)
-        fun_test.log(self.end_host, "Host instance on fpg interface 0: {}".format(str(self.end_host)))
-        fun_test.log("end host object is created")
-        end_host_ip = self.end_host.host_ip
-        fun_test.log("host_ip is: {}".format(end_host_ip)) NewChange"""
-
-        self.end_host = Linux(host_ip=end_host_ip, ssh_username=end_host_user, ssh_password=end_host_passwd)
-        fun_test.shared_variables["end_host"] = self.end_host
-
-        host_up_status = self.end_host.reboot(timeout=self.command_timeout, retries=self.retries)
-        fun_test.test_assert(host_up_status, "End Host {} is up".format(end_host_ip))
+        host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout)
+        fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
-                                                             self.host_config["test_interface_name"])
-        interface_mac_config= "ip link set {} address {}".format(self.host_config["test_interface_name"],
+                                                             self.end_host.test_interface_name)
+        interface_mac_config= "ip link set {} address {}".format(self.end_host.test_interface_name,
                                                                  self.test_network["test_interface_mac"])
-        link_up_cmd = "ip link set {} up".format(self.host_config["test_interface_name"])
+        link_up_cmd = "ip link set {} up".format(self.end_host.test_interface_name)
         static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
                                                self.test_network["test_net_route"]["arp"])
 
@@ -134,13 +111,12 @@ class ECVolumeLevelScript(FunTestScript):
         link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
         fun_test.test_assert(not link_up_status, message="Bringing up test link")
 
-        interface_up_status = self.end_host.ifconfig_up_down(interface=self.host_config["test_interface_name"],
-                                                             action="up")
+        interface_up_status = self.end_host.ifconfig_up_down(interface=self.end_host.test_interface_name, action="up")
         fun_test.test_assert(interface_up_status, "Bringing up test interface")
 
         route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
                                                       gateway=self.test_network["test_net_route"]["gw"],
-                                                      outbound_interface=self.host_config["test_interface_name"],
+                                                      outbound_interface=self.end_host.test_interface_name,
                                                       timeout=self.command_timeout)
         fun_test.test_assert(not route_add_status, message="Adding route to F1")
 
@@ -161,12 +137,10 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert_expected(expected="nvme_tcp", actual=command_result['name'],
                                       message="Loading nvme_tcp module")
 
-        self.storage_controller = self.f1.get_dpc_storage_controller()
-        """NewChange
-        self.come = fs.get_come()
+        """
+        self.come = self.fs.get_come()
         self.storage_controller = StorageController(target_ip=self.come.host_ip, target_port=self.come.get_dpc_port(0))
-        NewChange"""
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
+        """
 
         # Setting the syslog level
         if self.syslog_level != "default":
@@ -223,7 +197,6 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.testbed_type = fun_test.shared_variables["testbed_type"]
         self.fs_spec = fun_test.shared_variables["fs_spec"]
         self.testbed_config = fun_test.shared_variables["testbed_config"]
-        self.host_config = fun_test.shared_variables["host_config"]
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         self.attach = fun_test.shared_variables["attach"]
         self.test_network = fun_test.shared_variables["test_network"]
@@ -440,22 +413,29 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # Check whether the drive failure needs to be triggered
         if hasattr(self, "trigger_drive_failure") and self.trigger_drive_failure:
+            # Check whether the drive index to be failed is given or not. If not pick a random one
+            if self.failure_mode == "random" or not hasattr(self, "failure_drive_indicies"):
+                self.failure_drive_indicies = {}
+                for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                    self.failure_drive_indicies[num] = []
+                    while True:
+                        index = random.randint(0, self.ec_info["ndata"] + self.ec_info["nparity"] - 1)
+                        if index not in self.failure_drive_indicies[num]:
+                            self.failure_drive_indicies[num].append(index)
+                        if len(self.failure_drive_indicies[num]) >= 2:
+                            break
             # Sleep for sometime before triggering the drive failure
+            fun_test.log("Drives needs to be disabled: {}".format(self.failure_drive_indicies))
             wait_time = 2
             if hasattr(self, "failure_start_time_ratio"):
                 wait_time = int(round(cp_timeout * self.failure_start_time_ratio))
             fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
                            seconds=wait_time)
-            # Check whether the drive index to be failed is given or not. If not pick a random one
-            if self.failure_mode == "random" or not hasattr(self, "failure_drive_index"):
-                self.failure_drive_index = []
-                for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
-                    self.failure_drive_index.append(random.randint(0, self.ec_info["ndata"] +
-                                                                  self.ec_info["nparity"] - 1))
+
             # Triggering the drive failure
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
-                fail_uuid = self.ec_info["uuids"][num]["blt"][self.failure_drive_index[num - self.test_volume_start_index]]
-                fail_device = self.ec_info["device_id"][num][self.failure_drive_index[num - self.test_volume_start_index]]
+                fail_uuid = self.ec_info["uuids"][num]["blt"][self.failure_drive_indicies[num][0]]
+                fail_device = self.ec_info["device_id"][num][self.failure_drive_indicies[num][0]]
                 device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
                                                                             command_duration=self.command_timeout)
                 fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
@@ -469,6 +449,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 break
         else:
             fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file1))
+
+        self.end_host.sudo_command("sync", timeout=cp_timeout / 2)
+        self.end_host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             cur_dst_file = dst_file1[num - self.test_volume_start_index]
@@ -502,15 +485,21 @@ class ECVolumeLevelTestcase(FunTestCase):
             cp_cmd = "sudo cp {} {}".format(source_file, dst_file2[-1])
             self.end_host.start_bg_process(command=cp_cmd)
 
-        fun_test.sleep(message="Sleeping for {} seconds before bringing up the failed device(s)".
-                       format(wait_time), seconds=wait_time)
-
-        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
-            fail_uuid = self.ec_info["uuids"][num]["blt"][self.failure_drive_index[num - self.test_volume_start_index]]
-            fail_device = self.ec_info["device_id"][num][self.failure_drive_index[num - self.test_volume_start_index]]
-            device_up_status = self.storage_controller.enable_device(device_id=fail_device,
-                                                                     command_duration=self.command_timeout)
-            fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
+        # Check whether the drive failure needs to be triggered
+        if hasattr(self, "trigger_drive_failure") and self.trigger_drive_failure:
+            # Sleep for sometime before triggering the drive failure
+            wait_time = 2
+            if hasattr(self, "failure_start_time_ratio"):
+                wait_time = int(round(cp_timeout * self.failure_start_time_ratio))
+            fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
+                           seconds=wait_time)
+            # Triggering the drive failure
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                fail_uuid = self.ec_info["uuids"][num]["blt"][self.failure_drive_index[num][1]]
+                fail_device = self.ec_info["device_id"][num][self.failure_drive_index[num][1]]
+                device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
+                                                                            command_duration=self.command_timeout)
+                fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
 
         timer = FunTimer(max_time=cp_timeout)
         while not timer.is_expired():
@@ -521,6 +510,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 break
         else:
             fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file2))
+
+        self.end_host.sudo_command("sync", timeout=cp_timeout / 2)
+        self.end_host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             cur_dst_file = dst_file2[num - self.test_volume_start_index]
@@ -551,32 +543,40 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info, command_timeout=self.command_timeout)
 
 
-class SingleClientSingleVolumeWithoutBP(ECVolumeLevelTestcase):
+class SingleVolumeMultiDriveFailureWithoutBP(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of EC volume",
+                              summary="Inspur: 8.7.1.0: Multi Drive Failure Testing without rebuild",
                               steps="""
-        1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        1. Bring up F1 in FS1600.
+        2. Reboot network connected hosted and configure its test interface to establish connectivity with F1.
+        3. Configure 6 BLT volumes in F1.
+        4. Configure a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Configure a LS volume on top of the EC volume based on use_lsv config along with its associative journal 
+        volume.
         6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using vdbench
-        8. Run the Performance for 8k transfer size Random read/write IOPS
+        7. Execute NVME connect from the network host and ensure that the above volume is accessible from the host.
+        8. Create ext3 filesystem in the above volume and mount the same under /mnt/ssd<volume_num>.
+        9. Create test_file_size bytes file and copy the same into the above mount point.
+        10. While the copy is in progress, simulate drive failure in one of the drives hosting the above 6 BLT volumes.
+        11. Ensure that the file is copied successfully and the md5sum between the source and destination is matching.
+        12. Create another test_file_size bytes file and copy the same into the above mount point.
+        13. While the copy is in progress, simulate one more drive failure in one of the drives hosting the above 6 BLT 
+        volumes.
+        14. Ensure that the file is copied successfully and the md5sum between the source and destination is matching.
         """)
 
     def setup(self):
-        super(SingleClientSingleVolumeWithoutBP, self).setup()
+        super(SingleVolumeMultiDriveFailureWithoutBP, self).setup()
 
     def run(self):
-        super(SingleClientSingleVolumeWithoutBP, self).run()
+        super(SingleVolumeMultiDriveFailureWithoutBP, self).run()
 
     def cleanup(self):
-        super(SingleClientSingleVolumeWithoutBP, self).cleanup()
+        super(SingleVolumeMultiDriveFailureWithoutBP, self).cleanup()
 
 if __name__ == "__main__":
 
     ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(SingleClientSingleVolumeWithoutBP())
+    ecscript.add_test_case(SingleVolumeMultiDriveFailureWithoutBP())
     ecscript.run()

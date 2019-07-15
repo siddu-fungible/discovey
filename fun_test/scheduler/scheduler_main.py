@@ -962,22 +962,25 @@ def clear_out_old_jobs():
     old_jobs.delete()
 
 def cleanup_unused_assets():
-    all_assets = Asset.objects.all()
-    for asset in all_assets:
-        job_ids = asset.job_ids
+    try:
+        all_assets = Asset.objects.all()
+        for asset in all_assets:
+            job_ids = asset.job_ids
 
-        job_ids_to_remove = []
-        if job_ids:
-            for job_id in job_ids:
-                s = models_helper.get_suite_execution(suite_execution_id=job_id)
-                if s:
-                    if s.state <= JobStatusType.COMPLETED:
-                        job_ids_to_remove.append(job_id)
-                else:
-                    asset.remove_job_id(job_id=job_id)
-        job_ids = filter(lambda x: x not in job_ids_to_remove, job_ids)
-        asset.job_ids = job_ids
-        asset.save()
+            job_ids_to_remove = []
+            if job_ids:
+                for job_id in job_ids:
+                    s = models_helper.get_suite_execution(suite_execution_id=job_id)
+                    if s:
+                        if s.state <= JobStatusType.COMPLETED:
+                            job_ids_to_remove.append(job_id)
+                    else:
+                        asset.remove_job_id(job_id=job_id)
+            job_ids = filter(lambda x: x not in job_ids_to_remove, job_ids)
+            asset.job_ids = job_ids
+            asset.save()
+    except Exception as ex:
+        scheduler_logger.exception(str(ex))
 
 if __name__ == "__main__":
     queue_lock = Lock()
@@ -1017,4 +1020,5 @@ if __name__ == "__main__":
 
         except (SchedulerException, Exception) as ex:
             scheduler_logger.exception(str(ex))
-            send_error_mail(message="Scheduler exception")
+            send_error_mail(message="Scheduler exception: Ex: {}".format(ex))
+            time.sleep(60)

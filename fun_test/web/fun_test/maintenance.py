@@ -7,6 +7,7 @@ from django.utils import timezone
 from fun_global import PerfUnit
 from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
+from collections import OrderedDict
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
@@ -612,7 +613,7 @@ if __name__ == "__main_companion_charts__":
         print "added chart id: {}", format(chart_id)
     print "added companion charts"
 
-if __name__ == "__main__":
+if __name__ == "__main__soak_flows_apps":
     internal_chart_names = ['soak_flows_busy_loop_10usecs', 'soak_flows_dma_memcpy_test_1MB']
     for internal_chart_name in internal_chart_names:
         one_data_set = {}
@@ -675,3 +676,183 @@ if __name__ == "__main__":
                     work_in_progress=False).save()
         print data_sets
         print ("Metric id: {}".format(metric_id))
+
+if __name__ == "__main__":
+
+    internal_chart_names = OrderedDict([("ib_write_latency_size_1b", 1), ("ib_write_latency_size_128b", 128),
+                                        ("ib_write_latency_size_256b", 256), ("ib_write_latency_size_512b", 512),
+                                        ("ib_write_latency_size_1024b", 1024), ("ib_write_latency_size_4096b", 4096)])
+
+    model_name = "AlibabaRdmaPerformance"
+    description = "TBD"
+    owner_info = "Manu K S  (manu.ks@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/93cbceb27e5be0dfb3b79325c813d36789c5fe3d/fun_test" \
+             "/scripts/networking/funcp/rdma_write_perf.py"
+    positive = False
+    y1_axis_title = PerfUnit.UNIT_USECS
+    platform = FunPlatform.F1
+
+    for internal_chart_name in internal_chart_names:
+        size = internal_chart_names[internal_chart_name]
+        one_data_set = {}
+        data_sets = []
+
+        chart_name = "IB write latency, size {}B".format(size)
+        inputs = {
+         "input_size_latency": size,
+         "input_platform": platform,
+         "input_operation": "write",
+         "input_size_bandwidth": -1
+        }
+        output_names = OrderedDict([("output_write_min_latency", "min"), ("output_write_max_latency", "max"),
+                                    ("output_write_avg_latency", "avg"), ("output_write_99_latency", "99%"),
+                                    ("output_write_99_99_latency", "99.99%")])
+        for output_name in output_names:
+            output = {
+             "name": output_name,
+             "unit": PerfUnit.UNIT_USECS,
+             "min": 0,
+             "max": -1,
+             "expected": -1,
+             "reference": -1
+            }
+
+            one_data_set["name"] = output_names[output_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+
+        print ("Data sets: {}".format(data_sets))
+        print ("Metric id: {}".format(metric_id))
+
+    # Charts for RDMA bandwidth
+
+    internal_chart_name = "rdma_ib_write_bw"
+    model_name = "AlibabaRdmaPerformance"
+    description = "TBD"
+    owner_info = "Manu K S  (manu.ks@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/93cbceb27e5be0dfb3b79325c813d36789c5fe3d/fun_test/" \
+             "scripts/networking/funcp/rdma_write_perf.py"
+    positive = True
+    y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+    platform = FunPlatform.F1
+    chart_name = "IB write BW"
+
+    one_data_set = {}
+    data_sets = []
+    output_name = "output_write_bandwidth"
+    bw_size_list = [1, 128, 256, 512, 1024, 4096]
+
+    for bw_size in bw_size_list:
+        one_data_set = {}
+        inputs = {
+            "input_size_bandwidth": bw_size,
+            "input_platform": platform,
+            "input_operation": "write",
+            "input_size_latency": -1,
+        }
+
+        output = {
+            "name": output_name,
+            "unit": PerfUnit.UNIT_GBITS_PER_SEC,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+
+        one_data_set["name"] = bw_size
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description=description,
+                owner_info=owner_info,
+                source=source,
+                positive=positive,
+                y1_axis_title=y1_axis_title,
+                visualization_unit=y1_axis_title,
+                metric_model_name=model_name,
+                platform=platform,
+                work_in_progress=False).save()
+
+    print ("Data sets: {}".format(data_sets))
+    print ("Metric id: {}".format(metric_id))
+
+    # Chart for message rate
+
+    internal_chart_name = "rdma_ib_msg_rate"
+    model_name = "AlibabaRdmaPerformance"
+    description = "TBD"
+    owner_info = "Manu K S  (manu.ks@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/93cbceb27e5be0dfb3b79325c813d36789c5fe3d/fun_test/" \
+             "scripts/networking/funcp/rdma_write_perf.py"
+    positive = True
+    y1_axis_title = PerfUnit.UNIT_MPPS
+    platform = FunPlatform.F1
+    chart_name = "IB write message rate"
+
+    one_data_set = {}
+    data_sets = []
+    output_name = "output_write_msg_rate"
+    bw_size_list = [1, 128, 256, 512, 1024, 4096]
+    for bw_size in bw_size_list:
+        one_data_set = {}
+        inputs = {
+            "input_size_bandwidth": bw_size,
+            "input_platform": platform,
+            "input_operation": "write",
+        }
+        output = {
+            "name": output_name,
+            "unit": PerfUnit.UNIT_MPPS,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = bw_size
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description=description,
+                owner_info=owner_info,
+                source=source,
+                positive=positive,
+                y1_axis_title=y1_axis_title,
+                visualization_unit=y1_axis_title,
+                metric_model_name=model_name,
+                platform=platform,
+                work_in_progress=False).save()
+
+    print ("Data sets: {}".format(data_sets))
+    print ("Metric id: {}".format(metric_id))
