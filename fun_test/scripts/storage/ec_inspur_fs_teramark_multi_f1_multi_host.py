@@ -514,20 +514,22 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec"]["setup_created"] = True
 
             # disabling the error_injection for the EC volume
-            command_result = {}
-            command_result = self.storage_controller.poke("params/ecvol/error_inject 0",
-                                                          command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT")
+            for index, sc_obj in enumerate(self.sc_obj):
+                command_result = {}
+                command_result = sc_obj.poke("params/ecvol/error_inject 0", command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Disabling error_injection for EC volume on DUT {}".
+                                     format(index))
 
-            # Ensuring that the error_injection got disabled properly
-            fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
-            command_result = {}
-            command_result = self.storage_controller.peek("params/ecvol", command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
-            fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
-                                          message="Ensuring error_injection got disabled")
+                # Ensuring that the error_injection got disabled properly
+                fun_test.sleep("to disable the error_injection", 1)
+                command_result = {}
+                command_result = sc_obj.peek("params/ecvol", command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.simple_assert(command_result["status"], "Retrieving error_injection status on DUT {}".
+                                       format(index))
+                fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
+                                              message="Ensuring error_injection got disabled on DUT {}".format(index))
 
             # Starting packet capture in all the hosts
             pcap_started = {}
@@ -621,15 +623,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                     pcap_stopped[host_name] = True
 
             # Setting the syslog level
-            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog_level],
-                                                          legacy=False, command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"],
-                                 "Setting syslog level to {}".format(self.syslog_level))
-
-            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                          command_duration=self.command_timeout)
-            fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
-                                          message="Checking syslog level")
+            for index, sc_obj in enumerate(self.sc_obj):
+                command_result = sc_obj.poke(props_tree=["params/syslog/level", self.syslog_level], legacy=False,
+                                             command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"],
+                                     "Setting syslog level to {} in DUT {}".format(self.syslog_level, index))
+                command_result = sc_obj.peek(props_tree="params/syslog/level", legacy=False,
+                                             command_duration=self.command_timeout)
+                fun_test.test_assert_expected(expected=self.syslog_level, actual=command_result["data"],
+                                              message="Checking syslog level in DUT {}".format(index))
 
             # Executing the FIO command to fill the volume to it's capacity
             if not fun_test.shared_variables["ec"]["warmup_io_completed"] and self.warm_up_traffic:
@@ -777,6 +779,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Starting the thread to collect the vp_utils stats for the current iteration
             if start_stats:
+                pass
+                """
                 vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
                 vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
                 stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
@@ -784,6 +788,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
                                                                 count=int(mpstat_count), threaded=True)
+                """
             else:
                 fun_test.critical("Not starting the vp_utils stats collection because of lack of interval and count "
                                   "details")
@@ -882,12 +887,14 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
+                """
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
                     global vp_stats_thread_stop_status
                     vp_stats_thread_stop_status[self.storage_controller] = True
                     fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+                """
 
             # Summing up the FIO stats from all the hosts
             for index, host_name in enumerate(self.host_info):
@@ -948,6 +955,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                             format(host_name, row_data_dict["iodepth"]),
                                             filename=mpstat_artifact_file[host_name])
 
+            """
             # Checking whether the vp_util stats collection thread is still running...If so stopping it...
             if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                 fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
@@ -957,6 +965,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)
+            """
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
