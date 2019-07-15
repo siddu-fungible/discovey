@@ -182,12 +182,19 @@ class NetperfManager:
 
         return result
 
-    def start_netserver(self, linux_obj, cpu_list=None):
+    def start_netserver(self, linux_obj, cpu_list=None, fixed_netperf_port=False):
         linux_obj.pkill('netserver')
-        if cpu_list:
-            cmd = 'taskset -c {} netserver'.format(','.join([str(c) for c in cpu_list]))
+        if fixed_netperf_port:
+            if cpu_list:
+                cmds = []
+                for c in cpu_list:
+                    cmds.append('taskset -c {} netserver -p {}'.format(c, c+10000))  # Netperf control ports
+                cmd = ';'.join(cmds)
         else:
-            cmd = 'netserver'
+            if cpu_list:
+                cmd = 'taskset -c {} netserver'.format(','.join([str(c) for c in cpu_list]))
+            else:
+                cmd = 'netserver'
         linux_obj.sudo_command(cmd)
         return linux_obj.get_process_id_by_pattern('netserver') is not None
 
@@ -238,6 +245,7 @@ class NetperfManager:
                 sip = arg_dict.get('sip', None)
                 ns = arg_dict.get('ns', None)
                 cpu_list = sorted(arg_dict.get('cpu_list'))[::-1]  # reversed order
+                fixed_netperf_port = arg_dict.get('fixed_netperf_port', False)
 
                 if test == 2:
                     num_processes = 1
@@ -265,7 +273,7 @@ class NetperfManager:
                         task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
-                if not self.start_netserver(linux_obj_dst, cpu_list=process_cpu_list):
+                if not self.start_netserver(linux_obj_dst, cpu_list=process_cpu_list, fixed_port=fixed_netperf_port):
                     fun_test.critical('Failed to start netserver!')
                     netserver_ready = False
                     break
@@ -369,7 +377,7 @@ def calculate_pps(protocol, frame_size, throughput):
 
 
 def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=None, measure_latency=False, sip=None,
-            ns=None):
+            ns=None, fixed_netperf_port=False):
     """Use Netperf measure TCP throughput (Mbps) and latency (us).
 
 
@@ -419,16 +427,29 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
         else:
             t = 'TCP_STREAM'
     send_size = get_send_size(protocol, frame_size)
-    if not measure_latency:
-        #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
-        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT"'.format(t, dip, duration)
-        pat = r'THROUGHPUT=(\d+)'
-        pat = r'THROUGHPUT=(\d+\.\d+|\d+)'
+    if fixed_netperf_port:
+        if not measure_latency:
+            # cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+            cmd = 'netperf -t {0} -H {1} -v 2 -l {2} -f m -j -p {3},{3} -- -k "THROUGHPUT" -P {4}'.format(t, dip, duration, 10000+cpu, 20000+cpu)
+            pat = r'THROUGHPUT=(\d+)'
+            pat = r'THROUGHPUT=(\d+\.\d+|\d+)'
+        else:
+            # cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+            # 1 request per 100 msec
+            cmd = 'netperf -t {0} -H {1} -v 2 -l {2} -w 10 -b 100 -f m -j -p {3},{3} -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1 -P {4}'.format(
+                t, dip, duration, 10000+cpu, 20000+cpu)
+            pat = r'MIN_LATENCY=(\d+\.\d+|\d+).*?MEAN_LATENCY=(\d+\.\d+|\d+).*?P50_LATENCY=(\d+\.\d+|\d+).*?P90_LATENCY=(\d+\.\d+|\d+).*?P99_LATENCY=(\d+\.\d+|\d+).*?MAX_LATENCY=(\d+\.\d+|\d+)'
     else:
-        #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
-        # 1 request per 100 msec
-        cmd = 'netperf -t {} -H {} -v 2 -l {} -w 10 -b 100 -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1'.format(t, dip, duration)
-        pat = r'MIN_LATENCY=(\d+\.\d+|\d+).*?MEAN_LATENCY=(\d+\.\d+|\d+).*?P50_LATENCY=(\d+\.\d+|\d+).*?P90_LATENCY=(\d+\.\d+|\d+).*?P99_LATENCY=(\d+\.\d+|\d+).*?MAX_LATENCY=(\d+\.\d+|\d+)'
+        if not measure_latency:
+            #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+            cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT"'.format(t, dip, duration)
+            pat = r'THROUGHPUT=(\d+)'
+            pat = r'THROUGHPUT=(\d+\.\d+|\d+)'
+        else:
+            #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+            # 1 request per 100 msec
+            cmd = 'netperf -t {} -H {} -v 2 -l {} -w 10 -b 100 -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1'.format(t, dip, duration)
+            pat = r'MIN_LATENCY=(\d+\.\d+|\d+).*?MEAN_LATENCY=(\d+\.\d+|\d+).*?P50_LATENCY=(\d+\.\d+|\d+).*?P90_LATENCY=(\d+\.\d+|\d+).*?P99_LATENCY=(\d+\.\d+|\d+).*?MAX_LATENCY=(\d+\.\d+|\d+)'
     if sip:
         cmd = '{} -L {}'.format(cmd, sip)
     if ns:

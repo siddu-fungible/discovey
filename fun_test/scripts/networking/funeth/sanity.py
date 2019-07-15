@@ -195,7 +195,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 # nh
                 nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
-                for i in range(8):
+                for i in CPU_LIST_VM:
                     for j in (10000, 20000):  # TODO: for Netperf control (1000x) and data (2000x), remove after port range support is in
                         for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
                             for sip, dip in zip(src_flows, dst_flows):

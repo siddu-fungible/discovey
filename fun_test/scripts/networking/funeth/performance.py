@@ -279,6 +279,7 @@ class FunethPerformanceBase(FunTestCase):
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
                  'cpu_list': cpu_list,
+                 'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  }
             )
 
