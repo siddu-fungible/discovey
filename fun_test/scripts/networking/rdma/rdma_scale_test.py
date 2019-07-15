@@ -21,7 +21,13 @@ class BasicSetup(FunTestScript):
             fun_test.shared_variables['cmd_args'] = cmd_args
         fun_test.shared_variables['scenario'] = scenario_type
 
-        # TODO: Add Bringup Logic
+        if scenario_type in [RdmaHelper.SCENARIO_TYPE_1_1, RdmaHelper.SCENARIO_TYPE_N_1, RdmaHelper.SCENARIO_TYPE_N_N]:
+            if 'test_case_ids' in inputs:
+                fun_test.selected_test_case_ids = inputs['test_case_ids']
+            else:
+                fun_test.selected_test_case_ids = [1, 2]
+        elif scenario_type == RdmaHelper.SCENARIO_TYPE_LATENCY_UNDER_LOAD:
+            fun_test.selected_test_case_ids = [3]
 
     def cleanup(self):
         pass
@@ -56,8 +62,11 @@ class RdmaWriteBandwidthTest(FunTestCase):
         duration = self.rdma_helper.get_traffic_duration_in_secs()
         is_parallel = self.rdma_helper.is_parallel()
         inline_size = self.rdma_helper.get_inline_size()
+        run_infinetly = self.rdma_helper.get_run_infinetly()
+        iterations = self.rdma_helper.get_iterations()
         self.rdma_template = RdmaTemplate(test_type=self.test_type, is_parallel=is_parallel,
                                           size=size_in_bytes, duration=duration, inline_size=inline_size,
+                                          iterations=iterations, run_infinitely=run_infinetly,
                                           client_server_objs=client_server_objs, hosts=self.rdma_helper.host_objs)
         if self.setup_test:
             result = self.rdma_template.setup_test()
