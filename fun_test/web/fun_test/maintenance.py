@@ -677,7 +677,7 @@ if __name__ == "__main__soak_flows_apps":
         print data_sets
         print ("Metric id: {}".format(metric_id))
 
-if __name__ == "__main__":
+if __name__ == "__main_rdma__":
 
     internal_chart_names = OrderedDict([("ib_write_latency_size_1b", 1), ("ib_write_latency_size_128b", 128),
                                         ("ib_write_latency_size_256b", 256), ("ib_write_latency_size_512b", 512),
@@ -856,3 +856,106 @@ if __name__ == "__main__":
 
     print ("Data sets: {}".format(data_sets))
     print ("Metric id: {}".format(metric_id))
+
+if __name__ == "__main__":
+    internal_iops_chart_names = ["bmv_storage_local_ssd_random_read_iops", "bmv_storage_local_ssd_random_write_iops"]
+    num_threads = [1, 4, 16, 64, 256]
+    for internal_chart_name in internal_iops_chart_names:
+        if "random_read" in internal_chart_name:
+            test = "randread"
+            output_name = "output_read_iops"
+        else:
+            test = "randwrite"
+            output_name = "output_write_iops"
+        chart_name = "IOPS"
+        positive = True
+        model_name = "AlibabaPerformance"
+        data_sets = []
+        for thread in num_threads:
+            one_data_set = {}
+            one_data_set["name"] = str(thread)
+            one_data_set["inputs"] = {"input_test": test, "input_num_threads": thread, "input_platform":
+                FunPlatform.F1, "input_io_depth": 1}
+            one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                      "unit": PerfUnit.UNIT_OPS}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Radhika Naik (radhika.naik@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/POCs/Alibaba/raw_vol_pcie_perf.py",
+                    positive=positive,
+                    y1_axis_title=PerfUnit.UNIT_OPS,
+                    visualization_unit=PerfUnit.UNIT_OPS,
+                    metric_model_name=model_name,
+                    platform=FunPlatform.F1,
+                    work_in_progress=False).save()
+    print "added iops charts"
+    internal_latency_chart_names = ["bmv_storage_local_ssd_random_read_qd1_latency",
+                                 "bmv_storage_local_ssd_random_read_qd4_latency",
+                                 "bmv_storage_local_ssd_random_read_qd16_latency",
+                                 "bmv_storage_local_ssd_random_read_qd64_latency",
+                                    "bmv_storage_local_ssd_random_read_qd256_latency",
+                                    "bmv_storage_local_ssd_random_write_qd1_latency",
+                                    "bmv_storage_local_ssd_random_write_qd4_latency",
+                                    "bmv_storage_local_ssd_random_write_qd16_latency",
+                                    "bmv_storage_local_ssd_random_write_qd64_latency", "bmv_storage_local_ssd_random_write_qd256_latency"]
+    for internal_chart_name in internal_latency_chart_names:
+        if "random_read" in internal_chart_name:
+            test = "randread"
+            output_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
+        else:
+            test = "randwrite"
+            output_names = ["output_write_avg_latency", "output_write_99_latency", "output_write_99_99_latency"]
+        chart_name = "Latency"
+        positive = False
+        model_name = "AlibabaPerformance"
+        if "qd256" in internal_chart_name:
+            thread = 256
+        elif "qd64" in internal_chart_name:
+            thread = 64
+        elif "qd16" in internal_chart_name:
+            thread = 16
+        elif "qd4" in internal_chart_name:
+            thread = 4
+        else:
+            thread = 1
+        data_sets = []
+        for output_name in output_names:
+            if "avg" in output_name:
+                name = "avg"
+            elif "99_99" in output_name:
+                name = "99.99%"
+            else:
+                name = "99%"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {"input_test": test, "input_num_threads": thread, "input_platform":
+                FunPlatform.F1, "input_io_depth": 1}
+            one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                      "unit": PerfUnit.UNIT_USECS}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Radhika Naik (radhika.naik@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/POCs/Alibaba/raw_vol_pcie_perf.py",
+                    positive=positive,
+                    y1_axis_title=PerfUnit.UNIT_USECS,
+                    visualization_unit=PerfUnit.UNIT_USECS,
+                    metric_model_name=model_name,
+                    platform=FunPlatform.F1,
+                    work_in_progress=False).save()
+    print "added latency charts"
+
+
+
+
