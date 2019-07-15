@@ -47,6 +47,7 @@ try:
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
+        cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
         fundrv_branch = inputs.get('fundrv_branch', None)
         fundrv_commit = inputs.get('fundrv_commit', None)
         funsdk_branch = inputs.get('funsdk_branch', None)
@@ -56,7 +57,8 @@ try:
         control_plane = False  # default False
         update_driver = True  # default True
         hu_host_vm = False  # default False
-        bootup_funos = True # default True
+        bootup_funos = True  # default True
+        cleanup = True  # default True
         fundrv_branch = None
         fundrv_commit = None
         funsdk_branch = None
@@ -67,6 +69,7 @@ except:
     update_driver = True
     hu_host_vm = False
     bootup_funos = True
+    cleanup = True
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
@@ -290,14 +293,16 @@ class FunethSanity(FunTestScript):
                     funeth_obj.collect_syslog()
                     fun_test.log("Collect dmesg from HU hosts")
                     funeth_obj.collect_dmesg()
-                    fun_test.log("Unload funeth driver")
-                    funeth_obj.unload()
+                    if cleanup:
+                        fun_test.log("Unload funeth driver")
+                        funeth_obj.unload()
             except:
-                hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
-                for host_ip, host_info in hu_hosts.iteritems():
-                    host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
+                if cleanup:
+                    hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
+                    for host_ip, host_info in hu_hosts.iteritems():
+                        host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
-            if control_plane:
+            if control_plane and cleanup:
                 linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
                 try:
                     linux_obj.sudo_command('rmmod funeth')
