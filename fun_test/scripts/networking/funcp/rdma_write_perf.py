@@ -225,7 +225,7 @@ class NicEmulation(FunTestCase):
         # Using the first host instance of f1_0 & f1_1 object for all tests
         host_objs = fun_test.shared_variables["hosts_obj"]
         for obj in host_objs:
-            host_objs[obj][0].command("/home/localadmin/mks/update_rdma.sh update update")
+            host_objs[obj][0].command("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
