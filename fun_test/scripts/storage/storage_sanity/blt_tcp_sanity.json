@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "huid": 7,
@@ -8,6 +8,7 @@
     "syslog_level": 2,
     "command_timeout": 30,
     "reboot_timeout": 400,
+    "io_queues": 16,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -30,6 +31,7 @@
         "f1_loopback_ip": "29.1.1.1"
       }
     },
+    "end_host_name": "poc-server-01",
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -49,6 +51,8 @@
       "size": "100%",
       "rw": "write",
       "direct": 1,
+      "verify": "xxhash",
+      "do_verify": 1,
       "prio": 0,
       "timeout": 360
     }
@@ -89,6 +93,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
+      "verify": "xxhash",
+      "do_verify": 1,
       "rwmixread": 70,
       "runtime": 30,
       "timeout": 35
@@ -105,6 +111,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
+      "verify": "xxhash",
+      "do_verify": 1,
       "rwmixread": 30,
       "runtime": 30,
       "timeout": 35
@@ -121,6 +129,8 @@
       "size": "100%",
       "direct": 1,
       "prio": 0,
+      "verify": "xxhash",
+      "do_verify": 1,
       "rwmixread": 70,
       "runtime": 30,
       "timeout": 35
@@ -138,6 +148,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
+      "verify": "xxhash",
+      "do_verify": 1,
       "runtime": 30,
       "timeout": 35
     },
@@ -147,5 +159,4 @@
     ],
     "fio_job_name": "blt_tcp_sanity"
   }
-
 }

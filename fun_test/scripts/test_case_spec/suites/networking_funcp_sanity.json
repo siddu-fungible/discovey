@@ -1,0 +1,4 @@
+[
+  {"info": {"tags": ["networking-sanity"]}},
+  {"path": "networking/funcp/funcp_sanity.py"}
+]

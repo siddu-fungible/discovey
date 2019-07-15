@@ -181,7 +181,7 @@ def set_result_dict(result):
 def set_from_to_dates(chart):
     dates = {}
     # calculate the from date and to date for fetching the data
-    today = datetime.datetime.now(pytz.timezone('US/Pacific'))
+    today = datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
     from_date = adjust_timezone_for_day_light_savings(from_date)
     from_date = get_rounded_time(from_date)
@@ -221,7 +221,7 @@ def set_chart_status_details(chart, result):
 
 
 def adjust_timezone_for_day_light_savings(current_date):
-    date_time_obj = datetime.datetime(year=current_date.year, month=current_date.month, day=current_date.day,
+    date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day,
                                       hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
@@ -562,9 +562,6 @@ def convert_to_base_unit(output_value, output_unit):
 
 
 if __name__ == "__main__":
-    # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="rcnvme")
-    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     chart_names = ["F1", "S1", "All metrics"]
     for chart_name in chart_names:
         total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name=chart_name)

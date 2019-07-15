@@ -1,6 +1,9 @@
 import requests
 import dateutil.parser
 from datetime import timedelta
+from dateutil import parser
+from fun_global import get_current_time
+import re
 
 class Commit():
     def __init__(self, sha, date):
@@ -22,6 +25,51 @@ class GitManager:
     BASE_URL = "https://api.github.com"
     ORG = "fungible-inc"
     TOKEN = "6e7ab48474553bbabceeefde388339204ecd6c0f"
+
+    def get_funsdk_build_props(self, build_number):
+        url = "http://dochub.fungible.local/doc/jenkins/funsdk/{}/bld_props.json".format(build_number)
+        bld_props = None
+        try:
+            r = requests.get(url)
+            bld_props = r.json()
+        except:
+            pass
+        return bld_props
+
+    def get_bld_tags(self, repository_name="FunOS", earliest_date=get_current_time() - timedelta(days=30)):
+        url = "{}/repos/{}/{}".format(self.BASE_URL, self.ORG, repository_name)
+        url = "{}/repos/fungible-inc/FunOS/tags".format(self.BASE_URL)
+
+        all_tags = []
+
+        # r = requests.get(url=url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
+        earliest_date_found = False
+        for page_index in range(1, 10):
+            if earliest_date_found:
+                break
+            page_url = url + "?page={}&per_page={}".format(page_index, 100)
+            r = requests.get(url=page_url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
+            if r.status_code == 200:
+                response = r.json()
+                # response = [x for x in response if len(x["parents"]) > 1]
+                # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
+                # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
+                tags = response
+
+                for tag in tags:
+                    tag_name = tag["name"]
+                    commit_sha = tag["commit"]["sha"]
+                    c = self.get_commit(sha=commit_sha)
+                    commit_date = parser.parse(c.date)
+                    # print tag_name, commit_sha, commit_date
+                    if commit_date < earliest_date and tag_name.startswith("bld_"):
+                        earliest_date_found = True
+                    if tag_name.startswith("bld_"):
+                        build_number = re.sub(r'bld_', '', tag_name)
+                        bld_props = self.get_funsdk_build_props(build_number=build_number)
+                        new_tag = {"name": tag_name, "sha": commit_sha, "date": commit_date, "bld_props": bld_props}
+                        all_tags.append(new_tag)
+        return all_tags
 
     def get_all_commits(self, repository_name="FunOS", from_sha=None, since=None, until=None):
         results = None
@@ -87,7 +135,15 @@ if __name__ == "__main__":
     from_sha = "a11bab8"
     to_sha = "178b6eb"
 
+    gm.get_bld_tags()
+
+    """
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))
     for commit in commits:
         print commit.sha, commit.date
+    """
+
+
+s1 = "2019-05-22T21:22:00Z"
+s2 = "2019-05-25T06:22:45Z"

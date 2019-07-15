@@ -18,6 +18,8 @@ from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
 from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
+from asset.asset_global import AssetType
+from web.fun_test.models import Asset
 from web.fun_test.models import TestBed, User
 from django.db import transaction
 from pytz import timezone
@@ -55,6 +57,8 @@ if not DEBUG:
 else:
     handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+if len(scheduler_logger.handlers):
+    del scheduler_logger.handlers[:]
 scheduler_logger.addHandler(hdlr=handler)
 
 
@@ -288,8 +292,9 @@ def queue_job3(suite_path=None,
                test_bed_type=None,
                version=None,
                requested_priority_category=SchedulerJobPriority.NORMAL,
-               submitter_email=None):
-    time.sleep(0.1)
+               submitter_email=None,
+               description=None):
+    # time.sleep(0.1)
     result = -1
     if not tags:
         tags = []
@@ -299,7 +304,8 @@ def queue_job3(suite_path=None,
         inputs = {}
     if suite_type == SuiteType.DYNAMIC:
         original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
-        suite_path = "Re({})".format(original_suite_execution.suite_path)
+        # suite_path = "Re({})".format(original_suite_execution.suite_path)
+        suite_path = original_suite_execution.suite_path
 
     if suite_path and suite_path.replace(".json", "").endswith("_container"):
         suite_type = SuiteType.CONTAINER
@@ -348,6 +354,7 @@ def queue_job3(suite_path=None,
         suite_execution.build_url = build_url
         suite_execution.version = version
         suite_execution.requested_priority_category = requested_priority_category
+        suite_execution.description = description
 
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
@@ -592,6 +599,9 @@ def get_manual_lock_test_beds():
 def get_test_bed_by_name(test_bed_name):
     return TestBed.objects.get(name=test_bed_name)
 
+def manual_un_lock_assets(test_bed_name, manual_lock_submitter):
+    from asset.asset_manager import AssetManager
+    AssetManager().manual_un_lock_assets_by_test_bed(test_bed_name=test_bed_name, user=manual_lock_submitter)
 
 def send_error_mail(message, submitter_email=None, job_id=None):
     to_addresses = [TEAM_REGRESSION_EMAIL]
@@ -603,7 +613,7 @@ def send_error_mail(message, submitter_email=None, job_id=None):
     pass
 
 
-def send_test_bed_remove_lock(test_bed, warning=False):
+def send_test_bed_remove_lock(test_bed, warning=False, un_lock_warning_time=60 * 10):
 
     submitter_email = test_bed.manual_lock_submitter
     expiry_time = test_bed.manual_lock_expiry_time
@@ -614,18 +624,58 @@ def send_test_bed_remove_lock(test_bed, warning=False):
 
     user = User.objects.get(email=submitter_email)
     content = "Hi {},".format(user.first_name) + "<br>"
-    content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
+    content += "Manual-testing lock duration for test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
     if warning:
-        content += "We will unlock the test-bed in 1 hour" + "<br>"
-        subject = "Manual-testing lock duration for Test-bed {} has exceeded".format(test_bed.name)
+        content += "We will unlock the test-bed in {} minutes".format(un_lock_warning_time / 60) + "<br>"
+        subject = "Manual-testing lock duration for test-bed {} has exceeded".format(test_bed.name)
     else:
         content += "Unlocking now" + "<br>"
-        subject = "Manual lock for Test-bed {} removed".format(test_bed.name)
+        subject = "Manual lock for test-bed {} removed".format(test_bed.name)
     content += "- Regression" + "<br>"
 
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
 
 
+def get_job_inputs(job_id):
+    job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
+    job_inputs = {}
+    if hasattr(job_spec, "inputs"):
+        if (job_spec.inputs):
+            job_inputs = json.loads(job_spec.inputs)
+    return job_inputs
+
+def get_suite_based_test_bed_spec(job_id):
+    spec = None
+    s = models_helper.get_suite_execution(suite_execution_id=job_id)
+    suite_path = s.suite_path
+    if suite_path:
+        job_inputs = get_job_inputs(job_id=job_id)
+        if "custom_test_bed_spec" in job_inputs:
+            spec = job_inputs.get("custom_test_bed_spec", None)
+        else:
+            suite_spec = parse_suite(suite_name=suite_path)
+            if suite_spec:
+                for item in suite_spec:
+                    if "info" in item:
+                        info = item["info"]
+                        if "custom_test_bed_spec" in info:
+                            spec = info["custom_test_bed_spec"]
+                        else:
+                            print("Job: {} no custom_test_bed_spec in {}".format(job_id, suite_path))
+                        break
+    return spec
+
+def lock_assets(job_id, assets):
+    if assets:
+        for asset_type, assets in assets.items():
+            for asset in assets:
+                Asset.add_update(name=asset, type=asset_type)
+                Asset.add_job_id(name=asset, type=asset_type, job_id=job_id)
+
+def un_lock_assets(job_id):
+    assets = Asset.objects.filter(job_ids__contains=[job_id])
+    for asset in assets:
+        asset.job_ids = asset.remove_job_id(job_id=job_id)
 
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):

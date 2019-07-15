@@ -4,6 +4,7 @@ import re
 import requests
 import json
 from lib.system.fun_test import FunTimer, fun_test
+from fun_settings import JENKINS_PASSWORD, JENKINS_USERNAME
 from requests.auth import HTTPBasicAuth
 
 
@@ -13,7 +14,7 @@ DEFAULT_BUILD_PARAMS = {
     "HW_VERSION": "Ignored",
     "RUN_MODE": "Build only",
     "PRIORITY": "high_priority",
-    "BOOTARGS": "app=jpeg_perf_test --test-exit-fast",
+    "BOOTARGS": "",
     "MAX_DURATION": 3,
     "SECURE_BOOT": "fungible",
     "NOTE": "",
@@ -49,12 +50,16 @@ DEFAULT_BUILD_PARAMS = {
 }
 
 class JenkinsManager():
+    CONNECT_TIMEOUT = 60
     JENKINS_BASE_URL = "http://jenkins-sw-master:8080"
-    SERVICE_PASSWORD = '117071d3cb2cae6c964099664b271e4011'
-    SERVICE_USERNAME = 'jenkins.service'
+    SERVICE_PASSWORD = JENKINS_PASSWORD
+    SERVICE_USERNAME = JENKINS_USERNAME
+
     def __init__(self, job_name="emulation/fun_on_demand"):
-        self.jenkins_server = jenkins.Jenkins(self.JENKINS_BASE_URL, username=self.SERVICE_USERNAME,
-                                     password=self.SERVICE_PASSWORD)
+        self.jenkins_server = jenkins.Jenkins(self.JENKINS_BASE_URL,
+                                              username=self.SERVICE_USERNAME,
+                                              password=self.SERVICE_PASSWORD,
+                                              timeout=self.CONNECT_TIMEOUT)
         self.job_name = job_name
 
     def _apply_params(self, user_params):
@@ -185,7 +190,8 @@ class JenkinsManager():
 if __name__ == "__main__":
     jenkins_manager = JenkinsManager()
     boot_args = "app=jpeg_perf_test --test-exit-fast"
-    params = {"BOOTARGS": boot_args, "FUNOS_MAKEFLAGS": "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"}
+    params = {"BOOTARGS": boot_args,
+              "FUNOS_MAKEFLAGS": "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"}
 
     queue_item = jenkins_manager.build(params=params)
     build_number = None

@@ -1,51 +1,51 @@
 {
-  "EC42FioReadEffortAuto": {
-    "num_ssd": 12,
+  "GlobalSetup": {
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze  --useddr",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "huid": 3,
+    "ctlid": 2,
+    "fnid": 2,
+    "transport": "PCI",
+    "reboot_timeout": 300,
+    "num_ssd": 6,
     "num_volume": 1,
     "ec_coding": {
       "ndata": 4,
       "nparity": 2
     },
-    "volume_types": [
-      "lsv",
-      "ec",
-      "raw",
-      "jvol",
-      "ctrlr"
-    ],
-    "volume_info": {
-      "lsv": {
-        "block_size": 4096,
-        "zip_effort": "ZIP_EFFORT_AUTO",
-        "zip_filter": "FILTER_TYPE_DEFLATE",
-        "compress": true,
-        "capacity": 26843545600,
-        "type": "VOL_TYPE_BLK_LSV"
+    "command_timeout": 30
+  },
+  "EC42FioReadEffortAuto": {
+    "ns_id": 1,
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
       },
-      "jvol": {
-        "type": "VOL_TYPE_BLK_NV_MEMORY",
-        "capacity": 4194304,
-        "block_size": 512,
-        "name": "nvvol"
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
       },
-      "raw": {
-        "type": "VOL_TYPE_BLK_LOCAL_THIN",
-        "block_size": 4096,
-        "capacity": 0
-      },
-      "ec": {
-        "capacity": 0,
-        "block_size": 4096,
-        "type": "VOL_TYPE_BLK_EC"
-      },
-      "ctrlr": {
-        "transport": "PCI",
-        "huid": 3,
-        "ctlid": 2,
-        "fnid": 2,
-        "nsid": 1
-      }
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 26843545600,
+      "use_lsv": 1,
+      "lsv_pct": 0.25,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_64Gbps",
+      "zip_filter": "FILTER_TYPE_DEFLATE"
     },
+    "syslog_level": 2,
     "write_fio_cmd_args": {
       "bs": "4k",
       "iodepth": 8,
@@ -57,37 +57,25 @@
       "buffer_pattern": "0xdeadbeef",
       "buffer_compress_percentage": 50
     },
-    "read_modes": [
-      "read",
-      "randread"
-    ],
+    "command_timeout": 30,
+    "iter_interval": 1,
     "read_fio_cmd_args": {
       "bs": "4k",
       "numjobs": 8,
-      "cpumask": 1,
-      "iodepth": 2,
+      "cpus_allowed": "0-7",
+      "iodepth": 16,
       "size": "100%",
       "rw": "read",
       "name": "ec_fio_25G",
       "direct": 1,
       "prio": 0,
-      "runtime": 300,
-      "timeout": 720
+      "runtime": 180,
+      "timeout": 185
     },
-    "write_ut_fio_cmd_args": {
-      "bs": "4k",
-      "iodepth": 1,
-      "size": "16K",
-      "rw": "write",
-      "direct": 1,
-      "buffer_compress_percentage": 50,
-      "prio": 0,
-      "timeout": 720,
-      "buffer_pattern": "0xdeadbeef"
-    },
-    "command_timeout": 30,
-    "transport": "PCI",
-    "nvme_device": "/dev/nvme",
+    "fio_modes": [
+      "read",
+      "randread"
+    ],
     "test_parameters": [
       {
         "name": "Performance stats for 1% compressed data",
@@ -104,49 +92,32 @@
     ]
   },
   "EC42FioReadCompDisabled": {
-    "num_ssd": 12,
-    "num_volume": 1,
-    "ec_coding": {
+    "ns_id": 1,
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
       "ndata": 4,
-      "nparity": 2
+      "nparity": 2,
+      "capacity": 26843545600,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
     },
-    "volume_types": [
-      "lsv",
-      "ec",
-      "raw",
-      "jvol",
-      "ctrlr"
-    ],
-    "volume_info": {
-      "lsv": {
-        "block_size": 4096,
-        "capacity": 26843545600,
-        "type": "VOL_TYPE_BLK_LSV"
-      },
-      "jvol": {
-        "type": "VOL_TYPE_BLK_NV_MEMORY",
-        "capacity": 4194304,
-        "block_size": 512,
-        "name": "nvvol"
-      },
-      "raw": {
-        "type": "VOL_TYPE_BLK_LOCAL_THIN",
-        "block_size": 4096,
-        "capacity": 0
-      },
-      "ec": {
-        "capacity": 0,
-        "block_size": 4096,
-        "type": "VOL_TYPE_BLK_EC"
-      },
-      "ctrlr": {
-        "transport": "PCI",
-        "huid": 3,
-        "ctlid": 2,
-        "fnid": 2,
-        "nsid": 1
-      }
-    },
+    "syslog_level": 2,
     "write_fio_cmd_args": {
       "bs": "4k",
       "iodepth": 8,
@@ -158,37 +129,25 @@
       "buffer_pattern": "0xdeadbeef",
       "buffer_compress_percentage": 50
     },
-    "read_modes": [
-      "read",
-      "randread"
-    ],
+    "command_timeout": 30,
+    "iter_interval": 1,
     "read_fio_cmd_args": {
       "bs": "4k",
-      "numjobs": 1,
-      "cpumask": 1,
-      "iodepth": 19,
-      "size": "25G",
+      "numjobs": 8,
+      "cpus_allowed": "0-7",
+      "iodepth": 16,
+      "size": "100%",
       "rw": "read",
       "name": "ec_fio_25G_comp_disabled",
       "direct": 1,
       "prio": 0,
-      "runtime": 300,
-      "timeout": 720
+      "runtime": 180,
+      "timeout": 185
     },
-    "write_ut_fio_cmd_args": {
-      "bs": "4k",
-      "iodepth": 1,
-      "size": "16K",
-      "rw": "write",
-      "direct": 1,
-      "buffer_compress_percentage": 50,
-      "prio": 0,
-      "timeout": 720,
-      "buffer_pattern": "0xdeadbeef"
-    },
-    "command_timeout": 30,
-    "transport": "PCI",
-    "nvme_device": "/dev/nvme",
+    "fio_modes": [
+      "read",
+      "randread"
+    ],
     "test_parameters": [
       {
         "name": "Performance stats for Compression Disabled",

@@ -74,9 +74,10 @@ class Dut(ToDictMixin):
 
     TO_DICT_VARS = ["type", "index", "interfaces", "start_mode", "instance", "fpg_interfaces"]
 
-    def __init__(self, type, index, mode=MODE_SIMULATION, spec=None, start_mode=None):
+    def __init__(self, type, index, mode=MODE_SIMULATION, spec=None, start_mode=None, name=None):
         self.type = type
         self.index = index
+        self.name = name
         self.interfaces = {}  # For PCIe interfaces
         self.fpg_interfaces = {0: {}, 1: {}}  # for each F1
         self.bond_interfaces = {0: {}, 1: {}}
@@ -86,10 +87,13 @@ class Dut(ToDictMixin):
         self.start_mode = start_mode
 
     def __repr__(self):
-        return str(self.index) + " : " + str(self.type)
+        return str(self.index) + " : " + str(self.type) + " : " + self.name
 
     def set_instance(self, instance):
         self.instance = instance
+
+    def set_name(self, name):
+        self.name = name
 
     def get_ssd_interfaces(self):
         return self.interfaces

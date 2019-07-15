@@ -51,7 +51,9 @@ ClientAliveCountMax 3
 # export PRODUCTION_MODE=1
 # python web/manage.py migrate --database=default
 # cd web/angular/qadashboard/
+# brew install npm (For Mac only)
 # npm install
+# npm install -g @angular/cli
 # ng build --prod  --output-hashing none
 # cd ../../../
 # nohup python web/start_production_server.py &> server.out  &
@@ -65,4 +67,13 @@ ClientAliveCountMax 3
 # export PYTHONPATH=`pwd`
 # export PRODUCTION_MODE=1
 # scheduler/restart_scheduler.sh
+~~~~
+
+
+## Re-starting the web-server
+~~~~
+# cd /project/users/QA/regression/Integration/fun_test
+# export PYTHONPATH=`pwd`
+# export PRODUCTION_MODE=1
+# ./web/restart_production_server.sh
 ~~~~

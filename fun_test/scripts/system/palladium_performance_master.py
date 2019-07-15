@@ -20,10 +20,10 @@ from web.fun_test.models import TimeKeeper
 import re
 from datetime import datetime
 from dateutil.parser import parse
-from scripts.system.metric_parser import MetricParser
+from scripts.system.metrics_parser import MetricParser
 from django.utils import timezone
 from web.fun_test.models_helper import add_jenkins_job_id_map
-from fun_global import FunPlatform
+from fun_global import FunPlatform, PerfUnit
 
 F1 = FunPlatform.F1
 
@@ -62,6 +62,11 @@ IPSEC_ENC_SINGLE_TUNNEL = "ipsec_enc_single_tunnel_teramark"
 IPSEC_ENC_MULTI_TUNNEL = "ipsec_enc_multi_tunnel_teramark"
 IPSEC_DEC_SINGLE_TUNNEL = "ipsec_dec_single_tunnel_teramark"
 IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
+VOLTEST_LSV = "qa_voltest_lsv_performance"
+VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
+CHANNEL_PARALL = "qa_channel_parall"
+SOAKFLOWSBUSYLOOP = "qa_soak_flows_busy_loop"
+SOAKFLOWSMEMCPY = "qa_soak_flows_memcpy_non_coh"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -72,7 +77,8 @@ nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
-                     "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance"]
+                     "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance", "HuLatencyUnderLoadPerformance",
+                     "TeraMarkFunTcpConnectionsPerSecondPerformance"]
 
 
 def get_rounded_time():
@@ -108,8 +114,8 @@ def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenki
 
 
 def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit,
-                     internal_chart_name):
-    charts = MetricChart.objects.filter(internal_chart_name=internal_chart_name)
+                     metric_id):
+    charts = MetricChart.objects.filter(metric_id=metric_id)
     for chart in charts:
         chart.last_build_status = result
         chart.last_build_date = get_current_time()
@@ -121,7 +127,7 @@ def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, j
         chart.save()
 
 
-def set_networking_chart_status(platform="F1"):
+def set_networking_chart_status(platform=FunPlatform.F1):
     for model in networking_models:
         metric_model = app_config.get_metric_models()[model]
         charts = MetricChart.objects.filter(metric_model_name=model, platform=platform)
@@ -142,11 +148,13 @@ def set_networking_chart_status(platform="F1"):
                     if value == -1:
                         status = False
                         chart.last_build_status = fun_test.FAILED
+                        chart.last_suite_execution_id = fun_test.get_suite_execution_id()
                         chart.last_build_date = get_current_time()
                         chart.save()
                         break
             if status:
                 chart.last_build_status = fun_test.PASSED
+                chart.last_suite_execution_id = fun_test.get_suite_execution_id()
                 chart.last_build_date = get_current_time()
                 chart.save()
 
@@ -183,7 +191,8 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_WRITE, TERAMARK_CRYPTO_SINGLE_TUNNEL, TERAMARK_CRYPTO_MULTI_TUNNEL, RCNVME_READ_ALL,
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
-                IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL]
+                IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAKFLOWSBUSYLOOP, SOAKFLOWSMEMCPY]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -585,7 +594,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         reset_cut_done = False
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
+            log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
             fun_test.test_assert(log, "fetched boot time uart log")
             log = log.split("\n")
             for line in log:
@@ -677,60 +686,85 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
                         metrics["output_boot_success_boot_time_unit"] = "msecs"
 
-            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
+            log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
             fun_test.test_assert(log, "fetched mmc time uart log")
             log = log.split("\n")
             for line in log:
-                if "Welcome to FunOS" in line:
-                    break
-                else:
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
-                        line)
-                    if m:
-                        output_init_mmc_time = int(m.group("time")) / 1000.0
-                        output_init_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
-                                                                   output_init_mmc_cycles))
-                        metrics["output_init_mmc_time"] = output_init_mmc_time
-                        metrics["output_init_mmc_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+all\s+VPs\s+online,\s+sending\s+bootstrap\s+WU',
+                    line)
+                if m:
+                    metrics["output_all_vps_online"] = float(m.group("timestamp"))
+                    metrics["output_all_vps_online_unit"] = PerfUnit.UNIT_SECS
+                    fun_test.log(
+                        "All VPs online: {}".format(metrics["output_all_vps_online"]))
+                m = re.search(
+                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+Parsing\s+config\s+took\s+(?P<parsing_time>\d+)(?P<parsing_unit>\S+)',
+                    line)
+                if m:
+                    metrics["output_parsing_config_end"] = float(m.group("timestamp"))
+                    metrics["output_parsing_config_end_unit"] = PerfUnit.UNIT_SECS
+                    metrics["output_parsing_config"] = float(m.group("parsing_time"))
+                    metrics["output_parsing_config_unit"] = m.group("parsing_unit")
+                    fun_test.log(
+                        "Parsing config: {}, {}".format(metrics["output_parsing_config"],
+                                                        metrics["output_parsing_config_end"]))
+                m = re.search(
+                    r'\[(?P<timestamp>.*)\s+\S+\]\s+\[\S+\]\s+SKU\s+has\s+SBP,\s+sending\s+a\s+HOST_BOOTED\s+message',
+                    line)
+                if m:
+                    metrics["output_sending_host_booted_message"] = float(m.group("timestamp"))
+                    metrics["output_sending_host_booted_message_unit"] = PerfUnit.UNIT_SECS
+                    fun_test.log(
+                        "Sending host booted message: {}".format(metrics["output_sending_host_booted_message"]))
 
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
-                        line)
-                    if m:
-                        output_boot_read_mmc_time = int(m.group("time")) / 1000.0
-                        output_boot_read_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
-                                                                        output_boot_read_mmc_cycles))
-                        metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
-                        metrics["output_boot_read_mmc_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
+                    line)
+                if m:
+                    output_init_mmc_time = int(m.group("time")) / 1000.0
+                    output_init_mmc_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
+                                                               output_init_mmc_cycles))
+                    metrics["output_init_mmc_time"] = output_init_mmc_time
+                    metrics["output_init_mmc_time_unit"] = "msecs"
 
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
-                        line)
-                    if m:
-                        output_funos_read_mmc_time = int(m.group("time")) / 1000.0
-                        output_funos_read_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
-                                                                         output_funos_read_mmc_cycles))
-                        metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
-                        metrics["output_funos_read_mmc_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
+                    line)
+                if m:
+                    output_boot_read_mmc_time = int(m.group("time")) / 1000.0
+                    output_boot_read_mmc_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
+                                                                    output_boot_read_mmc_cycles))
+                    metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
+                    metrics["output_boot_read_mmc_time_unit"] = "msecs"
 
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
-                        line)
-                    if m:
-                        output_funos_load_elf_time = int(m.group("time")) / 1000.0
-                        output_funos_load_elf_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
-                                                                         output_funos_load_elf_cycles))
-                        metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
-                        metrics["output_funos_load_elf_time_unit"] = "msecs"
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
+                    line)
+                if m:
+                    output_funos_read_mmc_time = int(m.group("time")) / 1000.0
+                    output_funos_read_mmc_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
+                                                                     output_funos_read_mmc_cycles))
+                    metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
+                    metrics["output_funos_read_mmc_time_unit"] = "msecs"
+
+                m = re.search(
+                    r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
+                    line)
+                if m:
+                    output_funos_load_elf_time = int(m.group("time")) / 1000.0
+                    output_funos_load_elf_cycles = int(m.group("cycle"))
+                    fun_test.log(
+                        "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
+                                                                     output_funos_load_elf_cycles))
+                    metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
+                    metrics["output_funos_load_elf_time_unit"] = "msecs"
 
             d = self.metrics_to_dict(metrics, fun_test.PASSED)
             MetricHelper(model=BootTimePerformance).add_entry(**d)
@@ -745,175 +779,52 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeRsaPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
+    model = "TeraMarkPkeRsaPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=14,
                               summary="TeraMark PKE RSA Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
 
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>RSA\s+CRT\s+2048\s+decryptions)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "pke_rsa_crt_dec_no_pad_soak"
-                    input_metric_name = m.group("metric_name").replace(" ", "_")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=TeraMarkPkeRsaPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkPkeRsaPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeRsa4kPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
+    model = "TeraMarkPkeRsa4kPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=15,
                               summary="TeraMark PKE RSA 4K Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
 
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>RSA\s+CRT\s+4096\s+decryptions)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "pke_rsa_crt_dec_no_pad_4096_soak"
-                    input_metric_name = m.group("metric_name").replace(" ", "_")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=TeraMarkPkeRsa4kPerformance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkPkeRsa4kPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeEcdh256PerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
+    model = "TeraMarkPkeEcdh256Performance"
+    platform = F1
+
 
     def describe(self):
         self.set_test_details(id=16,
                               summary="TeraMark PKE ECDH P256 Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
 
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>ECDH\s+P256)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "pke_ecdh_soak_256"
-                    input_metric_name = m.group("metric_name").replace(" ", "_")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=TeraMarkPkeEcdh256Performance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkPkeEcdh256Performance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeEcdh25519PerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
+    model = "TeraMarkPkeEcdh25519Performance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=17,
                               summary="TeraMark PKE ECDH 25519 Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
 
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>ECDH\s+25519)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "pke_ecdh_soak_25519"
-                    input_metric_name = m.group("metric_name").replace(" ", "_")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=TeraMarkPkeEcdh25519Performance).add_entry(**d)
-
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkPkeEcdh25519Performance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkCryptoPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO
     model = "TeraMarkCryptoPerformance"
 
@@ -955,9 +866,6 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_throughput"] = output_throughput
                             metrics["output_ops_per_sec_unit"] = "ops"
                             metrics["output_throughput_unit"] = unit
-                            # metrics["output_latency_min"] = output_latency_min
-                            # metrics["output_latency_avg"] = output_latency_avg
-                            # metrics["output_latency_max"] = output_latency_max
                             d = self.metrics_to_dict(metrics, fun_test.PASSED)
                             metric_model = app_config.get_metric_models()[self.model]
                             MetricHelper(model=metric_model).add_entry(**d)
@@ -985,9 +893,6 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_throughput"] = output_throughput
                             metrics["output_ops_per_sec_unit"] = "ops"
                             metrics["output_throughput_unit"] = unit
-                            # metrics["output_latency_min"] = output_latency_min
-                            # metrics["output_latency_avg"] = output_latency_avg
-                            # metrics["output_latency_max"] = output_latency_max
                             d = self.metrics_to_dict(metrics, fun_test.PASSED)
                             metric_model = app_config.get_metric_models()[self.model]
                             MetricHelper(model=metric_model).add_entry(**d)
@@ -1003,7 +908,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
+class TeraMarkLookupEnginePerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_LOOKUP
     model = "TeraMarkLookupEnginePerformance"
 
@@ -1013,9 +918,10 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class FlowTestPerformanceTC(PalladiumPerformanceTc):
+class FlowTestPerformanceTc(PalladiumPerformanceTc):
     tag = FLOW_TEST_TAG
     model = "FlowTestPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=20,
@@ -1025,22 +931,24 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
+            lines = self.lsf_status_server.get_human_file(job_id=self.job_id, console_name="PCI Script Output")
+            self.lines = lines.split("\n")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
 
-            fun_test.test_assert(result["status"], "Checking if flow test passed")
             fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
+
         except Exception as ex:
             fun_test.critical(str(ex))
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
+                                     git_commit=self.git_commit, model_name=self.model, platform=self.platform)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_ZIP
 
     def describe(self):
@@ -1103,7 +1011,7 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkDfaPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_DFA
     model = "TeraMarkDfaPerformance"
 
@@ -1113,7 +1021,7 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
 
     def describe(self):
@@ -1199,7 +1107,7 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkNuTransitPerformanceTc(PalladiumPerformanceTc):
     model = "NuTransitPerformance"
     file_paths = ["nu_rfc2544_performance.json"]
 
@@ -1261,144 +1169,43 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
+class PkeX25519TlsSoakPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
+    model = "PkeX25519TlsSoakPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=25,
                               summary="ECDHE_RSA X25519 RSA 2K TLS Soak Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
 
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "pke_x25519_2k_tls_soak"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=PkeX25519TlsSoakPerformance).add_entry(**d)
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="PkeX25519TlsSoakPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
+class PkeP256TlsSoakPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
+    model = "PkeP256TlsSoakPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=26,
                               summary="ECDHE_RSA P256 RSA 2K TLS Soak Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            for line in self.lines:
-                m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\)\]',
-                    line)
-                if m:
-                    value_json = json.loads(m.group("value_json"))
-                    output_ops_per_sec = float(value_json["value"])
-                    unit = value_json["unit"]
-                    input_app = "pke_p256_2k_tls_soak"
-                    input_metric_name = m.group("metric_name")
-                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
-                    metrics["input_app"] = input_app
-                    metrics["input_metric_name"] = input_metric_name
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = unit
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=PkeP256TlsSoakPerformance).add_entry(**d)
 
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="PkeP256TlsSoakPerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
+class SoakDmaMemcpyCohPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_COH
     model = "SoakDmaMemcpyCoherentPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=27,
                               summary="Soak DMA memcpy coherent Performance Test",
                               steps="Steps 1")
 
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            for line in self.lines:
-                m = re.search(
-                    r'Bandwidth\s+for\s+DMA\s+(?P<operation>\S+)\s+for\s+size\s+(?P<size>\S+):\s+(?P<bandwidth_json>.*)\s+\[(?P<metric_name>\S+)\]',
-                    line)
-                if m:
-                    input_operation = m.group("operation")
-                    input_size = m.group("size")
-                    bandwidth_json = json.loads(m.group("bandwidth_json"))
-                    output_bandwidth = float(bandwidth_json["value"])
-                    unit = bandwidth_json["unit"]
-                    input_log_size = bandwidth_json["log_size"]
-                    if self.model == "SoakDmaMemsetPerformance":
-                        if "non_coh" in bandwidth_json:
-                            input_non_coherent = bandwidth_json["non_coh"]
-                            metrics["input_coherent"] = False if input_non_coherent == 1 else True
-                        elif "bm" in bandwidth_json:
-                            input_bm = bandwidth_json["bm"]
-                            metrics["input_buffer_memory"] = True if input_bm == 1 else False
-                    metric_name = m.group("metric_name")
-                    metrics["input_size"] = input_size
-                    metrics["input_operation"] = input_operation
-                    metrics["output_bandwidth"] = output_bandwidth
-                    metrics["output_bandwidth_unit"] = unit
-                    metrics["input_log_size"] = input_log_size
-                    metrics["input_metric_name"] = metric_name
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    metric_model = app_config.get_metric_models()[self.model]
-                    MetricHelper(model=metric_model).add_entry(**d)
 
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+class SoakDmaMemcpyNonCohPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_NON_COH
     model = "SoakDmaMemcpyNonCoherentPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=28,
@@ -1406,9 +1213,10 @@ class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
                               steps="Steps 1")
 
 
-class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+class SoakDmaMemsetPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMSET
     model = "SoakDmaMemsetPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=29,
@@ -1416,7 +1224,7 @@ class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
+class TeraMarkMultiClusterCryptoPerformanceTc(TeraMarkCryptoPerformanceTc):
     tag = TERAMARK_CRYPTO
     model = "TeraMarkMultiClusterCryptoPerformance"
 
@@ -1426,7 +1234,7 @@ class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
                               steps="Steps 1")
 
 
-class F1FlowTestPerformanceTC(FlowTestPerformanceTC):
+class F1FlowTestPerformanceTc(FlowTestPerformanceTc):
     tag = F1_FLOW_TEST_TAG
     model = "F1FlowTestPerformance"
 
@@ -1436,7 +1244,7 @@ class F1FlowTestPerformanceTC(FlowTestPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkNfaPerformanceTC(TeraMarkDfaPerformanceTC):
+class TeraMarkNfaPerformanceTc(TeraMarkDfaPerformanceTc):
     tag = TERAMARK_NFA
     model = "TeraMarkNfaPerformance"
 
@@ -1446,45 +1254,18 @@ class TeraMarkNfaPerformanceTC(TeraMarkDfaPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkJuniperNetworkingPerformanceTC(TeraMarkNuTransitPerformanceTC):
-    file_paths = ["nu_rfc2544_fwd_performance.json"]
-    model = "TeraMarkJuniperNetworkingPerformance"
-
-    def describe(self):
-        self.set_test_details(id=33,
-                              summary="TeraMark Juniper Networking Performance Test",
-                              steps="Steps 1")
-
-
-class TeraMarkRcnvmeReadPerformanceTC(PalladiumPerformanceTc):
+class TeraMarkRcnvmeReadPerformanceTc(PalladiumPerformanceTc):
     tag = RCNVME_READ
     model = "TeraMarkRcnvmeReadWritePerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=34,
                               summary="TeraMark rcnvme read Performance Test on F1",
                               steps="Steps 1")
 
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, date_time=self.dt)
 
-            fun_test.test_assert(result["match_found"], "Found atleast one entry")
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        if self.result == fun_test.FAILED:
-            set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                         test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                         git_commit=self.git_commit, model_name=self.model)
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-
-class TeraMarkRcnvmeRandomReadPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class TeraMarkRcnvmeRandomReadPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_READ
     model = "TeraMarkRcnvmeReadWritePerformance"
 
@@ -1494,7 +1275,7 @@ class TeraMarkRcnvmeRandomReadPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkRcnvmeWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class TeraMarkRcnvmeWritePerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_WRITE
     model = "TeraMarkRcnvmeReadWritePerformance"
 
@@ -1504,7 +1285,7 @@ class TeraMarkRcnvmeWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkRcnvmeRandomWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class TeraMarkRcnvmeRandomWritePerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_WRITE
     model = "TeraMarkRcnvmeReadWritePerformance"
 
@@ -1514,164 +1295,7 @@ class TeraMarkRcnvmeRandomWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class TeraMarkHuPerformanceTC(PalladiumPerformanceTc):
-    file_paths = ["hu_funeth_performance_data.json"]
-
-    def describe(self):
-        self.set_test_details(id=38,
-                              summary="TeraMark HU Funeth Performance Test",
-                              steps="Steps 1")
-
-    def run(self):
-        try:
-            fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
-            for file in self.lines:
-                for line in file:
-                    if "flow_type" in line:
-                        date_time = get_time_from_timestamp(line["timestamp"])
-                        if "throughput_h2n" in line:
-                            metrics = self.set_info(line=line)
-                            self.model = "HuThroughputPerformance"
-                            metrics["output_throughput_h2n"] = (float(
-                                line["throughput_h2n"]) / 1000) if line["throughput_h2n"] != -1 else -1
-                            metrics["output_throughput_n2h"] = (float(
-                                line["throughput_n2h"]) / 1000) if line["throughput_n2h"] != -1 else -1
-                            metrics["output_pps_h2n"] = (float(
-                                line["pps_h2n"]) / 1000000) if line["pps_h2n"] != -1 else -1
-                            metrics["output_pps_n2h"] = (float(
-                                line["pps_n2h"]) / 1000000) if line["pps_n2h"] != -1 else -1
-                            fun_test.log(
-                                "flow type: {}, frame size: {}, date time: {}".format(
-                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
-                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            d["input_date_time"] = date_time
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-                        if "latency_avg_h2n" in line:
-                            metrics = self.set_info(line=line)
-                            self.model = "HuLatencyPerformance"
-                            metrics["output_latency_max_h2n"] = line.get("latency_max_h2n", -1)
-                            metrics["output_latency_min_h2n"] = line.get("latency_min_h2n", -1)
-                            metrics["output_latency_avg_h2n"] = line.get("latency_avg_h2n", -1)
-                            metrics["output_latency_P99_h2n"] = line.get("latency_P99_h2n", -1)
-                            metrics["output_latency_P90_h2n"] = line.get("latency_P90_h2n", -1)
-                            metrics["output_latency_P50_h2n"] = line.get("latency_P50_h2n", -1)
-
-                            metrics["output_latency_max_n2h"] = line.get("latency_max_n2h", -1)
-                            metrics["output_latency_min_n2h"] = line.get("latency_min_n2h", -1)
-                            metrics["output_latency_avg_n2h"] = line.get("latency_avg_n2h", -1)
-                            metrics["output_latency_P99_n2h"] = line.get("latency_P99_n2h", -1)
-                            metrics["output_latency_P90_n2h"] = line.get("latency_P90_n2h", -1)
-                            metrics["output_latency_P50_n2h"] = line.get("latency_P50_n2h", -1)
-                            fun_test.log(
-                                "flow type: {}, frame size: {}, date time: {}".format(
-                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
-                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            d["input_date_time"] = date_time
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-                        if "throughput_h2h" in line:
-                            metrics = self.set_info(line=line)
-                            self.model = "HuThroughputPerformance"
-                            metrics["output_throughput_h2h"] = (float(
-                                line["throughput_h2h"]) / 1000) if line["throughput_h2h"] != -1 else -1
-                            metrics["output_pps_h2h"] = (float(
-                                line["pps_h2h"]) / 1000000) if line["pps_h2h"] != -1 else -1
-                            fun_test.log(
-                                "flow type: {}, frame size: {}, date time: {}".format(
-                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
-                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            d["input_date_time"] = date_time
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-                        if "latency_avg_h2h" in line:
-                            metrics = self.set_info(line=line)
-                            self.model = "HuLatencyPerformance"
-                            metrics["output_latency_max_h2h"] = line.get("latency_max_h2h", -1)
-                            metrics["output_latency_min_h2h"] = line.get("latency_min_h2h", -1)
-                            metrics["output_latency_avg_h2h"] = line.get("latency_avg_h2h", -1)
-                            metrics["output_latency_P99_h2h"] = line.get("latency_P99_h2h", -1)
-                            metrics["output_latency_P90_h2h"] = line.get("latency_P90_h2h", -1)
-                            metrics["output_latency_P50_h2h"] = line.get("latency_P50_h2h", -1)
-
-                            fun_test.log(
-                                "flow type: {}, frame size: {}, date time: {}".format(
-                                    metrics["input_flow_type"], metrics["input_frame_size"], date_time))
-                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            d["input_date_time"] = date_time
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-                        else:
-                            metrics = self.set_info(line=line)
-                            self.add_entries_into_dual_table(default_metrics=metrics, line=line, date_time=date_time)
-                            continue
-
-            self.result = fun_test.PASSED
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_networking_chart_status()
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
-    def set_info(self, line):
-        metrics = collections.OrderedDict()
-        metrics["input_flow_type"] = line["flow_type"]
-        metrics["input_frame_size"] = line["frame_size"]
-        metrics["input_number_flows"] = line.get("num_flows", 1)
-        metrics["input_offloads"] = line.get("offloads", False)
-        metrics["input_protocol"] = line.get("protocol", "TCP")
-        metrics["input_version"] = line.get("version", "")
-        metrics["input_num_hosts"] = line.get("num_hosts", 1)
-        return metrics
-
-    def add_entries_into_dual_table(self, default_metrics, line, date_time):
-        if "throughput" in line and "pps" in line:
-            metrics = dict(default_metrics)
-            self.model = "HuThroughputPerformance"
-            if metrics["input_flow_type"] == "HU_NU_NFCP":
-                metrics["output_throughput_h2n"] = (float(
-                    line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
-                metrics["output_pps_h2n"] = (float(
-                    line["pps"]) / 1000000) if "pps" in line and line["pps"] != -1 else -1
-            else:
-                metrics["output_throughput_n2h"] = (float(
-                    line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1
-                metrics["output_pps_n2h"] = (float(
-                    line["pps"]) / 1000000) if "pps" in line and line["pps"] != -1 else -1
-            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-            d["input_date_time"] = date_time
-            metric_model = app_config.get_metric_models()[self.model]
-            MetricHelper(model=metric_model).add_entry(**d)
-            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-        if "latency_avg" in line:
-            metrics = dict(default_metrics)
-            self.model = "HuLatencyPerformance"
-            if metrics["input_flow_type"] == "HU_NU_NFCP":
-                metrics["output_latency_max_h2n"] = line.get("latency_max", -1)
-                metrics["output_latency_min_h2n"] = line.get("latency_min", -1)
-                metrics["output_latency_avg_h2n"] = line.get("latency_avg", -1)
-                metrics["output_latency_P99_h2n"] = line.get("latency_P99", -1)
-                metrics["output_latency_P90_h2n"] = line.get("latency_P90", -1)
-                metrics["output_latency_P50_h2n"] = line.get("latency_P50", -1)
-            else:
-                metrics["output_latency_max_n2h"] = line.get("latency_max", -1)
-                metrics["output_latency_min_n2h"] = line.get("latency_min", -1)
-                metrics["output_latency_avg_n2h"] = line.get("latency_avg", -1)
-                metrics["output_latency_P99_n2h"] = line.get("latency_P99", -1)
-                metrics["output_latency_P90_n2h"] = line.get("latency_P90", -1)
-                metrics["output_latency_P50_n2h"] = line.get("latency_P50", -1)
-            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-            d["input_date_time"] = date_time
-            metric_model = app_config.get_metric_models()[self.model]
-            MetricHelper(model=metric_model).add_entry(**d)
-            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-
-
-class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperCryptoSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO_SINGLE_TUNNEL
     model = "JuniperCryptoTunnelPerformance"
 
@@ -1681,7 +1305,7 @@ class JuniperCryptoSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperCryptoMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO_MULTI_TUNNEL
     model = "JuniperCryptoTunnelPerformance"
 
@@ -1691,7 +1315,7 @@ class JuniperCryptoMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeReadAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_READ_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1701,7 +1325,7 @@ class RcnvmeReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class RcnvmeRandomReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeRandomReadAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_READ_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1711,7 +1335,7 @@ class RcnvmeRandomReadAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class RcnvmeWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeWriteAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_WRITE_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1721,7 +1345,7 @@ class RcnvmeWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+class RcnvmeRandomWriteAllPerformanceTc(TeraMarkRcnvmeReadPerformanceTc):
     tag = RCNVME_RANDOM_WRITE_ALL
     model = "TeraMarkRcnvmeReadWriteAllPerformance"
 
@@ -1731,7 +1355,7 @@ class RcnvmeRandomWriteAllPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
                               steps="Steps 1")
 
 
-class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperTlsSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = TLS_1_TUNNEL
     model = "JuniperTlsTunnelPerformance"
 
@@ -1741,7 +1365,7 @@ class JuniperTlsSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+class JuniperTls32TunnelPerformanceTc(JuniperTlsSingleTunnelPerformanceTc):
     tag = TLS_32_TUNNEL
     model = "JuniperTlsTunnelPerformance"
 
@@ -1751,7 +1375,7 @@ class JuniperTls32TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
                               steps="Steps 1")
 
 
-class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
+class JuniperTls64TunnelPerformanceTc(JuniperTlsSingleTunnelPerformanceTc):
     tag = TLS_64_TUNNEL
     model = "JuniperTlsTunnelPerformance"
 
@@ -1761,7 +1385,7 @@ class JuniperTls64TunnelPerformanceTC(JuniperTlsSingleTunnelPerformanceTC):
                               steps="Steps 1")
 
 
-class SoakDmaMemcpyThresholdPerformanceTC(PalladiumPerformanceTc):
+class SoakDmaMemcpyThresholdPerformanceTc(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_THRESHOLD
     model = "SoakDmaMemcpyThresholdPerformance"
 
@@ -1793,9 +1417,10 @@ class WuLatencyAllocStackPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecEncryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecEncryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_ENC_SINGLE_TUNNEL
     model = "JuniperIpsecEncryptionSingleTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=51,
@@ -1803,9 +1428,10 @@ class JuniperIpsecEncryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecEncryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecEncryptionMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_ENC_MULTI_TUNNEL
     model = "JuniperIpsecEncryptionMultiTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=52,
@@ -1813,9 +1439,10 @@ class JuniperIpsecEncryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecDecryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecDecryptionSingleTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_DEC_SINGLE_TUNNEL
     model = "JuniperIpsecDecryptionSingleTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=53,
@@ -1823,9 +1450,10 @@ class JuniperIpsecDecryptionSingleTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class JuniperIpsecDecryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
+class JuniperIpsecDecryptionMultiTunnelPerformanceTc(PalladiumPerformanceTc):
     tag = IPSEC_DEC_MULTI_TUNNEL
     model = "JuniperIpsecDecryptionMultiTunnelPerformance"
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=54,
@@ -1833,22 +1461,69 @@ class JuniperIpsecDecryptionMultiTunnelPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class PrepareDbTc(FunTestCase):
+class SetNetworkingStatusTc(PalladiumPerformanceTc):
     def describe(self):
-        self.set_test_details(id=100,
-                              summary="Prepare Status Db on F1",
+        self.set_test_details(id=55,
+                              summary="Set Networking status for charts",
                               steps="Steps 1")
 
-    def setup(self):
-        pass
-
     def run(self):
-        chart_names = [FunPlatform.F1, "All metrics"]
-        prepare_status_db(chart_names=chart_names)
-        TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
+        set_networking_chart_status(platform=FunPlatform.F1)
 
-    def cleanup(self):
-        pass
+
+class VoltestLsvPerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_LSV
+    model = "VoltestLsvPerformance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=56,
+                              summary="Voltest LSV Performance with numinstance 1",
+                              steps="Steps 1")
+
+
+class VoltestLsv4PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_LSV_4
+    model = "VoltestLsv4Performance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=57,
+                              summary="Voltest LSV Performance with numinstance 4",
+                              steps="Steps 1")
+
+
+class ChannelParallPerformanceTc(PalladiumPerformanceTc):
+    tag = CHANNEL_PARALL
+    model = "ChannelParallPerformance"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=58,
+                              summary="Channel parall Performance on F1",
+                              steps="Steps 1")
+
+
+class SoakFlowsBusyLoopPerformanceTc(PalladiumPerformanceTc):
+    tag = SOAKFLOWSBUSYLOOP
+    model = "SoakFlowsBusyLoop10usecs"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=59,
+                              summary="soak flows busy loop 10 usecs performance",
+                              steps="Steps 1")
+
+
+class SoakFlowsMemcpy1MbNonCohPerformanceTc(PalladiumPerformanceTc):
+    tag = SOAKFLOWSMEMCPY
+    model = "SoakFlowsMemcpy1MBNonCoh"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=60,
+                              summary="soak flows memcpy 1MB non coh performance",
+                              steps="Steps 1")
 
 
 if __name__ == "__main__":
@@ -1867,47 +1542,50 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakFunMallocPerformanceTc())
     myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    myscript.add_test_case(FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkZipPerformanceTC())
-    myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
-    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    myscript.add_test_case(F1FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkNfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
-    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTC())
-    myscript.add_test_case(TeraMarkHuPerformanceTC())
-    myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTC())
-    myscript.add_test_case(RcnvmeReadAllPerformanceTC())
-    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTC())
-    myscript.add_test_case(RcnvmeWriteAllPerformanceTC())
-    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTC())
-    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperTls32TunnelPerformanceTC())
-    myscript.add_test_case(JuniperTls64TunnelPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTc())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
+    myscript.add_test_case(FlowTestPerformanceTc())
+    myscript.add_test_case(TeraMarkZipPerformanceTc())
+    myscript.add_test_case(TeraMarkDfaPerformanceTc())
+    myscript.add_test_case(TeraMarkJpegPerformanceTc())
+    myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTc())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTc())
+    myscript.add_test_case(F1FlowTestPerformanceTc())
+    myscript.add_test_case(TeraMarkNfaPerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
+    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
+    myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTc())
+    myscript.add_test_case(RcnvmeReadAllPerformanceTc())
+    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
+    myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
+    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
+    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperTls32TunnelPerformanceTc())
+    myscript.add_test_case(JuniperTls64TunnelPerformanceTc())
+    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
     myscript.add_test_case(WuLatencyUngatedPerformanceTc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTC())
-    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTC())
-    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
+    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
+    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
+    myscript.add_test_case(SetNetworkingStatusTc())
+    myscript.add_test_case(VoltestLsvPerformanceTc())
+    myscript.add_test_case(VoltestLsv4PerformanceTc())
+    myscript.add_test_case(ChannelParallPerformanceTc())
+    myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
+    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
 
     myscript.run()

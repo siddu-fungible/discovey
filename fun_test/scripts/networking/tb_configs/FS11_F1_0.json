@@ -4,18 +4,28 @@
 	"Interfaces" : [
 	{
 		"name" : "fpg0",
+		"mtu": 9000,
 		"address" : "20.1.1.2",
-		"prefix length" : 30,
+		"prefix length" : 24,
 		"spine_index" : 0,
 		"gph_index" : 1,
 		"enable" : true
 	},
 	{
 		"name" : "fpg4",
+		"mtu": 9000,
 		"address" : "21.1.1.2",
-		"prefix length" : 30,
+		"prefix length" : 24,
 		"spine_index" : 0,
 		"gph_index" : 2,
+		"enable" : true
+	},
+		{
+		"name" : "fpg8",
+		"address" : "9.0.8.2",
+		"prefix length" : 30,
+		"spine_index" : 0,
+		"gph_index" : 6,
 		"enable" : true
 	},
 	{
@@ -44,7 +54,7 @@
 	},
 	{
 		"name" : "vlan1",
-		"address" : "53.1.1.253",
+		"address" : "53.1.1.254",
 		"prefix length" : 24,
 		"enable" : true
 	}
@@ -53,7 +63,7 @@
 	"Local AS": 65501,
 	"Neighbors" : [
 	{ "peer" : "9.0.16.1", "peer-as": 65001},
-	{ "peer" : "9.0.20.1", "peer-as": 65002}
+	{ "peer" : "9.0.20.1", "peer-as": 65001}
 	]
 	}
 }

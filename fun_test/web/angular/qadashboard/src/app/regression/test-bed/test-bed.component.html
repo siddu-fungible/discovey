@@ -1,10 +1,11 @@
 <div [ngClass]="{'component': !embed}">
-  <div class="container1">
+  <fun-spinner [status]="refreshing"></fun-spinner>
+  <div *ngIf="!refreshing" class="container1">
     <div class="row">
       <div class="col">
         <div class="card">
           <div class="card-header">
-            Testbeds
+            Test-beds
           </div>
           <div class="card-body">
             <table class="table table-bordered">
@@ -23,7 +24,7 @@
               </tr>
 
               <tr *ngFor="let testBed of testBeds">
-                <td>{{ testBed.name }}</td>
+                <td><a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a></td>
                 <td [innerHtml]="testBed.description | safeHtml"></td>
                 <td>
                   <span class="badge badge-danger"
@@ -36,10 +37,13 @@
                   <a *ngIf="automationStatus[testBed.name].numExecutions > 0" target="_blank"
                      href="/regression/suite_detail/{{ automationStatus[testBed.name].executionId }}">Suite:
                     {{ automationStatus[testBed.name].executionId }}</a>
+                  <ng-container *ngIf="automationStatus[testBed.name].assetInUse">
+                    Asset in use: {{ automationStatus[testBed.name].assetInUse }}
+                  </ng-container>
                 </td>
                 <td>
                   <span class="badge badge-danger"
-                        *ngIf="manualStatus[testBed.name].manualLock; else freeManualStatus">In use</span>
+                        *ngIf="manualStatus[testBed.name].manualLock || assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked; else freeManualStatus">In use</span>
 
                   <ng-container *ngIf="manualStatus[testBed.name].manualLock">
                     <span class="pseudo-anchor" (click)="currentTestBed = testBed; onUnLock(testBed)"> Un-lock</span>
@@ -48,9 +52,9 @@
                   <ng-template #freeManualStatus>
                     <span class="badge badge-success">Free</span>
                     <ng-container *ngIf="!manualStatus[testBed.name].manualLock">&nbsp;
-                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
-                    &nbsp;
-                  </ng-container>
+                      <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
+                      &nbsp;
+                    </ng-container>
                   </ng-template>
                 </td>
                 <td>
@@ -62,7 +66,8 @@
                       &nbsp;
                       <span class="badge badge-danger" *ngIf="manualStatus[testBed.name].manualLock"> Expired</span>
                       &nbsp;
-                      <span class="pseudo-anchor" (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+                      <span class="pseudo-anchor"
+                            (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
 
                     </ng-container>
 
@@ -70,7 +75,10 @@
                 </td>
                 <td>
                   <ng-container *ngIf="manualStatus[testBed.name].manualLock">
-                  {{ manualStatus[testBed.name].manualLockSubmitter }}
+                    {{ userMap[manualStatus[testBed.name].manualLockSubmitter].first_name }} {{ userMap[manualStatus[testBed.name].manualLockSubmitter].last_name.charAt(0)}}
+                  </ng-container>
+                  <ng-container *ngIf="assetLevelManualLockStatus[testBed.name]?.asset_level_manual_locked">
+                    {{ assetLevelManualLockStatus[testBed.name].error_message }}
                   </ng-container>
                 </td>
               </tr>
@@ -87,7 +95,6 @@
             <span style="float:right;" (click)="onCloseLockPanel()" class="pseudo-anchor">Close</span>
           </div>
           <div class="card-body">
-
 
 
             <table>
@@ -107,25 +114,28 @@
                 </td>
               </tr>
               <tr>
-
               </tr>
               <tr>
                 <td colspan="2">
-              <table>
-                <tr>
-                  <td>HH:MM (Duration from now)</td>
-                  <td>
-                    <ngb-timepicker style="display: inline-flex" id="scheduling-time-picker"
-                                    [(ngModel)]="schedulingTime"></ngb-timepicker>
-                  </td>
-                </tr>
-              </table>
+                  <table>
+                    <tr>
+                      <td>HH:MM (Duration from now)</td>
+                      <td>
+                        <ngb-timepicker style="display: inline-flex" id="scheduling-time-picker"
+                                        [(ngModel)]="schedulingTime"></ngb-timepicker>
+                      </td>
+                    </tr>
+                  </table>
 
-                 </td>
+                </td>
               </tr>
               <tr>
-                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="btn btn-sm btn-outline-success" (click)="onLockSubmit()"> Submit</button>
-                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_UPDATE_EXPIRATION " class="btn btn-sm btn-outline-success" (click)="onExtendTimeSubmit()"> Submit</button>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="btn btn-sm btn-outline-success"
+                        (click)="onLockSubmit()"> Submit
+                </button>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_UPDATE_EXPIRATION "
+                        class="btn btn-sm btn-outline-success" (click)="onExtendTimeSubmit()"> Submit
+                </button>
               </tr>
             </table>
           </div>
@@ -133,5 +143,59 @@
       </div>
     </div>
   </div>
+  <ng-container *ngIf="!embed && !refreshing">
+    <div class="card">
+      <div class="card-header">
+        Assets
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered table-nonfluid">
+          <tr>
+            <th>Name</th>
+            <th>Belongs to</th>
+            <th>Type</th>
+            <th>Manual-lock</th>
+            <th>Suites</th>
+          </tr>
+          <tr *ngFor="let asset of assets">
+            <td>{{ asset.name }}</td>
+            <td>
+              <ng-container *ngFor="let testBed of asset.test_beds">
+                {{ testBed }},&nbsp;
+              </ng-container>
+            </td>
+            <td>{{ asset.type }}</td>
+            <td>{{ asset.manual_lock_user }}
+              <span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
+                    (click)="unlockAsset(asset)"> Un-lock</span>
+              <span *ngIf="!asset.applyingManualLock && !asset.manual_lock_user" class="pseudo-anchor" (click)="asset.applyingManualLock = true">Apply manual-lock</span>
+              <ng-container *ngIf="asset.applyingManualLock && !asset.manual_lock_user">
+                Applying manual-lock
+              </ng-container>
+              <select *ngIf="asset.applyingManualLock" id="assetSelectedUser" [(ngModel)]="asset.selectedUser">
+                <option *ngFor="let user of users" [ngValue]="user.email">{{ user.email }}
+                </option>
+              </select>
+              <ng-container *ngIf="asset.applyingManualLock">
+                <span><i class="fa fa-check fa-fw tick-color" (click)="lockAsset(asset)"></i>
+                </span>
+                <span><i class="fa fa-times fa-fw close-color" (click)="asset.applyingManualLock = false; asset.selectedUser = null"></i>
+                </span>
+
+              </ng-container>
+
+
+
+            </td>
+            <td>
+              <ng-container *ngFor="let jobId of asset.job_ids">
+                <a href="/regression/suite_detail/{{ jobId }}">{{ jobId }}</a>&nbsp;
+              </ng-container>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </ng-container>
 
 </div>

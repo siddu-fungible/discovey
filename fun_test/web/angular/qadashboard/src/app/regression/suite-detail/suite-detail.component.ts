@@ -7,6 +7,12 @@ import {LoggerService} from '../../services/logger/logger.service';
 import {RegressionService} from "../regression.service";
 import {CommonService} from "../../services/common/common.service";
 
+
+class Environment {
+  BRANCH_FunOS: string = null;
+  DISABLE_ASSERTIONS: boolean = null;
+}
+
 @Component({
   selector: 'app-suite-detail',
   templateUrl: './suite-detail.component.html',
@@ -28,6 +34,7 @@ export class SuiteDetailComponent implements OnInit {
   scriptInfo: any = {};
   stateStringMap: any = null;
   stateMap: any = null;
+  environment = new Environment();
 
   constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService, private commonService: CommonService) {
     this.stateStringMap = this.regressionService.stateStringMap;
@@ -67,6 +74,24 @@ export class SuiteDetailComponent implements OnInit {
       let suiteFields = self.suiteExecution.fields;
       let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
 
+      if (self.suiteExecution.fields.hasOwnProperty("environment")) {
+        let environment = JSON.parse(self.suiteExecution.fields.environment);
+        //ctrl.environment.branchFunOs =
+        if (environment.hasOwnProperty("build_parameters")) {
+          let buildParameters = environment.build_parameters;
+          if (buildParameters.hasOwnProperty('BRANCH_FunOS')) {
+            if (!buildParameters.BRANCH_FunOS) {
+              ctrl.environment.BRANCH_FunOS = "master"
+            } else {
+              ctrl.environment.BRANCH_FunOS = buildParameters.BRANCH_FunOS;
+            }
+          }
+          if (buildParameters.hasOwnProperty('DISABLE_ASSERTIONS')) {
+            ctrl.environment.DISABLE_ASSERTIONS = buildParameters.DISABLE_ASSERTIONS;
+          }
+
+        }
+      }
       for(let testCaseExecutionId of testCaseExecutionIds) {
         self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
           //self.testCaseExecutions.push(JSON.parse(result.data)[0]);
@@ -84,7 +109,14 @@ export class SuiteDetailComponent implements OnInit {
           ctrl.fetchTestCaseInfo(testCaseExecutionId);
         });
       }
+      if (self.suiteExecution.fields.state >= self.stateMap.SUBMITTED) {
+        setInterval(() => {
+          window.location.reload();
+        }, 60 * 1000);
+      }
     });
+
+
   }
 
   fetchScriptInfo(scriptPath) {
@@ -180,10 +212,30 @@ export class SuiteDetailComponent implements OnInit {
 
   applyAdditionalAttributes(item) {
     item["showingDetails"] = false;
+    item["showingInputs"] = false;
+    item["showingEnvironment"] = false;
+    if (item.hasOwnProperty('fields') && item.fields.hasOwnProperty('inputs')) {
+      let inputs = JSON.parse(item.fields.inputs);
+      item["parsedInputs"] = inputs;
+    }
+
+    if (item.hasOwnProperty('fields') && item.fields.hasOwnProperty('environment')) {
+      let environment = JSON.parse(item.fields.environment);
+      item["parsedEnvironment"] = environment;
+    }
+
   }
 
   showDetailsClick(item) {
     item["showingDetails"] = !item["showingDetails"];
+  }
+
+  showInputsClick(item) {
+    item["showingInputs"] = !item["showingInputs"];
+  }
+
+  showEnvironmentClick(item) {
+    item["showingEnvironment"] = !item["showingEnvironment"];
   }
 
   getSchedulerLog(suiteId) {
@@ -298,6 +350,16 @@ export class SuiteDetailComponent implements OnInit {
 
   scriptPathToPk(scriptPath) {
     return this.scriptInfo[scriptPath].pk;
+  }
+
+  killClick() {
+    let suiteId = this.executionId;
+    this.regressionService.killSuite(this.executionId).subscribe((result) => {
+      this.logger.success(`Killed job: ${result}`);
+      window.location.reload()
+    }, error => {
+      this.logger.error(`Unable kill ${suiteId}`);
+    });
   }
 
 

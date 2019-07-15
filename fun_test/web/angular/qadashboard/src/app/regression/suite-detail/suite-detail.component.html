@@ -1,6 +1,4 @@
-<div class="this-component component">
-
-
+<div class="component">
   <div class="row">
     <div class="col">
       <div class="card">
@@ -14,6 +12,11 @@
                   (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
                   class="anchor-button pseudo-anchor">
     / Re-run failed</span>)
+            <ng-container *ngIf="suiteExecution.fields.state > stateMap.COMPLETED">
+              <span style="color:red" class="anchor-button pseudo-anchor" (click)="killClick()">Kill</span>
+            </ng-container>
+
+
           </ng-container>
         </div>
         <div class="card-body">
@@ -27,11 +30,11 @@
                   <app-smart-label [value]="stateStringMap[attribute.value]"></app-smart-label>
                 </td>
                 <td *ngSwitchCase="'Result'">
-                  <app-smart-label [value]="attribute.value" [type]="attribute.value"></app-smart-label>
+                  <app-smart-label [value]="attribute.value"></app-smart-label>
                 </td>
                 <td *ngSwitchCase="'Path'">
                   <ng-container *ngIf="suiteExecution">
-                    {{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
+                    {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
                   </ng-container>
                 </td>
                 <td *ngSwitchCase="'Completed Time'">
@@ -39,6 +42,12 @@
                     {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                   </ng-container>
                 </td>
+                <td *ngSwitchCase="'Started Time'">
+                  <ng-container *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state == stateMap.IN_PROGRESS || suiteExecution.fields.state <= stateMap.COMPLETED)">
+                    {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
+                  </ng-container>
+                </td>
+
                 <td *ngSwitchDefault>
                   {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                 </td>
@@ -47,14 +56,47 @@
 
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler
-                txt</a></td>
+              <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler log</a></td>
             </tr>
             <tr *ngIf="suiteExecution">
-              <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log
-                directory</a>
+              <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log directory</a>
             </tr>
+            <tr *ngIf="environment">
+              <td>Branch_FunOS</td>
+              <td>{{ environment.BRANCH_FunOS }}</td>
+            </tr>
+            <tr *ngIf="environment">
+              <td>DISABLE_ASSERTIONS</td>
+              <td>{{ environment.DISABLE_ASSERTIONS }}</td>
+            </tr>
+            <tr *ngIf="suiteExecution && suiteExecution.fields.description && suiteExecution.fields.description.length > 0">
+              <td>Description</td>
+              <td>{{ suiteExecution.fields.description }}</td>
+            </tr>
+
+
+
           </table>
+          <ng-container *ngIf="suiteExecution">
+            <div class="pseudo-anchor" (click)="showInputsClick(suiteExecution)">{{ suiteExecution.showingInputs? "Hide": "Show" }} inputs</div>
+            <ng-container *ngIf="suiteExecution.showingInputs">
+              <div><b>Inputs</b></div>
+              <td *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
+                  <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
+              </td>
+            </ng-container>
+          </ng-container>
+
+
+          <ng-container *ngIf="suiteExecution">
+            <div class="pseudo-anchor" (click)="showEnvironmentClick(suiteExecution)">{{ suiteExecution.showingEnvironment? "Hide": "Show" }} environment</div>
+              <ng-container *ngIf="suiteExecution.showingEnvironment">
+                <div><b>Environment</b></div>
+                <td *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
+                    <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
+                </td>
+              </ng-container>
+          </ng-container>
         </div>
       </div>
 
@@ -81,6 +123,12 @@
         </ng-container>
       </div>
 
+      <ng-container *ngIf="suiteExecution?.fields.state == stateMap.QUEUED">
+        <br>
+        <span class="h6">Queue occupancy:</span>
+        <app-queue-viewer></app-queue-viewer>
+      </ng-container>
+
 
       <div class="card" *ngFor="let scriptExecutionInfo of scriptExecutionsMap | keyvalue">
         <div class="card card-primary">
@@ -104,6 +152,7 @@
             <jira-info *ngIf="scriptInfo[scriptExecutionInfo.key]?.pk"
                          [apiUrl]="'/regression/jiras/' + scriptInfo[scriptExecutionInfo.key].pk">
             </jira-info>
+
 
             <br>
             <table *ngIf="getKeys(scriptExecutionInfo.value).length > 0"

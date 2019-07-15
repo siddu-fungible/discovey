@@ -3,7 +3,6 @@
 <head>
   <title>QA Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="static/js/qa_dashboard/qa_dashboard.js"></script>
 </head>
 <body>
 
@@ -45,7 +44,7 @@
            aria-expanded="false" ngbDropdownToggle>Administration</a>
         <div ngbDropdownMenu class="dropdown-menu">
           <a class="dropdown-item" href="/regression/scheduler/admin">Scheduler</a>
-          <a class="dropdown-item" href="/metrics">All</a>
+          <a class="dropdown-item" href="/performance/admin">All</a>
           <a class="dropdown-item" href="/initialize">Initialize</a>
         </div>
       </li>
@@ -62,6 +61,8 @@
 
 
 <div>
+  <!--div class="component" style="background-color: #FFFDDE; border:thin solid #EDDD00"> Your announcement</div-->
+  <app-announcement></app-announcement>
   <toaster-container></toaster-container>
   <router-outlet></router-outlet>
 

@@ -1,0 +1,33 @@
+{
+    "Description": "F1-1-FS-48_Intrarack_abstract",
+    "F1Index" : 2,
+    "Interfaces" : [
+	{
+	    "name" : "fpg12",
+            "mtu": 9000,
+	    "enable" : true
+	},
+        {
+            "name" : "fpg16",
+            "mtu": 9000,
+            "enable" : true
+        },
+        {
+            "name" : "fpg20",
+            "mtu": 9000,
+            "enable" : true
+        },
+	{
+	    "name" : "lo:0",
+	    "address" : "8.8.8.8",
+	    "prefix length" : 32,
+	    "enable" : true
+	},
+        {
+            "name" : "vlan1",
+            "address" : "42.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ]
+}

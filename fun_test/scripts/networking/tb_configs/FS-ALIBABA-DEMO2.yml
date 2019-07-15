@@ -1,0 +1,23 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# HU host
+hu:
+  hostname: cab03-qa-02
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu1-f0
+  vf_interface: hu1-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f0:
+            ipv4_addr: 19.1.1.2
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 18.1.1.0/24
+          nexthop: 19.1.1.1
+        - prefix: 30.1.1.0/24
+          nexthop: 19.1.1.1

@@ -6,9 +6,12 @@ from web.fun_test.models import Tag
 from web.fun_test.models import TestBed, TestbedNotificationEmails
 from web.fun_test.models import Module
 from web.fun_test.metrics_models import MetricsGlobalSettings
+from web.fun_test.models import Asset
 from django.apps import apps
 from web.fun_test.metrics_models import MetricChart, LastMetricId
+from web.fun_test.metrics_lib import *
 import json
+import os
 
 site_state = None
 
@@ -59,6 +62,31 @@ class SiteState():
                 t = TestBed(name=testbed)
                 t.save()
 
+    def register_assets(self):
+        fun_test_was_disabled = False
+        if "DISABLE_FUN_TEST" in os.environ:
+            fun_test_was_disabled = True
+            del os.environ["DISABLE_FUN_TEST"]
+        from asset.asset_manager import AssetManager
+
+        am = AssetManager()
+        valid_test_beds = am.get_valid_test_beds()
+        for test_bed_name in valid_test_beds:
+            # print test_bed_name
+            assets_required = am.get_assets_required(test_bed_name=test_bed_name)
+            for asset_type, assets in assets_required.iteritems():
+                print asset_type, assets
+                for asset in assets:
+                    (o, created) = Asset.objects.get_or_create(type=asset_type,
+                                                               name=asset)
+                    if not created:
+                        o.test_beds = []
+                    if test_bed_name not in o.test_beds:
+                        o.test_beds.append(test_bed_name)
+                    o.save()
+        if fun_test_was_disabled:
+            os.environ["DISABLE_FUN_TEST"] = "1"
+
     def register_tags(self):
         for tag in self.site_base_data["tags"]:
             try:
@@ -93,40 +121,29 @@ class SiteState():
             children = metric["children"]
 
         description = "TBD"
-
-        if "Erasure" in metric["name"]:
-            i = 0
-        if "JPEG Compression_Compression-ratio" in metric["name"]:
-            i = 0
         try:
             metric_model_name = "MetricContainer"
 
             if "metric_model_name" in metric:
                 metric_model_name = metric["metric_model_name"]
-            if "info" in metric:
-                description = metric["info"]
-            # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
             m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
             m.chart_name = metric["label"]
             m.save()
             if description and not m.description:
                 m.description = description
                 m.save()
-            '''
-            if metric_model_name == "MetricContainer":
-                m.leaf = False
-                m.save()
-            else:
-                m.leaf = True
-                m.save()
-            '''
 
         except ObjectDoesNotExist:
+            data_sets = []
+            one_data_set = {}
+            one_data_set["name"] = "Scores"
+            one_data_set["output"] = {"min": 0, "max": 200}
+            data_sets.append(one_data_set)
             m = MetricChart(metric_model_name="MetricContainer",
                                 internal_chart_name=metric["name"],
                                 chart_name=metric["label"],
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
-                                description=description)
+                                description=description, data_sets=json.dumps(data_sets))
             m.save()
         if "reference" in metric and metric["reference"]:
             pass
@@ -135,19 +152,16 @@ class SiteState():
                 m.children = "[]"
             except Exception as ex:
                 pass
-            m.children_weights = "{}"
+            # m.children_weights = "{}"
             m.save()
             for child in children:
                 c = self._do_register_metric(metric=child)
                 if c:
                     m.add_child(child_id=c.metric_id)
-                    child_weight = 0
-                    if "weight" in child:
-                        child_weight = child["weight"]
-                    m.add_child_weight(child_id=c.metric_id, weight=child_weight)
-                    if "leaf" in child and child["leaf"]:
+                    if "metric_model_name" in child and child["metric_model_name"] != "MetricContainer":
                         all_metrics_chart.add_child(child_id=c.metric_id)
                         all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
+            m.save()
         if "extensible_references" in metric:
             references = metric["extensible_references"]
             if len(references):
@@ -155,14 +169,12 @@ class SiteState():
                     try:
                         reference_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name=reference)
                         reference_children = json.loads(reference_chart.children)
-                        reference_weights = json.loads(reference_chart.children_weights)
                         for child in reference_children:
                             m.add_child(child_id=child)
-                        for child_weight in reference_weights:
-                            m.add_child_weight(child_id=child_weight, weight=reference_weights[child_weight])
                         m.save()
-                    except:
+                    except Exception as ex:
                         pass
+        m.fix_children_weights()
 
         return m
 
@@ -170,9 +182,7 @@ class SiteState():
         with open(METRICS_BASE_DATA_FILE, "r") as f:
             metrics = json.load(f)
             all_metrics_metric = {
-                "info": "All metrics",
                 "metric_model_name": "MetricContainer",
-                "leaf": False,
                 "name": "All metrics",
                 "label": "All metrics",
                 "children": [],
@@ -184,6 +194,8 @@ class SiteState():
                 global_setting = MetricsGlobalSettings.objects.first()
                 global_setting.cache_valid = False
                 global_setting.save()
+            ml = MetricLib()
+            ml.update_weights_for_wip()
 
     def set_metrics_settings(self):
         if MetricsGlobalSettings.objects.count() == 0:

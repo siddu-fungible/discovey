@@ -7,13 +7,19 @@ import sys
 from time import asctime
 
 
-CPU_LIST = range(8, 16)
+CPU_LIST_HOST = range(8, 16)  # Host's CPU ids used for traffic, which are in same NUMA node
+CPU_LIST_VM = range(0, 8)  # VM's CPU ids used for traffic
+COALESCE_RX_USECS = 8
+COALESCE_TX_USECS = 16
+COALESCE_RX_FRAMES = 128
+COALESCE_TX_FRAMES = 32
 
 
 class Funeth:
     """Funeth driver class"""
 
-    def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/ws'):
+    def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, fundrv_commit=None,
+                 funsdk_commit=None, ws='/mnt/ws'):
         self.tb_config_obj = tb_config_obj
         self.linux_obj_dict = {}
         self.nu_hosts = sorted([host for host in tb_config_obj.configs.keys() if host.startswith('nu')])
@@ -28,6 +34,8 @@ class Funeth:
         self.funos_branch = funos_branch
         self.fundrv_branch = fundrv_branch
         self.funsdk_branch = funsdk_branch
+        self.fundrv_commit = fundrv_commit
+        self.funsdk_commit = funsdk_commit
         self.ws = ws
         #self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
         #self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
@@ -112,8 +120,16 @@ class Funeth:
             # clone FunSDK, host-drivers, FunOS
             linux_obj.command('cd {}; git clone git@github.com:fungible-inc/fungible-host-drivers.git'.format(self.ws),
                               timeout=300)
+            if self.fundrv_branch:
+                linux_obj.command('cd {}; git checkout {}'.format(drvdir, self.fundrv_branch))
+            if self.fundrv_commit:
+                linux_obj.command('cd {}; git reset --hard {}'.format(drvdir, self.fundrv_commit))
             linux_obj.command('cd {}; git clone git@github.com:fungible-inc/FunSDK-small.git FunSDK'.format(self.ws),
                               timeout=300)
+            if self.funsdk_branch:
+                linux_obj.command('cd {}; git checkout {}'.format(sdkdir, self.funsdk_branch))
+            if self.funsdk_commit:
+                linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
 
             output = linux_obj.command(
                 'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
@@ -160,6 +176,7 @@ class Funeth:
         result = result_list[0]
         if not all(r == result for r in result_list):
             fun_test.critical('Different FunSDK/Driver commit/bld in hosts')
+            fun_test.log('result_list: {}'.format(result_list))
             return False
         elif len(result) != 4:
             fun_test.critical('Failed to update FunSDK/Driver source')
@@ -205,7 +222,7 @@ class Funeth:
 
         return result
 
-    def load(self, sriov=0, cc=False, debug=False):
+    def load(self, sriov=0, num_queues=2, cc=False, debug=False):
         """Load driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         _modparams = []
@@ -218,8 +235,9 @@ class Funeth:
 
         result = True
         for hu in self.hu_hosts:
-            self.linux_obj_dict[hu].command('cd {0}; sudo insmod funeth.ko {1} num_queues=2'.format(drvdir, " ".join(_modparams)),
-                                            timeout=300)
+            self.linux_obj_dict[hu].sudo_command(
+                'cd {0}; insmod funeth.ko {1} num_queues={2}'.format(drvdir, " ".join(_modparams), num_queues),
+                timeout=300)
 
             #fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
@@ -262,10 +280,14 @@ class Funeth:
 
             # ip alias, e.g. hu3-f0:1, has no mac/mtu config
             if not self.tb_config_obj.is_alias(nu_or_hu, intf):
+                if mac_addr:
+                    cmds.extend(
+                        ['ifconfig {} hw ether {}'.format(intf, mac_addr),
+                         ]
+                    )
                 cmds.extend(
-                    ['ifconfig {} hw ether {}'.format(intf, mac_addr),
-                     'ifconfig {} mtu {}'.format(intf, mtu),
-                    ]
+                    ['ifconfig {} mtu {}'.format(intf, mtu),
+                     ]
                 )
 
             cmds.extend(
@@ -284,15 +306,21 @@ class Funeth:
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
                 match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
-            else:
+            elif mac_addr:
                 match = re.search(r'UP.*RUNNING.*HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
                                   output, re.DOTALL)
+            else:
+                match = re.search(
+                    r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
             if not match:
                 # Ubuntu 18.04
                 if self.tb_config_obj.is_alias(nu_or_hu, intf):
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
-                else:
+                elif mac_addr:
                     match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                                      output, re.DOTALL)
+                else:
+                    match = re.search(r'UP.*RUNNING.*inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask),
                                       output, re.DOTALL)
             result &= match is not None
 
@@ -334,11 +362,12 @@ class Funeth:
 
         return result
 
-    def enable_namespace_interfaces_multi_txq(self, nu_or_hu, num_queues=8, ns=None, xps_cpus=True):
-        """Enable interfaces multi tx queue in a namespace."""
+    def enable_namespace_interfaces_multi_queues(self, nu_or_hu, num_queues_tx=8, num_queues_rx=8, ns=None,
+                                                 xps_cpus=True, cpu_list=CPU_LIST_HOST):
+        """Enable interfaces multi tx/rx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-            cmd = 'ethtool -L {} tx {}'.format(intf, num_queues)
+            cmd = 'ethtool -L {} tx {} rx {}'.format(intf, num_queues_tx, num_queues_rx)
             cmd_chk = 'ethtool -l {}'.format(intf)
             if ns is None or 'netns' in cmd:
                 cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
@@ -346,26 +375,38 @@ class Funeth:
                 cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
             output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
 
-            match = re.search(r'Current hardware settings:.*RX:\s+\d+.*TX:\s+{}'.format(num_queues), output, re.DOTALL)
+            match = re.search(r'Current hardware settings:.*RX:\s+{}.*TX:\s+{}'.format(num_queues_rx, num_queues_tx),
+                              output, re.DOTALL)
             result &= match is not None
+
+            # Configure Rx flow hash
+            cmd = 'ethtool -X {} equal {} hfunc toeplitz'.format(intf, num_queues_tx)
+            cmd_chk = 'ethtool -x {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
 
             # Configure XPS CPU mapping to have CPU-Txq one to one mapping
             if xps_cpus:
                 cmds = []
-                for i in range(num_queues):
-                    cpu_id = (1 << CPU_LIST[i%len(CPU_LIST)])
+                for i in range(num_queues_tx):
+                    cpu_id = (1 << cpu_list[i%len(cpu_list)])
                     cmds.append('echo {:04x} > /sys/class/net/{}/queues/tx-{}/xps_cpus'.format(cpu_id, intf, i))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds))
                 self.linux_obj_dict[nu_or_hu].command(
-                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues-1, intf))
+                    "for i in {0..%d}; do cat /sys/class/net/%s/queues/tx-$i/xps_cpus; done" % (num_queues_tx-1, intf))
 
         return result
 
-    def enable_multi_txq(self, nu_or_hu, num_queues=8, xps_cpus=True):
-        """Enable multi tx queue to the interfaces."""
+    def enable_multi_queues(self, nu_or_hu, num_queues_tx=8, num_queues_rx=8, xps_cpus=True, cpu_list=CPU_LIST_HOST):
+        """Enable multi tx/rx queue to the interfaces."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            result &= self.enable_namespace_interfaces_multi_txq(nu_or_hu, num_queues, ns, xps_cpus=xps_cpus)
+            result &= self.enable_namespace_interfaces_multi_queues(nu_or_hu, num_queues_tx=num_queues_tx,
+                                                                    num_queues_rx=num_queues_rx, ns=None,
+                                                                    xps_cpus=xps_cpus, cpu_list=cpu_list)
 
         return result
 
@@ -414,11 +455,11 @@ class Funeth:
 
         return result
 
-    def configure_ipv4_routes(self, nu_or_hu):
+    def configure_ipv4_routes(self, nu_or_hu, configure_gw_arp=True):
         """Configure IP routes to NU."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            result &= self.configure_namespace_ipv4_routes(nu_or_hu, ns)
+            result &= self.configure_namespace_ipv4_routes(nu_or_hu, ns, configure_gw_arp=configure_gw_arp)
 
         return result
 
@@ -472,10 +513,14 @@ class Funeth:
 
     def get_interrupts(self, nu_or_hu):
         """Get HU host funeth interface interrupts."""
+        intf_bus_dict = self.get_bus_info_from_ethtool(nu_or_hu)
         output_dict = {}
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                #cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                # TODO: workaround for http://jira.fungible.local/browse/SWLINUX-746
+                bus_info = intf_bus_dict.get(intf)
+                cmd = 'cat /proc/interrupts | egrep "{}|{}"'.format(intf, bus_info)
                 if ns is None or 'netns' in cmd:
                     cmds = ['sudo {}'.format(cmd), ]
                 else:
@@ -498,17 +543,55 @@ class Funeth:
                 output_dict.update({intf: output})
         return output_dict
 
-    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
-        """Configure irq affinity."""
+    def get_bus_info_from_ethtool(self, nu_or_hu):
+        """Get bus info from ethtool -i.
+
+        localadmin@poc-server-05:~$ ethtool -i hu1-f0
+        driver: funeth
+        version: 1.0.0
+        firmware-version: N/A
+        expansion-rom-version:
+        bus-info: 0000:d8:00.0
+        supports-statistics: yes
+        supports-test: no
+        supports-eeprom-access: no
+        supports-register-dump: no
+        supports-priv-flags: no
+        """
+        intf_bus_dict = {}
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-                cmd = 'cat /proc/interrupts | grep {}'.format(intf)
+                cmd = 'ethtool -i {}'.format(intf)
                 if ns is None or 'netns' in cmd:
                     cmds = ['sudo {}'.format(cmd), ]
                 else:
                     cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
                 output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
-                irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+                match = re.search(r'bus-info: (\S+)', output)
+                if match:
+                    bus = match.group(1)
+                else:
+                    bus = None
+                intf_bus_dict.update({intf: bus})
+        return intf_bus_dict
+
+    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx', cpu_list=CPU_LIST_HOST):
+        """Configure irq affinity."""
+        intf_bus_dict = self.get_bus_info_from_ethtool(nu_or_hu)
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                bus_info = intf_bus_dict.get(intf)
+                cmd = 'cat /proc/interrupts | egrep "{}|{}"'.format(intf, bus_info)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}'.format(cmd), ]
+                else:
+                    cmds = ['sudo ip netns exec {} {}'.format(ns, cmd), ]
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+                if tx_or_rx == 'tx':
+                    irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+                elif tx_or_rx == 'rx':
+                    irq_list = re.findall(r'(\d+):.*{}-{}'.format(intf, tx_or_rx), output)
+                    #irq_list = re.findall(r'(\d+):.*{}'.format(bus_info), output)[1:]  # exclude Q0, admin queue
 
                 # cat irq affinity
                 cmds_cat = []
@@ -520,10 +603,41 @@ class Funeth:
                 cmds_chg = []
                 for irq in irq_list:
                     i = irq_list.index(irq)
-                    cpu_id = (1 << CPU_LIST[i % len(CPU_LIST)])
+                    cpu_id = (1 << cpu_list[i % len(cpu_list)])
                     cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))
+
+    def interrupt_coalesce(self, nu_or_hu, disable=True):
+        """Configure interrupt coalescing."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                if disable:
+                    cmd = 'ethtool -C {} rx-usecs 0 tx-usecs 0 rx-frames 1 tx-frames 1'.format(intf)
+                else:
+                    cmd = 'ethtool -C {} rx-usecs {} tx-usecs {} rx-frames {} tx-frames {}'.format(
+                        intf, COALESCE_RX_USECS, COALESCE_TX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_FRAMES)
+                cmd_chk = 'ethtool -c {}'.format(intf)
+                if ns is None or 'netns' in cmd:
+                    cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+                else:
+                    cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+                if ns:
+                    cmds = ['sudo ip netns add {}'.format(ns), 'sudo ip link set {} netns {}'.format(intf, ns)] + cmds
+                output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+                match = re.search(r'rx-usecs: (\d+).*rx-frames: (\d+).*tx-usecs: (\d+).*tx-frames: (\d+)', output,
+                                  re.DOTALL)
+                if match:
+                    if disable:
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) == 0, 1, 0, 1)
+                    else:
+                        result &= (match.group(1), match.group(2), match.group(3), match.group(4) ==
+                                   COALESCE_RX_USECS, COALESCE_RX_FRAMES, COALESCE_TX_USECS, COALESCE_TX_FRAMES)
+                else:
+                    result &= False
+        return result
 
     def collect_syslog(self):
         """Collect all HU hosts' syslog file and copy to job's Log directory."""

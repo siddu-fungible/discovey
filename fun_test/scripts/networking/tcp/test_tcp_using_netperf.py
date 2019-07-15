@@ -171,29 +171,15 @@ class TestTcpPerformance(FunTestCase):
         test_parameters = {'dest_ip': '29.1.1.2', 'protocol': 'tcp', 'num_flows': num_flows, 'duration': 60,
                            'port1': 1000, 'port2': 4555, 'send_size': '128K'}
 
-        checkpoint = "Capture netstat before traffic"
-        netstat_1 = get_netstat_output(linux_obj=nu_lab_obj)
-        fun_test.add_checkpoint(checkpoint)
+        diff_netstat = None
+        netstat_1 = None
 
         # Start mpstat
         version = fun_test.get_version()
         mpstat_temp_filename = str(version) + "_" + str(num_flows) + '_mpstat.txt'
         mpstat_output_file = fun_test.get_temp_file_path(file_name=mpstat_temp_filename)
-        if use_mpstat:
-            fun_test.log("Starting to run mpstat command")
-            mp_out = run_mpstat_command(linux_obj=mpstat_obj, interval=self.test_run_time,
-                                        output_file=mpstat_output_file, bg=True, count=6)
-            fun_test.log('mpstat cmd process id: %s' % mp_out)
-            fun_test.add_checkpoint("Started mpstat command")
-
-        checkpoint = "Start tcpdump capture in background before starting traffic"
-        interface_name = get_interface_name(file_path=setup_fpg1_filepath)
         tcpdump_temp_filename = str(version) + "_" + str(num_flows) + '_tcpdump.pcap'
         tcpdump_output_file = fun_test.get_temp_file_path(file_name=tcpdump_temp_filename)
-        result = run_tcpdump_command(linux_obj=nu_lab_obj, interface=interface_name, tcp_dump_file=tcpdump_output_file,
-                                     count=100000, filecount=1)
-        fun_test.simple_assert(result, checkpoint)
-        fun_test.shared_variables['tcpdump_pid'] = result
 
         fun_test.log_section("Starting netperf test")
         cmd_list = get_netperf_cmd_list(dip=test_parameters['dest_ip'],
@@ -204,21 +190,69 @@ class TestTcpPerformance(FunTestCase):
 
         network_controller_obj.disconnect()
         cmd_dict = {nu_lab_obj: cmd_list}
-        netperf_result = run_netperf_concurrently(cmd_dict=cmd_dict, num_flows=num_flows,
-                                                  network_controller_obj=network_controller_obj, display_output=True)
-        fun_test.test_assert(netperf_result, 'Ensure result found')
+        throughput_list = []
+        for iteration in range(0, 5):
+            fun_test.add_checkpoint("<=====> Start iteration: %d  <=====>" % iteration)
+            fun_test.log_section("Start iteration: %d" % iteration)
+            collect_dpc_stats = False if iteration > 0 else True
+            if iteration == 0:
+                fun_test.add_checkpoint("Capture netstat before traffic for iteration %d" % iteration)
+                netstat_1 = get_netstat_output(linux_obj=nu_lab_obj)
 
-        fun_test.sleep('Wait after traffic', seconds=5)
+                # Start mpstat
+                if use_mpstat:
+                    fun_test.log("Starting to run mpstat command")
+                    mp_out = run_mpstat_command(linux_obj=mpstat_obj, interval=self.test_run_time,
+                                                output_file=mpstat_output_file, bg=True, count=6)
+                    fun_test.log('mpstat cmd process id: %s' % mp_out)
+                    fun_test.add_checkpoint("Started mpstat command")
 
-        total_throughput = netperf_result['total_throughput']
-        fun_test.log("Total throughput seen is %s" % total_throughput)
-        # fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" % total_throughput)
-        fun_test.add_checkpoint("Ensure some throughput is seen. Actual %s" % total_throughput)
+                checkpoint = "Start tcpdump capture in background before starting traffic"
+                interface_name = get_interface_name(file_path=setup_fpg1_filepath)
+                result = run_tcpdump_command(linux_obj=nu_lab_obj, interface=interface_name,
+                                             tcp_dump_file=tcpdump_output_file,
+                                             count=100000, filecount=1)
+                fun_test.simple_assert(result, checkpoint)
+                fun_test.shared_variables['tcpdump_pid'] = result
 
-        pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
-        fun_test.log("Total PPS value is %s" % round(pps, 2))
+            netperf_result = run_netperf_concurrently(cmd_dict=cmd_dict,
+                                                      network_controller_obj=network_controller_obj,
+                                                      display_output=False,
+                                                      num_flows=num_flows, collect_dpc_stats=collect_dpc_stats)
+            fun_test.simple_assert(netperf_result, 'Ensure result found')
 
-        create_performance_table(total_throughput=total_throughput, total_pps=round(pps, 2), num_flows=num_flows)
+            fun_test.sleep("Wait after traffic", seconds=self.test_run_time)
+
+            if 'tcpdump_pid' in fun_test.shared_variables and iteration == 0:
+                nu_lab_obj.kill_process(process_id=int(fun_test.shared_variables['tcpdump_pid']), sudo=True)
+
+            if iteration == 0:
+                fun_test.add_checkpoint("Capture netstat after traffic for iteration %d" % iteration)
+                netstat_2 = get_netstat_output(linux_obj=nu_lab_obj)
+                diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
+
+            total_throughput = netperf_result['total_throughput']
+            fun_test.add_checkpoint("ITERATION: %d Total throughput seen is %s" % (iteration, total_throughput))
+            # TODO: We don't need to fail the case if total_throughput <= 0 instead put -1 in JSON and
+            # TODO: Model so that it gets reflected on dashboard
+            # fun_test.test_assert(total_throughput > 0.0, "Ensure some throughput is seen. Actual %s" %
+            # total_throughput)
+
+            throughput_list.append(total_throughput)
+
+            pps = get_pps_from_mbps(mbps=total_throughput, byte_frame_size=self.default_frame_size)
+            fun_test.add_checkpoint("ITERATION: %d Total PPS value is %s" % (iteration, round(pps, 2)))
+
+            fun_test.add_checkpoint("<=====> End iteration: %d  <=====>" % iteration)
+
+        avg_throughput = sum(throughput_list) / len(throughput_list)
+        avg_pps = get_pps_from_mbps(mbps=avg_throughput, byte_frame_size=self.default_frame_size)
+        if avg_throughput <= 0.0 and avg_pps <= 0.0:
+            avg_throughput = -1
+            avg_pps = -1
+
+        create_performance_table(total_throughput=avg_throughput, total_pps=round(avg_pps, 2),
+                                 num_flows=num_flows)
 
         # Scp mpstat json to LOGS dir
         if use_mpstat:
@@ -230,12 +264,8 @@ class TestTcpPerformance(FunTestCase):
         populate_tcpdump_redirect_file(dump_filename=tcpdump_temp_filename, version=version, num_flows=num_flows,
                                        host_name=host_name, host_obj=nu_lab_obj, source_file_path=tcpdump_output_file)
 
-        fun_test.log("Capture netstat after traffic")
-        netstat_2 = get_netstat_output(linux_obj=nu_lab_obj)
-
         # Get diff stats
         netstat_temp_filename = str(version) + "_" + str(num_flows) + '_netstat.txt'
-        diff_netstat = get_diff_stats(old_stats=netstat_1, new_stats=netstat_2)
         populate = populate_netstat_output_file(diff_stats=diff_netstat, filename=netstat_temp_filename)
         fun_test.test_assert(populate, "Populate netstat into txt file")
 
@@ -245,7 +275,7 @@ class TestTcpPerformance(FunTestCase):
                 output = populate_performance_json_file(mode=mode, flow_type="FunTCP_Server_Throughput",
                                                         frame_size=self.default_frame_size,
                                                         num_flows=num_flows,
-                                                        throughput_n2t=total_throughput, pps_n2t=pps,
+                                                        throughput_n2t=avg_throughput, pps_n2t=avg_pps,
                                                         timestamp=TIMESTAMP,
                                                         filename=filename, model_name=TCP_PERFORMANCE_MODEL_NAME)
                 fun_test.test_assert(output, "JSON file populated")

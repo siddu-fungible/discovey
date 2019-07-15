@@ -12,6 +12,7 @@ import {Validators} from "@angular/forms";
   styleUrls: ['./submit-job.component.css']
 })
 export class SubmitJobComponent implements OnInit {
+  DEFAULT_TEST_BED: string = "fs-6";
   scheduleInMinutes: number;
   scheduleInMinutesRadio: boolean;
   buildUrl: string;
@@ -37,20 +38,24 @@ export class SubmitJobComponent implements OnInit {
   schedulingTimeTimezone = "IST";
   daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   selectedDays: string[] = [];
-  selectedTestBedType: string = null;
+  selectedTestBedType: string = this.DEFAULT_TEST_BED;
   testBedTypes: any = null;
   testBedNames: string[] = [];
   submitting: string = null;
-  tftpImagePath: string = "funos-f1.stripped.gz";
-  bootArgs: string = "app=hw_hsu_test --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
-  withJenkinsBuild: boolean = false;
+  tftpImagePath: string = "stable-funos-f1.stripped.gz";
+  // bootArgs: string = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
+  bootArgs: string = "";
+
+  withJenkinsBuild: boolean = true;
 
   disableAssertions: boolean = true;
   funOsMakeFlags: string = null;
   branchFunOs: string = null;
   branchFunSdk: string = null;
   branchFunControlPlane: string = null;
+  branchFunHw: string = null;
   skipDasmC: boolean = true;
+  branchFunTools: string = null;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -60,6 +65,8 @@ export class SubmitJobComponent implements OnInit {
   selectedUser: any = null;
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
+  description: string = null;
+
 
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
@@ -133,7 +140,7 @@ export class SubmitJobComponent implements OnInit {
       Object.keys(this.testBedTypes).map(key => {
         this.testBedNames.push(key);
         this.testBedNames.sort();
-        this.selectedTestBedType = "simulation";
+        this.selectedTestBedType = this.DEFAULT_TEST_BED;
       })
 
     })
@@ -261,7 +268,7 @@ export class SubmitJobComponent implements OnInit {
 
       if (payload["environment"]["with_jenkins_build"]) {
         payload["environment"]["build_parameters"] = {};
-        if (this.bootArgs && this.bootArgs !== "" && this.selectedTestBedType.indexOf('fs') > -1) {
+        if (this.bootArgs && this.bootArgs !== "" && this.isTestBedFs()) {
           payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, this.BOOT_ARGS_REPLACEMENT_STRING);
         }
         payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
@@ -270,6 +277,8 @@ export class SubmitJobComponent implements OnInit {
         payload["environment"]["build_parameters"]["BRANCH_FunSDK"] = this.branchFunSdk;
         payload["environment"]["build_parameters"]["BRANCH_FunControlPlane"] = this.branchFunControlPlane;
         payload["environment"]["build_parameters"]["SKIP_DASM_C"] = this.skipDasmC;
+        payload["environment"]["build_parameters"]["BRANCH_FunTools"] = this.branchFunTools;
+        payload["environment"]["build_parameters"]["BRANCH_FunHW"] = this.branchFunHw;
       }
     }
 
@@ -281,13 +290,17 @@ export class SubmitJobComponent implements OnInit {
       payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
     }
 
+    if (this.description) {
+      payload["description"] = this.description;
+    }
+
     this.submitting = "Submitting job";
     let ctrl = this;
     this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
       self.jobId = parseInt(result.data);
-      window.location.href = "/regression";
-
-      console.log("Job " + self.jobId + " Submitted");
+      window.location.href = "/regression/suite_detail/" + self.jobId;
+      ctrl.logger.success(`Job: ${self.jobId} Submitted`);
+      console.log("Job: " + self.jobId + " Submitted");
       ctrl.submitting = null;
     }, error => {
       self.logger.error("Unable to submit job");
@@ -311,7 +324,7 @@ export class SubmitJobComponent implements OnInit {
   isTestBedFs(): boolean {
     let result = null;
     if (this.selectedTestBedType) {
-      result = this.selectedTestBedType.indexOf('fs') > -1;
+      result = this.selectedTestBedType.indexOf('fs') > -1 || this.selectedTestBedType.indexOf('suite-based') > -1;
     }
     return result;
   }

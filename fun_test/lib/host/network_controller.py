@@ -1342,9 +1342,9 @@ class NetworkController(DpcshClient):
         stats = None
         try:
             if blocked_only:
-                cmd = "list"
-            else:
                 cmd = "blocked"
+            else:
+                cmd = "list"
             fun_test.debug("Getting flow list")
             result = self.json_execute(verb="flow", data=cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
@@ -1612,6 +1612,19 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def peek_nwqm_stats(self):
+        stats = None
+        try:
+            cmd = "stats/nwqm"
+            fun_test.debug("Getting NWQM stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=120)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting NWQM stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
     def update_meter(self, index, interval, crd, commit_rate, pps_mode, excess_rate=0, commit_burst=82, excess_burst=1,
                      dir=0,len_mode=1, rate_mode=0, color_aware=0, unit=0, rsvd=0, op="FUN_NU_OP_SFG_METER_CFG_W",
                      len8=3, common={}, bank=0, erp=False):
@@ -1771,3 +1784,105 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def peek_cdu_stats(self):
+        stats = None
+        try:
+            cmd = 'stats/cdu'
+            fun_test.debug("Getting cdu stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get cdu stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_ca_stats(self):
+        stats = None
+        try:
+            cmd = 'stats/ca'
+            fun_test.debug("Getting ca stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get ca stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_ddr_stats(self):
+        stats = None
+        try:
+            cmd = 'stats/ddr'
+            fun_test.debug("Getting ddr stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get ddr stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_vif_add(self, lport_num):
+        stats = None
+        try:
+            cmd = "vif add {}".format(lport_num)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_nh_add(self, nh_type, src_vtep, dst_vtep, vnid):
+        stats = None
+        try:
+            cmd = 'nh_add nh_type {} src_vtep "{}" dst_vtep "{}" vnid {}'.format(nh_type, src_vtep, dst_vtep, vnid)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_flow_add(self, flow_type, nh_index, ingress_vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto):
+        stats = None
+        try:
+            cmd = 'flow_add flow_type {} nh_index {} ingress_vif {} flow "{}" "{}" {} {} {}'.format(
+                flow_type, nh_index, ingress_vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_vtep_add(self, ipaddr):
+        stats = None
+        try:
+            cmd = "vtep add {}".format(ipaddr)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_vif_table_add_mac_entry(self, vnid, mac_addr, egress_vif):
+        stats = None
+        try:
+            cmd = 'vif_table vnid {} mac "{}" egress_vif {}'.format(vnid, mac_addr, egress_vif)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats

@@ -20,6 +20,10 @@ class NoLogger:
         self.trace_enabled = enable
         self.trace_id = id
 
+    def reset_context(self):
+        if hasattr(self, "context"):
+            self.context = None
+
     def write_now(self, message, stdout=True):
         pass
         
@@ -38,30 +42,35 @@ class NoLogger:
 
 
 class LinuxLogger:
-    def __init__(self):
+    def __init__(self, context=None):
         self.trace_enabled = None
         self.trace_id = None
+        self.context = context
+
+    def reset_context(self):
+        if hasattr(self, "context"):
+            self.context = None
 
     def trace(self, enable, id):
         self.trace_enabled = enable
         self.trace_id = id
 
     def write_now(self, message, stdout=True):
-        fun_test.write(message=message)
-        fun_test.flush(trace_id=self.trace_id, stdout=stdout)
+        fun_test.write(message=message, context=self.context)
+        fun_test.flush(trace_id=self.trace_id, stdout=stdout, context=self.context)
 
     def write(self, message, stdout=True):
-        fun_test.write(message=message)
+        fun_test.write(message=message, context=self.context)
 
     def flush(self):
-        fun_test.flush(trace_id=self.trace_id)
+        fun_test.flush(trace_id=self.trace_id, context=self.context)
 
     def log(self, message):
-        fun_test.log(message=message, trace_id=self.trace_id)
+        fun_test.log(message=message, trace_id=self.trace_id, context=self.context)
 
     def critical(self, message):
         message = "\nCRITICAL: {}".format(message)
-        fun_test.log(message=message, trace_id=self.trace_id)
+        fun_test.log(message=message, trace_id=self.trace_id, context=self.context)
 
 
 class Linux(object, ToDictMixin):
@@ -98,6 +107,7 @@ class Linux(object, ToDictMixin):
                  use_paramiko=False,
                  localhost=None,
                  set_term_settings=True,
+                 context=None,
                  ipmi_info=None,
                  **kwargs):
 
@@ -111,7 +121,7 @@ class Linux(object, ToDictMixin):
         self.localhost = localhost
         self.use_paramiko = use_paramiko
         self.paramiko_handle = None
-        self.logger = LinuxLogger()
+        self.logger = LinuxLogger(context=context)
         self.trace_enabled = None
         self.trace_id = None
         self.tmp_dir = None
@@ -125,10 +135,12 @@ class Linux(object, ToDictMixin):
         self.telnet_username = telnet_username
         self.telnet_password = telnet_password
         self.extra_attributes = kwargs
+        self.context = context
         self.ipmi_info = ipmi_info
         if self.extra_attributes:
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
+        fun_test.register_hosts(host=self)
         self.post_init()
 
     @staticmethod
@@ -144,6 +156,9 @@ class Linux(object, ToDictMixin):
 
         return Linux(host_ip=prop["host_ip"], ssh_username=ssh_username,
                      ssh_password=ssh_password, ssh_port=ssh_port)
+
+    def reset_context(self):
+        self.logger.reset_context()
 
     def enable_logs(self, enable=True):
         if enable:
@@ -454,7 +469,7 @@ class Linux(object, ToDictMixin):
                 buf = '\n'.join(buf_lines[start_line:-1])
         except Exception as ex:
             critical_str = str(ex) + " Command: {}".format(command)
-            fun_test.critical(critical_str)
+            fun_test.critical(critical_str, context=self.context)
             self.logger.critical(critical_str)
             raise ex
         return buf
@@ -497,6 +512,25 @@ class Linux(object, ToDictMixin):
                 output = self.sudo_command(command, timeout=timeout)
             else:
                 output = self.command(command, timeout=timeout)
+            m = re.search(r'(\d+)%\s+packet\s+loss', output)
+            if m:
+                percentage_loss = int(m.group(1))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        if percentage_loss <= max_percentage_loss:
+            result = True
+        return result
+
+    @fun_test.safe
+    def hping(self, dst, count=5, mode='faster', protocol_mode='icmp', max_percentage_loss=50, timeout=10,
+              data_bytes=80):
+        result = False
+        percentage_loss = 100
+        try:
+            cmd = "hping3 %s --%s -d %d --%s -c %d" % (dst, protocol_mode, data_bytes, mode, count)
+            output = self.sudo_command(command=cmd, timeout=timeout)
             m = re.search(r'(\d+)%\s+packet\s+loss', output)
             if m:
                 percentage_loss = int(m.group(1))
@@ -816,11 +850,40 @@ class Linux(object, ToDictMixin):
     def tshark_capture_stop(self, process_id):
         return self.kill_process(process_id=process_id)
 
-    def tcpdump_capture_start(self):
-        pass
+    def tcpdump_capture_start(self, interface, tcpdump_filename="/tmp/tcpdump_capture.pcap", snaplen=96, filecount=1,
+                              packet_count=2000000, file_size=None, rotate_seconds=None, sudo=True):
+        result = None
+        try:
+            if not file_size and not rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -c {} -W {} -w {}".format(interface, snaplen, packet_count, filecount,
+                                                                            tcpdump_filename)
+            elif file_size and rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -G {} -W {} -w {}".format(interface, snaplen, file_size,
+                                                                                  rotate_seconds, filecount,
+                                                                                  tcpdump_filename)
+            elif file_size:
+                cmd = "sudo tcpdump -nni {} -s {} -C {} -W {} -w {}".format(interface, snaplen, file_size, filecount,
+                                                                            tcpdump_filename)
+            elif rotate_seconds:
+                cmd = "sudo tcpdump -nni {} -s {} -G {} -W {} -w {}".format(interface, snaplen, rotate_seconds,
+                                                                            filecount, tcpdump_filename)
+
+            fun_test.log("executing command: {}".format(cmd))
+            if sudo:
+                cmd = "nohup {} >/dev/null 2>&1 &".format(cmd)
+                self.sudo_command(command=cmd)
+                process_id = self.get_process_id_by_pattern(process_pat="tcpdump")
+            else:
+                process_id = self.start_bg_process(command=cmd)
+            fun_test.log("tcpdump is started, process id: {}".format(process_id))
+            if process_id:
+                result = process_id
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def tcpdump_capture_stop(self, process_id):
-        pass
+        return self.kill_process(process_id=process_id)
 
     def tshark_parse(self, file_name, read_filter, fields=None, decode_as=None):
         pass
@@ -1149,9 +1212,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60):
+    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60, sudo=False, sudo_password=None):
         transfer_complete = False
-        scp_command = "scp -P %d %s %s@%s:%s" % (target_port, source_file_path, target_username, target_ip, target_file_path)
+        sudo_string = ""
+        if sudo:
+            sudo_string = "sudo "
+        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
@@ -1163,6 +1229,9 @@ class Linux(object, ToDictMixin):
         expects[0] = '[pP]assword:'
         expects[1] = self.prompt_terminator + r'$'
         expects[2] = '\(yes/no\)?'
+
+        if sudo:
+            expects[3] = '{}@.*password'.format(sudo_password)
 
         max_retry_count = 10
         max_loop_count = 10
@@ -1185,6 +1254,9 @@ class Linux(object, ToDictMixin):
                         if i == 1:
                             transfer_complete = True
                             break
+                        if i == 3 and sudo and sudo_password:
+                            handle.sendline(sudo_password)
+                            current_loop_count += 1
                     except pexpect.exceptions.EOF:
                         transfer_complete = True
                         break
@@ -1640,134 +1712,149 @@ class Linux(object, ToDictMixin):
         fio_result = ""
         fio_dict = {}
 
-        fun_test.debug(kwargs)
+        try:
+            fun_test.debug(kwargs)
 
-        # Building the fio command
+            # Building the fio command
 
-        # Add group reporting option (in case numjobs > 1)
-        fio_command += " --group_reporting"
+            # Add group reporting option (in case numjobs > 1)
+            fio_command += " --group_reporting"
 
-        if 'name' not in kwargs:
-            fio_command += " --name=nvme_pcie"
+            if 'output-format' not in kwargs:
+                fio_command += " --output-format=json"
 
-        if 'ioengine' not in kwargs:
-            fio_command += " --ioengine=libaio"
+            if "multiple_jobs" not in kwargs and 'name' not in kwargs:
+                fio_command += " --name=nvme_pcie"
 
-        fio_command += " --filename={}".format(filename)
+            if 'ioengine' not in kwargs:
+                fio_command += " --ioengine=libaio"
 
-        if 'numjobs' not in kwargs:
-            fio_command += " --numjobs=1"
+            fio_command += " --filename={}".format(filename)
 
-        if 'runtime' in kwargs:
-            fio_command += " --time_based"
+            if 'numjobs' not in kwargs:
+                fio_command += " --numjobs=1"
 
-        if 'output-format' not in kwargs:
-            fio_command += " --output-format=json"
+            if 'runtime' in kwargs:
+                fio_command += " --time_based"
 
-        if kwargs:
-            for key in kwargs:
-                fio_command += " --" + key + "=" + str(kwargs[key])
+            if 'output-format' not in kwargs:
+                fio_command += " --output-format=json"
 
-        fun_test.debug(fio_command)
+            if kwargs:
+                for key, value in kwargs.iteritems():
+                    if key == "multiple_jobs":
+                        fio_command += " " + str(value)
+                        # In case of multiple jobs scenario if global filename exists, removing it
+                        if fio_command.count("filename") >= 2:
+                            fio_command = re.sub(r"--filename=\S+", "", fio_command, 1)
+                    else:
+                        if value != "NO_VALUE":
+                            fio_command += " --" + key + "=" + str(value)
+                        else:
+                            fio_command += " --" + key
 
-        # Executing the fio command
-        fio_result = self.sudo_command(command=fio_command, timeout=timeout)
-        # fio_result += '\n'
-        fun_test.debug(fio_result)
+            fun_test.debug(fio_command)
 
-        # Trimming initial few lines to convert the output into a valid json format
-        before, sep, after = fio_result.partition("{")
-        trim_fio_result = sep + after
-        fun_test.debug(trim_fio_result)
+            # Executing the fio command
+            fio_result = self.sudo_command(command=fio_command, timeout=timeout)
+            # fio_result += '\n'
+            fun_test.debug(fio_result)
 
-        # Checking there is no error occurred during the FIO test
-        for pattern in err_pat_list:
-            match = ""
-            match = re.search(pattern, before, re.I)
-            if match:
-                fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
-                return fio_dict
+            # Trimming initial few lines to convert the output into a valid json format
+            before, sep, after = fio_result.partition("{")
+            trim_fio_result = sep + after
+            fun_test.debug(trim_fio_result)
 
-        # Converting the json into python dictionary
-        fio_result_dict = json.loads(trim_fio_result)
-        fun_test.debug(fio_result_dict)
+            # Checking there is no error occurred during the FIO test
+            for pattern in err_pat_list:
+                match = ""
+                match = re.search(pattern, before, re.I)
+                if match:
+                    fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+                    return fio_dict
 
-        # Populating the resultant fio_dict dictionary
-        for operation in ["write", "read"]:
-            fio_dict[operation] = {}
-            for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99",
-                         "latency9950", "latency9999"]:
-                if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
-                                "latency9999"):
-                    fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
-                elif stat in ("latency", "clatency"):
-                    for key in fio_result_dict["jobs"][0][operation].keys():
-                        if key.startswith("lat"):
-                            stat = "latency"
-                            # Extracting the latency unit
-                            unit = key[-2:]
-                            # Converting the units into microseconds
-                            if unit == "ns":
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value /= 1000
-                                fio_dict[operation][stat] = value
-                            elif unit == "us":
-                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                            else:
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value *= 1000
-                                fio_dict[operation][stat] = value
-                        if key.startswith("clat"):
-                            stat = "clatency"
-                            # Extracting the latency unit
-                            unit = key[-2:]
-                            # Converting the units into microseconds
-                            if unit == "ns":
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value /= 1000
-                                fio_dict[operation][stat] = value
-                            elif unit == "us":
-                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                            else:
-                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
-                                value *= 1000
-                                fio_dict[operation][stat] = value
-                elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
-                    for key in fio_result_dict["jobs"][0][operation].keys():
-                        if key == "clat_ns":
-                            for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
-                                if key.startswith("90.00"):
-                                    stat = "latency90"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
+            # Converting the json into python dictionary
+            fio_result_dict = json.loads(trim_fio_result)
+            fun_test.debug(fio_result_dict)
+
+            # Populating the resultant fio_dict dictionary
+            for operation in ["write", "read"]:
+                fio_dict[operation] = {}
+                for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99",
+                             "latency9950", "latency9999"]:
+                    if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9950",
+                                    "latency9999"):
+                        fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
+                    elif stat in ("latency", "clatency"):
+                        for key in fio_result_dict["jobs"][0][operation].keys():
+                            if key.startswith("lat"):
+                                stat = "latency"
+                                # Extracting the latency unit
+                                unit = key[-2:]
+                                # Converting the units into microseconds
+                                if unit == "ns":
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value /= 1000
                                     fio_dict[operation][stat] = value
-                                if key.startswith("95.00"):
-                                    stat = "latency95"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
+                                elif unit == "us":
+                                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                else:
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                    value *= 1000
+                                    fio_dict[operation][stat] = value
+                            if key.startswith("clat"):
+                                stat = "clatency"
+                                # Extracting the latency unit
+                                unit = key[-2:]
+                                # Converting the units into microseconds
+                                if unit == "ns":
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                     value /= 1000
                                     fio_dict[operation][stat] = value
-                                if key.startswith("99.00"):
-                                    stat = "latency99"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
-                                    value /= 1000
+                                elif unit == "us":
+                                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                else:
+                                    value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                    value *= 1000
                                     fio_dict[operation][stat] = value
-                                if key.startswith("99.50"):
-                                    stat = "latency9950"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
-                                    value /= 1000
-                                    fio_dict[operation][stat] = value
-                                if key.startswith("99.99"):
-                                    stat = "latency9999"
-                                    value = int(round(
-                                        fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
-                                    value /= 1000
-                                    fio_dict[operation][stat] = value
+                    elif stat in ("latency90", "latency95", "latency99", "latency9950", "latency9999"):
+                        for key in fio_result_dict["jobs"][0][operation].keys():
+                            if key == "clat_ns":
+                                for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                    if key.startswith("90.00"):
+                                        stat = "latency90"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("95.00"):
+                                        stat = "latency95"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("99.00"):
+                                        stat = "latency99"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("99.50"):
+                                        stat = "latency9950"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+                                    if key.startswith("99.99"):
+                                        stat = "latency9999"
+                                        value = int(round(
+                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
+                                        value /= 1000
+                                        fio_dict[operation][stat] = value
+            fun_test.debug(fio_dict)
+        except Exception as ex:
+            fun_test.critical(ex.message)
 
-        fun_test.debug(fio_dict)
         return fio_dict
 
     @fun_test.safe
@@ -1856,10 +1943,10 @@ class Linux(object, ToDictMixin):
         service_host = None
         if service_host_spec:
             service_host = Linux(**service_host_spec)
-        while not reboot_initiated and not reboot_initiated_timer.is_expired():
+        while not reboot_initiated and not reboot_initiated_timer.is_expired() and not fun_test.closed:
             try:
                 if service_host:
-                    ping_result = service_host.ping(dst=self.host_ip, count=10)
+                    ping_result = service_host.ping(dst=self.host_ip, count=5)
                     if not ping_result:
                         reboot_initiated = True
                         fun_test.log("Reboot initiated (based on pings)")
@@ -1875,7 +1962,7 @@ class Linux(object, ToDictMixin):
                     reboot_initiated = True
         if not reboot_initiated and reboot_initiated_timer.is_expired():
             fun_test.critical("Unable to verify reboot was initiated. Wait-time: {}".format(reboot_initiated_wait_time))
-            if ipmi_details:
+            if ipmi_details and not fun_test.closed:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
@@ -1962,6 +2049,7 @@ class Linux(object, ToDictMixin):
         :param max_wait_time: total time to wait before giving
         :return: True, if the host is pingable and ssh'able, else False
         """
+        fun_test.log("Ensuring the host is up: ipmi_details={}, power_cycle={}".format(ipmi_details, power_cycle))
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         service_host = None
         if service_host_spec:
@@ -1972,11 +2060,12 @@ class Linux(object, ToDictMixin):
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
         ping_result = False
-        while not host_is_up and not max_reboot_timer.is_expired():
+        while not host_is_up and not max_reboot_timer.is_expired() and not fun_test.closed:
             if service_host and not ping_result:
-                ping_result = service_host.ping(dst=self.host_ip, count=20)
-                if ping_result:
-                    max_reboot_timer = FunTimer(max_time=30)
+                ping_result = service_host.ping(dst=self.host_ip, count=5)
+                # if ping_result:  # TODO: Experimenting this on fs-11
+                #    max_reboot_timer = FunTimer(max_time=30)
+                #    fun_test.log("Lowered max_reboot_timer as ping is working")
             if ping_result or not service_host:
                 try:
                     fun_test.log("Attempting SSH")
@@ -1994,6 +2083,11 @@ class Linux(object, ToDictMixin):
 
         if not host_is_up and service_host:
             result = False
+
+            if not ipmi_details:
+                if self.ipmi_info:
+                    ipmi_details = self.ipmi_info
+                    
             if not result and ipmi_details and power_cycle:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
@@ -2006,7 +2100,7 @@ class Linux(object, ToDictMixin):
                     fun_test.critical(str(ex))
                     service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                 finally:
-                    return self.ensure_host_is_up(max_wait_time=max_wait_time)
+                    return self.ensure_host_is_up(max_wait_time=max_wait_time, power_cycle=False)
         return result
 
     @fun_test.safe
@@ -2064,7 +2158,7 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30, chassis=True):
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=10, chassis=True):
         result = True
         fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
                                                                                          interval))
@@ -2491,7 +2585,7 @@ class Linux(object, ToDictMixin):
     def lscpu(self, grep_filter=None):
         cmd = "lscpu"
         if grep_filter:
-            cmd = cmd + ' | grep {}'.format(grep_filter)
+            cmd = cmd + " | grep '{}'".format(grep_filter)
         output = self.command(cmd)
         lines = output.split('\n')
         lscpu_dictionary = {}
@@ -2522,12 +2616,64 @@ class Linux(object, ToDictMixin):
         return file_info
 
     @fun_test.safe
-    def flush_cache_mem(self):
+    def flush_cache_mem(self, timeout=60):
         flush_cmd = """
         sync; echo 1 > /proc/sys/vm/drop_caches; 
         sync; echo 2 > /proc/sys/vm/drop_caches; 
         sync; echo 3 > /proc/sys/vm/drop_caches"""
-        self.sudo_command(flush_cmd)
+        self.sudo_command(flush_cmd, timeout=timeout)
+
+    def mpstat(self, cpu_list=None, numa_node=None, interval=5, count=2, background=True,
+               output_file="/tmp/mpstat.out"):
+
+        mpstat_output = None
+        timeout = interval * (count + 1)
+
+        cmd = "mpstat"
+        if cpu_list:
+            cmd += " -P {}".format(str(cpu_list))
+        if numa_node:
+            cmd += " -N {}".format(str(numa_node))
+
+        cmd += " {} {}".format(str(interval), str(count))
+
+        if background:
+            fun_test.log("Starting command {} in background".format(cmd))
+            mpstat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
+            if mpstat_output is None:
+                fun_test.critical("mpstat process is not started")
+            else:
+                fun_test.log("mpstat process is started in background, pid is: {}".format(mpstat_output))
+        else:
+            mpstat_output = self.command(cmd, timeout=timeout)
+
+        return mpstat_output
+
+    def iostat(self, device=None, interval=5, count=2, background=True, extended_stats=False,
+               output_file="/tmp/iostat.out", timeout=None):
+        iostat_output = None
+        if not timeout:
+            timeout = interval * (count + 1)
+
+        cmd = "iostat"
+        if device:
+            cmd += " -p {}".format(str(device))
+        if extended_stats:
+            cmd += " -x"
+
+        cmd += " {} {}".format(str(interval), str(count))
+
+        if background:
+            fun_test.log("Starting iostat command {} in background".format(cmd))
+            iostat_output = self.start_bg_process(cmd, output_file=output_file, timeout=timeout)
+            if iostat_output is None:
+                fun_test.critical("iostat process is not started")
+            else:
+                fun_test.log("iostat process is started in background, pid is: {}".format(iostat_output))
+        else:
+            iostat_output = self.command(cmd, timeout=timeout)
+
+        return iostat_output
 
 
 class LinuxBackup:

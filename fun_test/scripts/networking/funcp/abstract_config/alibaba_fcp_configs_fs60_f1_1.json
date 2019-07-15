@@ -1,0 +1,49 @@
+{
+    "Description": "F1-1-FS-60_abstract",
+    "F1Index" : 2,
+    "Interfaces" : [
+	{ 
+	    "name" : "fpg0",
+            "mtu": 9000, 
+	    "address" : "27.1.1.2",
+	    "prefix length" : 30,
+	    "spine_index" : 2,
+	    "gph_index" : 2,	    
+	    "enable" : true
+	},
+        {
+            "name" : "fpg4",
+            "mtu": 9000,
+            "address" : "28.1.1.2",
+            "prefix length" : 30,
+            "spine_index" : 3,
+            "gph_index" : 3,
+            "enable" : true
+        },
+        {
+            "name" : "fpg20",
+            "mtu": 9000,
+            "enable" : true
+        }, 
+	{ 
+	    "name" : "lo:0", 
+	    "address" : "10.10.10.10",
+	    "prefix length" : 32,	    
+	    "enable" : true
+	},
+        {
+            "name" : "vlan1",
+            "address" : "44.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ],
+    "BGP" : {
+	"Local AS": 62002,
+	"Neighbors" : [
+	    { "peer" : "27.1.1.1", "peer-as": 62001},
+	    { "peer" : "28.1.1.1", "peer-as": 62001}
+
+	]
+    }	
+}

@@ -1,10 +1,10 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze  --useddr",
+    "bootargs": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze  --useddr",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     "syslog_level": 2,
-    "command_timeout": 5,
+    "command_timeout": 30,
     "reboot_timeout": 300,
     "blt_details": {
       "ns_id": 1,
@@ -27,7 +27,9 @@
       "rw": "write",
       "direct": 1,
       "prio": 0,
-      "timeout": 360
+      "verify": "xxhash",
+      "do_verify": 1,
+      "timeout": 600
     }
   },
   "BltPciSeqRead": {
@@ -67,8 +69,10 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 70,
+      "verify": "xxhash",
+      "do_verify": 1,
       "runtime": 30,
-      "timeout": 35
+      "timeout": 60
     },
     "fio_mode": "readwrite",
     "fio_numjobs_iodepth": [
@@ -83,6 +87,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
+      "verify": "xxhash",
+      "do_verify": 1,
       "runtime": 30,
       "timeout": 35
     },
@@ -99,8 +105,10 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 70,
+      "verify": "xxhash",
+      "do_verify": 1,
       "runtime": 30,
-      "timeout": 35
+      "timeout": 60
     },
     "fio_mode": "randrw",
     "fio_numjobs_iodepth": [
@@ -115,6 +123,8 @@
       "direct": 1,
       "prio": 0,
       "rwmixread": 30,
+      "verify": "xxhash",
+      "do_verify": 1,
       "runtime": 30,
       "timeout": 35
     },
@@ -122,6 +132,6 @@
     "fio_numjobs_iodepth": [
       "(8, 8)"
     ],
-    "fio_job_name": "blt_tcp_sanity"
+    "fio_job_name": "blt_pci_sanity"
   }
 }

@@ -27,7 +27,7 @@ tb_config = {
             "model": "StorageNetwork2",
             "run_mode": "build_only",
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
             "interface_info": {
@@ -250,11 +250,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
 
             # Configuring Local thin block volume
-            command_result = self.storage_controller.json_execute(verb="enable_counters",
-                                                                  command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
-
             """
             vol_size = self.volume_details["capacity"] / self.volume_details["block_size"]
             '''create_ns = self.end_host.nvme_create_namespace(size=vol_size, capacity=vol_size,

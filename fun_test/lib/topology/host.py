@@ -41,6 +41,9 @@ class Host(ToDictMixin):
     def set_spec(self, spec):
         self.spec = spec
 
+    def get_spec(self):
+        return self.spec
+
     def set_instance(self, instance):
         self.instance = instance
 

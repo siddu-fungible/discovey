@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Toast, ToasterService} from "angular2-toaster";
 import {CommonService} from "../common/common.service";
+import * as StackTrace from 'stacktrace-js';
 
 
 export let isDebugMode = true;
@@ -55,19 +56,26 @@ export class LoggerService {
 
   error(args: any) {
 
-    let stack = (new Error).stack;
-    //console.error.bind(console, arguments);
-    let message = stack + args;
-    console.error(message);
-    let toast: Toast = {
-      type: 'error',
-      title: args,
-      showCloseButton: true,
-      timeout: 0
-    };
-    this.toasterService.pop(toast);
-    let plainLog = new Log(null, args, LogDataType.SIMPLE, AlertLevel.ERROR);
-    this.addLog(plainLog);
+
+    var errback = function(err) { console.log(err.message); };
+    StackTrace.get().then((stackFrames) => {
+      console.error(args);
+      console.error(stackFrames);
+      let toast: Toast = {
+        type: 'error',
+        title: args,
+        showCloseButton: true,
+        timeout: 0
+      };
+      this.toasterService.pop(toast);
+      if (typeof args === 'object') {
+
+      } else {
+        let plainLog = new Log(null, args, LogDataType.SIMPLE, AlertLevel.ERROR);
+        this.addLog(plainLog);
+      }
+    }).catch(errback);
+
   }
 
 

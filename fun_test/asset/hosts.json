@@ -7,7 +7,8 @@
       "host_ip": "poc-server-05-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
-    }
+    },
+    "reboot_time": 600
   },
   "poc-server-01": {
     "host_ip": "poc-server-01",
@@ -92,6 +93,36 @@
       "password": "ADMIN"
     }
   },
+    "cab03-qa-03": {
+    "host_ip": "cab03-qa-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-03-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "cab03-qa-04": {
+    "host_ip": "cab03-qa-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-04-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+   "cab03-qa-05": {
+    "host_ip": "cab03-qa-05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-05-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
   "regression_service_host": {
     "host_ip": "qa-ubuntu-02",
     "ssh_username": "auto_admin",
@@ -102,8 +133,13 @@
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
   },
+  "nu-lab-06": {
+    "host_ip": "nu-lab-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
   "mktg-server-01": {
-    "host_ip": "mktg-server-01",
+    "host_ip": "mktg01",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -118,7 +154,7 @@
     }
   },
   "mktg-server-02": {
-    "host_ip": "mktg-server-02",
+    "host_ip": "mktg02",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -133,7 +169,7 @@
     }
   },
   "mktg-server-03": {
-    "host_ip": "mktg-server-03",
+    "host_ip": "mktg03",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -148,7 +184,7 @@
     }
   },
   "mktg-server-04": {
-    "host_ip": "mktg-server-04",
+    "host_ip": "mktg04",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -163,7 +199,7 @@
     }
   },
   "mktg-server-05": {
-    "host_ip": "mktg-server-05",
+    "host_ip": "mktg05",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -178,7 +214,7 @@
     }
   },
   "mktg-server-06": {
-    "host_ip": "mktg-server-06",
+    "host_ip": "mktg06",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -193,7 +229,7 @@
     }
   },
   "mktg-server-07": {
-    "host_ip": "mktg-server-07",
+    "host_ip": "mktg07",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -208,7 +244,7 @@
     }
   },
   "mktg-server-08": {
-    "host_ip": "mktg-server-08",
+    "host_ip": "mktg08",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -223,7 +259,7 @@
     }
   },
   "mktg-server-09": {
-    "host_ip": "mktg-server-09",
+    "host_ip": "mktg09",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -238,7 +274,7 @@
     }
   },
   "mktg-server-10": {
-    "host_ip": "mktg-server-10",
+    "host_ip": "mktg10",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -253,7 +289,7 @@
     }
   },
   "mktg-server-11": {
-    "host_ip": "mktg-server-11",
+    "host_ip": "mktg11",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "test_interface_info": {
@@ -265,6 +301,151 @@
           "port": "et-0/0/10"
         }
       }
+    }
+  },
+  "mktg-server-12": {
+    "host_ip": "mktg12",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.12.2/24",
+        "switch_info": {
+          "name": "qfx-1",
+          "port": "et-0/0/11"
+        }
+      }
+    }
+  },
+  "mktg-server-13": {
+    "host_ip": "mktg13",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.13.2/24",
+        "switch_info": {
+          "name": "qfx-1",
+          "port": "et-0/0/12"
+        }
+      }
+    }
+  },
+  "mktg-server-14": {
+    "host_ip": "mktg14",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "test_interface_info": {
+      "0": {
+        "name": "enp216s0",
+        "ip": "15.1.14.2/24",
+        "switch_info": {
+          "name": "qfx-1",
+          "port": "et-0/0/13"
+        }
+      }
+    }
+  },
+  "cab02-qa-01": {
+    "host_ip": "cab02-qa-01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-02": {
+    "host_ip": "cab02-qa-02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-02-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-03": {
+    "host_ip": "cab02-qa-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-03-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-04": {
+    "host_ip": "cab02-qa-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-04-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-05": {
+    "host_ip": "cab02-qa-05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-05-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-06": {
+    "host_ip": "cab02-qa-06",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-06-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-07": {
+    "host_ip": "cab02-qa-07",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-07-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+    "mktg15": {
+    "host_ip": "mktg15",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mktg15-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+      "mktg16": {
+    "host_ip": "10.1.22.135",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "mktg16-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+  "cab02-qa-08": {
+    "host_ip": "cab02-qa-08",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab02-qa-08-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
     }
   }
 }

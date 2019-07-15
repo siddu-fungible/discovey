@@ -30,7 +30,7 @@ from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
 from lib.utilities.send_mail import send_mail
 from web.fun_test.web_interface import get_suite_detail_url
-from web.fun_test.models import User
+from web.fun_test.models import User, SiteConfig
 import logging
 import subprocess
 import dateutil.parser
@@ -191,6 +191,8 @@ def submit_job(request):
             requested_minute = request_json["requested_minute"]
         if "repeat_in_minutes" in request_json:
             repeat_in_minutes = request_json["repeat_in_minutes"]
+        description = request_json.get("description", None)
+
 
         if suite_path:
             job_id = queue_job3(suite_path=suite_path,
@@ -206,7 +208,9 @@ def submit_job(request):
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
                                 repeat_in_minutes=repeat_in_minutes,
-                                submitter_email=submitter_email, inputs=inputs)
+                                submitter_email=submitter_email,
+                                inputs=inputs,
+                                description=description)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -222,7 +226,9 @@ def submit_job(request):
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
                                 repeat_in_minutes=repeat_in_minutes,
-                                submitter_email=submitter_email, inputs=inputs)
+                                submitter_email=submitter_email,
+                                inputs=inputs,
+                                description=description)
         elif dynamic_suite_spec:
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                 emails=emails,
@@ -258,7 +264,7 @@ def static_serve_log_directory(request, suite_execution_id):
 @api_safe_json_response
 def kill_job(request, suite_execution_id):
     scheduler.scheduler_helper.kill_job(job_id=suite_execution_id)
-    return "OK"
+    return suite_execution_id
 
 
 @csrf_exempt
@@ -328,7 +334,7 @@ def suite_executions_count(request, state_filter_string):
             request_json = json.loads(request.body)
             if "tags" in request_json:
                 tags = request_json["tags"]
-                tags = json.loads(tags)
+                # tags = json.loads(tags)
             submitter_email = request_json.get('submitter_email', None)
             test_bed_type = request_json.get('test_bed_type', None)
             suite_path = request_json.get('suite_path', None)
@@ -380,6 +386,7 @@ def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
+    site_version = SiteConfig.get_version()
     angular_home = 'qa_dashboard/angular_home_development.html'
     if is_production_mode() and not is_triaging_mode():
         angular_home = 'qa_dashboard/angular_home_production.html'
@@ -512,15 +519,12 @@ def scripts_by_module(request, module):
 @csrf_exempt
 @api_safe_json_response
 def build_to_date_map(request):
-    all_entries = JenkinsJobIdMap.objects.all()
+    end_date = get_current_time()
+    start_date = end_date - timedelta(days=30)
+    date_range = [start_date, end_date]
+    filtered_entries = JenkinsJobIdMap.objects.filter(build_date__range=date_range)
     build_info = {}
-    for entry in all_entries:
-        sdk_branch = entry.fun_sdk_branch
-        m = re.search(r'refs/tags/bld_(\d+)', sdk_branch)
-        key = 0
-        if m:
-            key = int(m.group(1))
-        # print "Completion date:" + entry.completion_date
+    for entry in filtered_entries:
         try:
             key = str(entry.build_date)
             key = key.split('+')[0]
@@ -980,6 +984,8 @@ def job_spec(request, job_id):
     result["emails"] = json.loads(suite_execution.emails)
     result["test_bed_type"] = suite_execution.test_bed_type
     result["environment"] = json.loads(suite_execution.environment)
+    result["suite_path"] = suite_execution.suite_path
+    result["script_path"] = suite_execution.script_path
 
     result["inputs"] = json.loads(suite_execution.inputs) if suite_execution.inputs else "{}"
     return result

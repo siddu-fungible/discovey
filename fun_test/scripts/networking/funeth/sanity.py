@@ -4,10 +4,13 @@ from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.network_controller import NetworkController
 from lib.utilities.funcp_config import FunControlPlaneBringup
-from scripts.networking.funeth.funeth import Funeth
+from scripts.networking.funeth.funeth import Funeth, CPU_LIST_HOST, CPU_LIST_VM
 from scripts.networking.tb_configs import tb_configs
+from scripts.networking.funeth import perf_utils
+
 
 import re
+import struct
 
 
 try:
@@ -36,38 +39,39 @@ except (KeyError, ValueError):
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
-# Enable LSO or not
 try:
     inputs = fun_test.get_job_inputs()
     if inputs:
-        enable_tso = (inputs.get('lso', 1) == 1)
+        enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
+        control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
+        update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
+        hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
+        bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
+        fundrv_branch = inputs.get('fundrv_branch', None)
+        fundrv_commit = inputs.get('fundrv_commit', None)
+        funsdk_branch = inputs.get('funsdk_branch', None)
+        funsdk_commit = inputs.get('funsdk_commit', None)
     else:
-        enable_tso = True
+        enable_tso = True  # default True
+        control_plane = False  # default False
+        update_driver = True  # default True
+        hu_host_vm = False  # default False
+        bootup_funos = True # default True
+        fundrv_branch = None
+        fundrv_commit = None
+        funsdk_branch = None
+        funsdk_commit = None
 except:
     enable_tso = True
-
-# Use control plane or not
-try:
-    inputs = fun_test.get_job_inputs()
-    if inputs:
-        control_plane = (inputs.get('control_plane', 0) == 1)
-    else:
-        control_plane = False
-except:
     control_plane = False
-
-# Update driver or not
-try:
-    inputs = fun_test.get_job_inputs()
-    if inputs:
-        update_driver = (inputs.get('update_driver', 1) == 1)
-    else:
-        update_driver = True
-except:
     update_driver = True
+    hu_host_vm = False
+    bootup_funos = True
 
-
-MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
+NUM_VFs = 4
+NUM_QUEUES_TX = 8
+NUM_QUEUES_RX = 8
+MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
@@ -81,23 +85,35 @@ def setup_nu_host(funeth_obj):
         #if TB in ('FS7', 'FS11'):
             #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
         fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        # TODO: temp workaround
+        if linux_obj.host_ip == 'poc-server-06':
+            linux_obj.sudo_command('sudo ethtool --offload fpg0 lro on; sudo ethtool -k fpg0')
         fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
             linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu), 'Configure NU host {} IPv4 routes'.format(
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
+                             'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
 
 
-def setup_hu_host(funeth_obj, update_driver=True):
+def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
+        if is_vm:
+            lspci_result = funeth_obj.lspci(check_pcie_width=False)
+        else:
+            lspci_result = funeth_obj.lspci(check_pcie_width=True)
+        fun_test.test_assert(lspci_result, 'Fungible Ethernet controller is seen.')
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+    if is_vm:
+        load_result = funeth_obj.load(sriov=0)
+    else:
+        load_result = funeth_obj.load(sriov=NUM_VFs)
+    fun_test.test_assert(load_result, 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if enable_tso:
@@ -106,19 +122,38 @@ def setup_hu_host(funeth_obj, update_driver=True):
         else:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.enable_multi_txq(hu, num_queues=8),
-                             'Enable HU host {} funeth interfaces multi Tx queues: 8.'.format(linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(
-            linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu), 'Configure HU host {} IPv4 routes.'.format(
-            linux_obj.host_ip))
-        fun_test.test_assert(funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(
-            linux_obj.host_ip))
+        if is_vm:
+            cpu_list = CPU_LIST_VM
+        else:
+            cpu_list = CPU_LIST_HOST
+        fun_test.test_assert(
+            funeth_obj.enable_multi_queues(hu, num_queues_tx=NUM_QUEUES_TX, num_queues_rx=NUM_QUEUES_RX,
+                                           cpu_list=cpu_list),
+            'Enable HU host {} funeth interfaces {} Tx queues, {} Rx queues.'.format(linux_obj.host_ip, NUM_QUEUES_TX,
+                                                                                     NUM_QUEUES_RX))
+        fun_test.test_assert(
+            funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
+                             'Configure HU host {} IPv4 routes.'.format(linux_obj.host_ip))
+        fun_test.test_assert(
+            funeth_obj.configure_arps(hu), 'Configure HU host {} ARP entries.'.format(linux_obj.host_ip))
         #fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
         #                    'HU PF and VF interface loopback ping test via NU')
 
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
+
+def start_vm(funeth_obj_hosts, funeth_obj_vms):
+    for vm in funeth_obj_vms.hu_hosts:
+        vm_host = funeth_obj_vms.tb_config_obj.get_vm_host(vm)
+        vm_name = funeth_obj_vms.tb_config_obj.get_hostname(vm)  # VM name and VM's hostname are kept same
+        pci_info = funeth_obj_vms.tb_config_obj.get_vm_host_pci_info(vm)
+        for hu in funeth_obj_hosts.hu_hosts:
+            if funeth_obj_hosts.tb_config_obj.get_hostname(hu) == vm_host:
+                linux_obj = funeth_obj_hosts.linux_obj_dict[hu]
+                cmds = ['virsh nodedev-dettach {}'.format(pci_info), 'virsh start {}'.format(vm_name)]
+                for cmd in cmds:
+                    linux_obj.sudo_command(cmd)
 
 class FunethSanity(FunTestScript):
     def describe(self):
@@ -136,39 +171,49 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables["test_bed_type"] = test_bed_type
 
         # Boot up FS1600
-        if test_bed_type == 'fs-11':
-
+        if test_bed_type != 'fs-11':
+            fun_test.test_assert(False, 'This test only runs in FS-11.')
+        else:
+            TB = 'FS11'
             if control_plane:
-                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
-                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server"
+                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
                                                                   1: {"boot_args": f1_1_boot_args}}
                                                    )
             else:
-                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g"
+                boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
 
-            topology = topology_helper.deploy()
-            fun_test.shared_variables["topology"] = topology
-            fun_test.test_assert(topology, "Topology deployed")
-            fs = topology.get_dut_instance(index=0)
+            if bootup_funos:
+                topology = topology_helper.deploy()
+                fun_test.shared_variables["topology"] = topology
+                fun_test.test_assert(topology, "Topology deployed")
+                fs = topology.get_dut_instance(index=0)
 
-            come = fs.get_come()
-            global DPC_PROXY_IP
-            global DPC_PROXY_PORT
-            DPC_PROXY_IP = come.host_ip
-            fun_test.shared_variables["come_ip"] = come.host_ip
-            DPC_PROXY_PORT = come.get_dpc_port(0)
-            DPC_PROXY_PORT2 = come.get_dpc_port(1)
+                come = fs.get_come()
+                global DPC_PROXY_IP
+                global DPC_PROXY_PORT
+                global DPC_PROXY_PORT2
+                DPC_PROXY_IP = come.host_ip
+                fun_test.shared_variables["come_ip"] = come.host_ip
+                DPC_PROXY_PORT = come.get_dpc_port(0)
+                DPC_PROXY_PORT2 = come.get_dpc_port(1)
+
+        network_controller_obj_f1_0 = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
+                                                        verbose=True)
+        network_controller_obj_f1_1 = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT2,
+                                                        verbose=True)
+        fun_test.shared_variables['network_controller_obj'] = network_controller_obj_f1_0
 
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
             funcp_obj.bringup_funcp(prepare_docker=False)
-            funcp_obj.assign_mpg_ips_dhcp()
+            funcp_obj.assign_mpg_ips()
             abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
             abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
@@ -177,59 +222,100 @@ class FunethSanity(FunTestScript):
             # TODO: sanity check of control plane
 
         tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = Funeth(tb_config_obj)
+        funeth_obj = Funeth(tb_config_obj,
+                            fundrv_branch=fundrv_branch,
+                            funsdk_branch=funsdk_branch,
+                            fundrv_commit=fundrv_commit,
+                            funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
-        if not control_plane:
-            setup_nu_host(funeth_obj)
+        setup_nu_host(funeth_obj)
 
         # HU host
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
 
-        # TODO: remove below workaround after SWLINUX-729 is fixed
-        #if test_bed_type == 'fs-11' and control_plane:
-        #    funeth_obj.linux_obj_dict['hu'].command('ping 53.1.1.253 -c 1')
-        #    funeth_obj.linux_obj_dict['hu2'].command('ping 53.1.1.253 -c 1')
-        #    funeth_obj.linux_obj_dict['hu3'].command('ping 54.1.1.253 -c 1')
-        #    funeth_obj.linux_obj_dict['hu4'].command('ping 54.1.1.253 -c 1')
+        # HU host VMs
+        if hu_host_vm:
+            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
+            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
+            funeth_obj_ul_vm = Funeth(tb_config_obj_ul_vm,
+                                      fundrv_branch=fundrv_branch,
+                                      funsdk_branch=funsdk_branch,
+                                      fundrv_commit=fundrv_commit,
+                                      funsdk_commit=funsdk_commit)
+            funeth_obj_ol_vm = Funeth(tb_config_obj_ol_vm,
+                                      fundrv_branch=fundrv_branch,
+                                      funsdk_branch=funsdk_branch,
+                                      fundrv_commit=fundrv_commit,
+                                      funsdk_commit=funsdk_commit)
+            fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
+            fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
 
-        network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
-                                                   verbose=True)
-        fun_test.shared_variables['network_controller_obj'] = network_controller_obj
+            # start VMs
+            start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ul_vm)
+            start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ol_vm)
+            fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
+
+            setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
+
+            # TODO: Configure overlay
+
+        if test_bed_type == 'fs-11':
+            nu = 'nu2'
+            hu = 'hu2'
+        else:
+            nu = 'nu'
+            hu = 'hu'
+        fun_test.shared_variables['sanity_nu'] = nu
+        fun_test.shared_variables['sanity_hu'] = hu
 
     def cleanup(self):
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fun_test.shared_variables["fs"].cleanup()
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
-            fun_test.shared_variables["topology"].cleanup()
-        funeth_obj = fun_test.shared_variables['funeth_obj']
-        funeth_obj.cleanup_workspace()
-        fun_test.log("Collect syslog from HU hosts")
-        funeth_obj.collect_syslog()
-        fun_test.log("Collect dmesg from HU hosts")
-        funeth_obj.collect_dmesg()
-        fun_test.test_assert(funeth_obj.unload(), 'Unload funeth driver')
+            topology = fun_test.shared_variables["topology"]
+            topology.cleanup()
+            try:
+                if hu_host_vm:
+                    funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ul_vm', 'funeth_obj']
+                else:
+                    funeth_obj_descs = ['funeth_obj', ]
+                for funeth_obj_desc in funeth_obj_descs:
+                    funeth_obj = fun_test.shared_variables[funeth_obj_desc]
+                    funeth_obj.cleanup_workspace()
+                    fun_test.log("Collect syslog from HU hosts")
+                    funeth_obj.collect_syslog()
+                    fun_test.log("Collect dmesg from HU hosts")
+                    funeth_obj.collect_dmesg()
+                    fun_test.log("Unload funeth driver")
+                    funeth_obj.unload()
+            except:
+                hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
+                for host_ip, host_info in hu_hosts.iteritems():
+                    host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
-        # TODO: Clean up control plane
-        if control_plane:
-            linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
-            linux_obj.sudo_command('rmmod funeth')
-            linux_obj.sudo_command('docker kill F1-0 F1-1')
-            linux_obj.sudo_command('rm -fr /tmp/*')
+            if control_plane:
+                linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
+                try:
+                    linux_obj.sudo_command('rmmod funeth')
+                    linux_obj.sudo_command('docker kill F1-0 F1-1')
+                    linux_obj.sudo_command('rm -fr /tmp/*')
+                except:
+                    linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
-def collect_stats():
-    try:
-        network_controller_obj = fun_test.shared_variables['network_controller_obj']
-        network_controller_obj.peek_fpg_port_stats(port_num=0)
-        network_controller_obj.peek_fpg_port_stats(port_num=1)
-        network_controller_obj.peek_fpg_port_stats(port_num=4)
-        network_controller_obj.peek_psw_global_stats()
-        network_controller_obj.peek_vp_packets()
-    except:
-        pass
+def collect_stats(when='before'):
+    network_controller_objs = [fun_test.shared_variables['network_controller_obj'], ]
+    fpg_interfaces = (4, )
+    fpg_intf_dict = {'F1_0': (4, )}
+    version = fun_test.get_version()
+    fun_test.log('Collect stats via DPC and save to file {} test'.format(when))
+    fun_test.log_module_filter("random_module")
+    perf_utils.collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict, version, when=when)
+    fun_test.log_module_filter_disable()
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu='nu', hu='hu'):
@@ -239,17 +325,25 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
     interfaces = [i for i in tb_config_obj.get_all_interfaces(hu) if i not in interfaces_excludes]
     ip_addrs = [tb_config_obj.get_interface_ipv4_addr(hu, intf) for intf in interfaces]
 
-    # Collect fpg, psw, vp stats before and after
-    collect_stats()
+    # Collect dpc stats before and after the test
+    collect_stats(when='before')
 
+    result = True
     for intf, ip_addr in zip(interfaces, ip_addrs):
-        result = linux_obj.ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
-                                size=packet_size-20-8,  # IP header 20B, ICMP header 8B
-                                sudo=True)
-        collect_stats()
-        fun_test.test_assert(
-            result,
-            'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
+        result &= linux_obj.ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
+                                 size=packet_size-20-8,  # IP header 20B, ICMP header 8B
+                                 sudo=True)
+    collect_stats(when='after')
+
+    fun_test.shared_variables['nu_hu_pingable'] = result
+    fun_test.test_assert(
+        result,
+        'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
+
+
+def check_nu_hu_pingable():
+    if not fun_test.shared_variables['nu_hu_pingable']:
+        fun_test.test_assert(False, 'NU ping HU unsuccessful, stop further testing')
 
 
 class FunethTestNUPingHU(FunTestCase):
@@ -268,12 +362,8 @@ class FunethTestNUPingHU(FunTestCase):
         pass
 
     def run(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'], nu=nu, hu=hu)
 
 
@@ -287,15 +377,12 @@ class FunethTestPacketSweep(FunTestCase):
         """)
 
     def setup(self):
+        check_nu_hu_pingable()
         funeth_obj = fun_test.shared_variables['funeth_obj']
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         # NU
         linux_obj = funeth_obj.linux_obj_dict[nu]
@@ -328,16 +415,10 @@ class FunethTestPacketSweep(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         #for i in range(46, MAX_MTU+1):  # 64 - 14 - 4 = 46
         #    verify_nu_hu_datapath(funeth_obj, packet_count=2, packet_size=i)
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         linux_obj = funeth_obj.linux_obj_dict[nu]
         tb_config_obj = funeth_obj.tb_config_obj
-
-
 
         if emulation_target == 'palladium':  # Use only one PF and one VF interface to save run time
             interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
@@ -353,13 +434,33 @@ class FunethTestPacketSweep(FunTestCase):
         def get_icmp_payload_size(pkt_size):
             return pkt_size - 20 - 8  # IP header 20B, ICMP header 8B
 
+        # Collect dpc stats before and after the test
+        collect_stats(when='before')
+
+        timeout = 600
+        result = True
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i %s; done' % (
-                get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
-            output = linux_obj.command(cmd, timeout=3000)
-            fun_test.test_assert(
-                re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None,
-                'NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
+            script_file = '/tmp/packet_sweep.sh'
+            linux_obj.command('rm {0}; touch {0}'.format(script_file))
+            cmd_str_list = ['{',
+                            '    sleep %s' % timeout,
+                            '    kill \$\$',
+                            '} &',
+                            'for i in {%s..%s}; do sudo ping -c %s -i %s -s \$i -M do %s; done' % (
+                                get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count,
+                                interval, ip_addr),
+                            ]
+            for cmd_str in cmd_str_list:
+                linux_obj.command('echo "{}" >> {}'.format(cmd_str, script_file))
+            linux_obj.command('cat {}'.format(script_file))
+            linux_obj.command('chmod +x {}'.format(script_file))
+            fun_test.log('NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
+            output = linux_obj.command('bash {}'.format(script_file), timeout=timeout+2)
+            #result &= re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None
+            result &= len(re.findall(r' (0% packet loss)', output)) == (max_pkt_size - min_pkt_size + 1)
+
+        collect_stats(when='after')
+        fun_test.test_assert(result, 'Packet sweep test')
 
 
 class FunethTestScpBase(FunTestCase):
@@ -370,26 +471,45 @@ class FunethTestScpBase(FunTestCase):
         :param nu_or_hu: host to execute scp cmd, 'nu' or 'hu', i.e. scp source host
         :param pf_or_vf: if scp destination is 'hu', whether to use 'pf' or 'vf' interface IP
         """
-
+        check_nu_hu_pingable()
         funeth_obj = fun_test.shared_variables['funeth_obj']
         linux_obj = funeth_obj.linux_obj_dict[nu_or_hu]
         self.file_name = '/tmp/{}file'.format(nu_or_hu)
 
         # Create a file
+        #if TB == 'SN2':
+        #    file_size = '2m'
+        #else:
+        #    file_size = '2g'
+        #linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
+
+        # Create file with pattern of sequential 32-bit
         if TB == 'SN2':
-            file_size = '2m'
+            file_size = 2000000  # 2MB
         else:
-            file_size = '2g'
-        linux_obj.command('xfs_mkfile {} {}'.format(file_size, self.file_name))
+            file_size = 200000000  # 200MB
+
+        # Create file in regression server
+        lista = list(range(0, file_size/4))
+        packer = struct.Struct('I ' * (file_size/4))
+        content = packer.pack(*lista)
+        tmp_filename = '{}/funeth_sanity_scp_test_file'.format(fun_test.get_logs_directory())
+        fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, tmp_filename))
+        with open(tmp_filename, 'w') as f:
+            f.write(content)
+
+        # Scp file to test server
+        fun_test.scp(source_file_path=tmp_filename,
+                     target_ip=linux_obj.host_ip,
+                     target_username=linux_obj.ssh_username,
+                     target_password=linux_obj.ssh_password,
+                     target_file_path=self.file_name)
+        linux_obj.command('ls -l {}'.format(self.file_name))
         fun_test.test_assert(linux_obj.check_file_directory_exists(self.file_name),
                              'Create file {} in {}'.format(self.file_name, linux_obj.host_ip))
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         # Start sshd in namespace if needed
         if nu_or_hu == nu:
@@ -416,12 +536,8 @@ class FunethTestScpBase(FunTestCase):
         linux_obj = funeth_obj.linux_obj_dict[nu_or_hu]
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         if nu_or_hu == nu:
             if pf_or_vf == 'pf':
@@ -432,20 +548,20 @@ class FunethTestScpBase(FunTestCase):
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from NU to HU host via {}.'.format(pf_or_vf.upper())
         elif nu_or_hu == hu:
-            ip_addr = tb_config_obj.get_interface_ipv4_addr(nu, tb_config_obj.get_a_nu_interface())
+            ip_addr = tb_config_obj.get_interface_ipv4_addr(nu, tb_config_obj.get_a_nu_interface(nu))
             username = tb_config_obj.get_username(hu)
             password = tb_config_obj.get_password(hu)
             desc = 'Scp a file from HU to NU host.'
 
-        collect_stats()
+        collect_stats(when='before')
         result = linux_obj.scp(source_file_path=self.file_name,
                                            target_ip=ip_addr,
                                            target_file_path='{}{}'.format(
                                                self.file_name, '' if not pf_or_vf else pf_or_vf),
                                            target_username=username,
                                            target_password=password,
-                                           timeout=300),
-        collect_stats()
+                                           timeout=60)
+        collect_stats(when='after')
         fun_test.test_assert(result, desc)
 
 
@@ -458,21 +574,13 @@ class FunethTestScpNU2HUPF(FunethTestScpBase):
         """)
 
     def setup(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._setup(self, nu, 'pf')
 
     def run(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._run(self, nu, 'pf')
 
 
@@ -485,15 +593,13 @@ class FunethTestScpNU2HUVF(FunethTestScpBase):
         """)
 
     def setup(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._setup(self, nu, 'vf')
 
     def run(self):
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._run(self, nu, 'vf')
 
 
@@ -506,28 +612,20 @@ class FunethTestScpHU2NU(FunethTestScpBase):
         """)
 
     def setup(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._setup(self, hu)
 
     def run(self):
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         FunethTestScpBase._run(self, hu)
 
 
 class FunethTestInterfaceFlapBase(FunTestCase):
 
     def setup(self):
-        pass
+        check_nu_hu_pingable()
 
     def cleanup(self):
         pass
@@ -536,12 +634,8 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
 
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
 
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if pf_or_vf == 'pf':
@@ -555,7 +649,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # ifconfig down
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='down', ns=ns),
                              'ifconfig {} down'.format(interface))
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface])
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[interface, ], nu=nu, hu=hu)
 
         # ifconfig up
         fun_test.test_assert(linux_obj.ifconfig_up_down(interface, action='up', ns=ns),
@@ -563,7 +657,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
         # Need to re-configure route/arp
         fun_test.test_assert(funeth_obj.configure_namespace_ipv4_routes(hu, ns=namespace),
                              'Configure HU host IPv4 routes.')
-        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[])
+        verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[], nu=nu, hu=hu)
 
 
 class FunethTestInterfaceFlapPF(FunethTestInterfaceFlapBase):
@@ -615,7 +709,9 @@ class FunethTestUnloadDriver(FunTestCase):
         pass
 
     def run(self):
-        verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'])
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
+        verify_nu_hu_datapath(funeth_obj=fun_test.shared_variables['funeth_obj'], nu=nu, hu=hu)
 
 
 class FunethTestReboot(FunTestCase):
@@ -637,19 +733,15 @@ class FunethTestReboot(FunTestCase):
     def run(self):
         funeth_obj = fun_test.shared_variables['funeth_obj']
         tb_config_obj = funeth_obj.tb_config_obj
-        if fun_test.shared_variables["test_bed_type"] == 'fs-11':
-            nu = 'nu2'
-            hu = 'hu2'
-        else:
-            nu = 'nu'
-            hu = 'hu'
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
 
         fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
-        verify_nu_hu_datapath(funeth_obj)
+        verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
 
 
 if __name__ == "__main__":

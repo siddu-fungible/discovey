@@ -1,5 +1,6 @@
+from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
-
+from threading import Thread
 
 class EndPoint(object, ToDictMixin):
     end_point_type = "Unknown end-point type"
@@ -45,17 +46,50 @@ class VmEndPoint(EndPoint, ToDictMixin):
 class BareMetalEndPoint(EndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_BARE_METAL
 
+    class RebootWorker(Thread):
+        def __init__(self, instance):
+            super(BareMetalEndPoint.RebootWorker, self).__init__()
+            self.instance = instance
+            self.work_complete = False
+            self.result = False
+
+        def run(self):
+            reboot_result = self.instance.reboot(non_blocking=True)
+            if reboot_result:
+                self.work_complete = True
+                self.result = True
+
+
     def __init__(self, host_info):
         super(BareMetalEndPoint, self).__init__()
         self.mode = self.MODE_SIMULATION
         self.host_info = host_info
         self.instance = None
+        self.reboot_worker = None
 
     def add_instance(self, instance):
         self.instance = instance
 
     def get_host_instance(self, host_index=None):
         return self.instance
+
+    def reboot(self):
+        self.reboot_worker = self.RebootWorker(instance=self.get_instance())
+        self.reboot_worker.start()
+        return True
+
+    def is_ready(self, max_wait_time=300):
+        instance_ready = False
+        if self.reboot_worker and self.reboot_worker.work_complete:
+            if self.reboot_worker.result:
+                host_instance = self.get_host_instance()
+                ipmi_details = None
+                if host_instance.extra_attributes:
+                    if "ipmi_info" in host_instance.extra_attributes:
+                        ipmi_details = host_instance.extra_attributes["ipmi_info"]
+                instance_ready = host_instance.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=ipmi_details)
+                # host_instance.lspci(grep_filter="1dad")
+        return instance_ready
 
 
 class SwitchEndPoint(EndPoint, ToDictMixin):

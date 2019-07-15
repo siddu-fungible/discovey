@@ -744,7 +744,8 @@ def trim_json_contents(filepath):
     return result
 
 
-def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=False, num_flows=1):
+def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=False, num_flows=1,
+                             collect_dpc_stats=True):
     result = {}
     try:
         version = fun_test.get_version()
@@ -773,17 +774,20 @@ def run_netperf_concurrently(cmd_dict, network_controller_obj, display_output=Fa
                                            resource_pc_file, display_output),
                                 task_key='')
         '''
-
-        thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=run_dpcsh_commands,
-                                                  network_controller_obj=network_controller_obj,
-                                                  flow_list_file=flow_list_file, resource_bam_file=resource_bam_file,
-                                                  vp_utils_file=vp_utils_file, resource_pc_file=resource_pc_file,
-                                                  display_output=display_output)
+        thread_id = None
+        if collect_dpc_stats:
+            thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=run_dpcsh_commands,
+                                                      network_controller_obj=network_controller_obj,
+                                                      flow_list_file=flow_list_file,
+                                                      resource_bam_file=resource_bam_file,
+                                                      vp_utils_file=vp_utils_file,
+                                                      resource_pc_file=resource_pc_file,
+                                                      display_output=display_output)
 
         run_started = multi_task_obj.run(max_parallel_processes=total_netperf_processes, parallel=True)
         fun_test.test_assert(run_started, "Ensure netperf commands started")
-
-        fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=5)
+        if thread_id:
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=5)
 
         for index in range(1, total_netperf_processes + 1):
             task_key = 'conn_%d' % index
@@ -903,10 +907,11 @@ def get_netperf_cmd_list(dip, protocol='tcp', duration=60, num_flows=1, send_siz
     return cmd_list
 
 
-def create_performance_table(total_throughput, num_flows, total_pps):
+def create_performance_table(total_throughput, num_flows, total_pps, no_of_runs=5):
     table_created = False
     try:
-        headers = ['# of connections', 'Total Throughput in Mbps', 'Total PPS']
+        headers = ['# of connections', 'Avg. Throughput of %d runs in Mbps' % no_of_runs,
+                   'Avg PPS of %d runs' % no_of_runs]
         rows = []
         rows.append([num_flows, total_throughput, total_pps])
         table_name = 'Aggregate throughput and pps for %d of connections' % num_flows

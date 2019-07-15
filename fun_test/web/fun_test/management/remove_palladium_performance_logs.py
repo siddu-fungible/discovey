@@ -17,7 +17,16 @@ def move_directory(source):
 palladium_suites = SuiteExecution.objects.filter(suite_path="palladium_performance_master.json")
 for palladium_suite in palladium_suites:
 
-    if (get_current_time() - palladium_suite.completed_time).days > 6:
+    if (get_current_time() - palladium_suite.completed_time).days > 1:
+        suite_logs_path = LOGS_DIR + "/s_{}".format(palladium_suite.execution_id)
+        print suite_logs_path
+        move_directory(source=suite_logs_path)
+
+
+palladium_suites = SuiteExecution.objects.filter(suite_path="palladium_apps.json")
+for palladium_suite in palladium_suites:
+
+    if (get_current_time() - palladium_suite.completed_time).days > 1:
         suite_logs_path = LOGS_DIR + "/s_{}".format(palladium_suite.execution_id)
         print suite_logs_path
         move_directory(source=suite_logs_path)

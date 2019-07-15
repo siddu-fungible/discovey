@@ -15,7 +15,7 @@ tb_config = {
     "dut_info": {
         0: {
             "bootarg": "setenv bootargs app=mdt_test,load_mods,hw_hsu_test --serial sku=SKU_FS1600_0 --all_100g"
-                       " --dis-stats --dpc-server --dpc-uart --csr-replay --nofreeze",
+                       " --dpc-server --dpc-uart --csr-replay --nofreeze",
             "huid": 7,
             "fnid": 5,
             "ctlid": 0,
@@ -245,11 +245,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
 
             # Configuring Local thin block volume
-            command_result = self.storage_controller.json_execute(verb="enable_counters",
-                                                                  command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
-
             command_result = self.storage_controller.ip_cfg(ip="29.1.1.1")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg on COMe")

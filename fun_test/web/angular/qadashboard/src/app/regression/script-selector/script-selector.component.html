@@ -1,7 +1,9 @@
-<div *ngIf="singleSelectNode" style="display: inline-block">Selected file: {{ singleSelectNode.scriptPath }}&nbsp;</div>
 
-<span (click)="selectClick()" class="pseudo-anchor">Select a file</span>
-<table *ngIf="selectionMode">
+<button (click)="selectClick()" class="btn btn-primary">Select a file</button>
+<br>
+<span class="span-selected" *ngIf="singleSelectNode" style="display: inline-block">Selected file: {{ singleSelectNode.scriptPath }}&nbsp;</span>
+
+<table class="table" *ngIf="selectionMode">
   <tr>
     <th>Path</th>
   </tr>

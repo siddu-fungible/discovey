@@ -2,9 +2,12 @@ import {Component, Input, OnInit} from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
-import {ApiService} from "../../services/api/api.service";
+import {ApiResponse, ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
+import {error} from "util";
+import {TestBedService} from "./test-bed.service";
+import {UserService} from "../../services/user/user.service";
 
 enum EditMode {
   NONE = 0,
@@ -23,40 +26,92 @@ export class TestBedComponent implements OnInit {
   testBeds: any [] = null;
   automationStatus = {};
   manualStatus = {};
+  assetLevelManualLockStatus = {};
   currentEditMode: EditMode = EditMode.NONE;
   currentTestBed: any = null;
   EditMode = EditMode;
   users: any = null;
   lockPanelHeader: string = null;
   selectedUser: any = null;
+  assetSelectedUser: any = null;
+  assets = null;
+  driver = null;
+  refreshing: string = null;
+  userMap: any = null;
 
-  constructor(private regressionService: RegressionService, private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService
+  constructor(private regressionService: RegressionService,
+              private apiService: ApiService,
+              private loggerService: LoggerService,
+              private commonService: CommonService,
+              private service: TestBedService,
+              private userService: UserService
   ) { }
 
   ngOnInit() {
     // fetchUsers
     // fetchTestbeds
-    let o = new Observable(observer => {
+    this.driver = new Observable(observer => {
       observer.next(true);
-      observer.complete();
+      //observer.complete();
       return () => {
       };
     }).pipe(
       switchMap(response => {
-          return this.fetchTestBeds();
+        return this.fetchTestBeds();
       }),
       switchMap(response => {
         return this.fetchAutomationStatus();
       }),
       switchMap(response => {
         return this.getUsers();
-      }));
+      }),
+      switchMap(response => {
+        return this.userService.getUserMap();
+      }),
+      switchMap(response => {
+        this.userMap = response;
+        return this.fetchAssets();
+      })
+      );
+    this.refreshAll();
+  }
 
-    o.subscribe();
+  refreshAll () {
+    this.refreshing = "Refreshing test-beds";
+    this.driver.subscribe(() => {
+      this.refreshing = null;
+    }, error => {
+      this.loggerService.error("Unable to init test-bed component");
+    });
   }
 
   refreshTestBeds() {
     this.fetchTestBeds().subscribe();
+  }
+
+  fetchAssets() {
+    if (!this.embed) {
+      return this.service.assets().pipe(switchMap(response => {
+        let dutAssets = [];
+        let hostAssets = [];
+        this.assets = response;
+        this.assets.map((asset) => {
+          asset.applyingManualLock = false;
+          asset.selectedUser = null;
+          if (asset.type === 'DUT') {
+            dutAssets.push(asset);
+          }
+          if (asset.type === 'Host') {
+            hostAssets.push(asset);
+          }
+        });
+        this.assets = [...dutAssets, ...hostAssets];
+        return of(true);
+      }))
+    } else {
+      return of(true);
+    }
+
   }
 
   fetchTestBeds() {
@@ -72,8 +127,10 @@ export class TestBedComponent implements OnInit {
         this.manualStatus[testBed.name] = {manualLock: testBed.manual_lock,
         manualLockExpiryTime: testBed.manual_lock_expiry_time,
         manualLockSubmitter: testBed.manual_lock_submitter};
-
-
+        this.assetLevelManualLockStatus[testBed.name] = null;
+        if (testBed.hasOwnProperty("asset_level_manual_lock_status")) {
+          this.assetLevelManualLockStatus[testBed.name] = testBed.asset_level_manual_lock_status;
+        }
       });
       this.automationStatus = {...this.automationStatus};
 
@@ -87,21 +144,32 @@ export class TestBedComponent implements OnInit {
         let numExecutions = -1;
         let executionId = -1;
         let manualLock = false;
+        if (testBed.name === 'fs-42') {
+          let i = 0;
+        }
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
           executionId: executionId,
           manualLock: manualLock};
-        if (response) {
-          let numExecutions = response.length;
-          let executionId = numExecutions;
-          if (numExecutions > 0) {
-            let thisResponse = response[0];
-            executionId = thisResponse.execution_id;
+          if (response && response.hasOwnProperty("automation_status")) {
+            /*
+            let numExecutions = response.length;
+            let executionId = numExecutions;
+            if (numExecutions > 0) {
+              let thisResponse = response[0];
+              executionId = thisResponse.execution_id;
+            }*/
+            let automationStatus = response.automation_status;
+            if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
+              this.automationStatus[testBed.name] = {numExecutions: 1,
+                executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
+            } else if (automationStatus.hasOwnProperty("used_by_suite_id")) {
+              this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.used_by_suite_id};
+            } else if (automationStatus.hasOwnProperty('suite_info') && automationStatus.suite_info) {
+              this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.suite_info.suite_execution_id};
+            }
+
           }
-          this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-            executionId: executionId}
-        }
-        this.automationStatus[testBed] = response;
-          return of(null);
+        return of(null);
         }))
       })
     )
@@ -122,7 +190,8 @@ export class TestBedComponent implements OnInit {
       let payload = {manual_lock: false};
       this.apiService.put(url, payload).subscribe(response => {
         this.loggerService.success(`Unlock submitted for ${testBed.name}`);
-        this.refreshTestBeds();
+        window.location.reload();
+        //this.refreshTestBeds();
       }, error => {
         this.loggerService.error(`Unlock ${testBed.name} failed`);
       })
@@ -166,10 +235,16 @@ export class TestBedComponent implements OnInit {
       this.selectedUser = null;
       this.schedulingTime.hour = 1;
       this.schedulingTime.minute = 1;
-      this.refreshTestBeds();
+      //this.refreshTestBeds();
+      window.location.reload();
       this.currentEditMode = EditMode.NONE;
     }, error => {
-      this.loggerService.error("Unable to submit lock");
+      if (error.value instanceof ApiResponse) {
+        this.loggerService.error("Unable to submit lock: " + error.value.error_message);
+      } else {
+        this.loggerService.error("Unable to submit lock");
+      }
+
     })
   }
 
@@ -197,5 +272,32 @@ export class TestBedComponent implements OnInit {
       }
     }
     return expired;
+  }
+
+  lockAsset(asset) {
+    if (!asset.selectedUser) {
+      return this.loggerService.error('Please select a user');
+    }
+    let name = asset.name;
+    this.service.lockAsset(name, asset.selectedUser).subscribe((response) => {
+      this.loggerService.success(`Asset ${name} lock submitted`);
+      asset.applyingManualLock = false;
+      asset.selectedUser = null;
+      this.refreshAll();
+    }, error => {
+      this.loggerService.error(`Unable to lock asset: ${name}`);
+    })
+  }
+
+  unlockAsset(asset) {
+    let name = asset.name;
+    this.service.unlockAsset(name).subscribe((response) => {
+      this.loggerService.success(`Asset: ${name} unlock submitted`);
+      asset.applyingManualLock = false;
+      this.refreshAll();
+
+    }, error => {
+      this.loggerService.error(`Unable to unlock asset: ${name}`);
+    })
   }
 }

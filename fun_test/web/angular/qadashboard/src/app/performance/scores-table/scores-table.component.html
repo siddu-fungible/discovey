@@ -1,0 +1,34 @@
+<div class="component container-fluid">
+  <h4>Chartname: {{ chartName }}</h4>
+  <h4>Modelname: {{ modelName }}</h4>
+  <table class="table table-bordered table-nonfluid">
+    <tr>
+      <th>
+        Date
+      </th>
+      <th>
+        Score
+      </th>
+      <th>
+        Copied Score
+      </th>
+      <th>
+        Copied Score Disposition
+      </th>
+    </tr>
+    <tr *ngFor="let row of rows | keyvalue">
+      <td>
+        {{ row.key }}
+      </td>
+      <td>
+        {{ row.value.score }}
+      </td>
+      <td>
+        {{ row.value.copiedScore }}
+      </td>
+      <td>
+        {{ row.value.copiedDisposition }}
+      </td>
+    </tr>
+  </table>
+</div>

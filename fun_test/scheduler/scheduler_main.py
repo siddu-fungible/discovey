@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 from fun_settings import *
-from fun_global import determine_version
+from fun_global import determine_version, is_development_mode
 import re
 import subprocess
 from threading import Thread, Lock
 import threading
+import traceback
 
 from scheduler_helper import *
 import signal
@@ -50,6 +51,7 @@ class TestBedWorker(Thread):
                 if get_current_time() > test_bed.manual_lock_expiry_time:
                     test_bed.manual_lock = False
                     test_bed.save()
+                    manual_un_lock_assets(test_bed_name=test_bed.name, manual_lock_submitter=test_bed.manual_lock_submitter)
                     send_test_bed_remove_lock(test_bed=test_bed, warning=False)
 
                     if test_bed_name in self.test_bed_lock_timers:
@@ -66,11 +68,12 @@ class TestBedWorker(Thread):
                 if test_bed.name not in self.warn_list:
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
+                        un_lock_warning_time = 60 * 10
                         # self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
-                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(60 * 10, self.test_bed_unlock_dispatch, (test_bed.name,))
+                        self.test_bed_lock_timers[test_bed.name] = threading.Timer(un_lock_warning_time, self.test_bed_unlock_dispatch, (test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name].start()
                         self.warn_list.append(test_bed.name)
-                        send_test_bed_remove_lock(test_bed=test_bed, warning=True)
+                        send_test_bed_remove_lock(test_bed=test_bed, warning=True, un_lock_warning_time=un_lock_warning_time)
 
             time.sleep(20)
 
@@ -148,7 +151,7 @@ class QueueWorker(Thread):
         if True:
 
             queue_lock.acquire()
-            scheduler_logger.info("Lock-acquire: QueueWorker")
+            # scheduler_logger.info("Lock-acquire: QueueWorker")
 
             try:
                 de_queued_jobs = []
@@ -167,15 +170,24 @@ class QueueWorker(Thread):
                         continue
 
                     if queued_job.test_bed_type not in not_available:
-                        availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
+                        suite_based_spec = None
+                        if queued_job.test_bed_type.startswith("suite-based"):
+                            suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
+                        availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type,
+                                                                               suite_base_test_bed_spec=suite_based_spec)
                         if availability["status"]:
                             de_queued_jobs.append(queued_job)
+                            assets_required = availability["assets_required"]
+                            custom_test_bed_spec = availability.get("custom_test_bed_spec", None)
                             # self.job_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
-                            job_id_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
+                            job_id_threads[suite_execution.execution_id] = self.execute_job(job_id=queued_job.job_id,
+                                                                                            assets_required=assets_required,
+                                                                                            custom_test_bed_spec=custom_test_bed_spec)
 
                         else:
-                            not_available[queued_job.test_bed_type] = availability["message"]
-                            print("Not available: {}".format(availability["message"]))
+                            if not queued_job.test_bed_type.startswith("suite-based"):
+                                not_available[queued_job.test_bed_type] = availability["message"]
+                            # print("Not available: {}".format(availability["message"]))
                             queued_job.message = availability["message"]
                             queued_job.save()
                     else:
@@ -191,7 +203,7 @@ class QueueWorker(Thread):
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
             # scheduler_logger.info("QueueWorker: Before lock release")
-            scheduler_logger.info("Lock-release: QueueWorker")
+            # scheduler_logger.info("Lock-release: QueueWorker")
             queue_lock.release()
             time.sleep(5)
 
@@ -212,11 +224,16 @@ class QueueWorker(Thread):
             invalid_job.delete()
         return valid_jobs
 
-    def execute_job(self, job_id):
+    def execute_job(self, job_id, assets_required=None, custom_test_bed_spec=None):
         suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+        if custom_test_bed_spec:
+            suite_execution.add_run_time_variable("custom_test_bed_spec", custom_test_bed_spec)
         scheduler_logger.info("{} Executing".format(get_job_string_from_spec(job_spec=suite_execution)))
         t = SuiteWorker(job_spec=suite_execution)
-        models_helper.update_suite_execution(suite_execution_id=job_id, state=JobStatusType.IN_PROGRESS)
+        models_helper.update_suite_execution(suite_execution_id=job_id,
+                                             state=JobStatusType.IN_PROGRESS)
+
+        lock_assets(job_id=job_id, assets=assets_required)
         t.initialize()
         # t.start()
         # t.run()
@@ -239,7 +256,7 @@ def get_job_string(job_id):
 
 def queue_job(job_id):
     queue_lock.acquire()
-    scheduler_logger.info("Lock-acquire: queue_job")
+    # scheduler_logger.info("Lock-acquire: queue_job")
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
     if job_spec and job_spec.state == JobStatusType.SCHEDULED:
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
@@ -254,7 +271,7 @@ def queue_job(job_id):
         if job_spec:
             scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 
-    scheduler_logger.info("Lock-release: queue_job")
+    # scheduler_logger.info("Lock-release: queue_job")
     queue_lock.release()
 
 
@@ -274,6 +291,7 @@ def report_error(job_spec, error_message, local_logger=None):
 
 
 class SuiteWorker(Thread):
+    RUN_TIME_ROOT_VARIABLE = "scheduler"
     def __init__(self, job_spec):
         super(SuiteWorker, self).__init__()
         self.job_spec = job_spec
@@ -330,23 +348,23 @@ class SuiteWorker(Thread):
         if hasattr(job_spec, "email_on_failure_only"):
             self.job_email_on_failure_only = job_spec.email_on_failure_only
 
-        self.job_test_bed_type = job_spec.test_bed_type
-        self.current_script_process = None
-
-        self.suite_shutdown = False
-        self.abort_on_failure_requested = False
-        self.summary_extra_message = ""
-        self.local_scheduler_logger = None
-        self.job_state = JobStatusType.IN_PROGRESS
-        self.log_handler = None
-
-        self.at_least_one_failure = False
-        self.shutdown_reason = None
-        self.script_items = None
         self.initialized = False
-        self.current_script_item_index = 0
-        self.active_script_item_index = -1
-        self.suite_completed = False
+        self.job_test_bed_type = job_spec.test_bed_type
+        self.local_scheduler_logger = None
+        self.log_handler = None
+        self.script_items = None
+
+        self.current_script_process = None  # run-time # done
+        self.suite_shutdown = False  # run-time
+        self.abort_on_failure_requested = False  # run-time
+        self.summary_extra_message = ""
+        self.at_least_one_failure = False  # run-time # done
+        self.shutdown_reason = None
+        self.last_script_path = None  # run-time # done
+        self.current_script_item_index = 0  # run-time  # done
+        self.active_script_item_index = -1  # run-time  # done
+        self.suite_completed = False   # run-time
+        self.job_state = JobStatusType.IN_PROGRESS
         self.initialize()
 
     def initialize(self):
@@ -361,11 +379,14 @@ class SuiteWorker(Thread):
                                                                     backupCount=5)
             self.log_handler.setFormatter(
                 logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+            if len(local_scheduler_logger.handlers):
+                del local_scheduler_logger.handlers[:]
             local_scheduler_logger.addHandler(hdlr=self.log_handler)
             self.local_scheduler_logger = local_scheduler_logger
             models_helper.update_suite_execution(suite_execution_id=self.job_id,
                                                  result=RESULTS["IN_PROGRESS"],
-                                                 state=JobStatusType.IN_PROGRESS)
+                                                 state=JobStatusType.IN_PROGRESS,
+                                                 started_time=get_current_time())
 
             build_url = self.job_build_url
             if not build_url:
@@ -517,6 +538,7 @@ class SuiteWorker(Thread):
 
     def suite_complete(self):
         state = JobStatusType.COMPLETED
+        un_lock_assets(self.job_id)
         if self.shutdown_reason == ShutdownReason.ABORTED:
             state = JobStatusType.ABORTED
         if self.shutdown_reason == ShutdownReason.KILLED:
@@ -613,11 +635,31 @@ class SuiteWorker(Thread):
         elif self.current_script_item_index > self.active_script_item_index:
             self.start_script(script_item=script_item, script_item_index=self.current_script_item_index)  # schedule it
 
+    def update_suite_run_time(self, variable_name, value):
+        s = models_helper.get_suite_execution(suite_execution_id=self.job_id)
+        if s:
+            if self.RUN_TIME_ROOT_VARIABLE not in s.run_time:
+                s.add_run_time_variable(self.RUN_TIME_ROOT_VARIABLE, None)
+
+            rt = s.get_run_time_variable(self.RUN_TIME_ROOT_VARIABLE)
+            if not rt:
+                rt = {variable_name: value}
+            else:
+                rt[variable_name] = value
+            s.add_run_time_variable(self.RUN_TIME_ROOT_VARIABLE, rt)
+
+    def clear_run_time(self):
+        s = models_helper.get_suite_execution(suite_execution_id=self.job_id)
+        if self.RUN_TIME_ROOT_VARIABLE in s.run_time:
+            s.run_time["scheduler"] = None
+            s.save()
 
     def start_script(self, script_item, script_item_index):
         print ("Start_script: {}".format(script_item))
         script_path = SCRIPTS_DIR + "/" + script_item["path"]
         self.last_script_path = script_path
+        self.update_suite_run_time("last_script_path", self.last_script_path)
+
         if self.abort_on_failure_requested:
             self.error(message="Skipping, as abort_on_failure_requested", script_path=script_path)
             self.shutdown_suite(reason=ShutdownReason.ABORTED)
@@ -662,12 +704,16 @@ class SuiteWorker(Thread):
                 self.current_script_process = subprocess.Popen(popens,
                                                                stdout=console_log,
                                                                stderr=console_log)
+                self.update_suite_run_time("current_script_process_id", self.current_script_process.pid)
 
                 time.sleep(5)
                 self.active_script_item_index = script_item_index
+                self.update_suite_run_time("active_script_item_index", self.active_script_item_index)
+
         except Exception as ex:
             self.error("Script error {}, exception: {}".format(script_item, str(ex)))
             self.at_least_one_failure = True
+            self.update_suite_run_time("at_least_one_failure", self.at_least_one_failure)
             self.set_next_script_item_index()
 
     def is_suite_completed(self):
@@ -675,6 +721,7 @@ class SuiteWorker(Thread):
 
     def set_next_script_item_index(self):
         self.current_script_item_index += 1
+        self.update_suite_run_time("current_script_item_index", self.current_script_item_index)
         if self.current_script_item_index >= len(self.script_items):
 
             self.suite_complete()
@@ -821,7 +868,7 @@ def graceful_shutdown(max_wait_time=ONE_HOUR):
 
 def process_auto_scheduled_jobs():
     # Get auto_scheduled_jobs
-    auto_scheduled_jobs = models_helper.get_suite_executions_by_filter(is_auto_scheduled_job=True)
+    auto_scheduled_jobs = models_helper.get_suite_executions_by_filter(is_auto_scheduled_job=True, disable_schedule=False)
     auto_scheduled_jobs = auto_scheduled_jobs.order_by('submitted_time')
 
     for auto_scheduled_job in auto_scheduled_jobs:
@@ -870,19 +917,35 @@ def clear_out_queue():
 
 
 def initialize():
-    JobQueue.objects.all().delete()
+    set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
+    test_bed_monitor.start()
+    # clear_out_queue()
+    clear_out_old_jobs()
+
+    if is_development_mode():
+        auto_scheduled_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.AUTO_SCHEDULED)
+        for auto_scheduled_job in auto_scheduled_jobs:
+            auto_scheduled_job.disable_schedule = True
+            auto_scheduled_job.save()
+
+
 
 
 def join_suite_workers():
     jobs_to_be_removed = []
     for job_id, t in job_id_threads.iteritems():
         try:
+
             if not t.is_suite_completed():
                 t.run_next()
             else:
                 jobs_to_be_removed.append(job_id)
+            if job_id not in job_id_threads:
+                jobs_to_be_removed.append(job_id)
         except Exception as ex:
+            traceback.print_exc()
             send_error_mail(submitter_email=t.submitter_email, job_id=job_id, message="Suite execution error at run_next. Exception: {}".format(str(ex)))
+
 
     for job_to_be_removed in jobs_to_be_removed:
         if job_to_be_removed in job_id_threads:
@@ -891,19 +954,36 @@ def join_suite_workers():
 def clear_out_old_jobs():
     today = get_current_time()
     past = today - timedelta(days=2)
-    old_jobs = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.SUBMITTED, scheduled_time__gt=past)
+    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SUBMITTED, scheduled_time__gt=past)
+    old_jobs.delete()
+    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SCHEDULED)
+    old_jobs.delete()
+    old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.IN_PROGRESS)
     old_jobs.delete()
 
+def cleanup_unused_assets():
+    all_assets = Asset.objects.all()
+    for asset in all_assets:
+        job_ids = asset.job_ids
+
+        job_ids_to_remove = []
+        if job_ids:
+            for job_id in job_ids:
+                s = models_helper.get_suite_execution(suite_execution_id=job_id)
+                if s:
+                    if s.state <= JobStatusType.COMPLETED:
+                        job_ids_to_remove.append(job_id)
+                else:
+                    asset.remove_job_id(job_id=job_id)
+        job_ids = filter(lambda x: x not in job_ids_to_remove, job_ids)
+        asset.job_ids = job_ids
+        asset.save()
 
 if __name__ == "__main__":
     queue_lock = Lock()
     ensure_singleton()
     initialize()
     scheduler_logger.info("Started Scheduler")
-    set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
-    test_bed_monitor.start()
-    clear_out_queue()
-    clear_out_old_jobs()
 
     run = True
     while run:
@@ -922,6 +1002,7 @@ if __name__ == "__main__":
             queue_worker.run()
             scheduler_info = get_scheduler_info()
             request = process_external_requests()
+            cleanup_unused_assets()
             join_suite_workers()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \
                     (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPED):

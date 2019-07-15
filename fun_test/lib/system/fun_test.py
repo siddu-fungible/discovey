@@ -76,6 +76,29 @@ class DatetimeEncoder(json.JSONEncoder):
         except TypeError:
             return str(obj)
 
+class FunContext:
+    def __init__(self, description, context_id, output_file_path):
+        self.description = description
+        self.context_id = context_id
+        self.fp = None
+        self.output_file_path = output_file_path
+        self.buf = ""
+
+    def open(self):
+        self.fp = open(self.output_file_path, "w")
+        return True
+
+    def close(self):
+        if self.fp:
+            self.fp.close()
+        return True
+
+    def write(self, data):
+        if self.fp:
+            self.fp.write(data)
+
+
+
 class FunTest:
     PASSED = RESULTS["PASSED"]
     FAILED = RESULTS["FAILED"]
@@ -146,7 +169,7 @@ class FunTest:
         parser.add_argument('--environment', dest="environment", default=None)
         parser.add_argument('--inputs', dest="inputs", default=None)
         parser.add_argument('--re_run_info', dest="re_run_info", default=None)
-        args = parser.parse_args()
+        args, unknown = parser.parse_known_args()
         if args.disable_fun_test:
             self.fun_test_disabled = True
             return
@@ -214,6 +237,13 @@ class FunTest:
         self.asset_manager = None
         self.build_parameters = {}
         self._prepare_build_parameters()
+
+        self.contexts = {}
+        self.last_context_id = 0
+        self.profiling = False
+        self.profiling_timer = None
+        self.topologies = []
+        self.hosts = []
         self.closed = False
 
     def initialize_output_files(self, absolute_script_file_name):
@@ -238,6 +268,18 @@ class FunTest:
                                           full_script_path=self.absolute_script_file_name)
         reload(sys)
         sys.setdefaultencoding('UTF8')  # Needed for xml
+
+    def enable_profiling(self):
+        self.profiling = True
+        self.profiling_timer = FunTimer(max_time=10000)
+
+    def add_context(self, description, output_file_path):
+        self.last_context_id += 1
+        output_file_path = output_file_path
+        fc = FunContext(description=description, context_id=self.last_context_id, output_file_path=output_file_path)
+        self.contexts[self.last_context_id] = fc
+        fc.open()
+        return fc
 
     def get_stored_environment_variable(self, variable_name):
         result = None
@@ -282,6 +324,10 @@ class FunTest:
                 self.build_parameters["BRANCH_FunControlPlane"] = user_supplied_build_parameters["BRANCH_FunControlPlane"]
             if "SKIP_DASM_C" in user_supplied_build_parameters:
                 self.build_parameters["SKIP_DASM_C"] = user_supplied_build_parameters["SKIP_DASM_C"]
+            if "BRANCH_FunHW" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunHW"] = user_supplied_build_parameters["BRANCH_FunHW"]
+            if "BRANCH_FunTools" in user_supplied_build_parameters:
+                self.build_parameters["BRANCH_FunTools"] = user_supplied_build_parameters["BRANCH_FunTools"]
 
     def get_build_parameters(self):
         return self.build_parameters
@@ -314,6 +360,11 @@ class FunTest:
             stored_environment = self.get_stored_environment()
             if stored_environment:
                 result = stored_environment
+        return result
+
+    def get_suite_run_time_environment_variable(self, name):
+        run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
+        result = run_time.get(name, None)
         return result
 
     def get_job_environment_variable(self, variable):
@@ -438,7 +489,7 @@ class FunTest:
 
     def join_thread(self, fun_test_thread_id, sleep_time=5):
         thread_complete = False
-        while not thread_complete:
+        while not thread_complete and not fun_test.closed:
             thread_info = self.fun_test_threads[fun_test_thread_id]
             thread = thread_info["thread"]
             if thread:
@@ -476,7 +527,7 @@ class FunTest:
             build_parameters["BOOTARGS"] = build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
 
             boot_args = build_parameters["BOOTARGS"]
-        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
+        # fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
@@ -560,17 +611,32 @@ class FunTest:
         log_prefix = ""
         if self.log_prefix:
             log_prefix = "_{}".format(self.log_prefix)
-        artifact_file = self.logs_dir + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        artifact_file = self.get_logs_directory() + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         return artifact_file
 
     def enable_pause_on_failure(self):
         self.pause_on_failure = True
+
+    def get_logs_directory(self):
+        return self.logs_dir
 
     def disable_pause_on_failure(self):
         self.pause_on_failure = False
 
     def set_topology_json_filename(self, filename):
         self.fun_xml_obj.set_topology_json_filename(filename=filename)
+
+    def register_topologies(self, topology):
+        self.topologies.append(topology)
+
+    def register_hosts(self, host):
+        self.hosts.append(host)
+
+    def get_topologies(self):
+        return self.topologies
+
+    def get_hosts(self):
+        return self.hosts
 
     def get_environment_variable(self, variable):
         result = None
@@ -618,25 +684,25 @@ class FunTest:
     def disable_function_tracing(self):
         self.function_tracing_enabled = False
 
-    def debug(self, message):
+    def debug(self, message, context=None):
         if self.debug_enabled:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             calling_module = self._get_calling_module(outer_frames)
-            self.log(message=message, level=self.LOG_LEVEL_DEBUG, calling_module=calling_module)
+            self.log(message=message, level=self.LOG_LEVEL_DEBUG, calling_module=calling_module, context=context)
 
-    def critical(self, message):
+    def critical(self, message, context=None):
         message = str(message)
         exc_type, exc_value, exc_traceback = sys.exc_info()
 
         tb = traceback.format_tb(exc_traceback)
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
-        self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+        self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module, context=context)
 
         if exc_traceback:
-            self.log(message="***** Last Exception At *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            self.log(message="***** Last Exception At *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module, context=context)
             last_exception_s = "".join(tb)
-            self.log(message=last_exception_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            self.log(message=last_exception_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module, context=context)
         traceback_stack = traceback.format_stack()
         if traceback_stack:
             asserts_present = None
@@ -653,11 +719,11 @@ class FunTest:
                 if asserts_present and not one_assert_found:
                     assert_string = l
                     s2 = s2[: len(s2) - index]
-                    self.log(message="ASSERT Raised by: {}".format(assert_string), level=self.LOG_LEVEL_CRITICAL)
+                    self.log(message="ASSERT Raised by: {}".format(assert_string), level=self.LOG_LEVEL_CRITICAL, context=context)
                     break
-            self.log(message="***** Traceback Stack *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            self.log(message="***** Traceback Stack *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module, context=context)
             stack_s = "".join(traceback_stack[:-1])
-            self.log(message=stack_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            self.log(message=stack_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module, context=context)
 
 
     def _get_module_name(self, outer_frames):
@@ -687,7 +753,10 @@ class FunTest:
             trace_id=None,
             stdout=True,
             calling_module=None,
-            no_timestamp=False):
+            no_timestamp=False,
+            context=None,
+            ignore_context_description=None,
+            section=False):
         current_time = get_current_time()
         if calling_module:
             module_name = calling_module[0]
@@ -725,14 +794,22 @@ class FunTest:
         if level is not self.LOG_LEVEL_NORMAL:
             message = "%s%s: %s%s" % (self.LOG_COLORS[level], level_name, message, self.LOG_COLORS['RESET'])
 
-        if self.log_timestamps and (not no_timestamp):
-            message = "[{}] {}".format(current_time, message)
-
         nl = ""
         if newline:
             nl = "\n"
+        if not ignore_context_description:
+            final_message = self._get_context_prefix(context=context, message=str(message) + nl)
+        else:
+            final_message = str(message) + nl
+        if self.log_timestamps and (not no_timestamp) and not section:
+            final_message = "[{}] {}".format(current_time, final_message)
+
+        if section:
+            final_message = "\n{}\n{}\n".format(final_message, "=" * len(final_message))
+        if context:
+            context.write(final_message)
         if stdout:
-            sys.stdout.write(str(message) + nl)
+            sys.stdout.write(final_message)
             sys.stdout.flush()
 
     def print_key_value(self, title, data, max_chars_per_column=50):
@@ -757,28 +834,42 @@ class FunTest:
                     break
         self.log("")
 
-    def log_section(self, message):
+    def log_section(self, message, context=None):
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             calling_module = self._get_calling_module(outer_frames=outer_frames)
-        s = "\n{}\n{}\n".format(message, "=" * len(message))
-        self.log(s, calling_module=calling_module)
+        # s = "\n{}\n{}\n".format(message, "=" * len(message))
+        self.log(message, calling_module=calling_module, context=context, section=True)
 
-    def write(self, message):
-        self.buf = message
+    def write(self, message, context=None):
+        if context:
+            context.buf = message
+        else:
+            self.buf = message
 
-    def flush(self, trace_id=None, stdout=True):
+    def flush(self, trace_id=None, stdout=True, context=None):
         calling_module = None
         if self.logging_selected_modules:
             outer_frames = inspect.getouterframes(inspect.currentframe())
             calling_module = self._get_calling_module(outer_frames=outer_frames)
+        buf = self.buf
+        if context:
+            buf = context.buf
         if trace_id:
-            self.trace(id=trace_id, log=self.buf)
-        self.log(self.buf, newline=False, stdout=stdout, calling_module=calling_module, no_timestamp=True)
-        self.buf = ""
+            self.trace(id=trace_id, log=buf)
+        self.log(buf, newline=False,
+                 stdout=stdout,
+                 calling_module=calling_module,
+                 no_timestamp=True,
+                 context=context,
+                 ignore_context_description=True)
+        if context:
+            context.buf = ""
+        else:
+            self.buf = ""
 
-    def _print_log_green(self, message, calling_module=None):
+    def _print_log_green(self, message, calling_module=None, context=None):
         module_info = ""
         if calling_module:
             module_info = "{}.py: {}".format(calling_module[0], calling_module[1])
@@ -786,13 +877,16 @@ class FunTest:
 
         sys.stdout.write(str(message) + "\n")
         sys.stdout.flush()
+        if context:
+            context.write(str(message) + "\n")
 
-    def sleep(self, message, seconds=5):
+    def sleep(self, message, seconds=5, context=None):
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
         message = "zzz...: Sleeping for :" + str(seconds) + "s : " + message
-        self._print_log_green(message=message, calling_module=calling_module)
-        self.fun_xml_obj.log(log=message, newline=True)
+        self._print_log_green(message=message, calling_module=calling_module, context=context)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.log(log=message, newline=True)
         time.sleep(seconds)
 
     def safe(self, the_function):
@@ -813,23 +907,23 @@ class FunTest:
                 return the_function(*args, **kwargs)
         return inner
 
-    def _print_summary(self):
+    def _print_summary(self, context=None):
         self.log_section(message="Summary")
         format = "{:<4} {:<10} {:<100}"
-        self.log(format.format("Id", "Result", "Description"), no_timestamp=True)
+        self.log(format.format("Id", "Result", "Description"), no_timestamp=True, context=context)
         for k, v in self.test_metrics.items():
-            self.log(format.format(k, v["result"], v["summary"]), no_timestamp=True)
+            self.log(format.format(k, v["result"], v["summary"]), no_timestamp=True, context=context)
 
         self.log("{}{}/".format(get_homepage_url(), LOGS_RELATIVE_DIR) + self.script_file_name.replace(".py", ".html"),
-                 no_timestamp=True)
-        self.log("\nRuntime: {}".format(self.get_wall_clock_time()))
+                 no_timestamp=True, context=context)
+        self.log("\nRuntime: {}".format(self.get_wall_clock_time()), context=context)
 
-    def print_test_case_summary(self, test_case_id):
+    def print_test_case_summary(self, test_case_id, context=None):
         metrics = self.test_metrics[test_case_id]
         assert_list = metrics["asserts"]
-        self.log_section("Testcase {} summary".format(test_case_id))
+        self.log_section("Testcase {} summary".format(test_case_id), context=context)
         for assert_result in assert_list:
-            self.log(assert_result, no_timestamp=True)
+            self.log(assert_result, no_timestamp=True, context=context)
 
     def _initialize(self, script_file_name):
         self.initialize_output_files(absolute_script_file_name=script_file_name)
@@ -915,19 +1009,25 @@ class FunTest:
         if self.current_test_case_id in self.test_metrics:
             self.test_metrics[self.current_test_case_id]["asserts"].append(assert_message)
 
-    def test_assert(self, expression, message, ignore_on_success=False):
+    def test_assert(self, expression, message, ignore_on_success=False, context=None):
         actual = True
         if not expression:
             actual = False
         self.test_assert_expected(expected=True,
                                   actual=actual,
                                   message=message,
-                                  ignore_on_success=ignore_on_success)
+                                  ignore_on_success=ignore_on_success, context=context)
 
-    def simple_assert(self, expression, message):
-        self.test_assert(expression=expression, message=message, ignore_on_success=True)
+    def simple_assert(self, expression, message, context=None):
+        self.test_assert(expression=expression, message=message, ignore_on_success=True, context=context)
 
-    def test_assert_expected(self, expected, actual, message, ignore_on_success=False):
+    def _get_context_prefix(self, context, message):
+        s = "{}".format(message)
+        if context:
+            s = "{}: {}".format(context.description, message.lstrip("\n"))
+        return s
+
+    def test_assert_expected(self, expected, actual, message, ignore_on_success=False, context=None):
         if not ((type(actual) is dict) and (type(expected) is dict)):
             expected = str(expected)
             actual = str(actual)
@@ -936,19 +1036,25 @@ class FunTest:
             assert_message = "ASSERT FAILED: expected={} actual={}, {}".format(expected, actual, message)
             if self.initialized:
                 self._append_assert_test_metric(assert_message)
-                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                this_checkpoint = self._get_context_prefix(context=context, message=message)
+                if self.profiling:
+                    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
+                self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
                                                 expected=expected,
                                                 actual=actual,
                                                 result=FunTest.FAILED)
-            self.critical(assert_message)
+            self.critical(assert_message, context=context)
             if self.pause_on_failure:
                 pdb.set_trace()
             raise TestException(assert_message)
         if not ignore_on_success:
-            self.log(assert_message)
+            self.log(assert_message, context=context)
             if self.initialized:
                 self._append_assert_test_metric(assert_message)
-                self.fun_xml_obj.add_checkpoint(checkpoint=message,
+                this_checkpoint = self._get_context_prefix(context=context, message=message)
+                if self.profiling:
+                    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
+                self.fun_xml_obj.add_checkpoint(checkpoint=this_checkpoint,
                                                 expected=expected,
                                                 actual=actual,
                                                 result=FunTest.PASSED)
@@ -957,9 +1063,16 @@ class FunTest:
                        checkpoint=None,
                        result=PASSED,
                        expected="",
-                       actual=""):
+                       actual="",
+                       context=None):
 
-        self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint, result=result, expected=expected, actual=actual)
+        checkpoint = self._get_context_prefix(context=context, message=checkpoint)
+        if self.profiling:
+            checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
+        self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
+                                        result=result,
+                                        expected=expected,
+                                        actual=actual)
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
@@ -1205,6 +1318,7 @@ class FunTestScript(object):
                                                                  log_prefix=fun_test.log_prefix,
                                                                  tags=suite_execution_tags,
                                                                  inputs=fun_test.get_job_inputs())
+
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
                 new_order = []
@@ -1281,8 +1395,24 @@ class FunTestScript(object):
             models_helper.report_re_run_result(execution_id=setup_te.execution_id, re_run_info=fun_test.get_re_run_info())
         fun_test._end_test(result=script_result)
 
-
         return script_result == FunTest.PASSED
+
+    def _cleanup_topologies(self):
+        topologies = fun_test.get_topologies()
+        for topology in topologies:
+            if not topology.is_cleaned_up():
+                fun_test.log("Topology was not cleaned up. Attempting ...")
+                try:
+                    topology.cleanup()
+                except Exception as ex:
+                    fun_test.critical(ex)
+
+    def _cleanup_hosts(self):
+        for host in fun_test.get_hosts():
+            try:
+                host.disconnect()
+            except:
+                pass
 
     @abc.abstractmethod
     def cleanup(self):
@@ -1292,7 +1422,17 @@ class FunTestScript(object):
         result = FunTest.FAILED
         try:
             self.cleanup()
+
             result = FunTest.PASSED
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self._cleanup_topologies()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+        try:
+            self._cleanup_hosts()
         except Exception as ex:
             fun_test.critical(ex)
         fun_test._end_test(result=result)
@@ -1331,6 +1471,7 @@ class FunTestScript(object):
                             models_helper.update_test_case_execution(test_case_execution_id=test_case.execution_id,
                                                                      suite_execution_id=fun_test.suite_execution_id,
                                                                      result=fun_test.IN_PROGRESS)
+                            fun_test.current_test_case_execution_id = test_case.execution_id
                         test_case.setup()
                         test_case.run()
 

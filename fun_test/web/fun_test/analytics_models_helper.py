@@ -11,20 +11,24 @@ from web.fun_test.metrics_models import VolumePerformanceEmulation, BltVolumePer
     TeraMarkFunTcpThroughputPerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart
+from web.fun_test.metrics_models import MetricChart, MetricsRunTime
 from web.fun_test.db_fixup import prepare_status
 from fun_global import RESULTS
 from dateutil.parser import parse
 from fun_settings import MAIN_WEB_APP
+
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 from lib.system.fun_test import *
 from web.fun_test.models_helper import add_jenkins_job_id_map
 from django.utils import timezone
 from dateutil import parser
+from fun_global import PerfUnit, FunPlatform
+
 
 def get_time_from_timestamp(timestamp):
     time_obj = parse(timestamp)
     return time_obj
+
 
 def invalidate_goodness_cache():
     charts = MetricChart.objects.all()
@@ -32,17 +36,54 @@ def invalidate_goodness_cache():
         chart.goodness_cache_valid = False
         chart.save()
 
-def get_data_collection_time():
-    result = get_current_time()
-    if fun_test.suite_execution_id:
-        result = fun_test.get_stored_environment_variable("data_collection_time")
-        if not result:
-            date_time = get_current_time()
-            fun_test.update_job_environment_variable("data_collection_time", str(date_time))
-            result = date_time
-        else:
-            result = parser.parse(result)
-    return result
+
+def get_data_collection_time(tag=None):
+    if tag:
+        data_collection_time = get_current_time()
+        if fun_test.suite_execution_id:
+            try:
+                date_time_details = MetricsRunTime.objects.get(name="data_collection_time")
+                value = date_time_details.value
+                if tag in value and value[tag] and "data_collection_time" in value[tag] and is_same_day(
+                        current_time=get_current_time(), data_collection_time=parser.parse(value[tag][
+                                                                                               "data_collection_time"])):
+                    data_collection_time = parser.parse(value[tag]["data_collection_time"])
+                else:
+                    data_collection_time = _update_run_time(date_time_details=date_time_details,
+                                                            value=value, tag=tag)
+            except ObjectDoesNotExist:
+                data_collection_time = _update_run_time(tag=tag)
+        fun_test.log("The returned date time is {}".format(str(data_collection_time)))
+        return data_collection_time
+    else:
+        result = get_current_time()
+        if fun_test.suite_execution_id:
+            result = fun_test.get_stored_environment_variable("data_collection_time")
+            if not result:
+                date_time = get_current_time()
+                fun_test.update_job_environment_variable("data_collection_time", str(date_time))
+                result = date_time
+            else:
+                result = parser.parse(result)
+        return result
+
+
+def is_same_day(current_time, data_collection_time):
+    return current_time.day == data_collection_time.day and current_time.month == data_collection_time.month and \
+           current_time.year == data_collection_time.year
+
+
+def _update_run_time(tag, value=None, date_time_details=None):
+    current_time = get_data_collection_time()
+    if date_time_details and value:
+        value[tag] = {}
+        value[tag]["data_collection_time"] = str(current_time)
+        date_time_details.value = value
+        date_time_details.save()
+    else:
+        value = {tag: {"data_collection_time": str(current_time)}}
+        MetricsRunTime(name="data_collection_time", value=value).save()
+    return get_data_collection_time(tag=tag)
 
 
 class MetricHelper(object):
@@ -261,7 +302,8 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
                   write_90_latency_unit="usecs", write_95_latency_unit="usecs",
                   write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
-                  read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs", version=-1):
+                  read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
+                  version=-1):
         try:
             if version == -1:
                 version = str(fun_test.get_version())
@@ -290,8 +332,8 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_95_latency = read_95_latency
             entry.output_read_99_latency = read_99_latency
             entry.output_read_99_99_latency = read_99_99_latency
-            entry.output_write_iops_unit = write_iops
-            entry.output_read_iops_unit = read_iops
+            entry.output_write_iops_unit = write_iops_unit
+            entry.output_read_iops_unit = read_iops_unit
             entry.output_write_throughput_unit = write_throughput_unit
             entry.output_read_throughput_unit = read_throughput_unit
             entry.output_write_avg_latency_unit = write_avg_latency_unit
@@ -361,7 +403,8 @@ class BltVolumePerformanceHelper(MetricHelper):
                                        hardware_version="",
                                        completion_date=completion_date,
                                        build_properties="", lsf_job_id="",
-                                       sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
+                                       sdk_version=version, build_date=build_date,
+                                       suite_execution_id=suite_execution_id)
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -420,7 +463,7 @@ class ModelHelper(MetricHelper):
             if not self.units:
                 raise Exception('No units provided. Please provide the required units')
             else:
-                for key,value in self.units.iteritems():
+                for key, value in self.units.iteritems():
                     kwargs[key] = value
             new_kwargs = {}
 
@@ -454,7 +497,8 @@ class ModelHelper(MetricHelper):
                                            hardware_version="",
                                            completion_date=completion_date,
                                            build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
+                                           sdk_version=version, build_date=build_date,
+                                           suite_execution_id=suite_execution_id)
                 result = True
             except Exception as ex:
                 fun_test.critical(str(ex))
@@ -463,13 +507,14 @@ class ModelHelper(MetricHelper):
             raise ex
         return result
 
-    def set_units(self, **kwargs):
+    def set_units(self, validate=True, **kwargs):
         result = None
         try:
             m_obj = self.metric_model
-            for key, value in kwargs.iteritems():
-                if not hasattr(m_obj, "output_" + key):
-                    raise Exception("Provided units do not match any output - {}".format(key))
+            if validate:
+                for key, value in kwargs.iteritems():
+                    if not hasattr(m_obj, "output_" + key):
+                        raise Exception("Provided units do not match any output - {}".format(key))
             self.units = kwargs
             result = True
         except Exception as ex:
@@ -494,7 +539,6 @@ class ModelHelper(MetricHelper):
             fun_test.critical(str(ex))
             raise ex
         return result
-
 
 
 class WuLatencyAllocStackHelper(MetricHelper):
@@ -698,163 +742,58 @@ if __name__ == "__main2__":
 
 if __name__ == "__main__":
     # prepare_status_db()
-    # generic_helper = ModelHelper(model_name="TeraMarkJuniperNetworkingPerformance")
-    # json_text = [{
-    #     "mode": "100G",
-    #     "version": 6284,
-    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
-    #     "half_load_latency": False,
-    #     "memory": "DDR",
-    #     "flow_type": "NU_LE_VP_NU_FW",
-    #     "frame_size": 64.0,
-    #     "pps": 40697455.92,
-    #     "throughput": 27999.85,
-    #     "latency_min": 2.42,
-    #     "latency_max": 14.83,
-    #     "latency_avg": 5.03,
-    #     "jitter_min": 0.0,
-    #     "jitter_max": 4.24,
-    #     "jitter_avg": 0.06,
-    #     "num_flows": 128000000,
-    #     "offloads": False,
-    #     "protocol": "UDP"
-    # },
-    # {
-    #     "mode": "100G",
-    #     "version": 6284,
-    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
-    #     "half_load_latency": False,
-    #     "memory": "DDR",
-    #     "flow_type": "NU_LE_VP_NU_FW",
-    #     "frame_size": 1500.0,
-    #     "pps": 16430764.88,
-    #     "throughput": 199798.1,
-    #     "latency_min": 2.82,
-    #     "latency_max": 8.76,
-    #     "latency_avg": 4.12,
-    #     "jitter_min": 0.0,
-    #     "jitter_max": 0.73,
-    #     "jitter_avg": 0.0,
-    #     "num_flows": 128000000,
-    #     "offloads": False,
-    #     "protocol": "UDP"
-    # },
-    # {
-    #     "mode": "100G",
-    #     "version": 6284,
-    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
-    #     "half_load_latency": False,
-    #     "memory": "DDR",
-    #     "flow_type": "NU_LE_VP_NU_FW",
-    #     "frame_size": 362.94,
-    #     "pps": 40089054.46,
-    #     "throughput": 120248.57,
-    #     "latency_min": 2.45,
-    #     "latency_max": 17.32,
-    #     "latency_avg": 4.98,
-    #     "jitter_min": 0.0,
-    #     "jitter_max": 2.11,
-    #     "jitter_avg": 0.05,
-    #     "num_flows": 128000000,
-    #     "offloads": False,
-    #     "protocol": "UDP"
-    # },
-    # {
-    #     "mode": "100G",
-    #     "version": 6284,
-    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
-    #     "half_load_latency": True,
-    #     "memory": "DDR",
-    #     "flow_type": "NU_LE_VP_NU_FW",
-    #     "frame_size": 64.0,
-    #     "pps": 20348822.69,
-    #     "throughput": 13999.99,
-    #     "latency_min": 2.7,
-    #     "latency_max": 6.77,
-    #     "latency_avg": 4.11,
-    #     "jitter_min": 0.0,
-    #     "jitter_max": 3.05,
-    #     "jitter_avg": 0.05,
-    #     "num_flows": 128000000,
-    #     "offloads": False,
-    #     "protocol": "UDP"
-    # },
-    # {
-    #     "mode": "100G",
-    #     "version": 6284,
-    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
-    #     "half_load_latency": True,
-    #     "memory": "DDR",
-    #     "flow_type": "NU_LE_VP_NU_FW",
-    #     "frame_size": 1500.0,
-    #     "pps": 8215386.59,
-    #     "throughput": 99899.1,
-    #     "latency_min": 2.72,
-    #     "latency_max": 5.8,
-    #     "latency_avg": 3.69,
-    #     "jitter_min": 0.0,
-    #     "jitter_max": 0.57,
-    #     "jitter_avg": 0.0,
-    #     "num_flows": 128000000,
-    #     "offloads": False,
-    #     "protocol": "UDP"
-    # },
-    # {
-    #     "mode": "100G",
-    #     "version": 6284,
-    #     "timestamp": "2019-05-06 05:29:15.989421-07:00",
-    #     "half_load_latency": True,
-    #     "memory": "DDR",
-    #     "flow_type": "NU_LE_VP_NU_FW",
-    #     "frame_size": 362.94,
-    #     "pps": 20044634.62,
-    #     "throughput": 60124.61,
-    #     "latency_min": 2.59,
-    #     "latency_max": 10.39,
-    #     "latency_avg": 3.66,
-    #     "jitter_min": 0.0,
-    #     "jitter_max": 2.04,
-    #     "jitter_avg": 0.04,
-    #     "num_flows": 128000000,
-    #     "offloads": False,
-    #     "protocol": "UDP"
-    # }]
-    #
-    # unit = {}
-    # unit["pps_unit"] = "pps"
-    # unit["throughput_unit"] = "Mbps"
-    # unit["latency_min_unit"] = "usecs"
-    # unit["latency_max_unit"] = "usecs"
-    # unit["latency_avg_unit"] = "usecs"
-    # unit["jitter_min_unit"] = "usecs"
-    # unit["jitter_max_unit"] = "usecs"
-    # unit["jitter_avg_unit"] = "usecs"
-    #
-    # for line in json_text:
-    #     status = fun_test.PASSED
-    #     try:
-    #         generic_helper.set_units(**unit)
-    #         generic_helper.add_entry(**line)
-    #         generic_helper.set_status(status)
-    #     except Exception as ex:
-    #         fun_test.critical(str(ex))
-    #     print "used generic helper to add an entry"
-    json_text = [{'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 53.345219, 'corpus_name': u'enwik8'},
-     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 56.596281870070456, 'corpus_name': u'misc'},
-     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 49.54274645518411, 'corpus_name': u'silesia'},
-     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 61.89778920481539, 'corpus_name': u'large'},
-     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 58.000550449492884, 'corpus_name': u'calgary'},
-     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 68.64279844752751, 'corpus_name': u'cantrbry'},
-     {'effort_name': u'ZIP_EFFORT_AUTO', 'f1_compression_ratio': 74.07162314967105, 'corpus_name': u'artificl'}]
+    value_dict = {
+    "date_time": get_data_collection_time(),
+    "volume_type": "BLT",
+    "test": "FioSeqRead",
+    "block_size": "4K",
+    "io_depth": 128,
+    "io_size": "8G",
+    "operation": "read",
+    "num_ssd": 1,
+    "num_volume": 1,
+    "num_threads": 4,
+    "platform": FunPlatform.F1,
+    "version": fun_test.get_version(),
+    "write_iops": 100,
+    "read_iops": 200,
+    "write_throughput": 300,
+    "read_throughput": 400,
+    "write_avg_latency": 500,
+    "write_90_latency": 600,
+    "write_95_latency": 700,
+    "write_99_99_latency": 800,
+    "write_99_latency": 900,
+    "read_avg_latency": 1000,
+    "read_90_latency": 1100,
+    "read_95_latency": 1200,
+    "read_99_99_latency": 1300,
+    "read_99_latency": 1400
+    }
 
-    unit_dict = {"f1_compression_ratio_unit": "number"}
+    unit_dict = {
+    "write_iops_unit": PerfUnit.UNIT_OPS,
+    "read_iops_unit": PerfUnit.UNIT_OPS,
+    "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "write_90_latency_unit": PerfUnit.UNIT_USECS,
+    "write_95_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "read_90_latency_unit": PerfUnit.UNIT_USECS,
+    "read_95_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_latency_unit": PerfUnit.UNIT_USECS
+    }
+    model_name = "AlibabaPerformance"
+    status = fun_test.PASSED
     try:
-        for d in json_text:
-            generic_helper = ModelHelper(model_name="InspurZipCompressionRatiosPerformance")
-            generic_helper.set_units(**unit_dict)
-            d["date_time"] = get_data_collection_time()
-            generic_helper.add_entry(**d)
-            generic_helper.set_status(fun_test.PASSED)
-            fun_test.log("Result posted to database: {}".format(d))
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=False, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
     except Exception as ex:
-        fun_test.critical(ex.message)
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"

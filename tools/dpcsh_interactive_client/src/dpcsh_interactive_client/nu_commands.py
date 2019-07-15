@@ -7,7 +7,7 @@ import os
 from uuid import uuid4
 import json
 
-TIME_INTERVAL = 5
+TIME_INTERVAL = 1
 
 class PortCommands(object):
     def __init__(self, dpc_client):

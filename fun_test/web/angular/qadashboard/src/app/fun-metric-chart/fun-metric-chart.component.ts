@@ -30,6 +30,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() minimal: boolean = false;
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
+  @Input() buildInfo: any = null;
 
   lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
   versionUrl = "https://github.com/fungible-inc/FunOS/releases/tag/";
@@ -58,7 +59,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   width: any;
   height: any;
   tableInfo: any;
-  buildInfo: any;
   timeMode: string;
   negativeGradient: boolean;
   leaf: boolean;
@@ -69,7 +69,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   chart1YaxisTitle: any;
   y1AxisTitle: any;
   chartName: string;
-  internalChartName: string;
   platform: string;
   modelName: string;
   pointClicked: boolean = false;
@@ -125,6 +124,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   message: any = null;
   readonly DECIMAL_PRECISION: number = 5;
 
+  containerMax: number = 200;
+
   public formatter: Function;
   public tooltip: Function;
   public pointClickCallback: Function;
@@ -151,11 +152,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
-    this.buildInfo = null;
-    this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
+    if (!this.id) {
+      this.status = null;
+    }
   }
 
   ngOnChanges() {
@@ -187,7 +189,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["metric_id"] = this.id;
     this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
       this.chartName = data.data["chart_name"];
-      this.internalChartName = data.data["internal_chart_name"];
       this.platform = data.data["platform"];
       this.modelName = data.data["metric_model_name"];
       this.setDefault();
@@ -204,10 +205,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.paddingNeeded = true;
         this.id = params['id'];
         this.fetchMetricsById();
-      }
-      else if (this.id) {
+      } else if (this.id) {
         this.fetchMetricsById();
+      } else {
+        this.status = null;
       }
+
     });
   }
 
@@ -253,27 +256,26 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   //formats the tooltip shown in the charts
-  tooltipFormatter(x, y): string {
+  tooltipFormatter(x, y, metaData): string {
     let softwareDate = "Unknown";
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
     let key = this._getBuildKey(x);
-    let s = "Error";
-    if (this.buildInfo && key in this.buildInfo) {
-      s = "";
-      softwareDate = this.buildInfo[key]["software_date"];
-      if (Number(softwareDate) > 0)
-        s = "<b>Software date:</b> " + softwareDate + "<br>";
-      s += "<b>Value:</b> " + y + "<br>";
+    let s = "";
+    if (x) {
+      s += "<b>Date:</b> " + x.substring(0, 5) + "<br>";
+    }
+    if (metaData.originalValue) {
+      s += "<b>Value:</b> " + metaData.originalValue + "<br>";
     } else {
-      s = "<b>Value:</b> " + y + "<br>";
+      s += "<b>Value:</b> " + y + "<br>";
     }
     return s;
   }
 
   //display details about the points in the chart
-  pointDetail(x, y): any {
+  pointDetail(x, y, metaData): any {
     let softwareDate = "Unknown";
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
@@ -288,26 +290,37 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let lsfJobId = this.buildInfo[key]["lsf_job_id"];
       let version = this.buildInfo[key]["sdk_version"];
       let suite_execution_id = this.buildInfo[key]["suite_execution_id"];
-      if (sdkBranch !== "")
+      if (sdkBranch !== "") {
         s["SDK branch"] = sdkBranch;
-      if (lsfJobId !== "")
+      }
+      if (lsfJobId !== "") {
         s["Lsf job id"] = lsfJobId;
+      }
       if (suite_execution_id !== -1) {
         s["Suite execution detail"] = suite_execution_id;
         s["Suite log directory"] = suite_execution_id;
       }
-      if (Number(softwareDate) > 0)
+      if (Number(softwareDate) > 0) {
         s["Software date"] = softwareDate;
-      if (hardwareVersion !== "")
+      }
+      if (hardwareVersion !== "") {
         s["Hardware version"] = hardwareVersion;
+      }
       if (version !== "") {
         s["SDK version"] = "bld_" + version;
       }
-      if (this.buildInfo[key]["git_commit"] !== "")
+      if (this.buildInfo[key]["git_commit"] !== "") {
         s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
-      if (buildProperties !== "")
+      }
+      if (buildProperties !== "") {
         s["Build Properties"] = buildProperties;
-      s["Value"] = y;
+      }
+    }
+    if (x) {
+      s["Date"] = x.substring(0, 5);
+    }
+    if (metaData.originalValue) {
+      s["Value"] = metaData.originalValue;
     } else {
       s["Value"] = y;
     }
@@ -467,13 +480,29 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
+  _setDataSetsDefaults(): void {
+    for (let dataSet of this.previewDataSets) {
+      if (!dataSet.output.max && this.leaf)
+        dataSet.output.max = -1;
+      if (!dataSet.output.max && !this.leaf)
+        dataSet.output.max = this.containerMax;
+      if (!dataSet.output.min)
+        dataSet.output.min = 0;
+      if (!dataSet.output.reference && this.leaf)
+        dataSet.output.reference = -1;
+      if (!dataSet.output.expected && this.leaf)
+        dataSet.output.expected = -1;
+    }
+  }
+
   //saves the edited data back to the DB
   submit(): void {
-    this.convertExpected();
+    // this.convertExpected();
+    this._setDataSetsDefaults();
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
-    payload["internal_chart_name"] = this.internalChartName;
+    payload["metric_id"] = this.id;
     payload["data_sets"] = this.previewDataSets;
     payload["description"] = this.inner.currentDescription;
     payload["owner_info"] = this.inner.currentOwner;
@@ -499,84 +528,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
 
   }
-
-  //populates buildInfo
-  fetchBuildInfo(): void {
-    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = response.data;
-    }, error => {
-      this.loggerService.error("regression/build_to_date_map");
-    });
-  }
-
-  // enterTriaging(): void {
-  //   this.message = {
-  //   "metric_type": this.selectedOption,
-  //   "from_date": this.fromDate,
-  //   "to_date": this.toDate,
-  //   "boot_args": this.bootArgs
-  //   };
-  //     this.sharedData.changeMessage(this.message);
-  //   //   alert("submitted");
-  //
-  //   //   let url = "/performance/atomic/" + this.metricId + "/triage";
-  //   // window.open(url, '_blank');
-  //   let payload = {"metric_id": this.metricId,
-  //   "metric_type": this.selectedOption,
-  //   "from_date": this.fromDate,
-  //   "to_date": this.toDate,
-  //   "boot_args": this.bootArgs};
-  //   this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
-  //     let result = data.data;
-  //     this.triageInfo = result;
-  //     if (result.passed_git_commit && result.passed_git_commit !== "") {
-  //       this.successCommit = result.passed_git_commit;
-  //     }
-  //     if (result.degraded_git_commit && result.degraded_git_commit !== "") {
-  //       this.faultyCommit = result.degraded_git_commit;
-  //     }
-  //     this.fetchGitCommits();
-  //   }, error => {
-  //     this.loggerService.error("Traiging info fetch failed");
-  //   });
-  //
-  // }
-  // fetchGitCommits(): void {
-  //   if (this.faultyCommit && this.successCommit) {
-  //     let payload = {};
-  //     payload = {
-  //       "faulty_commit": this.faultyCommit,
-  //       "success_commit": this.successCommit
-  //     };
-  //     this.apiService.post('/metrics/git_commits', payload).subscribe(result => {
-  //       this.commits = result.data.commits;
-  //       let total = this.commits.length - 1;
-  //       this.faultyMessage = this.commits[0].message;
-  //       this.faultyAuthor = this.commits[0].author;
-  //       this.successAuthor = this.commits[total].author;
-  //       this.successMessage = this.commits[total].message;
-  //       this.startTriaging();
-  //     }, error => {
-  //       this.loggerService.error("Fetching git Commits between the faulty and success commits");
-  //     });
-  //   }
-  //   else {
-  //     console.log("Git commit is missing from the data");
-  //   }
-  // }
-  //
-  // startTriaging(): void {
-  //   let payload = {
-  //     "metric_id": this.id,
-  //     "commits": this.commits,
-  //     "triage_info": this.triageInfo
-  //   };
-  //   this.apiService.post('/triage/insert_db', payload).subscribe(response => {
-  //     alert("submitted");
-  //   }, error => {
-  //     this.loggerService.error("Updating DB Failed");
-  //   });
-  // }
 
   openTriaging(): void {
     let url = "/performance/atomic/" + this.metricId + "/triage";
@@ -818,7 +769,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (this.modelName !== 'MetricContainer') {
       this.fetchLeafData(chartInfo, previewDataSets, tableInfo, payload);
     } else {
-      this.fetchContainerData(payload);
+      this.fetchContainerData(chartInfo, previewDataSets, payload);
     }
   }
 
@@ -826,11 +777,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
     let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
     let localYearString = String(localDate.getFullYear());
-    let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
-    let timeString = keySplitString[1].split(":");
-    let hour = ((Number(timeString[0]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[0] + ":";
-    let minutes = ((Number(timeString[1]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[1] + ":";
-    let seconds = ((Number(timeString[2]) < 10 && timeString[0].length < 2) ? '0' : '') + timeString[2];
+    // let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
+    // let timeString = keySplitString[1].split(":");
+    let localHour = (localDate.getHours());
+    let localMinutes = (localDate.getMinutes());
+    let localSeconds = (localDate.getSeconds());
+    let hour = ((Number(localHour) < 10) ? '0' : '') + localHour + ":";
+    let minutes = ((Number(localMinutes) < 10) ? '0' : '') + localMinutes + ":";
+    let seconds = ((Number(localSeconds) < 10) ? '0' : '') + localSeconds;
     let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " + hour + minutes + seconds;
     return keyString;
   }
@@ -892,6 +846,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let thisMaximum = this.filterDataSets[j].output.max;
         let outputName = this.filterDataSets[j].output.name;
         let name = this.filterDataSets[j].name;
+        let unit = this.filterDataSets[j].output.unit;
         let expected = filterDataSets[j].output.expected;
         for (let i = 0; i < keyList.length; i++) {
           let output = null;
@@ -955,7 +910,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         chartDataSets.push(oneChartDataSet);
         let output = {};
         output["name"] = name;
-        output["value"] = expected;
+        if (expected && expected !== -1) {
+          output["value"] = this.convertToBaseUnit(unit, expected);
+          output["value"] = this.convertToVisualizationUnit(this.visualizationUnit, output["value"]);
+        } else {
+          output["value"] = expected;
+        }
         output["unit"] = this.visualizationUnit;
         output["show"] = false;
         if (!this.showSelect && output["value"] !== -1) {
@@ -1194,7 +1154,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   onUnitChange(newUnit) {
-    console.log(newUnit);
+    // console.log(newUnit);
     this.chart1YaxisTitle = newUnit;
     let maximum = null;
     this.selectedUnit = newUnit;
@@ -1233,13 +1193,23 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
 
   //fetching container data
-  fetchContainerData(payload): void {
+  fetchContainerData(chartInfo, previewDataSets, payload): void {
     //console.log("Fetch Scores");
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
       if (response.data.length === 0) {
         this.values = null;
         return;
       }
+      let filterDataSets = [];
+      if (previewDataSets) {
+        filterDataSets = previewDataSets;
+      } else {
+        if (chartInfo) {
+          filterDataSets = chartInfo['data_sets'];
+        }
+      }
+      let thisMinimum = filterDataSets[0].output.min;
+      let thisMaximum = filterDataSets[0].output.max;
       let values = [];
       let series = [];
       let keyValue = {};
@@ -1285,7 +1255,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
           if (count !== 0) {
             let average = total / count;
-            let result = this.getValidatedData(average, 0, 200);
+            let result = this.getValidatedData(average, thisMinimum, thisMaximum);
             values.push(result);
           } else {
             values.push(null);
@@ -1309,7 +1279,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     if (this.modelName !== 'MetricContainer') {
       return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
         self.tableInfo = response.data;
-        self.fetchData(this.id, chartInfo, previewDataSets, self.tableInfo);
+        self.fetchData(self.id, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
         this.loggerService.error("fetchMetricsData");
       })
@@ -1330,12 +1300,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       y: data,
       marker: {
         radius: 3
-      }
+      },
+      metaData: {}
     };
     if (data > maximum && maximum !== -1) {
       result.y = maximum;
       result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";
       result.marker.radius = 3;
+      result.metaData["originalValue"] = data;
     }
     return result;
   }

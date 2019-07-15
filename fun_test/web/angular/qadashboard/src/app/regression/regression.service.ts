@@ -17,10 +17,12 @@ export class RegressionService implements OnInit{
                    "30": "SUBMITTED",
                    "40": "SCHEDULED",
                    "50": "QUEUED",
-                   "60": "IN_PROGRESS"};
+                   "60": "IN_PROGRESS",
+                   "ALL": "ALL"};
 
 
   stateMap = {
+    "ALL": "ALL",
     "UNKNOWN": "-200",  // TODO: fetch from the back-end
     "ERROR" : -100,
     "KILLED" : -20,
@@ -79,7 +81,10 @@ export class RegressionService implements OnInit{
   }
 
   getPrettyLocalizeTime(t) {
-    return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    let localTime = this.convertToLocalTimezone(t);
+    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${localTime.getMinutes()}`;
+    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return s;
   }
 
   getTestCaseExecution(executionId) {
@@ -114,13 +119,18 @@ export class RegressionService implements OnInit{
   }
 
   testBedInProgress(testBedType) {
-
+    /*
     let paramString = `?`;
     let stateStringNumber = this.stateFilterStringToNumber("IN_PROGRESS");
     if (testBedType) {
       paramString += `test_bed_type=${testBedType}&state=${stateStringNumber}`;
     }
     return this.apiService.get("/api/v1/regression/suite_executions" + paramString).pipe(switchMap (response => {
+      return of(response.data);
+    }))*/
+
+    let url = "/api/v1/regression/test_beds/" + testBedType;
+    return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }))
   }
@@ -132,6 +142,21 @@ export class RegressionService implements OnInit{
     }
     return this.apiService.get(url).pipe(switchMap (response => {
       return of(response.data);
+    }))
+  }
+
+  killSuite(suiteId) {
+    return this.apiService.get("/regression/kill_job/" + suiteId).pipe(switchMap( (response) => {
+      let jobId = parseInt(response.data);
+      return of(jobId);
+      //window.location.href = "/regression/";
+    }));
+  }
+
+  disableAutoSchedule(suiteId, disable_schedule) {
+    let payload = {"disable_schedule": disable_schedule};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteId, payload).pipe(switchMap(response => {
+      return of(true);
     }))
   }
 
