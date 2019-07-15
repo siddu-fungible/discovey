@@ -285,7 +285,6 @@ def configure_vms(server_name, vm_dict):
 
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
-    fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
 
 def shut_all_vms(hostname):
