@@ -131,13 +131,13 @@
         "pcie_vfs": 4,
           "vms":{
           "cab03-qa-02-vm01":{
-          "hostname":"10.1.105.59",
+          "hostname":"10.1.105.15",
           "user":"localadmin",
           "password":"Precious1*",
           "data_ip": "19.1.1.10",
           "ethernet_pci_device":"pci_0000_af_01_0",
           "nvme_pci_device":"pci_0000_af_05_0",
-          "fnid":12,
+          "fnid":40,
           "local_storage":{"blt_vol_capacity": 5368709120,
                             "blt_vol_block_size": 4096,
                             "rds_vol_capacity": 5368709120,
@@ -148,7 +148,27 @@
                             "blt_vol_block_size": 4096,
                             "command_timeout": 5
                           },
-          "vm_pings": ["30.1.1.2","18.1.1.1"]
+          "vm_pings": ["30.1.1.2","19.1.1.1"]
+        },
+             "cab03-qa-02-vm02":{
+          "hostname":"10.1.105.16",
+          "user":"localadmin",
+          "password":"Precious1*",
+          "data_ip": "19.1.1.11",
+          "ethernet_pci_device":"pci_0000_af_01_1",
+          "nvme_pci_device":"pci_0000_af_05_1",
+          "fnid":41,
+          "local_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "rds_vol_capacity": 5368709120,
+                            "rds_vol_block_size": 4096,
+                            "command_timeout": 5
+                          },
+          "remote_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "command_timeout": 5
+                          },
+          "vm_pings": ["30.1.1.2","19.1.1.1"]
         }
           }
         },
@@ -764,6 +784,46 @@
           "ethernet_pci_device":"pci_0000_af_04_5",
           "nvme_pci_device":"pci_0000_af_08_5",
           "fnid":69,
+          "local_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "rds_vol_capacity": 5368709120,
+                            "rds_vol_block_size": 4096,
+                            "command_timeout": 5
+                          },
+          "remote_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "command_timeout": 5
+                          },
+          "vm_pings": ["30.1.1.2","19.1.1.1"]
+        },
+          "cab03-qa-01-perfvm1":{
+          "hostname":"10.1.105.47",
+          "user":"localadmin",
+          "password":"Precious1*",
+          "data_ip": "18.1.1.33",
+          "ethernet_pci_device":"pci_0000_af_04_6",
+          "nvme_pci_device":"pci_0000_af_08_6",
+          "fnid":70,
+          "local_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "rds_vol_capacity": 5368709120,
+                            "rds_vol_block_size": 4096,
+                            "command_timeout": 5
+                          },
+          "remote_storage":{"blt_vol_capacity": 5368709120,
+                            "blt_vol_block_size": 4096,
+                            "command_timeout": 5
+                          },
+          "vm_pings": ["30.1.1.2","19.1.1.1"]
+        },
+          "cab03-qa-01-perfvm2":{
+          "hostname":"10.1.105.48",
+          "user":"localadmin",
+          "password":"Precious1*",
+          "data_ip": "18.1.1.34",
+          "ethernet_pci_device":"pci_0000_af_04_7",
+          "nvme_pci_device":"pci_0000_af_08_7",
+          "fnid":71,
           "local_storage":{"blt_vol_capacity": 5368709120,
                             "blt_vol_block_size": 4096,
                             "rds_vol_capacity": 5368709120,

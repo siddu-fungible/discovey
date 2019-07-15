@@ -277,7 +277,7 @@ def configure_vms(server_name, vm_dict):
                     if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
                         linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
                 # fun_test.sleep(message="Waiting for VFs detach", seconds=1)
-                start_op = linux_obj.command(command="virsh start %s" % vm)
+                start_op = linux_obj.command(command="virsh start %s" % vm, timeout=300)
                 critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
             except Exception as ex:
                 if ex == "Timeout exceeded.":
@@ -285,7 +285,6 @@ def configure_vms(server_name, vm_dict):
 
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
-    fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
 
 def shut_all_vms(hostname):

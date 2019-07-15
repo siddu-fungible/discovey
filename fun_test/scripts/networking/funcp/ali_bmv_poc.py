@@ -62,7 +62,6 @@ class ScriptSetup(FunTestScript):
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
-        fun_test.log("Lets go")
         # funcp_obj.fetch_mpg_ips() #Only if not running the full script
 
     def cleanup(self):
@@ -189,7 +188,7 @@ class StartVMs(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Configure VMs",
+                              summary="Start VMs",
                               steps="""
                               1. Create NVMe VFs
                               2. Make sure NVMe and Funeth VFs exist
@@ -495,7 +494,7 @@ class LocalNamespace(FunTestCase):
                 print "{:<20} | {:<18} | {:<18}".format(vm, result_dict[vm]['blt_volume_dpu_0'],
                                                     result_dict[vm]['controller_dpu_0'])
             vm_volume_map[server] = result_dict
-
+            storage_controller.disconnect()
 
     def cleanup(self):
         pass
@@ -557,7 +556,7 @@ class LoadNvmeOnVMs(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Load Funeth on all VMs",
+                              summary="Load NVMe on all VMs",
                               steps="""
                               1. Login into each VM
                               2. show lspci output
@@ -614,14 +613,14 @@ class PingTestVmVmSameServer(FunTestCase):
 
 
 if __name__ == '__main__':
-    ts = ScriptSetup2()
-    # ts.add_test_case(NicEmulation())
+    ts = ScriptSetup()
+    ts.add_test_case(NicEmulation())
     # # ts.add_test_case(CreateNamespaceVMs()) // Dont use this
-    # ts.add_test_case(StartVMs())
-    # ts.add_test_case(LocalNamespace())
-    # ts.add_test_case(CheckVMReachability())
-    ts.add_test_case(LoadFunethOnVMs())
-    ts.add_test_case(LoadNvmeOnVMs())
+    ts.add_test_case(StartVMs())
+    ts.add_test_case(LocalNamespace())
+    ts.add_test_case(CheckVMReachability())
+    # ts.add_test_case(LoadFunethOnVMs())
+    # ts.add_test_case(LoadNvmeOnVMs())
     # ts.add_test_case(PingTestVmVmSameServer())
     # ts.add_test_case(PingFioTestAllVMs())
     # ts.add_test_case(TempNvmeCmds())
