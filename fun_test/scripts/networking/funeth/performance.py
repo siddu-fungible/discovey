@@ -36,8 +36,8 @@ FLOW_TYPES_DICT = OrderedDict([
     ('HU_HU_NFCP_UL_VM',        'HU -> HU non-FCP under 1 F1'),             # test case id: 8xxx
     ('HU_HU_FCP_UL_VM',         'HU -> HU Underlay FCP under 2 F1s'),       # test case id: 9xxx
     ('HU_HU_NFCP_2F1_UL_VM',    'HU -> HU Underlay non-FCP under 2 F1s'),   # test case id: 10xxx
-    ('HU_HU_NFCP_OL_VM',        'HU -> HU Overlay non-FCP under 2 F1s'),    # test case id: 11xxx
-    ('HU_HU_FCP_OL_VM',         'HU -> HU Overlay FCP under 2 F1s'),        # test case id: 12xxx
+    ('HU_HU_FCP_OL_VM',         'HU -> HU Overlay FCP under 2 F1s'),        # test case id: 11xxx
+    ('HU_HU_NFCP_OL_VM',        'HU -> HU Overlay non-FCP under 2 F1s'),    # test case id: 12xxx
     # TODO: Enable bi-direction
 ])
 TOOLS = ('netperf',)
