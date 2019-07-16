@@ -21,7 +21,7 @@ class MyScript(FunTestScript):
         fun_test.log("Script-level cleanup")
 
 
-class PalladiumTC(FunTestCase):
+class PalladiumTc(FunTestCase):
     boot_args = ""
     tags = ""
     note = ""
@@ -31,6 +31,7 @@ class PalladiumTC(FunTestCase):
     disable_assertions = "true"
     hw_version = "rel_06152019"
     run_target = "palladium"
+    extra_emails = None
 
     def describe(self):
         self.set_test_details(id=0,
@@ -61,11 +62,11 @@ class PalladiumTC(FunTestCase):
                   "RUN_TARGET": self.run_target,
                   "HW_MODEL": self.hw_model}
 
-        build_result = jenkins_manager.build(params=params)
+        build_result = jenkins_manager.build(params=params, extra_emails=self.extra_emails)
         fun_test.test_assert(build_result, "Build completed normally")
 
 
-class CryptoTeramarkTc(PalladiumTC):
+class CryptoTeramarkTc(PalladiumTc):
     boot_args = "app=crypto_test,crypto_tunnel_perf,crypto_api_perf,crypto_raw_speed --test-exit-fast --serial"
     tags = "qa_s1_crypto_teramark"
     note = "Crypto teramark app on S1"
@@ -81,7 +82,7 @@ class CryptoTeramarkTc(PalladiumTC):
                               """)
 
 
-class PkeTeramarkTc(PalladiumTC):
+class PkeTeramarkTc(PalladiumTc):
     boot_args = "app=pke_rsa_crt_dec_no_pad_soak,pke_rsa_crt_dec_no_pad_4096_soak,pke_ecdh_soak_256,pke_ecdh_soak_25519,pke_x25519_2k_tls_soak,pke_p256_2k_tls_soak --serial"
     tags = "qa_s1_pke_teramark"
     hw_model = "S1_CUT"
@@ -97,7 +98,7 @@ class PkeTeramarkTc(PalladiumTC):
                                   """)
 
 
-class EcTeramarkTc(PalladiumTC):
+class EcTeramarkTc(PalladiumTc):
     boot_args = "app=qa_ec_stress min_ndata=8 max_ndata=8 min_nparity=4 max_nparity=4 min_stridelen=4096 max_stridelen=4096 syslog=2 --seq_fail --enable_multi_pcs num_pcs=8"
     tags = "qa_s1_ec_teramark"
     note = "EC teramark app on S1"
@@ -113,7 +114,7 @@ class EcTeramarkTc(PalladiumTC):
                                   """)
 
 
-class DfaTeramarkTc(PalladiumTC):
+class DfaTeramarkTc(PalladiumTc):
     boot_args = "app=dfa_perf_bootstrap rbm-size=1m dfa_perf.pc_mask=255 dfa_perf.nflows=3072 dfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_dfa_teramark"
     note = "DFA teramark app on S1"
@@ -129,7 +130,7 @@ class DfaTeramarkTc(PalladiumTC):
                                   """)
 
 
-class NfaTeramarkTc(PalladiumTC):
+class NfaTeramarkTc(PalladiumTc):
     boot_args = "app=nfa_perf_bootstrap rbm-size=1m nfa_perf.pc_mask=255 nfa_perf.nflows=3584 nfa_perf.niterations=1024 syslog=2"
     tags = "qa_s1_nfa_teramark"
     note = "NFA teramark app on S1"
@@ -144,11 +145,12 @@ class NfaTeramarkTc(PalladiumTC):
             3. Steps 3
                                   """)
 
-class JpegTeramarkTc(PalladiumTC):
+class JpegTeramarkTc(PalladiumTc):
     boot_args = "app=jpeg_perf_test"
     tags = "qa_s1_jpeg_teramark"
     note = "JPEG teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
+    extra_emails = ["aamir.shaikh@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=6,
@@ -159,7 +161,7 @@ class JpegTeramarkTc(PalladiumTC):
             3. Steps 3
                                   """)
 
-class ZipTeramarkTc(PalladiumTC):
+class ZipTeramarkTc(PalladiumTc):
     boot_args = "app=deflate_perf_multi,lzma_perf_multi --serial"
     tags = "qa_s1_zip_teramark"
     note = "ZIP teramark app on S1"
