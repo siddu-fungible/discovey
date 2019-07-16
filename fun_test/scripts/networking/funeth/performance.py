@@ -258,13 +258,14 @@ class FunethPerformanceBase(FunTestCase):
 
             # Check dip pingable - IP header 20B, ICMP header 8B
             # Allow up to 2 ping miss due to resolve ARP
-            pingable &= linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
+            if not 'OL_VM' in flow_type.upper():  # TODO: Remove after overlay support ping flow
+                pingable &= linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
 
-            if pingable:
-                fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
-                    linux_obj_src.host_ip, dip, frame_size))
-            else:
-                break
+                if pingable:
+                    fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
+                        linux_obj_src.host_ip, dip, frame_size))
+                else:
+                    break
 
             suffix = '{}2{}'.format(shost[0], dhost[0])
             arg_dicts.append(
