@@ -360,11 +360,176 @@ class RdmaTemplate(object):
             fun_test.critical(str(ex))
 
 
+class RdmaLatencyUnderLoadTemplate(object):
+
+    def __init__(self, lat_test_type, bw_test_type, lat_client_server_objs, bw_client_server_objs, bw_test_size, lat_test_size, inline_size,
+                 duration, iterations, run_infinitely, rate_limit, rate_units, hosts,
+                 connection_type=RdmaTemplate.CONNECTION_TYPE_RC):
+        self.lat_client_server_objs = lat_client_server_objs
+        self.bw_client_server_objs = bw_client_server_objs
+        self.lat_test_template = RdmaTemplate(client_server_objs=self.lat_client_server_objs, hosts=hosts,
+                                              test_type=lat_test_type, is_parallel=True,
+                                              connection_type=connection_type, size=lat_test_size,
+                                              inline_size=inline_size, duration=duration,
+                                              iterations=iterations, run_infinitely=run_infinitely)
+        self.bw_test_template = RdmaTemplate(client_server_objs=self.bw_client_server_objs, hosts=hosts,
+                                             test_type=bw_test_type, is_parallel=True,
+                                             connection_type=connection_type, size=bw_test_size,
+                                             inline_size=inline_size, duration=duration,
+                                             iterations=iterations, run_infinitely=run_infinitely)
+        self.rate_limit = rate_limit
+        self.rate_units = rate_units
+
+    def setup_test(self):
+        result = False
+        try:
+            result = self.lat_test_template.setup_test()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def run(self, **kwargs):
+        result = []
+        try:
+            multi_task_obj = MultiProcessingTasks()
+            process_count = 0
+            for bw_dict in self.bw_client_server_objs:
+                for client_obj, server_obj in bw_dict.items():
+                    if type(server_obj) == list:
+                        for obj in server_obj:
+                            multi_task_obj.add_task(func=self.start_test,
+                                                    func_args=(client_obj, obj, self.bw_test_template.test_type,
+                                                               kwargs),
+                                                    task_key="process_%s" % process_count)
+                            process_count += 1
+                    else:
+                        multi_task_obj.add_task(func=self.start_test,
+                                                func_args=(client_obj, server_obj, self.bw_test_template.test_type,
+                                                           kwargs),
+                                                task_key="process_%s" % process_count)
+                        process_count += 1
+            for lat_dict in self.lat_client_server_objs:
+                for client_obj, server_obj in lat_dict.items():
+                    multi_task_obj.add_task(func=self.start_test,
+                                            func_args=(client_obj, server_obj, self.lat_test_template.test_type,
+                                                       kwargs),
+                                            task_key="process_%s" % process_count)
+                    process_count += 1
+
+            run_started = multi_task_obj.run(max_parallel_processes=process_count, parallel=True)
+            fun_test.simple_assert(run_started, "Ensure Clients initiated simultaneously")
+            for index in range(process_count):
+                result_dict = multi_task_obj.get_result(task_key="process_%s" % index)
+                result.append(result_dict)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def setup_server(self, test_type, server_obj, **cmd_args):
+        result = False
+        try:
+            fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
+                                                                        server_obj.rdma_server_port))
+            ibv_device = self.lat_test_template.get_ibv_device(host_obj=server_obj)
+            cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], port_num=server_obj.rdma_server_port,
+                                       test_type=test_type, client_cmd=False, **cmd_args)
+            tmp_output_file = "/tmp/%s_server_process_%d.log" % (test_type, server_obj.rdma_server_port)
+            process_id = server_obj.start_bg_process(command=cmd, output_file=tmp_output_file)
+            fun_test.log("Server Process Started: %s" % process_id)
+            fun_test.simple_assert(process_id, "Rdma server process started")
+            server_obj.rdma_process_id = process_id
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def create_rdma_cmd(self, ibv_device, test_type, port_num, client_cmd=False, server_ip=None, **cmd_args):
+        if '--rate_units' not in cmd_args:
+            cmd_args['--rate_units'] = self.rate_units
+        if '--rate_limit' not in cmd_args:
+            cmd_args['--rate_limit'] = self.rate_limit
+
+        if test_type == self.lat_test_template.test_type:
+            return self.lat_test_template.create_rdma_cmd(ibv_device=ibv_device, port_num=port_num,
+                                                          client_cmd=client_cmd, server_ip=server_ip, **cmd_args)
+        else:
+            return self.bw_test_template.create_rdma_cmd(ibv_device=ibv_device, port_num=port_num,
+                                                         client_cmd=client_cmd, server_ip=server_ip, **cmd_args)
+
+    def start_test(self, client_obj, server_obj, test_type, cmd_args=None):
+        result_dict = {}
+        try:
+            fun_test.log_section("Run traffic from %s -----> %s" % (str(client_obj), str(server_obj)))
+            port_no = RdmaHelper.generate_random_port_no()
+            server_obj.rdma_server_port = port_no
+            client_obj.rdma_port = port_no
+            client_obj.server_ip = server_obj.interface_ip
+            client_obj.add_path(additional_path=PATH)
+            client_obj.set_ld_library_path()
+            server_obj.add_path(additional_path=PATH)
+            server_obj.set_ld_library_path()
+            fun_test.simple_assert(self.setup_server(test_type=test_type, server_obj=server_obj, **cmd_args),
+                                   "Ensure on %s server process started" % str(server_obj))
+            ibv_device = self.lat_test_template.get_ibv_device(host_obj=client_obj)
+            cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], test_type=test_type,
+                                       port_num=client_obj.rdma_port, client_cmd=True, server_ip=client_obj.server_ip,
+                                       **cmd_args)
+            tmp_output_file = "/tmp/%s_client_process_%d.log" % (test_type, server_obj.rdma_server_port)
+            process_id = client_obj.start_bg_process(command=cmd, output_file=tmp_output_file, nohup=True)
+            fun_test.log('Client Process Started: %s' % process_id)
+            fun_test.sleep(message="Client cmd running infinitely", seconds=120)
+            client_obj.kill_process(process_id=process_id, signal=9)
+            output = client_obj.read_file(file_name=tmp_output_file, include_last_line=True)
+            result_dict = self.lat_test_template._parse_rdma_output(output=output)
+            result_dict.update({'test_type': test_type})
+            result_dict.update({'client': str(client_obj)})
+            result_dict.update({'server': str(server_obj)})
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result_dict
+
+    def create_table(self, records):
+        try:
+            columns = records[0].keys()
+            table_obj = PrettyTable(columns)
+            rows = []
+            for record in records:
+                table_obj.add_row(record.values())
+                rows.append(record.values())
+            fun_test.log_section("Result table for Latency Under Load Test")
+            fun_test.log_disable_timestamps()
+            fun_test.log("\n")
+            fun_test.log(table_obj)
+            fun_test.log_enable_timestamps()
+
+            headers = columns
+            table_name = "Result table for Latency Under Load Test"
+            table_data = {'headers': headers, 'rows': rows}
+            fun_test.add_table(panel_header='RDMA Test Result Table',
+                               table_name=table_name, table_data=table_data)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return True
+
+    def cleanup(self):
+        try:
+            for c_s_dict in self.client_server_objs:
+                for client_obj, server_obj in c_s_dict.items():
+                    client_obj.disconnect()
+                    if type(server_obj) == list:
+                        for obj in server_obj:
+                            obj.disconnect()
+                    else:
+                        server_obj.disconnect()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+
 class RdmaHelper(object):
     SCENARIO_TYPE_1_1 = "1_1"
     SCENARIO_TYPE_N_1 = "N_1"
     SCENARIO_TYPE_N_N = "N_N"
-    SCENARIO_TYPE_LATENCY_UNDER_LOAD = 'latency_under_load'
+    SCENARIO_TYPE_LATENCY_UNDER_LOAD = 'lat_under_load'
     CONFIG_JSON = SCRIPTS_DIR + "/networking/rdma/config.json"
     HOSTS_ASSET = ASSET_DIR + "/hosts.json"
 
@@ -429,13 +594,13 @@ class RdmaHelper(object):
             fun_test.critical(str(ex))
         return result
 
-    def get_traffic_size_in_bytes(self):
+    def get_traffic_size_in_bytes(self, key_name='size_in_bytes'):
         size = None
         try:
             for key in self.config:
                 if key == self.scenario_type:
-                    if 'size_in_bytes' in self.config[key]:
-                        size = self.config[key]['size_in_bytes']
+                    if key_name in self.config[key]:
+                        size = self.config[key][key_name]
                         break
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -498,6 +663,30 @@ class RdmaHelper(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return iterations
+
+    def get_rate_limit(self):
+        rate_limit = None
+        try:
+            for key in self.config:
+                if key == self.scenario_type:
+                    if 'rate_limit' in self.config[key]:
+                        rate_limit = self.config[key]['rate_limit']
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return rate_limit
+
+    def get_rate_units(self):
+        rate_units = None
+        try:
+            for key in self.config:
+                if key == self.scenario_type:
+                    if 'rate_units' in self.config[key]:
+                        rate_units = self.config[key]['rate_units']
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return rate_units
 
     def _fetch_client_dict(self, client_name):
         result = None
@@ -605,6 +794,54 @@ class RdmaHelper(object):
                     self.host_objs.append(server_obj)
                     client_id += 1
                     server_id += 1
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def create_lat_under_load_topology(self):
+        result = {'bw': [], 'lat': []}
+        try:
+            for key in self.config:
+                if key == self.SCENARIO_TYPE_LATENCY_UNDER_LOAD:
+                    lat_test_map = self.get_client_server_map()
+                    bw_test_map = {}
+                    clients = self.get_list_of_clients()
+                    servers = self.get_list_of_servers()
+                    for client in clients:
+                        for server in servers:
+                            bw_test_map[client['host_ip']] = server['host_ip']
+
+                    result['bw'].extend(self._get_lat_under_test_map_objects(test_map=bw_test_map))
+                    result['lat'].extend(self._get_lat_under_test_map_objects(test_map=lat_test_map))
+                    for map_obj in result['bw']:
+                        self.host_objs.extend(map_obj.keys())
+                    self.host_objs.append(result['bw'][0].values()[0])
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _get_lat_under_test_map_objects(self, test_map):
+        result = []
+        try:
+            client_id = 1
+            server_id = 1
+            for client, server in test_map.items():
+                client_dict = self._fetch_client_dict(client)
+                fun_test.simple_assert(client_dict, "Unable to find client %s info in hosts.json under asset. " %
+                                       client)
+                server_dict = self._fetch_server_dict(server)
+                fun_test.simple_assert(server_dict, "Unable to find server %s info in hosts.json under asset. " %
+                                       server)
+                hu_interface_ip = self._get_hu_interface_ip(server_name=server)
+                client_obj = RdmaClient(host_ip=client_dict['host_ip'], ssh_username=client_dict['ssh_username'],
+                                        ssh_password=client_dict['ssh_password'], server_ip=None,
+                                        rdma_port=None, client_id=client_id)
+                server_obj = RdmaServer(host_ip=server_dict['host_ip'], ssh_password=server_dict['ssh_password'],
+                                        ssh_username=server_dict['ssh_username'], interface_ip=hu_interface_ip,
+                                        server_port=None, server_id=server_id)
+                result.append({client_obj: server_obj})
+                client_id += 1
+                server_id += 1
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

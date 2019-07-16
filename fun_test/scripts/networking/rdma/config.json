@@ -78,6 +78,45 @@
     "duration_in_secs": 10,
     "iterations": 100,
     "inline_size": 64
+  },
+  "lat_under_load": {
+    "name": "lat_under_load",
+    "description": "For Latency under BW test in N-->1 scenario and latency test 1-->1 scenario in parallel",
+    "run_infinitely": 10,
+    "clients": [
+      {
+        "client_id": "c1",
+        "host_ip": "cab02-qa-05",
+        "hu_interface_ip": "41.1.1.2"
+      },
+      {
+        "client_id": "c2",
+        "host_ip": "cab02-qa-06",
+        "hu_interface_ip": "41.1.1.3"
+      },
+      {
+        "client_id": "c3",
+        "host_ip": "cab02-qa-07",
+        "hu_interface_ip": "41.1.1.4"
+      }
+    ],
+    "servers": [
+      {
+        "server_id": "s1",
+        "host_ip": "cab02-qa-08",
+        "hu_interface_ip": "42.1.1.2"
+      }
+    ],
+    "client_server_map": {
+      "cab02-qa-05": "cab02-qa-08"
+    },
+    "bw_test_size_in_bytes": 4096,
+    "lat_test_size_in_bytes": 1,
+    "duration_in_secs": 10,
+    "rate_limit": 2.5,
+    "rate_units": "g",
+    "iterations": 100,
+    "inline_size": 64
   }
 
 }
