@@ -251,6 +251,8 @@ class RdmaTemplate(object):
             result_dict.update({'server': str(server_obj)})
         except Exception as ex:
             fun_test.critical(str(ex))
+        finally:
+            server_obj.kill_process(process_id=server_obj.rdma_process_id, signal=9)
         return result_dict
 
     def run(self, **kwargs):
