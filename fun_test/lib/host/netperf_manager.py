@@ -260,7 +260,7 @@ class NetperfManager:
                     process_cpu_list.append(cpu)
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, fixed_netperf_port),
                         task_key='{}_{}_{}'.format(direction, dip, i))
                 if test == 3:
                     #if num_flows == 1:
@@ -269,11 +269,11 @@ class NetperfManager:
                     measure_latency = True
                     mp_task_obj.add_task(
                         func=do_test,
-                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns),
+                        func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, fixed_netperf_port),
                         task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
-                if not self.start_netserver(linux_obj_dst, cpu_list=process_cpu_list, fixed_port=fixed_netperf_port):
+                if not self.start_netserver(linux_obj_dst, cpu_list=process_cpu_list, fixed_netperf_port=fixed_netperf_port):
                     fun_test.critical('Failed to start netserver!')
                     netserver_ready = False
                     break
