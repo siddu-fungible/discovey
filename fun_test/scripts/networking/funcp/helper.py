@@ -539,7 +539,8 @@ def test_host_fio(host, username="localadmin", password="Precious1*", strict=Fal
 
 
 def reload_nvme_driver(host, username="localadmin", password="Precious1*"):
-    host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password,
+                     connect_retry_timeout_max=60)
     host_obj.sudo_command("rmmod nvme; rmmod nvme_core", timeout=120)
     fun_test.sleep("Waiting for 10 seconds before loading driver", 10)
     host_obj.sudo_command("modprobe nvme")
