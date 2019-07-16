@@ -721,14 +721,14 @@ class FunControlPlaneBringup:
                     fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
                                                        diff_stats[VP_PACKETS_OUT_NU_ETP] >= count), message=checkpoint)
 
-                    checkpoint = "Validate FCB stats"
-                    fcp_stats_after = network_controller_obj.peek_fcp_global_stats()
-                    diff_stats = get_diff_stats(new_stats=fcp_stats_after, old_stats=fcp_stats_before)
-                    fun_test.log("FCB Diff stats: %s" % diff_stats)
-                    fun_test.test_assert_expected(expected=0, actual=diff_stats[FCB_SRC_REQ_MSG_XMTD],
-                                                  message=checkpoint, ignore_on_success=True)
-                    fun_test.test_assert_expected(expected=0, actual=diff_stats[FCB_DST_REQ_MSG_RCVD],
-                                                  message=checkpoint, ignore_on_success=True)
+                    #checkpoint = "Validate FCB stats"
+                    #fcp_stats_after = network_controller_obj.peek_fcp_global_stats()
+                    #diff_stats = get_diff_stats(new_stats=fcp_stats_after, old_stats=fcp_stats_before)
+                    #fun_test.log("FCB Diff stats: %s" % diff_stats)
+                    #fun_test.test_assert_expected(expected=0, actual=diff_stats[FCB_SRC_REQ_MSG_XMTD],
+                    #                              message=checkpoint, ignore_on_success=True)
+                    #fun_test.test_assert_expected(expected=0, actual=diff_stats[FCB_DST_REQ_MSG_RCVD],
+                    #                              message=checkpoint, ignore_on_success=True)
                 linux_obj.disconnect()
             result = True
         except Exception as ex:
