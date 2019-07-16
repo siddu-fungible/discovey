@@ -1824,7 +1824,7 @@ class NetworkController(DpcshClient):
     def overlay_vif_add(self, lport_num):
         stats = None
         try:
-            cmd = "vif add {}".format(lport_num)
+            cmd = ['vif', 'add', lport_num]
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
@@ -1837,7 +1837,7 @@ class NetworkController(DpcshClient):
     def overlay_nh_add(self, nh_type, src_vtep, dst_vtep, vnid):
         stats = None
         try:
-            cmd = 'nh_add nh_type {} src_vtep "{}" dst_vtep "{}" vnid {}'.format(nh_type, src_vtep, dst_vtep, vnid)
+            cmd = ['nh_add', 'nh_type', nh_type, 'src_vtep', src_vtep, 'dst_vtep', dst_vtep, 'vnid', vnid]
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
@@ -1854,8 +1854,8 @@ class NetworkController(DpcshClient):
                 vif_desc = 'ingress_vif'
             elif flow_type == 'vxlan_decap':
                 vif_desc = 'egress_vif'
-            cmd = 'flow_add flow_type {} nh_index {} {} {} flow "{}" "{}" {} {} {}'.format(
-                flow_type, nh_index, vif_desc, vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto)
+            cmd = ['flow_add', 'flow_type', flow_type, 'nh_index', nh_index, vif_desc, vif, 'flow',
+                   flow_sip, flow_dip, flow_sport, flow_dport, flow_proto]
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
@@ -1868,7 +1868,7 @@ class NetworkController(DpcshClient):
     def overlay_vtep_add(self, ipaddr):
         stats = None
         try:
-            cmd = "vtep add {}".format(ipaddr)
+            cmd = ['vtep', 'add', ipaddr]
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
@@ -1881,7 +1881,7 @@ class NetworkController(DpcshClient):
     def overlay_vif_table_add_mac_entry(self, vnid, mac_addr, egress_vif):
         stats = None
         try:
-            cmd = 'vif_table vnid {} mac "{}" egress_vif {}'.format(vnid, mac_addr, egress_vif)
+            cmd = ['vif_table', 'vnid', vnid, 'mac', '"{}"'.format(mac_addr), 'egress_vif', egress_vif]
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
