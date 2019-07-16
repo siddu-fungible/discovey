@@ -2873,13 +2873,55 @@
                         "metric_model_name": "MetricContainer",
                         "name": "l4_firewall_flow_4m_flows",
                         "label": "4M Flows",
-                        "children": []
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_4m_flows_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_4m_flows_pps",
+                            "label": "Packets per sec"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_4m_flows_latency_full_load",
+                            "label": "Latency - Full Load"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_4m_flows_latency_half_load",
+                            "label": "Latency - Half Load"
+                          }
+                        ]
                       },
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "l4_firewall_flow_128m_flows",
                         "label": "128M Flows",
-                        "children": []
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_128m_flows_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_128m_flows_pps",
+                            "label": "Packets per sec"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_128m_flows_latency_full_load",
+                            "label": "Latency - Full Load"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "l4_firewall_flow_128m_flows_latency_half_load",
+                            "label": "Latency - Half Load"
+                          }
+                        ]
                       }
                     ]
                   },
