@@ -251,6 +251,8 @@ class RdmaTemplate(object):
             result_dict.update({'server': str(server_obj)})
         except Exception as ex:
             fun_test.critical(str(ex))
+        finally:
+            server_obj.kill_process(process_id=server_obj.rdma_process_id, signal=9)
         return result_dict
 
     def run(self, **kwargs):
@@ -303,6 +305,7 @@ class RdmaTemplate(object):
                 if m1:
                     pat = m1.group(1)
                     chunk = re.sub(pat, "", chunk)
+
                 keys = re.split(r'\s\s+', chunk.split('\n')[0].strip())
                 for i in range(0, len(keys)):
                     if '#bytes #iterations' in keys[i]:
@@ -310,7 +313,11 @@ class RdmaTemplate(object):
                         keys.pop(i)
                         keys.insert(i, v[0])
                         keys.insert(i + 1, v[1])
-                values = list(map(float, re.split(r'\s+', chunk.split('\n')[-1].strip())))
+                if self.run_infinitely:
+                    index = -1
+                else:
+                    index = 1
+                values = list(map(float, re.split(r'\s+', chunk.split('\n')[index].strip())))
                 result = OrderedDict(zip(keys, values))
         except Exception as ex:
             fun_test.critical(str(ex))

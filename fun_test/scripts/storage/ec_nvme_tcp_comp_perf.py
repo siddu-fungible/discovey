@@ -2,7 +2,6 @@ from lib.system.fun_test import *
 from lib.fun.fs import Fs
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
-from lib.host.storage_controller import StorageController
 from storage_helper import *
 import fun_global
 

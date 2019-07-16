@@ -201,7 +201,7 @@ class MetricChart(models.Model):
     work_in_progress = models.BooleanField(default=False)
     peer_ids = models.TextField(default="[]")
     platform = models.TextField(default=FunPlatform.F1)
-    companion_charts = ArrayField(models.IntegerField(default=-1), default=[])
+    companion_charts = ArrayField(models.IntegerField(default=-1), default=[], blank=True)
     creator = models.TextField(default=TEAM_REGRESSION_EMAIL)
 
     def __str__(self):
