@@ -376,6 +376,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                                self.iter_interval)
 
                 for op, stats in fio_output[mode][combo].items():
+                    # TODO: "operation" gets overwritten here; Set operation based on mode
                     value_dict["operation"] = op
                     if op == "read":
                         value_dict["read_iops"] = stats["iops"]

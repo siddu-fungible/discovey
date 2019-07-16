@@ -638,7 +638,6 @@ if __name__ == "__main__soak_flows_apps":
                           " expect 2Tb/8Mb = 250Kops. There may be other limiting factors though."
             output_field = "output_dma_memcpy_value"
 
-
         metric_id = LastMetricId.get_next_id()
         positive = True
         y1_axis_title = PerfUnit.UNIT_OPS
@@ -699,22 +698,22 @@ if __name__ == "__main_rdma__":
 
         chart_name = "IB write latency, size {}B".format(size)
         inputs = {
-         "input_size_latency": size,
-         "input_platform": platform,
-         "input_operation": "write",
-         "input_size_bandwidth": -1
+            "input_size_latency": size,
+            "input_platform": platform,
+            "input_operation": "write",
+            "input_size_bandwidth": -1
         }
         output_names = OrderedDict([("output_write_min_latency", "min"), ("output_write_max_latency", "max"),
                                     ("output_write_avg_latency", "avg"), ("output_write_99_latency", "99%"),
                                     ("output_write_99_99_latency", "99.99%")])
         for output_name in output_names:
             output = {
-             "name": output_name,
-             "unit": PerfUnit.UNIT_USECS,
-             "min": 0,
-             "max": -1,
-             "expected": -1,
-             "reference": -1
+                "name": output_name,
+                "unit": PerfUnit.UNIT_USECS,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
             }
 
             one_data_set["name"] = output_names[output_name]
@@ -857,7 +856,7 @@ if __name__ == "__main_rdma__":
     print ("Data sets: {}".format(data_sets))
     print ("Metric id: {}".format(metric_id))
 
-if __name__ == "__main__":
+if __name__ == "__main_bmv_local_storage__":
     internal_iops_chart_names = ["bmv_storage_local_ssd_random_read_iops", "bmv_storage_local_ssd_random_write_iops"]
     num_threads = [1, 4, 16, 64, 256]
     for internal_chart_name in internal_iops_chart_names:
@@ -896,14 +895,15 @@ if __name__ == "__main__":
                     work_in_progress=False).save()
     print "added iops charts"
     internal_latency_chart_names = ["bmv_storage_local_ssd_random_read_qd1_latency",
-                                 "bmv_storage_local_ssd_random_read_qd4_latency",
-                                 "bmv_storage_local_ssd_random_read_qd16_latency",
-                                 "bmv_storage_local_ssd_random_read_qd64_latency",
+                                    "bmv_storage_local_ssd_random_read_qd4_latency",
+                                    "bmv_storage_local_ssd_random_read_qd16_latency",
+                                    "bmv_storage_local_ssd_random_read_qd64_latency",
                                     "bmv_storage_local_ssd_random_read_qd256_latency",
                                     "bmv_storage_local_ssd_random_write_qd1_latency",
                                     "bmv_storage_local_ssd_random_write_qd4_latency",
                                     "bmv_storage_local_ssd_random_write_qd16_latency",
-                                    "bmv_storage_local_ssd_random_write_qd64_latency", "bmv_storage_local_ssd_random_write_qd256_latency"]
+                                    "bmv_storage_local_ssd_random_write_qd64_latency",
+                                    "bmv_storage_local_ssd_random_write_qd256_latency"]
     for internal_chart_name in internal_latency_chart_names:
         if "random_read" in internal_chart_name:
             test = "randread"
@@ -956,6 +956,164 @@ if __name__ == "__main__":
                     work_in_progress=False).save()
     print "added latency charts"
 
+if __name__ == "__main_bmv_datasets__":
+    internal_iops_chart_names = ["bmv_storage_local_ssd_random_read_iops", "bmv_storage_local_ssd_random_write_iops"]
+    num_threads = [1, 16, 32, 64, 128]
+    for internal_chart_name in internal_iops_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if "random_read" in internal_chart_name:
+            test = "randread"
+            output_name = "output_read_iops"
+        else:
+            test = "randwrite"
+            output_name = "output_write_iops"
+        data_sets = []
+        for thread in num_threads:
+            one_data_set = {}
+            one_data_set["name"] = str(thread)
+            one_data_set["inputs"] = {"input_test": test, "input_num_threads": thread, "input_platform":
+                FunPlatform.F1, "input_io_depth": 1}
+            one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                      "unit": PerfUnit.UNIT_OPS}
+            data_sets.append(one_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    internal_latency_chart_names = [
+        "bmv_storage_local_ssd_random_read_qd4_latency",
+        "bmv_storage_local_ssd_random_read_qd256_latency",
+        "bmv_storage_local_ssd_random_write_qd4_latency",
+        "bmv_storage_local_ssd_random_write_qd256_latency"]
+    for internal_chart_name in internal_latency_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if "qd4" in internal_chart_name:
+            internal_chart_name = internal_chart_name.replace("qd4", "qd32")
+            thread = 32
+        else:
+            internal_chart_name = internal_chart_name.replace("qd256", "qd128")
+            thread = 128
+        chart.internal_chart_name = internal_chart_name
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_num_threads"] = thread
+            data_set["output"]["reference"] = -1
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "changed datasets and charts to show different qdepths"
 
-
-
+if __name__ == "__main__":
+    internal_chart_names = ["HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_under_load",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_under_load",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency", "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_under_load"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        internal_chart_name = internal_chart_name.replace("FCP", "NFCP_2f1")
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_flow_type"] = data_set["inputs"]["input_flow_type"].replace("FCP", "NFCP_2F1")
+            data_set["output"]["reference"] = -1
+            data_set["output"]["expected"] = -1
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=chart.description,
+                    owner_info=chart.owner_info,
+                    source=chart.source,
+                    positive=chart.positive,
+                    y1_axis_title=chart.y1_axis_title,
+                    visualization_unit=chart.visualization_unit,
+                    metric_model_name=chart.metric_model_name,
+                    base_line_date=chart.base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added Host to host 2f1s"
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance", "HuLatencyUnderLoadPerformance"]
+    for model_name in model_names:
+        charts = MetricChart.objects.filter(metric_model_name=model_name)
+        for chart in charts:
+            internal_chart_name = chart.internal_chart_name + "_underlay"
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_flow_type"] = data_set["inputs"]["input_flow_type"] + "_UL_VM"
+                data_set["output"]["reference"] = -1
+                data_set["output"]["expected"] = -1
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name="temp",
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info=chart.owner_info,
+                        source=chart.source,
+                        positive=chart.positive,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.visualization_unit,
+                        metric_model_name=chart.metric_model_name,
+                        base_line_date=chart.base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added underlay charts"
+    internal_chart_names = ["HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_latency_under_load_underlay"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        internal_chart_name = internal_chart_name.replace("underlay", "overlay")
+        if "NFCP" in internal_chart_name:
+            flow_type = "HU_HU_NFCP_OL_VM"
+        else:
+            flow_type = "HU_HU_FCP_OL_VM"
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_flow_type"] = flow_type
+            data_set["output"]["reference"] = -1
+            data_set["output"]["expected"] = -1
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=chart.description,
+                    owner_info=chart.owner_info,
+                    source=chart.source,
+                    positive=chart.positive,
+                    y1_axis_title=chart.y1_axis_title,
+                    visualization_unit=chart.visualization_unit,
+                    metric_model_name=chart.metric_model_name,
+                    base_line_date=chart.base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added overlay charts"

@@ -19,7 +19,7 @@
     ],
     "size_in_bytes": 1,
     "duration_in_secs": 120,
-    "iterations": 100000,
+    "iterations": 100,
     "inline_size": 64
   },
   "N_1": {
