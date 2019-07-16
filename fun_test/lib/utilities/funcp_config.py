@@ -688,6 +688,7 @@ class FunControlPlaneBringup:
 
                     erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
                     vppkts_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+                    fcp_stats_before = network_controller_obj.peek_fcp_global_stats()
                     hu_interface = self.get_hu_interface_on_host(linux_obj=linux_obj)
                     ifconfig_stats_before = self.get_rx_tx_ifconfig(interface_name=hu_interface, linux_obj=linux_obj)
 
@@ -719,6 +720,15 @@ class FunControlPlaneBringup:
                                                                           diff_stats[VP_PACKETS_OUT_NU_ETP]))
                     fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
                                                        diff_stats[VP_PACKETS_OUT_NU_ETP] >= count), message=checkpoint)
+
+                    checkpoint = "Validate FCB stats"
+                    fcp_stats_after = network_controller_obj.peek_fcp_global_stats()
+                    diff_stats = get_diff_stats(new_stats=fcp_stats_after, old_stats=fcp_stats_before)
+                    fun_test.log("FCB Diff stats: %s" % diff_stats)
+                    fun_test.test_assert_expected(expected=0, actual=diff_stats[FCB_SRC_REQ_MSG_XMTD],
+                                                  message=checkpoint, ignore_on_success=True)
+                    fun_test.test_assert_expected(expected=0, actual=diff_stats[FCB_DST_REQ_MSG_RCVD],
+                                                  message=checkpoint, ignore_on_success=True)
                 linux_obj.disconnect()
             result = True
         except Exception as ex:
@@ -1029,8 +1039,8 @@ class FunControlPlaneBringup:
                     fun_test.simple_assert(
                         expression=(int(diff_stats[FCB_DST_FCP_PKT_RCVD]) >= count and
                                     int(diff_stats[FCB_DST_REQ_MSG_RCVD]) >= count and
-                                    int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count), message=checkpoint
-                    )
+                                    int(diff_stats[FCB_SRC_GNT_MSG_RCVD]) >= count and
+                                    int(diff_stats[FCB_SRC_REQ_MSG_XMTD]) >= count), message=checkpoint)
 
                     checkpoint = "Validate vppkts stats"
                     vp_stats = get_vp_pkts_stats_values(network_controller_obj=f1_0_dpc_obj)
@@ -1076,13 +1086,13 @@ class FunControlPlaneBringup:
             if int(expected) == int(actual):
                 result = True
             else:
-                delta = expected * tolerance_in_percent
+                delta = expected * float(tolerance_in_percent)
                 lower_limit = expected - delta
                 upper_limit = expected + delta
 
-                fun_test.simple_assert(expression=(lower_limit <= actual >= upper_limit),
-                                       message="Assert with tolerance failed Expected: %d Actual: %d Delta: %d "
-                                               "Tolerance: %d percent" % (expected, actual, delta,
+                fun_test.simple_assert(expression=(lower_limit <= actual <= upper_limit),
+                                       message="Assert with tolerance failed Expected: %s Actual: %s Delta: %s "
+                                               "Tolerance: %s percent" % (expected, actual, delta,
                                                                           tolerance_in_percent))
                 result = True
         except Exception as ex:

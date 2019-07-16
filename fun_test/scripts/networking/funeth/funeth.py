@@ -7,7 +7,8 @@ import sys
 from time import asctime
 
 
-CPU_LIST = range(8, 16)
+CPU_LIST_HOST = range(8, 16)  # Host's CPU ids used for traffic, which are in same NUMA node
+CPU_LIST_VM = range(0, 8)  # VM's CPU ids used for traffic
 COALESCE_RX_USECS = 8
 COALESCE_TX_USECS = 16
 COALESCE_RX_FRAMES = 128
@@ -130,8 +131,11 @@ class Funeth:
             if self.funsdk_commit:
                 linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
 
-            output = linux_obj.command(
-                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
+            #output = linux_obj.command(
+            #    'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
+            for pkg in ('hci', 'generator-bin'):
+                output = linux_obj.command(
+                    'cd {0}; scripts/bob --sdkup {2} -C {1}/FunSDK-cache'.format(sdkdir, self.ws, pkg))
             if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
 
                 # Get FunSDK, fungible-host-driver commit/bld info
@@ -362,13 +366,10 @@ class Funeth:
         return result
 
     def enable_namespace_interfaces_multi_queues(self, nu_or_hu, num_queues_tx=8, num_queues_rx=8, ns=None,
-                                                 xps_cpus=True):
+                                                 xps_cpus=True, cpu_list=CPU_LIST_HOST):
         """Enable interfaces multi tx/rx queue in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-            # VF interface, TODO: have a better way to tell it's VF interface
-            if not intf.endswith('f0'):
-                continue
             cmd = 'ethtool -L {} tx {} rx {}'.format(intf, num_queues_tx, num_queues_rx)
             cmd_chk = 'ethtool -l {}'.format(intf)
             if ns is None or 'netns' in cmd:
@@ -394,7 +395,7 @@ class Funeth:
             if xps_cpus:
                 cmds = []
                 for i in range(num_queues_tx):
-                    cpu_id = (1 << CPU_LIST[i%len(CPU_LIST)])
+                    cpu_id = (1 << cpu_list[i%len(cpu_list)])
                     cmds.append('echo {:04x} > /sys/class/net/{}/queues/tx-{}/xps_cpus'.format(cpu_id, intf, i))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds))
                 self.linux_obj_dict[nu_or_hu].command(
@@ -402,13 +403,13 @@ class Funeth:
 
         return result
 
-    def enable_multi_queues(self, nu_or_hu, num_queues_tx=8, num_queues_rx=8, xps_cpus=True):
+    def enable_multi_queues(self, nu_or_hu, num_queues_tx=8, num_queues_rx=8, xps_cpus=True, cpu_list=CPU_LIST_HOST):
         """Enable multi tx/rx queue to the interfaces."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             result &= self.enable_namespace_interfaces_multi_queues(nu_or_hu, num_queues_tx=num_queues_tx,
                                                                     num_queues_rx=num_queues_rx, ns=None,
-                                                                    xps_cpus=xps_cpus)
+                                                                    xps_cpus=xps_cpus, cpu_list=cpu_list)
 
         return result
 
@@ -577,7 +578,7 @@ class Funeth:
                 intf_bus_dict.update({intf: bus})
         return intf_bus_dict
 
-    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx'):
+    def configure_irq_affinity(self, nu_or_hu, tx_or_rx='tx', cpu_list=CPU_LIST_HOST):
         """Configure irq affinity."""
         intf_bus_dict = self.get_bus_info_from_ethtool(nu_or_hu)
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
@@ -605,7 +606,7 @@ class Funeth:
                 cmds_chg = []
                 for irq in irq_list:
                     i = irq_list.index(irq)
-                    cpu_id = (1 << CPU_LIST[i % len(CPU_LIST)])
+                    cpu_id = (1 << cpu_list[i % len(cpu_list)])
                     cmds_chg.append('echo {:04x} > /proc/irq/{}/smp_affinity'.format(cpu_id, irq))
                 self.linux_obj_dict[nu_or_hu].sudo_command(';'.join(cmds_chg))
                 self.linux_obj_dict[nu_or_hu].command(';'.join(cmds_cat))

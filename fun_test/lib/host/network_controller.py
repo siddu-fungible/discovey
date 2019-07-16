@@ -1820,3 +1820,69 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return stats
+
+    def overlay_vif_add(self, lport_num):
+        stats = None
+        try:
+            cmd = "vif add {}".format(lport_num)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_nh_add(self, nh_type, src_vtep, dst_vtep, vnid):
+        stats = None
+        try:
+            cmd = 'nh_add nh_type {} src_vtep "{}" dst_vtep "{}" vnid {}'.format(nh_type, src_vtep, dst_vtep, vnid)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_flow_add(self, flow_type, nh_index, ingress_vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto):
+        stats = None
+        try:
+            cmd = 'flow_add flow_type {} nh_index {} ingress_vif {} flow "{}" "{}" {} {} {}'.format(
+                flow_type, nh_index, ingress_vif, flow_sip, flow_dip, flow_sport, flow_dport, flow_proto)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_vtep_add(self, ipaddr):
+        stats = None
+        try:
+            cmd = "vtep add {}".format(ipaddr)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_vif_table_add_mac_entry(self, vnid, mac_addr, egress_vif):
+        stats = None
+        try:
+            cmd = 'vif_table vnid {} mac "{}" egress_vif {}'.format(vnid, mac_addr, egress_vif)
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats

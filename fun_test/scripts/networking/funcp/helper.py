@@ -277,7 +277,7 @@ def configure_vms(server_name, vm_dict):
                     if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
                         linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
                 # fun_test.sleep(message="Waiting for VFs detach", seconds=1)
-                start_op = linux_obj.command(command="virsh start %s" % vm)
+                start_op = linux_obj.command(command="virsh start %s" % vm, timeout=300)
                 critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
             except Exception as ex:
                 if ex == "Timeout exceeded.":
@@ -285,7 +285,6 @@ def configure_vms(server_name, vm_dict):
 
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
-    fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
 
 def shut_all_vms(hostname):
@@ -295,7 +294,10 @@ def shut_all_vms(hostname):
     host_spec = all_hosts_specs[hostname]
     linux_obj = Linux(host_ip=host_spec["host_ip"], ssh_username=host_spec["ssh_username"],
                       ssh_password=host_spec["ssh_password"])
-    linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")
+    if linux_obj.check_ssh():
+        linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")
+    else:
+        fun_test.critical(message="Cannot ssh into host %s" % host_spec["host_ip"])
 
 
 def local_volume_create(storage_controller, vm_dict, uuid, count):
@@ -313,7 +315,7 @@ def remote_storage_config(storage_controller, vm_dict, vol_uuid, count, ctrl_uui
 
     print("\n")
     print("==============================================")
-    print("Attaching Local Volume to Controller on DPU 1")
+    print("Attaching Local Volume to Controller on remote DPU")
     print("==============================================\n")
     result = storage_controller.attach_volume_to_controller(ctrlr_uuid=ctrl_uuid,
                                                             vol_uuid=vol_uuid,
@@ -497,25 +499,32 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
     return result
 
 
-def test_scp(source, dest):
+def test_scp(source_host, dest_host, source_data_ip, dest_data_ip):
+    result = True
     host_file = ASSET_DIR + "/hosts.json"
     all_hosts_specs = parse_file_to_json(file_name=host_file)
-    source_host_spec = all_hosts_specs[source]
-    dest_host_spec = all_hosts_specs[dest]
+    source_host_spec = all_hosts_specs[source_host]
+    dest_host_spec = all_hosts_specs[dest_host]
     source_linux = Linux(host_ip=source_host_spec["host_ip"], ssh_username=source_host_spec["ssh_username"],
                          ssh_password=source_host_spec["ssh_password"])
     dest_linux = Linux(host_ip=dest_host_spec["host_ip"], ssh_username=dest_host_spec["ssh_username"],
                          ssh_password=dest_host_spec["ssh_password"])
-    source_linux.sudo_command("cd ~; rm -fr scp_testl")
+    dest_linux.sudo_command("cd ~; rm -fr scp_test;")
+    dest_linux.command("cd ~; mkdir scp_test;")
+    dest_linux.disconnect()
+    source_linux.sudo_command("cd ~; rm -fr scp_test")
     source_linux.command("cd ~; mkdir scp_test; cd ~/scp_test")
     source_linux.dd(input_file="/dev/zero", output_file="scp_test_file_source.txt", count=1048576, block_size=100,
                     timeout=120, sudo=True)
-    dest_linux.sudo_command("cd ~; rm -fr scp_test;")
-    dest_linux.command("cd ~; mkdir scp_test; cd ~/scp_test")
-    result = source_linux.scp(source_file_path="~/scp_test/scp_test_file_source.txt",
-                              target_ip=dest_host_spec["host_ip"],target_file_path="~/scp_test",
-                              target_username=dest_host_spec["ssh_username"],
-                              target_password=dest_host_spec["ssh_password"])
+    source_linux.scp(source_file_path="~/scp_test/scp_test_file_source.txt",
+                     target_ip=dest_data_ip, target_file_path="~/scp_test/scp_test_file_dest.txt",
+                     target_username=dest_host_spec["ssh_username"],
+                     target_password=dest_host_spec["ssh_password"])
+
+    op = dest_linux.command("ls ~/scp_test")
+    if "scp_test_file_dest.txt" not in op:
+        result = False
+    critical_log(expression=result, message="SCP successful over data IP from %s to %s" % (source_host, dest_host))
     return result
 
 
@@ -527,3 +536,27 @@ def test_host_fio(host, username="localadmin", password="Precious1*", strict=Fal
         fio_dict = linux_obj.fio(filename=filename, rw=rw, direct=direct, bs=bs, ioengine=ioengine, iodepth=iodepth,
                       name=name, runtime=runtime)
         critical_log(expression=fio_dict, message="Fio Result")
+
+
+def reload_nvme_driver(host, username="localadmin", password="Precious1*"):
+    host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password,
+                     connect_retry_timeout_max=60)
+    host_obj.sudo_command("rmmod nvme; rmmod nvme_core", timeout=120)
+    fun_test.sleep("Waiting for 10 seconds before loading driver", 10)
+    host_obj.sudo_command("modprobe nvme")
+
+
+def get_nvme_dev(host, username="localadmin", password="Precious1*"):
+    linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+
+    # Get the BDF number for the F1 NVMe device
+    bdf = linux_obj.sudo_command("lspci -D -d 1dad: | grep 'Non-Volatile memory controller' | awk '{print $1}'")
+
+    # use bdf number to get the nvme char & block device
+    nvme_char = linux_obj.sudo_command("ls /sys/bus/pci/devices/{}/nvme/".format(str(bdf)))
+    nvme_cntlid = linux_obj.sudo_command("cat /sys/class/nvme/{}/cntlid".format(str(nvme_char)))
+    ns_id = linux_obj.sudo_command("cat /sys/class/nvme/{}/{}c{}*/nsid".
+                                   format(str(nvme_char), str(nvme_char), str(nvme_cntlid)))
+    nvme_device = "/dev/" + str(nvme_char) + str(ns_id)
+
+    return nvme_device

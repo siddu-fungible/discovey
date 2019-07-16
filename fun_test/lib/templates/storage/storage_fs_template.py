@@ -112,7 +112,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         print "storage controller list is: {}".format(sc)
         print "dir of storage controller list is: {}".format(dir(sc))
         command_result = sc.ip_cfg(ip=ec_info["f1_ips"][index], port=ec_info["transport_port"])
-        fun_test.test_assert(command_result["status"], "Enabling controller to listen in {} on {} port in {} DUT".
+        fun_test.test_assert(command_result["status"], "Enabling controller to listen in {} on {} port in DUT {}".
                              format(ec_info["f1_ips"][index], ec_info["transport_port"], index))
 
     ec_info["uuids"] = {}
@@ -146,8 +146,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         # ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
 
         if "use_lsv" in ec_info and ec_info["use_lsv"]:
-            fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
-                         "rounding that to the nearest 8KB value")
+            fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by {}% and "
+                         "rounding that to the nearest 4KB value".format(int(ec_info["lsv_pct"] * 100)))
             ec_info["volume_capacity"][num]["jvol"] = ec_info["lsv_chunk_size"] * ec_info["volume_block"]["lsv"] * \
                                                       ec_info["jvol_size_multiplier"]
 
@@ -199,7 +199,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                                       nqn="nqn" + str(nqn), port=1099,
                                                       command_duration=command_timeout)
                 fun_test.test_assert(command_result["status"],
-                                     "Configuring {} transport Storage Controller for {} remote IP on {} DUT".
+                                     "Configuring {} transport Storage Controller for {} remote IP on DUT {}".
                                      format(transport, remote_ip, index))
 
                 if index == cur_vol_host_f1:
@@ -229,7 +229,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                                   nqn="nqn" + str(index), port=1099,
                                                   command_duration=command_timeout)
             fun_test.test_assert(command_result["status"],
-                                 "Configuring {} transport Storage Controller for {} remote IP on {} DUT".
+                                 "Configuring {} transport Storage Controller for {} remote IP on DUT {}".
                                  format(transport, remote_ip, index))
         """
 
@@ -247,7 +247,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                     type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
                     block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
                     command_duration=command_timeout)
-                fun_test.test_assert(command_result["status"], "Creating {} {} {} {} {} bytes volume on {} DUT".
+                fun_test.test_assert(command_result["status"], "Creating {} {} {} {} {} bytes volume on DUT {}".
                                      format(num, i, vtype, ec_info["volume_types"][vtype],
                                             ec_info["volume_capacity"][num][vtype], sc_index))
                 if sc_index != cur_vol_host_f1:
@@ -259,7 +259,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                         ctrlr_uuid=ec_info[sc][remote_ip][transport]["ctlr_id"], ns_id=ns_id, vol_uuid=this_uuid,
                         command_duration=command_timeout)
                     fun_test.test_assert(command_result["status"],
-                                         "Attaching {} {} {} {} bytes volume on {} DUT".
+                                         "Attaching {} {} {} {} bytes volume on DUT {}".
                                          format(num, i, vtype, ec_info["volume_capacity"][num][vtype], sc_index))
                 else:
                     ec_info["uuids"][num]["nonrds"].append(this_uuid)
@@ -275,7 +275,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 remote_nsid=cur_ns_id, remote_ip=ec_info["rds_nsid"][num][cur_ns_id],
                 command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
-                                                           "on {} DUT".format(cur_ns_id,
+                                                           "on DUT {}".format(cur_ns_id,
                                                                               ec_info["rds_nsid"][num][cur_ns_id],
                                                                               cur_vol_host_f1))
         """
@@ -292,7 +292,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 remote_nsid=int(str(num+1)+ str(plex_num)), remote_ip=ec_info["f1_ips"][sc_index],
                 command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
-                                                           "on {} DUT".format(num+ plex_num,
+                                                           "on DUT {}".format(num+ plex_num,
                                                                               ec_info["f1_ips"][sc_index],
                                                                               cur_vol_host_f1))
             plex_num += 1
@@ -306,7 +306,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
             block_size=ec_info["volume_block"]["ec"], name="ec_" + this_uuid[-4:], uuid=this_uuid,
             ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=pvol_id, command_duration=command_timeout)
-        fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on {} DUT ".
+        fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on DUT {}".
                              format(num, ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"][num]["ec"],
                                     cur_vol_host_f1))
         ec_info["attach_uuid"][num] = this_uuid
@@ -319,7 +319,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
                 block_size=ec_info["volume_block"]["jvol"], name="jvol_" + this_uuid[-4:],
                 uuid=ec_info["uuids"][num]["jvol"], command_duration=command_timeout)
-            fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on {} DUT".
+            fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on DUT {}".
                                  format(num, ec_info["volume_capacity"][num]["jvol"], cur_vol_host_f1))
 
             this_uuid = utils.generate_uuid()
@@ -346,7 +346,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                                           jvol_uuid=ec_info["uuids"][num]["jvol"],
                                                           pvol_id=ec_info["uuids"][num]["ec"],
                                                           command_duration=command_timeout)
-            fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on {} DUT".
+            fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT {}".
                                  format(num, ec_info["volume_capacity"][num]["lsv"], cur_vol_host_f1))
             ec_info["attach_uuid"][num] = this_uuid
             ec_info["attach_size"][num] = ec_info["volume_capacity"][num]["lsv"]
@@ -360,7 +360,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         # command_result = hosting_sc.attach_volume_to_controller(
         #    ctrlr_uuid=ec_info["uuids"][num]["ctlr"][cur_vol_host_f1], ns_id=int(str(num+1) + str(plex_num)),
         #    vol_uuid=ec_info["attach_uuid"][num], command_duration=command_timeout)
-        fun_test.test_assert(command_result["status"], "Attaching {} {} bytes EC/LS volume on {} DUT".
+        fun_test.test_assert(command_result["status"], "Attaching {} {} bytes EC/LS volume on DUT {}".
                              format(num, ec_info["attach_size"][num], cur_vol_host_f1))
 
     return (result, ec_info)

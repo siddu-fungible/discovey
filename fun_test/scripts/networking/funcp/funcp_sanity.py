@@ -32,7 +32,7 @@ class ScriptSetup(FunTestScript):
         for server in servers_mode:
             print server
             shut_all_vms(hostname=server)
-            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host %s " % server)
 
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
@@ -45,7 +45,7 @@ class ScriptSetup(FunTestScript):
         topology = topology_helper.deploy()
         fun_test.shared_variables["topology"] = topology
         fun_test.test_assert(topology, "Topology deployed")
-        b = topology_helper.get_expanded_topology()
+        # b = topology_helper.get_expanded_topology()
 
 
     def cleanup(self):
@@ -151,11 +151,12 @@ class NicEmulation(FunTestCase):
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
         get_ethtool_on_hu_host(funeth_obj)
 
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
-        funeth_obj = Funeth(tb_config_obj)
-        fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
-        get_ethtool_on_hu_host(funeth_obj)
+        if fs_name == "fs-alibaba-demo":
+            tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
+            funeth_obj = Funeth(tb_config_obj)
+            fun_test.shared_variables['funeth_obj'] = funeth_obj
+            setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
+            get_ethtool_on_hu_host(funeth_obj)
 
     def cleanup(self):
         pass
@@ -218,8 +219,10 @@ class TestScp(FunTestCase):
         result = True
         for nu_host in self.server_key["fs"][fs_name]["nu_host"]:
             for hu_host in self.server_key["fs"][fs_name]["hu_host"]:
-                result &= test_scp(source=nu_host, dest=hu_host)
-                result &= test_scp(source=hu_host, dest=nu_host)
+                nu_ip = self.server_key["fs"][fs_name]["nu_host"][nu_host]
+                hu_ip = self.server_key["fs"][fs_name]["hu_host"][hu_host]
+                result &= test_scp(source_host=nu_host, dest_host=hu_host, source_data_ip=nu_ip, dest_data_ip=hu_ip)
+                result &= test_scp(source_host=hu_host, dest_host=nu_host, source_data_ip=hu_ip, dest_data_ip=nu_ip)
 
         fun_test.test_assert(expression=result, message="SCP result")
 

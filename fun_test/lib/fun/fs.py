@@ -190,8 +190,7 @@ class Bmc(Linux):
         return True
 
     def ensure_come_is_up(self, come, max_wait_time=240, power_cycle=True):
-        come_up = False
-        come_up = come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=self._get_ipmi_details())
+        come_up = come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=self._get_ipmi_details(), power_cycle=power_cycle)
         return come_up
 
     def set_boot_phase(self, index, phase):
@@ -388,7 +387,7 @@ class Bmc(Linux):
     def _get_context_prefix(self, data):
         s = "{}".format(data)
         if self.original_context_description:
-            s = "{} {}".format(self.original_context_description, data)
+            s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
     def cleanup(self):
@@ -402,7 +401,7 @@ class Bmc(Linux):
                 self.kill_process(signal=15, process_id=int(log_listener_process))
                 self.kill_process(signal=9, process_id=log_listener_process)
 
-                artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
                 fun_test.scp(source_ip=self.host_ip,
                              source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
                              source_username=self.ssh_username,
@@ -623,14 +622,14 @@ class ComE(Linux):
     def _get_context_prefix(self, data):
         s = "{}".format(data)
         if self.original_context_description:
-            s = "{} {}".format(self.original_context_description, data)
+            s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
     def cleanup(self):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_dpc_log.txt".format(f1_index))
+            artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
                                         filename=artifact_file_name)

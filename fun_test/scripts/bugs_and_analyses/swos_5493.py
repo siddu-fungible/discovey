@@ -93,6 +93,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.dut_start_index = job_inputs["dut_start_index"]
         if "host_start_index" in job_inputs:
             self.host_start_index = job_inputs["host_start_index"]
+        if "num_hosts" in job_inputs:
+            self.num_hosts = job_inputs["num_hosts"]
         if "update_workspace" in job_inputs:
             self.update_workspace = job_inputs["update_workspace"]
         if "update_deploy_script" in job_inputs:
@@ -133,7 +135,13 @@ class ECVolumeLevelScript(FunTestScript):
         elif self.testbed_type == "suite-based":
             self.topology_helper = TopologyHelper()
             self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
-            self.required_hosts = self.topology_helper.get_available_hosts()
+            required_hosts_tmp = OrderedDict(self.topology_helper.get_available_hosts())
+            self.required_hosts = OrderedDict()
+            for index, host_name in enumerate(required_hosts_tmp):
+                if index < self.num_hosts:
+                    self.required_hosts[host_name] = required_hosts_tmp[host_name]
+                else:
+                    break
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
 

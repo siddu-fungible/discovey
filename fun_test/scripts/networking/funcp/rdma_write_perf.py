@@ -3,8 +3,8 @@ from lib.utilities.funcp_config import *
 from scripts.networking.funcp.helper import *
 from scripts.networking.funeth.sanity import Funeth
 from lib.topology.topology_helper import TopologyHelper
-from web.fun_test.analytics_models_helper import ModelHelper
-from fun_global import PerfUnit
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
+from fun_global import PerfUnit, FunPlatform
 
 
 def add_to_data_base(value_dict):
@@ -24,36 +24,38 @@ def add_to_data_base(value_dict):
         "read_msg_rate_unit": PerfUnit.UNIT_MPPS,
         "write_msg_rate_unit": PerfUnit.UNIT_MPPS
     }
+    # This dictionary is just for reference
     default_value_dict = {
-    # "date_time": get_data_collection_time(),
-    # "platform": FunPlatform.F1,
-    "version": fun_test.get_version(),
-    "test": "RDMA_test",
-    "operation": "read",
+        "date_time": get_data_collection_time(),
+        "platform": FunPlatform.F1,
+        "version": fun_test.get_version(),
+        "test": "RDMA_test",
+        "operation": "read",
 
-    "size_latency":128,
-    "size_bandwidth": 128,
-    "read_avg_latency": 100,
-    "write_avg_latency": 100,
-    "read_min_latency": 100,
-    "write_min_latency": 100,
-    "read_max_latency": 100,
-    "write_max_latency": 100,
-    "read_99_latency": 100,
-    "write_99_latency": 100,
-    "read_99_99_latency": 100,
-    "write_99_99_latency": 100,
-    "read_bandwidth": 100,
-    "write_bandwidth": 100,
-    "read_msg_rate": 100,
-    "write_msg_rate": 100
+        "size_latency": 128,
+        "size_bandwidth": 128,
+        "read_avg_latency": 100,
+        "write_avg_latency": 100,
+        "read_min_latency": 100,
+        "write_min_latency": 100,
+        "read_max_latency": 100,
+        "write_max_latency": 100,
+        "read_99_latency": 100,
+        "write_99_latency": 100,
+        "read_99_99_latency": 100,
+        "write_99_99_latency": 100,
+        "read_bandwidth": 100,
+        "write_bandwidth": 100,
+        "read_msg_rate": 100,
+        "write_msg_rate": 100
     }
-
+    
+    value_dict["date_time"] = get_data_collection_time()
     model_name = "AlibabaRdmaPerformance"
     status = fun_test.PASSED
     try:
         generic_helper = ModelHelper(model_name=model_name)
-        generic_helper.set_units(validate=False, **unit_dict)
+        generic_helper.set_units(validate=True, **unit_dict)
         generic_helper.add_entry(**value_dict)
         generic_helper.set_status(status)
         print "used generic helper to add an entry"
@@ -72,8 +74,13 @@ class ScriptSetup(FunTestScript):
                                                       '/fs_connected_servers.json')
 
     def cleanup(self):
-        # fun_test.shared_variables["topology"].clean_up = False
-        pass
+        host_obj = fun_test.shared_variables["hosts_obj"]
+
+        # Check if funeth is loaded or else bail out
+        for obj in host_obj:
+            host_obj[obj][0].sudo_command("rmmod funrdma")
+        fun_test.log("Unload funrdma drivers")
+        # pass
         # funcp_obj.cleanup_funcp()
         # for server in servers_mode:
         #     critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
@@ -127,8 +134,24 @@ class BringupSetup(FunTestCase):
         fs = topology.get_dut_instance(index=0)
         come_obj = fs.get_come()
         come_obj.sudo_command("netplan apply")
-        # Bringup FunCP
 
+        host_dict = {"f1_0": [], "f1_1": []}
+        for i in range(0, 23):
+            if i <= 11:
+                if topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i):
+                    if topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i) not in \
+                            host_dict["f1_0"]:
+                        host_dict["f1_0"].append(
+                            topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i))
+            elif i > 11 <= 23:
+                if topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i):
+                    if topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i) not in \
+                            host_dict["f1_1"]:
+                        host_dict["f1_1"].append(
+                            topology.get_host_instance(dut_index=0, host_index=0, ssd_interface_index=i))
+        fun_test.shared_variables["hosts_obj"] = host_dict
+
+        # Bringup FunCP
         fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
         # Assign MPG IPs from dhcp
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
@@ -176,11 +199,12 @@ class NicEmulation(FunTestCase):
         # Add static routes on Containers
         funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
         fun_test.sleep(message="Waiting before ping tests", seconds=10)
+        host_objs = fun_test.shared_variables["hosts_obj"]
 
         # Ping QFX from both F1s
-        # ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-        # for container in ping_dict:
-        #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
+        ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
+        for container in ping_dict:
+            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
@@ -193,11 +217,26 @@ class NicEmulation(FunTestCase):
             if result == "2":
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
+
+        # Set CPU governor to performance for all cores
+        for obj in host_objs:
+            online_cpu = \
+                host_objs[obj][0].command("lscpu | grep -i \"on-line\" | awk -F ':' '{print $2}' | tr -d ' '")
+            online_cpu_list = online_cpu.rstrip().rsplit('-')
+            for i in range(int(online_cpu_list[0]), int(online_cpu_list[1])+1):
+                host_objs[obj][0].sudo_command(
+                    "echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor".format(i))
+                host_objs[obj][0].sudo_command("cat /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor".format(i))
+
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-        setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=1)
+        setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
+
+        # Using the first host instance of f1_0 & f1_1 object for all tests
+        for obj in host_objs:
+            host_objs[obj][0].command("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
 
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
@@ -235,46 +274,86 @@ class IBWriteBW(FunTestCase):
     def run(self):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        host_obj = fun_test.shared_variables["hosts_obj"]
 
-        # Get host_objects
-        hostdetails = self.server_key["fs"][fs_name]["host_pings"]
-        host_obj = {}
-        for host in self.server_key["fs"][fs_name]["host_pings"]:
-            host_obj[host] = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+        # Check if funeth is loaded or else bail out
+        for obj in host_obj:
+            check_funeth = host_obj[obj][0].lsmod("funeth")
+            fun_test.test_assert(check_funeth, "Check funeth load status")
 
         # Load drivers on host
         for obj in host_obj:
-            host_obj[obj].sudo_command("dmesg -c > /dev/null")
-            check_module = host_obj[obj].lsmod("funrdma")
+            host_obj[obj][0].sudo_command("dmesg -c > /dev/null")
+            host_obj[obj][0].sudo_command("killall -g ib_write_lat")
+            host_obj[obj][0].sudo_command("killall -g ib_write_bw")
+            check_module = host_obj[obj][0].lsmod("funrdma")
             if not check_module:
-                host_obj[obj].sudo_command("insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko && modprobe rdma_ucm")
-                host_obj[obj].sudo_command("/etc/init.d/irqbalance stop")
+                host_obj[obj][0].sudo_command("insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko "
+                                              "&& modprobe rdma_ucm")
+                check_load_module = host_obj[obj][0].lsmod("funrdma")
+                fun_test.test_assert(check_load_module, "Funrdma load")
+                host_obj[obj][0].sudo_command("/etc/init.d/irqbalance stop")
+                host_obj[obj][0].sudo_command("tuned-adm profile network-throughput")
 
-        # TODO : Enable 1024 bytes once SWOS-5650 is fixed
-        # Start ib_write_bw server on cab03-qa-04
-        host_obj["cab03-qa-04"].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
-                                        "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["cab03-qa-04"].start_bg_process(command="sh -c 'for size in 1 128 256 512;do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 10 -R;sleep 2;done'", timeout=300)
+        # Get NUMA Node host connected to F1_0
+        server_interface_name = \
+            host_obj["f1_0"][0].command("ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
 
-        # Start ib_write_bw client on cab03-qa-05
-        host_obj["cab03-qa-05"].sudo_command("sudo rm -rf /tmp/*")
-        host_obj["cab03-qa-05"].command(
+        numa_node = host_obj["f1_0"][0].command("cat /sys/class/net/{}/device/numa_node".
+                                                format(server_interface_name.rstrip()))
+        numa_core_list = host_obj["f1_0"][0].command("lscpu | grep -i node{} | grep -o ':.*,' | tr -d ':, '".
+                                                     format(numa_node.rstrip()))
+        print numa_core_list
+        numa_cores = numa_core_list.rsplit('-')
+        taskset_core = random.randint(int(numa_cores[0]), int(numa_cores[1]))
+        fun_test.shared_variables["server_taskset_core"] = taskset_core
+        print taskset_core
+
+        # Start ib_write_bw server on F1_0
+        host_obj["f1_0"][0].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
+                                    " && export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
+        host_obj["f1_0"][0].start_bg_process(
+            command="sh -c 'for size in 1 128 256 512 1024 4096;"
+                    "do taskset -c {} ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 180 -R;"
+                    "sleep 2;done'".format(taskset_core), timeout=1400)
+
+        server_ip_address = \
+            host_obj["f1_0"][0].command("ip addr list {} |grep \"inet \" |cut -d\' \' -f6|cut -d/ -f1".
+                                        format(server_interface_name.rstrip()))
+
+        # Get NUMA Node host connected to F1_1
+        client_interface_name = \
+            host_obj["f1_1"][0].command("ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
+
+        numa_node = host_obj["f1_1"][0].command("cat /sys/class/net/{}/device/numa_node".
+                                                format(client_interface_name.rstrip()))
+        numa_core_list = host_obj["f1_1"][0].command("lscpu | grep -i node{} | grep -o ':.*,' | tr -d ':, '".
+                                                     format(numa_node.rstrip()))
+        numa_cores = numa_core_list.rsplit('-')
+        taskset_core = random.randint(int(numa_cores[0]), int(numa_cores[1]))
+        fun_test.shared_variables["client_taskset_core"] = taskset_core
+
+        # Start ib_write_bw client on F1_1
+        host_obj["f1_1"][0].sudo_command("sudo rm -rf /tmp/*")
+        host_obj["f1_1"][0].command(
             "export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
             "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["cab03-qa-05"].command(
-            "for size in 1 128 256 512;do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 10 -R 15.1.1.2 >> /tmp/ib_bw_$size.txt;sleep 5;done", timeout=300)
+        host_obj["f1_1"][0].command(
+            "for size in 1 128 256 512 1024 4096;"
+            "do taskset -c {} ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 180 -R {} >> /tmp/ib_bw_$size.txt;"
+            "sleep 5;done".format(taskset_core, server_ip_address.rstrip()),
+            timeout=1400)
 
-        host_obj["cab03-qa-05"].sudo_command("rmmod funrdma")
-        host_obj["cab03-qa-04"].sudo_command("rmmod funrdma")
-
-        host_obj["cab03-qa-04"].disconnect()
+        fun_test.sleep("Write BW test complete", 5)
 
         table_data_headers = ["Size in bytes", "Write_BW in Gbps", "Msg Rate in Mpps"]
         table_data_cols = ["size_bandwidth", "write_bandwidth", "write_msg_rate"]
         table_data_rows = []
         row_data_dict = {}
 
-        test_results = host_obj["cab03-qa-05"].command("for size in 1 128 256 512;do cat /tmp/ib_bw_$size.txt | grep -A2 -i \"bytes\"| sed 1d| sed '$d';done")
+        test_results = \
+            host_obj["f1_1"][0].command("for size in 1 128 256 512 1024 4096;"
+                                        "do cat /tmp/ib_bw_$size.txt | grep -A2 -i bytes | sed 1d | sed '$d';done")
 
         for lines in test_results.rsplit("\n"):
             row_data_list = []
@@ -306,7 +385,8 @@ class IBWriteBW(FunTestCase):
                            table_data=table_data)
 
         table_data_rows.append(row_data_list)
-        host_obj["cab03-qa-05"].disconnect()
+        host_obj["f1_0"][0].disconnect()
+        host_obj["f1_1"][0].disconnect()
 
         fun_test.log("Test done")
 
@@ -331,39 +411,57 @@ class IBWriteLat(FunTestCase):
                                                       '/fs_connected_servers.json')
 
     def run(self):
-        # global funcp_obj, servers_mode, servers_list, fs_name
-        # fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        host_obj = fun_test.shared_variables["hosts_obj"]
+        server_core = fun_test.shared_variables["server_taskset_core"]
+        client_core = fun_test.shared_variables["client_taskset_core"]
 
-        # Get host_objects
-        hostdetails = self.server_key["fs"][fs_name]["host_pings"]
-        host_obj = {}
-        for host in self.server_key["fs"][fs_name]["host_pings"]:
-            host_obj[host] = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+        # Check if funeth is loaded or else bail out
+        for obj in host_obj:
+            check_funeth = host_obj[obj][0].lsmod("funeth")
+            fun_test.test_assert(check_funeth, "Check funeth load status")
 
         # Load drivers on host
         for obj in host_obj:
-            host_obj[obj].sudo_command("dmesg -c > /dev/null")
-            check_module = host_obj[obj].lsmod("funrdma")
+            host_obj[obj][0].sudo_command("dmesg -c > /dev/null")
+            host_obj[obj][0].sudo_command("killall -g ib_write_lat")
+            host_obj[obj][0].sudo_command("killall -g ib_write_bw")
+            check_module = host_obj[obj][0].lsmod("funrdma")
             if not check_module:
-                host_obj[obj].sudo_command("insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko && modprobe rdma_ucm")
+                host_obj[obj][0].sudo_command("insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko "
+                                              "&& modprobe rdma_ucm")
+                check_load_module = host_obj[obj][0].lsmod("funrdma")
+                fun_test.test_assert(check_load_module, "Funrdma load")
+                host_obj[obj][0].sudo_command("/etc/init.d/irqbalance stop")
+                host_obj[obj][0].sudo_command("tuned-adm profile network-throughput")
 
-        # Start ib_write_bw server on cab03-qa-04
-        host_obj["cab03-qa-04"].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
-                                        "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["cab03-qa-04"].start_bg_process(command="sh -c 'for size in 1 128 256 512;do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 20000 -R;sleep 2;done'", timeout=300)
+        # Start ib_write_bw server on F1_0 host
+        host_obj["f1_0"][0].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
+                                    " && export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
+        host_obj["f1_0"][0].start_bg_process(
+            command="sh -c 'for size in 1 128 256 512 1024 4096;"
+                    "do taskset -c {} ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R;"
+                    "sleep 2;done'".format(server_core),
+            timeout=500)
+        server_interface_name = host_obj["f1_0"][0].command(
+            "ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
 
-        # Start ib_write_bw client on cab03-qa-05
-        host_obj["cab03-qa-05"].sudo_command("sudo rm -rf /tmp/*")
-        host_obj["cab03-qa-05"].command(
+        server_ip_address = host_obj["f1_0"][0].command(
+            "ip addr list {} |grep \"inet \" |cut -d\' \' -f6|cut -d/ -f1".format(server_interface_name.rstrip()))
+
+        # Start ib_write_bw client on F1_1 host
+        host_obj["f1_1"][0].sudo_command("sudo rm -rf /tmp/*")
+        host_obj["f1_1"][0].command(
             "export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/ && "
             "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["cab03-qa-05"].command(
-            "for size in 1 128 256 512;do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 20000 -R 15.1.1.2 >> /tmp/ib_lat_$size.txt;sleep 5;done", timeout=300)
+        host_obj["f1_1"][0].command(
+            "for size in 1 128 256 512 1024 4096;"
+            "do taskset -c {} ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R {} >> /tmp/ib_lat_$size.txt;"
+            "sleep 5;done".format(client_core, server_ip_address.rstrip()),
+            timeout=500)
 
-        host_obj["cab03-qa-05"].sudo_command("rmmod funrdma")
-        host_obj["cab03-qa-04"].sudo_command("rmmod funrdma")
-
-        host_obj["cab03-qa-04"].disconnect()
+        host_obj["f1_1"][0].sudo_command("rmmod funrdma")
+        host_obj["f1_0"][0].sudo_command("rmmod funrdma")
+        fun_test.sleep("Write BW test complete", 5)
 
         table_data_headers = ["Size in bytes", "t_min[usec]", "t_max[usec]", "t_avg[usec]", "99%[usec]", "99.9%[usec]"]
         table_data_cols = ["size_latency", "write_min_latency", "write_max_latency", "write_avg_latency",
@@ -371,7 +469,9 @@ class IBWriteLat(FunTestCase):
         table_data_rows = []
         row_data_dict = {}
 
-        test_results = host_obj["cab03-qa-05"].command("for size in 1 128 256 512;do cat /tmp/ib_lat_$size.txt | grep -A2 -i \"bytes\" | sed 1d | sed '$d';done")
+        test_results = \
+            host_obj["f1_1"][0].command("for size in 1 128 256 512 1024 4096;"
+                                        "do cat /tmp/ib_lat_$size.txt | grep -A2 -i bytes | sed 1d | sed '$d';done")
 
         for lines in test_results.rsplit("\n"):
             row_data_list = []
@@ -407,7 +507,8 @@ class IBWriteLat(FunTestCase):
                            table_data=table_data)
 
         table_data_rows.append(row_data_list)
-        host_obj["cab03-qa-05"].disconnect()
+        host_obj["f1_0"][0].disconnect()
+        host_obj["f1_1"][0].disconnect()
 
         fun_test.log("Test done")
 
@@ -419,7 +520,7 @@ if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
-    # ts.add_test_case(IBWriteBW())
+    ts.add_test_case(IBWriteBW())
     ts.add_test_case(IBWriteLat())
 
     ts.run()

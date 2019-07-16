@@ -249,6 +249,13 @@ class TopologyHelper:
                 if peer:
                     if peer.type == peer.END_POINT_TYPE_BARE_METAL:
                         host_ready_max_wait_time = 360
+                        try:
+                            extra_attributes = peer.get_host_instance().extra_attributes
+                            if extra_attributes:
+                                host_ready_max_wait_time = extra_attributes.get("reboot_time", host_ready_max_wait_time)
+                                fun_test.log("Setting custom reboot time for host: {}".format(peer.get_instance()))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                         host_ready_timer = FunTimer(max_time=host_ready_max_wait_time)
                         host_is_ready = False
                         while not host_is_ready and not host_ready_timer.is_expired():
