@@ -294,7 +294,10 @@ def shut_all_vms(hostname):
     host_spec = all_hosts_specs[hostname]
     linux_obj = Linux(host_ip=host_spec["host_ip"], ssh_username=host_spec["ssh_username"],
                       ssh_password=host_spec["ssh_password"])
-    linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")
+    if linux_obj.check_ssh():
+        linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")
+    else:
+        fun_test.critical(message="Cannot ssh into host %s" % host_spec["host_ip"])
 
 
 def local_volume_create(storage_controller, vm_dict, uuid, count):
