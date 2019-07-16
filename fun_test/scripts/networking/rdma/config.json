@@ -18,7 +18,7 @@
       }
     ],
     "size_in_bytes": 1,
-    "duration_in_secs": 10,
+    "duration_in_secs": 120,
     "iterations": 100,
     "inline_size": 64
   },
@@ -26,6 +26,7 @@
     "name": "N_1",
     "description": "RDMA test between N clients and 1 server",
     "is_parallel": true,
+    "run_infinitely": 10,
     "clients": [
       {
         "client_id": "c1",
@@ -58,6 +59,7 @@
     "name": "N_N",
     "description": "RDMA test between N clients and N servers",
     "is_parallel": true,
+    "run_infinitely": 10,
     "hosts": [
       {
         "host_ip": "cab02-qa-05",

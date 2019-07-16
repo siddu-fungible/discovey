@@ -32,7 +32,7 @@ class ScriptSetup(FunTestScript):
         for server in servers_mode:
             print server
             shut_all_vms(hostname=server)
-            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
+            critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host %s " % server)
 
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"

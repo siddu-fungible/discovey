@@ -131,8 +131,11 @@ class Funeth:
             if self.funsdk_commit:
                 linux_obj.command('cd {}; git reset --hard {}'.format(sdkdir, self.funsdk_commit))
 
-            output = linux_obj.command(
-                'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
+            #output = linux_obj.command(
+            #    'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=600)
+            for pkg in ('hci', 'generator-bin'):
+                output = linux_obj.command(
+                    'cd {0}; scripts/bob --sdkup {2} -C {1}/FunSDK-cache'.format(sdkdir, self.ws, pkg))
             if re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL):
 
                 # Get FunSDK, fungible-host-driver commit/bld info

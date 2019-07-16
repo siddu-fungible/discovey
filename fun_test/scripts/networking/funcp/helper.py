@@ -277,7 +277,7 @@ def configure_vms(server_name, vm_dict):
                     if vm_dict[vm]["nvme_pci_device"] in pci_device_nvme:
                         linux_obj.command(command="virsh nodedev-dettach %s" % vm_dict[vm]["nvme_pci_device"])
                 # fun_test.sleep(message="Waiting for VFs detach", seconds=1)
-                start_op = linux_obj.command(command="virsh start %s" % vm)
+                start_op = linux_obj.command(command="virsh start %s" % vm, timeout=300)
                 critical_log(("%s started" % vm) in start_op, message="VM %s started" % vm)
             except Exception as ex:
                 if ex == "Timeout exceeded.":
@@ -285,7 +285,6 @@ def configure_vms(server_name, vm_dict):
 
         else:
             fun_test.critical(message="VM:%s is not installed on %s" % (vm, server_name))
-    fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
 
 def shut_all_vms(hostname):
@@ -295,7 +294,10 @@ def shut_all_vms(hostname):
     host_spec = all_hosts_specs[hostname]
     linux_obj = Linux(host_ip=host_spec["host_ip"], ssh_username=host_spec["ssh_username"],
                       ssh_password=host_spec["ssh_password"])
-    linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")
+    if linux_obj.check_ssh():
+        linux_obj.command(command="for i in $(virsh list --name); do virsh shutdown $i; done")
+    else:
+        fun_test.critical(message="Cannot ssh into host %s" % host_spec["host_ip"])
 
 
 def local_volume_create(storage_controller, vm_dict, uuid, count):
@@ -537,7 +539,8 @@ def test_host_fio(host, username="localadmin", password="Precious1*", strict=Fal
 
 
 def reload_nvme_driver(host, username="localadmin", password="Precious1*"):
-    host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    host_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password,
+                     connect_retry_timeout_max=60)
     host_obj.sudo_command("rmmod nvme; rmmod nvme_core", timeout=120)
     fun_test.sleep("Waiting for 10 seconds before loading driver", 10)
     host_obj.sudo_command("modprobe nvme")
