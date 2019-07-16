@@ -177,11 +177,11 @@ class ZipTeramarkTc(PalladiumTC):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(CryptoTeramarkTc())
-    myscript.add_test_case(PkeTeramarkTc())
+    # myscript.add_test_case(CryptoTeramarkTc())
+    # myscript.add_test_case(PkeTeramarkTc())
     myscript.add_test_case(EcTeramarkTc())
-    myscript.add_test_case(DfaTeramarkTc())
-    myscript.add_test_case(NfaTeramarkTc())
+    # myscript.add_test_case(DfaTeramarkTc())
+    # myscript.add_test_case(NfaTeramarkTc())
     myscript.add_test_case(JpegTeramarkTc())
     myscript.add_test_case(ZipTeramarkTc())
     myscript.run()
