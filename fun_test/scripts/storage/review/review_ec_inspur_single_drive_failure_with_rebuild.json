@@ -5,7 +5,7 @@
     "disable_f1_index": 1,
     "f1_in_use": 0,
     // Script won't disturb the syslog_level setting, if it is set to "default". If any other level is needed set this config to that level in int format
-    "syslog_level": "default",
+    "syslog_level": 2,
     "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 1099, "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"},
     "command_timeout": 5,
     "reboot_timeout": 300,
@@ -47,7 +47,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "ndata": 4,
       "nparity": 2,
-      "capacity": 137438953472,
+      "capacity": 68719476736,
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
@@ -71,7 +71,7 @@
     "failure_start_time_ratio": 0.05,
     "fs_type": "ext3",
     "test_volume_start_index": 0,
-    "test_file_size": 53687091200,
+    "test_file_size": 26843545600,
     // Ensure that dividing block size with the test_file_size doesn't give any fractions
     "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": 1048576},
     //
