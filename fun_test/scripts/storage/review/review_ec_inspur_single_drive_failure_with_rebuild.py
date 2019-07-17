@@ -645,6 +645,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             host_handle = self.host_info[host_name]["handle"]
             nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
             volume_name_list = self.host_info[host_name]["volume_name_list"]
+            self.host_info[host_name]["src_file"] = {}
+            self.host_info[host_name]["dst_file"] = {}
 
             # Creating the filesystem in the volumes configured and available to the host
             if self.fs_type == "xfs":
@@ -676,6 +678,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                            mount_point))
 
             # Creating input file
+            self.host_info[host_name]["src_file"]["file1"] = {}
+            self.host_info[host_name]["src_file"]["file1"]["md5sum"] = []
             self.dd_create_file["count"] = self.test_file_size / self.dd_create_file["block_size"]
 
             # Write a file into the EC volume of size self.test_file_size bytes
@@ -686,6 +690,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                  timeout=self.dd_create_file["count"])
             fun_test.test_assert(self.src_md5sum, "Finding md5sum of source file {}".
                                  format(self.dd_create_file["output_file"]))
+            self.host_info[host_name]["src_file"]["file1"]["md5sum"].append(self.src_md5sum)
+            print("Modified host_info for files is: {}".format(self.host_info[host_name]["src_file"]))
+            print("src file md5sum is: {}".format(self.host_info[host_name]["src_file"]["file1"]["md5sum"]))
 
             # Test Preparation Done
             # Starting the test
@@ -703,12 +710,13 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Calling the iostat method to collect the iostat for the while performing IO (copying file)
             iostat_count = cp_timeout / self.iostat_args["interval"]
-            fun_test.log("Collecting iostat in {}".format(host_name))
+            fun_test.log("Collecting iostat on {}".format(host_name))
             if start_stats:
                 iostat_post_fix_name = "{}_iostat_fail_drive.txt".format(host_name)
                 iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=iostat_post_fix_name)
-                iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
+                iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
+                                                           output_file=self.iostat_args["output_file"],
                                                            interval=self.iostat_args["interval"],
                                                            count=int(iostat_count))
             else:
@@ -779,7 +787,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.add_auxillary_file(description="Host {} IOStat Usage - Drive Failure".format(host_name),
                                         filename=iostat_artifact_file[host_name])
 
+            self.host_info[host_name]["dst_file"]["file1"] = {}
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                if num not in self.host_info[host_name]["dst_file"]["file1"]:
+                    self.host_info[host_name]["dst_file"]["file1"][num] = {}
+                    self.host_info[host_name]["dst_file"]["file1"][num]["md5sum"] = []
                 cur_dst_file = dst_file1[num - self.test_volume_start_index]
                 dst_file_info = host_handle.ls(cur_dst_file)
                 fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
@@ -790,8 +802,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(self.dst_md5sum, "Finding md5sum of copied file {}".format(cur_dst_file))
                 fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & destination file")
+                self.host_info[host_name]["dst_file"]["file1"][num]["md5sum"].append(self.dst_md5sum)
+            print("2: Modified host info for files is: {}".format(self.host_info[host_name]["dst_file"]))
 
             # Creating another input file
+            self.host_info[host_name]["src_file"]["file2"] = {}
+            self.host_info[host_name]["src_file"]["file2"]["md5sum"] = []
             self.dd_create_file["count"] = self.test_file_size / self.dd_create_file["block_size"]
 
             # Write a file into the EC volume of size self.test_file_size bytes
@@ -802,6 +818,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                  timeout=self.dd_create_file["count"])
             fun_test.test_assert(self.src_md5sum, "Finding md5sum of source file {}".
                                  format(self.dd_create_file["output_file"]))
+            self.host_info[host_name]["src_file"]["file2"]["md5sum"].append(self.src_md5sum)
+            print("2. Modified host_info for files is: {}".format(self.host_info[host_name]["src_file"]))
+            print("2. src file md5sum is: {}".format(self.host_info[host_name]["src_file"]["file2"]["md5sum"]))
 
             # Copying the file into the volume
             source_file = self.dd_create_file["output_file"]
@@ -812,12 +831,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # TODO : capture IOSTAT in artifact file before start copy and after copy command is done
                 # Calling the iostat method to collect the iostat for the while performing IO (copying file)
                 iostat_count = cp_timeout / self.iostat_args["interval"]  # Duplicate?
-                fun_test.log("Collecting iostat in {}".format(host_name))
+                fun_test.log("Collecting iostat on {}".format(host_name))
                 if start_stats:
                     iostat_post_fix_name = "{}_iostat_re_enable_drive.txt".format(host_name)
                     iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=iostat_post_fix_name)
-                    iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
+                    iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
+                                                               output_file=self.iostat_args["output_file"],
                                                                interval=self.iostat_args["interval"],
                                                                count=int(iostat_count))
                 else:
@@ -881,7 +901,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.add_auxillary_file(description="Host {} IOStat Usage - Drive Re-enabled".format(host_name),
                                         filename=iostat_artifact_file[host_name])
 
+            self.host_info[host_name]["dst_file"]["file2"] = {}
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                if num not in self.host_info[host_name]["dst_file"]["file1"]:
+                    self.host_info[host_name]["dst_file"]["file2"][num] = {}
+                    self.host_info[host_name]["dst_file"]["file2"][num]["md5sum"] = []
                 cur_dst_file = dst_file2[num - self.test_volume_start_index]
                 dst_file_info = host_handle.ls(cur_dst_file)
                 fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
@@ -892,6 +916,24 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(self.dst_md5sum, "Finding md5sum of copied file {}".format(cur_dst_file))
                 fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & destination file")
+                self.host_info[host_name]["dst_file"]["file2"][num]["md5sum"].append(self.dst_md5sum)
+            print("3: Modified host info for files is: {}".format(self.host_info[host_name]["dst_file"]))
+
+            # Re-verifying integrity of file1 after rebuild successful
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                cur_dst_file = dst_file1[num - self.test_volume_start_index]
+                dst_file_info = host_handle.ls(cur_dst_file)
+                fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
+                fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
+                                              message="Copying {} bytes file into {}".format(self.test_file_size,
+                                                                                             cur_dst_file))
+                self.dst_md5sum = host_handle.md5sum(file_name=cur_dst_file, timeout=cp_timeout)
+                fun_test.test_assert(self.dst_md5sum, "Finding md5sum of existing file {}".format(cur_dst_file))
+                # fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
+                #                              message="Comparing md5sum of source & destination file")
+                fun_test.test_assert_expected(expected=self.host_info[host_name]["src_file"]["file1"]["md5sum"],
+                                              actual=self.dst_md5sum,
+                                              message="Comparing md5sum of source & existing file before rebuild")
 
     def cleanup(self):
         pass
