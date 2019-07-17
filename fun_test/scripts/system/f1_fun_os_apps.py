@@ -49,8 +49,7 @@ class ChannelParallTc(FunTestCase):
                   "NOTE": "channel parall app",
                   "DISABLE_ASSERTIONS": "true"}
 
-        build_result = jenkins_manager.build(params=params, extra_emails=[
-            "team-regression@fungible.com"])
+        build_result = jenkins_manager.build(params=params)
         fun_test.test_assert(build_result, "Build completed normally")
 
 
@@ -83,8 +82,7 @@ class SoakFlowsBusyLoopTc(FunTestCase):
                   "NOTE": "soak flows busy loop",
                   "DISABLE_ASSERTIONS": "true"}
 
-        build_result = jenkins_manager.build(params=params, extra_emails=[
-            "team-regression@fungible.com"])
+        build_result = jenkins_manager.build(params=params)
         fun_test.test_assert(build_result, "Build completed normally")
 
 
@@ -117,8 +115,7 @@ class SoakFlowsMemcpy1MbNonCohTc(FunTestCase):
                   "NOTE": "soak flows memcpy 1mb non coh",
                   "DISABLE_ASSERTIONS": "true"}
 
-        build_result = jenkins_manager.build(params=params, extra_emails=[
-            "team-regression@fungible.com"])
+        build_result = jenkins_manager.build(params=params)
         fun_test.test_assert(build_result, "Build completed normally")
 
 
