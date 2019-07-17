@@ -1000,7 +1000,7 @@ if __name__ == "__main_bmv_datasets__":
         chart.save()
     print "changed datasets and charts to show different qdepths"
 
-if __name__ == "__main__":
+if __name__ == "__main_underlay_overlay__":
     internal_chart_names = ["HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
                             "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
                             "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
@@ -1117,3 +1117,117 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added overlay charts"
+
+if __name__ == "__main_l4_firewall__":
+    model_name = "TeraMarkJuniperNetworkingPerformance"
+    chart_name = "temp"
+    internal_throughput_chart_names = ["l4_firewall_flow_4m_flows_throughput", "l4_firewall_flow_4m_flows_pps",
+                            "l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps"]
+    internal_latency_chart_names = ["l4_firewall_flow_4m_flows_latency_full_load",
+                                    "l4_firewall_flow_4m_flows_latency_half_load",
+                                    "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
+    flow_type = "NU_LE_VP_NU_L4_FW"
+    offloads = False
+    base_line_date = datetime(year=2019, month=7, day=15, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_throughput_chart_names:
+        if "throughput" in internal_chart_name:
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            visualization_unit = PerfUnit.UNIT_GBITS_PER_SEC
+            data_set_unit = PerfUnit.UNIT_MBITS_PER_SEC
+            output_name = "output_throughput"
+        else:
+            y1_axis_title = PerfUnit.UNIT_MPPS
+            visualization_unit = PerfUnit.UNIT_MPPS
+            data_set_unit = PerfUnit.UNIT_PPS
+            output_name = "output_pps"
+        if "128m" in internal_chart_name:
+            num_flows = 128000000
+            frame_sizes = [64]
+        else:
+            num_flows = 4000000
+            frame_sizes = [64, 1500, 362.94]
+        half_load_latency = False
+        data_sets = []
+        for frame_size in frame_sizes:
+            if frame_size == 362.94:
+                name = "IMIX"
+            else:
+                name = str(frame_size) + 'B'
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_flow_type": flow_type,
+                                      "input_frame_size": frame_size, "input_offloads": offloads, "input_num_flows":
+                                          num_flows, "input_protocol": "UDP", "input_half_load_latency": half_load_latency}
+            one_data_set["output"] = {"name": output_name, "reference": -1, "min": 0, "max": -1, "expected": -1,
+                                      "unit": data_set_unit}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Amit Surana (amit.surana@fungible.com)",
+                    source="",
+                    positive=True,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=visualization_unit,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added throughput and pps charts for l4 firewall"
+    for internal_chart_name in internal_latency_chart_names:
+        y1_axis_title = PerfUnit.UNIT_USECS
+        visualization_unit = PerfUnit.UNIT_USECS
+        data_set_unit = PerfUnit.UNIT_USECS
+        if "full_load" in internal_chart_name:
+            half_load_latency = False
+        else:
+            half_load_latency = True
+        if "128m" in internal_chart_name:
+            num_flows = 128000000
+            frame_sizes = [64]
+        else:
+            num_flows = 4000000
+            frame_sizes = [64, 1500, 362.94]
+        positive = False
+        latency_names = ["min", "avg", "max"]
+        data_sets = []
+        for frame_size in frame_sizes:
+            for latency_name in latency_names:
+                if frame_size == 362.94:
+                    name = "IMIX" + "-" + latency_name
+                else:
+                    name = str(frame_size) + 'B' + "-" + latency_name
+                output_name = "output_latency_" + latency_name
+                one_data_set = {}
+                one_data_set["name"] = name
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_flow_type": flow_type,
+                                          "input_frame_size": frame_size, "input_offloads": offloads, "input_num_flows":
+                                              num_flows, "input_protocol": "UDP",
+                                          "input_half_load_latency": half_load_latency}
+                one_data_set["output"] = {"name": output_name, "reference": -1, "min": 0, "max": -1, "expected": -1,
+                                          "unit": data_set_unit}
+                data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Amit Surana (amit.surana@fungible.com)",
+                    source="",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=visualization_unit,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added latency charts for juniper l4 firewall"
+

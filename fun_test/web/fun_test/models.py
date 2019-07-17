@@ -12,7 +12,7 @@ from web.fun_test.demo1_models import *
 from rest_framework import serializers
 from datetime import datetime, timedelta
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority, JobStatusType
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 import json
 from asset.asset_global import AssetType
 from rest_framework.serializers import ModelSerializer
@@ -335,6 +335,7 @@ class JenkinsJobIdMap(models.Model):
     sdk_version = models.TextField(default="")
     build_date = models.DateTimeField(default=datetime.now)
     suite_execution_id = models.IntegerField(default=-1)
+    associated_suites = ArrayField(models.IntegerField(default=-1), default=[])
 
     def __str__(self):
         return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
