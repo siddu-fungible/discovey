@@ -747,6 +747,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                         self.failure_drive_index[num - self.test_volume_start_index]]
                     fail_device = self.ec_info["device_id"][num][
                         self.failure_drive_index[num - self.test_volume_start_index]]
+
+                    ''' Marking drive as failed '''
+                    '''
                     device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
                                                                                 command_duration=self.command_timeout)
                     fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
@@ -760,6 +763,19 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                   message="Device ID {} is marked as Failed".format(fail_device))
                     print('Stats of device {} and device state is {}'.format(device_stats,
                                                                              device_stats["data"]["device state"]))
+                    '''
+                    ''' Marking drive as failed '''
+
+                    ''' Marking volume as failed '''
+
+                    volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
+                    fun_test.test_assert(volume_fail_status["status"], "Disabling Volume UUID {}".format(fail_uuid))
+                    # Validate if volume is marked as Failed
+                    device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
+                    volume_stats = self.storage_controller.peek(device_props_tree)
+                    print("Volume status is: {}".format(volume_stats["data"]))
+
+                    ''' Marking volume as failed '''
 
             print("2. self.ec info after disabling the device : {}".format(self.ec_info))
             timer = FunTimer(max_time=cp_timeout)
@@ -855,6 +871,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                     self.failure_drive_index[num - self.test_volume_start_index]]
                 fail_device = self.ec_info["device_id"][num][
                     self.failure_drive_index[num - self.test_volume_start_index]]
+
+                ''' Marking drive as failed '''
+                '''
                 device_up_status = self.storage_controller.enable_device(device_id=fail_device,
                                                                          command_duration=self.command_timeout)
                 fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
@@ -866,6 +885,20 @@ class ECVolumeLevelTestcase(FunTestCase):
                                               message="Device ID {} is Enabled again".format(fail_device))
                 print('Stats of device {} and device state is {}'.format(device_stats,
                                                                          device_stats["data"]["device state"]))
+
+                '''
+                ''' Marking drive as failed '''
+
+                ''' Marking volume as failed '''
+
+                volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
+                fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".format(fail_uuid))
+                # Validate if Volume is enabled again
+                device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
+                volume_stats = self.storage_controller.peek(device_props_tree)
+                print("Volume status is: {}".format(volume_stats["data"]))
+
+                ''' Marking volume as failed '''
 
                 # TODO Call the rebuild for same volume
                 rebuild_device = self.storage_controller.plex_rebuild(
