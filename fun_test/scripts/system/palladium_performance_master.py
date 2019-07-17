@@ -78,7 +78,7 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
                      "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance", "HuLatencyUnderLoadPerformance",
-                     "TeraMarkFunTcpConnectionsPerSecondPerformance"]
+                     "TeraMarkFunTcpConnectionsPerSecondPerformance", "AlibabaRdmaPerformance"]
 
 
 def get_rounded_time():

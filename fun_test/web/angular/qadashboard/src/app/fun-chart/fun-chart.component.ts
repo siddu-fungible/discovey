@@ -54,6 +54,7 @@ export class FunChartComponent implements OnInit, OnChanges {
             }
           },
         },
+        colors: ['#058DC7', '#000000', '#ED561B', '#008000', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FD3A94', '#6AF9C4'],
         tooltip: {
           formatter: function () {
             if (self.tooltipFormatter)
