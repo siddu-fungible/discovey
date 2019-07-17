@@ -23,6 +23,9 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() public pointClickCallback: Function;
   @Output() pointInfo: EventEmitter<any> = new EventEmitter();
   @Input() enableLegend: boolean = true;
+  @Input() backgroundColor: string = null;
+  @Input() seriesColors: string[] = null;
+
   chart: any;
   point: any = null;
 
@@ -54,7 +57,6 @@ export class FunChartComponent implements OnInit, OnChanges {
             }
           },
         },
-        colors: ['#058DC7', '#000000', '#ED561B', '#008000', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FD3A94', '#6AF9C4'],
         tooltip: {
           formatter: function () {
             if (self.tooltipFormatter)
@@ -133,6 +135,13 @@ export class FunChartComponent implements OnInit, OnChanges {
             });
           }
         }
+      }
+      if (this.backgroundColor) {
+        chartOptions.chart["backgroundColor"] = this.backgroundColor;
+      }
+      if (this.seriesColors) {
+        chartOptions.colors = this.seriesColors;
+        chartOptions.plotOptions.series["lineWidth"] = 1.5;
       }
     } else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
