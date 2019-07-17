@@ -741,59 +741,207 @@ if __name__ == "__main2__":
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
 
 if __name__ == "__main__":
-    # prepare_status_db()
-    value_dict = {
-    "date_time": get_data_collection_time(),
-    "volume_type": "BLT",
-    "test": "FioSeqRead",
-    "block_size": "4K",
-    "io_depth": 128,
-    "io_size": "8G",
-    "operation": "read",
-    "num_ssd": 1,
-    "num_volume": 1,
-    "num_threads": 4,
-    "platform": FunPlatform.F1,
-    "version": fun_test.get_version(),
-    "write_iops": 100,
-    "read_iops": 200,
-    "write_throughput": 300,
-    "read_throughput": 400,
-    "write_avg_latency": 500,
-    "write_90_latency": 600,
-    "write_95_latency": 700,
-    "write_99_99_latency": 800,
-    "write_99_latency": 900,
-    "read_avg_latency": 1000,
-    "read_90_latency": 1100,
-    "read_95_latency": 1200,
-    "read_99_99_latency": 1300,
-    "read_99_latency": 1400
-    }
-
+    json_text = [
+        {
+            "mode": "100G",
+            "version": 7248,
+            "timestamp": "2019-07-16 03:44:44.780229-07:00",
+            "half_load_latency": False,
+            "flow_type": "NU_LE_VP_NU_L4_FW",
+            "frame_size": 64.0,
+            "pps": 163371647.1,
+            "throughput": 112399.78,
+            "latency_min": 2.62,
+            "latency_max": 6081.88,
+            "latency_avg": 12.85,
+            "jitter_min": 0.0,
+            "jitter_max": 1.77,
+            "jitter_avg": 0.02,
+            "num_flows": 4000000,
+            "offloads": False,
+            "protocol": "UDP"
+        },
+        {
+            "mode": "100G",
+            "version": 7248,
+            "timestamp": "2019-07-16 03:44:44.780229-07:00",
+            "half_load_latency": False,
+            "flow_type": "NU_LE_VP_NU_L4_FW",
+            "frame_size": 1500.0,
+            "pps": 16118257.56,
+            "throughput": 195998.04,
+            "latency_min": 2.64,
+            "latency_max": 5350.76,
+            "latency_avg": 4.65,
+            "jitter_min": 0.0,
+            "jitter_max": 13.38,
+            "jitter_avg": 0.14,
+            "num_flows": 4000000,
+            "offloads": False,
+            "protocol": "UDP"
+        },
+        {
+            "mode": "100G",
+            "version": 7248,
+            "timestamp": "2019-07-16 03:44:44.780229-07:00",
+            "half_load_latency": False,
+            "flow_type": "NU_LE_VP_NU_L4_FW",
+            "frame_size": 362.94,
+            "pps": 65515849.81,
+            "throughput": 196517.51,
+            "latency_min": 2.42,
+            "latency_max": 9532.24,
+            "latency_avg": 14.29,
+            "jitter_min": 0.0,
+            "jitter_max": 3.23,
+            "jitter_avg": 0.07,
+            "num_flows": 4000000,
+            "offloads": False,
+            "protocol": "UDP"
+        },
+        {
+            "mode": "100G",
+            "version": 7248,
+            "timestamp": "2019-07-16 03:44:44.780229-07:00",
+            "half_load_latency": True,
+            "flow_type": "NU_LE_VP_NU_L4_FW",
+            "frame_size": 64.0,
+            "pps": 81394608.23,
+            "throughput": 55999.57,
+            "latency_min": 2.42,
+            "latency_max": 8199.44,
+            "latency_avg": 10.6,
+            "jitter_min": 0.0,
+            "jitter_max": 4.23,
+            "jitter_avg": 0.06,
+            "num_flows": 4000000,
+            "offloads": False,
+            "protocol": "UDP"
+        },
+        {
+            "mode": "100G",
+            "version": 7248,
+            "timestamp": "2019-07-16 03:44:44.780229-07:00",
+            "half_load_latency": True,
+            "flow_type": "NU_LE_VP_NU_L4_FW",
+            "frame_size": 1500.0,
+            "pps": 8059127.75,
+            "throughput": 97998.99,
+            "latency_min": 2.66,
+            "latency_max": 5203.26,
+            "latency_avg": 3.39,
+            "jitter_min": 0.0,
+            "jitter_max": 9.22,
+            "jitter_avg": 0.13,
+            "num_flows": 4000000,
+            "offloads": False,
+            "protocol": "UDP"
+        },
+        {
+            "mode": "100G",
+            "version": 7248,
+            "timestamp": "2019-07-16 03:44:44.780229-07:00",
+            "half_load_latency": True,
+            "flow_type": "NU_LE_VP_NU_L4_FW",
+            "frame_size": 362.94,
+            "pps": 32799674.48,
+            "throughput": 98383.97,
+            "latency_min": 2.44,
+            "latency_max": 12366.0,
+            "latency_avg": 9.97,
+            "jitter_min": 0.0,
+            "jitter_max": 9.28,
+            "jitter_avg": 0.09,
+            "num_flows": 4000000,
+            "offloads": False,
+            "protocol": "UDP"
+        },
+        {
+            "mode": "100G",
+            "flow_type": "NU_LE_VP_NU_L4_FW",
+            "frame_size": 64.0,
+            "pps": 60385949.0,
+            "timestamp": "2019-07-16 03:44:44.780229-07:00",
+            "version": 7248,
+            "throughput": 31882.0,
+            "num_flows": 128000000,
+            "offloads": False,
+            "protocol": "UDP",
+            "latency_min": "2.623",
+            "latency_max": "2059.74",
+            "latency_avg": "45.788",
+            "jitter_min": "0",
+            "jitter_max": "0.705",
+            "jitter_avg": "0.035",
+            "half_load_latency": False
+        }
+    ]
     unit_dict = {
-    "write_iops_unit": PerfUnit.UNIT_OPS,
-    "read_iops_unit": PerfUnit.UNIT_OPS,
-    "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
-    "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
-    "write_avg_latency_unit": PerfUnit.UNIT_USECS,
-    "write_90_latency_unit": PerfUnit.UNIT_USECS,
-    "write_95_latency_unit": PerfUnit.UNIT_USECS,
-    "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
-    "write_99_latency_unit": PerfUnit.UNIT_USECS,
-    "read_avg_latency_unit": PerfUnit.UNIT_USECS,
-    "read_90_latency_unit": PerfUnit.UNIT_USECS,
-    "read_95_latency_unit": PerfUnit.UNIT_USECS,
-    "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
-    "read_99_latency_unit": PerfUnit.UNIT_USECS
+        "throughput_unit": PerfUnit.UNIT_MBITS_PER_SEC,
+        "pps_unit": PerfUnit.UNIT_PPS,
+        "latency_min_unit": PerfUnit.UNIT_USECS,
+        "latency_max_unit": PerfUnit.UNIT_USECS,
+        "latency_avg_unit": PerfUnit.UNIT_USECS,
+        "jitter_min_unit": PerfUnit.UNIT_USECS,
+        "jitter_max_unit": PerfUnit.UNIT_USECS,
+        "jitter_avg_unit": PerfUnit.UNIT_USECS
+
     }
-    model_name = "AlibabaPerformance"
-    status = fun_test.PASSED
-    try:
-        generic_helper = ModelHelper(model_name=model_name)
-        generic_helper.set_units(validate=False, **unit_dict)
-        generic_helper.add_entry(**value_dict)
-        generic_helper.set_status(status)
-    except Exception as ex:
-        fun_test.critical(str(ex))
+    # prepare_status_db()
+    # value_dict = {
+    # "date_time": get_data_collection_time(),
+    # "volume_type": "BLT",
+    # "test": "FioSeqRead",
+    # "block_size": "4K",
+    # "io_depth": 128,
+    # "io_size": "8G",
+    # "operation": "read",
+    # "num_ssd": 1,
+    # "num_volume": 1,
+    # "num_threads": 4,
+    # "platform": FunPlatform.F1,
+    # "version": fun_test.get_version(),
+    # "write_iops": 100,
+    # "read_iops": 200,
+    # "write_throughput": 300,
+    # "read_throughput": 400,
+    # "write_avg_latency": 500,
+    # "write_90_latency": 600,
+    # "write_95_latency": 700,
+    # "write_99_99_latency": 800,
+    # "write_99_latency": 900,
+    # "read_avg_latency": 1000,
+    # "read_90_latency": 1100,
+    # "read_95_latency": 1200,
+    # "read_99_99_latency": 1300,
+    # "read_99_latency": 1400
+    # }
+
+    # unit_dict = {
+    # "write_iops_unit": PerfUnit.UNIT_OPS,
+    # "read_iops_unit": PerfUnit.UNIT_OPS,
+    # "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    # "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    # "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+    # "write_90_latency_unit": PerfUnit.UNIT_USECS,
+    # "write_95_latency_unit": PerfUnit.UNIT_USECS,
+    # "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    # "write_99_latency_unit": PerfUnit.UNIT_USECS,
+    # "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+    # "read_90_latency_unit": PerfUnit.UNIT_USECS,
+    # "read_95_latency_unit": PerfUnit.UNIT_USECS,
+    # "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    # "read_99_latency_unit": PerfUnit.UNIT_USECS
+    # }
+
+    model_name = "TeraMarkJuniperNetworkingPerformance"
+    for value_dict in json_text:
+        status = fun_test.PASSED
+        try:
+            generic_helper = ModelHelper(model_name=model_name)
+            generic_helper.set_units(validate=True, **unit_dict)
+            generic_helper.add_entry(**value_dict)
+            generic_helper.set_status(status)
+        except Exception as ex:
+            fun_test.critical(str(ex))
     print "used generic helper to add an entry"
