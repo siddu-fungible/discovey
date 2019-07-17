@@ -945,6 +945,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                   "interval and count details")
 
             for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
                 fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
                 nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
@@ -976,7 +977,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 io_factor += 1
 
                 row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
-                fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
                 # Calling the mpstat method to collect the mpstats for the current iteration in all the hosts used in
                 # the test
@@ -1025,6 +1025,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                           iodepth=fio_iodepth, name=fio_job_name,
                                                                           cpus_allowed=host_numa_cpus,
                                                                           **self.fio_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -1165,6 +1169,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=resource_bam_artifact_file)
+
+            fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
