@@ -472,7 +472,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 # Detaching all the EC/LS volumes to the external server
-                """for num in xrange(self.ec_info["num_volumes"]):
+                for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
                         ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -485,7 +485,7 @@ class ECVolumeLevelScript(FunTestScript):
                 command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
                 self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
