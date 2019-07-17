@@ -72,6 +72,7 @@ import {NgxJsonViewerModule} from "ngx-json-viewer";
 import {AnnouncementComponent} from './announcement/announcement.component';
 import { PerformanceSummaryWidgetComponent } from './performance/performance-summary-widget/performance-summary-widget.component';
 import { FunCardComponent } from './fun-card/fun-card.component';
+import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
 
 @NgModule({
   declarations: [
@@ -127,7 +128,8 @@ import { FunCardComponent } from './fun-card/fun-card.component';
     RegressionSummaryWidgetComponent,
     PerformanceSummaryWidgetComponent,
     AnnouncementComponent,
-    FunCardComponent
+    FunCardComponent,
+    SmokeTestStorageWidgetComponent
   ],
   imports: [
     BsDropdownModule,
