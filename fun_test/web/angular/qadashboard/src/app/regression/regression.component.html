@@ -180,7 +180,7 @@
               </td>
               <td>
               <span class="pseudo-anchor"
-                    (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})">{{ userMap[suiteExecution.fields.submitter_email].first_name }} {{ userMap[suiteExecution.fields.submitter_email].last_name.charAt(0)}}
+                    (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})">{{ userMap[suiteExecution.fields.submitter_email]?.first_name }} {{ userMap[suiteExecution.fields.submitter_email]?.last_name.charAt(0)}}
               </span>
               </td>
 
