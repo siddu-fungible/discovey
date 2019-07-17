@@ -1118,7 +1118,7 @@ if __name__ == "__main_underlay_overlay__":
                     platform=FunPlatform.F1).save()
     print "added overlay charts"
 
-if __name__ == "__main__":
+if __name__ == "__main_l4_firewall__":
     model_name = "TeraMarkJuniperNetworkingPerformance"
     chart_name = "temp"
     internal_throughput_chart_names = ["l4_firewall_flow_4m_flows_throughput", "l4_firewall_flow_4m_flows_pps",
@@ -1230,5 +1230,4 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added latency charts for juniper l4 firewall"
-
 
