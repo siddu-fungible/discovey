@@ -472,7 +472,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 # Detaching all the EC/LS volumes to the external server
-                """for num in xrange(self.ec_info["num_volumes"]):
+                for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
                         ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -485,7 +485,7 @@ class ECVolumeLevelScript(FunTestScript):
                 command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
                 self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
@@ -935,7 +935,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
                 resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=resource_bam_post_fix_name)
-                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_resource_bam_stats,
+                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=collect_resource_bam_stats,
                                                                      storage_controller=self.storage_controller,
                                                                      output_file=resource_bam_artifact_file,
                                                                      interval=self.resource_bam_args["interval"],
@@ -945,6 +945,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                   "interval and count details")
 
             for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
                 fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
                 nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
@@ -976,7 +977,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 io_factor += 1
 
                 row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
-                fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
                 # Calling the mpstat method to collect the mpstats for the current iteration in all the hosts used in
                 # the test
@@ -1025,6 +1025,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                           iodepth=fio_iodepth, name=fio_job_name,
                                                                           cpus_allowed=host_numa_cpus,
                                                                           **self.fio_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -1165,6 +1169,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=resource_bam_artifact_file)
+
+            fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
