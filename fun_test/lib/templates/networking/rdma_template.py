@@ -131,8 +131,11 @@ class RdmaTemplate(object):
                 if '-s' in kwargs:
                     self.size = kwargs['-s']
 
-                cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (self.test_type, self.connection_type, ibv_device,
-                                                             port_num, self.size)
+                if not self.connection_type:
+                    cmd = "%s -d %s -p %d -F -s %d " % (self.test_type, ibv_device, port_num, self.size)
+                else:
+                    cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (self.test_type, self.connection_type, ibv_device,
+                                                                 port_num, self.size)
                 for key, val in kwargs.items():
                     if type(val) == list:
                         for op in val:
@@ -162,8 +165,12 @@ class RdmaTemplate(object):
                 if '-n' in kwargs and client_cmd:
                     self.iterations = kwargs['-n']
 
-                cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (self.test_type, self.connection_type, ibv_device,
-                                                                   port_num, self.inline_size, self.size)
+                if not self.connection_type:
+                    cmd = "%s -d %s -p %d -F -I %d -s %d " % (self.test_type, ibv_device, port_num, self.inline_size,
+                                                              self.size)
+                else:
+                    cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (self.test_type, self.connection_type, ibv_device,
+                                                                       port_num, self.inline_size, self.size)
                 for key, val in kwargs.items():
                     if type(val) == list:
                         for op in val:
@@ -242,6 +249,7 @@ class RdmaTemplate(object):
                 fun_test.log('Client Process Started: %s' % process_id)
                 fun_test.sleep(message="Client cmd running infinitely", seconds=120)
                 client_obj.kill_process(process_id=process_id, signal=9)
+                server_obj.kill_process(process_id=server_obj.rdma_process_id, signal=9)
                 output = client_obj.read_file(file_name=tmp_output_file, include_last_line=True)
                 result_dict = self._parse_rdma_output(output=output)
             else:
@@ -479,6 +487,7 @@ class RdmaLatencyUnderLoadTemplate(object):
             fun_test.log('Client Process Started: %s' % process_id)
             fun_test.sleep(message="Client cmd running infinitely", seconds=120)
             client_obj.kill_process(process_id=process_id, signal=9)
+            server_obj.kill_process(process_id=server_obj.rdma_process_id, signal=9)
             output = client_obj.read_file(file_name=tmp_output_file, include_last_line=True)
             result_dict = self.lat_test_template._parse_rdma_output(output=output)
             result_dict.update({'test_type': test_type})
@@ -490,22 +499,47 @@ class RdmaLatencyUnderLoadTemplate(object):
 
     def create_table(self, records):
         try:
-            columns = records[0].keys()
-            table_obj = PrettyTable(columns)
-            rows = []
+            table_obj1 = None
+            table_obj2 = None
+            lat_columns = None
+            bw_columns = None
             for record in records:
-                table_obj.add_row(record.values())
-                rows.append(record.values())
+                if record['test_type'] == self.lat_test_template.test_type:
+                    lat_columns = record.keys()
+                    table_obj1 = PrettyTable(lat_columns)
+                else:
+                    bw_columns = record.keys()
+                    table_obj2 = PrettyTable(bw_columns)
+                if table_obj1 and table_obj2:
+                    break
+            lat_rows = []
+            bw_rows = []
+            for record in records:
+                if record['test_type'] == self.lat_test_template.test_type:
+                    table_obj1.add_row(record.values())
+                    lat_rows.append(record.values())
+                else:
+                    table_obj2.add_row(record.values())
+                    bw_rows.append(record.values())
+
             fun_test.log_section("Result table for Latency Under Load Test")
             fun_test.log_disable_timestamps()
             fun_test.log("\n")
-            fun_test.log(table_obj)
+            fun_test.log(table_obj1)
+            fun_test.log("\n")
+            fun_test.log(table_obj2)
             fun_test.log_enable_timestamps()
 
-            headers = columns
-            table_name = "Result table for Latency Under Load Test"
-            table_data = {'headers': headers, 'rows': rows}
-            fun_test.add_table(panel_header='RDMA Test Result Table',
+            headers = lat_columns
+            table_name = "Latency Result table for Latency Under Load Test"
+            table_data = {'headers': headers, 'rows': lat_rows}
+            fun_test.add_table(panel_header='RDMA Test Result Table (Latency)',
+                               table_name=table_name, table_data=table_data)
+
+            headers = bw_columns
+            table_name = "BW Result table for Latency Under Load Test"
+            table_data = {'headers': headers, 'rows': bw_rows}
+            fun_test.add_table(panel_header='RDMA Test Result Table (BW)',
                                table_name=table_name, table_data=table_data)
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -513,7 +547,7 @@ class RdmaLatencyUnderLoadTemplate(object):
 
     def cleanup(self):
         try:
-            for c_s_dict in self.client_server_objs:
+            for c_s_dict in self.bw_client_server_objs:
                 for client_obj, server_obj in c_s_dict.items():
                     client_obj.disconnect()
                     if type(server_obj) == list:

@@ -112,7 +112,7 @@
     },
     "bw_test_size_in_bytes": 4096,
     "lat_test_size_in_bytes": 1,
-    "duration_in_secs": 10,
+    "duration_in_secs": 120,
     "rate_limit": 2.5,
     "rate_units": "g",
     "iterations": 100,

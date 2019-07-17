@@ -139,7 +139,6 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
         lat_test_size_in_bytes = self.rdma_helper.get_traffic_size_in_bytes(key_name='lat_test_size_in_bytes')
         duration = self.rdma_helper.get_traffic_duration_in_secs()
         inline_size = self.rdma_helper.get_inline_size()
-        run_infinetly = self.rdma_helper.get_run_infinetly()
         iterations = self.rdma_helper.get_iterations()
         rate_limit = self.rdma_helper.get_rate_limit()
         rate_units = self.rdma_helper.get_rate_units()
@@ -151,8 +150,9 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
                                                           bw_test_size=bw_test_size_in_bytes,
                                                           lat_test_size=lat_test_size_in_bytes, inline_size=inline_size,
                                                           duration=duration, iterations=iterations,
-                                                          run_infinitely=run_infinetly, rate_limit=rate_limit,
-                                                          rate_units=rate_units, hosts=self.rdma_helper.host_objs)
+                                                          run_infinitely=None, rate_limit=rate_limit,
+                                                          rate_units=rate_units, hosts=self.rdma_helper.host_objs,
+                                                          connection_type=None)
 
         if self.setup_test:
             result = self.rdma_template.setup_test()
@@ -175,7 +175,7 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
-        pass
+        self.rdma_template.cleanup()
 
 
 if __name__ == '__main__':
