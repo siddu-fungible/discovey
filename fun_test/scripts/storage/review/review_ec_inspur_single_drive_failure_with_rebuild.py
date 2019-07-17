@@ -903,7 +903,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             self.host_info[host_name]["dst_file"]["file2"] = {}
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
-                if num not in self.host_info[host_name]["dst_file"]["file1"]:
+                if num not in self.host_info[host_name]["dst_file"]["file2"]:
                     self.host_info[host_name]["dst_file"]["file2"][num] = {}
                     self.host_info[host_name]["dst_file"]["file2"][num]["md5sum"] = []
                 cur_dst_file = dst_file2[num - self.test_volume_start_index]
@@ -929,9 +929,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                              cur_dst_file))
                 self.dst_md5sum = host_handle.md5sum(file_name=cur_dst_file, timeout=cp_timeout)
                 fun_test.test_assert(self.dst_md5sum, "Finding md5sum of existing file {}".format(cur_dst_file))
-                # fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
-                #                              message="Comparing md5sum of source & destination file")
-                fun_test.test_assert_expected(expected=self.host_info[host_name]["src_file"]["file1"]["md5sum"],
+                fun_test.test_assert_expected(expected=self.host_info[host_name]["src_file"]["file1"]["md5sum"][0],
                                               actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & existing file before rebuild")
 
