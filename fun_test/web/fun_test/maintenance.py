@@ -1231,3 +1231,69 @@ if __name__ == "__main_l4_firewall__":
                     platform=FunPlatform.F1).save()
     print "added latency charts for juniper l4 firewall"
 
+if __name__ == "__main__":
+    charts = ["iops", "latency"]
+    xaxis_title = "log2(qDepth)"
+    chart_type = ChartType.REGULAR
+    fun_chart_type = FunChartType.LINE_CHART
+    for chart in charts:
+        if "iops" in chart:
+            names = ["read(1 vol)", "write(1 vol)"]
+            chart_name = "inspur_8111_8k_rand_rw_2f1"
+            yaxis_title = "log10(" + PerfUnit.UNIT_OPS + ")"
+            title = "qdepth vs IOPS (1 vol)"
+        else:
+            names = ["read-avg(1 vol)", "write-avg(1 vol)"]
+            chart_name = "inspur_8116_8k_rand_rw_2f1"
+            yaxis_title = "log10(" + PerfUnit.UNIT_USECS + ")"
+            title = "qdepth vs latency (1 vol)"
+        data_sets = []
+        for name in names:
+            if "iops" in chart:
+                if "read" in name:
+                    output_name = "output_read_iops"
+                else:
+                    output_name = "output_write_iops"
+            else:
+                if "read" in name:
+                    output_name = "output_read_avg_latency"
+                else:
+                    output_name = "output_write_avg_latency"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["filters"] = {}
+            one_data_set["filters"] = [{"name": 1, "model_name": "BltVolumePerformance", "filter": {
+                "input_fio_job_name": "inspur_8k_random_read_write_iodepth_1_f1_2_vol_1",
+                "input_platform": FunPlatform.F1}},
+                                       {"name": 8, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_8_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 16, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_16_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 32, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_32_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 64, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_64_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 128, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_128_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 256, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}}]
+            one_data_set["output_field"] = output_name
+            data_sets.append(one_data_set)
+        print json.dumps(data_sets)
+        chart_id = LastChartId.get_next_id()
+        Chart(chart_id=chart_id, title=title, x_axis_title=xaxis_title, y_axis_title=yaxis_title,
+              chart_type=chart_type, fun_chart_type=fun_chart_type, series_filters=data_sets, x_scale="log2",
+              y_scale="log10").save()
+        chart = MetricChart.objects.get(internal_chart_name=chart_name)
+        if chart:
+            chart.companion_charts = [chart_id]
+            chart.save()
+        print "added chart id: {}", format(chart_id)
+    print "added companion charts"
+
