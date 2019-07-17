@@ -199,11 +199,12 @@ class NicEmulation(FunTestCase):
         # Add static routes on Containers
         funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
         fun_test.sleep(message="Waiting before ping tests", seconds=10)
+        host_objs = fun_test.shared_variables["hosts_obj"]
 
         # Ping QFX from both F1s
-        # ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
-        # for container in ping_dict:
-        #     funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
+        ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
+        for container in ping_dict:
+            funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
         # Ping vlan to vlan
         funcp_obj.test_cc_pings_fs()
@@ -216,6 +217,17 @@ class NicEmulation(FunTestCase):
             if result == "2":
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
+
+        # Set CPU governor to performance for all cores
+        for obj in host_objs:
+            online_cpu = \
+                host_objs[obj][0].command("lscpu | grep -i \"on-line\" | awk -F ':' '{print $2}' | tr -d ' '")
+            online_cpu_list = online_cpu.rstrip().rsplit('-')
+            for i in range(int(online_cpu_list[0]), int(online_cpu_list[1])+1):
+                host_objs[obj][0].sudo_command(
+                    "echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor".format(i))
+                host_objs[obj][0].sudo_command("cat /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor".format(i))
+
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
@@ -223,7 +235,6 @@ class NicEmulation(FunTestCase):
         setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
 
         # Using the first host instance of f1_0 & f1_1 object for all tests
-        host_objs = fun_test.shared_variables["hosts_obj"]
         for obj in host_objs:
             host_objs[obj][0].command("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
 
@@ -273,6 +284,8 @@ class IBWriteBW(FunTestCase):
         # Load drivers on host
         for obj in host_obj:
             host_obj[obj][0].sudo_command("dmesg -c > /dev/null")
+            host_obj[obj][0].sudo_command("killall -g ib_write_lat")
+            host_obj[obj][0].sudo_command("killall -g ib_write_bw")
             check_module = host_obj[obj][0].lsmod("funrdma")
             if not check_module:
                 host_obj[obj][0].sudo_command("insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko "
@@ -282,19 +295,43 @@ class IBWriteBW(FunTestCase):
                 host_obj[obj][0].sudo_command("/etc/init.d/irqbalance stop")
                 host_obj[obj][0].sudo_command("tuned-adm profile network-throughput")
 
+        # Get NUMA Node host connected to F1_0
+        server_interface_name = \
+            host_obj["f1_0"][0].command("ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
+
+        numa_node = host_obj["f1_0"][0].command("cat /sys/class/net/{}/device/numa_node".
+                                                format(server_interface_name.rstrip()))
+        numa_core_list = host_obj["f1_0"][0].command("lscpu | grep -i node{} | grep -o ':.*,' | tr -d ':, '".
+                                                     format(numa_node.rstrip()))
+        print numa_core_list
+        numa_cores = numa_core_list.rsplit('-')
+        taskset_core = random.randint(int(numa_cores[0]), int(numa_cores[1]))
+        fun_test.shared_variables["server_taskset_core"] = taskset_core
+        print taskset_core
+
         # Start ib_write_bw server on F1_0
         host_obj["f1_0"][0].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
                                     " && export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["f1_0"][0].start_bg_process(command="sh -c 'for size in 1 128 256 512 1024 4096; "
-                                                     "do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 180 -R;"
-                                                     "sleep 2;done'",
-                                             timeout=1400)
-        server_interface_name = \
-            host_obj["f1_0"][0].command("ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
+        host_obj["f1_0"][0].start_bg_process(
+            command="sh -c 'for size in 1 128 256 512 1024 4096;"
+                    "do taskset -c {} ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 180 -R;"
+                    "sleep 2;done'".format(taskset_core), timeout=1400)
 
         server_ip_address = \
             host_obj["f1_0"][0].command("ip addr list {} |grep \"inet \" |cut -d\' \' -f6|cut -d/ -f1".
                                         format(server_interface_name.rstrip()))
+
+        # Get NUMA Node host connected to F1_1
+        client_interface_name = \
+            host_obj["f1_1"][0].command("ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
+
+        numa_node = host_obj["f1_1"][0].command("cat /sys/class/net/{}/device/numa_node".
+                                                format(client_interface_name.rstrip()))
+        numa_core_list = host_obj["f1_1"][0].command("lscpu | grep -i node{} | grep -o ':.*,' | tr -d ':, '".
+                                                     format(numa_node.rstrip()))
+        numa_cores = numa_core_list.rsplit('-')
+        taskset_core = random.randint(int(numa_cores[0]), int(numa_cores[1]))
+        fun_test.shared_variables["client_taskset_core"] = taskset_core
 
         # Start ib_write_bw client on F1_1
         host_obj["f1_1"][0].sudo_command("sudo rm -rf /tmp/*")
@@ -303,12 +340,10 @@ class IBWriteBW(FunTestCase):
             "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
         host_obj["f1_1"][0].command(
             "for size in 1 128 256 512 1024 4096;"
-            "do ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 180 -R {} >> /tmp/ib_bw_$size.txt;sleep 5;done".
-            format(server_ip_address.rstrip()),
+            "do taskset -c {} ib_write_bw --report_gbits -F -d funrdma0 -s $size -D 180 -R {} >> /tmp/ib_bw_$size.txt;"
+            "sleep 5;done".format(taskset_core, server_ip_address.rstrip()),
             timeout=1400)
 
-        # host_obj["f1_1"][0].sudo_command("rmmod funrdma")
-        # host_obj["f1_0"][0].sudo_command("rmmod funrdma")
         fun_test.sleep("Write BW test complete", 5)
 
         table_data_headers = ["Size in bytes", "Write_BW in Gbps", "Msg Rate in Mpps"]
@@ -377,6 +412,8 @@ class IBWriteLat(FunTestCase):
 
     def run(self):
         host_obj = fun_test.shared_variables["hosts_obj"]
+        server_core = fun_test.shared_variables["server_taskset_core"]
+        client_core = fun_test.shared_variables["client_taskset_core"]
 
         # Check if funeth is loaded or else bail out
         for obj in host_obj:
@@ -386,6 +423,8 @@ class IBWriteLat(FunTestCase):
         # Load drivers on host
         for obj in host_obj:
             host_obj[obj][0].sudo_command("dmesg -c > /dev/null")
+            host_obj[obj][0].sudo_command("killall -g ib_write_lat")
+            host_obj[obj][0].sudo_command("killall -g ib_write_bw")
             check_module = host_obj[obj][0].lsmod("funrdma")
             if not check_module:
                 host_obj[obj][0].sudo_command("insmod /mnt/ws/fungible-host-drivers/linux/kernel/funrdma.ko "
@@ -398,10 +437,11 @@ class IBWriteLat(FunTestCase):
         # Start ib_write_bw server on F1_0 host
         host_obj["f1_0"][0].command("export PATH=$PATH:/mnt/ws/fungible-rdma-core/build/bin/:/mnt/ws/fungible-perftest/"
                                     " && export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
-        host_obj["f1_0"][0].start_bg_process(command="sh -c 'for size in 1 128 256 512 1024 4096;"
-                                                     "do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R;"
-                                                     "sleep 2;done'",
-                                             timeout=500)
+        host_obj["f1_0"][0].start_bg_process(
+            command="sh -c 'for size in 1 128 256 512 1024 4096;"
+                    "do taskset -c {} ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R;"
+                    "sleep 2;done'".format(server_core),
+            timeout=500)
         server_interface_name = host_obj["f1_0"][0].command(
             "ip link ls up | awk '{print $2}' | grep -i \"00:f1:1d\" -B 1 |head -1|tr -d :")
 
@@ -415,8 +455,8 @@ class IBWriteLat(FunTestCase):
             "export LD_LIBRARY_PATH=/mnt/ws/fungible-rdma-core/build/lib/")
         host_obj["f1_1"][0].command(
             "for size in 1 128 256 512 1024 4096;"
-            "do ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R {} >> /tmp/ib_lat_$size.txt;sleep 5;done".
-            format(server_ip_address.rstrip()),
+            "do taskset -c {} ib_write_lat -I 64 -F -d funrdma0 -s $size -n 100000 -R {} >> /tmp/ib_lat_$size.txt;"
+            "sleep 5;done".format(client_core, server_ip_address.rstrip()),
             timeout=500)
 
         host_obj["f1_1"][0].sudo_command("rmmod funrdma")

@@ -956,7 +956,7 @@ if __name__ == "__main_bmv_local_storage__":
                     work_in_progress=False).save()
     print "added latency charts"
 
-if __name__ == "__main__":
+if __name__ == "__main_bmv_datasets__":
     internal_iops_chart_names = ["bmv_storage_local_ssd_random_read_iops", "bmv_storage_local_ssd_random_write_iops"]
     num_threads = [1, 16, 32, 64, 128]
     for internal_chart_name in internal_iops_chart_names:
@@ -999,3 +999,236 @@ if __name__ == "__main__":
         chart.data_sets = json.dumps(data_sets)
         chart.save()
     print "changed datasets and charts to show different qdepths"
+
+if __name__ == "__main_underlay_overlay__":
+    internal_chart_names = ["HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_under_load",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_under_load",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency", "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_under_load"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        internal_chart_name = internal_chart_name.replace("FCP", "NFCP_2f1")
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_flow_type"] = data_set["inputs"]["input_flow_type"].replace("FCP", "NFCP_2F1")
+            data_set["output"]["reference"] = -1
+            data_set["output"]["expected"] = -1
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=chart.description,
+                    owner_info=chart.owner_info,
+                    source=chart.source,
+                    positive=chart.positive,
+                    y1_axis_title=chart.y1_axis_title,
+                    visualization_unit=chart.visualization_unit,
+                    metric_model_name=chart.metric_model_name,
+                    base_line_date=chart.base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added Host to host 2f1s"
+    model_names = ["HuThroughputPerformance", "HuLatencyPerformance", "HuLatencyUnderLoadPerformance"]
+    for model_name in model_names:
+        charts = MetricChart.objects.filter(metric_model_name=model_name)
+        for chart in charts:
+            internal_chart_name = chart.internal_chart_name + "_underlay"
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_flow_type"] = data_set["inputs"]["input_flow_type"] + "_UL_VM"
+                data_set["output"]["reference"] = -1
+                data_set["output"]["expected"] = -1
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name="temp",
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info=chart.owner_info,
+                        source=chart.source,
+                        positive=chart.positive,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.visualization_unit,
+                        metric_model_name=chart.metric_model_name,
+                        base_line_date=chart.base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added underlay charts"
+    internal_chart_names = ["HU_HU_FCP_8TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_FCP_8TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_FCP_8TCP_2H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_FCP_1TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_latency_under_load_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_throughput_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_pps_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_latency_underlay",
+                            "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_latency_under_load_underlay"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        internal_chart_name = internal_chart_name.replace("underlay", "overlay")
+        if "NFCP" in internal_chart_name:
+            flow_type = "HU_HU_NFCP_OL_VM"
+        else:
+            flow_type = "HU_HU_FCP_OL_VM"
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["inputs"]["input_flow_type"] = flow_type
+            data_set["output"]["reference"] = -1
+            data_set["output"]["expected"] = -1
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=chart.description,
+                    owner_info=chart.owner_info,
+                    source=chart.source,
+                    positive=chart.positive,
+                    y1_axis_title=chart.y1_axis_title,
+                    visualization_unit=chart.visualization_unit,
+                    metric_model_name=chart.metric_model_name,
+                    base_line_date=chart.base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added overlay charts"
+
+if __name__ == "__main__":
+    model_name = "TeraMarkJuniperNetworkingPerformance"
+    chart_name = "temp"
+    internal_throughput_chart_names = ["l4_firewall_flow_4m_flows_throughput", "l4_firewall_flow_4m_flows_pps",
+                            "l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps"]
+    internal_latency_chart_names = ["l4_firewall_flow_4m_flows_latency_full_load",
+                                    "l4_firewall_flow_4m_flows_latency_half_load",
+                                    "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
+    flow_type = "NU_LE_VP_NU_L4_FW"
+    offloads = False
+    base_line_date = datetime(year=2019, month=7, day=15, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_throughput_chart_names:
+        if "throughput" in internal_chart_name:
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            visualization_unit = PerfUnit.UNIT_GBITS_PER_SEC
+            data_set_unit = PerfUnit.UNIT_MBITS_PER_SEC
+            output_name = "output_throughput"
+        else:
+            y1_axis_title = PerfUnit.UNIT_MPPS
+            visualization_unit = PerfUnit.UNIT_MPPS
+            data_set_unit = PerfUnit.UNIT_PPS
+            output_name = "output_pps"
+        if "128m" in internal_chart_name:
+            num_flows = 128000000
+            frame_sizes = [64]
+        else:
+            num_flows = 4000000
+            frame_sizes = [64, 1500, 362.94]
+        half_load_latency = False
+        data_sets = []
+        for frame_size in frame_sizes:
+            if frame_size == 362.94:
+                name = "IMIX"
+            else:
+                name = str(frame_size) + 'B'
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_flow_type": flow_type,
+                                      "input_frame_size": frame_size, "input_offloads": offloads, "input_num_flows":
+                                          num_flows, "input_protocol": "UDP", "input_half_load_latency": half_load_latency}
+            one_data_set["output"] = {"name": output_name, "reference": -1, "min": 0, "max": -1, "expected": -1,
+                                      "unit": data_set_unit}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Amit Surana (amit.surana@fungible.com)",
+                    source="",
+                    positive=True,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=visualization_unit,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added throughput and pps charts for l4 firewall"
+    for internal_chart_name in internal_latency_chart_names:
+        y1_axis_title = PerfUnit.UNIT_USECS
+        visualization_unit = PerfUnit.UNIT_USECS
+        data_set_unit = PerfUnit.UNIT_USECS
+        if "full_load" in internal_chart_name:
+            half_load_latency = False
+        else:
+            half_load_latency = True
+        if "128m" in internal_chart_name:
+            num_flows = 128000000
+            frame_sizes = [64]
+        else:
+            num_flows = 4000000
+            frame_sizes = [64, 1500, 362.94]
+        positive = False
+        latency_names = ["min", "avg", "max"]
+        data_sets = []
+        for frame_size in frame_sizes:
+            for latency_name in latency_names:
+                if frame_size == 362.94:
+                    name = "IMIX" + "-" + latency_name
+                else:
+                    name = str(frame_size) + 'B' + "-" + latency_name
+                output_name = "output_latency_" + latency_name
+                one_data_set = {}
+                one_data_set["name"] = name
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_flow_type": flow_type,
+                                          "input_frame_size": frame_size, "input_offloads": offloads, "input_num_flows":
+                                              num_flows, "input_protocol": "UDP",
+                                          "input_half_load_latency": half_load_latency}
+                one_data_set["output"] = {"name": output_name, "reference": -1, "min": 0, "max": -1, "expected": -1,
+                                          "unit": data_set_unit}
+                data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Amit Surana (amit.surana@fungible.com)",
+                    source="",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=visualization_unit,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added latency charts for juniper l4 firewall"
+
+
