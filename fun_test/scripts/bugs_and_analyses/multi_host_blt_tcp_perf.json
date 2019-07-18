@@ -91,7 +91,6 @@
       "randread"
     ],
     "fio_bs": "4k",
-    // "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)"],
     "fio_jobs_iodepth": ["(32, 1)"],
     "fio_job_name": {
       "randread": "nhosts"
