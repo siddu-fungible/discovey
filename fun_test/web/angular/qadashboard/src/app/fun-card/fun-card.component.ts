@@ -14,21 +14,30 @@ import {CommonService} from "../services/common/common.service";
 
 
 @Component({
-  selector: 'app-fun-card',
+  selector: 'fun-card',
   templateUrl: './fun-card.component.html',
   styleUrls: ['./fun-card.component.css']
 })
 export class FunCardComponent implements OnInit {
 
-  @Input() title: string;
+  @Input() title: any;
   @Input() subtitle: string;
-  @Input() text: string;
   @Input() textTitle: string;
-  @Input() icon: string;
+  @Input() iconLink: string;
+  @Input() tooltip: string;
+  @Input() text: string;
+  @Input() footerTextTitle: string;
+  @Input() footerText: string;
+  @Input() footerIconLink: string;
+  @Input() footerTooltip: string;
+  @Input() enableFooter: boolean = false;
+
 
   constructor() { }
 
   ngOnInit() {
+    console.log(this.title);
+    console.log(this.subtitle);
 
   }
 

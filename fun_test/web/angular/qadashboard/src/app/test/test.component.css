@@ -47,3 +47,14 @@ table {
 .card-text {
   font-weight: bold;
 }
+
+.column {
+  float: left;
+  width: 50%;
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
