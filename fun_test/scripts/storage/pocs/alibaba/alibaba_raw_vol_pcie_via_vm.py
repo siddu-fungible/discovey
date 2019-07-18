@@ -62,15 +62,15 @@ class RawVolumePerfScript(FunTestScript):
     def setup(self):
 
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/raw_vol_pcie_perf.json')
+                                                      fun_test.get_script_name_without_ext() + ".json")
         fun_test.shared_variables["server_key"] = self.server_key
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -176,7 +176,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        testconfig_file = fun_test.get_script_parent_directory() + '/raw_vol_pcie_perf.json'
+        testconfig_file = fun_test.get_script_parent_directory() + fun_test.get_script_name_without_ext() + ".json"
         self.server_key = fun_test.parse_file_to_json(testconfig_file)
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.server_key["fs"][fs_name]["fs-name"])
 
