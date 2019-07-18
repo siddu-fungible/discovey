@@ -1231,7 +1231,7 @@ if __name__ == "__main_l4_firewall__":
                     platform=FunPlatform.F1).save()
     print "added latency charts for juniper l4 firewall"
 
-if __name__ == "__main__":
+if __name__ == "__main_companion2__":
     charts = ["iops", "latency"]
     xaxis_title = "log2(qDepth)"
     chart_type = ChartType.REGULAR
@@ -1296,4 +1296,12 @@ if __name__ == "__main__":
             chart.save()
         print "added chart id: {}", format(chart_id)
     print "added companion charts"
+
+if __name__ == "__main__":
+    entries = JenkinsJobIdMap.objects.all()
+    for entry in entries:
+        if len(entry.associated_suites) > 0:
+            print entry.associated_suites
+            entry.associated_suites = list(set(entry.associated_suites))
+            entry.save()
 
