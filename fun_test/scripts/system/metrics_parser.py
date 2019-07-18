@@ -89,6 +89,8 @@ class MetricParser():
             return self.soak_dma_memcpy_memset(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         elif "SoakFlows" in model_name:
             return self.soak_flows(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
+        elif "EcPerformance" in model_name:
+            return self.ec_performace(logs=logs, date_time=date_time, platform=platform)
         else:
             return {}
 
