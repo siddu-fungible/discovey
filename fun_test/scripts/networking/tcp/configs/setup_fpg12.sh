@@ -8,4 +8,4 @@ sudo ifconfig fpg12 up
 sudo route add -net 29.1.1.0/24 gw 23.1.1.2
 sudo route add -host 20.1.1.1 gw 23.1.1.2
 sudo arp -s 23.1.1.2 00:de:ad:be:ef:00
-sudo /usr/sbin/set_irq_affinity_bynode.sh 1 fpg12
+#sudo /usr/sbin/set_irq_affinity_bynode.sh 1 fpg12
