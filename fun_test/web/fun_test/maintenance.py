@@ -1305,6 +1305,131 @@ if __name__ == "__main_associated_suites__":
             entry.associated_suites = list(set(entry.associated_suites))
             entry.save()
 
+if __name__ == "__main_voltest_blt__":
+
+    # Latency charts for various instances
+    internal_chart_names = OrderedDict([('voltest_blt_1_instance_latency', 1), ('voltest_blt_8_instance_latency', 8),
+                                        ('voltest_blt_12_instance_latency', 12)])
+
+    owner_info = "Sunil Subramanya (sunil.subramanya@fungible.com)"
+    source = "https://github.com/fungible-inc/FunOS/blob/5d979f094bc34c0425f8d27d0e5bcaeb4aa80954/apps/md_table_test.c"
+    positive = False
+    y1_axis_title = PerfUnit.UNIT_NSECS
+    platform = FunPlatform.F1
+
+    for internal_chart_name in internal_chart_names:
+        blt_instance = internal_chart_names[internal_chart_name]
+        model_name = 'VoltestBlt{}Performance'.format(blt_instance)
+        description = "TBD"
+        chart_name = "voltest blt {} instance latency".format(blt_instance)
+        one_data_set = {}
+        data_sets = []
+
+        inputs = {
+            "input_platform": platform,
+            "input_blt_instance": blt_instance
+        }
+        output_names = OrderedDict([('output_min_latency', 'min'), ('output_max_latency', 'max'),
+                                    ('output_avg_latency', 'avg')])
+        for output_name in output_names:
+            output = {
+                "name": output_name,
+                "unit": PerfUnit.UNIT_NSECS,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = output_names[output_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Data sets: {}".format(data_sets))
+        print ("Metric id: {}".format(metric_id))
+
+    # IOPS and Bandwidht charts for various instances
+
+    internal_chart_names = OrderedDict([('voltest_blt_1_instance_iops', 1), ('voltest_blt_8_instance_iops', 8),
+                                        ('voltest_blt_12_instance_iops', 12), ('voltest_blt_1_instance_bandwidth', 1),
+                                        ('voltest_blt_8_instance_bandwidth', 8),
+                                        ('voltest_blt_12_instance_bandwidth', 12)])
+
+    owner_info = "Sunil Subramanya (sunil.subramanya@fungible.com)"
+    source = "https://github.com/fungible-inc/FunOS/blob/5d979f094bc34c0425f8d27d0e5bcaeb4aa80954/apps/md_table_test.c"
+    positive = True
+    platform = FunPlatform.F1
+
+    for internal_chart_name in internal_chart_names:
+        blt_instance = internal_chart_names[internal_chart_name]
+        model_name = 'VoltestBlt{}Performance'.format(blt_instance)
+        one_data_set = {}
+        data_sets = []
+
+        if "iops" in internal_chart_name:
+            chart_name = "voltest blt {} instance(s) IOPS".format(blt_instance)
+            output_name = "output_iops"
+            y1_axis_title = PerfUnit.UNIT_OPS
+            name = "iops"
+            description = "TBD"
+        elif "bandwidth" in internal_chart_name:
+            chart_name = "voltest blt {} instance(s) Bandwidth".format(blt_instance)
+            output_name = "output_bandwidth"
+            y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
+            name = "bandwidth"
+            description = "TBD"
+
+        inputs = {
+            "input_platform": platform,
+            "input_blt_instance": blt_instance
+        }
+
+        output = {
+            "name": output_name,
+            "unit": y1_axis_title,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = name
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+
 if __name__ == "__main__":
     internal_chart_names = ["juniper_new_ipsec_enc_single_tunnel_output_throughput",
                             "juniper_new_ipsec_enc_single_tunnel_output_pps",
@@ -1365,5 +1490,4 @@ if __name__ == "__main__":
                     base_line_date=base_line_date,
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
-    print "added charts fro ipsec encryption and decryption"
-
+    print "added charts for ipsec encryption and decryption"

@@ -2789,6 +2789,72 @@ class SoakFlowsMemcpy1MBNonCoh(models.Model):
     def __str__(self):
         return (str(self.__dict__))
 
+
+class VoltestBlt1Performance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    input_blt_instance = models.IntegerField(verbose_name="BLT instance", default=-1)
+
+    output_min_latency = models.FloatField(verbose_name="Minimun latency", default=-1)
+    output_max_latency = models.FloatField(verbose_name="Maximum latency", default=-1)
+    output_avg_latency = models.FloatField(verbose_name="Average latency", default=-1)
+    output_iops = models.FloatField(verbose_name="IOPS", default=-1)
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+
+    output_min_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_max_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+
+
+class VoltestBlt8Performance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    input_blt_instance = models.IntegerField(verbose_name="BLT instance", default=-1)
+
+    output_min_latency = models.FloatField(verbose_name="Minimun latency", default=-1)
+    output_max_latency = models.FloatField(verbose_name="Maximum latency", default=-1)
+    output_avg_latency = models.FloatField(verbose_name="Average latency", default=-1)
+    output_iops = models.FloatField(verbose_name="IOPS", default=-1)
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+
+    output_min_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_max_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+
+
+class VoltestBlt12Performance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+    input_blt_instance = models.IntegerField(verbose_name="BLT instance", default=-1)
+
+    output_min_latency = models.FloatField(verbose_name="Minimun latency", default=-1)
+    output_max_latency = models.FloatField(verbose_name="Maximum latency", default=-1)
+    output_avg_latency = models.FloatField(verbose_name="Average latency", default=-1)
+    output_iops = models.FloatField(verbose_name="IOPS", default=-1)
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+
+    output_min_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_max_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_NSECS)
+    output_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+
 '''
 ANALYTICS_MAP = {
     "Performance1": {

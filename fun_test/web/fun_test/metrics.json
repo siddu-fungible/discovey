@@ -692,6 +692,88 @@
                     ]
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "storage_voltest_blt",
+                "label": "BLT",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "voltest_blt_1_instance",
+                    "label": "1 Instance(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "VoltestBlt1Performance",
+                        "name": "voltest_blt_1_instance_latency",
+                        "label": "Latency",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt1Performance",
+                        "name": "voltest_blt_1_instance_iops",
+                        "label": "IOPS",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt1Performance",
+                        "name": "voltest_blt_1_instance_bandwidth",
+                        "label": "Bandwidth",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "voltest_blt_8_instance",
+                    "label": "8 Instance(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "VoltestBlt8Performance",
+                        "name": "voltest_blt_8_instance_latency",
+                        "label": "Latency",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt8Performance",
+                        "name": "voltest_blt_8_instance_iops",
+                        "label": "IOPS",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt8Performance",
+                        "name": "voltest_blt_8_instance_bandwidth",
+                        "label": "Bandwidth",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "voltest_blt_12_instance",
+                    "label": "12 Instance(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "VoltestBlt12Performance",
+                        "name": "voltest_blt_12_instance_latency",
+                        "label": "Latency",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt12Performance",
+                        "name": "voltest_blt_12_instance_iops",
+                        "label": "IOPS",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt12Performance",
+                        "name": "voltest_blt_12_instance_bandwidth",
+                        "label": "Bandwidth",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
