@@ -1308,7 +1308,12 @@ if __name__ == "__main_associated_suites__":
 if __name__ == "__main__":
     internal_chart_names = ["juniper_new_ipsec_enc_single_tunnel_output_throughput",
                             "juniper_new_ipsec_enc_single_tunnel_output_pps",
-                            "juniper_new_ipsec_enc_multi_tunnel_output_throughput", "juniper_new_ipsec_enc_multi_tunnel_output_pps"]
+                            "juniper_new_ipsec_enc_multi_tunnel_output_throughput",
+                            "juniper_new_ipsec_enc_multi_tunnel_output_pps",
+                            "juniper_new_ipsec_dec_single_tunnel_output_throughput",
+                            "juniper_new_ipsec_dec_single_tunnel_output_pps",
+                            "juniper_new_ipsec_dec_multi_tunnel_output_throughput",
+                            "juniper_new_ipsec_dec_multi_tunnel_output_pps"]
     chart_name = "temp"
     positive = True
     model_name = "TeraMarkJuniperNetworkingPerformance"
@@ -1326,10 +1331,14 @@ if __name__ == "__main__":
             output_name = "output_pps"
             data_set_unit = PerfUnit.UNIT_PPS
         data_sets = []
-        if "single_tunnel" in internal_chart_name:
+        if "enc_single_tunnel" in internal_chart_name:
             flow_type = "IPSEC_ENCRYPT_SINGLE_TUNNEL"
-        else:
+        elif "enc_multi_tunnel" in internal_chart_name:
             flow_type = "IPSEC_ENCRYPT_MULTI_TUNNEL"
+        elif "dec_single_tunnel" in internal_chart_name:
+            flow_type = "IPSEC_DECRYPT_SINGLE_TUNNEL"
+        else:
+            flow_type = "IPSEC_DECRYPT_MULTI_TUNNEL"
         for frame_size in frame_sizes:
             name = str(frame_size) + 'B'
             one_data_set = {}
@@ -1356,5 +1365,5 @@ if __name__ == "__main__":
                     base_line_date=base_line_date,
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
-    print "added latency charts for juniper l4 firewall"
+    print "added charts fro ipsec encryption and decryption"
 
