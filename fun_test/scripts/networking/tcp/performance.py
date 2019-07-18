@@ -572,9 +572,9 @@ class TcpPerformance16Conn2Host(FunTestCase):
 if __name__ == '__main__':
     ts = TcpPerformance()
 
-    #ts.add_test_case(TcpPerformance1Conn())
+    ts.add_test_case(TcpPerformance1Conn())
     ts.add_test_case(TcpPerformance4Conn())
-    #ts.add_test_case(TcpPerformance8Conn())
+    ts.add_test_case(TcpPerformance8Conn())
     ts.add_test_case(TcpPerformance16Conn2Host())
 
     ts.run()
