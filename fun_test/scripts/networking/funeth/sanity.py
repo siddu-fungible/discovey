@@ -78,24 +78,24 @@ MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
-    if TB in ('FS7', 'FS11'):
-        for nu in funeth_obj.nu_hosts:
-            linux_obj = funeth_obj.linux_obj_dict[nu]
-            fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
-        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
+    #if TB in ('FS7', 'FS11'):
+        #for nu in funeth_obj.nu_hosts:
+        #    linux_obj = funeth_obj.linux_obj_dict[nu]
+        #    fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
+        #fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
     for nu in funeth_obj.nu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[nu]
         #if TB in ('FS7', 'FS11'):
             #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
         fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
-        # TODO: temp workaround
-        if linux_obj.host_ip == 'poc-server-06':
-            linux_obj.sudo_command('sudo ethtool --offload fpg0 lro on; sudo ethtool -k fpg0')
         fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
                              'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
+        # TODO: temp workaround
+        #if linux_obj.host_ip == 'poc-server-06':
+        #    linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro on; sudo ethtool -k fpg0')
 
 
 def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):

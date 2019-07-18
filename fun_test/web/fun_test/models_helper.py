@@ -567,6 +567,10 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
     print"Hardware_version: {}".format(hardware_version)
     try:
         entry = JenkinsJobIdMap.objects.get(completion_date=completion_date, build_date=build_date)
+        if entry.suite_execution_id != suite_execution_id:
+            entry.associated_suites.append(suite_execution_id)
+            entry.associated_suites = list(set(entry.associated_suites))
+            entry.save()
     except ObjectDoesNotExist:
         entry = JenkinsJobIdMap(completion_date=completion_date,
                                 jenkins_job_id=jenkins_job_id,
