@@ -70,8 +70,6 @@ class FlatNode {
   }
 
 
-
-
 }
 
 enum Mode {
@@ -110,6 +108,7 @@ export class PerformanceComponent implements OnInit {
   miniGridMaxWidth: string;
   miniGridMaxHeight: string;
   status: string = null;
+  flatNodesMap: any = {};
 
   currentRegressionUrl: string = null;
   currentJenkinsUrl: string = null;
@@ -308,11 +307,13 @@ export class PerformanceComponent implements OnInit {
     statusNode.hide = false;
     statusNode.special = true;
     this.flatNodes.push(statusNode);
+    this.flatNodesMap[statusNode.gUid] = statusNode;
     for (let child in statusFlatNode) {
       let statusChild = statusFlatNode[child];
       statusChild.indent = 1;
       statusNode.addChild(statusChild);
       this.flatNodes.push(statusChild);
+      this.flatNodesMap[statusChild.gUid] = statusChild;
     }
   }
 
@@ -374,18 +375,13 @@ export class PerformanceComponent implements OnInit {
 
   expandFromLineage(parent): void {
     this.chartReady = false;
-    for (let flatNode of this.flatNodes) {
-      let node = flatNode.node;
-      if (Number(parent.guid) === flatNode.gUid) {
-        this.expandNode(flatNode);
-        if (node.metricModelName === 'MetricContainer') {
-          this.showNonAtomicMetric(flatNode);
-          break;
-        } else {
-          this.showAtomicMetric(flatNode);
-          break;
-        }
-      }
+    let flatNode = this.flatNodesMap[parent.gUid];
+    let node = flatNode.node;
+    this.expandNode(flatNode);
+    if (node.metricModelName === 'MetricContainer') {
+      this.showNonAtomicMetric(flatNode);
+    } else {
+      this.showAtomicMetric(flatNode);
     }
     this.chartReady = true;
   }
@@ -552,6 +548,7 @@ export class PerformanceComponent implements OnInit {
     }
     this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
     this.flatNodes.push(thisFlatNode);
+    this.flatNodesMap[thisFlatNode.gUid] = thisFlatNode;
     //this.loggerService.log('Node:' + nodeInfo.chart_name);
     let parentsGuid = {};
     parentsGuid["guid"] = thisFlatNode.gUid;
@@ -946,12 +943,12 @@ export class PerformanceComponent implements OnInit {
   fetchChartInfo(flatNode) {
     if (flatNode.node.leaf && (!flatNode.node.chartInfo || !flatNode.node.pastStatus)) {
       this.service.chartInfo(flatNode.node.metricId).subscribe((response) => {
-      flatNode.node.chartInfo = response;
-      this.service.pastStatus(flatNode.node.metricId).subscribe((response) => {
-        flatNode.node.pastStatus = response;
-      }, error => {
-        console.error("Unable to fetch past status"); //TODO
-      })
+        flatNode.node.chartInfo = response;
+        this.service.pastStatus(flatNode.node.metricId).subscribe((response) => {
+          flatNode.node.pastStatus = response;
+        }, error => {
+          console.error("Unable to fetch past status"); //TODO
+        })
 
       }, error => {
         console.error("Unable to fetch chartInfo");
@@ -1124,9 +1121,9 @@ export class PerformanceComponent implements OnInit {
       self.renderer.appendChild(headerElement, self.renderer.createText(headerValue));
     }
 
-    let lsfElement = PerformanceComponent._tooltipInfoElementHelper(self,"LSF log", PerformanceComponent.LSF_BASE_URL, lsfJobId);
-    let jenkinsElement = PerformanceComponent._tooltipInfoElementHelper(self,"Jenkins log", PerformanceComponent.JENKINS_BASE_URL, jenkinsJobId);
-    let regressionElement = PerformanceComponent._tooltipInfoElementHelper(self,"Regression log", PerformanceComponent.REGRESSION_BASE_URL, regressionJobId);
+    let lsfElement = PerformanceComponent._tooltipInfoElementHelper(self, "LSF log", PerformanceComponent.LSF_BASE_URL, lsfJobId);
+    let jenkinsElement = PerformanceComponent._tooltipInfoElementHelper(self, "Jenkins log", PerformanceComponent.JENKINS_BASE_URL, jenkinsJobId);
+    let regressionElement = PerformanceComponent._tooltipInfoElementHelper(self, "Regression log", PerformanceComponent.REGRESSION_BASE_URL, regressionJobId);
 
     let elements = [headerElement, lsfElement, jenkinsElement, regressionElement];
     for (let element of elements) {
@@ -1164,7 +1161,6 @@ export class PerformanceComponent implements OnInit {
         flatNode.node.chartInfo.failedJenkinsJobId,
         flatNode.node.chartInfo.failedSuiteExecutionId);
       this.renderer.appendChild(content, firstFailedElement);
-
 
 
     }
