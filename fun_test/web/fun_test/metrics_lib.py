@@ -195,9 +195,8 @@ class MetricLib():
         self.save_data_sets(data_sets=data_sets, chart=chart)
 
     def clone_chart(self, old_chart, internal_chart_name, data_sets):
-        try:
-            chart = MetricChart.objects.filter(internal_chart_name=internal_chart_name)
-        except ObjectDoesNotExist:
+        chart = MetricChart.objects.exists(internal_chart_name=internal_chart_name)
+        if not chart:
             metric_id = LastMetricId.get_next_id()
             peer_id = []
             peer_id.append(old_chart.metric_id)
