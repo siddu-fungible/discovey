@@ -1571,6 +1571,103 @@ class PeekCommands(object):
         else:
             self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
+    def peek_cdu_stats(self, grep=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "stats/cdu"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            diff_result = self._get_difference(result=result['cdu_cnts'], prev_result=prev_result)
+                            for key in sorted(result['cdu_cnts']):
+                                if grep:
+                                    if re.search(grep, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result['cdu_cnts'][key], diff_result[key]])
+                                else:
+                                    table_obj.add_row([key, result['cdu_cnts'][key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counter'])
+                            table_obj.align = 'l'
+                            for key in sorted(result['cdu_cnts']):
+                                if grep:
+                                    if re.search(grep, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result['cdu_cnts'][key]])
+                                else:
+                                    table_obj.add_row([key, result['cdu_cnts'][key]])
+                        prev_result = result['cdu_cnts']
+                        print table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def peek_ca_stats(self, grep=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "stats/ca"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            master_table_obj = PrettyTable()
+                            master_table_obj.align = 'l'
+                            master_table_obj.header = False
+                            diff_result = self._get_difference(result=result['ca_cnts'], prev_result=prev_result)
+                            for key in sorted(result['ca_cnts']):
+                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result['ca_cnts'][key]):
+                                    if grep:
+                                        if re.search(grep, key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result['ca_cnts'][key][_key],
+                                                               diff_result[key][_key]])
+                                    else:
+                                        table_obj.add_row([_key, result['ca_cnts'][key][_key],
+                                                           diff_result[key][_key]])
+                                if table_obj:
+                                    master_table_obj.add_row([key, table_obj])
+                        else:
+                            master_table_obj = PrettyTable()
+                            master_table_obj.align = 'l'
+                            master_table_obj.header = False
+                            for key in sorted(result['ca_cnts']):
+                                table_obj = PrettyTable(['Field Name', 'Counter'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result['ca_cnts'][key]):
+                                    if grep:
+                                        if re.search(grep, key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result['ca_cnts'][key][_key]])
+                                    else:
+                                        table_obj.add_row([_key, result['ca_cnts'][key][_key]])
+                                if table_obj:
+                                    master_table_obj.add_row([key, table_obj])
+                        prev_result = result['ca_cnts']
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+
     def _get_parser_stats(self, grep_regex=None, hnu=False, get_result_only=False):
         try:
             prev_result = None
