@@ -75,7 +75,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.log("Going to use the script level defaults")
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
-            self.f1_in_use = 0
+            self.f1_in_use = 1
             self.syslog_level = 2
             self.command_timeout = 5
             self.reboot_timeout = 600
