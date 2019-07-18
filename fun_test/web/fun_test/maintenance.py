@@ -1297,11 +1297,64 @@ if __name__ == "__main_companion2__":
         print "added chart id: {}", format(chart_id)
     print "added companion charts"
 
-if __name__ == "__main__":
+if __name__ == "__main_associated_suites__":
     entries = JenkinsJobIdMap.objects.all()
     for entry in entries:
         if len(entry.associated_suites) > 0:
             print entry.associated_suites
             entry.associated_suites = list(set(entry.associated_suites))
             entry.save()
+
+if __name__ == "__main__":
+    internal_chart_names = ["juniper_new_ipsec_enc_single_tunnel_output_throughput",
+                            "juniper_new_ipsec_enc_single_tunnel_output_pps",
+                            "juniper_new_ipsec_enc_multi_tunnel_output_throughput", "juniper_new_ipsec_enc_multi_tunnel_output_pps"]
+    chart_name = "temp"
+    positive = True
+    model_name = "TeraMarkJuniperNetworkingPerformance"
+    base_line_date = datetime(year=2019, month=7, day=15, minute=0, hour=0, second=0)
+    frame_sizes = [64, 362.94]
+    for internal_chart_name in internal_chart_names:
+        if "throughput" in internal_chart_name:
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            visualization_unit = PerfUnit.UNIT_GBITS_PER_SEC
+            output_name = "output_throughput"
+            data_set_unit = PerfUnit.UNIT_MBITS_PER_SEC
+        else:
+            y1_axis_title = PerfUnit.UNIT_MPPS
+            visualization_unit = PerfUnit.UNIT_MPPS
+            output_name = "output_pps"
+            data_set_unit = PerfUnit.UNIT_PPS
+        data_sets = []
+        if "single_tunnel" in internal_chart_name:
+            flow_type = "IPSEC_ENCRYPT_SINGLE_TUNNEL"
+        else:
+            flow_type = "IPSEC_ENCRYPT_MULTI_TUNNEL"
+        for frame_size in frame_sizes:
+            name = str(frame_size) + 'B'
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_offloads": False,
+                                      "input_half_load_latency": False, "input_flow_type": flow_type,
+                                      "input_frame_size": frame_size, "input_protocol": "UDP"}
+            one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                      "unit": data_set_unit}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Amit Surana (amit.surana@fungible.com), Onkar Sarmalkar (onkar.sarmalkar@fungible.com)",
+                    source="",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=visualization_unit,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added latency charts for juniper l4 firewall"
 
