@@ -68,6 +68,9 @@ CHANNEL_PARALL = "qa_channel_parall"
 SOAKFLOWSBUSYLOOP = "qa_soak_flows_busy_loop"
 SOAKFLOWSMEMCPY = "qa_soak_flows_memcpy_non_coh"
 
+QA_S1_EC_TERAMARK = "qa_s1_ec_teramark"
+QA_S1_JPEG_TERAMARK = "qa_s1_jpeg_teramark"
+
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
                    "Accelerator Compression throughput": "Compression Accelerator throughput",
@@ -192,7 +195,8 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAKFLOWSBUSYLOOP, SOAKFLOWSMEMCPY]
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAKFLOWSBUSYLOOP, SOAKFLOWSMEMCPY, QA_S1_EC_TERAMARK,
+                QA_S1_JPEG_TERAMARK]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1023,6 +1027,7 @@ class TeraMarkDfaPerformanceTc(PalladiumPerformanceTc):
 
 class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=23,
@@ -1068,6 +1073,7 @@ class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
 
                         try:
                             metrics = {}
+                            metrics['input_platform'] = self.platform
                             if not compression_ratio_found:
                                 if d["Operation"] in jpeg_operations:
                                     metrics["input_operation"] = jpeg_operations[d["Operation"]]

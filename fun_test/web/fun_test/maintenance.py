@@ -1231,7 +1231,7 @@ if __name__ == "__main_l4_firewall__":
                     platform=FunPlatform.F1).save()
     print "added latency charts for juniper l4 firewall"
 
-if __name__ == "__main__":
+if __name__ == "__main__log2":
     charts = ["iops", "latency"]
     xaxis_title = "log2(qDepth)"
     chart_type = ChartType.REGULAR
@@ -1297,3 +1297,256 @@ if __name__ == "__main__":
         print "added chart id: {}", format(chart_id)
     print "added companion charts"
 
+
+if __name__ == "__main__":
+
+    # S1 EC 8:4 latency, throughput charts
+    internal_chart_names = ["s1_ec_8_eachto_4_latency", "s1_ec_8_eachto_4_throughput"]
+    model_name = "EcPerformance"
+    owner_info = "Mohit Saxena (mohit.saxena@fungible.com)"
+    source = "https://github.com/fungible-inc/FunOS/blob/master/apps/integration_apps/ec/qa_ec_test.c"
+    positive = True
+    platform = FunPlatform.S1
+
+    for internal_chart_name in internal_chart_names:
+        one_data_set = {}
+        data_sets = []
+        if internal_chart_name == "s1_ec_8_eachto_4_latency":
+            chart_name = "EC 8:4 Latency"
+            y1_axis_title = PerfUnit.UNIT_NSECS
+            description = 'Encode and Recovery latency of the EC accelerator with Reed-Solomon algorithm' \
+                          ' for one Processor Cluster(PC) of S1. ' \
+                          '<br><br>' \
+                          '<u>Job details</u><br>' \
+                          '<li> Number of data blocks - 8' \
+                          '<li> Number of parity blocks - 4' \
+                          '<li> Stride Length - 4k' \
+                          '<li> Data block content type - random data' \
+                          '<li> Request send from 1 VP to the the EC accelerator' \
+                          '<li> Scatter & Gather Memory: HBM to HBM' \
+                          '<li> Latency is calculated for both encode and recovery operation over 256 iterations' \
+                          '<br><br>'
+            output_names = OrderedDict([("output_encode_latency_avg", "Encode-avg"),
+                                        ("output_recovery_latency_avg", "Recovery-avg")])
+
+        elif internal_chart_name == "s1_ec_8_eachto_4_throughput":
+            chart_name = "EC 8:4 Throughput"
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            description = 'Encode and Recovery throughput of the EC accelerator with Reed-Solomon algorithm' \
+                          ' for multi-cluster of S1. ' \
+                          '<br><br>' \
+                          '<u>Job details</u><br>' \
+                          '<li> Number of data blocks - 8' \
+                          '<li> Number of parity blocks - 4' \
+                          '<li> Stride Length - 4k' \
+                          '<li> Data block content type - random data' \
+                          '<li> Request send from 1 VP to the the EC accelerator' \
+                          '<li> Scatter & Gather Memory: HBM to HBM' \
+                          '<li> Latency is calculated for both encode and recovery operation over 256 iterations' \
+                          '<br><br>'
+            output_names = OrderedDict([("output_encode_throughput_avg", "Encode-avg"),
+                                        ("output_recovery_throughput_avg", "Recovery-avg")])
+
+        inputs = {
+            "input_platform": platform
+        }
+
+        for output_name in output_names:
+            output = {
+                "name": output_name,
+                "unit": y1_axis_title,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = output_names[output_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+
+    # S1 JPEG compression_throughput, decompression_throughput, compression_ratio charts
+
+    internal_chart_names = ["s1_compression_throughput", "s1_decompression_throughput", "s1_compression_ratio"]
+    model_name = "TeraMarkJpegPerformance"
+    owner_info = "Harinadh Saladi (harinadh.saladi@fungible.com)"
+    source = "https://github.com/fungible-inc/FunOS/blob/master/apps/integration_apps/zip/jpeg_perf_test.c"
+    positive = True
+    platform = FunPlatform.S1
+
+    for internal_chart_name in internal_chart_names:
+        one_data_set = {}
+        data_sets = []
+
+        if internal_chart_name == "s1_compression_throughput":
+            chart_name = "JPEG compression throughput"
+            input_operation = "Compression throughput with Driver"
+            output_name = "output_average_bandwidth"
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            description = 'Compression throughput measured using 1 PC (Processing Cluster); this measurement does not' \
+                          ' includes the time spent in driver.' \
+                          '<br><b>' \
+                          '<u>Images used</u>' \
+                          '</b></p><table>' \
+                          '<tr>' \
+                          '<td><b>Name&nbsp&nbsp&nbsp</b></td><td><b>Size</b></td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim13_jpg</td>    <td>197KB</td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim18_jpg</td>    <td>150KB</td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim20_jpg</td>    <td>84KB</td>' \
+                          '</tr>' \
+                          '</table>' \
+                          '<br><b><u>Job Details</u></b><br>' \
+                          '<u>Test Inputs located at</u>:  <code>/project/users/ashaikh/qa_test_inputs/</code><br>' \
+                          '<hr>' \
+                          'Test owner: Aamir Shaikh (<a href="mailto:aamir.shaikh@fungible.com">' \
+                          'aamir.shaikh@fungible.com</a>)<br>' \
+                          '<hr>' \
+                          '<b>Details</b><br>' \
+                          '<u>Platform</u>: S1<br>' \
+                          '<u>Boot args</u>: <code>app=jpeg_perf_test num_iter=20 --disable-wu-watchdog</code><br>' \
+                          '<u>Test code</u>: <code> apps/integration_apps/zip/jpeg_perf_test.c</code><br>' \
+                          '<u>See jobs:</u> <a href="http://palladium-jobs.fungible.local:8080/?tag=jpeg_teramark">' \
+                          'here</a>'
+
+        elif internal_chart_name == "s1_decompression_throughput":
+            chart_name = "JPEG decompression throughput"
+            input_operation = "JPEG Decompress"
+            output_name = "output_average_bandwidth"
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            description = 'Data compression ratio is defined as the ratio between the uncompressed size and compressed' \
+                          ' size.<br>Compression Ratio = Uncompressed Size / Compressed Size<br>' \
+                          'A representation that compresses a 10 MB file to 2 MB has a compression ratio of 10/2 = 5,' \
+                          ' often notated as an ' \
+                          'explicit ratio,5:1 (read "five" to "one"), or as an implicit ratio, 5/1.' \
+                          '<br><b>' \
+                          '<u>Images used</u>' \
+                          '</b></p><table>' \
+                          '<tr>' \
+                          '<td><b>Name&nbsp&nbsp&nbsp</b></td><td><b>Size</b></td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim13_jpg</td>    <td>197KB</td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim18_jpg</td>    <td>150KB</td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim20_jpg</td>    <td>84KB</td>' \
+                          '</tr>' \
+                          '</table>' \
+                          '<br><b><u>Job Details</u></b><br>' \
+                          '<u>Test Inputs located at</u>:  <code>/project/users/ashaikh/qa_test_inputs/</code><br>' \
+                          '<hr>' \
+                          'Test owner: Aamir Shaikh (<a href="mailto:aamir.shaikh@fungible.com">' \
+                          'aamir.shaikh@fungible.com</a>)<br>' \
+                          '<hr>' \
+                          '<b>Details</b><br>' \
+                          '<u>Platform</u>: S1<br>' \
+                          '<u>Boot args</u>: <code>app=jpeg_perf_test num_iter=20 --disable-wu-watchdog</code><br>' \
+                          '<u>Test code</u>: <code> apps/integration_apps/zip/jpeg_perf_test.c</code><br>' \
+                          '<u>See jobs:</u> <a href="http://palladium-jobs.fungible.local:8080/?tag=jpeg_teramark">' \
+                          'here</a>'
+
+        elif internal_chart_name == "s1_compression_ratio":
+            chart_name = "JPEG Compression-ratio"
+            input_operation = "JPEG Compression"
+            output_name = "output_compression_ratio"
+            y1_axis_title = PerfUnit.UNIT_NUMBER
+            description = 'Decompression throughput measured using one PC. It measures the time taken by the' \
+                          ' accelerator to decompress the image.The time spent by the driver is ignored in this' \
+                          ' calculation as the driver adds an overhead of ~10%.' \
+                          '<br><b>' \
+                          '<u>Images used</u>' \
+                          '</b></p><table>' \
+                          '<tr>' \
+                          '<td><b>Name&nbsp&nbsp&nbsp</b></td><td><b>Size</b></td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim13_jpg</td>    <td>197KB</td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim18_jpg</td>    <td>150KB</td>' \
+                          '</tr>' \
+                          '<tr>' \
+                          '<td>kodim20_jpg</td>    <td>84KB</td>' \
+                          '</tr>' \
+                          '</table>' \
+                          '<br><b><u>Job Details</u></b><br>' \
+                          '<u>Test Inputs located at</u>:  <code>/project/users/ashaikh/qa_test_inputs/</code><br>' \
+                          '<hr>' \
+                          'Test owner: Aamir Shaikh (<a href="mailto:aamir.shaikh@fungible.com">' \
+                          'aamir.shaikh@fungible.com</a>)<br>' \
+                          '<hr>' \
+                          '<b>Details</b><br>' \
+                          '<u>Platform</u>: S1<br>' \
+                          '<u>Boot args</u>: <code>app=jpeg_perf_test num_iter=20 --disable-wu-watchdog</code><br>' \
+                          '<u>Test code</u>: <code> apps/integration_apps/zip/jpeg_perf_test.c</code><br>' \
+                          '<u>See jobs:</u> <a href="http://palladium-jobs.fungible.local:8080/?tag=jpeg_teramark">' \
+                          'here</a>'
+
+        inputs = {
+            "input_platform": platform,
+            "input_operation": input_operation
+        }
+
+        output = {
+            "name": output_name,
+            "unit": y1_axis_title,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+
+        image_names_list = ['kodim13_jpg', 'kodim18_jpg', 'kodim20_jpg']
+
+        for image in image_names_list:
+            inputs["input_image"] = image
+            one_data_set["name"] = image
+            one_data_set["inputs"] = inputs.copy()
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))

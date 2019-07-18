@@ -4555,6 +4555,75 @@
             ]
           }
         ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "s1_accelerators",
+        "label": "Accelerators",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "s1_accelerators_ec",
+            "label": "EC",
+            "children": [
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "s1_ec_8_eachto_4_latency",
+                "label": "EC 8:4 Latency",
+                "children": []
+              },
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "s1_ec_8_eachto_4_throughput",
+                "label": "EC 8:4 Throughput",
+                "children": []
+              }
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "s1_accelerators_jpeg",
+            "label": "JPEG",
+            "children": [
+              {
+                "metric_model_name": "TeraMarkJpegPerformance",
+                "name": "s1_compression_throughput",
+                "label": "Compression Throughput",
+                "children": []
+              },
+              {
+                "metric_model_name": "TeraMarkJpegPerformance",
+                "name": "s1_decompression_throughput",
+                "label": "Decompression Throughput",
+                "children": []
+              },
+              {
+                "metric_model_name": "TeraMarkJpegPerformance",
+                "name": "s1_compression_ratio",
+                "label": "Compression ratio",
+                "children": []
+              }
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "s1_crypto",
+            "label": "Crypto",
+            "children": []
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "s1_regex",
+            "label": "Regex",
+            "children": []
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "s1_zip",
+            "label": "Zip",
+            "children": []
+          }
+        ]
       }
     ]
   }
