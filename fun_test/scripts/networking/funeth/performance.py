@@ -128,8 +128,6 @@ class FunethPerformance(sanity.FunethSanity):
             linux_objs_ol_vm = funeth_obj_ol_vm.linux_obj_dict.values()
             netperf_manager_obj_ul_vm = nm.NetperfManager(linux_objs_ul_vm)
             netperf_manager_obj_ol_vm = nm.NetperfManager(linux_objs_ol_vm)
-            fun_test.shared_variables['netperf_manager_obj_ul_vm'] = netperf_manager_obj_ul_vm
-            fun_test.shared_variables['netperf_manager_obj_ol_vm'] = netperf_manager_obj_ol_vm
             fun_test.test_assert(netperf_manager_obj_ul_vm.setup(), 'Set up for throughput/latency test with underlay VMs')
             fun_test.test_assert(netperf_manager_obj_ol_vm.setup(), 'Set up for throughput/latency test with overlay VMs')
 
@@ -200,18 +198,18 @@ class FunethPerformanceBase(FunTestCase):
         # Underlay VMs
         if 'UL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ul_vm']
-            perf_manager_obj = fun_test.shared_variables['netperf_manager_obj_ul_vm']
             cpu_list = funeth.CPU_LIST_VM
         # Overlay VMs
         elif 'OL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ol_vm']
-            perf_manager_obj = fun_test.shared_variables['netperf_manager_obj_ol_vm']
             cpu_list = funeth.CPU_LIST_VM
         # Hosts
         else:
             funeth_obj = fun_test.shared_variables['funeth_obj']
-            perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
             cpu_list = funeth.CPU_LIST_HOST
+
+        # host/VM use same perf_manager_obj, since CPU tuning is only doable in host
+        perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
 
         host_pairs = []
         bi_dir = False  # TODO: enable bi-direction
@@ -258,13 +256,14 @@ class FunethPerformanceBase(FunTestCase):
 
             # Check dip pingable - IP header 20B, ICMP header 8B
             # Allow up to 2 ping miss due to resolve ARP
-            pingable &= linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
+            if not 'OL_VM' in flow_type.upper():  # TODO: Remove after overlay support ping flow
+                pingable &= linux_obj_src.ping(dip, count=5, max_percentage_loss=40, size=frame_size-20-8)
 
-            if pingable:
-                fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
-                    linux_obj_src.host_ip, dip, frame_size))
-            else:
-                break
+                if pingable:
+                    fun_test.test_assert(pingable, '{} ping {} with packet size {}'.format(
+                        linux_obj_src.host_ip, dip, frame_size))
+                else:
+                    break
 
             suffix = '{}2{}'.format(shost[0], dhost[0])
             arg_dicts.append(
@@ -279,6 +278,7 @@ class FunethPerformanceBase(FunTestCase):
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
                  'cpu_list': cpu_list,
+                 'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  }
             )
 
@@ -286,7 +286,6 @@ class FunethPerformanceBase(FunTestCase):
         network_controller_objs = fun_test.shared_variables['network_controller_objs']
         fpg_interfaces = FPG_INTERFACES[:num_hosts]
         fpg_intf_dict = FPG_FABRIC_DICT
-        funeth_obj = fun_test.shared_variables['funeth_obj']
         version = fun_test.get_version()
         fun_test.log('Collect stats before test')
         sth_stuck_before = perf_utils.collect_dpc_stats(network_controller_objs,

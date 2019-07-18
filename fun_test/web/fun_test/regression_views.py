@@ -535,7 +535,8 @@ def build_to_date_map(request):
                                "build_properties": entry.build_properties,
                                "lsf_job_id": entry.lsf_job_id,
                                "sdk_version": entry.sdk_version,
-                               "suite_execution_id": entry.suite_execution_id}
+                               "suite_execution_id": entry.suite_execution_id,
+                               "associated_suites": entry.associated_suites}
             # print str(dt)
         except Exception as ex:
             print ex
