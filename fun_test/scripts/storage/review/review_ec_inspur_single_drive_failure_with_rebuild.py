@@ -514,6 +514,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
+                    """
                     # Checking that the above created BLT volume is visible to the end host
                     self.host_info[host_name]["nvme_block_device_list"] = []
                     self.host_info[host_name]["volume_name_list"] = []
@@ -564,10 +565,40 @@ class ECVolumeLevelTestcase(FunTestCase):
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     fun_test.shared_variables["ec"][host_name]["nvme_connect"] = True
+                    """
 
+                    # Checking that the above created EC volume is visible to the end host after NVME connect
+                    volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
+                    self.host_info[host_name]["nvme_block_device_list"] = []
+                    self.host_info[host_name]["volume_name_list"] = []
+                    for volume_name in lsblk_output:
+                        match = re.search(volume_pattern, volume_name)
+                        if match:
+                            ctlr_id = match.group(1)
+                            ns_id = match.group(2)
+                            self.host_info[host_name]["nvme_block_device_list"].append(self.nvme_device + ctlr_id + "n" + ns_id)
+                            self.host_info[host_name]["volume_name_list"].append(self.nvme_block_device.replace("/dev/", ""))
+                            '''
+                            fun_test.test_assert_expected(expected=self.host_info[host_name]["volume_name_list"][-1],
+                                                          actual=lsblk_output[volume_name]["name"],
+                                                          message="{} device available".format(
+                                                              self.host_info[host_name]["volume_name_list"][-1]))
+                            '''
+                            print("{} device is available".format(self.host_info[host_name]["volume_name_list"][-1]))
+                            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
+                                                          message="{} device type check".format(
+                                                              self.host_info[host_name]["volume_name_list"][-1]))
+                            fun_test.test_assert_expected(expected=self.ec_info["attach_size"][int(ns_id) - 1],
+                                                          actual=lsblk_output[volume_name]["size"],
+                                                          message="{} volume size check".format(
+                                                              self.host_info[host_name]["volume_name_list"][-1]))
+
+                    # Total number of volumes available should be equal to the ec_info["num_volumes"]
                     self.host_info[host_name]["nvme_block_device_list"].sort()
-                    self.host_info[host_name]["fio_filename"] = \
-                        ":".join(self.host_info[host_name]["nvme_block_device_list"])
+                    self.host_info[host_name]["volume_name_list"].sort()
+                    fun_test.test_assert_expected(expected=self.ec_info["num_volumes"],
+                                                  actual=len(self.host_info[host_name]["volume_name_list"]),
+                                                  message="Number of volumes available")
                     fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
 
@@ -672,10 +703,18 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.simple_assert(command_result, "Mounting EC volume {} on {}".
                                        format(nvme_block_device_list[num], mount_point))
                 lsblk_output = host_handle.lsblk("-b")
+                try:
+                    fun_test.simple_assert(expression=mount_point in lsblk_output,
+                                           message="Mounting EC volume {} on {}".format(nvme_block_device_list[num],
+                                                                                        mount_point))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                '''
                 fun_test.test_assert_expected(expected=mount_point,
                                               actual=lsblk_output[volume_name_list[num]]["mount_point"],
                                               message="Mounting EC volume {} on {}".format(nvme_block_device_list[num],
                                                                                            mount_point))
+                '''
 
             # Creating input file
             self.host_info[host_name]["src_file"]["file1"] = {}
@@ -715,8 +754,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 iostat_post_fix_name = "{}_iostat_fail_drive.txt".format(host_name)
                 iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=iostat_post_fix_name)
+                '''
                 iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
                                                            output_file=self.iostat_args["output_file"],
+                                                           interval=self.iostat_args["interval"],
+                                                           count=int(iostat_count))
+                '''
+                iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
                                                            interval=self.iostat_args["interval"],
                                                            count=int(iostat_count))
             else:
@@ -852,8 +896,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                     iostat_post_fix_name = "{}_iostat_re_enable_drive.txt".format(host_name)
                     iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=iostat_post_fix_name)
+                    '''
                     iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
                                                                output_file=self.iostat_args["output_file"],
+                                                               interval=self.iostat_args["interval"],
+                                                               count=int(iostat_count))
+                    '''
+                    iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
                                                                interval=self.iostat_args["interval"],
                                                                count=int(iostat_count))
                 else:
@@ -903,7 +952,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # TODO Call the rebuild for same volume
                 rebuild_device = self.storage_controller.plex_rebuild(
                     subcmd="ISSUE", type=self.ec_info["volume_types"]["ec"],
-                    uuid=self.ec_info["uuids"][num]["ec"][self.test_volume_start_index],
+                    uuid=self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index],
                     failed_uuid=fail_uuid, spare_uuid=fail_uuid, rate=20)
                 # fun_test.test_assert(rebuild_device["status"], "Rebuild failed Device ID {}".format(fail_device))
                 fun_test.log("Rebuild failed Device ID {} status {}".format(fail_device, rebuild_device["status"]))
