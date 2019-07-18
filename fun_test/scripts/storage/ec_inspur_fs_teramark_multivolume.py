@@ -1068,7 +1068,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
                                                                   command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
-                    initial_stats[iodepth]["eqm_stats"] = command_result["data"]
+                    final_stats[iodepth]["eqm_stats"] = command_result["data"]
                     fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
                         iodepth, initial_stats[iodepth]))
 
