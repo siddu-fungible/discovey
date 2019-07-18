@@ -307,13 +307,13 @@ export class PerformanceComponent implements OnInit {
     statusNode.hide = false;
     statusNode.special = true;
     this.flatNodes.push(statusNode);
-    this.flatNodesMap[statusNode.guid] = statusNode;
+    this.flatNodesMap[statusNode.gUid] = statusNode;
     for (let child in statusFlatNode) {
       let statusChild = statusFlatNode[child];
       statusChild.indent = 1;
       statusNode.addChild(statusChild);
       this.flatNodes.push(statusChild);
-      this.flatNodesMap[statusChild.guid] = statusChild;
+      this.flatNodesMap[statusChild.gUid] = statusChild;
     }
   }
 
@@ -375,7 +375,7 @@ export class PerformanceComponent implements OnInit {
 
   expandFromLineage(parent): void {
     this.chartReady = false;
-    let flatNode = this.flatNodesMap[parent.guid];
+    let flatNode = this.flatNodesMap[parent.gUid];
     let node = flatNode.node;
     this.expandNode(flatNode);
     if (node.metricModelName === 'MetricContainer') {
@@ -548,7 +548,7 @@ export class PerformanceComponent implements OnInit {
     }
     this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
     this.flatNodes.push(thisFlatNode);
-    this.flatNodesMap[thisFlatNode.guid] = thisFlatNode;
+    this.flatNodesMap[thisFlatNode.gUid] = thisFlatNode;
     //this.loggerService.log('Node:' + nodeInfo.chart_name);
     let parentsGuid = {};
     parentsGuid["guid"] = thisFlatNode.gUid;
