@@ -17,7 +17,7 @@
 }
 
 #all-cards {
-  padding: 20px;
+  padding: 10px;
 }
 
 
@@ -27,7 +27,7 @@
   box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
   transition: 0.3s;
   width: 500px;
-  margin: 20px;
+  margin: 10px;
 }
 
 /* On mouse-over, add a deeper shadow */
@@ -44,6 +44,27 @@ table {
   empty-cells: show;
 }
 
-.card-text {
+.cardTextTitle {
   font-weight: bold;
+}
+
+.cardText {
+
+}
+
+
+
+
+.centered { vertical-align:middle; text-align:center; }
+.centered img { display:block; margin:0 auto; }
+
+.column {
+  float: left;
+  width: 50%;
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
 }

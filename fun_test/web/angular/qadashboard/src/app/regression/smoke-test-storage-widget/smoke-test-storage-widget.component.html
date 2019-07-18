@@ -1,7 +1,11 @@
 <div class="component" style="width:100%;margin: 0 auto">
   <fun-card
-    [title]="'My Title'"
-    [subtitle]= "'F1 Storage'"
-    [iconLink]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-80plus.png'">
+    [subtitle]= "'<a href = /regression?tag=smoke>F1 storage smoke test</a>'"
+    [iconLink]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-80plus.png'"
+    [textTitle]="'7/11 14:03 (current run)'"
+    [text]="'passed: 4 failed: 0'"
+    [footerIconLink]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-00to19.png'"
+    [enableFooter]="true"
+    [footerText]="'7/11 12:04 (previous run) passed: 0 failed: 3'">
   </fun-card>
 </div>
