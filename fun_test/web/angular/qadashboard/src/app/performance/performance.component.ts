@@ -375,7 +375,7 @@ export class PerformanceComponent implements OnInit {
 
   expandFromLineage(parent): void {
     this.chartReady = false;
-    let flatNode = this.flatNodesMap[parent.gUid];
+    let flatNode = this.flatNodesMap[parent.guid];
     let node = flatNode.node;
     this.expandNode(flatNode);
     if (node.metricModelName === 'MetricContainer') {
