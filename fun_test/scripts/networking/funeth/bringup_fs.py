@@ -11,8 +11,8 @@ boot_args_f1_0 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-repl
 boot_args_f1_1 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
 #boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
 #boot_args_f1_1 = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
-boot_args_f1_0 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
-boot_args_f1_1 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+#boot_args_f1_0 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
+#boot_args_f1_1 = "app=mdt_test,load_mods,hw_hsu_test --serial cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
 
 
 class ScriptSetup(FunTestScript):
