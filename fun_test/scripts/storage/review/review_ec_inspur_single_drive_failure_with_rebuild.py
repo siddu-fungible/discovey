@@ -264,7 +264,6 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
         come_reboot = False
-        '''
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
@@ -327,7 +326,6 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.critical(str(ex))
 
             self.topology.cleanup()
-        '''
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -514,59 +512,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
 
-                    """
-                    # Checking that the above created BLT volume is visible to the end host
-                    self.host_info[host_name]["nvme_block_device_list"] = []
-                    self.host_info[host_name]["volume_name_list"] = []
-                    volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
-                    cnt = 0
-                    for volume_name in lsblk_output:
-                        match = re.search(volume_pattern, volume_name)
-                        if match:
-                            ctlr_id = match.group(1)
-                            ns_id = match.group(2)
-                            self.host_info[host_name]["nvme_block_device_list"].append(
-                                self.nvme_device + ctlr_id + "n" + str(int(ns_id) + cnt))
-                            self.host_info[host_name]["volume_name_list"].append(
-                                self.nvme_block_device.replace("/dev/", ""))
-                            '''
-                            fun_test.test_assert_expected(expected=self.host_info[host_name]["volume_name_list"][-1],
-                                                          actual=lsblk_output[volume_name]["name"],
-                                                          message="{} device available".format(
-                                                              self.host_info[host_name]["volume_name_list"][-1]))
-                            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                                          message="{} device type check".format(
-                                                              self.host_info[host_name]["volume_name_list"][-1]))
-                            fun_test.test_assert_expected(expected=self.ec_info["attach_size"][int(ns_id) - 1],
-                                                          actual=lsblk_output[volume_name]["size"],
-                                                          message="{} volume size check".format(
-                                                              self.host_info[host_name]["volume_name_list"][-1]))
-                            '''
-                            print('expected=self.host_info[host_name]["volume_name_list"][-1] = {}, '
-                                  'actual=lsblk_output[volume_name]["name"] = {}'.format(
-                                self.host_info[host_name]["volume_name_list"][-1], lsblk_output[volume_name]["name"]))
-                            print('expected="disk", actual=lsblk_output[volume_name]["type"]={}'.format(
-                                lsblk_output[volume_name]["type"]))
-                            print('expected=self.ec_info["attach_size"][int(ns_id) - 1] = {}, '
-                                  'actual=lsblk_output[volume_name]["size"] = {}'.format(
-                                self.ec_info["attach_size"][int(ns_id) - 1], lsblk_output[volume_name]["size"]))
-                            cnt += 1
-
-                            # self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
-                            #                          str(match.group(2))
-                            # self.host_info[host_name]["nvme_block_device_list"].append(self.nvme_block_device)
-                            # fun_test.log("NVMe Block Device/s: {}".
-                            #              format(self.host_info[host_name]["nvme_block_device_list"]))
-
-                    try:
-                        fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
-                                                      actual=len(self.host_info[host_name]["nvme_block_device_list"]),
-                                                      message="Expected NVMe devices are available")
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                    fun_test.shared_variables["ec"][host_name]["nvme_connect"] = True
-                    """
-
                     # Checking that the above created EC volume is visible to the end host after NVME connect
                     volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
                     self.host_info[host_name]["nvme_block_device_list"] = []
@@ -576,15 +521,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                         if match:
                             ctlr_id = match.group(1)
                             ns_id = match.group(2)
-                            self.host_info[host_name]["nvme_block_device_list"].append(self.nvme_device + ctlr_id + "n" + ns_id)
-                            self.host_info[host_name]["volume_name_list"].append(self.nvme_block_device.replace("/dev/", ""))
-                            '''
+                            self.host_info[host_name]["nvme_block_device_list"].append(
+                                self.nvme_device + ctlr_id + "n" + ns_id)
+                            self.host_info[host_name]["volume_name_list"].append(
+                                self.nvme_block_device.replace("/dev/", ""))
+
                             fun_test.test_assert_expected(expected=self.host_info[host_name]["volume_name_list"][-1],
                                                           actual=lsblk_output[volume_name]["name"],
                                                           message="{} device available".format(
                                                               self.host_info[host_name]["volume_name_list"][-1]))
-                            '''
-                            print("{} device is available".format(self.host_info[host_name]["volume_name_list"][-1]))
                             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
                                                           message="{} device type check".format(
                                                               self.host_info[host_name]["volume_name_list"][-1]))
@@ -631,6 +576,12 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def run(self):
 
+        table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time",
+                              "File Copy Time During Volume Fail", "File Copy Time During Rebuild", "Job Name"]
+        table_data_cols = ["num_hosts", "vol_size", "test_file_size", "base_copy_time", "copy_time_during_vol_fail",
+                           "copy_time_during_rebuild", "fio_job_name"]
+        table_data_rows = []
+
         # Test Preparation
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
         # Else going to extract the same
@@ -671,6 +622,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         iostat_pid = {}
         iostat_artifact_file = {}
         start_stats = True
+        row_data_dict = {}
+        row_data_dict["num_hosts"] = self.num_hosts
 
         for index, host_name in enumerate(self.host_info):
             host_handle = self.host_info[host_name]["handle"]
@@ -703,20 +656,127 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.simple_assert(command_result, "Mounting EC volume {} on {}".
                                        format(nvme_block_device_list[num], mount_point))
                 lsblk_output = host_handle.lsblk("-b")
-                try:
-                    fun_test.simple_assert(expression=mount_point in lsblk_output,
-                                           message="Mounting EC volume {} on {}".format(nvme_block_device_list[num],
-                                                                                        mount_point))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                '''
                 fun_test.test_assert_expected(expected=mount_point,
                                               actual=lsblk_output[volume_name_list[num]]["mount_point"],
                                               message="Mounting EC volume {} on {}".format(nvme_block_device_list[num],
                                                                                            mount_point))
-                '''
+
+            ''' start: base file copy to measure time without any failure or rebuild '''
 
             # Creating input file
+            self.host_info[host_name]["src_file"]["base_file"] = {}
+            self.host_info[host_name]["src_file"]["base_file"]["md5sum"] = []
+            self.dd_create_file["count"] = self.test_file_size / self.dd_create_file["block_size"]
+
+            # Write a file into the EC volume of size self.test_file_size bytes
+            return_size = host_handle.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
+            fun_test.test_assert_expected(self.test_file_size, return_size, "Creating {} bytes input base file".
+                                          format(self.test_file_size))
+            self.src_md5sum = host_handle.md5sum(file_name=self.dd_create_file["output_file"],
+                                                 timeout=self.dd_create_file["count"])
+            fun_test.test_assert(self.src_md5sum, "Finding md5sum of source base file {}".
+                                 format(self.dd_create_file["output_file"]))
+            self.host_info[host_name]["src_file"]["base_file"]["md5sum"].append(self.src_md5sum)
+            print("Modified host_info for files is: {}".format(self.host_info[host_name]["src_file"]))
+            print("src file md5sum is: {}".format(self.host_info[host_name]["src_file"]["base_file"]["md5sum"]))
+
+            # Test Preparation Done
+            # Starting the test
+            cp_timeout = (self.test_file_size / self.fs_cp_timeout_ratio[0]) * self.fs_cp_timeout_ratio[1]
+            if cp_timeout < self.min_timeout:
+                cp_timeout = self.min_timeout
+
+            # Copying the file into the all the test volumes
+            source_file = self.dd_create_file["output_file"]
+            dst_file1 = []
+
+            # Calling the iostat method to collect the iostat for the while performing IO (copying file)
+            iostat_count = cp_timeout / self.iostat_args["interval"]
+            fun_test.log("Collecting iostat on {}".format(host_name))
+            if start_stats:
+                iostat_post_fix_name = "{}_iostat_base_file_copy.txt".format(host_name)
+                iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name=iostat_post_fix_name)
+                iostat_pid[host_name] = host_handle.iostat(
+                    device=",".join(self.host_info[host_name]["volume_name_list"]),
+                    output_file=self.iostat_args["output_file"],
+                    interval=self.iostat_args["interval"],
+                    count=int(iostat_count))
+                '''
+                iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
+                                                           interval=self.iostat_args["interval"],
+                                                           count=int(iostat_count))
+                '''
+            else:
+                fun_test.critical("Not starting the iostat collection because of lack of interval and count details")
+
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                dst_file1.append(self.mount_path + str(num + 1) + "/base_file")
+                start_time = time.time()
+                cp_cmd = "sudo cp {} {}".format(source_file, dst_file1[-1])
+                host_handle.start_bg_process(command=cp_cmd)
+
+            timer = FunTimer(max_time=cp_timeout)
+            while not timer.is_expired():
+                fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
+                output = host_handle.get_process_id_by_pattern(process_pat=cp_cmd, multiple=True)
+                if not output:
+                    fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file1))
+                    break
+            else:
+                fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file1))
+
+            host_handle.sudo_command("sync", timeout=cp_timeout / 2)
+            host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
+            end_time = time.time()
+            time_taken = end_time - start_time
+            fun_test.log("Time taken to copy base file {}".format(time_taken))
+
+            # Checking if iostat process is still running...If so killing it...
+            iostat_pid_check = host_handle.get_process_id("iostat")
+            if iostat_pid_check and int(iostat_pid_check) == int(iostat_pid[host_name]):
+                host_handle.kill_process(process_id=int(iostat_pid_check))
+            # Saving the iostat output to the iostat_artifact_file file
+            fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                         source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                         source_file_path=self.iostat_args["output_file"],
+                         target_file_path=iostat_artifact_file[host_name])
+            fun_test.add_auxillary_file(description="Host {} IOStat Usage - Drive Failure".format(host_name),
+                                        filename=iostat_artifact_file[host_name])
+
+            self.host_info[host_name]["dst_file"]["base_file"] = {}
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                if num not in self.host_info[host_name]["dst_file"]["base_file"]:
+                    self.host_info[host_name]["dst_file"]["base_file"][num] = {}
+                    self.host_info[host_name]["dst_file"]["base_file"][num]["md5sum"] = []
+                cur_dst_file = dst_file1[num - self.test_volume_start_index]
+                dst_file_info = host_handle.ls(cur_dst_file)
+                fun_test.simple_assert(dst_file_info, "Copied file {} exists".format(cur_dst_file))
+                fun_test.test_assert_expected(expected=self.test_file_size, actual=dst_file_info["size"],
+                                              message="Copying {} bytes file into {}".format(self.test_file_size,
+                                                                                             cur_dst_file))
+                self.dst_md5sum = host_handle.md5sum(file_name=cur_dst_file, timeout=cp_timeout)
+                fun_test.test_assert(self.dst_md5sum, "Finding md5sum of copied file {}".format(cur_dst_file))
+                fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
+                                              message="Comparing md5sum of source & destination file")
+                self.host_info[host_name]["dst_file"]["base_file"][num]["md5sum"].append(self.dst_md5sum)
+            print("2: Modified host info for files is: {}".format(self.host_info[host_name]["dst_file"]))
+
+            # Deleting the base file
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                try:
+                    rm_cmd = "rm -f {}".format(dst_file1[-1])
+                    host_handle.sudo_command(command=rm_cmd)
+                    fun_test.simple_assert(expression=host_handle.exit_status() == 0, message="base file is deleted")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                host_handle.sudo_command("sync", timeout=cp_timeout / 2)
+                host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
+
+            row_data_dict["base_copy_time"] = time_taken
+            ''' finish: base file copy to measure time without any failure or rebuild'''
+
+            ''' start: File copy while the BLT volume is marked failed '''
             self.host_info[host_name]["src_file"]["file1"] = {}
             self.host_info[host_name]["src_file"]["file1"]["md5sum"] = []
             self.dd_create_file["count"] = self.test_file_size / self.dd_create_file["block_size"]
@@ -754,7 +814,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 iostat_post_fix_name = "{}_iostat_fail_drive.txt".format(host_name)
                 iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=iostat_post_fix_name)
-                '''
                 iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
                                                            output_file=self.iostat_args["output_file"],
                                                            interval=self.iostat_args["interval"],
@@ -763,11 +822,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                 iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
                                                            interval=self.iostat_args["interval"],
                                                            count=int(iostat_count))
+                '''
             else:
                 fun_test.critical("Not starting the iostat collection because of lack of interval and count details")
 
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 dst_file1.append(self.mount_path + str(num + 1) + "/file1")
+                start_time = time.time()
                 cp_cmd = "sudo cp {} {}".format(source_file, dst_file1[-1])
                 host_handle.start_bg_process(command=cp_cmd)
 
@@ -834,6 +895,10 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             host_handle.sudo_command("sync", timeout=cp_timeout / 2)
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
+            end_time = time.time()
+            time_taken = end_time - start_time
+            fun_test.log("Time taken to copy during failed volume/drive {}".format(time_taken))
+            row_data_dict["copy_time_during_vol_fail"] = time_taken
 
             # Checking if iostat process is still running...If so killing it...
             iostat_pid_check = host_handle.get_process_id("iostat")
@@ -864,7 +929,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                                               message="Comparing md5sum of source & destination file")
                 self.host_info[host_name]["dst_file"]["file1"][num]["md5sum"].append(self.dst_md5sum)
             print("2: Modified host info for files is: {}".format(self.host_info[host_name]["dst_file"]))
+            ''' Finish: File copy while the BLT volume is marked failed '''
 
+            ''' start: File copy while the BLT volume is rebuilding '''
             # Creating another input file
             self.host_info[host_name]["src_file"]["file2"] = {}
             self.host_info[host_name]["src_file"]["file2"]["md5sum"] = []
@@ -896,7 +963,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                     iostat_post_fix_name = "{}_iostat_re_enable_drive.txt".format(host_name)
                     iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=iostat_post_fix_name)
-                    '''
                     iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
                                                                output_file=self.iostat_args["output_file"],
                                                                interval=self.iostat_args["interval"],
@@ -905,10 +971,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                     iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
                                                                interval=self.iostat_args["interval"],
                                                                count=int(iostat_count))
+                    '''
                 else:
                     fun_test.critical(
                         "Not starting the iostat collection because of lack of interval and count details")
 
+                start_time = time.time()
                 cp_cmd = "sudo cp {} {}".format(source_file, dst_file2[-1])
                 host_handle.start_bg_process(command=cp_cmd)
 
@@ -970,6 +1038,15 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             host_handle.sudo_command("sync", timeout=cp_timeout / 2)
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
+            end_time = time.time()
+            time_taken = end_time - start_time
+            fun_test.log("Time taken to copy during volume rebuild {}".format(time_taken))
+
+            row_data_dict["copy_time_during_rebuild"] = time_taken
+            row_data_dict["fio_job_name"] = "inspur_function_8_7_1_f1_{}_vol_{}_host_{}".format(
+                self.num_f1s, self.ec_info["num_volumes"], self.num_hosts)
+            row_data_dict["vol_size"] = str(self.ec_info["capacity"] / (1024 ** 3)) + "G"
+            row_data_dict["test_file_size"] = str(self.tes_file_size / (1024 ** 3)) + "G"
 
             # Checking if iostat process is still running...If so killing it...
             iostat_pid_check = host_handle.get_process_id("iostat")
@@ -1014,6 +1091,21 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected=self.host_info[host_name]["src_file"]["file1"]["md5sum"][0],
                                               actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & existing file before rebuild")
+            ''' finish: File copy while the BLT volume is rebuilding '''
+
+            # Building the table raw for this variation
+            row_data_list = []
+            for i in table_data_cols:
+                if i not in row_data_dict:
+                    row_data_list.append(-1)
+                else:
+                    row_data_list.append(row_data_dict[i])
+            table_data_rows.append(row_data_list)
+            # post_results("Inspur Performance Test", test_method, *row_data_list)
+
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
+            fun_test.add_table(panel_header="Single Drive Failure Result Table", table_name=self.summary,
+                               table_data=table_data)
 
     def cleanup(self):
         pass
