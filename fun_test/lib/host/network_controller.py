@@ -1348,7 +1348,7 @@ class NetworkController(DpcshClient):
             else:
                 cmd = ["list"]
             fun_test.debug("Getting flow list")
-            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout)
+            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout, chunk=16384)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
             fun_test.debug("flow %s: %s" % (cmd, result['data']))
             stats = result['data']
@@ -1378,7 +1378,7 @@ class NetworkController(DpcshClient):
             cmd = "stats/pervppkts/[%s]" % cluster_id
             fun_test.debug("Getting vp per pkt")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION,
-                                       sleep_duration=20)
+                                       chunk=16384)
             fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
             fun_test.debug("Per vppkts stats: %s" % result['data'])
             stats = result['data']
