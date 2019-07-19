@@ -812,6 +812,17 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                     cpus_allowed=cpus_allowed,
                                                                     **self.fio_cmd_args)
                     """
+                    vp_util_post_fix_name = "vp_util_iodepth_{}_{}_{}.txt".format(self.fio_jobs_iodepth[1], self.blt_count, mode)
+                    vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name=vp_util_post_fix_name)
+                    stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
+                                                                    storage_controller=self.storage_controller,
+                                                                    output_file=vp_util_artifact_file,
+                                                                    interval=60,
+                                                                    count=self.fio_cmd_args["runtime"]/60, threaded=True)
+
+
+
                     thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                             func=fio_parser,
                                                                             arg1=end_host_thread[thread_count],
