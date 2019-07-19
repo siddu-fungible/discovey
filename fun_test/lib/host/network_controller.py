@@ -1338,15 +1338,17 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def flow_list(self, blocked_only=False):
+    def flow_list(self, huid=None, blocked_only=False, timeout=120):
         stats = None
         try:
             if blocked_only:
-                cmd = "blocked"
+                cmd = ["blocked"]
+            elif huid:
+                cmd = ["list", huid]
             else:
-                cmd = "list"
+                cmd = ["list"]
             fun_test.debug("Getting flow list")
-            result = self.json_execute(verb="flow", data=cmd, command_duration=self.COMMAND_DURATION)
+            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
             fun_test.debug("flow %s: %s" % (cmd, result['data']))
             stats = result['data']
