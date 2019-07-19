@@ -118,6 +118,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_dsld = job_inputs["disable_dsld"]
         else:
             self.disable_dsld = False
+        if "f1_in_use" in job_inputs:
+            self.f1_in_use = job_inputs["f1_in_use"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -291,6 +293,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                   message="Configure Static route")
 
             # Forming shared variables for defined parameters
+            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["topology"] = self.topology
             fun_test.shared_variables["fs_obj"] = self.fs_obj
             fun_test.shared_variables["come_obj"] = self.come_obj
@@ -456,7 +459,7 @@ class ECVolumeLevelScript(FunTestScript):
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
-                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+                self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
             elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["csr_replay"]:
                 self.fs = fun_test.shared_variables["fs"]
@@ -478,6 +481,7 @@ class ECVolumeLevelScript(FunTestScript):
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 # Detaching all the EC/LS volumes to the external server
+                '''
                 for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
                         ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
@@ -493,6 +497,7 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")
                 self.storage_controller.disconnect()
+                '''
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
@@ -517,7 +522,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
-
         self.topology.cleanup()
 
 
@@ -572,11 +576,12 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
+            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
             self.fs = fun_test.shared_variables["fs_obj"]
             self.come_obj = fun_test.shared_variables["come_obj"]
             self.f1 = fun_test.shared_variables["f1_obj"][0][0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+            self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
+            self.f1_ips = fun_test.shared_variables["f1_ips"][self.f1_in_use]
             self.host_info = fun_test.shared_variables["host_info"]
             self.num_f1s = fun_test.shared_variables["num_f1s"]
             self.test_network = {}

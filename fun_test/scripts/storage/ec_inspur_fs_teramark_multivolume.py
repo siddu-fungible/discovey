@@ -285,6 +285,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                   message="Configure Static route")
 
             # Forming shared variables for defined parameters
+            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["topology"] = self.topology
             fun_test.shared_variables["fs_obj"] = self.fs_obj
             fun_test.shared_variables["come_obj"] = self.come_obj
@@ -450,7 +451,7 @@ class ECVolumeLevelScript(FunTestScript):
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
-                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+                self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
             elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["csr_replay"]:
                 self.fs = fun_test.shared_variables["fs"]
@@ -566,11 +567,12 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
+            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
             self.fs = fun_test.shared_variables["fs_obj"]
             self.come_obj = fun_test.shared_variables["come_obj"]
             self.f1 = fun_test.shared_variables["f1_obj"][0][0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+            self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
+            self.f1_ips = fun_test.shared_variables["f1_ips"][self.f1_in_use]
             self.host_info = fun_test.shared_variables["host_info"]
             self.num_f1s = fun_test.shared_variables["num_f1s"]
             self.test_network = {}

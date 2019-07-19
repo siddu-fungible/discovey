@@ -61,8 +61,7 @@ class RawVolumePerfScript(FunTestScript):
 
     def setup(self):
 
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      fun_test.get_script_name_without_ext() + ".json")
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_name_without_ext() + ".json")
         fun_test.shared_variables["server_key"] = self.server_key
 
         global funcp_obj, servers_mode, servers_list, fs_name
@@ -176,7 +175,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        testconfig_file = fun_test.get_script_parent_directory() + fun_test.get_script_name_without_ext() + ".json"
+        testconfig_file = fun_test.get_script_name_without_ext() + ".json"
         self.server_key = fun_test.parse_file_to_json(testconfig_file)
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.server_key["fs"][fs_name]["fs-name"])
 

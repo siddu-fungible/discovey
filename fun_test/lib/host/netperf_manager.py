@@ -244,7 +244,8 @@ class NetperfManager:
                 frame_size = arg_dict.get('frame_size', 800)
                 sip = arg_dict.get('sip', None)
                 ns = arg_dict.get('ns', None)
-                cpu_list = sorted(arg_dict.get('cpu_list'))[::-1]  # reversed order
+                cpu_list_server = sorted(arg_dict.get('cpu_list_server'))[::-1]  # reversed order
+                cpu_list_client = sorted(arg_dict.get('cpu_list_client'))[::-1]  # reversed order
                 fixed_netperf_port = arg_dict.get('fixed_netperf_port', False)
 
                 if test == 2:
@@ -253,11 +254,12 @@ class NetperfManager:
                 else:
                     num_processes = num_flows
                     measure_latency = False
-                process_cpu_list = []
+                netserver_cpu_list = []
                 for i in range(0, num_processes):
                     #cpu = 15 - i  # TODO: assume host has 2 CPUs, each has 8 cores, and NIC NUMA is 1
-                    cpu = cpu_list[i % len(cpu_list)]
-                    process_cpu_list.append(cpu)
+                    cpu = cpu_list_client[i % len(cpu_list_client)]
+                    netserver_cpu = cpu_list_server[i % len(cpu_list_server)]
+                    netserver_cpu_list.append(netserver_cpu)
                     mp_task_obj.add_task(
                         func=do_test,
                         func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, fixed_netperf_port),
@@ -273,7 +275,7 @@ class NetperfManager:
                         task_key='{}_{}_{}_latency'.format(direction, dip, i))
 
                 # Start netserver
-                if not self.start_netserver(linux_obj_dst, cpu_list=process_cpu_list, fixed_netperf_port=fixed_netperf_port):
+                if not self.start_netserver(linux_obj_dst, cpu_list=netserver_cpu_list, fixed_netperf_port=fixed_netperf_port):
                     fun_test.critical('Failed to start netserver!')
                     netserver_ready = False
                     break

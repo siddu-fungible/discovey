@@ -210,7 +210,7 @@ class Bmc(Linux):
                              context=self.context)
         return True
 
-    def ensure_come_is_up(self, come, max_wait_time=240, power_cycle=True):
+    def ensure_come_is_up(self, come, max_wait_time=300, power_cycle=True):
         come_up = come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=self._get_ipmi_details(), power_cycle=power_cycle)
         return come_up
 
@@ -477,7 +477,7 @@ class ComEInitializationWorker(Thread):
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
-            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True),
+            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
                                  message="Ensure ComE is up",
                                  context=self.fs.context)
 
@@ -967,7 +967,7 @@ class Fs(object, ToDictMixin):
         bmc = self.get_bmc()
         fun_test.test_assert(bmc.come_power_cycle(), "Trigger ComE power-cycle")
         come = self.get_come()
-        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=240), "Ensure ComE is up")
+        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=300), "Ensure ComE is up")
         return True
 
 

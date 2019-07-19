@@ -162,15 +162,17 @@ class RdmaTemplate(object):
                 if '-I' in kwargs:
                     self.inline_size = kwargs['-I']
 
-                if '-n' in kwargs and client_cmd:
+                if '-n' in kwargs:
                     self.iterations = kwargs['-n']
 
                 if not self.connection_type:
-                    cmd = "%s -d %s -p %d -F -I %d -s %d " % (self.test_type, ibv_device, port_num, self.inline_size,
-                                                              self.size)
+                    cmd = "%s -d %s -p %d -F -I %d -s %d -n %d " % (self.test_type, ibv_device, port_num,
+                                                                    self.inline_size, self.size, self.iterations)
                 else:
-                    cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (self.test_type, self.connection_type, ibv_device,
-                                                                       port_num, self.inline_size, self.size)
+                    cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d -n %d" % (self.test_type, self.connection_type,
+                                                                            ibv_device,
+                                                                            port_num, self.inline_size, self.size,
+                                                                            self.iterations)
                 for key, val in kwargs.items():
                     if type(val) == list:
                         for op in val:
@@ -181,9 +183,10 @@ class RdmaTemplate(object):
                             cmd += "%s %s " % (key, val)
                 if client_cmd:
                     if self.run_infinitely:
-                        cmd += "--run_infinitely -D %d -n %d %s " % (self.run_infinitely, self.iterations, server_ip)
-                    else:
-                        cmd += "-n %d %s " % (self.iterations, server_ip)
+                        cmd += "--run_infinitely -D %d " % self.run_infinitely
+                    if '-n' not in cmd:
+                        cmd += "-n %d" % self.iterations
+                    cmd += " %s" % server_ip
             fun_test.log('Cmd Formed: %s' % cmd)
         except Exception as ex:
             fun_test.critical(str(ex))
