@@ -198,15 +198,25 @@ class FunethPerformanceBase(FunTestCase):
         # Underlay VMs
         if 'UL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ul_vm']
-            cpu_list = funeth.CPU_LIST_VM
+            if flow_type.startswith('HU_NU'):
+                cpu_list_client = funeth.CPU_LIST_VM
+                cpu_list_server = funeth.CPU_LIST_HOST
+            elif flow_type.startswith('NU_HU'):
+                cpu_list_client = funeth.CPU_LIST_HOST
+                cpu_list_server = funeth.CPU_LIST_VM
+            elif flow_type.startswith('HU_HU'):
+                cpu_list_client = funeth.CPU_LIST_VM
+                cpu_list_server = funeth.CPU_LIST_VM
         # Overlay VMs
         elif 'OL_VM' in flow_type.upper():
             funeth_obj = fun_test.shared_variables['funeth_obj_ol_vm']
-            cpu_list = funeth.CPU_LIST_VM
+            cpu_list_client = funeth.CPU_LIST_VM
+            cpu_list_server = funeth.CPU_LIST_VM
         # Hosts
         else:
             funeth_obj = fun_test.shared_variables['funeth_obj']
-            cpu_list = funeth.CPU_LIST_HOST
+            cpu_list_client = funeth.CPU_LIST_HOST
+            cpu_list_server = funeth.CPU_LIST_HOST
 
         # host/VM use same perf_manager_obj, since CPU tuning is only doable in host
         perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
@@ -277,7 +287,8 @@ class FunethPerformanceBase(FunTestCase):
                  'duration': duration,
                  'frame_size': frame_size + 18,  # Pass Ethernet frame size
                  'suffix': suffix,
-                 'cpu_list': cpu_list,
+                 'cpu_list_server': cpu_list_server,
+                 'cpu_list_client': cpu_list_client,
                  'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  }
             )

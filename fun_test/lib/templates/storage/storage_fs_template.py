@@ -246,7 +246,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 command_result = sc.create_volume(
                     type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
                     block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
-                    command_duration=command_timeout)
+                    group_id=num+1, command_duration=command_timeout)
                 fun_test.test_assert(command_result["status"], "Creating {} {} {} {} {} bytes volume on DUT {}".
                                      format(num, i, vtype, ec_info["volume_types"][vtype],
                                             ec_info["volume_capacity"][num][vtype], sc_index))
@@ -272,7 +272,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             command_result = hosting_sc.create_volume(
                 type="VOL_TYPE_BLK_RDS", capacity=ec_info["volume_capacity"][num]["ndata"],
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
-                remote_nsid=cur_ns_id, remote_ip=ec_info["rds_nsid"][num][cur_ns_id],
+                remote_nsid=cur_ns_id, remote_ip=ec_info["rds_nsid"][num][cur_ns_id], group_id=num+1,
                 command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
                                                            "on DUT {}".format(cur_ns_id,
@@ -305,7 +305,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         command_result = hosting_sc.create_volume(
             type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
             block_size=ec_info["volume_block"]["ec"], name="ec_" + this_uuid[-4:], uuid=this_uuid,
-            ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=pvol_id, command_duration=command_timeout)
+            ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=pvol_id, group_id=num+1,
+            command_duration=command_timeout)
         fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on DUT {}".
                              format(num, ec_info["ndata"], ec_info["nparity"], ec_info["volume_capacity"][num]["ec"],
                                     cur_vol_host_f1))
@@ -318,7 +319,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             command_result = hosting_sc.create_volume(
                 type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
                 block_size=ec_info["volume_block"]["jvol"], name="jvol_" + this_uuid[-4:],
-                uuid=ec_info["uuids"][num]["jvol"], command_duration=command_timeout)
+                uuid=ec_info["uuids"][num]["jvol"], group_id=num+1, command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on DUT {}".
                                  format(num, ec_info["volume_capacity"][num]["jvol"], cur_vol_host_f1))
 
@@ -336,6 +337,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                                           compress=ec_info['compress'],
                                                           zip_effort=ec_info['zip_effort'],
                                                           zip_filter=ec_info['zip_filter'],
+                                                          group_id=num + 1,
                                                           command_duration=command_timeout)
             else:
                 command_result = hosting_sc.create_volume(type=ec_info["volume_types"]["lsv"],
@@ -345,6 +347,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                                                           group=ec_info["ndata"],
                                                           jvol_uuid=ec_info["uuids"][num]["jvol"],
                                                           pvol_id=ec_info["uuids"][num]["ec"],
+                                                          group_id=num+1,
                                                           command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT {}".
                                  format(num, ec_info["volume_capacity"][num]["lsv"], cur_vol_host_f1))

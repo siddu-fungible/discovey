@@ -692,6 +692,88 @@
                     ]
                   }
                 ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "storage_voltest_blt",
+                "label": "BLT",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "voltest_blt_1_instance",
+                    "label": "1 Instance(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "VoltestBlt1Performance",
+                        "name": "voltest_blt_1_instance_latency",
+                        "label": "Latency",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt1Performance",
+                        "name": "voltest_blt_1_instance_iops",
+                        "label": "IOPS",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt1Performance",
+                        "name": "voltest_blt_1_instance_bandwidth",
+                        "label": "Bandwidth",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "voltest_blt_8_instance",
+                    "label": "8 Instance(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "VoltestBlt8Performance",
+                        "name": "voltest_blt_8_instance_latency",
+                        "label": "Latency",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt8Performance",
+                        "name": "voltest_blt_8_instance_iops",
+                        "label": "IOPS",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt8Performance",
+                        "name": "voltest_blt_8_instance_bandwidth",
+                        "label": "Bandwidth",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "voltest_blt_12_instance",
+                    "label": "12 Instance(s)",
+                    "children": [
+                      {
+                        "metric_model_name": "VoltestBlt12Performance",
+                        "name": "voltest_blt_12_instance_latency",
+                        "label": "Latency",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt12Performance",
+                        "name": "voltest_blt_12_instance_iops",
+                        "label": "IOPS",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "VoltestBlt12Performance",
+                        "name": "voltest_blt_12_instance_bandwidth",
+                        "label": "Bandwidth",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           },
@@ -2934,13 +3016,35 @@
                         "metric_model_name": "MetricContainer",
                         "name": "ipsec_encryption_single_tunnel",
                         "label": "Single Tunnel",
-                        "children": []
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_enc_single_tunnel_output_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_enc_single_tunnel_output_pps",
+                            "label": "Packets per sec"
+                          }
+                        ]
                       },
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "ipsec_encryption_multi_tunnel",
                         "label": "Multi Tunnel",
-                        "children": []
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_enc_multi_tunnel_output_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_enc_multi_tunnel_output_pps",
+                            "label": "Packets per sec"
+                          }
+                        ]
                       }
                     ]
                   },
@@ -2953,13 +3057,35 @@
                         "metric_model_name": "MetricContainer",
                         "name": "ipsec_decryption_single_tunnel",
                         "label": "Single Tunnel",
-                        "children": []
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_dec_single_tunnel_output_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_dec_single_tunnel_output_pps",
+                            "label": "Packets per sec"
+                          }
+                        ]
                       },
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "ipsec_decryption_multi_tunnel",
                         "label": "Multi Tunnel",
-                        "children": []
+                        "children": [
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_dec_multi_tunnel_output_throughput",
+                            "label": "Throughput"
+                          },
+                          {
+                            "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                            "name": "juniper_new_ipsec_dec_multi_tunnel_output_pps",
+                            "label": "Packets per sec"
+                          }
+                        ]
                       }
                     ]
                   }
