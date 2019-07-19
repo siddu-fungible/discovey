@@ -49,7 +49,7 @@ class ScriptSetup(FunTestScript):
 
 
     def cleanup(self):
-        funcp_obj.cleanup_funcp()
+        # funcp_obj.cleanup_funcp()
         fun_test.shared_variables["topology"].cleanup()
         # pass
 
