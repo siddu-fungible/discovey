@@ -457,7 +457,7 @@ class ECVolumeLevelScript(FunTestScript):
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
-                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+                self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
             elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["csr_replay"]:
                 self.fs = fun_test.shared_variables["fs"]
