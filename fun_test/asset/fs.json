@@ -351,6 +351,7 @@
   },
    {
     "name": "fs-31",
+     "gateway_ip": "10.1.44.1",
     "bmc": {
       "mgmt_ip": "10.1.44.53",
       "mgmt_ssh_username": "sysadmin",
