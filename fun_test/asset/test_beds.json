@@ -512,6 +512,35 @@
       }
     }
   },
+    "fs-31": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-31",
+      "pcie_interface_info": {
+         "0": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "systems-lab-01"
+            }
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          }
+        }
+      }
+    }
+  },
   "fs-41": {
     "workarounds": {
       "enable_funcp": true
