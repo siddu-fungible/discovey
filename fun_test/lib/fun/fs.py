@@ -186,11 +186,15 @@ class Bmc(Linux):
             service_host = self
 
         try:
-            service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
-            fun_test.log("IPMI power-cycle complete")
+            service_host.ipmi_power_off(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+            fun_test.log("IPMI power-cycle off complete")
         except Exception as ex:
             fun_test.critical(str(ex))
+        try:
             service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+            fun_test.log("IPMI power-cycle on complete")
+        except Exception as ex:
+            fun_test.critical(str(ex))
         return True
 
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
