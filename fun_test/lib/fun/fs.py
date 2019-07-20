@@ -179,6 +179,7 @@ class Bmc(Linux):
         ipmi_password = ipmi_details["password"]
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         service_host = None
+        power_on_result = False
         if service_host_spec:
             service_host = Linux(**service_host_spec)
         else:
@@ -191,10 +192,11 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         try:
-            service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+            power_on_result = service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
             fun_test.log("IPMI power-cycle on complete")
         except Exception as ex:
             fun_test.critical(str(ex))
+        fun_test.simple_assert(power_on_result, "IPMI power on")
         return True
 
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
