@@ -726,7 +726,8 @@ class Fs(object, ToDictMixin):
                  context=None,
                  setup_bmc_support_files=None,
                  apc_info=None,
-                 fun_cp_callback=None):
+                 fun_cp_callback=None,
+                 skip_funeth_come_power_cycle=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -749,6 +750,7 @@ class Fs(object, ToDictMixin):
         self.f1_parameters = f1_parameters
         self.gateway_ip = gateway_ip
         self.retimer_workround = retimer_workaround
+        self.skip_funeth_come_power_cycle = skip_funeth_come_power_cycle
         self.non_blocking = non_blocking
         self.context = context
         self.set_boot_phase(BootPhases.FS_BRING_UP_INIT)
@@ -841,6 +843,7 @@ class Fs(object, ToDictMixin):
         gateway_ip = fs_spec.get("gateway_ip", None)
         workarounds = fs_spec.get("workarounds", {})
         retimer_workaround = workarounds.get("retimer_workaround", None)
+        skip_funeth_come_power_cycle = workarounds.get("skip_funeth_come_power_cycle", None)
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
@@ -863,7 +866,8 @@ class Fs(object, ToDictMixin):
                   setup_bmc_support_files=setup_bmc_support_files,
                   apc_info=apc_info,
                   fun_cp_callback=fun_cp_callback,
-                  power_cycle_come=power_cycle_come)
+                  power_cycle_come=power_cycle_come,
+                  skip_funeth_come_power_cycle=skip_funeth_come_power_cycle)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
@@ -876,8 +880,10 @@ class Fs(object, ToDictMixin):
 
         fun_test.test_assert(expression=self.set_f1s(), message="Set F1s", context=self.context)
 
-        self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
-        fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+        if not self.skip_funeth_come_power_cycle:
+            self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
+            fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+
         self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
         fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
 

@@ -74,7 +74,8 @@
   {
     "name": "fs-11",
     "workarounds": {
-      "retimer_workaround": true
+      "retimer_workaround": true,
+      "skip_funeth_come_power_cycle": true
     },
     "bmc": {
       "mgmt_ip": "10.1.21.16",
