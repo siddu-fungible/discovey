@@ -218,16 +218,6 @@ class NicEmulation(FunTestCase):
                 fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                         % servers_mode[server])
 
-        # Set CPU governor to performance for all cores
-        for obj in host_objs:
-            online_cpu = \
-                host_objs[obj][0].command("lscpu | grep -i \"on-line\" | awk -F ':' '{print $2}' | tr -d ' '")
-            online_cpu_list = online_cpu.rstrip().rsplit('-')
-            for i in range(int(online_cpu_list[0]), int(online_cpu_list[1])+1):
-                host_objs[obj][0].sudo_command(
-                    "echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor".format(i))
-                host_objs[obj][0].sudo_command("cat /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor".format(i))
-
         # install drivers on PCIE connected servers
         tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
