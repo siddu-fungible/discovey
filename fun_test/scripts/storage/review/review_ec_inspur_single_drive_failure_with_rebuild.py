@@ -227,6 +227,7 @@ class ECVolumeLevelScript(FunTestScript):
             # Forming shared variables for defined parameters
             fun_test.shared_variables["topology"] = self.topology
             fun_test.shared_variables["fs_obj"] = self.fs_obj
+            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["come_obj"] = self.come_obj
             fun_test.shared_variables["f1_obj"] = self.f1_obj
             fun_test.shared_variables["sc_obj"] = self.sc_obj
@@ -264,6 +265,7 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
         come_reboot = False
+        '''
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
@@ -326,6 +328,7 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.critical(str(ex))
 
             self.topology.cleanup()
+        '''
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -377,7 +380,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
-            self.fs = fun_test.shared_variables["fs_obj"]
+            self.fs_obj = fun_test.shared_variables["fs_obj"]
+            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
             self.come_obj = fun_test.shared_variables["come_obj"]
             self.f1 = fun_test.shared_variables["f1_obj"][0][0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
@@ -404,6 +408,24 @@ class ECVolumeLevelTestcase(FunTestCase):
             (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
                                                                                            self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
+            fun_test.log("EC details after configuring EC Volume:")
+            for k, v in self.ec_info.items():
+                fun_test.log("{}: {}".format(k, v))
+            if self.rebuild_on_spare_volume:
+                num = self.test_volume_start_index
+                vtype = "ndata"
+                self.spare_vol_uuid = utils.generate_uuid()
+                self.ec_info["uuids"][num][vtype].append(self.spare_vol_uuid)
+                self.ec_info["uuids"][num]["blt"].append(self.spare_vol_uuid)
+                command_result = self.storage_controller.create_volume(
+                    type=self.ec_info["volume_types"][vtype], capacity=self.ec_info["volume_capacity"][num][vtype],
+                    block_size=self.ec_info["volume_block"][vtype], name=vtype + "_" + self.spare_vol_uuid[-4:],
+                    uuid=self.spare_vol_uuid, group_id=num + 1, command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(
+                    command_result["status"], "Creating Spare Volume {} {} {} {} bytes volume on DUT instance".
+                        format(num, vtype, self.ec_info["volume_types"][vtype],
+                               self.ec_info["volume_capacity"][num][vtype]))
 
             fun_test.log("EC details after configuring EC Volume:")
             for k, v in self.ec_info.items():
@@ -989,7 +1011,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fail_device = self.ec_info["device_id"][num][
                     self.failure_drive_index[num - self.test_volume_start_index]]
 
-                ''' Marking drive as failed '''
+                ''' Marking drive as online '''
                 '''
                 device_up_status = self.storage_controller.enable_device(device_id=fail_device,
                                                                          command_duration=self.command_timeout)
@@ -1004,9 +1026,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                          device_stats["data"]["device state"]))
 
                 '''
-                ''' Marking drive as failed '''
+                ''' Marking drive as online '''
 
-                ''' Marking volume as failed '''
+                ''' Marking volume as online '''
 
                 volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
                 fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".format(fail_uuid))
@@ -1015,13 +1037,19 @@ class ECVolumeLevelTestcase(FunTestCase):
                 volume_stats = self.storage_controller.peek(device_props_tree)
                 print("Volume status is: {}".format(volume_stats["data"]))
 
-                ''' Marking volume as failed '''
+                ''' Marking volume as online '''
 
-                # TODO Call the rebuild for same volume
+                # TODO Call the rebuild for same volume or on spare volume
+                if self.rebuild_on_spare_volume:
+                    spare_uuid = self.spare_vol_uuid
+                    fun_test.log("Rebuilding on spare volume: {}".format(spare_uuid))
+                else:
+                    spare_uuid = fail_uuid
+                    fun_test.log("Rebuilding on failed volume: {}".format(spare_uuid))
                 rebuild_device = self.storage_controller.plex_rebuild(
                     subcmd="ISSUE", type=self.ec_info["volume_types"]["ec"],
                     uuid=self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index],
-                    failed_uuid=fail_uuid, spare_uuid=fail_uuid, rate=20)
+                    failed_uuid=fail_uuid, spare_uuid=spare_uuid, rate=80)
                 # fun_test.test_assert(rebuild_device["status"], "Rebuild failed Device ID {}".format(fail_device))
                 fun_test.log("Rebuild failed Device ID {} status {}".format(fail_device, rebuild_device["status"]))
 
@@ -1046,7 +1074,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             row_data_dict["fio_job_name"] = "inspur_function_8_7_1_f1_{}_vol_{}_host_{}".format(
                 self.num_f1s, self.ec_info["num_volumes"], self.num_hosts)
             row_data_dict["vol_size"] = str(self.ec_info["capacity"] / (1024 ** 3)) + "G"
-            row_data_dict["test_file_size"] = str(self.tes_file_size / (1024 ** 3)) + "G"
+            row_data_dict["test_file_size"] = str(self.test_file_size / (1024 ** 3)) + "G"
 
             # Checking if iostat process is still running...If so killing it...
             iostat_pid_check = host_handle.get_process_id("iostat")
@@ -1092,6 +1120,44 @@ class ECVolumeLevelTestcase(FunTestCase):
                                               actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & existing file before rebuild")
             ''' finish: File copy while the BLT volume is rebuilding '''
+
+            # Parsing f1 uart log file to search rebuild start and finish time
+            '''
+            log file output:
+            [2537.762236 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 under rebuild total failed:1"
+            [2774.291395 2.2.3] ALERT ecvol "storage/flvm/ecvol/ecvol.c:3312:ecvol_rebuild_done_process_push() Rebuild operation complete for plex:5"
+            [2774.292149 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 marked active total failed:0"
+            '''
+            try:
+                bmc_handle = self.fs_obj[0].get_bmc()
+                print("bmc handle is: {}".format(bmc_handle))
+                print("dir of bmc handle is: {}".format(dir(bmc_handle)))
+                uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_filename(f1_index=self.f1_in_use)
+                fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
+                search_pattern = "under rebuild total failed"
+                output = bmc_handle.command("grep {} {}".format(search_pattern, uart_log_file,
+                                                                      timeout=self.command_timeout))
+                fun_test.log("'Rebuild operation start' log search output: {}".format(output))
+                print("type of output is: {}".format(type(output)))
+                fun_test.log("Rebuild operation is started")
+
+                timer = FunTimer(max_time=600)
+                while not timer.is_expired():
+                    search_pattern = "Rebuild operation complete for plex"
+                    fun_test.sleep("Waiting for volume rebuild to complete", seconds=(self.status_interval * 2))
+                    output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
+                                                                       timeout=self.command_timeout))
+                    print("type of output is: {}".format(type(output)))
+                    if int(output) == 1:
+                        complete_search_output = bmc_handle.command("grep {} {}".format(
+                            search_pattern, uart_log_file, timeout=self.command_timeout))
+                        fun_test.log("Rebuild operation completion log search output: {}".format(complete_search_output))
+                        fun_test.log("Rebuild operation on volume {} is completed".format(spare_uuid))
+                        break
+                else:
+                    fun_test.test_assert(False, "Rebuild operation on volume {} completed".format(spare_uuid))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
             # Building the table raw for this variation
             row_data_list = []

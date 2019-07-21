@@ -47,7 +47,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "ndata": 4,
       "nparity": 2,
-      "capacity": 274877906944,
+      "capacity": 137438953472,
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
@@ -66,12 +66,13 @@
     "nvme_device": "/dev/nvme",
     "mount_path": "/mnt/ssd",
     "trigger_drive_failure": true,
+    "rebuild_on_spare_volume": true,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
     "fs_type": "ext3",
     "test_volume_start_index": 0,
-    "test_file_size": 107374182400,
+    "test_file_size": 53687091200,
     // Ensure that dividing block size with the test_file_size doesn't give any fractions
     "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": 1048576},
     //
