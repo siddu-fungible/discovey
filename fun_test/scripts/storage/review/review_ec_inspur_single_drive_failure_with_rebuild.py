@@ -1049,7 +1049,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 rebuild_device = self.storage_controller.plex_rebuild(
                     subcmd="ISSUE", type=self.ec_info["volume_types"]["ec"],
                     uuid=self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index],
-                    failed_uuid=fail_uuid, spare_uuid=spare_uuid, rate=80)
+                    failed_uuid=fail_uuid, spare_uuid=spare_uuid, rate=self.rebuild_rate)
                 # fun_test.test_assert(rebuild_device["status"], "Rebuild failed Device ID {}".format(fail_device))
                 fun_test.log("Rebuild failed Device ID {} status {}".format(fail_device, rebuild_device["status"]))
 
@@ -1071,7 +1071,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("Time taken to copy during volume rebuild {}".format(time_taken))
 
             row_data_dict["copy_time_during_rebuild"] = time_taken
-            row_data_dict["fio_job_name"] = "inspur_function_8_7_1_f1_{}_vol_{}_host_{}".format(
+            row_data_dict["fio_job_name"] = "inspur_functional_8_7_1_f1_{}_vol_{}_host_{}".format(
                 self.num_f1s, self.ec_info["num_volumes"], self.num_hosts)
             row_data_dict["vol_size"] = str(self.ec_info["capacity"] / (1024 ** 3)) + "G"
             row_data_dict["test_file_size"] = str(self.test_file_size / (1024 ** 3)) + "G"
@@ -1134,16 +1134,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                 print("dir of bmc handle is: {}".format(dir(bmc_handle)))
                 uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_filename(f1_index=self.f1_in_use)
                 fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
-                search_pattern = "under rebuild total failed"
+                search_pattern = "'under rebuild total failed'"
                 output = bmc_handle.command("grep {} {}".format(search_pattern, uart_log_file,
-                                                                      timeout=self.command_timeout))
+                                                                timeout=self.command_timeout))
                 fun_test.log("'Rebuild operation start' log search output: {}".format(output))
                 print("type of output is: {}".format(type(output)))
                 fun_test.log("Rebuild operation is started")
 
                 timer = FunTimer(max_time=600)
                 while not timer.is_expired():
-                    search_pattern = "Rebuild operation complete for plex"
+                    search_pattern = "'Rebuild operation complete for plex'"
                     fun_test.sleep("Waiting for volume rebuild to complete", seconds=(self.status_interval * 2))
                     output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
                                                                        timeout=self.command_timeout))

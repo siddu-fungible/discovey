@@ -67,6 +67,7 @@
     "mount_path": "/mnt/ssd",
     "trigger_drive_failure": true,
     "rebuild_on_spare_volume": true,
+    "rebuild_rate": 80,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
