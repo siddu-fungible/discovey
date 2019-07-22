@@ -735,6 +735,8 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 dst_file1.append(self.mount_path + str(num + 1) + "/base_file")
+                fun_test.log("Performing sync operation before starting file copy")
+                host_handle.sudo_command("sync", timeout=cp_timeout / 2)
                 start_time = time.time()
                 cp_cmd = "sudo cp {} {}".format(source_file, dst_file1[-1])
                 host_handle.start_bg_process(command=cp_cmd)
@@ -1174,7 +1176,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
             fun_test.add_table(panel_header="Single Drive Failure Result Table", table_name=self.summary,
                                table_data=table_data)
-
             try:
                 if hasattr(self, "back_pressure") and self.back_pressure:
                     # Check if back pressure is still running, if yes, stop it
@@ -1193,7 +1194,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 class SingleVolumeWithoutBP(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur: 8.7.1.0: Single Drive Failure Testing without back pressure",
+                              summary="Inspur: 8.7.1.0: Single Drive Failure Testing with back pressure",
                               steps="""
         1. Bring up F1 in FS1600.
         2. Reboot network connected hosted and configure its test interface to establish connectivity with F1.
