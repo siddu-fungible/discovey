@@ -235,6 +235,10 @@ class FunControlPlaneBringup:
             linux_obj = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                               ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                               ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
+        # Make sure API server is active
+        fun_test.test_assert(expression=linux_obj.get_process_id_by_pattern(process_pat="apisvr"),
+                             message="API server active")
+
         if update_funcp_folder:
             # linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
             funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
@@ -248,6 +252,19 @@ class FunControlPlaneBringup:
             self.abstract_configs_f1_1 = fun_test.parse_file_to_json(abstract_config_f1_1)
 
         for f1 in self.mpg_ips:
+
+            # ping MPG IPs before executing abstract config
+            ping_mpg = linux_obj.ping(self.mpg_ips[f1])
+
+            if ping_mpg:
+                fun_test.test_assert(expression=True, message="MPG IP %s is reachable" % self.mpg_ips[f1])
+            else:
+                fun_test.sleep(message="Waiting to retry mpg ping")
+                ping_mpg = linux_obj.ping(self.mpg_ips[f1], count=15)
+                if not ping_mpg:
+                    fun_test.critical(message="cannot ping MPG IP %s from COMe" % self.mpg_ips[f1])
+                    continue
+
             file_contents = None
             file_name = str(f1).strip() + "_abstract.json"
             if str(f1.split("-")[-1]) == "0":
