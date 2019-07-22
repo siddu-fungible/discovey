@@ -353,6 +353,9 @@
    {
     "name": "fs-31",
      "gateway_ip": "10.1.44.1",
+         "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "bmc": {
       "mgmt_ip": "10.1.44.53",
       "mgmt_ssh_username": "sysadmin",
