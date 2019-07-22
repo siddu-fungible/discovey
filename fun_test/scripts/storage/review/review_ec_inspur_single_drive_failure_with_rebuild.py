@@ -501,7 +501,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     fun_test.critical("Unable to start packet capture in {}".format(host_name))
 
-            fun_test.shared_variables["fio"] = {}
             for host_name in self.host_info:
                 fun_test.shared_variables["ec"][host_name] = {}
                 host_handle = self.host_info[host_name]["handle"]
@@ -708,8 +707,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(self.src_md5sum, "Finding md5sum of source base file {}".
                                  format(self.dd_create_file["output_file"]))
             self.host_info[host_name]["src_file"]["base_file"]["md5sum"].append(self.src_md5sum)
-            print("Modified host_info for files is: {}".format(self.host_info[host_name]["src_file"]))
-            print("src file md5sum is: {}".format(self.host_info[host_name]["src_file"]["base_file"]["md5sum"]))
 
             # Test Preparation Done
             # Starting the test
@@ -725,19 +722,14 @@ class ECVolumeLevelTestcase(FunTestCase):
             iostat_count = cp_timeout / self.iostat_args["interval"]
             fun_test.log("Collecting iostat on {}".format(host_name))
             if start_stats:
-                iostat_post_fix_name = "{}_iostat_base_file_copy.txt".format(host_name)
+                iostat_post_fix_name = "{}_iostat_copy_base_file.txt".format(host_name)
                 iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=iostat_post_fix_name)
                 iostat_pid[host_name] = host_handle.iostat(
-                    device=",".join(self.host_info[host_name]["volume_name_list"]),
+                    device=",".join(self.host_info[host_name]["nvme_block_device_list"]),
                     output_file=self.iostat_args["output_file"],
                     interval=self.iostat_args["interval"],
                     count=int(iostat_count))
-                '''
-                iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
-                                                           interval=self.iostat_args["interval"],
-                                                           count=int(iostat_count))
-                '''
             else:
                 fun_test.critical("Not starting the iostat collection because of lack of interval and count details")
 
@@ -772,7 +764,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                          source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
                          source_file_path=self.iostat_args["output_file"],
                          target_file_path=iostat_artifact_file[host_name])
-            fun_test.add_auxillary_file(description="Host {} IOStat Usage - Drive Failure".format(host_name),
+            fun_test.add_auxillary_file(description="Host {} IOStat Usage - Base File copy".format(host_name),
                                         filename=iostat_artifact_file[host_name])
 
             self.host_info[host_name]["dst_file"]["base_file"] = {}
@@ -791,7 +783,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & destination file")
                 self.host_info[host_name]["dst_file"]["base_file"][num]["md5sum"].append(self.dst_md5sum)
-            print("2: Modified host info for files is: {}".format(self.host_info[host_name]["dst_file"]))
 
             # Deleting the base file
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
@@ -821,8 +812,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(self.src_md5sum, "Finding md5sum of source file {}".
                                  format(self.dd_create_file["output_file"]))
             self.host_info[host_name]["src_file"]["file1"]["md5sum"].append(self.src_md5sum)
-            print("Modified host_info for files is: {}".format(self.host_info[host_name]["src_file"]))
-            print("src file md5sum is: {}".format(self.host_info[host_name]["src_file"]["file1"]["md5sum"]))
 
             # Test Preparation Done
             # Starting the test
@@ -849,18 +838,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             iostat_count = cp_timeout / self.iostat_args["interval"]
             fun_test.log("Collecting iostat on {}".format(host_name))
             if start_stats:
-                iostat_post_fix_name = "{}_iostat_fail_drive.txt".format(host_name)
+                iostat_post_fix_name = "{}_iostat_copy_during_fail.txt".format(host_name)
                 iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=iostat_post_fix_name)
-                iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
-                                                           output_file=self.iostat_args["output_file"],
-                                                           interval=self.iostat_args["interval"],
-                                                           count=int(iostat_count))
-                '''
-                iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
-                                                           interval=self.iostat_args["interval"],
-                                                           count=int(iostat_count))
-                '''
+                iostat_pid[host_name] = host_handle.iostat(
+                    device=",".join(self.host_info[host_name]["nvme_block_device_list"]),
+                    output_file=self.iostat_args["output_file"], interval=self.iostat_args["interval"],
+                    count=int(iostat_count))
             else:
                 fun_test.critical("Not starting the iostat collection because of lack of interval and count details")
 
@@ -893,8 +877,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if self.fail_drive:
                         ''' Marking drive as failed '''
                         fun_test.log("Initiating drive failure")
-                        device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
-                                                                                    command_duration=self.command_timeout)
+                        device_fail_status = self.storage_controller.disable_device(
+                            device_id=fail_device, command_duration=self.command_timeout)
                         fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
 
                         # Validate if Device is marked as Failed
@@ -904,21 +888,26 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.test_assert_expected(expected="DEV_FAILED_ERR_INJECT",
                                                       actual=device_stats["data"]["device state"],
                                                       message="Device ID {} is marked as Failed".format(fail_device))
-                        print('Stats of device {} and device state is {}'.format(device_stats,
-                                                                                 device_stats["data"]["device state"]))
                         ''' Marking drive as failed '''
                     else:
-                        ''' Marking volume as failed '''
-                        fun_test.log("Initiating volume failure")
+                        ''' Marking Plex as failed '''
+                        fun_test.log("Initiating Plex failure")
                         volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
-                        fun_test.test_assert(volume_fail_status["status"], "Disabling Volume UUID {}".format(fail_uuid))
+                        fun_test.test_assert(volume_fail_status["status"], "Disabling Plex UUID {}".format(fail_uuid))
                         # Validate if volume is marked as Failed
-                        device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
+                        device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                                 fail_uuid)
                         volume_stats = self.storage_controller.peek(device_props_tree)
-                        print("Volume status is: {}".format(volume_stats["data"]))
-                        ''' Marking volume as failed '''
-
-            print("2. self.ec info after disabling the device : {}".format(self.ec_info))
+                        try:
+                            print("Volume status is: {}".format(volume_stats["data"]["stats"]["fault_injection"]))
+                            print("Type Volume status is: {}".format(
+                                type(volume_stats["data"]["stats"]["fault_injection"])))
+                            fun_test.test_assert_expected(
+                                expected=1, actual=volume_stats["data"]["stats"]["fault_injection"],
+                                message="Plex is marked as Failed")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        ''' Marking Plex as failed '''
             timer = FunTimer(max_time=cp_timeout)
             while not timer.is_expired():
                 fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
@@ -932,7 +921,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             host_handle.sudo_command("sync", timeout=cp_timeout / 2)
             end_time = time.time()
             time_taken = end_time - start_time
-            fun_test.log("Time taken to copy during failed volume/drive {}".format(time_taken))
+            fun_test.log("Time taken to copy during failed plex/drive {}".format(time_taken))
             row_data_dict["copy_time_during_plex_fail"] = time_taken
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
@@ -964,7 +953,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & destination file")
                 self.host_info[host_name]["dst_file"]["file1"][num]["md5sum"].append(self.dst_md5sum)
-            print("2: Modified host info for files is: {}".format(self.host_info[host_name]["dst_file"]))
             ''' Finish: File copy while the BLT volume is marked failed '''
 
             ''' start: File copy while the BLT volume is rebuilding '''
@@ -982,32 +970,23 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(self.src_md5sum, "Finding md5sum of source file {}".
                                  format(self.dd_create_file["output_file"]))
             self.host_info[host_name]["src_file"]["file2"]["md5sum"].append(self.src_md5sum)
-            print("2. Modified host_info for files is: {}".format(self.host_info[host_name]["src_file"]))
-            print("2. src file md5sum is: {}".format(self.host_info[host_name]["src_file"]["file2"]["md5sum"]))
 
             # Copying the file into the volume
             source_file = self.dd_create_file["output_file"]
             dst_file2 = []
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 dst_file2.append(self.mount_path + str(num + 1) + "/file2")
-
-                # TODO : capture IOSTAT in artifact file before start copy and after copy command is done
                 # Calling the iostat method to collect the iostat for the while performing IO (copying file)
                 iostat_count = cp_timeout / self.iostat_args["interval"]  # Duplicate?
                 fun_test.log("Collecting iostat on {}".format(host_name))
                 if start_stats:
-                    iostat_post_fix_name = "{}_iostat_re_enable_drive.txt".format(host_name)
+                    iostat_post_fix_name = "{}_iostat_copy_during_rebuild.txt".format(host_name)
                     iostat_artifact_file[host_name] = fun_test.get_test_case_artifact_file_name(
                         post_fix_name=iostat_post_fix_name)
-                    iostat_pid[host_name] = host_handle.iostat(device=",".join(self.host_info[host_name]["volume_name_list"]),
-                                                               output_file=self.iostat_args["output_file"],
-                                                               interval=self.iostat_args["interval"],
-                                                               count=int(iostat_count))
-                    '''
-                    iostat_pid[host_name] = host_handle.iostat(output_file=self.iostat_args["output_file"],
-                                                               interval=self.iostat_args["interval"],
-                                                               count=int(iostat_count))
-                    '''
+                    iostat_pid[host_name] = host_handle.iostat(
+                        device=",".join(self.host_info[host_name]["nvme_block_device_list"]),
+                        output_file=self.iostat_args["output_file"], interval=self.iostat_args["interval"],
+                        count=int(iostat_count))
                 else:
                     fun_test.critical(
                         "Not starting the iostat collection because of lack of interval and count details")
@@ -1015,9 +994,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 start_time = time.time()
                 cp_cmd = "sudo cp {} {}".format(source_file, dst_file2[-1])
                 host_handle.start_bg_process(command=cp_cmd)
-
-            fun_test.sleep(message="Sleeping for {} seconds before bringing up the failed device(s)".
-                           format(wait_time), seconds=wait_time)
+            fun_test.sleep(message="Sleeping for {} seconds before before bringing up the failed device(s) & "
+                                   "plex rebuild".format(wait_time), seconds=wait_time)
 
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 fail_uuid = self.ec_info["uuids"][num]["blt"][
@@ -1025,32 +1003,41 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fail_device = self.ec_info["device_id"][num][
                     self.failure_drive_index[num - self.test_volume_start_index]]
 
-                if self.fail_drive:
-                    ''' Marking drive as online '''
-                    ''''''
-                    device_up_status = self.storage_controller.enable_device(device_id=fail_device,
-                                                                             command_duration=self.command_timeout)
-                    fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
+                if not self.rebuild_on_spare_volume:
+                    if self.fail_drive:
+                        ''' Marking drive as online '''
+                        ''''''
+                        device_up_status = self.storage_controller.enable_device(device_id=fail_device,
+                                                                                 command_duration=self.command_timeout)
+                        fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
 
-                    device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
-                    device_stats = self.storage_controller.peek(device_props_tree)
-                    fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
-                    fun_test.test_assert_expected(expected="DEV_ONLINE", actual=device_stats["data"]["device state"],
-                                                  message="Device ID {} is Enabled again".format(fail_device))
-                    print('Stats of device {} and device state is {}'.format(device_stats,
-                                                                             device_stats["data"]["device state"]))
-
-                    ''''''
-                    ''' Marking drive as online '''
-                else:
-                    ''' Marking volume as online '''
-                    volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
-                    fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".format(fail_uuid))
-                    # Validate if Volume is enabled again
-                    device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
-                    volume_stats = self.storage_controller.peek(device_props_tree)
-                    print("Volume status is: {}".format(volume_stats["data"]))
-                    ''' Marking volume as online '''
+                        device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
+                        device_stats = self.storage_controller.peek(device_props_tree)
+                        fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
+                        fun_test.test_assert_expected(
+                            expected="DEV_ONLINE", actual=device_stats["data"]["device state"],
+                            message="Device ID {} is Enabled again".format(fail_device))
+                        ''''''
+                        ''' Marking drive as online '''
+                    else:
+                        ''' Marking Plex as online '''
+                        volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
+                        fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".
+                                             format(fail_uuid))
+                        # Validate if Volume is enabled again
+                        device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                                 fail_uuid)
+                        volume_stats = self.storage_controller.peek(device_props_tree)
+                        try:
+                            print("Volume status is: {}".format(volume_stats["data"]["stats"]["fault_injection"]))
+                            print("Type Volume status is: {}".format(
+                                type(volume_stats["data"]["stats"]["fault_injection"])))
+                            fun_test.test_assert_expected(expected=0,
+                                                          actual=volume_stats["data"]["stats"]["fault_injection"],
+                                                          message="Plex is marked as online")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        ''' Marking Plex as online '''
 
                 # TODO Call the rebuild for same volume or on spare volume
                 if self.rebuild_on_spare_volume:
@@ -1063,10 +1050,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                     subcmd="ISSUE", type=self.ec_info["volume_types"]["ec"],
                     uuid=self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index],
                     failed_uuid=fail_uuid, spare_uuid=spare_uuid, rate=self.rebuild_rate)
-                # fun_test.test_assert(rebuild_device["status"], "Rebuild failed Device ID {}".format(fail_device))
-                fun_test.log("Rebuild failed Device ID {} status {}".format(fail_device, rebuild_device["status"]))
+                fun_test.test_assert(rebuild_device["status"], "Rebuild failed Plex {}".format(fail_uuid))
+                fun_test.log("Rebuild failed Plex {} status {}".format(fail_uuid, rebuild_device["status"]))
 
-            print("3. self.ec info after re-enabling the device : {}".format(self.ec_info))
             timer = FunTimer(max_time=cp_timeout)
             while not timer.is_expired():
                 fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
@@ -1117,7 +1103,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & destination file")
                 self.host_info[host_name]["dst_file"]["file2"][num]["md5sum"].append(self.dst_md5sum)
-            print("3: Modified host info for files is: {}".format(self.host_info[host_name]["dst_file"]))
 
             # Re-verifying integrity of file1 after rebuild successful
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
@@ -1148,36 +1133,28 @@ class ECVolumeLevelTestcase(FunTestCase):
                 search_pattern = "'under rebuild total failed'"
                 output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
                                                                    timeout=self.command_timeout))
-                try:
-                    print("Rebuild operation is started: {}".format(output.rstrip()))
-                    print("type of output is: {}".format(type(output.rstrip())))
-                    if int(output.rstrip()) == 1:
-                        print("type of output is: {}".format(type(int(output.rstrip()))))
-                        print("Good to use it")
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                # fun_test.test_assert_expected(expected=1, actual=output, message="Rebuild operation is started")
+                fun_test.test_assert_expected(expected=1, actual=int(output.rstrip()),
+                                              message="Rebuild operation is started")
                 rebuild_start_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".format(
                     search_pattern, uart_log_file, timeout=self.command_timeout))
                 rebuild_start_time = int(round(float(rebuild_start_time.rstrip())))
-                fun_test.log("'Rebuild operation started at' log search output: {}".format(rebuild_start_time))
+                fun_test.log("Rebuild operation started at : {}".format(rebuild_start_time))
 
                 timer = FunTimer(max_time=600)
                 while not timer.is_expired():
                     search_pattern = "'Rebuild operation complete for plex'"
-                    fun_test.sleep("Waiting for volume rebuild to complete", seconds=(self.status_interval * 2))
+                    fun_test.sleep("Waiting for plex rebuild to complete", seconds=(self.status_interval * 5))
                     output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
                                                                        timeout=self.command_timeout))
-                    print("type of output is: {}".format(type(output)))
                     if int(output.rstrip()) == 1:
                         rebuild_stop_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".
                             format(search_pattern, uart_log_file, timeout=self.command_timeout))
                         rebuild_stop_time = int(round(float(rebuild_stop_time.rstrip())))
                         fun_test.log("Rebuild operation completed at: {}".format(rebuild_stop_time))
-                        fun_test.log("Rebuild operation on volume {} is completed".format(spare_uuid))
+                        fun_test.log("Rebuild operation on plex {} is completed".format(spare_uuid))
                         break
                 else:
-                    fun_test.test_assert(False, "Rebuild operation on volume {} completed".format(spare_uuid))
+                    fun_test.test_assert(False, "Rebuild operation on plex {} completed".format(spare_uuid))
                 rebuild_time = rebuild_stop_time - rebuild_start_time
                 fun_test.log("Time taken to rebuild plex: {}".format(rebuild_time))
                 row_data_dict["plex_rebuild_time"] = rebuild_time
@@ -1202,9 +1179,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if hasattr(self, "back_pressure") and self.back_pressure:
                     # Check if back pressure is still running, if yes, stop it
                     check_pid = host_handle.get_process_id(process_name="fio")
-                    if check_pid == fio_pid:
+                    if check_pid:
                         fun_test.log("back pressure is still running, stopping it")
-                        kill_fio = host_handle.kill_process(process_id=fio_pid)
+                        host_handle.pkill(process_name="fio")
                         fun_test.simple_assert(host_handle.exit_status() == 0, "Back pressure is stopped")
             except Exception as ex:
                 fun_test.critical(str(ex))
