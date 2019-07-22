@@ -472,7 +472,7 @@ class FunethTestPacketSweep(FunTestCase):
         namespaces = [tb_config_obj.get_hu_pf_namespace(hu), tb_config_obj.get_hu_vf_namespace(hu)]
         interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
         for namespace, interface in zip(namespaces, interfaces):
-            fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU, ns=ns),
+            fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU, ns=namespace),
                                  'Set HU host {} interface {} MTU to {}'.format(hostname, interface, MAX_MTU))
 
         # FPG MTU
