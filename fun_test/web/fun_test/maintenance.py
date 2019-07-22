@@ -1430,7 +1430,7 @@ if __name__ == "__main_voltest_blt__":
         print ("Metric id: {}".format(metric_id))
         print ("Data sets: {}".format(data_sets))
 
-if __name__ == "__main__":
+if __name__ == "__main_ipsec_new__":
     internal_chart_names = ["juniper_new_ipsec_enc_single_tunnel_output_throughput",
                             "juniper_new_ipsec_enc_single_tunnel_output_pps",
                             "juniper_new_ipsec_enc_multi_tunnel_output_throughput",
@@ -1491,3 +1491,62 @@ if __name__ == "__main__":
                     work_in_progress=False,
                     platform=FunPlatform.F1).save()
     print "added charts for ipsec encryption and decryption"
+
+if __name__ == "__main__":
+    internal_chart_names = ["inspur_8111_8k_rand_rw_2f1", "inspur_8116_8k_rand_rw_2f1",
+                            "inspur_rand_read_write_qd1_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd8_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd16_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd32_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd64_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd128_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd256_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd1_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd8_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd16_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd32_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd64_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd128_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd256_2f1_8k_block_output_latency"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            internal_chart_name = internal_chart_name.replace('2f1', '6f1')
+            if "qd256" in internal_chart_name:
+                internal_chart_name = internal_chart_name.replace('qd256','qd96')
+            chart.internal_chart_name = internal_chart_name
+            chart.save()
+            if chart.leaf:
+                if "qd32" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_32_f1_6_vol_1"
+                elif "qd64" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_64_f1_6_vol_1"
+                elif "qd96" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_96_f1_6_vol_1"
+                elif "qd128" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_128_f1_6_vol_1"
+                else:
+                    fio_job_name = None
+                if fio_job_name:
+                    data_sets1 = json.loads(chart.data_sets)
+                    for data_set in data_sets1:
+                        if "read" in data_set["name"]:
+                            data_set["name"] = "read(2 F1s, 1 vol)"
+                        else:
+                            data_set["name"] = "write(2 F1s, 1 vol)"
+                    chart.data_sets = json.dumps(data_sets1)
+                    chart.save()
+                    data_sets = json.loads(chart.data_sets)
+                    for data_set in data_sets1:
+                        one_data_set = data_set
+                        if "read" in one_data_set["name"]:
+                            one_data_set["name"] = "read(6 F1s, 1 vol)"
+                        else:
+                            one_data_set["name"] = "write(6 F1s, 1 vol)"
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"]["reference"] = -1
+                        one_data_set["output"]["expected"] = -1
+                        data_sets.append(one_data_set)
+                    chart.data_sets = json.dumps(data_sets)
+                    chart.save()
+    print "added new datasets for 6 F1"
