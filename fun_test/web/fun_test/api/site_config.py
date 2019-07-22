@@ -10,5 +10,6 @@ def site_configs(request):
         site_config = SiteConfig.objects.all()[0]
         result["version"] = site_config.version
         result["announcement"] = site_config.announcement
+        result["announcement_level"] = site_config.announcement_level
 
     return result

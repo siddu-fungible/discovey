@@ -8,7 +8,7 @@ import psutil
 import logging.handlers
 import sys
 import web.fun_test.models_helper as models_helper
-from web.fun_test.web_interface import get_suite_detail_url
+from web.fun_test.web_interface import get_suite_detail_url, set_annoucement, clear_announcements
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR
 from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS, get_current_time
@@ -17,7 +17,9 @@ from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
+from scheduler.scheduler_global import SchedulerDirectiveTypes
 from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution, TestbedNotificationEmails
+from web.fun_test.models import SchedulerDirective
 from asset.asset_global import AssetType
 from web.fun_test.models import Asset
 from web.fun_test.models import TestBed, User
@@ -676,6 +678,17 @@ def un_lock_assets(job_id):
     assets = Asset.objects.filter(job_ids__contains=[job_id])
     for asset in assets:
         asset.job_ids = asset.remove_job_id(job_id=job_id)
+
+
+def pause():
+    SchedulerDirective.remove(directive=SchedulerDirectiveTypes.UNPAUSE_QUEUE_WORKER)
+    SchedulerDirective.add(directive=SchedulerDirectiveTypes.PAUSE_QUEUE_WORKER)
+
+
+def unpause():
+    SchedulerDirective.remove(directive=SchedulerDirectiveTypes.PAUSE_QUEUE_WORKER)
+    SchedulerDirective.add(directive=SchedulerDirectiveTypes.UNPAUSE_QUEUE_WORKER)
+
 
 class DatetimeEncoder(json.JSONEncoder):
     def default(self, obj):

@@ -19,6 +19,7 @@ ONE_HOUR = 60 * 60
 
 queue_lock = None
 
+
 class ShutdownReason:
     ABORTED = -2
     KILLED = -1
@@ -147,16 +148,20 @@ class QueueWorker(Thread):
     def run(self):
         from asset.asset_manager import AssetManager
         asset_manager = AssetManager()
+        scheduler_info = get_scheduler_info()
+        if scheduler_info:
+            if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_PAUSED:
+                return
         # while True:
         if True:
 
             queue_lock.acquire()
-            # scheduler_logger.info("Lock-acquire: QueueWorker")
-
             try:
                 de_queued_jobs = []
                 valid_jobs = self.get_valid_jobs()
                 not_available = {}
+
+
 
                 for queued_job in valid_jobs:
 
@@ -618,9 +623,8 @@ class SuiteWorker(Thread):
         script_item = self.script_items[self.current_script_item_index]
         if self.current_script_item_index == self.active_script_item_index:
 
-            if self.current_script_process.poll() is None:
+            if self.current_script_process.poll() is not None:
                 self.debug(message="Executed", script_path=self.last_script_path)
-
                 script_result = False
                 if self.current_script_process.returncode == 0:
                     script_result = True
@@ -628,7 +632,7 @@ class SuiteWorker(Thread):
                     if "abort_suite_on_failure" in script_item and script_item["abort_suite_on_failure"]:
                         self.abort_on_failure_requested = True
                         self.error(message="Abort Requested on failure", script_path=self.last_script_path)
-            else:
+
                 print ("PID: {} does not exist".format(self.current_script_process.pid))
                 self.set_next_script_item_index()
 
@@ -820,13 +824,27 @@ def process_submissions():
 
 
 def process_external_requests():
+    """
     request_file = SCHEDULER_REQUESTS_DIR + "/request.json"
     request = parse_file_to_json(file_name=request_file)
     if request and "request" in request:
         if request["request"] == "stop":
             set_scheduler_state(SchedulerStates.SCHEDULER_STATE_STOPPING)
     return request
-
+    """
+    directive = SchedulerDirective.get_recent()
+    if directive:
+        if directive.directive == SchedulerDirectiveTypes.PAUSE_QUEUE_WORKER:
+            set_scheduler_state(SchedulerStates.SCHEDULER_STATE_PAUSED)
+            SchedulerDirective.remove(directive.directive)
+            set_annoucement("Scheduler queue worker is paused")
+        if directive.directive == SchedulerDirectiveTypes.UNPAUSE_QUEUE_WORKER:
+            scheduler_info = get_scheduler_info()
+            if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_PAUSED:
+                clear_announcements()
+                set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
+                SchedulerDirective.remove(directive.directive)
+    pass
 
 def ensure_singleton():
     if os.path.exists(SCHEDULER_PID):
@@ -1004,7 +1022,7 @@ if __name__ == "__main__":
             process_container_suites()
             queue_worker.run()
             scheduler_info = get_scheduler_info()
-            request = process_external_requests()
+            process_external_requests()
             cleanup_unused_assets()
             join_suite_workers()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \
@@ -1012,11 +1030,13 @@ if __name__ == "__main__":
                 process_auto_scheduled_jobs()
                 process_submissions()
 
+            """
             if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPING:
                 max_wait_time = ONE_HOUR
                 if request and "max_wait_time" in request:
                     max_wait_time = int(request["max_wait_time"])
                 graceful_shutdown(max_wait_time=max_wait_time)
+            """
 
         except (SchedulerException, Exception) as ex:
             scheduler_logger.exception(str(ex))

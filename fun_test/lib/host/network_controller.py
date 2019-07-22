@@ -1338,15 +1338,17 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def flow_list(self, blocked_only=False):
+    def flow_list(self, huid=None, blocked_only=False, timeout=120):
         stats = None
         try:
             if blocked_only:
-                cmd = "blocked"
+                cmd = ["blocked"]
+            elif huid:
+                cmd = ["list", huid]
             else:
-                cmd = "list"
+                cmd = ["list"]
             fun_test.debug("Getting flow list")
-            result = self.json_execute(verb="flow", data=cmd, command_duration=self.COMMAND_DURATION)
+            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout, chunk=16384)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
             fun_test.debug("flow %s: %s" % (cmd, result['data']))
             stats = result['data']
@@ -1376,7 +1378,7 @@ class NetworkController(DpcshClient):
             cmd = "stats/pervppkts/[%s]" % cluster_id
             fun_test.debug("Getting vp per pkt")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION,
-                                       sleep_duration=20)
+                                       chunk=16384)
             fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
             fun_test.debug("Per vppkts stats: %s" % result['data'])
             stats = result['data']
