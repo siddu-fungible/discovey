@@ -75,7 +75,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.log("Going to use the script level defaults")
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
-            self.f1_in_use = 0
+            self.f1_in_use = 1
             self.syslog_level = 2
             self.command_timeout = 5
             self.reboot_timeout = 600
@@ -118,6 +118,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_dsld = job_inputs["disable_dsld"]
         else:
             self.disable_dsld = False
+        if "f1_in_use" in job_inputs:
+            self.f1_in_use = job_inputs["f1_in_use"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -291,6 +293,7 @@ class ECVolumeLevelScript(FunTestScript):
                                                   message="Configure Static route")
 
             # Forming shared variables for defined parameters
+            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
             fun_test.shared_variables["topology"] = self.topology
             fun_test.shared_variables["fs_obj"] = self.fs_obj
             fun_test.shared_variables["come_obj"] = self.come_obj
@@ -456,7 +459,7 @@ class ECVolumeLevelScript(FunTestScript):
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
-                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+                self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
             elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["csr_replay"]:
                 self.fs = fun_test.shared_variables["fs"]
@@ -478,7 +481,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
                 # Detaching all the EC/LS volumes to the external server
-                """for num in xrange(self.ec_info["num_volumes"]):
+                '''
+                for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
                         ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -491,8 +495,9 @@ class ECVolumeLevelScript(FunTestScript):
                 command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
+                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
                 self.storage_controller.disconnect()
+                '''
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
@@ -517,7 +522,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
-
         self.topology.cleanup()
 
 
@@ -572,11 +576,12 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
+            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
             self.fs = fun_test.shared_variables["fs_obj"]
             self.come_obj = fun_test.shared_variables["come_obj"]
             self.f1 = fun_test.shared_variables["f1_obj"][0][0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+            self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
+            self.f1_ips = fun_test.shared_variables["f1_ips"][self.f1_in_use]
             self.host_info = fun_test.shared_variables["host_info"]
             self.num_f1s = fun_test.shared_variables["num_f1s"]
             self.test_network = {}
@@ -926,6 +931,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
                 initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
                 initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                              command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
+                initial_stats[iodepth]["eqm_stats"] = command_result["data"]
                 fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
                     iodepth, initial_stats[iodepth]))
 
@@ -941,7 +950,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
                 resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=resource_bam_post_fix_name)
-                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_resource_bam_stats,
+                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=collect_resource_bam_stats,
                                                                      storage_controller=self.storage_controller,
                                                                      output_file=resource_bam_artifact_file,
                                                                      interval=self.resource_bam_args["interval"],
@@ -951,6 +960,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                   "interval and count details")
 
             for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
                 fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
                 nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
@@ -982,7 +992,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 io_factor += 1
 
                 row_data_dict["iodepth"] = int(fio_iodepth) * int(global_num_jobs) * int(fio_num_jobs)
-                fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
                 # Calling the mpstat method to collect the mpstats for the current iteration in all the hosts used in
                 # the test
@@ -1031,6 +1040,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                           iodepth=fio_iodepth, name=fio_job_name,
                                                                           cpus_allowed=host_numa_cpus,
                                                                           **self.fio_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+
             # Waiting for all the FIO test threads to complete
             try:
                 fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -1063,6 +1076,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                     final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
                     final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
                     final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                    command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                  command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
+                    final_stats[iodepth]["eqm_stats"] = command_result["data"]
                     fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
                         iodepth, initial_stats[iodepth]))
 
@@ -1087,6 +1104,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                         new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
                     fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
+                    resultant_stats[iodepth]["eqm_stats"] = get_diff_stats(
+                        new_stats=final_stats[iodepth]["eqm_stats"], old_stats=initial_stats[iodepth]["eqm_stats"])
+                    fun_test.log("\nStat difference for eqm_stats at the end iteration for iodepth {}: \n{}\n".format(
+                        iodepth, json.dumps(resultant_stats[iodepth]["eqm_stats"], indent=2)))
                     '''
                     aggregate_resultant_stats[iodepth] = get_diff_stats(
                         new_stats=final_stats[iodepth], old_stats=initial_stats[iodepth])
@@ -1171,6 +1192,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=resource_bam_artifact_file)
+
+            fun_test.sleep("Waiting in between iterations", self.iter_interval)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

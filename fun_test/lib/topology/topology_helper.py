@@ -260,10 +260,9 @@ class TopologyHelper:
                         host_is_ready = False
                         while not host_is_ready and not host_ready_timer.is_expired():
                             host_is_ready = peer.is_ready(max_wait_time=host_ready_max_wait_time)
-                            fun_test.sleep("Host: {} readiness check. Remaining time: {}".format(peer.get_instance(),
-                                                                                                 host_ready_timer.remaining_time()))
+                            fun_test.sleep("Host: {} readiness check. Remaining time: {}: Host ready: {}".format(peer.get_instance(), host_ready_timer.remaining_time(), host_is_ready))
 
-                        fun_test.test_assert(not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
+                        fun_test.test_assert(host_is_ready or not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
                         """
                         host_instance = peer_info.get_host_instance()
                         ipmi_details = None

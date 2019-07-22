@@ -13,6 +13,7 @@ from fun_global import PerfUnit, FunPlatform
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
 
+
 def post_results(value_dict):
     unit_dict = {
         "write_iops_unit": PerfUnit.UNIT_OPS,
@@ -60,16 +61,15 @@ class RawVolumePerfScript(FunTestScript):
 
     def setup(self):
 
-        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
-                                                      '/raw_vol_pcie_perf.json')
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_name_without_ext() + ".json")
         fun_test.shared_variables["server_key"] = self.server_key
 
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         f1_0_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
         f1_1_boot_args = "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog"
+                         "--dis-stats retimer=0 --mgmt --disable-wu-watchdog syslog=2"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         # fs_name = "fs-45"
         funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -99,9 +99,9 @@ class RawVolumePerfScript(FunTestScript):
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
         abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
+            self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
+            self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
 
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
@@ -135,14 +135,14 @@ class RawVolumePerfScript(FunTestScript):
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=4)
-        
+
         # get ethtool output
         get_ethtool_on_hu_host(funeth_obj)
         for server in self.server_key["fs"][fs_name]["vm_config"]:
             critical_log(enable_nvme_vfs
                          (host=server,
                           pcie_vfs_count=self.server_key["fs"][fs_name]["vm_config"][server]["pcie_vfs"]),
-                          message="NVMe VFs enabled")
+                         message="NVMe VFs enabled")
         # Ping hosts
         ping_dict = self.server_key["fs"][fs_name]["host_pings"]
         for host in ping_dict:
@@ -154,10 +154,11 @@ class RawVolumePerfScript(FunTestScript):
         for server in servers_with_vms:
             configure_vms(server_name=server, vm_dict=servers_with_vms[server]["vms"])
 
-        #fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
+        # fun_test.sleep(message="Waiting for VMs to come up", seconds=120)
 
     def cleanup(self):
         fun_test.shared_variables["topology"].cleanup()
+
 
 class RawVolumeLocalPerfTestcase(FunTestCase):
     server_key = {}
@@ -174,7 +175,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        testconfig_file = fun_test.get_script_parent_directory() + '/raw_vol_pcie_perf.json'
+        testconfig_file = fun_test.get_script_name_without_ext() + ".json"
         self.server_key = fun_test.parse_file_to_json(testconfig_file)
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.server_key["fs"][fs_name]["fs-name"])
 
@@ -195,7 +196,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
             storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
                                                    target_port=40221)
             command_result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
-                                               port=servers_with_vms[server]["local_controller_port"])
+                                                       port=servers_with_vms[server]["local_controller_port"])
 
             fun_test.test_assert(command_result["status"], "Configuring IP {}:{} to storage controller".
                                  format(servers_with_vms[server]["local_controller_ip"],
@@ -238,14 +239,13 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 print("===========================================")
                 print("Attach Local Volume to Controller on DPU 1")
                 print("===========================================\n")
+                command_timeout = servers_with_vms[server]["vms"][vm]["local_storage"]["command_timeout"]
                 command_result = storage_controller.attach_volume_to_controller(ctrlr_uuid=controller_dpu_1,
-                                                                        vol_uuid=blt_volume_dpu_1,
-                                                                        ns_id=int(i),
-                                                                        command_duration=
-                                                                        servers_with_vms[server]["vms"][vm][
-                                                                            "local_storage"]["command_timeout"])
+                                                                                vol_uuid=blt_volume_dpu_1,
+                                                                                ns_id=int(i),
+                                                                                command_duration=command_timeout)
                 fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}"
-                             .format(blt_volume_dpu_1, controller_dpu_1))
+                                     .format(blt_volume_dpu_1, controller_dpu_1))
 
                 # Workaround for connecting to the VM via SSH
                 host_obj.sudo_command("sysctl -w net.bridge.bridge-nf-call-iptables=0")
@@ -260,7 +260,8 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
 
                 """
                 # Get the nvme device name from the VMs
-                fun_test.shared_variables["nvme_block_device"] = get_nvme_dev(servers_with_vms[server]["vms"][vm]["hostname"])
+                fun_test.shared_variables["nvme_block_device"] = \
+                    get_nvme_dev(servers_with_vms[server]["vms"][vm]["hostname"])
                 """
                 self.nvme_block_device = "/dev/nvme0n1"
                 fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
@@ -306,9 +307,11 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
 
         table_data_headers = ["Block Size", "IO Depth", "Numjobs", "Size", "Test", "Operation",
                               "Write IOPS", "Read IOPS", "Write Throughput in MB/s", "Read Throughput in MB/s",
-                              "Avg Write Latency in uSecs", "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+                              "Avg Write Latency in uSecs", "Write Latency 90 Percentile in uSecs",
+                              "Write Latency 95 Percentile in uSecs",
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
-                              "Avg Read Latency in uSecs", "Read Latency 90 Percentile in uSecs", "Read Latency 95 Percentile in uSecs",
+                              "Avg Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
+                              "Read Latency 95 Percentile in uSecs",
                               "Read Latency 99 Percentile in uSecs", "Read Latency 99.99 Percentile in uSecs"]
         table_data_cols = ["block_size", "io_depth", "num_threads", "io_size", "test", "operation",
                            "write_iops", "read_iops", "write_throughput", "read_throughput",
@@ -353,7 +356,8 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 cpus_allowed = "0-15"
 
                 fun_test.log("Running FIO...")
-                fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + \
+                               self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[mode][combo] = {}
                 fio_filename = fun_test.shared_variables["nvme_block_device"]
@@ -406,7 +410,8 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 post_results(value_dict)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Ali BMV BLT over PCIe Perf Table", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="Ali BMV BLT over PCIe Perf Table", table_name=self.summary,
+                           table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -422,6 +427,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
     def cleanup(self):
         pass
 
+
 class LocalSSDVM(RawVolumeLocalPerfTestcase):
 
     def describe(self):
@@ -436,8 +442,8 @@ class LocalSSDVM(RawVolumeLocalPerfTestcase):
         host and check the performance are inline with the expected threshold. 
         ''')
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     bltscript = RawVolumePerfScript()
     bltscript.add_test_case(LocalSSDVM())
     bltscript.run()

@@ -5,11 +5,22 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {Sort} from "@angular/material";
 import {Validators} from "@angular/forms";
+import {animate, state, style, transition, trigger} from "@angular/animations";
 
 @Component({
   selector: 'app-submit-job',
   templateUrl: './submit-job.component.html',
-  styleUrls: ['./submit-job.component.css']
+  styleUrls: ['./submit-job.component.css'],
+  animations:    [trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate(300)
+      ]),
+      transition(':leave', [
+        animate(1, style({ opacity: 1.0 }))
+      ]),
+      state('*', style({ opacity: 1.0 })),
+    ])]
 })
 export class SubmitJobComponent implements OnInit {
   DEFAULT_TEST_BED: string = "fs-6";
@@ -70,7 +81,7 @@ export class SubmitJobComponent implements OnInit {
 
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
-
+  moreJenkinsOptions: boolean = false;
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,

@@ -96,6 +96,7 @@ class ScriptSetup(FunTestScript):
             print "\n\n\n Booting HU unit  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
+
     def cleanup(self):
         fun_test.log("Cleanup")
         fun_test.shared_variables["topology"].cleanup()

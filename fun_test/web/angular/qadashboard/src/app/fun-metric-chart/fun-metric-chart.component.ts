@@ -91,6 +91,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   yMax: number = null;
   yMin: number = null;
   yAxisSet: any = new Set(); //to cehck for duplicates in the expected value so that the text is not overwritten
+  backgroundColor: string = "#FAFAFA";
+  seriesColors: string[] = ['#058DC7', '#8B4513', '#ED561B', '#008000', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FD3A94', '#6AF9C4'];
 
   baseLineDate: string = null;
   visualizationUnit: string = null;

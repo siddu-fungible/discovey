@@ -33,9 +33,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.137'
+    DPC_PROXY_IP = '10.1.20.186'
     DPC_PROXY_PORT = 40220
-    DPC_PROXY_IP2 = '10.1.20.137'
+    DPC_PROXY_IP2 = '10.1.20.186'
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
@@ -78,24 +78,24 @@ MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
-    if TB in ('FS7', 'FS11'):
-        for nu in funeth_obj.nu_hosts:
-            linux_obj = funeth_obj.linux_obj_dict[nu]
-            fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
-        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
+    #if TB in ('FS7', 'FS11'):
+        #for nu in funeth_obj.nu_hosts:
+        #    linux_obj = funeth_obj.linux_obj_dict[nu]
+        #    fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
+        #fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
     for nu in funeth_obj.nu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[nu]
         #if TB in ('FS7', 'FS11'):
             #fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
         fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
-        # TODO: temp workaround
-        if linux_obj.host_ip == 'poc-server-06':
-            linux_obj.sudo_command('sudo ethtool --offload fpg0 lro on; sudo ethtool -k fpg0')
         fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
             linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
                              'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
+        # TODO: temp workaround
+        #if linux_obj.host_ip == 'poc-server-06':
+        #    linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro on; sudo ethtool -k fpg0')
 
 
 def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
@@ -334,7 +334,7 @@ class FunethSanity(FunTestScript):
             setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
             # Configure overlay
-            configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+            #configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'

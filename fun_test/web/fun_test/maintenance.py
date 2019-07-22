@@ -1231,3 +1231,345 @@ if __name__ == "__main_l4_firewall__":
                     platform=FunPlatform.F1).save()
     print "added latency charts for juniper l4 firewall"
 
+if __name__ == "__main_companion2__":
+    charts = ["iops", "latency"]
+    xaxis_title = "log2(qDepth)"
+    chart_type = ChartType.REGULAR
+    fun_chart_type = FunChartType.LINE_CHART
+    for chart in charts:
+        if "iops" in chart:
+            names = ["read(1 vol)", "write(1 vol)"]
+            chart_name = "inspur_8111_8k_rand_rw_2f1"
+            yaxis_title = "log10(" + PerfUnit.UNIT_OPS + ")"
+            title = "qdepth vs IOPS (1 vol)"
+        else:
+            names = ["read-avg(1 vol)", "write-avg(1 vol)"]
+            chart_name = "inspur_8116_8k_rand_rw_2f1"
+            yaxis_title = "log10(" + PerfUnit.UNIT_USECS + ")"
+            title = "qdepth vs latency (1 vol)"
+        data_sets = []
+        for name in names:
+            if "iops" in chart:
+                if "read" in name:
+                    output_name = "output_read_iops"
+                else:
+                    output_name = "output_write_iops"
+            else:
+                if "read" in name:
+                    output_name = "output_read_avg_latency"
+                else:
+                    output_name = "output_write_avg_latency"
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["filters"] = {}
+            one_data_set["filters"] = [{"name": 1, "model_name": "BltVolumePerformance", "filter": {
+                "input_fio_job_name": "inspur_8k_random_read_write_iodepth_1_f1_2_vol_1",
+                "input_platform": FunPlatform.F1}},
+                                       {"name": 8, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_8_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 16, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_16_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 32, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_32_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 64, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_64_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 128, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_128_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}},
+                                       {"name": 256, "model_name": "BltVolumePerformance", "filter": {
+                                           "input_fio_job_name": "inspur_8k_random_read_write_iodepth_256_f1_2_vol_1",
+                                           "input_platform": FunPlatform.F1}}]
+            one_data_set["output_field"] = output_name
+            data_sets.append(one_data_set)
+        print json.dumps(data_sets)
+        chart_id = LastChartId.get_next_id()
+        Chart(chart_id=chart_id, title=title, x_axis_title=xaxis_title, y_axis_title=yaxis_title,
+              chart_type=chart_type, fun_chart_type=fun_chart_type, series_filters=data_sets, x_scale="log2",
+              y_scale="log10").save()
+        chart = MetricChart.objects.get(internal_chart_name=chart_name)
+        if chart:
+            chart.companion_charts = [chart_id]
+            chart.save()
+        print "added chart id: {}", format(chart_id)
+    print "added companion charts"
+
+if __name__ == "__main_associated_suites__":
+    entries = JenkinsJobIdMap.objects.all()
+    for entry in entries:
+        if len(entry.associated_suites) > 0:
+            print entry.associated_suites
+            entry.associated_suites = list(set(entry.associated_suites))
+            entry.save()
+
+if __name__ == "__main_voltest_blt__":
+
+    # Latency charts for various instances
+    internal_chart_names = OrderedDict([('voltest_blt_1_instance_latency', 1), ('voltest_blt_8_instance_latency', 8),
+                                        ('voltest_blt_12_instance_latency', 12)])
+
+    owner_info = "Sunil Subramanya (sunil.subramanya@fungible.com)"
+    source = "https://github.com/fungible-inc/FunOS/blob/5d979f094bc34c0425f8d27d0e5bcaeb4aa80954/apps/md_table_test.c"
+    positive = False
+    y1_axis_title = PerfUnit.UNIT_NSECS
+    platform = FunPlatform.F1
+
+    for internal_chart_name in internal_chart_names:
+        blt_instance = internal_chart_names[internal_chart_name]
+        model_name = 'VoltestBlt{}Performance'.format(blt_instance)
+        description = "TBD"
+        chart_name = "voltest blt {} instance latency".format(blt_instance)
+        one_data_set = {}
+        data_sets = []
+
+        inputs = {
+            "input_platform": platform,
+            "input_blt_instance": blt_instance
+        }
+        output_names = OrderedDict([('output_min_latency', 'min'), ('output_max_latency', 'max'),
+                                    ('output_avg_latency', 'avg')])
+        for output_name in output_names:
+            output = {
+                "name": output_name,
+                "unit": PerfUnit.UNIT_NSECS,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = output_names[output_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Data sets: {}".format(data_sets))
+        print ("Metric id: {}".format(metric_id))
+
+    # IOPS and Bandwidht charts for various instances
+
+    internal_chart_names = OrderedDict([('voltest_blt_1_instance_iops', 1), ('voltest_blt_8_instance_iops', 8),
+                                        ('voltest_blt_12_instance_iops', 12), ('voltest_blt_1_instance_bandwidth', 1),
+                                        ('voltest_blt_8_instance_bandwidth', 8),
+                                        ('voltest_blt_12_instance_bandwidth', 12)])
+
+    owner_info = "Sunil Subramanya (sunil.subramanya@fungible.com)"
+    source = "https://github.com/fungible-inc/FunOS/blob/5d979f094bc34c0425f8d27d0e5bcaeb4aa80954/apps/md_table_test.c"
+    positive = True
+    platform = FunPlatform.F1
+
+    for internal_chart_name in internal_chart_names:
+        blt_instance = internal_chart_names[internal_chart_name]
+        model_name = 'VoltestBlt{}Performance'.format(blt_instance)
+        one_data_set = {}
+        data_sets = []
+
+        if "iops" in internal_chart_name:
+            chart_name = "voltest blt {} instance(s) IOPS".format(blt_instance)
+            output_name = "output_iops"
+            y1_axis_title = PerfUnit.UNIT_OPS
+            name = "iops"
+            description = "TBD"
+        elif "bandwidth" in internal_chart_name:
+            chart_name = "voltest blt {} instance(s) Bandwidth".format(blt_instance)
+            output_name = "output_bandwidth"
+            y1_axis_title = PerfUnit.UNIT_MBITS_PER_SEC
+            name = "bandwidth"
+            description = "TBD"
+
+        inputs = {
+            "input_platform": platform,
+            "input_blt_instance": blt_instance
+        }
+
+        output = {
+            "name": output_name,
+            "unit": y1_axis_title,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = name
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+
+if __name__ == "__main_ipsec_new__":
+    internal_chart_names = ["juniper_new_ipsec_enc_single_tunnel_output_throughput",
+                            "juniper_new_ipsec_enc_single_tunnel_output_pps",
+                            "juniper_new_ipsec_enc_multi_tunnel_output_throughput",
+                            "juniper_new_ipsec_enc_multi_tunnel_output_pps",
+                            "juniper_new_ipsec_dec_single_tunnel_output_throughput",
+                            "juniper_new_ipsec_dec_single_tunnel_output_pps",
+                            "juniper_new_ipsec_dec_multi_tunnel_output_throughput",
+                            "juniper_new_ipsec_dec_multi_tunnel_output_pps"]
+    chart_name = "temp"
+    positive = True
+    model_name = "TeraMarkJuniperNetworkingPerformance"
+    base_line_date = datetime(year=2019, month=7, day=15, minute=0, hour=0, second=0)
+    frame_sizes = [64, 362.94]
+    for internal_chart_name in internal_chart_names:
+        if "throughput" in internal_chart_name:
+            y1_axis_title = PerfUnit.UNIT_GBITS_PER_SEC
+            visualization_unit = PerfUnit.UNIT_GBITS_PER_SEC
+            output_name = "output_throughput"
+            data_set_unit = PerfUnit.UNIT_MBITS_PER_SEC
+        else:
+            y1_axis_title = PerfUnit.UNIT_MPPS
+            visualization_unit = PerfUnit.UNIT_MPPS
+            output_name = "output_pps"
+            data_set_unit = PerfUnit.UNIT_PPS
+        data_sets = []
+        if "enc_single_tunnel" in internal_chart_name:
+            flow_type = "IPSEC_ENCRYPT_SINGLE_TUNNEL"
+        elif "enc_multi_tunnel" in internal_chart_name:
+            flow_type = "IPSEC_ENCRYPT_MULTI_TUNNEL"
+        elif "dec_single_tunnel" in internal_chart_name:
+            flow_type = "IPSEC_DECRYPT_SINGLE_TUNNEL"
+        else:
+            flow_type = "IPSEC_DECRYPT_MULTI_TUNNEL"
+        for frame_size in frame_sizes:
+            name = str(frame_size) + 'B'
+            one_data_set = {}
+            one_data_set["name"] = name
+            one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_offloads": False,
+                                      "input_half_load_latency": False, "input_flow_type": flow_type,
+                                      "input_frame_size": frame_size, "input_protocol": "UDP"}
+            one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1, "reference": -1,
+                                      "unit": data_set_unit}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name="temp",
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Amit Surana (amit.surana@fungible.com), Onkar Sarmalkar (onkar.sarmalkar@fungible.com)",
+                    source="",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=visualization_unit,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date,
+                    work_in_progress=False,
+                    platform=FunPlatform.F1).save()
+    print "added charts for ipsec encryption and decryption"
+
+if __name__ == "__main_inspur_6f1s__":
+    internal_chart_names = ["inspur_8111_8k_rand_rw_2f1", "inspur_8116_8k_rand_rw_2f1",
+                            "inspur_rand_read_write_qd1_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd8_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd16_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd32_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd64_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd128_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd256_2f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd1_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd8_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd16_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd32_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd64_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd128_2f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd256_2f1_8k_block_output_latency"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            internal_chart_name = internal_chart_name.replace('2f1', '6f1')
+            if "qd256" in internal_chart_name:
+                internal_chart_name = internal_chart_name.replace('qd256','qd96')
+            chart.internal_chart_name = internal_chart_name
+            chart.save()
+            if chart.leaf:
+                if "qd32" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_32_f1_6_vol_1"
+                elif "qd64" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_64_f1_6_vol_1"
+                elif "qd96" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_96_f1_6_vol_1"
+                elif "qd128" in internal_chart_name:
+                    fio_job_name = "inspur_8k_random_read_write_iodepth_128_f1_6_vol_1"
+                else:
+                    fio_job_name = None
+                if fio_job_name:
+                    data_sets1 = json.loads(chart.data_sets)
+                    for data_set in data_sets1:
+                        if "read" in data_set["name"]:
+                            data_set["name"] = "read(2 F1s, 1 vol)"
+                        else:
+                            data_set["name"] = "write(2 F1s, 1 vol)"
+                    chart.data_sets = json.dumps(data_sets1)
+                    chart.save()
+                    data_sets = json.loads(chart.data_sets)
+                    for data_set in data_sets1:
+                        one_data_set = data_set
+                        if "read" in one_data_set["name"]:
+                            one_data_set["name"] = "read(6 F1s, 1 vol)"
+                        else:
+                            one_data_set["name"] = "write(6 F1s, 1 vol)"
+                        one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+                        one_data_set["output"]["reference"] = -1
+                        one_data_set["output"]["expected"] = -1
+                        data_sets.append(one_data_set)
+                    chart.data_sets = json.dumps(data_sets)
+                    chart.save()
+    print "added new datasets for 6 F1"
+
+if __name__ == "__main__":
+    internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
+                            "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets1 = json.loads(chart.data_sets)
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets1:
+                data_set["name"] = data_set["name"].replace("64B", "IMIX")
+                data_set["inputs"]["input_frame_size"] = 362.94
+                data_set["output"]["reference"] = -1
+                data_set["output"]["expected"] = -1
+                data_sets.append(data_set)
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+    print "added l4 firewall datasets for IMIX 128M flows"
+
+
+
+
+

@@ -65,8 +65,12 @@ IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 VOLTEST_LSV = "qa_voltest_lsv_performance"
 VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
 CHANNEL_PARALL = "qa_channel_parall"
-SOAKFLOWSBUSYLOOP = "qa_soak_flows_busy_loop"
-SOAKFLOWSMEMCPY = "qa_soak_flows_memcpy_non_coh"
+SOAK_FLOWS_BUSY_LOOP = "qa_soak_flows_busy_loop"
+SOAK_FLOWS_MEMCPY = "qa_soak_flows_memcpy_non_coh"
+
+VOLTEST_BLT_1 = "qa_voltest_blt_performance"
+VOLTEST_BLT_8 = "qa_voltest_blt_8_performance"
+VOLTEST_BLT_12 = "qa_voltest_blt_12_performance"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -78,7 +82,7 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
                      "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance", "HuLatencyUnderLoadPerformance",
-                     "TeraMarkFunTcpConnectionsPerSecondPerformance"]
+                     "TeraMarkFunTcpConnectionsPerSecondPerformance", "AlibabaRdmaPerformance"]
 
 
 def get_rounded_time():
@@ -192,7 +196,8 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAKFLOWSBUSYLOOP, SOAKFLOWSMEMCPY]
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
+                VOLTEST_BLT_8, VOLTEST_BLT_12]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1505,7 +1510,7 @@ class ChannelParallPerformanceTc(PalladiumPerformanceTc):
 
 
 class SoakFlowsBusyLoopPerformanceTc(PalladiumPerformanceTc):
-    tag = SOAKFLOWSBUSYLOOP
+    tag = SOAK_FLOWS_BUSY_LOOP
     model = "SoakFlowsBusyLoop10usecs"
     platform = F1
 
@@ -1516,13 +1521,46 @@ class SoakFlowsBusyLoopPerformanceTc(PalladiumPerformanceTc):
 
 
 class SoakFlowsMemcpy1MbNonCohPerformanceTc(PalladiumPerformanceTc):
-    tag = SOAKFLOWSMEMCPY
+    tag = SOAK_FLOWS_MEMCPY
     model = "SoakFlowsMemcpy1MBNonCoh"
     platform = F1
 
     def describe(self):
         self.set_test_details(id=60,
                               summary="soak flows memcpy 1MB non coh performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt1PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_1
+    model = 'VoltestBlt1Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=61,
+                              summary="Voltest instance 1 BLT performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt8PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_8
+    model = 'VoltestBlt8Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=62,
+                              summary="Voltest instance 8 BLT performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt12PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_12
+    model = 'VoltestBlt12Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=63,
+                              summary="Voltest instance 12 BLT performance",
                               steps="Steps 1")
 
 
@@ -1587,5 +1625,8 @@ if __name__ == "__main__":
     myscript.add_test_case(ChannelParallPerformanceTc())
     myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
     myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
+    # myscript.add_test_case(VoltestBlt1PerformanceTc())
+    # myscript.add_test_case(VoltestBlt8PerformanceTc())
+    # myscript.add_test_case(VoltestBlt12PerformanceTc())
 
     myscript.run()

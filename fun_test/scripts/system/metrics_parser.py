@@ -89,6 +89,8 @@ class MetricParser():
             return self.soak_dma_memcpy_memset(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         elif "SoakFlows" in model_name:
             return self.soak_flows(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
+        elif "VoltestBlt" in model_name:
+            return self.voltest_blt(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         else:
             return {}
 
@@ -1006,6 +1008,38 @@ class MetricParser():
 
         self.result["match_found"] = self.match_found
         self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def voltest_blt(self, logs, date_time, platform, model_name):
+        self.initialize()
+        blt_instance = int(re.search(r'\d+', model_name).group())
+        self.metrics['input_blt_instance'] = blt_instance
+        for line in logs:
+            m = re.search(r'loadgen_aggregate\s+(\w+:\s+)?(?P<value_json>{.*})\s+\[(?P<metric_name>.*)\]', line)
+            if m:
+                self.match_found = True
+                metric_name = m.group('metric_name')
+                value_json = json.loads(m.group("value_json"))
+                if metric_name == 'loadgen_aggregate_latency_ns':
+                    self.metrics["output_min_latency"] = value_json["latency"]["min"]
+                    self.metrics["output_max_latency"] = value_json["latency"]["max"]
+                    self.metrics["output_avg_latency"] = value_json["latency"]["avg"]
+                    self.metrics["output_min_latency"] = value_json["latency"]["min"]
+                    self.metrics["output_max_latency"] = value_json["latency"]["max"]
+                    self.metrics["output_min_latency_unit"] = self.metrics["output_max_latency_unit"] = \
+                        self.metrics["output_avg_latency_unit"] = value_json["latency"]["unit"]
+                elif metric_name == "loadgen_aggregate_iops":
+                    key = 'output_iops'
+                    self.set_value_metrics(value_json=value_json, key=key, default=-1)
+                elif metric_name == "loadgen_aggregate_avg_op_bw_mbps":
+                    key = 'output_bandwidth'
+                    self.set_value_metrics(value_json=value_json, key=key, default=-1)
+        if self.match_found:
+            self.status = RESULTS["PASSED"]
+            d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+            self.result["data"].append(d)
+            self.result["match_found"] = self.match_found
+            self.result["status"] = self.status == RESULTS["PASSED"]
         return self.result
 
 

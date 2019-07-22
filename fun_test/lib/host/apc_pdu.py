@@ -77,3 +77,7 @@ class ApcPdu():
         if re.search(r'Outlet\s+' + outlet_number + r'.*On', status):
             result = True
         return result
+
+if __name__ == "__main__":
+    a = ApcPdu(host_ip="10.1.105.249", username="localadmin", password="Precious1*")
+    a.outlet_status("1")

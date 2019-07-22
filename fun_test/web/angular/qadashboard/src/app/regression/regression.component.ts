@@ -84,6 +84,7 @@ export class RegressionComponent implements OnInit {
   queryParameters: any = null;
   filterButtons: FilterButton [] = [];
   userMap: any = null;
+  showingTestBeds: boolean = false;
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
