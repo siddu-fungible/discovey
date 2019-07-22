@@ -3458,7 +3458,7 @@
                         "metric_model_name": "BltVolumePerformance",
                         "name": "inspur_rand_read_write_qd96_6f1_8k_block_output_iops",
                         "label": "IOPS, QDepth=96"
-                      }
+                      },
                       {
                         "metric_model_name": "BltVolumePerformance",
                         "name": "inspur_rand_read_write_qd128_6f1_8k_block_output_iops",
