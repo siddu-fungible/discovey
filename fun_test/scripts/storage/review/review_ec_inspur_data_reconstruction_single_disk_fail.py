@@ -176,7 +176,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.test_assert(self.topology, "Topology deployed")
 
             # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1")
+            self.db_log_time = get_data_collection_time(tag="ec_inspur_data_reconstruction_single_disk_failure")
             fun_test.log("Data collection time: {}".format(self.db_log_time))
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
@@ -333,117 +333,6 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                          format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-
-            for i in range(len(self.bootargs)):
-                self.bootargs[i] += " --csr-replay"
-                if self.disable_wu_watchdog:
-                    self.bootargs[i] += " --disable-wu-watchdog"
-
-            self.topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                   1: {"boot_args": self.bootargs[1]}})
-            self.topology = self.topology_helper.deploy()
-            fun_test.test_assert(self.topology, "Topology deployed")
-
-            self.fs = self.topology.get_dut_instance(index=0)
-            self.f1 = self.fs.get_f1(index=self.f1_in_use)
-            self.db_log_time = get_data_collection_time()
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
-
-            self.storage_controller = self.f1.get_dpc_storage_controller()
-
-            # Fetching Linux host with test interface name defined
-            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
-            for host_ip, host_info in fpg_connected_hosts.iteritems():
-                if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
-                    continue
-                if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                    self.end_host = host_info["host_obj"]
-                    self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
-                    self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
-                    fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
-                    break
-            else:
-                fun_test.test_assert(False, "Host found with Test Interface")
-
-            self.test_network = self.csr_network[str(self.fpg_inteface_index)]
-            fun_test.shared_variables["end_host"] = self.end_host
-            fun_test.shared_variables["topology"] = self.topology
-            fun_test.shared_variables["fs"] = self.fs
-            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
-            fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
-            fun_test.shared_variables["db_log_time"] = self.db_log_time
-            fun_test.shared_variables["storage_controller"] = self.storage_controller
-
-            # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
-            if self.override_numa_node["override_node"]:
-                self.numa_cpus_filter = self.end_host.lscpu(self.override_numa_node["override_node"])
-                self.numa_cpus = self.numa_cpus_filter[self.override_numa_node["override_node"]]
-            else:
-                self.numa_cpus = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
-
-            # Calculating the number of CPUs available in the given numa
-            self.total_numa_cpus = 0
-            for cpu_group in self.numa_cpus.split(","):
-                cpu_range = cpu_group.split("-")
-                self.total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-
-            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
-            fun_test.shared_variables["numa_cpus"] = self.numa_cpus
-            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
-
-            # Configuring Linux host
-            host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout,
-                                                  reboot_initiated_wait_time=self.reboot_timeout)
-            fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
-
-            interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
-                                                                 self.test_interface_name)
-            interface_mac_config = "ip link set {} address {}".format(self.test_interface_name,
-                                                                      self.test_network["test_interface_mac"])
-            link_up_cmd = "ip link set {} up".format(self.test_interface_name)
-            static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
-                                                   self.test_network["test_net_route"]["arp"])
-
-            interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
-                                                                    timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Configuring test interface IP address")
-
-            interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
-                                                              timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Assigning MAC to test interface")
-
-            link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Bringing up test link")
-
-            interface_up_status = self.end_host.ifconfig_up_down(interface=self.test_interface_name,
-                                                                 action="up")
-            fun_test.test_assert(interface_up_status, "Bringing up test interface")
-
-            route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
-                                                          gateway=self.test_network["test_net_route"]["gw"],
-                                                          outbound_interface=self.test_interface_name,
-                                                          timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
-
-            arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Adding static ARP to F1 route")
-
-            # Loading the nvme and nvme_tcp modules
-            for module in self.load_modules:
-                module_check = self.end_host.lsmod(module)
-                if not module_check:
-                    self.end_host.modprobe(module)
-                    module_check = self.end_host.lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
@@ -454,10 +343,6 @@ class ECVolumeLevelScript(FunTestScript):
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
                 self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
-            elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                    self.testbed_config["workarounds"]["csr_replay"]:
-                self.fs = fun_test.shared_variables["fs"]
-                self.storage_controller = fun_test.shared_variables["storage_controller"]
             try:
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
@@ -581,17 +466,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.test_network["f1_loopback_ip"] = self.f1_ips
             self.num_duts = fun_test.shared_variables["num_duts"]
             self.num_hosts = len(self.host_info)
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-            self.fs = fun_test.shared_variables["fs"]
-            self.end_host = fun_test.shared_variables["end_host"]
-            self.test_network = fun_test.shared_variables["test_network"]
-            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-            self.storage_controller = fun_test.shared_variables["storage_controller"]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"]
-            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
@@ -696,16 +570,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                                 format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
                                        str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
                                        self.host_info[host_name]["ip"][0])
-                    else:
-                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}". \
-                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                       str(self.transport_port), self.nvme_subsystem)
-                        else:
-                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}". \
-                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                       str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
-
                     try:
                         nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
                         nvme_connect_exit_status = host_handle.exit_status()
