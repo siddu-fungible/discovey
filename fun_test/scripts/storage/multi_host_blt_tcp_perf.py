@@ -790,7 +790,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     """
 
                     fun_test.log("Running FIO...")
-                    fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                    fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.blt_count + "_vol"
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                     fio_output[combo][mode] = {}
                     final_fio_output[combo][mode] = {}
