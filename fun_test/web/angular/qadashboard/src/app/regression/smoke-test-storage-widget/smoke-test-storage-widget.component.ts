@@ -6,6 +6,15 @@ import {mergeMap, switchMap} from "rxjs/operators";
 import {CommonService} from "../../services/common/common.service";
 import {RegressionService} from "../../regression/regression.service";
 
+
+class Suite {
+  result: string;
+  time: string;
+  numPassed: number;
+  numFailed: number;
+}
+
+
 @Component({
   selector: 'app-smoke-test-storage-widget',
   templateUrl: './smoke-test-storage-widget.component.html',
@@ -13,17 +22,17 @@ import {RegressionService} from "../../regression/regression.service";
 })
 export class SmokeTestStorageWidgetComponent implements OnInit {
 
-  items: any;
-  numList: number[] = [6,1,9];
-  lastTwoTestSuites: any[] = [];
-  lastTwoResults: string[] = [];
-  passed: number = 4;
-  failed: number = 0;
-  result: string;
+  lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
-  numbers: number[] = [0,1];
-  myTitle: string = "My Title";
-  mySubtitle: string = "My Subtitle";
+  numbers: number[] = [0, 1];
+  myURL: string = "<a href = 'http://www.youtube.com'>F1 storage smoke test</a>";
+
+
+  iconDict: any = {
+    'PASSED': "<img  src='http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-80plus.png'>",
+    'FAILED': "<img src='http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-00to19.png'>",
+    'IN_PROGRESS': "<img src='http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-60to79.png'>"
+  };
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,
@@ -33,10 +42,8 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
 
   stateMap = this.regressionService.stateMap;
   stateStringMap = this.regressionService.stateStringMap;
-  ngOnInit() {
 
-    console.log(this.stateMap);
-    console.log(this.stateStringMap);
+  ngOnInit() {
 
     new Observable(observer => {
       observer.next(true);
@@ -50,40 +57,35 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
       this.logger.error('Failed to fetch data');
     });
 
+
   }
 
 
   fetchData() {
     let stateFilter = 'ALL';
-    let count = 0;
-    //completed (passed or failed), killed, aborted (override result w/ failed) --> done
-    //only care about result when completed
-    //separate icon for in progress
-    //use field result
-    //get result of past 2 suites
-    //display date + result of previous test
-    //statemap, statestringmap (in regression service)
-    //scheduler_global.py, suite-detail.component
     let payload = {tags: '["smoke"]', tag: "smoke"};
     return this.apiService.post("/regression/suite_executions/" + 10 + "/" + 1 + "/" + stateFilter, payload).pipe(switchMap(response => {
       for (let i of response.data) {
-        if (this.lastTwoResults.length == 2) {
+        let mySuite = new Suite();
+        if (this.lastTwoSuites.length == 2) {
           break;
         }
-
-
         if (i.fields.state == this.stateMap.AUTO_SCHEDULED) {
+          continue;
         } else if (i.fields.state == this.stateMap.COMPLETED) {
-          this.lastTwoResults.push(i.fields.result);
-          this.lastTwoTestSuites.push(i)
+          mySuite.result = i.fields.result;
+          mySuite.time = this.trimTime(i.fields.completed_time);
 
         } else if (i.fields.state < this.stateMap.COMPLETED) {
-          this.lastTwoResults.push('FAILED');
-          this.lastTwoTestSuites.push(i);
+          mySuite.result = 'FAILED';
+          mySuite.time = this.trimTime(i.fields.completed_time);
         } else {
-          this.lastTwoResults.push('IN_PROGRESS');
-          this.lastTwoTestSuites.push(i);
+          mySuite.result = 'IN_PROGRESS'
+          mySuite.time = this.trimTime(i.fields.scheduled_time);
         }
+        mySuite.numFailed = i.num_failed;
+        mySuite.numPassed = i.num_passed;
+        this.lastTwoSuites.push(mySuite);
 
       }
       this.isDone = true;
@@ -91,7 +93,7 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
     }));
   }
 
-   trimTime(t) {
+  trimTime(t) {
     return this.regressionService.getPrettyLocalizeTime(t);
   }
 }

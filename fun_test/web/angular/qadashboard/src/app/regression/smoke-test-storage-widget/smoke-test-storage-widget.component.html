@@ -1,11 +1,11 @@
-<div class="component" style="width:100%;margin: 0 auto">
+<div *ngIf="isDone" class="component" style="width:100%;margin: 0 auto">
   <fun-card
-    [subtitle]= "'<a href = /regression?tag=smoke>F1 storage smoke test</a>'"
-    [iconLink]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-80plus.png'"
-    [textTitle]="'7/11 14:03 (current run)'"
-    [text]="'passed: 4 failed: 0'"
-    [footerIconLink]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-00to19.png'"
+    [subtitle]= "'<a href = /regression>F1 storage smoke test</a>'"
+    [icon]="iconDict[lastTwoSuites[0].result]"
+    [textTitle]="'passed: ' + lastTwoSuites[0].numPassed + ' failed: ' + lastTwoSuites[0].numFailed"
+    [text]="lastTwoSuites[0].time + ' (current run)'"
+    [footerIcon]="iconDict[lastTwoSuites[1].result]"
     [enableFooter]="true"
-    [footerText]="'7/11 12:04 (previous run) passed: 0 failed: 3'">
+    [footerText]="'passed: ' + lastTwoSuites[1].numPassed + ' failed: ' + lastTwoSuites[1].numFailed + ' ' + lastTwoSuites[1].time + ' (previous run)'">
   </fun-card>
 </div>

@@ -5,34 +5,34 @@
   </div>
   <div class=card-body>
 
-    <table>
-
-      <tr>
-        <td style="width:50%">
-          <span tooltip [tooltipContentString]="tooltip" placement="left">
-            <img [src]="iconLink" align="center" style="max-width: 150px; max-height: 150px">
+    <div class="flex-container">
+      <div
+        style="height: 150px; width: 150px; display: flex; justify-content: center; flex: 1 50%; align-items: center">
+        <span tooltip [tooltipContentString]="tooltip" placement="left">
+            <div [innerHTML]="icon | safeHtml"></div>
           </span>
-
-        </td>
-        <td style="width: 200px">
-          <div class="cardTextTitle">{{textTitle}}</div>
-          <div class="cardText">{{text}}</div>
-        </td>
-      </tr>
-    </table>
-  </div>
-  <div *ngIf="enableFooter" class="card-footer">
-    <div>
-      <small style="float: right">{{footerText}}</small>
-      <span tooltip [tooltipContentString]="footerTooltip" placement="left" style="float: right; padding-right:15px">
-              <img [src]="footerIconLink" align="right" style="max-width:50px; max-height: 50px;">
-      </span>
+      </div>
+      <div style="display: flex; justify-content: center; flex: 1 50%; align-items: center; flex-direction: column;">
+        <div class="cardTextTitle">{{textTitle}}</div>
+        <div class="cardText">{{text}}</div>
+      </div>
 
     </div>
 
-    <!--        <div class="cardTextTitle">{{footerTextTitle}}</div>-->
-
   </div>
 
+  <div *ngIf="enableFooter" class="card-footer" style="max-height: 45px">
 
+    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end">
+      <div>
+        <span tooltip [tooltipContentString]="footerTooltip" placement="left">
+          <div [innerHTML]="footerIcon | safeHtml"></div>
+      </span>
+
+      </div>
+      <div>
+        <small>{{footerText}}</small>
+      </div>
+    </div>
+  </div>
 </div>

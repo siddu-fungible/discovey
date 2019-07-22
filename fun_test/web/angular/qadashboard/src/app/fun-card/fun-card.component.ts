@@ -31,6 +31,8 @@ export class FunCardComponent implements OnInit {
   @Input() footerIconLink: string;
   @Input() footerTooltip: string;
   @Input() enableFooter: boolean = false;
+  @Input() icon: string;
+  @Input() footerIcon: string;
 
 
   constructor() { }

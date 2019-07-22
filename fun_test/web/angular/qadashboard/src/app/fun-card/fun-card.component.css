@@ -45,26 +45,48 @@ table {
 }
 
 .cardTextTitle {
-  font-weight: bold;
+  font-size: 18px;
 }
 
 .cardText {
+  font-size: 14px;
+}
 
+.footerTitleText{
+  float: right;
+  font-size: small;
 }
 
 
+.footerText{
+  float: right;
+  font-size: small;
+}
 
 
 .centered { vertical-align:middle; text-align:center; }
 .centered img { display:block; margin:0 auto; }
 
-.column {
-  float: left;
-  width: 50%;
+td img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+
 }
 
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
+.flex-container {
+  display: flex;
 }
+
+.fun-card-footer > img {
+  width: 20px;
+  height: 20px;
+}
+
+.card-footer{
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
