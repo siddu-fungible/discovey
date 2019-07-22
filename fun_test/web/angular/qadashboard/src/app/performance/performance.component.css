@@ -144,7 +144,6 @@ arrow-icon {
 .container {
   margin: 0;
   max-width: 3000px;
-  padding-top: 70px;
 }
 
 ::ng-deep #copy-url-button > .tooltip > .tooltip-inner {
