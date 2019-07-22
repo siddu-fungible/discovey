@@ -65,7 +65,7 @@ class ScriptSetup(FunTestScript):
         mode = 3
         num_flows = 268435456
         benchmark_ports = [8, 12, 0 ,20]
-        '''
+
         result = network_controller_obj.set_etp(pkt_adj_size=8)
         fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 8")
 
@@ -90,7 +90,7 @@ class ScriptSetup(FunTestScript):
         output_5 = network_controller_obj.set_nu_benchmark_1(mode=mode, sport="10-2058", dport="10000-26384", protocol=17,
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=100663296,
                                                              flow_inport=20, flow_outport=0)
-        '''
+
         sf_thr = 500
         sx_thr = 10
         df_thr = 15000
