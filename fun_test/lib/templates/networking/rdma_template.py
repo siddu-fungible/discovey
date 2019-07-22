@@ -136,6 +136,12 @@ class RdmaTemplate(object):
                 else:
                     cmd = "%s -c %s -R -d %s -p %d -F -s %d " % (self.test_type, self.connection_type, ibv_device,
                                                                  port_num, self.size)
+                if client_cmd:
+                    if self.run_infinitely:
+                        cmd += "--run_infinitely -D %d %s" % (self.run_infinitely, server_ip)
+                    else:
+                        cmd += "-D %d %s " % (self.duration, server_ip)
+                        
                 for key, val in kwargs.items():
                     if type(val) == list:
                         for op in val:
@@ -144,11 +150,6 @@ class RdmaTemplate(object):
                     else:
                         if key not in cmd:
                             cmd += "%s %s " % (key, val)
-                if client_cmd:
-                    if self.run_infinitely:
-                        cmd += "--run_infinitely -D %d %s" % (self.run_infinitely, server_ip)
-                    else:
-                        cmd += "-D %d %s " % (self.duration, server_ip)
             elif self.test_type == IB_WRITE_LATENCY_TEST:
                 if '-c' in kwargs:
                     self.connection_type = kwargs['-c']
@@ -173,6 +174,13 @@ class RdmaTemplate(object):
                                                                             ibv_device,
                                                                             port_num, self.inline_size, self.size,
                                                                             self.iterations)
+                if client_cmd:
+                    if self.run_infinitely:
+                        cmd += "--run_infinitely -D %d " % self.run_infinitely
+                    if '-n' not in cmd:
+                        cmd += "-n %d" % self.iterations
+                    cmd += " %s" % server_ip
+                    
                 for key, val in kwargs.items():
                     if type(val) == list:
                         for op in val:
@@ -181,12 +189,6 @@ class RdmaTemplate(object):
                     else:
                         if key not in cmd:
                             cmd += "%s %s " % (key, val)
-                if client_cmd:
-                    if self.run_infinitely:
-                        cmd += "--run_infinitely -D %d " % self.run_infinitely
-                    if '-n' not in cmd:
-                        cmd += "-n %d" % self.iterations
-                    cmd += " %s" % server_ip
             fun_test.log('Cmd Formed: %s' % cmd)
         except Exception as ex:
             fun_test.critical(str(ex))
