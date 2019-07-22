@@ -6,6 +6,7 @@ import {Observable} from "rxjs";
 })
 export class CommonService {
   newAlert: boolean = false;
+  announcementAvailable: boolean = false;
   constructor() {
 
   }
@@ -47,6 +48,20 @@ export class CommonService {
       d1.getDate() === d2.getDate();
   }
 
+  setAnnouncement() {
+    this.announcementAvailable = true;
+  }
+
+  clearAnnouncement() {
+    this.announcementAvailable = false;
+  }
+
+  monitorAnnouncements() {
+    return new Observable(observer => {
+      setInterval(() => observer.next(this.announcementAvailable), 1000);
+      return () => {};
+    })
+  }
 
   getPrettyLocalizeTime(t) {
     let result = t;

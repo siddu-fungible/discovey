@@ -438,6 +438,16 @@
       "password": "ADMIN"
     }
   },
+     "systems-lab-01": {
+    "host_ip": "10.1.44.43",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "systems-lab-01-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
   "cab02-qa-08": {
     "host_ip": "cab02-qa-08",
     "ssh_username": "localadmin",

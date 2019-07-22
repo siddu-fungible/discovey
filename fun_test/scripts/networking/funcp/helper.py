@@ -108,13 +108,24 @@ def rmmod_funeth_host(hostname, username="localadmin", password="Precious1*"):
             fun_test.sleep(seconds=15, message="waiting for host")
     funeth_op = ""
     try:
+        rdma_op = linux_obj.command(command="lsmod | grep funrdma")
+        if "funrdma" in rdma_op:
+            funrdma_rm = linux_obj.sudo_command("rmmod funrdma")
+            result = "ERROR" not in funrdma_rm
+            critical_log(expression=result, message="FunRDMA removed succesfully")
+            if not result:
+                return False
         funeth_op = linux_obj.command(command="lsmod | grep funeth")
         if "funeth" not in funeth_op:
             return True
         else:
             funeth_rm = linux_obj.sudo_command("rmmod funeth")
-            critical_log(expression="ERROR" not in funeth_rm, message="Funeth removed succesfully")
-            return True
+            result = "ERROR" not in funeth_rm
+            critical_log(expression=result, message="Funeth removed succesfully")
+            if result:
+                return True
+            else:
+                return False
     except:
         return False
 

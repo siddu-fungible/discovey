@@ -53,7 +53,7 @@ class FunTimer:
         return current_time - self.start_time
 
     def remaining_time(self):
-        return (self.start_time + self.max_time) - time.time()
+        return self.max_time - self.elapsed_time()
 
 class FunTestThread(Thread):
     def __init__(self, func, **kwargs):

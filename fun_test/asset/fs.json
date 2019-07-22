@@ -74,7 +74,8 @@
   {
     "name": "fs-11",
     "workarounds": {
-      "retimer_workaround": true
+      "retimer_workaround": true,
+      "skip_funeth_come_power_cycle": true
     },
     "bmc": {
       "mgmt_ip": "10.1.21.16",
@@ -82,12 +83,12 @@
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.20.146",
+      "mgmt_ip": "10.1.20.17",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
     "come": {
-      "mgmt_ip": "10.1.20.137",
+      "mgmt_ip": "10.1.20.186",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
@@ -345,6 +346,28 @@
     },
     "come": {
       "mgmt_ip": "10.1.104.166",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
+  },
+   {
+    "name": "fs-31",
+     "gateway_ip": "10.1.44.1",
+         "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "bmc": {
+      "mgmt_ip": "10.1.44.53",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "mgmt_ip": "10.1.44.55",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
+    },
+    "come": {
+      "mgmt_ip": "10.1.44.54",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }

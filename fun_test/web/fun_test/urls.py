@@ -26,6 +26,7 @@ from . import demo_views
 from web.fun_test.api import users
 from web.fun_test.api import regression, triaging, performance
 from web.fun_test.api import site_config
+from web.fun_test.api import scheduler_api
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -207,7 +208,11 @@ api_v1_urls = [
     url(r'^triaging_trial_states$', triaging.triaging_trial_states),
     url(r'^triage_types$', triaging.triaging_types),
     url(r'^git_commits_fun_os/(\S+)/(\S+)$', triaging.git_commits_fun_os),
-    url(r'^site_config', site_config.site_configs)
+    url(r'^site_configs$', site_config.site_configs),
+    url(r'^scheduler/directive_types$', scheduler_api.directive_types),
+    url(r'^scheduler/directive$', scheduler_api.directive),
+    url(r'^scheduler/info$', scheduler_api.info),
+    url(r'^scheduler/state_types$', scheduler_api.state_types)
 ]
 
 site_under_construction = False

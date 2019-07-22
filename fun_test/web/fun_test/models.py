@@ -28,6 +28,7 @@ TAG_LENGTH = 50
 class SiteConfig(models.Model):
     version = models.IntegerField(default=101)
     announcement = models.TextField(default="", null=True, blank=True)
+    announcement_level = models.IntegerField(default=1)
 
     def bump_version(self):
         self.version += 1
@@ -434,7 +435,6 @@ class ScriptInfo(models.Model):
     bug = models.TextField(default="")
 
 
-
 class SchedulerInfo(models.Model):
     """
     A place to store scheduler state such as time started, time restarted, current state
@@ -443,6 +443,57 @@ class SchedulerInfo(models.Model):
     last_start_time = models.DateTimeField(default=datetime.now)
     last_restart_request_time = models.DateTimeField(default=datetime.now)
     main_loop_heartbeat = models.IntegerField(default=0)
+
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
+class SchedulerDirective(models.Model):
+    """
+    Stores actions that need to be completed by the scheduler.
+    Usually the web-interface would request such actions
+    """
+    date_time = models.DateTimeField(default=datetime.now)
+    directive = models.IntegerField(default=-1)
+    active = models.BooleanField(default=True)   # Usually set after Directive has been processed
+
+    def disable(self):
+        self.active = False
+        self.save()
+
+    def enable(self):
+        self.active = True
+        self.save()
+
+    @staticmethod
+    def get_recent():
+        directives = SchedulerDirective.objects.all().order_by('date_time')
+        recent = None
+        if directives:
+            recent = directives.last()
+        return recent
+
+    @staticmethod
+    def remove_recent():
+        last_directive = SchedulerDirective.get_recent()
+        if last_directive:
+            last_directive.delete()
+
+    @staticmethod
+    def remove(directive):
+        objects = SchedulerDirective.objects.filter(directive=directive)
+        if objects:
+            objects.delete()
+
+    @staticmethod
+    def add(directive):
+        SchedulerDirective.objects.update_or_create(directive=directive, defaults={'date_time': datetime.now()})
+
+
+
 
 class SuiteReRunInfo(models.Model):
     """

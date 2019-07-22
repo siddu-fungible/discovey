@@ -1,0 +1,21 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# HU host
+hu:
+  hostname: 10.1.44.43
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu1-f0
+  vf_interface: hu1-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f0:
+            ipv4_addr: 12.1.1.2
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 30.1.1.0/24
+          nexthop: 12.1.1.1

@@ -9,6 +9,7 @@ import re
 
 
 NETWORK_PC_LIST = (1, 2)
+HU_ID_LIST = (1, 2, 3)
 
 
 def get_diff_stats(old_stats, new_stats):
@@ -311,6 +312,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
                         else:
                             fun_test.log('{} dpc: flow blocked {} {} has no callee_dest'.format(f1, hu_fn, flow_t))
 
+        # Flow list
+        for huid in HU_ID_LIST:
+            output = nc_obj.flow_list(huid=huid)
+            output_list.append({'flow list {}'.format(huid): output})
+
         # Upload stats output file
         dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
         file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
@@ -548,3 +554,17 @@ def mlx5_irq_affinity(linux_obj):
         cmds_chg.append('echo 7f00 > /proc/irq/{}/smp_affinity'.format(i))
     linux_obj.sudo_command(';'.join(cmds_chg))
     linux_obj.command(';'.join(cmds_cat))
+
+
+def redis_op_fcp_ftep(linux_obj, op='del'):
+    """In redis, delete FCP FTEP to tear down FCP tunnel, or add it to set up FCP tunnel."""
+    ftep_dict = {
+        'F1-0': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.2']",
+        'F1-1': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']",
+    }
+    for k in ftep_dict:
+        cmd_op = "echo {} {} | redis-cli".format(op.upper(), ftep_dict[k])
+        cmd_chk = "echo 'KEYS {}' | redis-cli | awk '{print $1}'".format(ftep_dict[k])
+        linux_obj.command('docker exec {} {}'.format(k, cmd_op))
+        linux_obj.command('docker exec {} {}'.format(k, cmd_chk))
+

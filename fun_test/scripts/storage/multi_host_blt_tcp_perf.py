@@ -790,7 +790,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     """
 
                     fun_test.log("Running FIO...")
-                    fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
+                    fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_vol_" + self.blt_count
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                     fio_output[combo][mode] = {}
                     final_fio_output[combo][mode] = {}
@@ -812,6 +812,18 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                     cpus_allowed=cpus_allowed,
                                                                     **self.fio_cmd_args)
                     """
+                    vp_util_post_fix_name = "vp_util_numjobs_iodepth_{}_{}_{}.txt".\
+                        format(fio_numjobs, fio_iodepth, mode)
+                    vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name=vp_util_post_fix_name)
+                    stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
+                                                                    storage_controller=self.storage_controller,
+                                                                    output_file=vp_util_artifact_file,
+                                                                    interval=60,
+                                                                    count=self.fio_cmd_args["runtime"]/60, threaded=True)
+
+
+
                     thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                             func=fio_parser,
                                                                             arg1=end_host_thread[thread_count],
@@ -838,6 +850,17 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fio_output[combo][mode][i] = {}
                 fio_output[combo][mode][i] = fun_test.shared_variables["fio"][i]
             final_fio_output[combo][mode] = fio_output[combo][mode][1]
+
+            # Checking whether the vp_util stats collection thread is still running...If so stopping it...
+            if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
+                fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
+                global vp_stats_thread_stop_status
+                vp_stats_thread_stop_status[self.storage_controller] = True
+                fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+            fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
+            fun_test.add_auxillary_file(description="F1 VP Utilization - Numjobs {}, IO depth {}".
+                                        format(row_data_dict["num_jobs"], row_data_dict["iodepth"]),
+                                        filename=vp_util_artifact_file)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
