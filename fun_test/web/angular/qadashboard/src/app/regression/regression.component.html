@@ -1,5 +1,6 @@
 <div class="component">
-  <app-test-bed [embed]="true"></app-test-bed>
+  <span style="margin-left: 20px" (click)="showingTestBeds = !showingTestBeds" class="pseudo-anchor">{{ !showingTestBeds? "+ Show": "- Hide" }} test-beds</span>
+  <app-test-bed *ngIf="showingTestBeds" [embed]="true"></app-test-bed>
 
   <div class="card">
     <div class="card-header">

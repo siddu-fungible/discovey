@@ -389,9 +389,16 @@ input:checked + .slider:before {
   margin: 0 !important;
 }
 
-.component {
+.component_old {
+  margin-left: 10px;
+  margin-right: 10px;
+
+}
+
+.component-margin {
   margin-top: 70px;
 }
+
 .fa {
   cursor: pointer;
 }
