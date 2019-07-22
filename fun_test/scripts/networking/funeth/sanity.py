@@ -281,7 +281,7 @@ class FunethSanity(FunTestScript):
 
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
-            funcp_obj.bringup_funcp(prepare_docker=False)
+            funcp_obj.bringup_funcp(prepare_docker=True)
             funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
                                      f1_0_mpg_netmask="255.255.252.0",
                                      f1_1_mpg_netmask="255.255.252.0"
