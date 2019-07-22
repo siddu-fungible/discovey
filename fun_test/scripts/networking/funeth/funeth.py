@@ -296,16 +296,24 @@ class Funeth:
             cmds.extend(
                 ['ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
                  'ifconfig {} up'.format(intf),
-                 'ifconfig {}'.format(intf),
+                 #'ifconfig {}'.format(intf),
                 ]
             )
+            cmd_chk = 'ifconfig {}'.format(intf)
             if ns:
                 cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
             for cmd in cmds:
                 if ns is None or 'netns' in cmd:
-                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                    self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                 else:
-                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+                    self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+
+            if ns is None:
+                output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd_chk))
+            else:
+                fun_test.sleep('Wait for 2 seconds', 2)
+                output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd_chk))
+
             # Ubuntu 16.04
             if self.tb_config_obj.is_alias(nu_or_hu, intf):
                 match = re.search(r'UP.*RUNNING.*inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)

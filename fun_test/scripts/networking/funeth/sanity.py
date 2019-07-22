@@ -33,9 +33,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.186'
+    DPC_PROXY_IP = '10.1.20.22'
     DPC_PROXY_PORT = 40220
-    DPC_PROXY_IP2 = '10.1.20.186'
+    DPC_PROXY_IP2 = '10.1.20.22'
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
