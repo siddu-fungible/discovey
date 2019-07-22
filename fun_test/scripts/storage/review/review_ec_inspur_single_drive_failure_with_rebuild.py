@@ -900,15 +900,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                         device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
                                                                  fail_uuid)
                         volume_stats = self.storage_controller.peek(device_props_tree)
-                        try:
-                            print("Volume status is: {}".format(volume_stats["data"]["stats"]["fault_injection"]))
-                            print("Type Volume status is: {}".format(
-                                type(volume_stats["data"]["stats"]["fault_injection"])))
-                            fun_test.test_assert_expected(
-                                expected=1, actual=volume_stats["data"]["stats"]["fault_injection"],
-                                message="Plex is marked as Failed")
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
+                        fun_test.test_assert_expected(
+                            expected=1, actual=volume_stats["data"]["stats"]["fault_injection"],
+                            message="Plex is marked as Failed")
                         ''' Marking Plex as failed '''
             timer = FunTimer(max_time=cp_timeout)
             while not timer.is_expired():
@@ -1030,18 +1024,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                         device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
                                                                  fail_uuid)
                         volume_stats = self.storage_controller.peek(device_props_tree)
-                        try:
-                            print("Volume status is: {}".format(volume_stats["data"]["stats"]["fault_injection"]))
-                            print("Type Volume status is: {}".format(
-                                type(volume_stats["data"]["stats"]["fault_injection"])))
-                            fun_test.test_assert_expected(expected=0,
-                                                          actual=volume_stats["data"]["stats"]["fault_injection"],
-                                                          message="Plex is marked as online")
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
+                        fun_test.test_assert_expected(expected=0,
+                                                      actual=volume_stats["data"]["stats"]["fault_injection"],
+                                                      message="Plex is marked as online")
                         ''' Marking Plex as online '''
 
-                # TODO Call the rebuild for same volume or on spare volume
+                # Rebuil failed plex
                 if self.rebuild_on_spare_volume:
                     spare_uuid = self.spare_vol_uuid
                     fun_test.log("Rebuilding on spare volume: {}".format(spare_uuid))
