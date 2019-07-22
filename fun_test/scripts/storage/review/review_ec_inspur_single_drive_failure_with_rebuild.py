@@ -405,6 +405,11 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
 
+            # Checking if test case is with back-pressure; if so creating additional volume for back-pressure
+            if self.back_pressure:
+                fun_test.log("Creating Additional EC volume for back-pressure")
+                self.ec_info["num_volumes"] += 1
+
             (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
                                                                                            self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
@@ -548,6 +553,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             self.host_info[host_name]["volume_name_list"].append(
                                 self.nvme_block_device.replace("/dev/", ""))
 
+                            '''
                             fun_test.test_assert_expected(expected=self.host_info[host_name]["volume_name_list"][-1],
                                                           actual=lsblk_output[volume_name]["name"],
                                                           message="{} device available".format(
@@ -559,6 +565,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                           actual=lsblk_output[volume_name]["size"],
                                                           message="{} volume size check".format(
                                                               self.host_info[host_name]["volume_name_list"][-1]))
+                            '''
 
                     # Total number of volumes available should be equal to the ec_info["num_volumes"]
                     self.host_info[host_name]["nvme_block_device_list"].sort()
@@ -598,10 +605,11 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def run(self):
 
-        table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time",
-                              "File Copy Time During Volume Fail", "File Copy Time During Rebuild", "Job Name"]
-        table_data_cols = ["num_hosts", "vol_size", "test_file_size", "base_copy_time", "copy_time_during_vol_fail",
-                           "copy_time_during_rebuild", "fio_job_name"]
+        table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time (sec)",
+                              "File Copy Time During Plex Fail (sec)", "File Copy Time During Rebuild (sec)",
+                              "Plex Rebuild Time (sec)", "Job Name"]
+        table_data_cols = ["num_hosts", "vol_size", "test_file_size", "base_copy_time", "copy_time_during_plex_fail",
+                           "copy_time_during_rebuild", "plex_rebuild_time", "fio_job_name"]
         table_data_rows = []
 
         # Test Preparation
@@ -636,10 +644,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
                                                format(blt_stats["data"]["drive_uuid"]))
 
-        fun_test.log("EC plex volumes UUID      : {}".format(self.ec_info["uuids"][0]["blt"]))
-        fun_test.log("EC plex volumes drive UUID: {}".format(self.ec_info["drive_uuid"][0]))
-        fun_test.log("EC plex volumes device ID : {}".format(self.ec_info["device_id"][0]))
-        print("1. self.ec info: {}".format(self.ec_info))
+        fun_test.log("EC plex volumes UUID      : {}".format(self.ec_info["uuids"][self.test_volume_start_index]["blt"]))
+        fun_test.log("EC plex volumes drive UUID: {}".format(self.ec_info["drive_uuid"][self.test_volume_start_index]))
+        fun_test.log("EC plex volumes device ID : {}".format(self.ec_info["device_id"][self.test_volume_start_index]))
 
         iostat_pid = {}
         iostat_artifact_file = {}
@@ -678,10 +685,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.simple_assert(command_result, "Mounting EC volume {} on {}".
                                        format(nvme_block_device_list[num], mount_point))
                 lsblk_output = host_handle.lsblk("-b")
+                '''
                 fun_test.test_assert_expected(expected=mount_point,
                                               actual=lsblk_output[volume_name_list[num]]["mount_point"],
                                               message="Mounting EC volume {} on {}".format(nvme_block_device_list[num],
                                                                                            mount_point))
+                '''
 
             ''' start: base file copy to measure time without any failure or rebuild '''
 
@@ -749,10 +758,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file1))
 
             host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-            host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
             end_time = time.time()
             time_taken = end_time - start_time
             fun_test.log("Time taken to copy base file {}".format(time_taken))
+            host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
             # Checking if iostat process is still running...If so killing it...
             iostat_pid_check = host_handle.get_process_id("iostat")
@@ -822,8 +831,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                 cp_timeout = self.min_timeout
 
             if hasattr(self, "back_pressure") and self.back_pressure:
-                # Start the vdbench here to produce the back pressure
-                pass
+                try:
+                    # Start the fio here to produce the back pressure
+                    self.back_pressure_io["fio_cmd_args"] += "--filename={}".\
+                        format(nvme_block_device_list[self.test_volume_start_index-1])
+                    fio_pid = host_handle.start_bg_process(command=self.back_pressure_io["fio_cmd_args"],
+                                                           timeout=self.back_pressure_io["timeout"])
+                    fun_test.log("Back pressure is started using fio pid is: {}".format(fio_pid))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
             # Copying the file into the all the test volumes
             source_file = self.dd_create_file["output_file"]
@@ -855,7 +871,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 host_handle.start_bg_process(command=cp_cmd)
 
             # Check whether the drive failure needs to be triggered
-            if hasattr(self, "trigger_drive_failure") and self.trigger_drive_failure:
+            if hasattr(self, "trigger_failure") and self.trigger_failure:
                 # Sleep for sometime before triggering the drive failure
                 wait_time = 2
                 if hasattr(self, "failure_start_time_ratio"):
@@ -874,35 +890,33 @@ class ECVolumeLevelTestcase(FunTestCase):
                         self.failure_drive_index[num - self.test_volume_start_index]]
                     fail_device = self.ec_info["device_id"][num][
                         self.failure_drive_index[num - self.test_volume_start_index]]
+                    if self.fail_drive:
+                        ''' Marking drive as failed '''
+                        fun_test.log("Initiating drive failure")
+                        device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
+                                                                                    command_duration=self.command_timeout)
+                        fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
 
-                    ''' Marking drive as failed '''
-                    '''
-                    device_fail_status = self.storage_controller.disable_device(device_id=fail_device,
-                                                                                command_duration=self.command_timeout)
-                    fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
-
-                    # Validate if Device is marked as Failed
-                    device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
-                    device_stats = self.storage_controller.peek(device_props_tree)
-                    fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
-                    fun_test.test_assert_expected(expected="DEV_FAILED_ERR_INJECT",
-                                                  actual=device_stats["data"]["device state"],
-                                                  message="Device ID {} is marked as Failed".format(fail_device))
-                    print('Stats of device {} and device state is {}'.format(device_stats,
-                                                                             device_stats["data"]["device state"]))
-                    '''
-                    ''' Marking drive as failed '''
-
-                    ''' Marking volume as failed '''
-
-                    volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
-                    fun_test.test_assert(volume_fail_status["status"], "Disabling Volume UUID {}".format(fail_uuid))
-                    # Validate if volume is marked as Failed
-                    device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
-                    volume_stats = self.storage_controller.peek(device_props_tree)
-                    print("Volume status is: {}".format(volume_stats["data"]))
-
-                    ''' Marking volume as failed '''
+                        # Validate if Device is marked as Failed
+                        device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
+                        device_stats = self.storage_controller.peek(device_props_tree)
+                        fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
+                        fun_test.test_assert_expected(expected="DEV_FAILED_ERR_INJECT",
+                                                      actual=device_stats["data"]["device state"],
+                                                      message="Device ID {} is marked as Failed".format(fail_device))
+                        print('Stats of device {} and device state is {}'.format(device_stats,
+                                                                                 device_stats["data"]["device state"]))
+                        ''' Marking drive as failed '''
+                    else:
+                        ''' Marking volume as failed '''
+                        fun_test.log("Initiating volume failure")
+                        volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
+                        fun_test.test_assert(volume_fail_status["status"], "Disabling Volume UUID {}".format(fail_uuid))
+                        # Validate if volume is marked as Failed
+                        device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
+                        volume_stats = self.storage_controller.peek(device_props_tree)
+                        print("Volume status is: {}".format(volume_stats["data"]))
+                        ''' Marking volume as failed '''
 
             print("2. self.ec info after disabling the device : {}".format(self.ec_info))
             timer = FunTimer(max_time=cp_timeout)
@@ -916,11 +930,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file1))
 
             host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-            host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
             end_time = time.time()
             time_taken = end_time - start_time
             fun_test.log("Time taken to copy during failed volume/drive {}".format(time_taken))
-            row_data_dict["copy_time_during_vol_fail"] = time_taken
+            row_data_dict["copy_time_during_plex_fail"] = time_taken
+            host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
             # Checking if iostat process is still running...If so killing it...
             iostat_pid_check = host_handle.get_process_id("iostat")
@@ -1011,33 +1025,32 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fail_device = self.ec_info["device_id"][num][
                     self.failure_drive_index[num - self.test_volume_start_index]]
 
-                ''' Marking drive as online '''
-                '''
-                device_up_status = self.storage_controller.enable_device(device_id=fail_device,
-                                                                         command_duration=self.command_timeout)
-                fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
+                if self.fail_drive:
+                    ''' Marking drive as online '''
+                    ''''''
+                    device_up_status = self.storage_controller.enable_device(device_id=fail_device,
+                                                                             command_duration=self.command_timeout)
+                    fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
 
-                device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
-                device_stats = self.storage_controller.peek(device_props_tree)
-                fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
-                fun_test.test_assert_expected(expected="DEV_ONLINE", actual=device_stats["data"]["device state"],
-                                              message="Device ID {} is Enabled again".format(fail_device))
-                print('Stats of device {} and device state is {}'.format(device_stats,
-                                                                         device_stats["data"]["device state"]))
+                    device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
+                    device_stats = self.storage_controller.peek(device_props_tree)
+                    fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
+                    fun_test.test_assert_expected(expected="DEV_ONLINE", actual=device_stats["data"]["device state"],
+                                                  message="Device ID {} is Enabled again".format(fail_device))
+                    print('Stats of device {} and device state is {}'.format(device_stats,
+                                                                             device_stats["data"]["device state"]))
 
-                '''
-                ''' Marking drive as online '''
-
-                ''' Marking volume as online '''
-
-                volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
-                fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".format(fail_uuid))
-                # Validate if Volume is enabled again
-                device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
-                volume_stats = self.storage_controller.peek(device_props_tree)
-                print("Volume status is: {}".format(volume_stats["data"]))
-
-                ''' Marking volume as online '''
+                    ''''''
+                    ''' Marking drive as online '''
+                else:
+                    ''' Marking volume as online '''
+                    volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
+                    fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".format(fail_uuid))
+                    # Validate if Volume is enabled again
+                    device_props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", fail_uuid)
+                    volume_stats = self.storage_controller.peek(device_props_tree)
+                    print("Volume status is: {}".format(volume_stats["data"]))
+                    ''' Marking volume as online '''
 
                 # TODO Call the rebuild for same volume or on spare volume
                 if self.rebuild_on_spare_volume:
@@ -1065,10 +1078,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file2))
 
             host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-            host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
             end_time = time.time()
             time_taken = end_time - start_time
             fun_test.log("Time taken to copy during volume rebuild {}".format(time_taken))
+            host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
             row_data_dict["copy_time_during_rebuild"] = time_taken
             row_data_dict["fio_job_name"] = "inspur_functional_8_7_1_f1_{}_vol_{}_host_{}".format(
@@ -1130,16 +1143,24 @@ class ECVolumeLevelTestcase(FunTestCase):
             '''
             try:
                 bmc_handle = self.fs_obj[0].get_bmc()
-                print("bmc handle is: {}".format(bmc_handle))
-                print("dir of bmc handle is: {}".format(dir(bmc_handle)))
                 uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_filename(f1_index=self.f1_in_use)
                 fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
                 search_pattern = "'under rebuild total failed'"
-                output = bmc_handle.command("grep {} {}".format(search_pattern, uart_log_file,
-                                                                timeout=self.command_timeout))
-                fun_test.log("'Rebuild operation start' log search output: {}".format(output))
-                print("type of output is: {}".format(type(output)))
-                fun_test.log("Rebuild operation is started")
+                output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
+                                                                   timeout=self.command_timeout))
+                try:
+                    print("Rebuild operation is started: {}".format(output.rstrip()))
+                    print("type of output is: {}".format(type(output.rstrip())))
+                    if int(output.rstrip()) == 1:
+                        print("type of output is: {}".format(type(int(output.rstrip()))))
+                        print("Good to use it")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                # fun_test.test_assert_expected(expected=1, actual=output, message="Rebuild operation is started")
+                rebuild_start_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".format(
+                    search_pattern, uart_log_file, timeout=self.command_timeout))
+                rebuild_start_time = int(round(float(rebuild_start_time.rstrip())))
+                fun_test.log("'Rebuild operation started at' log search output: {}".format(rebuild_start_time))
 
                 timer = FunTimer(max_time=600)
                 while not timer.is_expired():
@@ -1148,14 +1169,18 @@ class ECVolumeLevelTestcase(FunTestCase):
                     output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
                                                                        timeout=self.command_timeout))
                     print("type of output is: {}".format(type(output)))
-                    if int(output) == 1:
-                        complete_search_output = bmc_handle.command("grep {} {}".format(
-                            search_pattern, uart_log_file, timeout=self.command_timeout))
-                        fun_test.log("Rebuild operation completion log search output: {}".format(complete_search_output))
+                    if int(output.rstrip()) == 1:
+                        rebuild_stop_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".
+                            format(search_pattern, uart_log_file, timeout=self.command_timeout))
+                        rebuild_stop_time = int(round(float(rebuild_stop_time.rstrip())))
+                        fun_test.log("Rebuild operation completed at: {}".format(rebuild_stop_time))
                         fun_test.log("Rebuild operation on volume {} is completed".format(spare_uuid))
                         break
                 else:
                     fun_test.test_assert(False, "Rebuild operation on volume {} completed".format(spare_uuid))
+                rebuild_time = rebuild_stop_time - rebuild_start_time
+                fun_test.log("Time taken to rebuild plex: {}".format(rebuild_time))
+                row_data_dict["plex_rebuild_time"] = rebuild_time
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -1172,6 +1197,17 @@ class ECVolumeLevelTestcase(FunTestCase):
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
             fun_test.add_table(panel_header="Single Drive Failure Result Table", table_name=self.summary,
                                table_data=table_data)
+
+            try:
+                if hasattr(self, "back_pressure") and self.back_pressure:
+                    # Check if back pressure is still running, if yes, stop it
+                    check_pid = host_handle.get_process_id(process_name="fio")
+                    if check_pid == fio_pid:
+                        fun_test.log("back pressure is still running, stopping it")
+                        kill_fio = host_handle.kill_process(process_id=fio_pid)
+                        fun_test.simple_assert(host_handle.exit_status() == 0, "Back pressure is stopped")
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
     def cleanup(self):
         pass

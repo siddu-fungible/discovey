@@ -62,18 +62,22 @@
     "status_interval": 10,
     "ns_id": 1,
     "io_queues": 16,
-    "back_pressure": false,
+    "back_pressure": true,
+    "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed=0-19,40-59 --numjobs=8 --iodepth=1 --bs=4k --io_size=17179869184 --time_based --runtime=1200 --name=job0 ", "timeout": 1260},
     "nvme_device": "/dev/nvme",
     "mount_path": "/mnt/ssd",
-    "trigger_drive_failure": true,
+    "trigger_failure": true,
+    // If 'fail_drive' is true, initiate drive failure else initiate plex failure
+    "fail_drive": false,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
     "fs_type": "ext3",
-    "test_volume_start_index": 0,
+    "test_volume_start_index": 1,
     "test_file_size": 53687091200,
+    //"test_file_size": 1073741824,
     // Ensure that dividing block size with the test_file_size doesn't give any fractions
     "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": 1048576},
     //
