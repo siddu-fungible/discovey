@@ -94,11 +94,11 @@ hu2:
       interfaces:
         - hu2-f8:
             mac_addr: 00:de:ad:be:ef:51
-            ipv4_addr: 53.1.9.4
+            ipv4_addr: 53.1.1.8
             ipv4_netmask: 255.255.255.0
       routes:
-        - prefix: 53.1.1.0/24
-          nexthop: 53.1.9.254
+        - prefix: 21.1.1.0/24
+          nexthop: 53.1.1.254
 
 hu3:
   hostname: poc-server-08
