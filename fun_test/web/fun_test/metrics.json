@@ -104,41 +104,34 @@
                 "metric_model_name": "MetricContainer",
                 "name": "host_to_network_hu",
                 "label": "HU",
+                "extensible_references": [
+                  "HU_NU_NFCP"
+                ],
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "HU_NU_NFCP_non_teramark",
-                    "label": "Host->Network",
-                    "extensible_references": [
-                      "HU_NU_NFCP"
-                    ],
+                    "name": "HU_NU_NFCP_1TCP_offloads_disabled",
+                    "label": "1 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
-                        "metric_model_name": "MetricContainer",
-                        "name": "HU_NU_NFCP_1TCP_offloads_disabled",
-                        "label": "1 TCP Flow(s), 1 Host(s)",
-                        "children": [
-                          {
-                            "metric_model_name": "HuThroughputPerformance",
-                            "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "HuThroughputPerformance",
-                            "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
-                            "label": "Packets per sec"
-                          },
-                          {
-                            "metric_model_name": "HuLatencyPerformance",
-                            "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
-                            "label": "Latency"
-                          },
-                          {
-                            "metric_model_name": "HuLatencyUnderLoadPerformance",
-                            "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
-                            "label": "Latency under load"
-                          }
-                        ]
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "HU_NU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
+                        "label": "Latency under load"
                       }
                     ]
                   }
@@ -184,41 +177,34 @@
                 "metric_model_name": "MetricContainer",
                 "name": "network_to_host_hu",
                 "label": "HU",
+                "extensible_references": [
+                  "NU_HU_NFCP"
+                ],
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
-                    "name": "NU_HU_NFCP_non_teramark",
-                    "label": "Network->Host",
-                    "extensible_references": [
-                      "NU_HU_NFCP"
-                    ],
+                    "name": "NU_HU_NFCP_1TCP_offloads_disabled",
+                    "label": "1 TCP Flow(s), 1 Host(s)",
                     "children": [
                       {
-                        "metric_model_name": "MetricContainer",
-                        "name": "NU_HU_NFCP_1TCP_offloads_disabled",
-                        "label": "1 TCP Flow(s), 1 Host(s)",
-                        "children": [
-                          {
-                            "metric_model_name": "HuThroughputPerformance",
-                            "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
-                            "label": "Throughput"
-                          },
-                          {
-                            "metric_model_name": "HuThroughputPerformance",
-                            "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
-                            "label": "Packets per sec"
-                          },
-                          {
-                            "metric_model_name": "HuLatencyPerformance",
-                            "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
-                            "label": "Latency"
-                          },
-                          {
-                            "metric_model_name": "HuLatencyUnderLoadPerformance",
-                            "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
-                            "label": "Latency under load"
-                          }
-                        ]
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput",
+                        "label": "Throughput"
+                      },
+                      {
+                        "metric_model_name": "HuThroughputPerformance",
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps",
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyPerformance",
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency",
+                        "label": "Latency"
+                      },
+                      {
+                        "metric_model_name": "HuLatencyUnderLoadPerformance",
+                        "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_under_load",
+                        "label": "Latency under load"
                       }
                     ]
                   }
