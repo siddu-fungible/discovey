@@ -2945,12 +2945,6 @@
                 ]
               }
             ]
-          },
-          {
-            "metric_model_name": "MetricContainer",
-            "name": "teramarks_customer_new",
-            "label": "Customer",
-            "children": []
           }
         ]
       },
