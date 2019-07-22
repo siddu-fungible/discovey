@@ -1551,7 +1551,7 @@ if __name__ == "__main_inspur_6f1s__":
                     chart.save()
     print "added new datasets for 6 F1"
 
-if __name__ == "__main__":
+if __name__ == "__main_l4_IMIX__":
     internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
                             "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
     for internal_chart_name in internal_chart_names:
@@ -1569,7 +1569,49 @@ if __name__ == "__main__":
             chart.save()
     print "added l4 firewall datasets for IMIX 128M flows"
 
-
-
-
+if __name__ == "__main__":
+    internal_chart_names = ["bmv_storage_local_ssd_random_read_iops", "bmv_storage_local_ssd_random_write_iops",
+                            "bmv_storage_local_ssd_random_read_qd128_latency", "bmv_storage_local_ssd_random_write_qd128_latency"]
+    for internal_chart_name in internal_chart_names:
+        if "latency" in internal_chart_name:
+            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+            internal_chart_name = internal_chart_name.replace("qd128", "qd256")
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_num_threads"] = 256
+                data_set["output"]["reference"] = -1
+                data_set["output"]["expected"] = -1
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name="temp",
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=chart.description,
+                        owner_info=chart.owner_info,
+                        source=chart.source,
+                        positive=chart.positive,
+                        y1_axis_title=chart.y1_axis_title,
+                        visualization_unit=chart.visualization_unit,
+                        metric_model_name=chart.metric_model_name,
+                        base_line_date=chart.base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+        else:
+            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+            if "random_read" in internal_chart_name:
+                output_name = "output_read_iops"
+            else:
+                output_name = "output_write_iops"
+            data_sets = json.loads(chart.data_sets)
+            one_data_set = {}
+            one_data_set["name"] = "256"
+            one_data_set["inputs"] = {"input_test": "randread", "input_num_threads": 256, "input_io_depth": 1,
+                                      "input_platform": "F1"}
+            one_data_set["output"] = {"name": output_name, "reference": -1, "min": 0, "max": -1,
+                                      "expected": -1, "unit": "ops"}
+            data_sets.append(one_data_set)
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+    print "added 256 iodepth to local ssd"
 
