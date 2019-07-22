@@ -1492,7 +1492,7 @@ if __name__ == "__main_ipsec_new__":
                     platform=FunPlatform.F1).save()
     print "added charts for ipsec encryption and decryption"
 
-if __name__ == "__main__":
+if __name__ == "__main_inspur_6f1s__":
     internal_chart_names = ["inspur_8111_8k_rand_rw_2f1", "inspur_8116_8k_rand_rw_2f1",
                             "inspur_rand_read_write_qd1_2f1_8k_block_output_iops",
                             "inspur_rand_read_write_qd8_2f1_8k_block_output_iops",
@@ -1550,3 +1550,26 @@ if __name__ == "__main__":
                     chart.data_sets = json.dumps(data_sets)
                     chart.save()
     print "added new datasets for 6 F1"
+
+if __name__ == "__main__":
+    internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
+                            "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets1 = json.loads(chart.data_sets)
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets1:
+                data_set["name"] = data_set["name"].replace("64B", "IMIX")
+                data_set["inputs"]["input_frame_size"] = 362.94
+                data_set["output"]["reference"] = -1
+                data_set["output"]["expected"] = -1
+                data_sets.append(data_set)
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+    print "added l4 firewall datasets for IMIX 128M flows"
+
+
+
+
+
