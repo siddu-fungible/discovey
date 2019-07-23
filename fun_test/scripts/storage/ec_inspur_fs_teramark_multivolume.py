@@ -75,7 +75,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.log("Going to use the script level defaults")
             self.bootargs = Fs.DEFAULT_BOOT_ARGS
             self.disable_f1_index = None
-            self.f1_in_use = 1
+            self.f1_in_use = 0
             self.syslog_level = 2
             self.command_timeout = 5
             self.reboot_timeout = 600
@@ -114,6 +114,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "f1_in_use" in job_inputs:
+            self.f1_in_use = job_inputs["f1_in_use"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
