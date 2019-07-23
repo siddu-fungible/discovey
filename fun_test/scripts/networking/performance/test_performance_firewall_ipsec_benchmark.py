@@ -57,7 +57,7 @@ class ScriptSetup(FunTestScript):
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
         inputs = fun_test.shared_variables['inputs']
-        test_streams = ["MULTI_FLOW_ENCRYPT_64B", "MULTI_FLOW_ENCRYPT_IMIX", "SINGLE_FLOW_ENCRYPT_64B", "SINGLE_FLOW_ENCRYPT_IMIX",
+        test_streams = ["MULTI_FLOW_ENCRYPT_IMIX", "MULTI_FLOW_ENCRYPT_64B", "SINGLE_FLOW_ENCRYPT_64B", "SINGLE_FLOW_ENCRYPT_IMIX",
                         "MULTI_FLOW_DECRYPT", "SINGLE_FLOW_DECRYPT"]
         publish_results = False
         branch_name = None
@@ -285,6 +285,8 @@ class TestL4IPsecPerformance(FunTestCase):
             for traffic_streamblock in handle_list:
                 template_obj.stc_manager.update_stream_block(traffic_streamblock, update_attributes)
             fun_test.log("Updated frame load to %s on each port" % default_load_pps)
+
+            fun_test.sleep("Letting remaining traffic go through", seconds=10)
 
             result[stream] = {}
             result[stream]['pps'] = 0.0
