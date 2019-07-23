@@ -549,8 +549,8 @@ if __name__ == '__main__':
     ts = ScriptSetup()
 
     # Multi flows
-    ts.add_test_case(TestL4FirewallPerformance())
-    ts.add_test_case(TestL4FirewallLatency())
+    #ts.add_test_case(TestL4FirewallPerformance())
+    #ts.add_test_case(TestL4FirewallLatency())
     #ts.add_test_case(TestL4FirewallPerformance128M())
     ts.add_test_case(TestL4FirewallPerformanceOld128M())
     ts.add_test_case(TestL4FirewallLatencyOld128M())

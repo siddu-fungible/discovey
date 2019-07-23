@@ -33,9 +33,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.186'
+    DPC_PROXY_IP = '10.1.20.22'
     DPC_PROXY_PORT = 40220
-    DPC_PROXY_IP2 = '10.1.20.186'
+    DPC_PROXY_IP2 = '10.1.20.22'
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
@@ -281,7 +281,7 @@ class FunethSanity(FunTestScript):
 
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
-            funcp_obj.bringup_funcp(prepare_docker=False)
+            funcp_obj.bringup_funcp(prepare_docker=True)
             funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
                                      f1_0_mpg_netmask="255.255.252.0",
                                      f1_1_mpg_netmask="255.255.252.0"
@@ -472,8 +472,7 @@ class FunethTestPacketSweep(FunTestCase):
         namespaces = [tb_config_obj.get_hu_pf_namespace(hu), tb_config_obj.get_hu_vf_namespace(hu)]
         interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
         for namespace, interface in zip(namespaces, interfaces):
-            ns = None if namespace == 'default' else namespace
-            fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU, ns=ns),
+            fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU, ns=namespace),
                                  'Set HU host {} interface {} MTU to {}'.format(hostname, interface, MAX_MTU))
 
         # FPG MTU
@@ -812,8 +811,8 @@ class FunethTestReboot(FunTestCase):
         hu = fun_test.shared_variables['sanity_hu']
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
-
-        fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
+        fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot HU host {}'.format(hostname))
+        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=180)
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
