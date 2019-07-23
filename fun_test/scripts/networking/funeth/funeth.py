@@ -308,10 +308,10 @@ class Funeth:
                 else:
                     self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
 
+            fun_test.sleep('Wait for 2 seconds', 2)
             if ns is None:
                 output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd_chk))
             else:
-                fun_test.sleep('Wait for 2 seconds', 2)
                 output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd_chk))
 
             # Ubuntu 16.04
