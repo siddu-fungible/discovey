@@ -167,6 +167,7 @@ class SuiteExecution(models.Model):
     emails = models.TextField(default="[]", null=True)  # email addresses to send reports to
     email_on_failure_only = models.BooleanField(default=False)
     finalized = models.BooleanField(default=False)
+    preserve_logs = models.BooleanField(default=False)  # Preserve logs do not archive
 
     """
     Execution

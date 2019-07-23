@@ -122,10 +122,6 @@ export class RegressionComponent implements OnInit {
       }
     }).pipe(switchMap(() => {
         return this.getQueryParam().pipe(switchMap((response) => {
-          /*if (response["state_filter"]) {
-            this.stateFilter = response["state_filter"];
-            this.stateFilterString = this.regressionService.stateStringMap[this.stateFilter];
-          }*/
           this.queryParameters = response;
           this.setFilterButtons();
           return of(response);
