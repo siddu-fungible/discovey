@@ -95,6 +95,37 @@ class ScriptSetup(FunTestScript):
                                                              ip_sa="29.1.1.1", ip_da="29.1.1.2", flow_offset=9437184,
                                                              flow_inport=20, flow_outport=0)
 
+        sf_thr = 500
+        sx_thr = 10
+        df_thr = 15000
+        dx_thr = 10
+        fcp_thr = 10
+        nonfcp_thr = 16000
+        sf_xoff_thr = 1800
+        fcp_xoff_thr = 8
+        nonfcp_xoff_thr = 15800
+        sf_xon_thr = 400
+        fcp_xon_thr = 6
+        nonfcp_xon_thr = 15500
+
+        set_1 = network_controller_obj.set_qos_egress_buffer_pool(sf_thr=sf_thr, sx_thr=sx_thr, dx_thr=dx_thr,
+                                                                  df_thr=df_thr,
+                                                                  fcp_thr=fcp_thr, nonfcp_thr=nonfcp_thr,
+                                                                  sf_xoff_thr=sf_xoff_thr,
+                                                                  fcp_xoff_thr=fcp_xoff_thr,
+                                                                  nonfcp_xoff_thr=nonfcp_xoff_thr,
+                                                                  sf_xon_thr=sf_xon_thr, fcp_xon_thr=fcp_xon_thr,
+                                                                  nonfcp_xon_thr=nonfcp_xon_thr)
+
+        set_2 = network_controller_obj.set_qos_egress_queue_buffer(port_num=27, queue_num=0, dynamic_enable=0,
+                                                                   min_threshold=15000)
+        set_3 = network_controller_obj.set_qos_egress_queue_buffer(port_num=35, queue_num=0, dynamic_enable=0,
+                                                                   min_threshold=15000)
+        set_4 = network_controller_obj.set_qos_egress_queue_buffer(port_num=43, queue_num=0, dynamic_enable=0,
+                                                                   min_threshold=15000)
+
+        out = network_controller_obj.poke_fcp_config_scheduler(total_bw=400, fcp_ctl_bw=10, fcp_data_bw=10)
+
         TIMESTAMP = get_current_time()
 
     def cleanup(self):
