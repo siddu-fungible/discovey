@@ -1569,7 +1569,7 @@ if __name__ == "__main_l4_IMIX__":
             chart.save()
     print "added l4 firewall datasets for IMIX 128M flows"
 
-if __name__ == "__main__":
+if __name__ == "__main__bmv_storage_local_ssd":
     internal_chart_names = ["bmv_storage_local_ssd_random_read_iops", "bmv_storage_local_ssd_random_write_iops",
                             "bmv_storage_local_ssd_random_read_qd128_latency", "bmv_storage_local_ssd_random_write_qd128_latency"]
     for internal_chart_name in internal_chart_names:
@@ -1615,3 +1615,48 @@ if __name__ == "__main__":
             chart.save()
     print "added 256 iodepth to local ssd"
 
+if __name__ == "__main__":
+    fio_job_names = ["inspur_8k_random_read_write_iodepth_32_f1_6_vol_1",
+                     "inspur_8k_random_read_write_iodepth_2_f1_6_vol_1",
+                     "inspur_8k_random_read_write_iodepth_3_f1_6_vol_1", "inspur_8k_random_read_write_iodepth_4_f1_6_vol_1"]
+    for fio_job_name in fio_job_names:
+        entries = BltVolumePerformance.objects.filter(input_fio_job_name=fio_job_name)
+        for entry in entries:
+            print entry
+            print fio_job_name
+            if "_1_f1" in fio_job_name:
+                entry.input_fio_job_name = entry.input_fio_job_name.replace("_1_f1", "_32_f1")
+            elif "_2_f1" in fio_job_name:
+                entry.input_fio_job_name = entry.input_fio_job_name.replace("_2_f1", "_64_f1")
+            elif "_3_f1" in fio_job_name:
+                entry.input_fio_job_name = entry.input_fio_job_name.replace("_3_f1", "_96_f1")
+            elif "_4_f1" in fio_job_name:
+                entry.input_fio_job_name = entry.input_fio_job_name.replace("_4_f1", "_128_f1")
+            entry.save()
+    print "changed fio job names for inpur 6 f1s"
+    internal_chart_names = ["inspur_rand_read_write_qd1_6f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd8_6f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd16_6f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd32_6f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd64_6f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd96_6f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd128_6f1_8k_block_output_iops",
+                            "inspur_rand_read_write_qd1_6f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd8_6f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd16_6f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd32_6f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd64_6f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd96_6f1_8k_block_output_latency",
+                            "inspur_rand_read_write_qd128_6f1_8k_block_output_latency"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        if chart:
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"].pop("input_operation", None)
+            if "qd32" in internal_chart_name or "qd64" in internal_chart_name or "qd96" in internal_chart_name or \
+                    "qd128" in internal_chart_name:
+                data_sets[:] = [data_set for data_set in data_sets if "6 F1s" in data_set["name"]]
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+    print "removed input operation from the filter"
