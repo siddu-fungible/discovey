@@ -25,9 +25,9 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
   isDone: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
-    'PASSED': "https://jenkins.io/doc/book/resources/blueocean/icons/weather/sunny.svg",
-    'FAILED': "https://jenkins.io/doc/book/resources/blueocean/icons/weather/storm.svg",
-    'IN_PROGRESS': "https://jenkins.io/doc/book/resources/blueocean/icons/weather/cloudy.svg"
+    'PASSED': "/static/media/sunny.svg",
+    'FAILED': "/static/media/storm.svg",
+    'IN_PROGRESS': "/static/media/loading_gif.gif"
   };
 
 
