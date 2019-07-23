@@ -80,12 +80,17 @@ export class RegressionService implements OnInit{
     return new Date(epochValue);
   }
 
-  getPrettyLocalizeTime(t) {
-    let localTime = this.convertToLocalTimezone(t);
-    let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${localTime.getMinutes()}`;
-    //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
-    return s;
+getPrettyLocalizeTime(t) {
+  let minutePrefix = '';
+  let localTime = this.convertToLocalTimezone(t);
+  if (localTime.getMinutes() < 10){
+    minutePrefix += '0';
   }
+  let s = `${localTime.getMonth() + 1}/${localTime.getDate()} ${localTime.getHours()}:${minutePrefix}${localTime.getMinutes()}`;
+  //return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+  return s;
+}
+
 
   getTestCaseExecution(executionId) {
     return this.apiService.get('/regression/test_case_execution_info/' + executionId).pipe(switchMap((response) => {

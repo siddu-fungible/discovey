@@ -1615,7 +1615,7 @@ if __name__ == "__main__bmv_storage_local_ssd":
             chart.save()
     print "added 256 iodepth to local ssd"
 
-if __name__ == "__main__":
+if __name__ == "__main_fio_job_name_fix__":
     fio_job_names = ["inspur_8k_random_read_write_iodepth_32_f1_6_vol_1",
                      "inspur_8k_random_read_write_iodepth_2_f1_6_vol_1",
                      "inspur_8k_random_read_write_iodepth_3_f1_6_vol_1", "inspur_8k_random_read_write_iodepth_4_f1_6_vol_1"]
@@ -1660,3 +1660,144 @@ if __name__ == "__main__":
             chart.data_sets = json.dumps(data_sets)
             chart.save()
     print "removed input operation from the filter"
+
+if __name__ == "__main__inspur":
+    entries = BltVolumePerformance.objects.filter(input_fio_job_name="inspur_8k_random_read_write_iodepth_1_f1_6_vol_1")
+    for entry in entries:
+        print entry
+        entry.input_fio_job_name = entry.input_fio_job_name.replace("_1_f1", "_32_f1")
+        entry.save()
+    print "fixed missed 32 iodepth"
+
+
+if __name__ == "__main__":
+
+    # charts for inspur functional 871 time_taken
+    internal_chart_name = "inspur_functional_871_single_disk_failure_time_taken"
+    owner_info = "Ravi Hulle (ravi.hulle@fungible.com) "
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/review/review_ec_inspur" \
+             "_single_drive_failure_with_rebuild.py"
+    positive = False
+    y1_axis_title = PerfUnit.UNIT_SECS
+    platform = FunPlatform.F1
+    model_name = "InspurSingleDiskFailurePerformance"
+    description = "Copy a file, when there is no disk failure. Base file copy. Measure time to copy file<br>" \
+                  "Copy file during disk/volume failure, Measure time to copy file<br>" \
+                  "Copy file during failed disk/volume rebuild, Measure time to copy file<br>"
+    chart_name = "Single disk failure with rebuild"
+    one_data_set = {}
+    data_sets = []
+
+    inputs = {
+        "input_platform": platform,
+        "input_num_hosts": 1,
+        "input_num_f1s": 1
+    }
+
+    output_names = OrderedDict([("output_base_file_copy_time", "base file copy time"),
+                                ("output_copy_time_during_plex_fail", "time taken during plex fail"),
+                                ("output_file_copy_time_during_rebuild", "time taken during rebuild"),
+                                ("output_plex_rebuild_time", "plex rebuild time")])
+
+    for output_name in output_names:
+        output = {
+            "name": output_name,
+            "unit": PerfUnit.UNIT_SECS,
+            "min": 0,
+            "max": -1,
+            "expected": -1,
+            "reference": -1
+        }
+        one_data_set["name"] = output_names[output_name]
+        one_data_set["inputs"] = inputs
+        one_data_set["output"] = output
+        data_sets.append(one_data_set.copy())
+
+    metric_id = LastMetricId.get_next_id()
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description=description,
+                owner_info=owner_info,
+                source=source,
+                positive=positive,
+                y1_axis_title=y1_axis_title,
+                visualization_unit=y1_axis_title,
+                metric_model_name=model_name,
+                platform=platform,
+                work_in_progress=False).save()
+    print ("Metric id: {}".format(metric_id))
+    print ("Data sets: {}".format(data_sets))
+
+    # charts for inspur functional 875 (iops, latency, plex rebuild time)
+    internal_chart_names = ["inspur_functional_875_iops", "inspur_functional_875_plex_rebuild_time",
+                            "inspur_functional_875_latency"]
+    owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/review/review_ec_inspur" \
+             "_single_drive_failure_with_rebuild.py"
+    platform = FunPlatform.F1
+    model_name = "InspurDataReconstructionPerformance"
+
+    for internal_chart_name in internal_chart_names:
+        one_data_set = {}
+        data_sets = []
+        inputs = {
+            "input_platform": platform,
+            "input_num_hosts": 1,
+            "input_block_size": "Mixed",
+            "input_operation": "Combined"
+        }
+        if internal_chart_name == "inspur_functional_875_iops":
+            chart_name = "Inspur functional 875 IOPS"
+            y1_axis_title = PerfUnit.UNIT_OPS
+            description = "TBD"
+            output_names = OrderedDict([("output_write_iops", "write(1 vol)"),
+                                        ("output_read_iops", "read(1 vol)")])
+            positive = False
+        elif internal_chart_name == "inspur_functional_875_plex_rebuild_time":
+            chart_name = "Inspur functional 875 Plex rebuild time"
+            y1_axis_title = PerfUnit.UNIT_SECS
+            description = "TBD"
+            output_names = OrderedDict([("output_plex_rebuild_time", "Plex rebuild time")])
+            positive = False
+        elif internal_chart_name == "inspur_functional_875_latency":
+            chart_name = "Inspur functional 875 latency"
+            y1_axis_title = PerfUnit.UNIT_USECS
+            description = "TBD"
+            output_names = OrderedDict([("output_write_avg_latency", "write-avg(1 vol)"),
+                                        ("output_read_avg_latency", "read-avg(1 vol)")])
+            positive = True
+
+        for output_name in output_names:
+            output = {
+                "name": output_name,
+                "unit": y1_axis_title,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = output_names[output_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
