@@ -1,9 +1,11 @@
+
 import {Component, OnInit, Input, OnChanges, Output, EventEmitter, Renderer2} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {from, Observable, of} from "rxjs";
 import {mergeMap, switchMap} from "rxjs/operators";
 import {CommonService} from "../services/common/common.service";
+import {RegressionService} from "../regression/regression.service";
 
 @Component({
   selector: 'app-test',
@@ -13,46 +15,30 @@ import {CommonService} from "../services/common/common.service";
 
 
 export class TestComponent implements OnInit {
+  items: any;
+  numList: number[] = [6,1,9];
+  lastTwoTestSuites: any[] = [];
+  lastTwoResults: string[] = [];
+  passed: number = 4;
+  failed: number = 0;
+  result: string;
+  isDone: boolean = false;
+  numbers: number[] = [0,1];
 
-  initialFilterData = [{info: "Networking overall", payload: {module: "networking"}}, {
-    info: "Storage overall",
-    payload: {module: "storage"}
-  }];
-
-  y1Values: any = [];
-  payload: any = {};
-  x1Values: string[] = ['Networking Overall', 'Storage Overall'];
-  //numPassed: number = 0;
-  //numFailed: number = 0;
-  //numNotRun: number = 0;
-  numInProgress: number = 0;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
-              private renderer: Renderer2, private commonService: CommonService) {
+              private renderer: Renderer2, private commonService: CommonService, private regressionService: RegressionService) {
   }
 
-  initializeY1Values() {
-    this.y1Values = [{
-      name: 'Passed',
-      data: Array(this.x1Values.length).fill(0),
-      color: 'green'
-    }
-      , {
-        name: 'Failed',
-        data: Array(this.x1Values.length).fill(0),
-        color: 'red'
 
-      }, {
-        name: 'Not-run',
-        data: Array(this.x1Values.length).fill(0),
-        color: 'grey'
+  stateMap = this.regressionService.stateMap;
+  stateStringMap = this.regressionService.stateStringMap;
 
-      }];
-  }
 
   ngOnInit() {
 
-    this.initializeY1Values();
+    console.log(this.stateMap);
+    console.log(this.stateStringMap);
 
     new Observable(observer => {
       observer.next(true);
@@ -60,51 +46,54 @@ export class TestComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
-      let numbers = [];
-      this.initialFilterData.map(filter => {
-        numbers.push(numbers.length)
-      });
-      return from(numbers).pipe(
-        mergeMap(filterIndex => this.fetchTestCaseExecutions(filterIndex)));
+      return this.fetchData();
     })).subscribe(response => {
     }, error => {
-      this.logger.error('Failed to fetch test case executions');
+      this.logger.error('Failed to fetch data');
     });
+
   }
 
-  fetchTestCaseExecutions(index: number): any {
-    console.log('testing');
-    let numPassed = 0;
-    let numFailed = 0;
-    let numNotRun = 0;
-    let numInProgress = 0;
-    let today = new Date();
-    let payload = this.initialFilterData[index].payload;
-    return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=1", payload).pipe(switchMap((response) => {
-      for (let i in response.data) {
-        let historyTime = new Date(this.commonService.convertToLocalTimezone(response.data[i].started_time));
-        if (this.commonService.isSameDay(historyTime, today) && !response.data[i].is_re_run) {
-          if (response.data[i].result == 'FAILED') {
-            ++numFailed;
-          } else if (response.data[i].result == 'PASSED') {
-            ++numPassed
-          } else if (response.data[i].result == 'NOT_RUN') {
-            ++numNotRun;
-          } else if (response.data[i].result == 'IN_PROGRESS') {
-            ++numInProgress;
-          }
+
+  fetchData() {
+    let stateFilter = 'ALL';
+    let count = 0;
+    //completed (passed or failed), killed, aborted (override result w/ failed) --> done
+    //only care about result when completed
+    //separate icon for in progress
+    //use field result
+    //get result of past 2 suites
+    //display date + result of previous test
+    //statemap, statestringmap (in regression service)
+    //scheduler_global.py, suite-detail.component
+    let payload = {tags: '["smoke"]', tag: "smoke"};
+    return this.apiService.post("/regression/suite_executions/" + 10 + "/" + 1 + "/" + stateFilter, payload).pipe(switchMap(response => {
+      for (let i of response.data) {
+        if (this.lastTwoResults.length == 2) {
+          break;
         }
+
+
+        if (i.fields.state == this.stateMap.AUTO_SCHEDULED) {
+        } else if (i.fields.state == this.stateMap.COMPLETED) {
+          this.lastTwoResults.push(i.fields.result);
+          this.lastTwoTestSuites.push(i)
+
+        } else if (i.fields.state < this.stateMap.COMPLETED) {
+          this.lastTwoResults.push('FAILED');
+          this.lastTwoTestSuites.push(i);
+        } else {
+          this.lastTwoResults.push('IN_PROGRESS');
+          this.lastTwoTestSuites.push(i);
+        }
+
       }
-      this.populateResults(index, numPassed, numFailed, numNotRun);
+      this.isDone = true;
       return of(true);
     }));
   }
 
-  populateResults(index, numPassed, numFailed, numNotRun) {
-    this.y1Values[0].data[index] = numPassed; //make these local vars, pass to populateResults
-    this.y1Values[1].data[index] = numFailed;
-    this.y1Values[2].data[index] = numNotRun;
-    this.y1Values = [...this.y1Values];
+   trimTime(t) {
+    return this.regressionService.getPrettyLocalizeTime(t);
   }
 }
-
