@@ -120,8 +120,6 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_dsld = False
         if "f1_in_use" in job_inputs:
             self.f1_in_use = job_inputs["f1_in_use"]
-        if "vol_size" in job_inputs:
-            self.ec_info["capacity"] = job_inputs["vol_size"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
