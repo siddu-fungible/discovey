@@ -21,5 +21,6 @@ The backup script is located https://github.com/fungible-inc/Integration/blob/ma
 ## Errors
 If you encounter EBUSY: resource busy or locked, unlink, too often
 ~~~~ 
-npm cache clean --force" 
+npm cache clean --force"
+npm install
 ~~~~
