@@ -1,4 +1,4 @@
-<div class="card" style="width:400px; margin: 100px;">
+<div class="card">
   <div class="card-header">
     <h3 class="card-title" [innerHTML]="title"></h3>
     <h5 class="card-subtitle" [innerHTML]="subtitle"></h5>
@@ -7,32 +7,35 @@
 
     <div class="flex-container">
       <div
-        style="height: 150px; width: 150px; display: flex; justify-content: center; flex: 1 50%; align-items: center">
+        style="height: 50%; width: 50%; display: flex; justify-content: center; flex: 1 50%; align-items: center">
         <span tooltip [tooltipContentString]="tooltip" placement="left">
-            <div [innerHTML]="icon | safeHtml"></div>
+          <img style="max-width: 100%; max-height: 100%" [src]="icon">
           </span>
       </div>
       <div style="display: flex; justify-content: center; flex: 1 50%; align-items: center; flex-direction: column;">
-        <div class="cardTextTitle">{{textTitle}}</div>
-        <div class="cardText">{{text}}</div>
+        <div class="card-text-title">{{textTitle}}</div>
+        <div class="card-text">{{text}}</div>
       </div>
 
     </div>
 
   </div>
 
-  <div *ngIf="enableFooter" class="card-footer" style="max-height: 45px">
+  <div *ngIf="enableFooter" class="card-footer">
 
-    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end">
-      <div>
-        <span tooltip [tooltipContentString]="footerTooltip" placement="left">
-          <div [innerHTML]="footerIcon | safeHtml"></div>
+    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end; height: 20px">
+      <div style="display: flex">
+        <span tooltip [tooltipContentString]="footerTooltip" placement="left" style="height: 20px">
+          <img style="max-width: 100%; max-height: 100%" [src]="footerIcon">
       </span>
 
       </div>
-      <div>
-        <small>{{footerText}}</small>
+      <div style="display: flex">
+        <p class="footer-text">{{footerText}}</p>
       </div>
     </div>
   </div>
 </div>
+
+
+

@@ -4,7 +4,7 @@ import {
   EventEmitter,
   Input,
   OnInit,
-  Output
+  Output,
 } from '@angular/core';
 import {Sort} from '@angular/material';
 import {PagerService} from '../services/pager/pager.service';
@@ -16,7 +16,7 @@ import {CommonService} from "../services/common/common.service";
 @Component({
   selector: 'fun-card',
   templateUrl: './fun-card.component.html',
-  styleUrls: ['./fun-card.component.css']
+  styleUrls: ['./fun-card.component.css'],
 })
 export class FunCardComponent implements OnInit {
 
@@ -33,9 +33,11 @@ export class FunCardComponent implements OnInit {
   @Input() enableFooter: boolean = false;
   @Input() icon: string;
   @Input() footerIcon: string;
+  @Input() imageURL: string;
 
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
     console.log(this.title);

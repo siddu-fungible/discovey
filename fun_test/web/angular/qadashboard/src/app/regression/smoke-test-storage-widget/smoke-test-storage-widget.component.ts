@@ -14,29 +14,26 @@ class Suite {
   numFailed: number;
 }
 
-
 @Component({
   selector: 'app-smoke-test-storage-widget',
   templateUrl: './smoke-test-storage-widget.component.html',
-  styleUrls: ['./smoke-test-storage-widget.component.css']
+  styleUrls: ['./smoke-test-storage-widget.component.css'],
 })
 export class SmokeTestStorageWidgetComponent implements OnInit {
 
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
   numbers: number[] = [0, 1];
-  myURL: string = "<a href = 'http://www.youtube.com'>F1 storage smoke test</a>";
-
-
   iconDict: any = {
-    'PASSED': "<img  src='http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-80plus.png'>",
-    'FAILED': "<img src='http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-00to19.png'>",
-    'IN_PROGRESS': "<img src='http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-60to79.png'>"
+    'PASSED': "https://jenkins.io/doc/book/resources/blueocean/icons/weather/sunny.svg",
+    'FAILED': "https://jenkins.io/doc/book/resources/blueocean/icons/weather/storm.svg",
+    'IN_PROGRESS': "https://jenkins.io/doc/book/resources/blueocean/icons/weather/cloudy.svg"
   };
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private renderer: Renderer2, private commonService: CommonService, private regressionService: RegressionService) {
+
   }
 
 
@@ -64,28 +61,30 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
   fetchData() {
     let stateFilter = 'ALL';
     let payload = {tags: '["smoke"]', tag: "smoke"};
-    return this.apiService.post("/regression/suite_executions/" + 10 + "/" + 1 + "/" + stateFilter, payload).pipe(switchMap(response => {
+    let recordsPerPage = 10;
+    let pages = 1;
+    return this.apiService.post("/regression/suite_executions/" + recordsPerPage + "/" + pages + "/" + stateFilter, payload).pipe(switchMap(response => {
       for (let i of response.data) {
-        let mySuite = new Suite();
+        let suite = new Suite();
         if (this.lastTwoSuites.length == 2) {
           break;
         }
-        if (i.fields.state == this.stateMap.AUTO_SCHEDULED) {
+        if (i.fields.state === this.stateMap.AUTO_SCHEDULED) {
           continue;
-        } else if (i.fields.state == this.stateMap.COMPLETED) {
-          mySuite.result = i.fields.result;
-          mySuite.time = this.trimTime(i.fields.completed_time);
+        } else if (i.fields.state === this.stateMap.COMPLETED) {
+          suite.result = i.fields.result;
+          suite.time = this.trimTime(i.fields.completed_time);
 
         } else if (i.fields.state < this.stateMap.COMPLETED) {
-          mySuite.result = 'FAILED';
-          mySuite.time = this.trimTime(i.fields.completed_time);
+          suite.result = 'FAILED';
+          suite.time = this.trimTime(i.fields.completed_time);
         } else {
-          mySuite.result = 'IN_PROGRESS'
-          mySuite.time = this.trimTime(i.fields.scheduled_time);
+          suite.result = 'IN_PROGRESS'
+          suite.time = this.trimTime(i.fields.scheduled_time);
         }
-        mySuite.numFailed = i.num_failed;
-        mySuite.numPassed = i.num_passed;
-        this.lastTwoSuites.push(mySuite);
+        suite.numFailed = i.num_failed;
+        suite.numPassed = i.num_passed;
+        this.lastTwoSuites.push(suite);
 
       }
       this.isDone = true;
