@@ -69,19 +69,13 @@ class TBConfigs:
 
     def get_hu_pf_namespace(self, hu='hu'):
         for ns in self.get_namespaces(hu):
-            if self.get_hu_pf_interface() in self.get_interfaces(hu, ns):
-                if ns != 'default':
-                    return ns
-                else:
-                    return None
+            if self.get_hu_pf_interface(hu) in self.get_interfaces(hu, ns):
+                return ns
 
     def get_hu_vf_namespace(self, hu='hu'):
         for ns in self.get_namespaces(hu):
-            if self.get_hu_vf_interface() in self.get_interfaces(hu, ns):
-                if ns != 'default':
-                    return ns
-                else:
-                    return None
+            if self.get_hu_vf_interface(hu) in self.get_interfaces(hu, ns):
+                return ns
 
     def get_interface_dicts(self, nu_or_hu, ns):
         if ns is None:

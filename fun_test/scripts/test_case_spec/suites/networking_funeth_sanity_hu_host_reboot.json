@@ -1,4 +1,0 @@
-[
-  {"info": {"tags": ["networking-funeth-sanity"]}},
-  {"path": "networking/funeth/sanity.py", "test_case_ids": [1, 9]}
-]

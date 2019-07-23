@@ -1625,8 +1625,8 @@ if __name__ == "__main__":
     myscript.add_test_case(ChannelParallPerformanceTc())
     myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
     myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
-    # myscript.add_test_case(VoltestBlt1PerformanceTc())
-    # myscript.add_test_case(VoltestBlt8PerformanceTc())
-    # myscript.add_test_case(VoltestBlt12PerformanceTc())
+    myscript.add_test_case(VoltestBlt1PerformanceTc())
+    myscript.add_test_case(VoltestBlt8PerformanceTc())
+    myscript.add_test_case(VoltestBlt12PerformanceTc())
 
     myscript.run()

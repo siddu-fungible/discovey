@@ -12,7 +12,7 @@
     "num_hosts": 4,
     "fpg_int_prefix": "fpg",
     "disable_f1_index": 0,
-    "f1_in_use": 1,
+    "f1_in_use": 0,
     "load_modules": ["nvme", "nvme_tcp"],
     "huid": 7,
     "ctlid": 0,

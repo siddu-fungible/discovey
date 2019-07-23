@@ -1355,7 +1355,7 @@ class NetworkController(DpcshClient):
             else:
                 cmd = ["list"]
             fun_test.debug("Getting flow list")
-            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout, chunk=16384)
+            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout, chunk=32768)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
             fun_test.debug("flow %s: %s" % (cmd, result['data']))
             stats = result['data']
