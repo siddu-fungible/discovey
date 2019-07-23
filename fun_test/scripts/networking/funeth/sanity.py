@@ -96,9 +96,11 @@ def setup_nu_host(funeth_obj):
                              'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
         # TODO: temp workaround
-        #if linux_obj.host_ip == 'poc-server-06':
-        #    linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro on; sudo ethtool -k fpg0')
-
+        if linux_obj.host_ip == 'poc-server-06':
+            if enable_tso:
+                linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro on; sudo ethtool -k fpg0')
+            else:
+                linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro off; sudo ethtool -k fpg0')
 
 def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
