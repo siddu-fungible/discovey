@@ -117,7 +117,7 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
     if is_vm:
-        load_result = funeth_obj.load(sriov=0)
+        load_result = funeth_obj.load(sriov=0, sleep=1)
     else:
         load_result = funeth_obj.load(sriov=NUM_VFs)
     fun_test.test_assert(load_result, 'Load funeth driver.')
