@@ -275,6 +275,11 @@ class FunethSanity(FunTestScript):
                 global DPC_PROXY_PORT2
                 DPC_PROXY_IP = come.host_ip
                 fun_test.shared_variables["come_ip"] = come.host_ip
+                fun_test.shared_variables["ssh_username"] = come.ssh_username
+                fun_test.shared_variables["ssh_password"] = come.ssh_password
+                self.come_linux_obj = Linux(host_ip=come.host_ip,
+                                            ssh_username=come.ssh_username,
+                                            ssh_password=come.ssh_password)
                 DPC_PROXY_PORT = come.get_dpc_port(0)
                 DPC_PROXY_PORT2 = come.get_dpc_port(1)
 
@@ -379,13 +384,12 @@ class FunethSanity(FunTestScript):
                         host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
             if control_plane and cleanup:
-                linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
                 try:
-                    linux_obj.sudo_command('rmmod funeth')
-                    linux_obj.sudo_command('docker kill F1-0 F1-1')
-                    linux_obj.sudo_command('rm -fr /tmp/*')
+                    self.come_linux_obj.sudo_command('rmmod funeth')
+                    self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
+                    self.come_linux_obj.sudo_command('rm -fr /tmp/*')
                 except:
-                    linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
+                    self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
 def collect_stats(when='before'):

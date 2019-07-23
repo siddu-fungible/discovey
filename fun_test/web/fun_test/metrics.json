@@ -3658,13 +3658,39 @@
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_871_single_disk_failure",
                 "label": "8_7_1:Single_Disk_Failure",
-                "children": []
+                "children": [
+                  {
+                    "metric_model_name": "InspurSingleDiskFailurePerformance",
+                    "name": "inspur_functional_871_single_disk_failure_time_taken",
+                    "label": "F1(s)=1",
+                    "children": []
+                  }
+                ]
               },
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_875_data_reconstruction",
                 "label": "8_7_5:Data_Reconstruction",
-                "children": []
+                "children": [
+                   {
+                    "metric_model_name": "InspurDataReconstructionPerformance",
+                    "name": "inspur_functional_875_iops",
+                    "label": "IOPS",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "InspurDataReconstructionPerformance",
+                    "name": "inspur_functional_875_latency",
+                    "label": "Latency",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "InspurDataReconstructionPerformance",
+                    "name": "inspur_functional_875_plex_rebuild_time",
+                    "label": "Plex rebuild time",
+                    "children": []
+                  }
+                ]
               },
               {
                 "metric_model_name": "MetricContainer",
