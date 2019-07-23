@@ -2855,6 +2855,86 @@ class VoltestBlt12Performance(models.Model):
     output_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
     output_bandwidth_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
 
+
+class InspurSingleDiskFailurePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_num_hosts = models.IntegerField(verbose_name="Number of hosts", default=-1)
+    input_num_f1s = models.IntegerField(verbose_name="Number of F1's", default=1)
+    input_volume_size = models.IntegerField(verbose_name="Volume size", default=-1)
+    input_test_file_size = models.IntegerField(verbose_name="Test file size", default=-1)
+    input_job_name = models.CharField(verbose_name="Job name", max_length=50, default="")
+
+    output_base_file_copy_time = models.FloatField(verbose_name="Base file copy time (sec)", default=-1)
+    output_copy_time_during_plex_fail = models.FloatField(verbose_name="File copy time during plex fail(sec)", default=-1)
+    output_file_copy_time_during_rebuild = models.FloatField(verbose_name="File copy time during rebuild (sec)", default=-1)
+    output_plex_rebuild_time = models.FloatField(verbose_name="Plex rebuild time (sec)", default=-1)
+
+    output_base_file_copy_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    output_copy_time_during_plex_fail_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    output_file_copy_time_during_rebuild_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    output_plex_rebuild_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+
+class InspurDataReconstructionPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_platform = models.TextField(default=FunPlatform.F1)
+    input_version = models.CharField(verbose_name="Version", max_length=50, default="")
+
+    input_num_hosts = models.IntegerField(verbose_name="Number of hosts", default=-1)
+    input_block_size = models.TextField(verbose_name="Block size", default="")
+    input_io_depth = models.IntegerField(verbose_name="IO depth", default=-1)
+    input_size =models.TextField(verbose_name="Input size", default="")
+    input_operation = models.TextField(verbose_name="Operation type", default="")
+    input_fio_job_name = models.TextField(verbose_name="Input FIO job name", default="")
+
+    output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
+    output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
+    output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
+    output_read_throughput = models.FloatField(verbose_name="Read throughput", default=-1)
+    output_write_avg_latency = models.IntegerField(verbose_name="Write avg latency", default=-1)
+    output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency", default=-1)
+    output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99% latency", default=-1)
+    output_write_99_99_latency = models.IntegerField(verbose_name="Write 99.99% latency", default=-1)
+    output_read_avg_latency = models.IntegerField(verbose_name="Read avg latency", default=-1)
+    output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency", default=-1)
+    output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency", default=-1)
+    output_read_99_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
+    output_plex_rebuild_time = models.IntegerField(verbose_name="Plex rebuild time", default=-1)
+
+    output_write_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_read_iops_unit = models.TextField(default=PerfUnit.UNIT_OPS)
+    output_write_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_read_throughput_unit = models.TextField(default=PerfUnit.UNIT_MBITS_PER_SEC)
+    output_write_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_90_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_write_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_avg_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_90_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_95_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_read_99_latency_unit = models.TextField(default=PerfUnit.UNIT_USECS)
+    output_plex_rebuild_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+
 '''
 ANALYTICS_MAP = {
     "Performance1": {
