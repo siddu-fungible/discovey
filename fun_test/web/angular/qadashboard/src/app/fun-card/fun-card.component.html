@@ -23,12 +23,11 @@
 
   <div *ngIf="enableFooter" class="card-footer">
 
-    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end; height: 20px">
+    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end; height: inherit">
       <div style="display: flex">
-        <span tooltip [tooltipContentString]="footerTooltip" placement="left" style="height: 20px">
+        <span tooltip [tooltipContentString]="footerTooltip" placement="left">
           <img style="max-width: 100%; max-height: 100%" [src]="footerIcon">
-      </span>
-
+        </span>
       </div>
       <div style="display: flex">
         <p class="footer-text">{{footerText}}</p>

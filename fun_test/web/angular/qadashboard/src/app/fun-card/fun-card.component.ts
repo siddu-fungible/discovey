@@ -6,8 +6,6 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
-import {Sort} from '@angular/material';
-import {PagerService} from '../services/pager/pager.service';
 import {LoggerService} from "../services/logger/logger.service";
 import {ApiService} from "../services/api/api.service";
 import {CommonService} from "../services/common/common.service";
