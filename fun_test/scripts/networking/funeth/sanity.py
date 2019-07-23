@@ -76,6 +76,8 @@ NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
 MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
+supported_testbed_types = ('fs-11', )
+
 
 def setup_nu_host(funeth_obj):
     #if TB in ('FS7', 'FS11'):
@@ -240,10 +242,11 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables["test_bed_type"] = test_bed_type
 
         # Boot up FS1600
-        if test_bed_type != 'fs-11':
-            fun_test.test_assert(False, 'This test only runs in FS-11.')
+        if test_bed_type not in supported_testbed_types:
+            fun_test.test_assert(False, 'This test only runs in {}.'.format(','.format(supported_testbed_types)))
         else:
-            TB = 'FS11'
+            #TB = 'FS11'
+            TB = ''.join(test_bed_type.split('-')).upper()
             if control_plane:
                 f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
@@ -279,6 +282,7 @@ class FunethSanity(FunTestScript):
                                                         verbose=True)
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj_f1_0
 
+        # TODO: make it work for other setup
         if test_bed_type == 'fs-11' and control_plane:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
             funcp_obj.bringup_funcp(prepare_docker=True)
