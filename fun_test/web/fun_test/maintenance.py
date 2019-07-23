@@ -1615,7 +1615,7 @@ if __name__ == "__main__bmv_storage_local_ssd":
             chart.save()
     print "added 256 iodepth to local ssd"
 
-if __name__ == "__main__":
+if __name__ == "__main_fio_job_name_fix__":
     fio_job_names = ["inspur_8k_random_read_write_iodepth_32_f1_6_vol_1",
                      "inspur_8k_random_read_write_iodepth_2_f1_6_vol_1",
                      "inspur_8k_random_read_write_iodepth_3_f1_6_vol_1", "inspur_8k_random_read_write_iodepth_4_f1_6_vol_1"]
@@ -1660,3 +1660,11 @@ if __name__ == "__main__":
             chart.data_sets = json.dumps(data_sets)
             chart.save()
     print "removed input operation from the filter"
+
+if __name__ == "__main__":
+    entries = BltVolumePerformance.objects.filter(input_fio_job_name="inspur_8k_random_read_write_iodepth_1_f1_6_vol_1")
+    for entry in entries:
+        print entry
+        entry.input_fio_job_name = entry.input_fio_job_name.replace("_1_f1", "_32_f1")
+        entry.save()
+    print "fixed missed 32 iodepth"
