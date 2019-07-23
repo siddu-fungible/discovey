@@ -240,10 +240,10 @@ class TestL4IPsecPerformance(FunTestCase):
 
     def run(self):
         default_load_pps = 10
-        multi_flow_encrypt_64B_start_data_mpps = 60
+        multi_flow_encrypt_64B_start_data_mpps = 59
         multi_flow_encrypt_64B_end_data_mpps = 100
         multi_flow_encrypt_64B_step_data_mpps = 10
-        multi_flow_encrypt_IMIX_start_data_mpps = 60
+        multi_flow_encrypt_IMIX_start_data_mpps = 50
         multi_flow_encrypt_IMIX_end_data_mpps = 100
         multi_flow_encrypt_IMIX_step_data_mpps = 10
         single_flow_encrypt_64B_start_data_mpps = 2.6
