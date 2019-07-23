@@ -117,7 +117,7 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
     if is_vm:
-        load_result = funeth_obj.load(sriov=0)
+        load_result = funeth_obj.load(sriov=0, sleep=1)
     else:
         load_result = funeth_obj.load(sriov=NUM_VFs)
     fun_test.test_assert(load_result, 'Load funeth driver.')
@@ -364,7 +364,7 @@ class FunethSanity(FunTestScript):
             topology.cleanup()
             try:
                 if hu_host_vm:
-                    funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ul_vm', 'funeth_obj']
+                    funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ol_vm', 'funeth_obj']
                 else:
                     funeth_obj_descs = ['funeth_obj', ]
                 for funeth_obj_desc in funeth_obj_descs:

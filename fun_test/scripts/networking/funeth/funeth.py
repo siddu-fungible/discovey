@@ -225,7 +225,7 @@ class Funeth:
 
         return result
 
-    def load(self, sriov=0, num_queues=2, cc=False, debug=False):
+    def load(self, sriov=0, num_queues=2, cc=False, debug=False, sleep=0):
         """Load driver."""
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
         _modparams = []
@@ -257,6 +257,8 @@ class Funeth:
                 self.linux_obj_dict[hu].command('ifconfig -a')
 
             output1 = self.linux_obj_dict[hu].command('lsmod | grep funeth')
+            if sleep:
+                fun_test.sleep('Sleep for {} sec'.format(sleep), sleep)
             output2 = self.linux_obj_dict[hu].command('ifconfig %s' % pf_intf)
             result &= re.search(r'funeth', output1) is not None and re.search(
                 r'Device not found', output2, re.IGNORECASE) is None
