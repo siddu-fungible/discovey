@@ -364,7 +364,7 @@ class FunethSanity(FunTestScript):
             topology.cleanup()
             try:
                 if hu_host_vm:
-                    funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ul_vm', 'funeth_obj']
+                    funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ol_vm', 'funeth_obj']
                 else:
                     funeth_obj_descs = ['funeth_obj', ]
                 for funeth_obj_desc in funeth_obj_descs:
