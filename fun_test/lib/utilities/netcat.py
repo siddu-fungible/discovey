@@ -67,42 +67,54 @@ class Netcat:
 
 if __name__ == "__main__":
 
-    nc = Netcat(ip="10.1.105.166", port=9990)
+    """
+    bmc_ip = "fs21-bmc.fungible.local"
+    gateway_ip = "10.1.20.1"
+    nc = Netcat(ip=bmc_ip, port=9990)
     nc.write("setenv autoload no\n")
     print nc.read_until("f1 #")
     nc.write("lfw; lmpg; ltrain; lstatus\n")
     print nc.read_until("f1 #")
-    nc.write("setenv gatewayip 10.1.105.1\n")
+    #nc.write("setenv gatewayip {}\n".format(gateway_ip))
     print nc.read_until("f1 #")
     nc.write("setenv serverip 10.1.21.48\n")
     print nc.read_until("f1 #")
-    nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test cc_huid=3 module_log=epcq:DEBUG,virtual_interface:DEBUG --all_100g --disable-wu-watchdog --dpc-server --dpc-uart retimer=0,1,2\n")
-    print nc.read_until("f1 #")
-    nc.write("dhcp\n")
-    print nc.read_until("f1 #")
-    nc.write("tftpboot 0xa800000080000000 10.1.21.48:s_16365_funos-f1.stripped.gz\n")
-    print nc.read_until("f1 #")
-    nc.write("unzip 0xa800000080000000 0xffffffff99000000;\n")
-    print nc.read_until("f1 #")
-    nc.write("bootelf -p 0xffffffff99000000\n")
-    print nc.read_until("f1 #")
+    nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g pcie_gen=1\n")
+    # nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
 
-    nc = Netcat(ip="10.1.105.166", port=9991)
-    nc.write("setenv autoload no\n")
-    print nc.read_until("f1 #")
-    nc.write("lfw; lmpg; ltrain; lstatus\n")
-    print nc.read_until("f1 #")
-    nc.write("setenv gatewayip 10.1.105.1\n")
-    print nc.read_until("f1 #")
-    nc.write("setenv serverip 10.1.21.48\n")
-    print nc.read_until("f1 #")
-    nc.write("setenv bootargs sku=SKU_FS1600_1 app=hw_hsu_test cc_huid=3 module_log=epcq:DEBUG,virtual_interface:DEBUG --all_100g --disable-wu-watchdog --dpc-server --dpc-uart retimer=0,1,2\n")
     print nc.read_until("f1 #")
     nc.write("dhcp\n")
     print nc.read_until("f1 #")
-    nc.write("tftpboot 0xa800000080000000 10.1.21.48:s_16365_funos-f1.stripped.gz\n")
+    nc.write("tftpboot 0xa800000080000000 10.1.21.48:s_19079_funos-f1.stripped.gz\n")
     print nc.read_until("f1 #")
     nc.write("unzip 0xa800000080000000 0xffffffff99000000;\n")
     print nc.read_until("f1 #")
     nc.write("bootelf -p 0xffffffff99000000\n")
+    print nc.read_until("f1 #", timeout=30)
+    """
+
+
+
+    bmc_ip = "fs21-bmc.fungible.local"
+    gateway_ip = "10.1.20.1"
+    nc = Netcat(ip=bmc_ip, port=9991)
+    nc.write("setenv autoload no\n")
     print nc.read_until("f1 #")
+    nc.write("lfw; lmpg; ltrain; lstatus\n")
+    print nc.read_until("f1 #")
+    #nc.write("setenv gatewayip {}\n".format(gateway_ip))
+    print nc.read_until("f1 #")
+    nc.write("setenv serverip 10.1.21.48\n")
+    print nc.read_until("f1 #")
+    nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g pcie_gen1\n")
+    # nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
+
+    print nc.read_until("f1 #")
+    nc.write("dhcp\n")
+    print nc.read_until("f1 #")
+    nc.write("tftpboot 0xa800000080000000 10.1.21.48:s_19079_funos-f1.stripped.gz\n")
+    print nc.read_until("f1 #")
+    nc.write("unzip 0xa800000080000000 0xffffffff99000000;\n")
+    print nc.read_until("f1 #")
+    nc.write("bootelf -p 0xffffffff99000000\n")
+    print nc.read_until("f1 #", timeout=30)

@@ -26,6 +26,7 @@ class SuiteType:
     STATIC = "regular"
     DYNAMIC = "dynamic"  # Usually for re-runs
     CONTAINER = "container"
+    TASK = "task"
 
 class SchedulerJobPriority:
     LOW = "low"

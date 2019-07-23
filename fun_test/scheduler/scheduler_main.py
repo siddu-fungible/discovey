@@ -178,6 +178,9 @@ class QueueWorker(Thread):
                         suite_based_spec = None
                         if queued_job.test_bed_type.startswith("suite-based"):
                             suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
+                            if not suite_based_spec:
+                                scheduler_logger.error("suite-based is requested for: {} but it is invalid".format(queued_job.job_id))
+                                break
                         availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type,
                                                                                suite_base_test_bed_spec=suite_based_spec)
                         if availability["status"]:
