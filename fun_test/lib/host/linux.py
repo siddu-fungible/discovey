@@ -1295,8 +1295,9 @@ class Linux(object, ToDictMixin):
             fun_test.debug(output)
             output_lines = output.split('\n')
             fun_test.debug(output_lines)
-            result = output_lines[0].strip()
+            result = True
         except Exception as ex:
+            result = False
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
