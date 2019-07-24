@@ -165,7 +165,7 @@ if __name__ == "__main__kk":
 if __name__ == "__main__":
 
     # S1 EC 8:4 latency, throughput charts
-    internal_chart_names = ["s1_ec_8_eachto_4_latency", "s1_ec_8_eachto_4_throughput"]
+    internal_chart_names = ["ec_8_eachto_4_latency_s1", "ec_8_eachto_4_throughput_s1"]
     model_name = "EcPerformance"
     owner_info = "Mohit Saxena (mohit.saxena@fungible.com)"
     source = "https://github.com/fungible-inc/FunOS/blob/master/apps/integration_apps/ec/qa_ec_test.c"
@@ -250,7 +250,7 @@ if __name__ == "__main__":
 
     # S1 JPEG compression_throughput, decompression_throughput, compression_ratio charts
 
-    internal_chart_names = ["s1_compression_throughput", "s1_decompression_throughput", "s1_compression_ratio"]
+    internal_chart_names = ["compression_throughput_s1", "decompression_throughput_s1", "compression_ratio_s1"]
     model_name = "TeraMarkJpegPerformance"
     owner_info = "Harinadh Saladi (harinadh.saladi@fungible.com)"
     source = "https://github.com/fungible-inc/FunOS/blob/master/apps/integration_apps/zip/jpeg_perf_test.c"
