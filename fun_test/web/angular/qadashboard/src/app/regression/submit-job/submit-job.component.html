@@ -2,7 +2,7 @@
   <div class="row">
     <div class="col">
       <div class="card" style="margin: 4px;">
-        <div class="card-header">Submit {{ type === 'suite'? 'Job': 'Task' }}</div>
+        <div class="card-header">Submit {{ type === 'regular'? 'Job': 'Task' }}</div>
         <div class="card-body">
           <table class="table table-nonfluid table-borderless">
             <tr>
@@ -20,7 +20,7 @@
               </td>
             </tr>
 
-            <ng-container *ngIf="type === 'suite'">
+            <ng-container *ngIf="type === 'regular'">
               <tr>
                 <td class="no-wrap">
                   <label for="testbed-type" class="required-label">Testbed type</label>

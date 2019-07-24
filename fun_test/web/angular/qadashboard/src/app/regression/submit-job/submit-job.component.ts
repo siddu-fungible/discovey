@@ -80,7 +80,7 @@ export class SubmitJobComponent implements OnInit {
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
   description: string = null;
-  type: string = "suite"; // some other type like task
+  type: string = "regular"; // some other type like task
   queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
