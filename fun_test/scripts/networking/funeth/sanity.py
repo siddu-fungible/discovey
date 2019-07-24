@@ -857,6 +857,12 @@ class FunethTestComeReboot(FunTestCase):
         fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot COMe {}'.format(hostname))
         fun_test.sleep("Sleeping for COMe to come up from reboot", seconds=180)
         fun_test.test_assert(linux_obj.is_host_up(), 'Come {} is up'.format(hostname))
+
+        tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
+        pf_interface = tb_config_obj.get_hu_pf_interface(hu)
+        vf_interface = tb_config_obj.get_hu_vf_interface(hu)
+        verify_nu_hu_datapath(funeth_obj, interfaces_excludes=[pf_interface, vf_interface], nu=nu, hu=hu)
+
         setup_funcp(fun_test.shared_variables["test_bed_type"])
         #setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
