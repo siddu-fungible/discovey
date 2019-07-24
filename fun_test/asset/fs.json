@@ -230,7 +230,8 @@
   {
     "name": "fs-48",
     "workarounds": {
-      "retimer_workaround": true
+      "retimer_workaround": true,
+      "skip_funeth_come_power_cycle": true
     },
     "gateway_ip": "10.1.105.1",
     "bmc": {
