@@ -4954,6 +4954,103 @@
             ]
           }
         ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "TeraMarks_S1",
+        "label": "TeraMarks",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "Erasure-coding_S1",
+            "label": "Erasure-coding",
+            "children": [
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "EC 8:4 Throughput_S1",
+                "label": "EC 8:4 Throughput",
+                "children": []
+              }
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "TeraMark Compression_S1",
+            "label": "Compression",
+            "children": [
+              {
+              "metric_model_name": "MetricContainer",
+              "name": "JPEG_S1",
+              "label": "JPEG",
+              "children": [
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "Compression throughput with Driver_output_average_bandwidth_S1",
+                  "label": "Compression Throughput",
+                  "children": []
+                },
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "JPEG Decompress_output_average_bandwidth_S1",
+                  "label": "Decompression Throughput",
+                  "children": []
+                },
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "JPEG Compression_Compression-ratio_S1",
+                  "label": "Compression ratio",
+                  "children": []
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "Zip_S1",
+                "label": "Zip",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "Deflate_S1",
+                    "label": "Deflate",
+                    "children": [
+                      {
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "name": "Deflate Compression Throughput_S1",
+                        "label": "Compression Throughput",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "name": "Deflate Decompression Throughput_S1",
+                        "label": "Decompression Throughput",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "Lzma_S1",
+                    "label": "Lzma",
+                    "children": [
+                      {
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "name": "Lzma Compression Throughput_S1",
+                        "label": "Compression Throughput",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "name": "Lzma Decompression Throughput_S1",
+                        "label": "Decompression Throughput",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   }
