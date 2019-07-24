@@ -41,10 +41,16 @@ def profiles(request, id):
         first_name = request_json["first_name"]
         last_name = request_json["last_name"]
         email = request_json["email"]
+        interested_metrics = request_json["interested_metrics"]
 
         if PerformanceUserProfile.objects.filter(email=email).count():
             raise Exception("User with email: {} already exists".format(email))
-        new_user = PerformanceUserProfile(first_name=first_name, last_name=last_name, email=email)
+        metric_ids = interested_metrics.split(',')
+        interested_metrics = {}
+        for metric_id in metric_ids:
+            interested_metrics[metric_id] = {"notify": False}
+        new_user = PerformanceUserProfile(first_name=first_name, last_name=last_name, email=email,
+                                          interested_metrics=interested_metrics)
         new_user.save()
         result = new_user.to_dict()
 
