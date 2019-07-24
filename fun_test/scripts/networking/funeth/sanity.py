@@ -102,6 +102,7 @@ def setup_nu_host(funeth_obj):
             else:
                 linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro off; sudo ethtool -k fpg0')
 
+
 def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
@@ -148,6 +149,22 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
         #                    'HU PF and VF interface loopback ping test via NU')
 
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
+
+
+def setup_funcp(test_bed_type):
+    funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+    funcp_obj.bringup_funcp(prepare_docker=True)
+    # TODO: Make it setup independent
+    funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
+                             f1_0_mpg_netmask="255.255.252.0",
+                             f1_1_mpg_netmask="255.255.252.0"
+                             )
+    abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+    abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+    funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                    abstract_config_f1_1=abstract_json_file_f1_1)
+    fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
+    # TODO: sanity check of control plane
 
 
 def start_vm(funeth_obj_hosts, funeth_obj_vms):
@@ -274,14 +291,12 @@ class FunethSanity(FunTestScript):
                 global DPC_PROXY_PORT
                 global DPC_PROXY_PORT2
                 DPC_PROXY_IP = come.host_ip
-                fun_test.shared_variables["come_ip"] = come.host_ip
-                fun_test.shared_variables["ssh_username"] = come.ssh_username
-                fun_test.shared_variables["ssh_password"] = come.ssh_password
+                DPC_PROXY_PORT = come.get_dpc_port(0)
+                DPC_PROXY_PORT2 = come.get_dpc_port(1)
                 self.come_linux_obj = Linux(host_ip=come.host_ip,
                                             ssh_username=come.ssh_username,
                                             ssh_password=come.ssh_password)
-                DPC_PROXY_PORT = come.get_dpc_port(0)
-                DPC_PROXY_PORT2 = come.get_dpc_port(1)
+                fun_test.shared_variables["come_linux_obj"] = self.come_linux_obj
 
         network_controller_obj_f1_0 = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
                                                         verbose=True)
@@ -291,18 +306,7 @@ class FunethSanity(FunTestScript):
 
         # TODO: make it work for other setup
         if test_bed_type == 'fs-11' and control_plane:
-            funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
-            funcp_obj.bringup_funcp(prepare_docker=True)
-            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
-                                     f1_0_mpg_netmask="255.255.252.0",
-                                     f1_1_mpg_netmask="255.255.252.0"
-                                     )
-            abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
-            abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
-            funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
-                                            abstract_config_f1_1=abstract_json_file_f1_1)
-            fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
-            # TODO: sanity check of control plane
+            setup_funcp(test_bed_type)
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
@@ -825,6 +829,36 @@ class FunethTestReboot(FunTestCase):
         fun_test.sleep("Sleeping for the host to come up from reboot", seconds=180)
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
+        verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
+
+
+class FunethTestComeReboot(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="Reboot COMe.",
+                              steps="""
+        1. Reboot Come.
+        2. Setup control plane.
+        3. From NU host, Ping HU host PF/VF interfaces.
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        funeth_obj = fun_test.shared_variables['funeth_obj']
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
+        linux_obj = fun_test.shared_variables["come_linux_obj"]
+        hostname = linux_obj.host_ip()
+        fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot COMe {}'.format(hostname))
+        fun_test.sleep("Sleeping for COMe to come up from reboot", seconds=180)
+        fun_test.test_assert(linux_obj.is_host_up(), 'Come {} is up'.format(hostname))
+        setup_funcp(fun_test.shared_variables["test_bed_type"])
+        #setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
 
 
