@@ -15,7 +15,6 @@ older_build = False
 frame_threshold = 5000
 FRAME_SIZE_64B = 64.0
 FRAME_SIZE_IMIX = 364.92
-FRAME_SIZE_DECRYPT = 430.0
 
 
 class ScriptSetup(FunTestScript):
@@ -240,10 +239,10 @@ class TestL4IPsecPerformance(FunTestCase):
 
     def run(self):
         default_load_pps = 10
-        multi_flow_encrypt_64B_start_data_mpps = 59
+        multi_flow_encrypt_64B_start_data_mpps = 60
         multi_flow_encrypt_64B_end_data_mpps = 100
         multi_flow_encrypt_64B_step_data_mpps = 5
-        multi_flow_encrypt_IMIX_start_data_mpps = 50
+        multi_flow_encrypt_IMIX_start_data_mpps = 60
         multi_flow_encrypt_IMIX_end_data_mpps = 100
         multi_flow_encrypt_IMIX_step_data_mpps = 5
         single_flow_encrypt_64B_start_data_mpps = 2.6
@@ -252,8 +251,8 @@ class TestL4IPsecPerformance(FunTestCase):
         single_flow_encrypt_IMIX_start_data_mpps = 2.6
         single_flow_encrypt_IMIX_end_data_mpps = 5.6
         single_flow_encrypt_IMIX_step_data_mpps = 0.5
-        multi_flow_decrypt_start_data_mpps = 50
-        multi_flow_decrypt_end_data_mpps = 80
+        multi_flow_decrypt_start_data_mpps = 52
+        multi_flow_decrypt_end_data_mpps = 82
         multi_flow_decrypt_step_data_mpps = 5
         single_flow_decrypt_start_data_mpps = 2
         single_flow_decrypt_end_data_mpps = 5
@@ -327,13 +326,13 @@ class TestL4IPsecPerformance(FunTestCase):
                 start_data = multi_flow_decrypt_start_data_mpps
                 end_data = multi_flow_decrypt_end_data_mpps
                 step_data = multi_flow_decrypt_step_data_mpps
-                frame_size = FRAME_SIZE_DECRYPT
+                frame_size = FRAME_SIZE_IMIX
                 self.flow_direction = IPSEC_DECRYPT_MULTI_TUNNEL
             elif 'SINGLE_FLOW_DECRYPT' in stream:
                 start_data = single_flow_decrypt_start_data_mpps
                 end_data = single_flow_decrypt_end_data_mpps
                 step_data = single_flow_decrypt_step_data_mpps
-                frame_size = FRAME_SIZE_DECRYPT
+                frame_size = FRAME_SIZE_IMIX
                 self.flow_direction = IPSEC_DECRYPT_SINGLE_TUNNEL
 
 
