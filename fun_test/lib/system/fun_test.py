@@ -1350,10 +1350,12 @@ class FunTestScript(object):
             ids = set()
             fun_test.log("Test-case count: {}".format(len(self.test_cases)))
 
+
             if fun_test.selected_test_case_ids:
                 new_test_cases = []
                 for selected_test_case_id in fun_test.selected_test_case_ids:
                     for test_case in self.test_cases:
+                        test_case.describe()
                         if test_case.id == selected_test_case_id:
                             new_test_cases.append(test_case)
                 self.test_cases = new_test_cases
