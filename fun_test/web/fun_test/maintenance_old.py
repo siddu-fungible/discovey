@@ -3047,6 +3047,7 @@ if __name__ == "__main_2hosts__":
 
 
 def set_internal_name(metrics):
+    ml = MetricLib()
     chart = MetricChart.objects.get(internal_chart_name=metrics["name"])
     metrics["name"] += "_S1"
     if chart.leaf:
@@ -3057,8 +3058,9 @@ def set_internal_name(metrics):
         ml.clone_chart(old_chart=chart, internal_chart_name=metrics["name"], data_sets=data_sets)
     else:
         ml.clone_chart(old_chart=chart, internal_chart_name=metrics["name"], data_sets=json.loads(chart.data_sets))
-        for child in metrics["children"]:
-            set_internal_name(child)
+        if "children" in metrics:
+            for child in metrics["children"]:
+                set_internal_name(child)
     return metrics
 
 

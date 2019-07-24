@@ -8,10 +8,11 @@ from fun_global import PerfUnit
 from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
 from collections import OrderedDict
+from web.fun_test.metrics_lib import MetricLib
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
-if __name__ == "__main__":
+if __name__ == "__main__rand_read_qd_multi_host":
     internal_read_chart_names = ["rand_read_qd_multi_host_nvmetcp_output_iops",
                                  "rand_read_qd1_multi_host_nvmetcp_output_latency",
                                  "rand_read_qd32_multi_host_nvmetcp_output_latency",
@@ -160,3 +161,25 @@ if __name__ == "__main__":
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
     print "added charts f0r 2,4,8 volumes"
+
+
+if __name__ == "__main__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        funos_metrics = f1_metric
+                        break
+
+        tera_marks = funos_metrics["children"]
+        for tera_mark in tera_marks:
+            tera_mark_child_name = tera_mark["name"]
+            print(tera_mark_child_name)
+            if tera_mark_child_name == "TeraMark Compression" or tera_mark_child_name == "Erasure-coding":
+                print("tera_mark :{}".format(tera_mark))
+                result = set_internal_name(tera_mark)
+                print json.dumps(result)
+

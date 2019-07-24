@@ -91,6 +91,8 @@ class MetricParser():
             return self.soak_flows(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
         elif "VoltestBlt" in model_name:
             return self.voltest_blt(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
+        elif "EcPerformance" in model_name:
+            return self.ec_performace(logs=logs, date_time=date_time, platform=platform)
         else:
             return {}
 
@@ -1040,6 +1042,54 @@ class MetricParser():
             self.result["data"].append(d)
             self.result["match_found"] = self.match_found
             self.result["status"] = self.status == RESULTS["PASSED"]
+        return self.result
+
+    def ec_performace(self, logs, date_time, platform):
+        self.initialize()
+        self.metrics["input_platform"] = platform
+        for line in logs:
+            m = re.search(r'EC config\s+\w+\s+\w+:?\s+(?P<value_json>{.*})\s+\[(?P<metric_name>\w+)\]', line)
+            if m:
+                self.match_found = True
+                value_json = json.loads(m.group("value_json"))
+                metric_name = m.group("metric_name")
+                if metric_name == 'perf_ec_encode_latency':
+                    self.metrics['output_encode_latency_min'] = value_json['min']
+                    self.metrics['output_encode_latency_max'] = value_json['max']
+                    self.metrics['output_encode_latency_avg'] = value_json['avg']
+                    self.metrics['output_encode_latency_min_unit'] =\
+                        self.metrics['output_encode_latency_max_unit'] =\
+                        self.metrics['output_encode_latency_avg_unit'] = value_json['unit']
+
+                elif metric_name == 'perf_ec_encode_throughput':
+                    self.metrics['output_encode_throughput_min'] = value_json['min']
+                    self.metrics['output_encode_throughput_max'] = value_json['max']
+                    self.metrics['output_encode_throughput_avg'] = value_json['avg']
+                    self.metrics['output_encode_throughput_min_unit'] =\
+                        self.metrics['output_encode_throughput_max_unit'] =\
+                        self.metrics['output_encode_throughput_avg_unit'] = value_json['unit']
+
+                elif metric_name == 'perf_ec_recovery_latency':
+                    self.metrics['output_recovery_latency_min'] = value_json['min']
+                    self.metrics['output_recovery_latency_max'] = value_json['max']
+                    self.metrics['output_recovery_latency_avg'] = value_json['avg']
+                    self.metrics['output_recovery_latency_min_unit'] =\
+                        self.metrics['output_recovery_latency_max_unit'] = \
+                        self.metrics['output_recovery_latency_avg_unit'] = value_json['unit']
+
+                elif metric_name == 'perf_ec_recovery_throughput':
+                    self.metrics['output_recovery_throughput_min'] = value_json['min']
+                    self.metrics['output_recovery_throughput_max'] = value_json['max']
+                    self.metrics['output_recovery_throughput_avg'] = value_json['avg']
+                    self.metrics['output_recovery_throughput_min_unit'] =\
+                        self.metrics['output_recovery_throughput_max_unit'] =\
+                        self.metrics['output_recovery_throughput_avg_unit'] = value_json['unit']
+
+        self.status = RESULTS["PASSED"]
+        d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+        self.result["data"].append(d)
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
         return self.result
 
 
