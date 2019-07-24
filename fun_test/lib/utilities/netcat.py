@@ -9,30 +9,19 @@ class Netcat:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((ip, port))
         self.terminate = None
+        self.stop_reading_trigger = False
 
     def read(self, length=1024):
         return self.socket.recv(length)
 
-    def read_until2(self, data, timeout=None):
-        if timeout:
-            self.socket.settimeout(timeout)
-        buf = ""
-        try:
-
-            while data not in buf:
-                new_data = self.socket.recv(1024)
-                buf += new_data
-        except Exception as ex:
-            pass
-        return buf
-
     def read_until(self, expected_data, timeout=15):
+        self.stop_reading_trigger = False
         self.buffer = ""
         if timeout:
             self.socket.settimeout(timeout)
         return_from_function = False
         max_wait_timer = FunTimer(max_time=timeout)
-        while not fun_test.closed and expected_data not in self.buffer and not self.terminate and not return_from_function and not max_wait_timer.is_expired():
+        while not self.stop_reading_trigger and not fun_test.closed and expected_data not in self.buffer and not self.terminate and not return_from_function and not max_wait_timer.is_expired():
             try:
                 readable, writable, exceptional = select.select(
                     [self.socket], [], [], timeout)
@@ -55,7 +44,19 @@ class Netcat:
                 break
 
             time.sleep(0.00001)
+        self.stop_reading_trigger = False
         return self.buffer
+
+    def stop_reading(self):
+        self.stop_reading_trigger = True
+
+    def get_buffer(self):
+        buffer = self.buffer
+        self.clear_buffer()
+        return buffer
+
+    def clear_buffer(self):
+        self.buffer = ""
 
     def write(self, data):
         self.socket.send(data)
@@ -67,7 +68,7 @@ class Netcat:
 
 if __name__ == "__main__":
 
-    """
+
     bmc_ip = "fs21-bmc.fungible.local"
     gateway_ip = "10.1.20.1"
     nc = Netcat(ip=bmc_ip, port=9990)
@@ -79,7 +80,7 @@ if __name__ == "__main__":
     print nc.read_until("f1 #")
     nc.write("setenv serverip 10.1.21.48\n")
     print nc.read_until("f1 #")
-    nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g pcie_gen=1\n")
+    nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
     # nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
 
     print nc.read_until("f1 #")
@@ -91,7 +92,7 @@ if __name__ == "__main__":
     print nc.read_until("f1 #")
     nc.write("bootelf -p 0xffffffff99000000\n")
     print nc.read_until("f1 #", timeout=30)
-    """
+
 
 
 
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     print nc.read_until("f1 #")
     nc.write("setenv serverip 10.1.21.48\n")
     print nc.read_until("f1 #")
-    nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g pcie_gen1\n")
+    nc.write("setenv bootargs sku=SKU_FS1600_1 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
     # nc.write("setenv bootargs sku=SKU_FS1600_0 app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g\n")
 
     print nc.read_until("f1 #")

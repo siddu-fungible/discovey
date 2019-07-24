@@ -123,6 +123,7 @@ class Bmc(Linux):
         if self.context:
             self.original_context_description = self.context.description
         self.setup_support_files = setup_support_files
+        self.nc = {}  # nc connections to serial proxy indexed by f1_index
 
     @fun_test.safe
     def ping(self,
@@ -226,8 +227,8 @@ class Bmc(Linux):
         fun_test.log_section(message="F1_{}:{}".format(index, phase), context=self.context)
 
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
-        # fun_test.log("Sending u-boot command: {}".format(command))
-        nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+        # nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+        nc = self.nc[f1_index]
         nc.write(command + "\n")
         output = nc.read_until(expected_data=expected, timeout=timeout)
         fun_test.log(message=output, context=self.context)
@@ -235,7 +236,7 @@ class Bmc(Linux):
             fun_test.simple_assert(expression=expected in output,
                                    message="{} in output".format(expected),
                                    context=self.context)
-        output = nc.close()
+        # output = nc.close()
         self.u_boot_logs[f1_index] += output
         return output
 
@@ -248,6 +249,24 @@ class Bmc(Linux):
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+
+    def setup_serial_proxy_connection(self, f1_index):
+        self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+        nc = self.nc[f1_index]
+        fun_test.execute_thread_after(0, nc.read_until, expected_data=self.U_BOOT_F1_PROMPT, timeout=20)
+        # output = nc.read_until(expected_data=self.U_BOOT_F1_PROMPT, timeout=2)
+        # fun_test.log(message=output, context=self.context)
+
+        return True
+
+    def validate_preamble(self, f1_index):
+        nc = self.nc[f1_index]
+        nc.stop_reading()
+        fun_test.sleep("Reading preamble")
+        output = nc.get_buffer()
+        fun_test.log(message=output, context=self.context)
+
+        return True
 
     def u_boot_load_image(self,
                           index,
@@ -880,9 +899,13 @@ class Fs(object, ToDictMixin):
 
         fun_test.test_assert(expression=self.set_f1s(), message="Set F1s", context=self.context)
 
-        if not self.skip_funeth_come_power_cycle:
-            self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
-            fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+        # if not self.skip_funeth_come_power_cycle:
+        #    self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
+        #    fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+
+        for f1_index, f1 in self.f1s.iteritems():
+            fun_test.test_assert(self.bmc.setup_serial_proxy_connection(f1_index=f1_index),
+                                 "Setup nc serial proxy connection")
 
         self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
         fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
@@ -896,6 +919,8 @@ class Fs(object, ToDictMixin):
                 if f1_index in self.f1_parameters:
                     if "boot_args" in self.f1_parameters[f1_index]:
                         boot_args = self.f1_parameters[f1_index]["boot_args"]
+
+            fun_test.test_assert(self.bmc.validate_preamble(f1_index=f1_index), "Validate preamble")
             fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
                                  message="U-Bootup f1: {} complete".format(f1_index),
                                  context=self.context)
