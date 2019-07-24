@@ -9,33 +9,9 @@ from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 
 from threading import Thread
+from datetime import datetime
 import re
 import os
-
-class UartLogger(Thread):
-    def __init__(self, ip, port):
-        super(UartLogger, self).__init__()
-        self.ip = ip
-        self.port = port
-        self.stopped = False
-        self.buf = ""
-        self.nc = None
-
-    def run(self):
-        self.nc = Netcat(ip=self.ip, port=self.port)
-        try:
-            while not self.stopped and not fun_test.closed:
-                self.buf += self.nc.read_until(expected_data="PUlsAr", timeout=5)
-        except Exception as ex:
-            pass
-
-    def get_log(self):
-        return self.buf
-
-    def close(self):
-        self.stopped = True
-        if self.nc:
-            self.buf += self.nc.close()
 
 
 class BootPhases:
@@ -259,12 +235,22 @@ class Bmc(Linux):
 
         return True
 
-    def validate_preamble(self, f1_index):
+    def validate_u_boot_version(self, f1_index, minimum_date):
         nc = self.nc[f1_index]
         nc.stop_reading()
         fun_test.sleep("Reading preamble")
         output = nc.get_buffer()
         fun_test.log(message=output, context=self.context)
+
+        m = re.search("U-Boot\s+\S+\s+\((.*)\s+-", output)  # Based on U-Boot 2017.01-00000-bld_6654 (May 29 2019 - 05:38:02 +0000)
+        if m:
+            try:
+                this_date = datetime.strptime(m.group(1), "%b %d %Y")
+                fun_test.add_checkpoint("u-boot date: {}".format(this_date))
+            except Exception as ex:
+                fun_test.critical("Unable to parse u-boot build date")
+            fun_test.log("Mininum u-boot build date: {}".format(minimum_date))
+            fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date")
 
         return True
 
@@ -346,6 +332,11 @@ class Bmc(Linux):
                                  context=self.context)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_COMPLETE)
         result = True
+        try:
+            self.nc[index].close()
+            fun_test.log("Disconnected nc")
+        except Exception as ex:
+            fun_test.critical(str(ex))
         return result
 
     def _reset_microcom(self):
@@ -709,8 +700,9 @@ class F1InFs:
 
 
 class Fs(object, ToDictMixin):
-    #  sku=SKU_FS1600_{}
     DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
+    MIN_U_BOOT_DATE = datetime(year=2019, month=5, day=29)
+
 
     TO_DICT_VARS = ["bmc_mgmt_ip",
                     "bmc_mgmt_ssh_username",
@@ -746,7 +738,8 @@ class Fs(object, ToDictMixin):
                  setup_bmc_support_files=None,
                  apc_info=None,
                  fun_cp_callback=None,
-                 skip_funeth_come_power_cycle=None):
+                 skip_funeth_come_power_cycle=None,
+                 validate_u_boot_version=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -779,6 +772,7 @@ class Fs(object, ToDictMixin):
         if self.context:
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
+        self.validate_u_boot_version = validate_u_boot_version
 
     def post_bootup(self):
         self.get_bmc().reset_context()
@@ -836,7 +830,8 @@ class Fs(object, ToDictMixin):
             context=None,
             setup_bmc_support_files=None,
             fun_cp_callback=None,
-            power_cycle_come=False):  #TODO
+            power_cycle_come=False,
+            validate_u_boot_version=None):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -886,7 +881,8 @@ class Fs(object, ToDictMixin):
                   apc_info=apc_info,
                   fun_cp_callback=fun_cp_callback,
                   power_cycle_come=power_cycle_come,
-                  skip_funeth_come_power_cycle=skip_funeth_come_power_cycle)
+                  skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
+                  validate_u_boot_version=validate_u_boot_version)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
@@ -902,6 +898,7 @@ class Fs(object, ToDictMixin):
         # if not self.skip_funeth_come_power_cycle:
         #    self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
         #    fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+
 
         for f1_index, f1 in self.f1s.iteritems():
             fun_test.test_assert(self.bmc.setup_serial_proxy_connection(f1_index=f1_index),
@@ -919,8 +916,8 @@ class Fs(object, ToDictMixin):
                 if f1_index in self.f1_parameters:
                     if "boot_args" in self.f1_parameters[f1_index]:
                         boot_args = self.f1_parameters[f1_index]["boot_args"]
-
-            fun_test.test_assert(self.bmc.validate_preamble(f1_index=f1_index), "Validate preamble")
+            if self.validate_u_boot_version:
+                fun_test.test_assert(self.bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
             fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
                                  message="U-Bootup f1: {} complete".format(f1_index),
                                  context=self.context)

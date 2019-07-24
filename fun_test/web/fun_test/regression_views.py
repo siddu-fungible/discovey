@@ -250,7 +250,7 @@ def submit_job(request):
             pass
 
         contents = "Hi {}".format(submitter_user_name) + "<br>"
-        contents += "Your integration job's progress can be tracked at {}".format(get_suite_detail_url(suite_execution_id=job_id)) + "<br>"
+        contents += "Your Integration job's progress can be tracked at {}".format(get_suite_detail_url(suite_execution_id=job_id)) + "<br>"
         contents += "Thank you<br>Regression team<br>"
         send_mail(to_addresses=[submitter_email], subject="Regression: Integration Job: {} submitted".format(job_id), content=contents)
     return job_id
