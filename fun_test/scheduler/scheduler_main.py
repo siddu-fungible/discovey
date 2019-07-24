@@ -471,11 +471,11 @@ class SuiteWorker(Thread):
             else:
                 item["tags"] = tags
 
-    def get_scripts(self, suite_execution_id, suite_file=None, dynamic_suite_spec=None):
+    def get_scripts(self, suite_execution_id, suite_file=None, dynamic_suite_spec=None, suite_type=SuiteType.STATIC):
         all_tags = []
         items = []
         if suite_file:
-            suite_spec = parse_suite(suite_name=suite_file)
+            suite_spec = parse_suite(suite_name=suite_file, suite_type=suite_type)
             suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
             all_tags.extend(suite_level_tags)
             items = suite_spec
@@ -586,12 +586,15 @@ class SuiteWorker(Thread):
             script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
                                                       suite_file=self.job_suite_path)
 
+        elif self.job_suite_path and self.job_suite_type == SuiteType.TASK:
+            script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
+                                                      suite_file=self.job_suite_path,
+                                                      suite_type=self.job_suite_type)
         elif self.job_script_path:
             script_items.append({"path": self.job_script_path})
         elif self.job_suite_type == SuiteType.DYNAMIC:
             script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
                                                       dynamic_suite_spec=self.job_dynamic_suite_spec)
-            # TODO: Delete dynamic spec
 
         script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))
         scripts_exist, error_message = self.ensure_scripts_exists(script_paths)

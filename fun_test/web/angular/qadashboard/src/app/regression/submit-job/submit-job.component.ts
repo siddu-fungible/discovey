@@ -270,9 +270,7 @@ export class SubmitJobComponent implements OnInit {
     payload["email_on_fail_only"] = this.emailOnFailOnly;
     payload["test_bed_type"] = this.selectedTestBedType;
     payload["submitter_email"] = this.selectedUser.email;
-    if (this.type) {
-      payload["type"] = this.type;
-    }
+
     if (this.emails) {
       this.emails = this.emails.split(",");
       payload["email_list"] = this.emails
@@ -290,7 +288,10 @@ export class SubmitJobComponent implements OnInit {
     if (this.selectedTestBedType) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
-
+    if (this.type) {
+      payload["suite_type"] = this.type;
+      payload["environment"]["test_bed_type"] = "tasks"
+    }
 
     if (this.isTestBedFs()) {
       if (!this.withJenkinsBuild) {
