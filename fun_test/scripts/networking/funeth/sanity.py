@@ -880,6 +880,7 @@ if __name__ == "__main__":
             FunethTestInterfaceFlapVF,
             FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
             FunethTestReboot,
+            FunethTestComeReboot,
     ):
         ts.add_test_case(tc())
     ts.run()
