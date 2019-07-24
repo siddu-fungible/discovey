@@ -25,8 +25,8 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
   isDone: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
-    'PASSED': "/static/media/sun-icon.png",
-    'FAILED': "/static/media/storm.svg",
+    'PASSED': "/static/media/storm_icon.png",
+    'FAILED': "/static/media/storm_icon.png",
     'IN_PROGRESS': "/static/media/loading_gif.gif"
   };
 
@@ -96,3 +96,4 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
     return this.regressionService.getPrettyLocalizeTime(t);
   }
 }
+
