@@ -17,8 +17,14 @@
 
   <div class="collapse navbar-collapse" id="qa-dashboard-navbar">
     <ul class="navbar-nav mr-auto">
-      <li class="nav-item">
-        <a class="nav-link" href="/performance" style="color: white;background-color: #337ab7" role="button">Performance</a>
+      <li ngbDropdown class="nav-item dropdown">
+        <a [routerLink]="" id="navbarPerfDropdown" style="color: white;background-color: #337ab7"
+           class="nav-link dropdown-toggle"role="button" aria-haspopup="true"
+           aria-expanded="false" ngbDropdownToggle>Performance</a>
+        <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarPerfDropdown">
+          <a class="dropdown-item" href="/performance">All</a>
+          <a class="dropdown-item" href="/performance/workspace">Workspace</a>
+        </div>
       </li>
 
       <li ngbDropdown class="nav-item dropdown">

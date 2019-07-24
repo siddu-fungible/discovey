@@ -163,7 +163,7 @@ if __name__ == "__main__rand_read_qd_multi_host":
     print "added charts f0r 2,4,8 volumes"
 
 
-if __name__ == "__main__":
+if __name__ == "__main_s1_teramarks__":
     with open(METRICS_BASE_DATA_FILE, "r") as f:
         metrics = json.load(f)
         for metric in metrics:
@@ -183,3 +183,5 @@ if __name__ == "__main__":
                 result = set_internal_name(tera_mark)
                 print json.dumps(result)
 
+if __name__ == "__main__":
+    print "hello"

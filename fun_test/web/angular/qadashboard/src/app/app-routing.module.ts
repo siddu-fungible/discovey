@@ -27,6 +27,8 @@ import {AdminComponent} from "./performance/admin/admin.component";
 import {CreateChartComponent} from "./performance/create-chart/create-chart.component";
 import {ScoresTableComponent} from "./performance/scores-table/scores-table.component";
 import {PerformanceTableComponent} from "./performance/performance-table/performance-table.component";
+import { WorkspaceComponent } from './performance/workspace/workspace.component';
+import {CreateWorkspaceComponent} from "./performance/workspace/create-workspace/create-workspace.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -39,6 +41,8 @@ const routes: Routes = [
   {path: 'users', component: UserComponent},
   {path: 'dashboard', component: DashboardComponent},
   {path: 'performance', component: PerformanceComponent},
+  {path: 'performance/workspace', component: WorkspaceComponent},
+  {path: 'performance/workspace/create', component: CreateWorkspaceComponent},
   {path: 'performance/atomic/:id', component: FunMetricChartComponent},
   {path: 'regression/summary', component: RegressionSummaryComponent},
   {path: 'regression/admin', component: RegressionAdminComponent},

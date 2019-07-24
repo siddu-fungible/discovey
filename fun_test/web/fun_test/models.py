@@ -526,6 +526,16 @@ class User(FunModel):
     def __str__(self):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
 
+class PerformanceUserProfile(FunModel):
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    email = models.EmailField(max_length=60, unique=True)
+    interested_metrics = JSONField(default=[])
+    workspace = JSONField(default=[])
+
+    def __str__(self):
+        return (str(self.__dict__))
+
 
 class Daemon(FunModel):
     name = models.TextField(unique=True)
