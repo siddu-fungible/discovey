@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from fun_settings import SCRIPTS_DIR
 from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
+from lib.host import netperf_manager
 from lib.host.network_controller import NetworkController
 from lib.utilities.funcp_config import FunControlPlaneBringup
 from scripts.networking.funeth.funeth import Funeth, CPU_LIST_HOST, CPU_LIST_VM
@@ -213,30 +214,51 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 src_flows = dst['flows']
                 dst_flows = src['flows']
                 vif_table_mac_entries = dst['vif_table_mac_entries']
+
+            # num_flows, 512k
+            nc_obj.overlay_num_flows(512*1024)
             # vif
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
                 # nh
                 nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
-                for i in CPU_LIST_VM:
-                    for j in (10000, 20000):  # TODO: for Netperf control (1000x) and data (2000x), remove after port range support is in
-                        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
-                            for sip, dip in zip(src_flows, dst_flows):
-                                if flow_type == 'vxlan_encap':
-                                    flow_sip, flow_dip = sip, dip
-                                else:
-                                    flow_sip, flow_dip = dip, sip
-                                # flows
-                                nc_obj.overlay_flow_add(
-                                    flow_type=flow_type,
-                                    nh_index=nh_index,
-                                    vif=lport_num,
-                                    flow_sip=flow_sip,
-                                    flow_dip=flow_dip,
-                                    flow_sport=i+j,
-                                    flow_dport=i+j,
-                                    flow_proto=6
+                # flows
+                for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                    for sip, dip in zip(src_flows, dst_flows):
+                        if flow_type == 'vxlan_encap':
+                            flow_sip, flow_dip = sip, dip
+                            flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                        else:
+                            flow_sip, flow_dip = dip, sip
+                            flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                        nc_obj.overlay_flow_add(flow_type=flow_type,
+                                                nh_index=nh_index,
+                                                vif=lport_num,
+                                                flow_sip=flow_sip,
+                                                flow_dip=flow_dip,
+                                                flow_sport=flow_sport,
+                                                flow_dport=flow_dport,
+                                                flow_proto=6
+                                                )
+                #for i in CPU_LIST_VM:
+                #    for j in (10000, 20000):  # TODO: for Netperf control (1000x) and data (2000x), remove after port range support is in
+                #        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                #            for sip, dip in zip(src_flows, dst_flows):
+                #                if flow_type == 'vxlan_encap':
+                #                    flow_sip, flow_dip = sip, dip
+                #                else:
+                #                    flow_sip, flow_dip = dip, sip
+                #                # flows
+                #                nc_obj.overlay_flow_add(
+                #                    flow_type=flow_type,
+                #                    nh_index=nh_index,
+                #                    vif=lport_num,
+                #                    flow_sip=flow_sip,
+                #                    flow_dip=flow_dip,
+                #                    flow_sport=i+j,
+                #                    flow_dport=i+j,
+                #                    flow_proto=6
                                 )
                 # vif_table
                 for mac_addr in vif_table_mac_entries:

@@ -1844,6 +1844,19 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def overlay_num_flows(self, n):
+        stats = None
+        try:
+            cmd = ['num_flows', n]
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
     def overlay_vif_add(self, lport_num):
         stats = None
         try:

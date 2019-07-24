@@ -296,7 +296,7 @@ class FunethPerformanceBase(FunTestCase):
                  'suffix': suffix,
                  'cpu_list_server': cpu_list_server,
                  'cpu_list_client': cpu_list_client,
-                 'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
+                 #'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  }
             )
 
