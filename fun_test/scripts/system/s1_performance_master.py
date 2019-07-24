@@ -172,7 +172,6 @@ class TeraMarkJpegPerformanceS1Tc(TeraMarkJpegPerformanceTc):
 
 class TeraMarkZipPerformanceS1Tc(TeraMarkZipPerformanceTc):
     tag = TERAMARK_ZIP_S1
-    model = "TeraMarkZipDeflatePerformance"
     platform = FunPlatform.S1
 
     def describe(self):
