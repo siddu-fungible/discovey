@@ -371,7 +371,7 @@ class FunethSanity(FunTestScript):
             setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
             # Configure overlay
-            configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+            #configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'
