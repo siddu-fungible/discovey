@@ -23,19 +23,18 @@
 
   <div class="card-footer" style="height: 40px">
 
-    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end; height: 40px">
-      <div style="display: flex; height:40px">
-<!--        <span tooltip [tooltipContentString]="footerTooltip" placement="left">-->
+    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end; height: inherit">
+      <div style="display: flex; min-height: 0; height: inherit">
+        <span tooltip [tooltipContentString]="footerTooltip" placement="left">
           <img style="max-width: 100%; max-height: 100%" [src]="footerIcon">
-<!--        </span>-->
+        </span>
       </div>
-      <div style="display: flex">
+      <div style="display: flex; min-height: 0; height: inherit">
         <p class="footer-text">{{footerText}}</p>
       </div>
     </div>
   </div>
 </div>
-
 
 
 
