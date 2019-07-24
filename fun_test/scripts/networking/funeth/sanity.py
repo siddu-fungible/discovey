@@ -371,7 +371,9 @@ class FunethSanity(FunTestScript):
             setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
             # Configure overlay
-            #configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+            configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+            network_controller_obj_f1_0.disconnect()
+            network_controller_obj_f1_1.disconnect()
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'
@@ -403,6 +405,15 @@ class FunethSanity(FunTestScript):
                     if cleanup:
                         fun_test.log("Unload funeth driver")
                         funeth_obj.unload()
+
+                # Temp workaround to clean up idel ssh sessions
+                funeth_obj = fun_test.shared_variables['funeth_obj']
+                for nu in funeth_obj.nu_hosts:
+                    linux_obj = funeth_obj.linux_obj_dict[nu]
+                    if linux_obj.host_ip == 'poc-server-06':
+                        cmd = 'pkill sshd'
+                        fun_test.log("{} in {}".format(cmd, inux_obj.host_ip))
+                        linux_obj.command(cmd)
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)

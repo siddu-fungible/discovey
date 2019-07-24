@@ -176,6 +176,8 @@ class FunethPerformance(sanity.FunethSanity):
                                                fun_test.shared_variables['driver_commit'],
                                                fun_test.shared_variables['driver_bld'],
                                                '00_summary_of_results.txt')
+            for nc_obj in fun_test.shared_variables['network_controller_objs']:
+                nc_obj.disconnect()
         except:
             pass
         super(FunethPerformance, self).cleanup()
