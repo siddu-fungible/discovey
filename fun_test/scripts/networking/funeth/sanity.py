@@ -259,7 +259,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 #                    flow_sport=i+j,
                 #                    flow_dport=i+j,
                 #                    flow_proto=6
-                                )
+                #                )
                 # vif_table
                 for mac_addr in vif_table_mac_entries:
                     nc_obj.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=mac_addr, egress_vif=lport_num)
