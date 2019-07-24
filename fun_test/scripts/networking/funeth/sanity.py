@@ -284,7 +284,7 @@ class FunethSanity(FunTestScript):
 
         # Boot up FS1600
         if test_bed_type not in supported_testbed_types:
-            fun_test.test_assert(False, 'This test only runs in {}.'.format(','.format(supported_testbed_types)))
+            fun_test.test_assert(False, 'This test only runs in {}.'.format(','.join(supported_testbed_types)))
         else:
             #TB = 'FS11'
             TB = ''.join(test_bed_type.split('-')).upper()

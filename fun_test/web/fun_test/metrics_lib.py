@@ -195,11 +195,13 @@ class MetricLib():
         self.save_data_sets(data_sets=data_sets, chart=chart)
 
     def clone_chart(self, old_chart, internal_chart_name, data_sets):
-        if not MetricChart.objects.exists(internal_chart_name=internal_chart_name):
+        if not MetricChart.objects.filter(internal_chart_name=internal_chart_name).exists():
             metric_id = LastMetricId.get_next_id()
             peer_id = []
             peer_id.append(old_chart.metric_id)
+            print("Metric id:{}".format(metric_id))
             MetricChart(chart_name=old_chart.chart_name,
+                        platform=FunPlatform.S1,
                         metric_id=metric_id,
                         internal_chart_name=internal_chart_name,
                         data_sets=json.dumps(data_sets),
