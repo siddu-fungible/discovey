@@ -25,9 +25,9 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
   isDone: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
-    'PASSED': "/static/media/storm_icon.png",
+    'PASSED': "/static/media/sun_icon.png",
     'FAILED': "/static/media/storm_icon.png",
-    'IN_PROGRESS': "/static/media/loading_gif.gif"
+    'IN_PROGRESS': "/static/media/Bars-1.3s-100px.svg"
   };
 
 
