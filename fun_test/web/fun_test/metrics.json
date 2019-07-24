@@ -4957,23 +4957,23 @@
       },
       {
         "metric_model_name": "MetricContainer",
-        "name": "s1_tera_marks",
+        "name": "tera_marks_s1",
         "label": "TeraMarks",
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "name": "s1_teramarks_ec",
+            "name": "teramarks_ec_s1",
             "label": "Erasure-coding",
             "children": [
               {
                 "metric_model_name": "EcPerformance",
-                "name": "s1_ec_8_eachto_4_latency",
+                "name": "ec_8_eachto_4_latency_s1",
                 "label": "EC 8:4 Latency",
                 "children": []
               },
               {
                 "metric_model_name": "EcPerformance",
-                "name": "s1_ec_8_eachto_4_throughput",
+                "name": "ec_8_eachto_4_throughput_s1",
                 "label": "EC 8:4 Throughput",
                 "children": []
               }
@@ -4981,29 +4981,29 @@
           },
           {
             "metric_model_name": "MetricContainer",
-            "name": "s1_teramark_compression",
+            "name": "teramark_compression_s1",
             "label": "Compression",
             "children": [
               {
               "metric_model_name": "MetricContainer",
-              "name": "s1_teramark_jpeg",
+              "name": "teramark_jpeg_s1",
               "label": "JPEG",
               "children": [
                 {
                   "metric_model_name": "TeraMarkJpegPerformance",
-                  "name": "s1_compression_throughput",
+                  "name": "compression_throughput_s1",
                   "label": "Compression Throughput",
                   "children": []
                 },
                 {
                   "metric_model_name": "TeraMarkJpegPerformance",
-                  "name": "s1_decompression_throughput",
+                  "name": "decompression_throughput_s1",
                   "label": "Decompression Throughput",
                   "children": []
                 },
                 {
                   "metric_model_name": "TeraMarkJpegPerformance",
-                  "name": "s1_compression_ratio",
+                  "name": "compression_ratio_s1",
                   "label": "Compression ratio",
                   "children": []
                   }

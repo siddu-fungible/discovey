@@ -148,7 +148,7 @@ class PrepareDbTc(FunTestCase):
         pass
 
 
-class S1EcPerformanceTc(PalladiumPerformanceTc):
+class EcPerformanceS1Tc(PalladiumPerformanceTc):
     tag = TERAMARK_EC_S1
     model = "EcPerformance"
     platform = FunPlatform.S1
@@ -159,7 +159,7 @@ class S1EcPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
-class S1TeraMarkJpegPerformanceTc(TeraMarkJpegPerformanceTc):
+class TeraMarkJpegPerformanceS1Tc(TeraMarkJpegPerformanceTc):
     tag = TERAMARK_JPEG_S1
     model = "TeraMarkZipDeflatePerformance"
     platform = FunPlatform.S1
@@ -170,7 +170,7 @@ class S1TeraMarkJpegPerformanceTc(TeraMarkJpegPerformanceTc):
                               steps="Steps 1")
 
 
-class S1TeraMarkZipPerformanceTc(TeraMarkZipPerformanceTc):
+class TeraMarkZipPerformanceS1Tc(TeraMarkZipPerformanceTc):
     tag = TERAMARK_ZIP_S1
     model = "TeraMarkJpegPerformance"
     platform = FunPlatform.S1
@@ -196,9 +196,8 @@ if __name__ == "__main__":
     myscript.add_test_case(WuLatencyUngatedPerformanceS1Tc())
     myscript.add_test_case(WuLatencyAllocStackPerformanceS1Tc())
     # myscript.add_test_case(PrepareDbTc())
-    myscript.add_test_case(S1EcPerformanceTc())
-    myscript.add_test_case(S1TeraMarkJpegPerformanceTc())
-    # myscript.add_test_case(S1TeraMarkZipPerformanceTc())
-
+    myscript.add_test_case(EcPerformanceS1Tc())
+    myscript.add_test_case(TeraMarkJpegPerformanceS1Tc())
+    # myscript.add_test_case(TeraMarkZipPerformanceS1Tc())
 
     myscript.run()
