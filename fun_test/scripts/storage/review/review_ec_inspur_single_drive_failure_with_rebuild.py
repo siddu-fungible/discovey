@@ -824,11 +824,18 @@ class ECVolumeLevelTestcase(FunTestCase):
             if hasattr(self, "back_pressure") and self.back_pressure:
                 try:
                     # Start the fio here to produce the back pressure
+                    fio_pid = None
+                    check_pid = None
                     self.back_pressure_io["fio_cmd_args"] += "--filename={}".\
                         format(nvme_block_device_list[self.test_volume_start_index-1])
                     fio_pid = host_handle.start_bg_process(command=self.back_pressure_io["fio_cmd_args"],
                                                            timeout=self.back_pressure_io["timeout"])
-                    fun_test.log("Back pressure is started using fio pid is: {}".format(fio_pid))
+                    fun_test.test_assert(expression=fio_pid is not None, message="Back pressure is started")
+                    fun_test.sleep("Allowing FIO to warmup", 10)
+                    # Re-checking if FIO processes are not died due to any issue
+                    check_pid = host_handle.get_process_id(process_name="fio")
+                    fun_test.test_assert(expression=check_pid is not None, message="Back pressure is active")
+                    fun_test.log("Back pressure is still running pid/s: {}".format(fio_pid))
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
@@ -1169,9 +1176,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                     # Check if back pressure is still running, if yes, stop it
                     check_pid = host_handle.get_process_id(process_name="fio")
                     if check_pid:
-                        fun_test.log("back pressure is still running, stopping it")
+                        fun_test.log("Back pressure is still running, stopping it")
                         host_handle.pkill(process_name="fio")
-                        fun_test.simple_assert(host_handle.exit_status() == 0, "Back pressure is stopped")
+                        fun_test.test_assert_expected(expected=0, actual=host_handle.exit_status(),
+                                                      message="Back pressure is stopped")
             except Exception as ex:
                 fun_test.critical(str(ex))
 

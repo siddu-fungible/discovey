@@ -1355,7 +1355,7 @@ class NetworkController(DpcshClient):
             else:
                 cmd = ["list"]
             fun_test.debug("Getting flow list")
-            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout, chunk=16384)
+            result = self.json_execute(verb="flow", data=cmd, command_duration=timeout, chunk=32768)
             fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
             fun_test.debug("flow %s: %s" % (cmd, result['data']))
             stats = result['data']
@@ -1839,6 +1839,19 @@ class NetworkController(DpcshClient):
             fun_test.debug("Getting ddr stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get ddr stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def overlay_num_flows(self, n):
+        stats = None
+        try:
+            cmd = ['num_flows', n]
+            msg = "Overlay {}".format(cmd)
+            fun_test.debug(msg)
+            result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message=msg)
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))

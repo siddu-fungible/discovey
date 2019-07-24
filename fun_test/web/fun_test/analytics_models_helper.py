@@ -741,122 +741,81 @@ if __name__ == "__main2__":
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
 
 if __name__ == "__main__":
-    json_text =  [
-     {
-         "mode": "100G",
-         "version": 7286,
-         "timestamp": "2019-07-18 06:22:05.152852-07:00",
-         "half_load_latency": False,
-         "flow_type": "IPSEC_ENCRYPT_MULTI_TUNNEL",
-         "frame_size": 64.0,
-         "pps": 69999999.0,
-         "throughput": 48160,
-         "offloads": False,
-         "protocol": "UDP"
-     },
-     {
-         "mode": "100G",
-         "version": 7286,
-         "timestamp": "2019-07-18 06:22:05.152852-07:00",
-         "half_load_latency": False,
-         "flow_type": "IPSEC_ENCRYPT_MULTI_TUNNEL",
-         "frame_size": 362.94,
-         "pps": 55000000.0,
-         "throughput": 168080,
-         "offloads": False,
-         "protocol": "UDP"
-     },
-     {
-         "mode": "100G",
-         "version": 7286,
-         "timestamp": "2019-07-18 06:22:05.152852-07:00",
-         "half_load_latency": False,
-         "flow_type": "IPSEC_ENCRYPT_SINGLE_TUNNEL",
-         "frame_size": 64.0,
-         "pps": 3000000.0,
-         "throughput": 2064,
-         "offloads": False,
-         "protocol": "UDP"
-     },
-     {
-         "mode": "100G",
-         "version": 7286,
-         "timestamp": "2019-07-18 06:22:05.152852-07:00",
-         "half_load_latency": False,
-         "flow_type": "IPSEC_ENCRYPT_SINGLE_TUNNEL",
-         "frame_size": 362.94,
-         "pps": 2000000.0,
-         "throughput": 6112,
-         "offloads": False,
-         "protocol": "UDP"
-     }
- ]
-    unit_dict = {
-        "throughput_unit": PerfUnit.UNIT_MBITS_PER_SEC,
-        "pps_unit": PerfUnit.UNIT_PPS,
-        "latency_min_unit": PerfUnit.UNIT_USECS,
-        "latency_max_unit": PerfUnit.UNIT_USECS,
-        "latency_avg_unit": PerfUnit.UNIT_USECS,
-        "jitter_min_unit": PerfUnit.UNIT_USECS,
-        "jitter_max_unit": PerfUnit.UNIT_USECS,
-        "jitter_avg_unit": PerfUnit.UNIT_USECS
 
+    # Helper for Inspur 871 (single disk failure)
+    value_dict = {
+        "date_time": get_data_collection_time(),
+        "num_hosts": 1,
+        "num_f1s":1,
+        "base_file_copy_time": 1.32,
+        "copy_time_during_plex_fail":2.13,
+        "file_copy_time_during_rebuild":3.123,
+        "plex_rebuild_time":4.12,
     }
-    # prepare_status_db()
-    # value_dict = {
-    # "date_time": get_data_collection_time(),
-    # "volume_type": "BLT",
-    # "test": "FioSeqRead",
-    # "block_size": "4K",
-    # "io_depth": 128,
-    # "io_size": "8G",
-    # "operation": "read",
-    # "num_ssd": 1,
-    # "num_volume": 1,
-    # "num_threads": 4,
-    # "platform": FunPlatform.F1,
-    # "version": fun_test.get_version(),
-    # "write_iops": 100,
-    # "read_iops": 200,
-    # "write_throughput": 300,
-    # "read_throughput": 400,
-    # "write_avg_latency": 500,
-    # "write_90_latency": 600,
-    # "write_95_latency": 700,
-    # "write_99_99_latency": 800,
-    # "write_99_latency": 900,
-    # "read_avg_latency": 1000,
-    # "read_90_latency": 1100,
-    # "read_95_latency": 1200,
-    # "read_99_99_latency": 1300,
-    # "read_99_latency": 1400
-    # }
+    unit_dict = {
+        "base_file_copy_time_unit":PerfUnit.UNIT_SECS,
+        "copy_time_during_plex_fail_unit":PerfUnit.UNIT_SECS,
+        "file_copy_time_during_rebuild_unit":PerfUnit.UNIT_SECS,
+        "plex_rebuild_time_unit":PerfUnit.UNIT_SECS
+    }
+    model_name = "InspurSingleDiskFailurePerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"
 
-    # unit_dict = {
-    # "write_iops_unit": PerfUnit.UNIT_OPS,
-    # "read_iops_unit": PerfUnit.UNIT_OPS,
-    # "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
-    # "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
-    # "write_avg_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_90_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_95_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
-    # "write_99_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_avg_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_90_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_95_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
-    # "read_99_latency_unit": PerfUnit.UNIT_USECS
-    # }
+    # Helper for Inspur 875 (Data reconstruction)
 
-    model_name = "TeraMarkJuniperNetworkingPerformance"
-    for value_dict in json_text:
-        status = fun_test.PASSED
-        try:
-            generic_helper = ModelHelper(model_name=model_name)
-            generic_helper.set_units(validate=True, **unit_dict)
-            generic_helper.add_entry(**value_dict)
-            generic_helper.set_status(status)
-        except Exception as ex:
-            fun_test.critical(str(ex))
+    value_dict = {
+        "date_time": get_data_collection_time(),
+        "num_hosts": 1,
+        "block_size": "Mixed",
+        "operation": "Combined",
+        "write_iops": 100,
+        "read_iops": 200,
+        "write_throughput": 300,
+        "read_throughput": 400,
+        "write_avg_latency": 500,
+        "write_90_latency": 600,
+        "write_95_latency": 700,
+        "write_99_99_latency": 800,
+        "write_99_latency": 900,
+        "read_avg_latency": 1000,
+        "read_90_latency": 1100,
+        "read_95_latency": 1200,
+        "read_99_99_latency": 1300,
+        "read_99_latency": 1400,
+        "plex_rebuild_time": 1500
+    }
+    unit_dict = {
+    "write_iops_unit": PerfUnit.UNIT_OPS,
+    "read_iops_unit": PerfUnit.UNIT_OPS,
+    "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+    "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "write_90_latency_unit": PerfUnit.UNIT_USECS,
+    "write_95_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "write_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+    "read_90_latency_unit": PerfUnit.UNIT_USECS,
+    "read_95_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_99_latency_unit": PerfUnit.UNIT_USECS,
+    "read_99_latency_unit": PerfUnit.UNIT_USECS,
+    "plex_rebuild_time_unit": PerfUnit.UNIT_SECS
+    }
+    model_name = "InspurDataReconstructionPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
     print "used generic helper to add an entry"

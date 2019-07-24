@@ -1,0 +1,4 @@
+[
+  {"info": {"tags": ["pcie-host"]}},
+  {"path": "networking/funcp/no_come_reboot.py", "test_case_ids": [1]}
+]

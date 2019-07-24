@@ -556,15 +556,30 @@ def mlx5_irq_affinity(linux_obj):
     linux_obj.command(';'.join(cmds_cat))
 
 
-def redis_op_fcp_ftep(linux_obj, op='del'):
-    """In redis, delete FCP FTEP to tear down FCP tunnel, or add it to set up FCP tunnel."""
+def redis_del_fcp_ftep(linux_obj):
+    """In redis, delete FCP FTEP to tear down FCP tunnel."""
+    # TODO: make it setup independent
     ftep_dict = {
         'F1-0': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.2']",
         'F1-1': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']",
     }
     for k in ftep_dict:
-        cmd_op = "echo {} {} | redis-cli".format(op.upper(), ftep_dict[k])
-        cmd_chk = "echo 'KEYS {}' | redis-cli | awk '{print $1}'".format(ftep_dict[k])
-        linux_obj.command('docker exec {} {}'.format(k, cmd_op))
-        linux_obj.command('docker exec {} {}'.format(k, cmd_chk))
+        cmd_prefix = 'docker exec {} -c'.format(k)
+        cmd_op = 'DEL {}'.format(ftep_dict[k])
+        cmd_chk = 'KEYS *fcp-tunnel*'
+
+        # op
+        cmds = ['SELECT 1', cmd_op]
+        linux_obj.command('{} "touch del"'.format(cmd_prefix))
+        for cmd in cmds:
+            linux_obj.command('{} "echo {} > del"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "redis-cli < del"'.format(cmd_prefix))
+
+        # check
+        cmds = ['SELECT 1', cmd_chk]
+        linux_obj.command('{} touch check'.format(cmd_prefix))
+        for cmd in cmds:
+            linux_obj.command('{} "echo {} > check"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
+
 

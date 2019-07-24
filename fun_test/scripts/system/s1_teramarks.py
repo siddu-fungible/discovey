@@ -99,10 +99,13 @@ class PkeTeramarkTc(PalladiumTc):
 
 
 class EcTeramarkTc(PalladiumTc):
-    boot_args = "app=qa_ec_stress min_ndata=8 max_ndata=8 min_nparity=4 max_nparity=4 min_stridelen=4096 max_stridelen=4096 syslog=2 --seq_fail --enable_multi_pcs num_pcs=8"
+    boot_args = "app=qa_ec_stress min_ndata=8 max_ndata=8 min_nparity=4 max_nparity=4 min_stridelen=4096 max_stridelen=4096 --seq_fail syslog=2 num_pcs=1 --noload --test-exit-fast"
     tags = "qa_s1_ec_teramark"
     note = "EC teramark app on S1"
-    max_duration = 2700
+    run_target = "protium_s"
+    hw_model = "S1_Compute"
+    max_duration = 1800
+    hw_version = "rel_06152019"
 
     def describe(self):
         self.set_test_details(id=3,
@@ -181,9 +184,9 @@ if __name__ == "__main__":
     myscript = MyScript()
     # myscript.add_test_case(CryptoTeramarkTc())
     # myscript.add_test_case(PkeTeramarkTc())
-    myscript.add_test_case(EcTeramarkTc())
+    # myscript.add_test_case(EcTeramarkTc())
     # myscript.add_test_case(DfaTeramarkTc())
     # myscript.add_test_case(NfaTeramarkTc())
     myscript.add_test_case(JpegTeramarkTc())
-    myscript.add_test_case(ZipTeramarkTc())
+    # myscript.add_test_case(ZipTeramarkTc())
     myscript.run()
