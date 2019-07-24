@@ -70,7 +70,7 @@ hu2:
   mgmt_interface: eno1
   pcie_width: 16
   pf_interface: hu2-f0
-  vf_interface: hu2-f8
+  vf_interface: hu2-f10
   namespaces:
     default:
       interfaces:
@@ -92,9 +92,9 @@ hu2:
           mac_addr: 00:de:ad:be:ef:11
     n1:
       interfaces:
-        - hu2-f8:
+        - hu2-f10:
             mac_addr: 00:de:ad:be:ef:51
-            ipv4_addr: 53.1.1.8
+            ipv4_addr: 53.1.1.10
             ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 21.1.1.0/24

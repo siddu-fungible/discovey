@@ -6,7 +6,7 @@ from scripts.networking.helper import *
 from lib.utilities.funcp_config import *
 
 fs = "fs-11"
-image = "s_19666_funos-f1.stripped.gz"
+image = "funos-f1.stripped.gz.ol_mflows"
 boot_args_f1_0 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
 boot_args_f1_1 = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
 #boot_args_f1_0 = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-server --dpc-uart --disable-wu-watchdog"
@@ -50,7 +50,9 @@ class BringupFS(FunTestCase):
         if 'cc_huid' in boot_args_f1_0:
             funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
             funcp_obj.bringup_funcp(prepare_docker=False)
-            funcp_obj.assign_mpg_ips()
+            funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
+                                     f1_0_mpg_netmask="255.255.252.0",
+                                     f1_1_mpg_netmask="255.255.252.0")
             abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
             abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,

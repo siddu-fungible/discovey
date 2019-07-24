@@ -311,7 +311,7 @@
           {
             "metric_model_name": "MetricContainer",
             "name": "non_teramarks_customer",
-            "label": "POCs",
+            "label": "PoCs",
             "children": [
               {
                 "metric_model_name": "MetricContainer",
@@ -2594,55 +2594,285 @@
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "raw_block_teramarks_multi_host_nvmetcp_rand_read",
-                        "label": "Random Read",
+                        "name": "multi_host_raw_block_nvmetcp_2_vols",
+                        "label": "2 Volumes",
                         "children": [
                           {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_read_qd_multi_host_nvmetcp_output_iops",
-                            "label": "IOPS"
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_2_vols_rand_read",
+                            "label": "Random Read",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd_multi_host_nvmetcp_2_vols_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd1_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd32_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=32"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd64_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=64"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd128_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=128"
+                              }
+                            ]
                           },
                           {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_read_qd1_multi_host_nvmetcp_output_latency",
-                            "label": "Latency, QDepth=1"
-                          },
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_read_qd32_multi_host_nvmetcp_output_latency",
-                            "label": "Latency, QDepth=32"
-                          },
-                          {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_read_qd64_multi_host_nvmetcp_output_latency",
-                            "label": "Latency, QDepth=64"
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_2_vols_rand_write",
+                            "label": "Random Write",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd_multi_host_nvmetcp_2_vols_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd1_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd8_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=8"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd16_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=16"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd32_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=32"
+                              }
+                            ]
                           }
                         ]
                       },
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "raw_block_teramarks_multi_host_nvmetcp_rand_write",
-                        "label": "Random Write",
+                        "name": "multi_host_raw_block_nvmetcp_4_vols",
+                        "label": "4 Volumes",
                         "children": [
                           {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_write_qd_multi_host_nvmetcp_output_iops",
-                            "label": "IOPS"
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_4_vols_rand_read",
+                            "label": "Random Read",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd_multi_host_nvmetcp_4_vols_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd1_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd32_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=32"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd64_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=64"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd128_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=128"
+                              }
+                            ]
                           },
                           {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_write_qd1_multi_host_nvmetcp_output_latency",
-                            "label": "Latency, QDepth=1"
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_4_vols_rand_write",
+                            "label": "Random Write",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd_multi_host_nvmetcp_4_vols_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd1_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd8_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=8"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd16_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=16"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd32_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=32"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "multi_host_raw_block_nvmetcp_8_vols",
+                        "label": "8 Volumes",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_8_vols_rand_read",
+                            "label": "Random Read",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd_multi_host_nvmetcp_8_vols_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd1_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd32_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=32"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd64_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=64"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd128_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=128"
+                              }
+                            ]
                           },
                           {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_write_qd32_multi_host_nvmetcp_output_latency",
-                            "label": "Latency, QDepth=32"
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_8_vols_rand_write",
+                            "label": "Random Write",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd_multi_host_nvmetcp_8_vols_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd1_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd8_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=8"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd16_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=16"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd32_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=32"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "multi_host_raw_block_nvmetcp_12_vols",
+                        "label": "12 Volumes",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_rand_read",
+                            "label": "Random Read",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd_multi_host_nvmetcp_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd1_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd32_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=32"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd64_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=64"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd128_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=128"
+                              }
+                            ]
                           },
                           {
-                            "metric_model_name": "BltVolumePerformance",
-                            "name": "rand_write_qd64_multi_host_nvmetcp_output_latency",
-                            "label": "Latency, QDepth=64"
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_multi_host_nvmetcp_rand_write",
+                            "label": "Random Write",
+                            "children": [
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd_multi_host_nvmetcp_output_iops",
+                                "label": "IOPS"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd1_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=1"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd8_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=8"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd16_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=16"
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_write_qd32_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=32"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -2951,7 +3181,7 @@
       {
         "metric_model_name": "MetricContainer",
         "name": "teramarks_customer",
-        "label": "POCs",
+        "label": "PoCs",
         "children": [
           {
             "metric_model_name": "MetricContainer",
@@ -3428,13 +3658,39 @@
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_871_single_disk_failure",
                 "label": "8_7_1:Single_Disk_Failure",
-                "children": []
+                "children": [
+                  {
+                    "metric_model_name": "InspurSingleDiskFailurePerformance",
+                    "name": "inspur_functional_871_single_disk_failure_time_taken",
+                    "label": "F1(s)=1",
+                    "children": []
+                  }
+                ]
               },
               {
                 "metric_model_name": "MetricContainer",
                 "name": "inspur_875_data_reconstruction",
                 "label": "8_7_5:Data_Reconstruction",
-                "children": []
+                "children": [
+                   {
+                    "metric_model_name": "InspurDataReconstructionPerformance",
+                    "name": "inspur_functional_875_iops",
+                    "label": "IOPS",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "InspurDataReconstructionPerformance",
+                    "name": "inspur_functional_875_latency",
+                    "label": "Latency",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "InspurDataReconstructionPerformance",
+                    "name": "inspur_functional_875_plex_rebuild_time",
+                    "label": "Plex rebuild time",
+                    "children": []
+                  }
+                ]
               },
               {
                 "metric_model_name": "MetricContainer",
@@ -4694,6 +4950,103 @@
                 "name": "Bcopy: Flood DMA: Avg Latency_S1",
                 "label": "Bcopy: Flood DMA: Avg Latency",
                 "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "TeraMarks_S1",
+        "label": "TeraMarks",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "Erasure-coding_S1",
+            "label": "Erasure-coding",
+            "children": [
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "EC 8:4 Throughput_S1",
+                "label": "EC 8:4 Throughput",
+                "children": []
+              }
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "TeraMark Compression_S1",
+            "label": "Compression",
+            "children": [
+              {
+              "metric_model_name": "MetricContainer",
+              "name": "JPEG_S1",
+              "label": "JPEG",
+              "children": [
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "Compression throughput with Driver_output_average_bandwidth_S1",
+                  "label": "Compression Throughput",
+                  "children": []
+                },
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "JPEG Decompress_output_average_bandwidth_S1",
+                  "label": "Decompression Throughput",
+                  "children": []
+                },
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "JPEG Compression_Compression-ratio_S1",
+                  "label": "Compression ratio",
+                  "children": []
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "Zip_S1",
+                "label": "Zip",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "Deflate_S1",
+                    "label": "Deflate",
+                    "children": [
+                      {
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "name": "Deflate Compression Throughput_S1",
+                        "label": "Compression Throughput",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "name": "Deflate Decompression Throughput_S1",
+                        "label": "Decompression Throughput",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "Lzma_S1",
+                    "label": "Lzma",
+                    "children": [
+                      {
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "name": "Lzma Compression Throughput_S1",
+                        "label": "Compression Throughput",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "name": "Lzma Decompression Throughput_S1",
+                        "label": "Decompression Throughput",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }
