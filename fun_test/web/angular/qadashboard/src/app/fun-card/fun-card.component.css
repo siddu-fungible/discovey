@@ -1,6 +1,6 @@
 .card {
-  width: 400px;
-  margin: 100px;
+  width: 500px;
+  margin: 20px;
 }
 
 .card:hover {
@@ -50,8 +50,6 @@ table {
   padding-bottom: 0;
   padding-left: 10px;
   padding-right: 10px;
-  height: 40px;
   position: relative;
 }
-
 
