@@ -14,7 +14,7 @@ OUTPUT_JSON_FILE_NAME = "firewall_ipsec_performance.json"
 older_build = False
 frame_threshold = 5000
 FRAME_SIZE_64B = 64.0
-FRAME_SIZE_IMIX = 364.92
+FRAME_SIZE_IMIX = 362.94
 
 
 class ScriptSetup(FunTestScript):
