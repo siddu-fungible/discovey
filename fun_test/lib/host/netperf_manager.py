@@ -3,6 +3,8 @@ from lib.system.utils import MultiProcessingTasks
 import pprint
 import re
 
+
+NETSERVER_PORT = 12865
 THROUGHPUT = 'throughput'
 LATENCY = 'latency'
 PPS = 'pps'
