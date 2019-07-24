@@ -82,10 +82,12 @@ class FunethPerformance(sanity.FunethSanity):
         funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld')
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
+        come_linux_obj =  super(FunethPerformance, self).__getattribute__('come_linux_obj')
         fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
         fun_test.shared_variables['driver_bld'] = driver_bld
+        fun_test.shared_variables['come_linux_obj'] = come_linux_obj
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -218,6 +220,11 @@ class FunethPerformanceBase(FunTestCase):
             cpu_list_client = funeth.CPU_LIST_HOST
             cpu_list_server = funeth.CPU_LIST_HOST
 
+        # Tear down FCP tunnel
+        # TODO: Need to set up FCP tunnel
+        if flow_type.startswith('HU_HU_NFCP_2F1') or flow_type.startswith('HU_HU_NFCP_OL'):
+            perf_utils.redis_del_fcp_ftep(fun_test.shared_variables['come_linux_obj'])
+
         # host/VM use same perf_manager_obj, since CPU tuning is only doable in host
         perf_manager_obj = fun_test.shared_variables['netperf_manager_obj']
 
@@ -289,7 +296,7 @@ class FunethPerformanceBase(FunTestCase):
                  'suffix': suffix,
                  'cpu_list_server': cpu_list_server,
                  'cpu_list_client': cpu_list_client,
-                 'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
+                 #'fixed_netperf_port': True if 'OL_VM' in flow_type.upper() else False,  # TODO: Remove after SWOS-5645
                  }
             )
 

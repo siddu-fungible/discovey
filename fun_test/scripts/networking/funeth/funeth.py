@@ -254,7 +254,7 @@ class Funeth:
                 self.linux_obj_dict[hu].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
                                                 timeout=300)
                 #fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
-                self.linux_obj_dict[hu].command('ifconfig -a')
+            self.linux_obj_dict[hu].command('ifconfig -a')
 
             output1 = self.linux_obj_dict[hu].command('lsmod | grep funeth')
             output2 = self.linux_obj_dict[hu].command('ifconfig %s' % pf_intf)
