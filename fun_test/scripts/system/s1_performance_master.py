@@ -161,7 +161,7 @@ class S1EcPerformanceTc(PalladiumPerformanceTc):
 
 class S1TeraMarkJpegPerformanceTc(TeraMarkJpegPerformanceTc):
     tag = TERAMARK_JPEG_S1
-    model = "TeraMarkJpegPerformance"
+    model = "TeraMarkZipDeflatePerformance"
     platform = FunPlatform.S1
 
     def describe(self):
