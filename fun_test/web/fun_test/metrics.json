@@ -5010,24 +5010,6 @@
                 ]
               }
             ]
-          },
-          {
-            "metric_model_name": "MetricContainer",
-            "name": "s1_teramark_crypto",
-            "label": "Crypto",
-            "children": []
-          },
-          {
-            "metric_model_name": "MetricContainer",
-            "name": "s1_teramark_regex",
-            "label": "Regex",
-            "children": []
-          },
-          {
-            "metric_model_name": "MetricContainer",
-            "name": "s1_teramark_zip",
-            "label": "Zip",
-            "children": []
           }
         ]
       }
