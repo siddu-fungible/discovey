@@ -82,7 +82,7 @@ class FunethPerformance(sanity.FunethSanity):
         funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld')
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
-        come_linux_obj =  super(FunethPerformance, self).__getattribute__('come_linux_obj')
+        come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
         fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
@@ -176,6 +176,8 @@ class FunethPerformance(sanity.FunethSanity):
                                                fun_test.shared_variables['driver_commit'],
                                                fun_test.shared_variables['driver_bld'],
                                                '00_summary_of_results.txt')
+            for nc_obj in fun_test.shared_variables['network_controller_objs']:
+                nc_obj.disconnect()
         except:
             pass
         super(FunethPerformance, self).cleanup()
