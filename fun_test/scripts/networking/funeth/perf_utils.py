@@ -564,7 +564,7 @@ def redis_del_fcp_ftep(linux_obj):
         'F1-1': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']",
     }
     for k in ftep_dict:
-        cmd_prefix = 'docker exec {} -c'.format(k)
+        cmd_prefix = 'docker exec {} bash -c'.format(k)
         cmd_op = 'DEL {}'.format(ftep_dict[k])
         cmd_chk = 'KEYS *fcp-tunnel*'
 
