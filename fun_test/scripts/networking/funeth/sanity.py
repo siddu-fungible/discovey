@@ -47,6 +47,7 @@ try:
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
+        configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
         fundrv_branch = inputs.get('fundrv_branch', None)
@@ -58,6 +59,7 @@ try:
         control_plane = False  # default False
         update_driver = True  # default True
         hu_host_vm = False  # default False
+        configure_overlay = False  # default False
         bootup_funos = True  # default True
         cleanup = True  # default True
         fundrv_branch = None
@@ -69,6 +71,7 @@ except:
     control_plane = False
     update_driver = True
     hu_host_vm = False
+    configure_overlay = False
     bootup_funos = True
     cleanup = True
 
@@ -371,9 +374,10 @@ class FunethSanity(FunTestScript):
             setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
             # Configure overlay
-            #configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
-            #network_controller_obj_f1_0.disconnect()
-            #network_controller_obj_f1_1.disconnect()
+            if configure_overlay:
+                configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+                network_controller_obj_f1_0.disconnect()
+                network_controller_obj_f1_1.disconnect()
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'
