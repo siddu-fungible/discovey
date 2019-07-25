@@ -585,7 +585,7 @@ def redis_del_fcp_ftep(linux_obj):
 
 def collect_funcp_logs(linux_obj, path='/scratch'):
     """Populate the FunCP log files to job log dir"""
-    output = linux_obj.command('ls -l {}/*.log'.format(path))
+    output = linux_obj.command('cd {}; ls -l *.log'.format(path))
     log_files = re.findall(r'(\S+.log)', output)
     for log_file in log_files:
         artifact_file_name = fun_test.get_test_case_artifact_file_name(
