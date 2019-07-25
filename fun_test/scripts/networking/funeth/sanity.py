@@ -226,8 +226,10 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
                 # nh
-                nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
-                nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                for nh_type in ('vxlan_encap', 'vxlan_decap'):
+                    nc_obj.overlay_nh_add(nh_type=nh_type, src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 # flows
                 for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
                     for sip, dip in zip(src_flows, dst_flows):
