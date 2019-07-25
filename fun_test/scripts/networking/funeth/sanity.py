@@ -426,14 +426,15 @@ class FunethSanity(FunTestScript):
                     for host_ip, host_info in hu_hosts.iteritems():
                         host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
-            if control_plane and cleanup:
-                try:
-                    perf_utils.collect_funcp_logs(self.come_linux_obj)
-                    self.come_linux_obj.sudo_command('rmmod funeth')
-                    self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
-                    self.come_linux_obj.sudo_command('rm -fr /tmp/*')
-                except:
-                    self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
+            if control_plane:
+                perf_utils.collect_funcp_logs(self.come_linux_obj)
+                if cleanup:
+                    try:
+                        self.come_linux_obj.sudo_command('rmmod funeth')
+                        self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
+                        self.come_linux_obj.sudo_command('rm -fr /tmp/*')
+                    except:
+                        self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
 def collect_stats(when='before'):
