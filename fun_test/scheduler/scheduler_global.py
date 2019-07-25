@@ -75,3 +75,4 @@ class JobStatusType:
 class SchedulerDirectiveTypes(Codes):
     PAUSE_QUEUE_WORKER = 1
     UNPAUSE_QUEUE_WORKER = 2
+

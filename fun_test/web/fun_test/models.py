@@ -612,6 +612,33 @@ class Asset(FunModel):
             self.save()
 
 
+class TaskStatus(models.Model):
+    path = models.TextField(unique=True, default="")
+    name = models.TextField(unique=True)
+    last_counter = models.IntegerField(default=0)
+    state = models.TextField(default="")   # Job status type
+    """ 
+    Tasks logs switch between index 0 and index 1.
+    One of these is the previous log and the other is
+    is the current log
+    """
+    date_time = models.DateTimeField(default=datetime.now)
+
+    @staticmethod
+    def set_state(path, name, state=JobStatusType.UNKNOWN):
+        TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state})
+
+    @staticmethod
+    def get_state(path, name):
+        state = None
+        try:
+            t = TaskStatus.objects.get(path=path, name=name)
+            state = t.state
+        except ObjectDoesNotExist:
+            logger.error("Task status: {} {} Object does not exist".format(path, name))
+        return state
+
+
 class TestbedNotificationEmails(FunModel):
     email = models.EmailField(max_length=30, unique=True)
 
