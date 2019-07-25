@@ -1287,6 +1287,23 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def untar(self, file_name, dest, timeout=60):
+        result = None
+        command = "tar -xvzf " + file_name + " -C " + dest
+        try:
+            output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            fun_test.debug(output)
+            output_lines = output.split('\n')
+            fun_test.debug(output_lines)
+            result = True
+        except Exception as ex:
+            result = False
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
     def command_exists(self, command):
         self.command("which " + command)
         exit_status = self.exit_status()  #TODO

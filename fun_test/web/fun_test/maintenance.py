@@ -8,10 +8,11 @@ from fun_global import PerfUnit
 from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
 from collections import OrderedDict
+from web.fun_test.metrics_lib import MetricLib
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
-if __name__ == "__main__":
+if __name__ == "__main__rand_read_qd_multi_host":
     internal_read_chart_names = ["rand_read_qd_multi_host_nvmetcp_output_iops",
                                  "rand_read_qd1_multi_host_nvmetcp_output_latency",
                                  "rand_read_qd32_multi_host_nvmetcp_output_latency",
@@ -160,3 +161,56 @@ if __name__ == "__main__":
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
     print "added charts f0r 2,4,8 volumes"
+
+
+if __name__ == "__main_s1_teramarks__":
+    with open(METRICS_BASE_DATA_FILE, "r") as f:
+        metrics = json.load(f)
+        for metric in metrics:
+            if metric["label"] == "F1":
+                f1_metrics = metric["children"]
+                for f1_metric in f1_metrics:
+                    if f1_metric["label"] == "TeraMarks":
+                        funos_metrics = f1_metric
+                        break
+
+        tera_marks = funos_metrics["children"]
+        for tera_mark in tera_marks:
+            tera_mark_child_name = tera_mark["name"]
+            print(tera_mark_child_name)
+            if tera_mark_child_name == "TeraMark Compression" or tera_mark_child_name == "Erasure-coding":
+                print("tera_mark :{}".format(tera_mark))
+                result = set_internal_name(tera_mark)
+                print json.dumps(result)
+
+if __name__ == "__main__":
+    internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
+                            "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        temp_data_sets = json.loads(chart.data_sets)
+        if "throughput" in internal_chart_name or "pps" in internal_chart_name:
+            for temp_data_set in temp_data_sets:
+                if temp_data_set["name"] == "64B":
+                    one_data_set = temp_data_set
+            one_data_set["name"] = "1500B"
+            one_data_set["inputs"]["input_frame_size"] = 1500
+            one_data_set["output"]["expected"] = -1
+            one_data_set["output"]["reference"] = -1
+            data_sets = json.loads(chart.data_sets)
+            data_sets.append(one_data_set)
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+        else:
+            data_sets = json.loads(chart.data_sets)
+            for temp_data_set in temp_data_sets:
+                if "64B" in temp_data_set["name"]:
+                    one_data_set = temp_data_set
+                    one_data_set["name"] = one_data_set["name"].replace("64B", "1500B")
+                    one_data_set["inputs"]["input_frame_size"] = 1500
+                    one_data_set["output"]["expected"] = -1
+                    one_data_set["output"]["reference"] = -1
+                    data_sets.append(one_data_set)
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+    print "added 1500B datasets for 124M flows"
