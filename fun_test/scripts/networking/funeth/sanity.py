@@ -235,10 +235,16 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                     for sip, dip in zip(src_flows, dst_flows):
                         if flow_type == 'vxlan_encap':
                             flow_sip, flow_dip = sip, dip
-                            flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
                         else:
                             flow_sip, flow_dip = dip, sip
-                            flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
                         nc_obj.overlay_flow_add(flow_type=flow_type,
                                                 nh_index=nh_index,
                                                 vif=lport_num,
