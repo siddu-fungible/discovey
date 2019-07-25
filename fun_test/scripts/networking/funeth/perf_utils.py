@@ -572,14 +572,14 @@ def redis_del_fcp_ftep(linux_obj):
         cmds = ['SELECT 1', cmd_chk]
         linux_obj.command('{} "touch check"'.format(cmd_prefix))
         for cmd in cmds:
-            linux_obj.command('{} "echo \"{}\" > check"'.format(cmd_prefix, cmd))
+            linux_obj.command('{} \'echo \"{}\" > check\''.format(cmd_prefix, cmd))
         linux_obj.command('{} "cat check"'.format(cmd_prefix))
 
         # del
         cmds = ['SELECT 1', cmd_op]
         linux_obj.command('{} "touch del"'.format(cmd_prefix))
         for cmd in cmds:
-            linux_obj.command('{} "echo \"{}\" > del"'.format(cmd_prefix, cmd))
+            linux_obj.command('{} \'echo \"{}\" > del\''.format(cmd_prefix, cmd))
         linux_obj.command('{} "cat del"'.format(cmd_prefix))
 
         linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
