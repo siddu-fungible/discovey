@@ -14,15 +14,14 @@ export class RegressionSummaryWidgetComponent implements OnInit {
 
   initialFilterData = [{info: "Networking overall", payload: {module: "networking"}}, {
     info: "Storage overall",
-    payload: {module: "storage"}
-  }];
+    payload: {module: "storage"}}, {
+    info: "Networking sanity", payload: {module: "networking", test_case_execution_tags: ["networking-sanity"]}
+  }
+  ];
 
   y1Values: any = [];
   payload: any = {};
-  x1Values: string[] = ['Networking Overall', 'Storage Overall'];
-  //numPassed: number = 0;
-  //numFailed: number = 0;
-  //numNotRun: number = 0;
+  x1Values: string[] = ['Networking overall', 'Storage overall', 'Networking sanity'];
   numInProgress: number = 0;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
