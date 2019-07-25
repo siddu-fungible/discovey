@@ -98,6 +98,9 @@ class Dut(ToDictMixin):
     def get_ssd_interfaces(self):
         return self.interfaces
 
+    def get_pcie_interfaces(self):
+        return self.interfaces
+
     def get_fpg_interfaces(self, f1_index=0):
         return self.fpg_interfaces[f1_index]
 
@@ -148,6 +151,8 @@ class Dut(ToDictMixin):
             peer_instance = interface_obj.get_peer_instance()
             if peer_instance.type != EndPoint.END_POINT_TYPE_DUT:
                 host = peer_instance.get_host_instance(host_index=host_index)
+                if not host:
+                    host = peer_instance.host_info # only used if deploy has not happened
         else:
             host = self.get_host_on_interface(interface_index=interface_obj.dual_interface_index, host_index=host_index)
         return host

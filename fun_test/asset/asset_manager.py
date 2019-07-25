@@ -266,6 +266,15 @@ class AssetManager:
         return result
 
     @fun_test.safe
+    def get_linux_host(self, name):
+        from lib.host.linux import Linux
+        host_spec = self.get_host_spec(name=name)
+        host = None
+        if host_spec:
+            host = Linux(**host_spec)
+        return host
+
+    @fun_test.safe
     def get_regression_service_host_spec(self):
         host_spec = self.get_host_spec(name=REGRESSION_SERVICE_HOST)
         return host_spec
