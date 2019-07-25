@@ -235,7 +235,8 @@ class FunethPerformanceBase(FunTestCase):
         if flow_type.startswith('HU_HU'):  # HU --> HU
             # TODO: handle exception if hu_hosts len is 1
             num_hu_hosts = len(funeth_obj.hu_hosts)
-            if flow_type.startswith('HU_HU_NFCP_2F1') or flow_type.startswith('HU_HU_FCP'):  # Under 2 F1s
+            flow_types_2f1 = ('HU_HU_NFCP_2F1', 'HU_HU_NFCP_OL', 'HU_HU_FCP')
+            if any(flow_type.startswith(f) for f in flow_types_2f1):  # Under 2 F1s
                 for i in range(0, num_hu_hosts/2):
                     host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+2]])
                     if num_flows == 1:
