@@ -568,24 +568,28 @@ def redis_del_fcp_ftep(linux_obj):
         cmd_op = 'DEL {}'.format(ftep_dict[k])
         cmd_chk = 'KEYS *fcp-tunnel*'
 
-        # op
+        # check
+        cmds = ['SELECT 1', cmd_chk]
+        linux_obj.command('{} "touch check"'.format(cmd_prefix))
+        for cmd in cmds:
+            linux_obj.command('{} "echo \"{}\" > check"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "cat check"'.format(cmd_prefix))
+
+        # del
         cmds = ['SELECT 1', cmd_op]
         linux_obj.command('{} "touch del"'.format(cmd_prefix))
         for cmd in cmds:
-            linux_obj.command('{} "echo {} > del"'.format(cmd_prefix, cmd))
-        linux_obj.command('{} "redis-cli < del"'.format(cmd_prefix))
+            linux_obj.command('{} "echo \"{}\" > del"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "cat del"'.format(cmd_prefix))
 
-        # check
-        cmds = ['SELECT 1', cmd_chk]
-        linux_obj.command('{} touch check'.format(cmd_prefix))
-        for cmd in cmds:
-            linux_obj.command('{} "echo {} > check"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
+        linux_obj.command('{} "redis-cli < del"'.format(cmd_prefix))
         linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
 
 
 def collect_funcp_logs(linux_obj, path='/scratch'):
     """Populate the FunCP log files to job log dir"""
-    output = linux_obj.command('ls -l {}/*.log'.format(path))
+    output = linux_obj.command('cd {}; ls -l *.log'.format(path))
     log_files = re.findall(r'(\S+.log)', output)
     for log_file in log_files:
         artifact_file_name = fun_test.get_test_case_artifact_file_name(

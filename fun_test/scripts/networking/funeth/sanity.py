@@ -198,6 +198,10 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
         ]
     }
 
+    # num_flows, 512k
+    for nc_obj in overlay_config_dict:
+        nc_obj.overlay_num_flows(512 * 1024)
+
     nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
     for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
         for nc_obj in (nc_obj_src, nc_obj_dst):
@@ -218,23 +222,29 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 dst_flows = src['flows']
                 vif_table_mac_entries = dst['vif_table_mac_entries']
 
-            # num_flows, 512k
-            nc_obj.overlay_num_flows(512*1024)
             # vif
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
                 # nh
-                nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
-                nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                for nh_type in ('vxlan_encap', 'vxlan_decap'):
+                    nc_obj.overlay_nh_add(nh_type=nh_type, src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 # flows
                 for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
                     for sip, dip in zip(src_flows, dst_flows):
                         if flow_type == 'vxlan_encap':
                             flow_sip, flow_dip = sip, dip
-                            flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
                         else:
                             flow_sip, flow_dip = dip, sip
-                            flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
                         nc_obj.overlay_flow_add(flow_type=flow_type,
                                                 nh_index=nh_index,
                                                 vif=lport_num,
@@ -414,24 +424,24 @@ class FunethSanity(FunTestScript):
                 funeth_obj = fun_test.shared_variables['funeth_obj']
                 for nu in funeth_obj.nu_hosts:
                     linux_obj = funeth_obj.linux_obj_dict[nu]
-                    if linux_obj.host_ip == 'poc-server-06':
-                        cmd = 'pkill sshd'
-                        fun_test.log("{} in {}".format(cmd, inux_obj.host_ip))
-                        linux_obj.command(cmd)
+                    cmd = 'pkill sshd'
+                    fun_test.log("{} in {}".format(cmd, inux_obj.host_ip))
+                    linux_obj.command(cmd)
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                     for host_ip, host_info in hu_hosts.iteritems():
                         host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
-            if control_plane and cleanup:
-                try:
-                    perf_utils.collect_funcp_logs(self.come_linux_obj)
-                    self.come_linux_obj.sudo_command('rmmod funeth')
-                    self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
-                    self.come_linux_obj.sudo_command('rm -fr /tmp/*')
-                except:
-                    self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
+            if control_plane:
+                perf_utils.collect_funcp_logs(self.come_linux_obj)
+                if cleanup:
+                    try:
+                        self.come_linux_obj.sudo_command('rmmod funeth')
+                        self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
+                        self.come_linux_obj.sudo_command('rm -fr /tmp/*')
+                    except:
+                        self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
 def collect_stats(when='before'):
