@@ -447,7 +447,7 @@ class FunethSanity(FunTestScript):
                 for nu in funeth_obj.nu_hosts:
                     linux_obj = funeth_obj.linux_obj_dict[nu]
                     cmd = 'pkill sshd'
-                    fun_test.log("{} in {}".format(cmd, inux_obj.host_ip))
+                    fun_test.log("{} in {}".format(cmd, linux_obj.host_ip))
                     linux_obj.command(cmd)
             except:
                 if cleanup:
