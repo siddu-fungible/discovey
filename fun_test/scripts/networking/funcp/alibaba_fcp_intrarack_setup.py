@@ -39,7 +39,6 @@ class ScriptSetup(FunTestScript):
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
-        '''
         # Removing any funeth driver from COMe and and all the connected server
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
@@ -96,7 +95,6 @@ class ScriptSetup(FunTestScript):
             setup_hu_host(funeth_obj, update_driver=True)
             print "\n\n\n Booting HU unit  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-        '''
 
     def cleanup(self):
         fun_test.log("Cleanup")
@@ -178,11 +176,11 @@ class TestCcCcPing(FunTestCase):
         funcp2_obj._get_vlan1_ips()
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp1_obj.fs_name, funcp2_obj.fs_name)
-        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips, from_vlan=True, interval=0.01)
+        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips.values(), from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp2_obj.fs_name, funcp1_obj.fs_name)
-        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips, from_vlan=True, interval=0.01)
+        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips.values(), from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         fun_test.add_checkpoint("Ensure all vlans can ping its neighbour FS vlans")
