@@ -42,6 +42,7 @@ class BLTVolumeSanityScript(FunTestScript):
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
                                            disable_f1_index=self.disable_f1_index)
+        fun_test.shared_variables['topology'] = topology_helper.expanded_topology
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
 
@@ -50,27 +51,34 @@ class BLTVolumeSanityScript(FunTestScript):
         storage_controller = StorageController(target_ip=end_host.host_ip,
                                                target_port=end_host.get_dpc_port(self.f1_in_use))
 
+        if not check_come_health(storage_controller):
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology re-deployed")
+            end_host = topology.get_dut_instance(index=0).get_come()
+            storage_controller = StorageController(target_ip=end_host.host_ip,
+                                                   target_port=end_host.get_dpc_port(self.f1_in_use))
+
         fun_test.shared_variables["end_host"] = end_host
         fun_test.shared_variables["storage_controller"] = storage_controller
         fun_test.shared_variables["syslog_level"] = self.syslog_level
         fun_test.shared_variables['topology'] = topology
+
         self.end_host = end_host
         self.storage_controller = storage_controller
 
         # load nvme
-        #load_nvme_module(end_host)
+        # load_nvme_module(end_host)
 
-        #enable_counters(storage_controller, self.command_timeout)
+        # enable_counters(storage_controller, self.command_timeout)
 
         # create controller
         ctrlr_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_controller(
-            ctrlr_uuid=ctrlr_uuid,
-            transport=self.transport,
-            huid=self.huid,
-            ctlid=self.ctlid,
-            fnid=self.fnid,
-            command_duration=self.command_timeout)['status'],
+        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
+                                                                       transport=self.transport,
+                                                                       huid=self.huid,
+                                                                       ctlid=self.ctlid,
+                                                                       fnid=self.fnid,
+                                                                       command_duration=self.command_timeout)['status'],
                              message="Create Controller with UUID: {}".format(ctrlr_uuid))
         fun_test.shared_variables["ctrlr_uuid"] = ctrlr_uuid
 
@@ -93,7 +101,7 @@ class BLTVolumeSanityScript(FunTestScript):
         fun_test.shared_variables["blt_uuid"] = blt_uuid
 
         # Set syslog level
-        #set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
+        # set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
 
         # check nvme device is visible on end host
         fetch_nvme = fetch_nvme_device(end_host, self.ns_id)
@@ -137,8 +145,14 @@ class BLTVolumeSanityScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(ex.message)
         finally:
-            self.storage_controller.disconnect()
-            fun_test.shared_variables["topology"].cleanup()
+            try:
+                self.storage_controller.disconnect()
+            except:
+                pass
+            try:
+                fun_test.shared_variables["topology"].cleanup()
+            except:
+                pass
 
 
 class BltPciSanityTestcase(FunTestCase):
@@ -254,11 +268,11 @@ class BltPciRandWRMix(BltPciSanityTestcase):
 
 if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
-    #bltscript.add_test_case(BltPciSeqRead())
-    #bltscript.add_test_case(BltPciRandRead())
-    #bltscript.add_test_case(BltPciSeqRWMix())
-    #bltscript.add_test_case(BltPciSeqWRMix())
+    # bltscript.add_test_case(BltPciSeqRead())
+    # bltscript.add_test_case(BltPciRandRead())
+    # bltscript.add_test_case(BltPciSeqRWMix())
+    # bltscript.add_test_case(BltPciSeqWRMix())
     bltscript.add_test_case(BltPciRandRWMix())
-    #bltscript.add_test_case(BltPciRandWRMix())
+    # bltscript.add_test_case(BltPciRandWRMix())
 
     bltscript.run()

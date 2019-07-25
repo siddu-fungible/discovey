@@ -84,6 +84,7 @@ FCB_TDP2_REQ = "tdp2_req"
 FCB_DST_FCP_PKT_RCVD = "FCB_DST_FCP_PKT_RCVD"
 FCB_DST_REQ_MSG_RCVD = "FCB_DST_REQ_MSG_RCVD"
 FCB_SRC_GNT_MSG_RCVD = "FCB_SRC_GNT_MSG_RCVD"
+FCB_SRC_REQ_MSG_XMTD = "FCB_SRC_REQ_MSG_XMTD"
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
@@ -944,7 +945,8 @@ def populate_per_vp_output_file(network_controller_obj, filename, display_output
     return output
 
 
-def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, test_type, single_flow, half_load_latency,test_time, display_output=False):
+def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, single_flow, half_load_latency,test_time,
+                       test_type=None, display_output=False):
     try:
         sequencer_passed = False
         version = fun_test.get_version()
@@ -957,17 +959,26 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
         flow_latency = "%s_%s" % (flow, latency)
         sleep_time = int(test_time/10)
 
-        resource_pc_1_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_resource_pc_1.txt'
-        resource_pc_2_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_resource_pc_2.txt'
-        bam_stats_file = str(version) + "_" + str(test_type) + "_" + flow_latency + '_bam.txt'
-        vp_util_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_vp_util.txt"
-        per_vp_file = str(version) + "_" + str(test_type) + "_" + flow_latency + "_per_vp.txt"
+        common_file_name = str(version) + "_" + flow_latency
+        if test_type:
+            str(version) + "_" + str(test_type) + "_" + flow_latency
+        resource_pc_1_file = common_file_name + '_resource_pc_1.txt'
+        resource_pc_2_file = common_file_name + '_resource_pc_2.txt'
+        bam_stats_file = common_file_name + '_bam.txt'
+        vp_util_file = common_file_name + "_vp_util.txt"
+        per_vp_file = common_file_name + "_per_vp.txt"
+        ddr_stats_file = common_file_name + "_ddr.txt"
+        cdu_stats_file = common_file_name + "_cdu.txt"
+        ca_stats_file = common_file_name + "_ca.txt"
 
         artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
         artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
         artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
         artifact_vp_util_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_file)
         artifact_per_vp_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_file)
+        artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
+        artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
+        artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
 
         while not sequencer_passed:
             fun_test.log_module_filter("random_module")
@@ -978,6 +989,9 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
             populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
             populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
             populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
+            populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
+            populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
+            populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
             fun_test.log_module_filter_disable()
 
             fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
@@ -986,6 +1000,54 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, t
             if state.lower() == template_obj.PASSED.lower():
                 sequencer_passed = True
                 fun_test.log("Sequencer passed. Stopping dpcsh commands")
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return True
+
+def populate_stats_file(network_controller_obj, test_time, generic_file_name_part, display_output=False):
+    try:
+        version = fun_test.get_version()
+        sleep_time_factor = 10
+        sleep_time = int(test_time/sleep_time_factor)
+
+        resource_pc_1_file = str(version) + "_" + generic_file_name_part + '_resource_pc_1.txt'
+        resource_pc_2_file = str(version) + "_" + generic_file_name_part + '_resource_pc_2.txt'
+        bam_stats_file = str(version) + "_" + generic_file_name_part + '_bam.txt'
+        vp_util_file = str(version) + "_" + generic_file_name_part + "_vp_util.txt"
+        per_vp_file = str(version) + "_" + generic_file_name_part + "_per_vp.txt"
+        ddr_stats_file = str(version) + "_" + generic_file_name_part + "_ddr.txt"
+        cdu_stats_file = str(version) + "_" + generic_file_name_part + "_cdu.txt"
+        ca_stats_file = str(version) + "_" + generic_file_name_part + "_ca.txt"
+
+        artifact_resource_pc_1_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_1_file)
+        artifact_resource_pc_2_file = fun_test.get_test_case_artifact_file_name(post_fix_name=resource_pc_2_file)
+        artifact_bam_stats_file = fun_test.get_test_case_artifact_file_name(post_fix_name=bam_stats_file)
+        artifact_vp_util_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_file)
+        artifact_per_vp_file = fun_test.get_test_case_artifact_file_name(post_fix_name=per_vp_file)
+        artifact_ddr_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ddr_stats_file)
+        artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
+        artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
+
+        start_counter = 0
+        while not start_counter == sleep_time_factor:
+            fun_test.log_module_filter("random_module")
+            populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                             filename=artifact_resource_pc_1_file, pc_id=1, display_output=display_output)
+            populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
+                                             filename=artifact_resource_pc_2_file, pc_id=2, display_output=display_output)
+            populate_resource_bam_output_file(network_controller_obj=network_controller_obj, filename=artifact_bam_stats_file)
+            populate_vp_util_output_file(network_controller_obj=network_controller_obj, filename=artifact_vp_util_file)
+            populate_per_vp_output_file(network_controller_obj=network_controller_obj, filename=artifact_per_vp_file)
+            populate_ddr_output_file(network_controller_obj=network_controller_obj, filename=artifact_ddr_file)
+            populate_cdu_output_file(network_controller_obj=network_controller_obj, filename=artifact_cdu_file)
+            populate_ca_output_file(network_controller_obj=network_controller_obj, filename=artifact_ca_file)
+            fun_test.log_module_filter_disable()
+
+            fun_test.sleep("Sleep for %s secs before next iteration of populating dpcsh stats" % sleep_time, seconds=sleep_time)
+
+            start_counter += 1
+        fun_test.log("Population of file stats completed")
 
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -1048,6 +1110,97 @@ def populate_resource_bam_output_file(network_controller_obj, filename, display_
             for line in lines:
                 fun_test.log(line)
             fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_ddr_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result = network_controller_obj.peek_ddr_stats()
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        for key, val in result.iteritems():
+
+            master_table_obj = get_nested_dict_stats(result=val)
+            lines.append(master_table_obj.get_string())
+
+            with open(filename, 'a') as f:
+                f.writelines(lines)
+
+            description = "DDR stats"
+            fun_test.add_auxillary_file(description=description, filename=filename)
+
+            if display_output:
+                fun_test.log_disable_timestamps()
+                fun_test.log_section("DDR result")
+                for line in lines:
+                    fun_test.log(line)
+                fun_test.log_enable_timestamps()
+        lines.append('\n\n\n')
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_cdu_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result = network_controller_obj.peek_cdu_stats()
+        master_table_obj = get_nested_dict_stats(result=result)
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        lines.append(master_table_obj.get_string())
+        lines.append('\n\n\n')
+
+        with open(filename, 'a') as f:
+            f.writelines(lines)
+
+        description = "CDU stats"
+        fun_test.add_auxillary_file(description=description, filename=filename)
+
+        if display_output:
+            fun_test.log_disable_timestamps()
+            fun_test.log_section("CDU result")
+            for line in lines:
+                fun_test.log(line)
+            fun_test.log_enable_timestamps()
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def populate_ca_output_file(network_controller_obj, filename, display_output=False):
+    output = False
+    try:
+        lines = list()
+
+        result = network_controller_obj.peek_ca_stats()
+        lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
+        for key, val in result.iteritems():
+
+            master_table_obj = get_nested_dict_stats(result=val)
+            lines.append(master_table_obj.get_string())
+
+            with open(filename, 'a') as f:
+                f.writelines(lines)
+
+            description = "CA stats"
+            fun_test.add_auxillary_file(description=description, filename=filename)
+
+            if display_output:
+                fun_test.log_disable_timestamps()
+                fun_test.log_section("CA result")
+                for line in lines:
+                    fun_test.log(line)
+                fun_test.log_enable_timestamps()
+        lines.append('\n\n\n')
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))

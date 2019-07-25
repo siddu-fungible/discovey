@@ -1134,6 +1134,14 @@ peek_stats_blt_vol_parser.add_argument('vol_id', type=str, help="Volume ID (For 
 peek_stats_rds_vol_parser = peek_stats_parsers.add_parser('rds', help="Peek RDS volume stats")
 peek_stats_rds_vol_parser.add_argument('vol_id', type=str, help="Volume ID (For e.g if vol id is 0000000000003001)")
 
+# Peek stats cdu
+peek_stats_cdu_parser = peek_stats_parsers.add_parser('cdu', help="Peek cdu stats")
+peek_stats_cdu_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# Peek stats ca
+peek_stats_ca_parser = peek_stats_parsers.add_parser('ca', help="Peek ca stats")
+peek_stats_ca_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 

@@ -140,6 +140,7 @@ class Linux(object, ToDictMixin):
         if self.extra_attributes:
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
+        fun_test.register_hosts(host=self)
         self.post_init()
 
     @staticmethod
@@ -1211,9 +1212,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60):
+    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60, sudo=False, sudo_password=None):
         transfer_complete = False
-        scp_command = "scp -P %d %s %s@%s:%s" % (target_port, source_file_path, target_username, target_ip, target_file_path)
+        sudo_string = ""
+        if sudo:
+            sudo_string = "sudo "
+        scp_command = "%sscp -P %d %s %s@%s:%s" % (sudo_string, target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
@@ -1225,6 +1229,9 @@ class Linux(object, ToDictMixin):
         expects[0] = '[pP]assword:'
         expects[1] = self.prompt_terminator + r'$'
         expects[2] = '\(yes/no\)?'
+
+        if sudo:
+            expects[3] = '{}@.*password'.format(sudo_password)
 
         max_retry_count = 10
         max_loop_count = 10
@@ -1247,6 +1254,9 @@ class Linux(object, ToDictMixin):
                         if i == 1:
                             transfer_complete = True
                             break
+                        if i == 3 and sudo and sudo_password:
+                            handle.sendline(sudo_password)
+                            current_loop_count += 1
                     except pexpect.exceptions.EOF:
                         transfer_complete = True
                         break
@@ -1271,6 +1281,23 @@ class Linux(object, ToDictMixin):
             fun_test.debug(output_lines)
             result = output_lines[0].strip()
         except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
+    def untar(self, file_name, dest, timeout=60):
+        result = None
+        command = "tar -xvzf " + file_name + " -C " + dest
+        try:
+            output = self.sudo_command("tar -xvzf " + file_name + " -C " + dest)
+            fun_test.debug(output)
+            output_lines = output.split('\n')
+            fun_test.debug(output_lines)
+            result = True
+        except Exception as ex:
+            result = False
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
@@ -2053,9 +2080,9 @@ class Linux(object, ToDictMixin):
         while not host_is_up and not max_reboot_timer.is_expired() and not fun_test.closed:
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
-                if ping_result:
-                    max_reboot_timer = FunTimer(max_time=30)
-                    fun_test.log("Lowered max_reboot_timer")
+                # if ping_result:  # TODO: Experimenting this on fs-11
+                #    max_reboot_timer = FunTimer(max_time=30)
+                #    fun_test.log("Lowered max_reboot_timer as ping is working")
             if ping_result or not service_host:
                 try:
                     fun_test.log("Attempting SSH")
@@ -2606,12 +2633,12 @@ class Linux(object, ToDictMixin):
         return file_info
 
     @fun_test.safe
-    def flush_cache_mem(self):
+    def flush_cache_mem(self, timeout=60):
         flush_cmd = """
         sync; echo 1 > /proc/sys/vm/drop_caches; 
         sync; echo 2 > /proc/sys/vm/drop_caches; 
         sync; echo 3 > /proc/sys/vm/drop_caches"""
-        self.sudo_command(flush_cmd)
+        self.sudo_command(flush_cmd, timeout=timeout)
 
     def mpstat(self, cpu_list=None, numa_node=None, interval=5, count=2, background=True,
                output_file="/tmp/mpstat.out"):

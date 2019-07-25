@@ -389,9 +389,16 @@ input:checked + .slider:before {
   margin: 0 !important;
 }
 
-.component {
-  padding-top: 70px;
+.component_old {
+  margin-left: 10px;
+  margin-right: 10px;
+
 }
+
+.component-margin {
+  margin-top: 70px;
+}
+
 .fa {
   cursor: pointer;
 }
@@ -489,7 +496,7 @@ tr.text-center > th {
 .fun-tooltip {
   position: fixed;
   /*font-size: 14px;*/
-  text-align: center;
+  text-align: left;
   color: #000000;
   /*padding: 3px 8px;*/
   background: #fff8ba;

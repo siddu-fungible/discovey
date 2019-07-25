@@ -6,6 +6,7 @@ import {Observable} from "rxjs";
 })
 export class CommonService {
   newAlert: boolean = false;
+  announcementAvailable: boolean = false;
   constructor() {
 
   }
@@ -39,6 +40,27 @@ export class CommonService {
     let d = new Date(t.replace(/\s+/g, 'T'));
     let epochValue = d.getTime();
     return new Date(epochValue);
+  }
+
+  isSameDay(d1, d2) {
+    return d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
+  }
+
+  setAnnouncement() {
+    this.announcementAvailable = true;
+  }
+
+  clearAnnouncement() {
+    this.announcementAvailable = false;
+  }
+
+  monitorAnnouncements() {
+    return new Observable(observer => {
+      setInterval(() => observer.next(this.announcementAvailable), 1000);
+      return () => {};
+    })
   }
 
   getPrettyLocalizeTime(t) {

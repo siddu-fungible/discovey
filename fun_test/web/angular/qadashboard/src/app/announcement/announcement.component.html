@@ -1,0 +1,3 @@
+<div *ngIf="show" class="component-margin">
+  <div class="announcement" [ngClass]="{'announcement-info': level === 1, 'announcement-danger': level === 2}">{{ message }}</div>
+</div>

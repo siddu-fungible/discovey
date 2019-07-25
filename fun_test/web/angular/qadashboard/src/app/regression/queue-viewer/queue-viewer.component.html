@@ -10,7 +10,7 @@
         <th>Priority</th>
         <th>Test-bed</th>
         <th>Suite</th>
-        <th>Email</th>
+        <th>Submitter</th>
         <th>Message</th>
       </tr>
       <tr *ngFor="let queueEntry of queueOccupancy[category]; let i = index">
@@ -33,11 +33,11 @@
 
 
         </td>
-        <td>{{ queueEntry.job_id }}</td>
+        <td><a href="/regression/suite_detail/{{ queueEntry.job_id }}">{{ queueEntry.job_id }}</a></td>
         <td>{{ queueEntry.priority }}</td>
         <td>{{ queueEntry.test_bed_type }}</td>
         <td>{{ queueEntry.job_spec.suite_path }}</td>
-        <td>{{ queueEntry.job_spec.email }}</td>
+        <td>{{ userMap[queueEntry.job_spec.email].first_name }} {{ userMap[queueEntry.job_spec.email].last_name.charAt(0)}}</td>
         <td [innerHTML]="queueEntry.message | safeHtml"></td>
 
       </tr>

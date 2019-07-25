@@ -83,6 +83,6 @@ class RetrieveLogLinesCase(FunTestCase):
 
     def run(self):
         fun_test.test_assert(self.validate_job(), "Validate job")
-        fun_test.log("Lines")
-        for line in self.lines:
-            fun_test.log(line)
+        fun_test.log("Lines... please checking palladium-jobs web-site")
+        # for line in self.lines:
+        #    fun_test.log(line)

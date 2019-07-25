@@ -1,5 +1,6 @@
 <div class="component">
-  <app-test-bed [embed]="true"></app-test-bed>
+  <span style="margin-left: 20px" (click)="showingTestBeds = !showingTestBeds" class="pseudo-anchor">{{ !showingTestBeds? "+ Show": "- Hide" }} test-beds</span>
+  <app-test-bed *ngIf="showingTestBeds" [embed]="true"></app-test-bed>
 
   <div class="card">
     <div class="card-header">
@@ -180,7 +181,7 @@
               </td>
               <td>
               <span class="pseudo-anchor"
-                    (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})">{{ suiteExecution.fields.submitter_email }}
+                    (click)="navigateByQueryParams({submitter_email: suiteExecution.fields.submitter_email})">{{ userMap[suiteExecution.fields.submitter_email]?.first_name }} {{ userMap[suiteExecution.fields.submitter_email]?.last_name.charAt(0)}}
               </span>
               </td>
 
@@ -188,12 +189,15 @@
                 <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'; else regularSuitePath">
                   <span class="pseudo-anchor"
                         (click)="navigateByQueryParams({suite_path: getReRunOriginalSuitePath(suiteExecution)})">Re({{ getReRunOriginalSuitePath(suiteExecution)}})</span>
+                  &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)" class="pseudo-anchor">...details</span></small>
                   <small>{{ suiteExecution.fields.description }}</small>
 
                 </ng-container>
                 <ng-template #regularSuitePath>
                   <span class="pseudo-anchor"
-                        (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})">{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}</span>
+                        (click)="navigateByQueryParams({suite_path: suiteExecution.fields.suite_path})">{{ suiteExecution.fields?.suite_path?.length > 0 ? suiteExecution.fields.suite_path: suiteExecution.fields.script_path }}
+                  </span>
+                  &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)" class="pseudo-anchor">...details</span></small>
                   <p *ngIf="suiteExecution.fields.description">
                     <small>{{ suiteExecution.fields.description }}</small>
                   </p>
@@ -243,8 +247,7 @@
                 <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'">
                 <span (click)="showDetailsClick(suiteExecution)"
                       *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">
-                  <a href="/regression/suite_detail/
-                    {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }} </a>
+                  <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }} </a>
                 </span>
                 </ng-container>
               </td>
@@ -264,7 +267,15 @@
               </td>
             </tr>
             <tr *ngIf="suiteExecution.showingDetails">
-              <td colspan="16">
+              <td colspan="18">
+                <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
+                  <app-section-horizontal-line [text]="'Inputs'"></app-section-horizontal-line>
+                  <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
+                </ng-container>
+                <ng-container *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
+                  <app-section-horizontal-line [text]="'Environment'"></app-section-horizontal-line>
+                  <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
+                </ng-container>
                 <app-re-run-panel *ngIf="suiteExecution.reRunInfo"
                                   [reRunInfo]="suiteExecution.reRunInfo"></app-re-run-panel>
               </td>
@@ -277,7 +288,6 @@
         <tr>
           <th class="text-center">Actions</th>
           <th class="text-center">ID</th>
-          <th class="text-center">State</th>
           <th class="text-center">Submitter</th>
           <th class="text-center">Suite</th>
           <th class="text-center">Schedule</th>
@@ -295,11 +305,11 @@
             </td>
 
             <td style="text-align: center">{{ suiteExecution.fields.execution_id }}</td>
-            <td style="text-align: center">{{ stateStringMap[suiteExecution.fields.state] }}
-            </td>
             <td>{{ suiteExecution.fields.submitter_email }}</td>
             <td>
               {{ suiteExecution.fields.suite_type === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}
+              &nbsp;&nbsp;<small><span (click)="showDetailsClick(suiteExecution)" class="pseudo-anchor">...details</span></small>
+
             </td>
 
             <ng-container [ngSwitch]="suiteExecution.fields.scheduling_type">
@@ -319,6 +329,22 @@
             </td>
 
           </tr>
+          <tr *ngIf="suiteExecution.showingDetails">
+              <td colspan="8">
+                <ng-container *ngIf="(suiteExecution.parsedInputs | keyvalue)?.length">
+                  <div><b>Inputs</b></div>
+
+                  <ngx-json-viewer [json]="suiteExecution.parsedInputs" [expanded]="false"></ngx-json-viewer>
+                </ng-container>
+                <ng-container *ngIf="(suiteExecution.parsedEnvironment | keyvalue)?.length">
+                  <div><b>Environment</b></div>
+
+                  <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
+                </ng-container>
+                <app-re-run-panel *ngIf="suiteExecution.reRunInfo"
+                                  [reRunInfo]="suiteExecution.reRunInfo"></app-re-run-panel>
+              </td>
+            </tr>
         </ng-container>
       </table>
     </div>

@@ -24,7 +24,6 @@ f1_urls = [
     url(r'^upload$', views.upload)
 ]
 
-
 tg_urls = [
     url(r'^$', views.tg),
     url(r'^ikv_put/(.*)/(.*)$', views.ikv_put),

@@ -1,14 +1,14 @@
 from lib.host.dpcsh_client import DpcshClient
+from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
 
 
-class StorageController(DpcshClient):
+class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
-        super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port,
-                                                verbose=verbose)
+        DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
 
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
@@ -276,7 +276,7 @@ class StorageController(DpcshClient):
                     command_result = self.create_volume(
                         type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
                         block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
-                        command_duration=command_timeout)
+                        group_id=num+1, command_duration=command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"],
                                          "Creating {} {} {} {} {} bytes volume on DUT instance".
@@ -290,7 +290,7 @@ class StorageController(DpcshClient):
                 type=ec_info["volume_types"]["ec"], capacity=ec_info["volume_capacity"][num]["ec"],
                 block_size=ec_info["volume_block"]["ec"], name="ec_" + this_uuid[-4:], uuid=this_uuid,
                 ndata=ec_info["ndata"], nparity=ec_info["nparity"], pvol_id=ec_info["uuids"][num]["blt"],
-                command_duration=command_timeout)
+                group_id=num+1, command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating {} {}:{} {} bytes EC volume on DUT instance".
                                  format(num, ec_info["ndata"], ec_info["nparity"],
                                         ec_info["volume_capacity"][num]["ec"]))
@@ -303,7 +303,7 @@ class StorageController(DpcshClient):
                 command_result = self.create_volume(
                     type=ec_info["volume_types"]["jvol"], capacity=ec_info["volume_capacity"][num]["jvol"],
                     block_size=ec_info["volume_block"]["jvol"], name="jvol_" + this_uuid[-4:],
-                    uuid=ec_info["uuids"][num]["jvol"], command_duration=command_timeout)
+                    uuid=ec_info["uuids"][num]["jvol"], group_id=num+1, command_duration=command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating {} {} bytes Journal volume on DUT instance".
                                      format(num, ec_info["volume_capacity"][num]["jvol"]))
@@ -322,6 +322,7 @@ class StorageController(DpcshClient):
                                                         compress=ec_info['compress'],
                                                         zip_effort=ec_info['zip_effort'],
                                                         zip_filter=ec_info['zip_filter'],
+                                                        group_id=num+1,
                                                         command_duration=command_timeout)
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
@@ -330,6 +331,7 @@ class StorageController(DpcshClient):
                                                         name="lsv_" + this_uuid[-4:], uuid=this_uuid,
                                                         group=ec_info["ndata"], jvol_uuid=ec_info["uuids"][num]["jvol"],
                                                         pvol_id=ec_info["uuids"][num]["ec"],
+                                                        group_id=num+1,
                                                         command_duration=command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating {} {} bytes LS volume on DUT instance".
@@ -403,6 +405,13 @@ class StorageController(DpcshClient):
         try:
             cmd = ['vp_util']
             return self.json_execute(verb='debug', data=cmd, command_duration=command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+    def peek_resource_bam_stats(self, command_timeout=TIMEOUT):
+        try:
+            cmd = "stats/resource/bam"
+            return self.json_execute(verb="peek", data=cmd, command_duration=command_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
 

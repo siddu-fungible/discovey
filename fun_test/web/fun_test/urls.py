@@ -24,7 +24,9 @@ from . import upgrade_views
 from . import demo_views
 # from . import triaging
 from web.fun_test.api import users
-from web.fun_test.api import regression, triaging
+from web.fun_test.api import regression, triaging, performance
+from web.fun_test.api import site_config
+from web.fun_test.api import scheduler_api
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -197,13 +199,20 @@ api_v1_urls = [
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),
     url(r'^regression/script_infos/?(.*)?$', regression.script_infos),
     url(r'^regression/assets/?(.*)?$', regression.assets),
+    url(r'^performance/charts/?(.*)?$', performance.charts),
+    url(r'^performance/data$', performance.data),
     url(r'^triages/?(\d+)?$', triaging.triagings),
     url(r'^triages/(\d+)/trials/?(\S+)?$', triaging.trials),
     url(r'^triage_states$', triaging.triaging_states),
     url(r'^triage_trial_set/(\d+)$', triaging.trial_set),
     url(r'^triaging_trial_states$', triaging.triaging_trial_states),
     url(r'^triage_types$', triaging.triaging_types),
-    url(r'^git_commits_fun_os/(\S+)/(\S+)$', triaging.git_commits_fun_os)
+    url(r'^git_commits_fun_os/(\S+)/(\S+)$', triaging.git_commits_fun_os),
+    url(r'^site_configs$', site_config.site_configs),
+    url(r'^scheduler/directive_types$', scheduler_api.directive_types),
+    url(r'^scheduler/directive$', scheduler_api.directive),
+    url(r'^scheduler/info$', scheduler_api.info),
+    url(r'^scheduler/state_types$', scheduler_api.state_types)
 ]
 
 site_under_construction = False

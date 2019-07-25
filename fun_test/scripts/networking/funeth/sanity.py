@@ -2,9 +2,10 @@ from lib.system.fun_test import *
 from fun_settings import SCRIPTS_DIR
 from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
+from lib.host import netperf_manager
 from lib.host.network_controller import NetworkController
 from lib.utilities.funcp_config import FunControlPlaneBringup
-from scripts.networking.funeth.funeth import Funeth
+from scripts.networking.funeth.funeth import Funeth, CPU_LIST_HOST, CPU_LIST_VM
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import perf_utils
 
@@ -33,9 +34,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.137'
+    DPC_PROXY_IP = '10.1.20.22'
     DPC_PROXY_PORT = 40220
-    DPC_PROXY_IP2 = '10.1.20.137'
+    DPC_PROXY_IP2 = '10.1.20.22'
     DPC_PROXY_PORT2 = 40221
     TB = 'FS11'
 
@@ -45,27 +46,46 @@ try:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
+        hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
+        bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
+        cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
+        fundrv_branch = inputs.get('fundrv_branch', None)
+        fundrv_commit = inputs.get('fundrv_commit', None)
+        funsdk_branch = inputs.get('funsdk_branch', None)
+        funsdk_commit = inputs.get('funsdk_commit', None)
     else:
         enable_tso = True  # default True
         control_plane = False  # default False
         update_driver = True  # default True
+        hu_host_vm = False  # default False
+        bootup_funos = True  # default True
+        cleanup = True  # default True
+        fundrv_branch = None
+        fundrv_commit = None
+        funsdk_branch = None
+        funsdk_commit = None
 except:
     enable_tso = True
     control_plane = False
     update_driver = True
+    hu_host_vm = False
+    bootup_funos = True
+    cleanup = True
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
-MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
+MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
+
+supported_testbed_types = ('fs-11', )
 
 
 def setup_nu_host(funeth_obj):
-    if TB in ('FS7', 'FS11'):
-        for nu in funeth_obj.nu_hosts:
-            linux_obj = funeth_obj.linux_obj_dict[nu]
-            fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
-        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
+    #if TB in ('FS7', 'FS11'):
+        #for nu in funeth_obj.nu_hosts:
+        #    linux_obj = funeth_obj.linux_obj_dict[nu]
+        #    fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'NU host {} reboot'.format(linux_obj.host_ip))
+        #fun_test.sleep("Sleeping for the host to come up from reboot", seconds=30)
     for nu in funeth_obj.nu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[nu]
         #if TB in ('FS7', 'FS11'):
@@ -76,19 +96,33 @@ def setup_nu_host(funeth_obj):
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=(not control_plane)),
                              'Configure NU host {} IPv4 routes'.format(
             linux_obj.host_ip))
+        # TODO: temp workaround
+        if linux_obj.host_ip == 'poc-server-06':
+            if enable_tso:
+                linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro on; sudo ethtool -k fpg0')
+            else:
+                linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro off; sudo ethtool -k fpg0')
 
 
-def setup_hu_host(funeth_obj, update_driver=True):
+def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
-        fun_test.test_assert(funeth_obj.lspci(check_pcie_width=True), 'Fungible Ethernet controller is seen.')
+        if is_vm:
+            lspci_result = funeth_obj.lspci(check_pcie_width=False)
+        else:
+            lspci_result = funeth_obj.lspci(check_pcie_width=True)
+        fun_test.test_assert(lspci_result, 'Fungible Ethernet controller is seen.')
         update_src_result = funeth_obj.update_src(parallel=True)
         if update_src_result:
             funsdk_commit, funsdk_bld, driver_commit, driver_bld = update_src_result
         fun_test.test_assert(update_src_result, 'Update funeth driver source code.')
     fun_test.test_assert(funeth_obj.build(parallel=True), 'Build funeth driver.')
-    fun_test.test_assert(funeth_obj.load(sriov=NUM_VFs, num_queues=NUM_QUEUES_RX), 'Load funeth driver.')
+    if is_vm:
+        load_result = funeth_obj.load(sriov=0)
+    else:
+        load_result = funeth_obj.load(sriov=NUM_VFs)
+    fun_test.test_assert(load_result, 'Load funeth driver.')
     for hu in funeth_obj.hu_hosts:
         linux_obj = funeth_obj.linux_obj_dict[hu]
         if enable_tso:
@@ -97,9 +131,15 @@ def setup_hu_host(funeth_obj, update_driver=True):
         else:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+        if is_vm:
+            cpu_list = CPU_LIST_VM
+        else:
+            cpu_list = CPU_LIST_HOST
         fun_test.test_assert(
-            funeth_obj.enable_multi_txq(hu, num_queues=NUM_QUEUES_TX),
-            'Enable HU host {} funeth interfaces multi Tx queues: {}.'.format(linux_obj.host_ip, NUM_QUEUES_TX))
+            funeth_obj.enable_multi_queues(hu, num_queues_tx=NUM_QUEUES_TX, num_queues_rx=NUM_QUEUES_RX,
+                                           cpu_list=cpu_list),
+            'Enable HU host {} funeth interfaces {} Tx queues, {} Rx queues.'.format(linux_obj.host_ip, NUM_QUEUES_TX,
+                                                                                     NUM_QUEUES_RX))
         fun_test.test_assert(
             funeth_obj.configure_interfaces(hu), 'Configure HU host {} funeth interfaces.'.format(linux_obj.host_ip))
         fun_test.test_assert(funeth_obj.configure_ipv4_routes(hu, configure_gw_arp=(not control_plane)),
@@ -110,6 +150,121 @@ def setup_hu_host(funeth_obj, update_driver=True):
         #                    'HU PF and VF interface loopback ping test via NU')
 
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
+
+
+def setup_funcp(test_bed_type):
+    funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+    funcp_obj.bringup_funcp(prepare_docker=True)
+    # TODO: Make it setup independent
+    funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
+                             f1_0_mpg_netmask="255.255.252.0",
+                             f1_1_mpg_netmask="255.255.252.0"
+                             )
+    abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
+    abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
+    funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                    abstract_config_f1_1=abstract_json_file_f1_1)
+    fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
+    # TODO: sanity check of control plane
+
+
+def start_vm(funeth_obj_hosts, funeth_obj_vms):
+    for vm in funeth_obj_vms.hu_hosts:
+        vm_host = funeth_obj_vms.tb_config_obj.get_vm_host(vm)
+        vm_name = funeth_obj_vms.tb_config_obj.get_hostname(vm)  # VM name and VM's hostname are kept same
+        pci_info = funeth_obj_vms.tb_config_obj.get_vm_host_pci_info(vm)
+        for hu in funeth_obj_hosts.hu_hosts:
+            if funeth_obj_hosts.tb_config_obj.get_hostname(hu) == vm_host:
+                linux_obj = funeth_obj_hosts.linux_obj_dict[hu]
+                cmds = ['virsh nodedev-dettach {}'.format(pci_info), 'virsh start {}'.format(vm_name)]
+                for cmd in cmds:
+                    linux_obj.sudo_command(cmd)
+
+
+def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
+
+    # TODO: Define overlay args in config file
+    overlay_config_dict = {
+        network_controller_obj_f1_0: [
+            {'lport_num': 265, 'vtep': '53.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.1.8', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:31', ]},
+            {'lport_num': 393, 'vtep': '53.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.1.9', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:41', ]},
+        ],
+        network_controller_obj_f1_1: [
+            {'lport_num': 265, 'vtep': '54.1.1.1', 'vnids': [20100, ], 'flows': ['50.1.2.8', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:51', ]},
+            {'lport_num': 521, 'vtep': '54.1.1.4', 'vnids': [20100, ], 'flows': ['50.1.2.9', ], 'vif_table_mac_entries': ['00:de:ad:be:ef:61', ]},
+        ]
+    }
+
+    nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
+    for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
+        for nc_obj in (nc_obj_src, nc_obj_dst):
+            if nc_obj == nc_obj_src:
+                lport_num = src['lport_num']
+                vnids = src['vnids']
+                src_vtep = src['vtep']
+                dst_vtep = dst['vtep']
+                src_flows = src['flows']
+                dst_flows = dst['flows']
+                vif_table_mac_entries = src['vif_table_mac_entries']
+            else:
+                lport_num = dst['lport_num']
+                vnids = dst['vnids']
+                src_vtep = dst['vtep']
+                dst_vtep = src['vtep']
+                src_flows = dst['flows']
+                dst_flows = src['flows']
+                vif_table_mac_entries = dst['vif_table_mac_entries']
+
+            # num_flows, 512k
+            nc_obj.overlay_num_flows(512*1024)
+            # vif
+            nc_obj.overlay_vif_add(lport_num=lport_num)
+            for vnid in vnids:
+                # nh
+                nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
+                nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                # flows
+                for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                    for sip, dip in zip(src_flows, dst_flows):
+                        if flow_type == 'vxlan_encap':
+                            flow_sip, flow_dip = sip, dip
+                            flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                        else:
+                            flow_sip, flow_dip = dip, sip
+                            flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                        nc_obj.overlay_flow_add(flow_type=flow_type,
+                                                nh_index=nh_index,
+                                                vif=lport_num,
+                                                flow_sip=flow_sip,
+                                                flow_dip=flow_dip,
+                                                flow_sport=flow_sport,
+                                                flow_dport=flow_dport,
+                                                flow_proto=6
+                                                )
+                #for i in CPU_LIST_VM:
+                #    for j in (10000, 20000):  # TODO: for Netperf control (1000x) and data (2000x), remove after port range support is in
+                #        for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
+                #            for sip, dip in zip(src_flows, dst_flows):
+                #                if flow_type == 'vxlan_encap':
+                #                    flow_sip, flow_dip = sip, dip
+                #                else:
+                #                    flow_sip, flow_dip = dip, sip
+                #                # flows
+                #                nc_obj.overlay_flow_add(
+                #                    flow_type=flow_type,
+                #                    nh_index=nh_index,
+                #                    vif=lport_num,
+                #                    flow_sip=flow_sip,
+                #                    flow_dip=flow_dip,
+                #                    flow_sport=i+j,
+                #                    flow_dport=i+j,
+                #                    flow_proto=6
+                #                )
+                # vif_table
+                for mac_addr in vif_table_mac_entries:
+                    nc_obj.overlay_vif_table_add_mac_entry(vnid=vnid, mac_addr=mac_addr, egress_vif=lport_num)
+            # vtep
+            nc_obj.overlay_vtep_add(ipaddr=src_vtep)
 
 
 class FunethSanity(FunTestScript):
@@ -128,8 +283,11 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables["test_bed_type"] = test_bed_type
 
         # Boot up FS1600
-        if test_bed_type == 'fs-11':
-
+        if test_bed_type not in supported_testbed_types:
+            fun_test.test_assert(False, 'This test only runs in {}.'.format(','.join(supported_testbed_types)))
+        else:
+            #TB = 'FS11'
+            TB = ''.join(test_bed_type.split('-')).upper()
             if control_plane:
                 f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
@@ -144,32 +302,40 @@ class FunethSanity(FunTestScript):
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
 
-            topology = topology_helper.deploy()
-            fun_test.shared_variables["topology"] = topology
-            fun_test.test_assert(topology, "Topology deployed")
-            fs = topology.get_dut_instance(index=0)
+            if bootup_funos:
+                topology = topology_helper.deploy()
+                fun_test.shared_variables["topology"] = topology
+                fun_test.test_assert(topology, "Topology deployed")
+                fs = topology.get_dut_instance(index=0)
 
-            come = fs.get_come()
-            global DPC_PROXY_IP
-            global DPC_PROXY_PORT
-            DPC_PROXY_IP = come.host_ip
-            fun_test.shared_variables["come_ip"] = come.host_ip
-            DPC_PROXY_PORT = come.get_dpc_port(0)
-            DPC_PROXY_PORT2 = come.get_dpc_port(1)
+                come = fs.get_come()
+                global DPC_PROXY_IP
+                global DPC_PROXY_PORT
+                global DPC_PROXY_PORT2
+                DPC_PROXY_IP = come.host_ip
+                DPC_PROXY_PORT = come.get_dpc_port(0)
+                DPC_PROXY_PORT2 = come.get_dpc_port(1)
+                self.come_linux_obj = Linux(host_ip=come.host_ip,
+                                            ssh_username=come.ssh_username,
+                                            ssh_password=come.ssh_password)
+                fun_test.shared_variables["come_linux_obj"] = self.come_linux_obj
 
+        network_controller_obj_f1_0 = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
+                                                        verbose=True)
+        network_controller_obj_f1_1 = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT2,
+                                                        verbose=True)
+        fun_test.shared_variables['network_controller_obj'] = network_controller_obj_f1_0
+
+        # TODO: make it work for other setup
         if test_bed_type == 'fs-11' and control_plane:
-            funcp_obj = FunControlPlaneBringup(fs_name="fs-11")
-            funcp_obj.bringup_funcp(prepare_docker=False)
-            funcp_obj.assign_mpg_ips()
-            abstract_json_file_f1_0 = '{}/networking/tb_configs/FS11_F1_0.json'.format(SCRIPTS_DIR)
-            abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
-            funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
-                                            abstract_config_f1_1=abstract_json_file_f1_1)
-            fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
-            # TODO: sanity check of control plane
+            setup_funcp(test_bed_type)
 
         tb_config_obj = tb_configs.TBConfigs(TB)
-        funeth_obj = Funeth(tb_config_obj)
+        funeth_obj = Funeth(tb_config_obj,
+                            fundrv_branch=fundrv_branch,
+                            funsdk_branch=funsdk_branch,
+                            fundrv_commit=fundrv_commit,
+                            funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
@@ -179,9 +345,36 @@ class FunethSanity(FunTestScript):
         self.funsdk_commit, self.funsdk_bld, self.driver_commit, self.driver_bld = setup_hu_host(
             funeth_obj, update_driver=update_driver)
 
-        network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
-                                                   verbose=True)
-        fun_test.shared_variables['network_controller_obj'] = network_controller_obj
+        # HU host VMs
+        if hu_host_vm:
+            tb_config_obj_ul_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ul'))
+            tb_config_obj_ol_vm = tb_configs.TBConfigs(tb_configs.get_tb_name_vm(TB, 'ol'))
+            funeth_obj_ul_vm = Funeth(tb_config_obj_ul_vm,
+                                      fundrv_branch=fundrv_branch,
+                                      funsdk_branch=funsdk_branch,
+                                      fundrv_commit=fundrv_commit,
+                                      funsdk_commit=funsdk_commit)
+            funeth_obj_ol_vm = Funeth(tb_config_obj_ol_vm,
+                                      fundrv_branch=fundrv_branch,
+                                      funsdk_branch=funsdk_branch,
+                                      fundrv_commit=fundrv_commit,
+                                      funsdk_commit=funsdk_commit)
+            fun_test.shared_variables['funeth_obj_ul_vm'] = funeth_obj_ul_vm
+            fun_test.shared_variables['funeth_obj_ol_vm'] = funeth_obj_ol_vm
+
+            # start VMs
+            start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ul_vm)
+            start_vm(funeth_obj_hosts=funeth_obj, funeth_obj_vms=funeth_obj_ol_vm)
+            fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
+
+            setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
+
+            # Configure overlay
+            #configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+            #network_controller_obj_f1_0.disconnect()
+            #network_controller_obj_f1_1.disconnect()
+
         if test_bed_type == 'fs-11':
             nu = 'nu2'
             hu = 'hu2'
@@ -198,27 +391,43 @@ class FunethSanity(FunTestScript):
             topology = fun_test.shared_variables["topology"]
             topology.cleanup()
             try:
-                funeth_obj = fun_test.shared_variables['funeth_obj']
-                funeth_obj.cleanup_workspace()
-                fun_test.log("Collect syslog from HU hosts")
-                funeth_obj.collect_syslog()
-                fun_test.log("Collect dmesg from HU hosts")
-                funeth_obj.collect_dmesg()
-                fun_test.log("Unload funeth driver")
-                funeth_obj.unload()
-            except:
-                hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
-                for host_ip, host_info in hu_hosts.iteritems():
-                    host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
+                if hu_host_vm:
+                    funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ol_vm', 'funeth_obj']
+                else:
+                    funeth_obj_descs = ['funeth_obj', ]
+                for funeth_obj_desc in funeth_obj_descs:
+                    funeth_obj = fun_test.shared_variables[funeth_obj_desc]
+                    funeth_obj.cleanup_workspace()
+                    fun_test.log("Collect syslog from HU hosts")
+                    funeth_obj.collect_syslog()
+                    fun_test.log("Collect dmesg from HU hosts")
+                    funeth_obj.collect_dmesg()
+                    if cleanup:
+                        fun_test.log("Unload funeth driver")
+                        funeth_obj.unload()
 
-            if control_plane:
-                linux_obj = Linux(host_ip=fun_test.shared_variables["come_ip"], ssh_username='fun', ssh_password='123')
+                # Temp workaround to clean up idel ssh sessions
+                funeth_obj = fun_test.shared_variables['funeth_obj']
+                for nu in funeth_obj.nu_hosts:
+                    linux_obj = funeth_obj.linux_obj_dict[nu]
+                    if linux_obj.host_ip == 'poc-server-06':
+                        cmd = 'pkill sshd'
+                        fun_test.log("{} in {}".format(cmd, inux_obj.host_ip))
+                        linux_obj.command(cmd)
+            except:
+                if cleanup:
+                    hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
+                    for host_ip, host_info in hu_hosts.iteritems():
+                        host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
+
+            if control_plane and cleanup:
                 try:
-                    linux_obj.sudo_command('rmmod funeth')
-                    linux_obj.sudo_command('docker kill F1-0 F1-1')
-                    linux_obj.sudo_command('rm -fr /tmp/*')
+                    perf_utils.collect_funcp_logs(self.come_linux_obj)
+                    self.come_linux_obj.sudo_command('rmmod funeth')
+                    self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
+                    self.come_linux_obj.sudo_command('rm -fr /tmp/*')
                 except:
-                    linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
+                    self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
 def collect_stats(when='before'):
@@ -311,8 +520,7 @@ class FunethTestPacketSweep(FunTestCase):
         namespaces = [tb_config_obj.get_hu_pf_namespace(hu), tb_config_obj.get_hu_vf_namespace(hu)]
         interfaces = [tb_config_obj.get_hu_pf_interface(hu), tb_config_obj.get_hu_vf_interface(hu)]
         for namespace, interface in zip(namespaces, interfaces):
-            ns = None if namespace == 'default' else namespace
-            fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU, ns=ns),
+            fun_test.test_assert(linux_obj.set_mtu(interface, MAX_MTU, ns=namespace),
                                  'Set HU host {} interface {} MTU to {}'.format(hostname, interface, MAX_MTU))
 
         # FPG MTU
@@ -651,10 +859,46 @@ class FunethTestReboot(FunTestCase):
         hu = fun_test.shared_variables['sanity_hu']
         linux_obj = funeth_obj.linux_obj_dict[hu]
         hostname = tb_config_obj.get_hostname(hu)
-
-        fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot HU host {}'.format(hostname))
+        fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot HU host {}'.format(hostname))
+        fun_test.sleep("Sleeping for the host to come up from reboot", seconds=180)
         fun_test.test_assert(linux_obj.is_host_up(), 'HU host {} is up'.format(hostname))
         setup_hu_host(funeth_obj, update_driver=False)
+        verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
+
+
+class FunethTestComeReboot(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="Reboot COMe.",
+                              steps="""
+        1. Reboot Come.
+        2. Setup control plane.
+        3. From NU host, Ping HU host PF/VF interfaces.
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        funeth_obj = fun_test.shared_variables['funeth_obj']
+        nu = fun_test.shared_variables['sanity_nu']
+        hu = fun_test.shared_variables['sanity_hu']
+        linux_obj = fun_test.shared_variables["come_linux_obj"]
+        hostname = linux_obj.host_ip()
+        fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot COMe {}'.format(hostname))
+        fun_test.sleep("Sleeping for COMe to come up from reboot", seconds=180)
+        fun_test.test_assert(linux_obj.is_host_up(), 'Come {} is up'.format(hostname))
+
+        tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
+        pf_interface = tb_config_obj.get_hu_pf_interface(hu)
+        vf_interface = tb_config_obj.get_hu_vf_interface(hu)
+        verify_nu_hu_datapath(funeth_obj, interfaces_excludes=[pf_interface, vf_interface], nu=nu, hu=hu)
+
+        setup_funcp(fun_test.shared_variables["test_bed_type"])
+        #setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
 
 
@@ -670,6 +914,7 @@ if __name__ == "__main__":
             FunethTestInterfaceFlapVF,
             FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
             FunethTestReboot,
+            FunethTestComeReboot,
     ):
         ts.add_test_case(tc())
     ts.run()

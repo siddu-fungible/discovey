@@ -55,7 +55,7 @@ class FunTestCase1(FunTestCase):
                   "TAGS": tags}
 
         build_result = jenkins_manager.build(params=params, extra_emails=[
-            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com"],
+            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com,indrani.p@fungible.com "],
                                              wait_time_for_build_complete=25 * 60)
         fun_test.test_assert(build_result, "Build completed normally")
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
@@ -93,7 +93,7 @@ class FunTestCase2(FunTestCase):
                   "TAGS": tags}
 
         build_result = jenkins_manager.build(params=params, extra_emails=[
-            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com"],
+            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com,indrani.p@fungible.com "],
                                              wait_time_for_build_complete=25 * 60)
         fun_test.test_assert(build_result, "Build completed normally")
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")
@@ -131,7 +131,7 @@ class FunTestCase3(FunTestCase):
                   "TAGS": tags}
 
         build_result = jenkins_manager.build(params=params, extra_emails=[
-            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com"],
+            "john.abraham@fungible.com,team-regression@fungible.com,jitendra.lulla@fungible.com,renat.idrisov@fungible.com,ed.wimmers@fungible.com,indrani.p@fungible.com "],
                                              wait_time_for_build_complete=25 * 60)
         fun_test.test_assert(build_result, "Build completed normally")
         fun_test.test_assert_expected(actual=build_result.lower(), expected="success", message="Successfully built")

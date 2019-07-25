@@ -952,7 +952,7 @@ class SingleBLTFioRead(MultiBLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Random Read performance for 1 volumes on TCP "
+                              summary="Sequential Read performance for 1 volumes on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
         1. Create 1 BLT volumes on F1 attached

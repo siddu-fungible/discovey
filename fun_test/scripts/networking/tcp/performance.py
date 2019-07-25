@@ -12,10 +12,10 @@ import re
 network_controller_obj = None
 nu_lab_handle = None
 app = "tcp_server"
-host_name1 = "poc-server-06"
+host_name1 = "nu-lab-06"
 host_name2 = "nu-lab-04"
 hosts_json_file = ASSET_DIR + "/hosts.json"
-setup_fpg1_file = "setup_fpg1.sh"
+setup_fpg1_file = "setup_fpg12.sh"
 setup_fpg0_file = "fpg0.sh"
 setup_fpg1_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg1_file
 setup_fpg0_filepath = SCRIPTS_DIR + "/networking/tcp/configs/" + setup_fpg0_file
@@ -431,7 +431,7 @@ class TcpPerformance16Conn2Host(FunTestCase):
         host2_cmd_list = get_netperf_cmd_list(dip=test_parameters['dest_ip'],
                                               duration=test_parameters['duration'],
                                               num_flows=8,
-                                              start_core_id=0, end_core_id=7,
+                                              start_core_id=8, end_core_id=15,
                                               send_size=test_parameters['send_size'])
         fun_test.simple_assert(host2_cmd_list, 'Ensure netperf command formed')
 

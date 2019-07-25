@@ -8,6 +8,10 @@ import json
 import re
 
 
+NETWORK_PC_LIST = (1, 2)
+HU_ID_LIST = (1, 2, 3)
+
+
 def get_diff_stats(old_stats, new_stats):
     result = {}
     try:
@@ -183,6 +187,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             for i in fpg_interfaces:
                 fun_test.log('{} dpc: Get FPG stats'.format(f1))
                 r = nc_obj.peek_fpg_port_stats(port_num=i)
+                output_list.append({'FPG{}'.format(i): r})
                 # TODO: handle None
                 #if not r:
                 #    r = [{}]
@@ -210,6 +215,12 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
         output = nc_obj.peek_vp_packets()
         output_list.append({'VP': output})
+
+        # Per VP stats
+        for pc_id in NETWORK_PC_LIST:
+            fun_test.log('{} dpc: Get per VP pkts stats from PC {}'.format(f1, pc_id))
+            output = nc_obj.peek_per_vppkts_stats(pc_id)
+            output_list.append({'Per VP for PC {}'.format(pc_id): output})
 
         # NWQM
         #fun_test.log('{} dpc: Get NWQM stats'.format(f1))
@@ -263,7 +274,7 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output_list.append({'EQM': eqm_output})
 
         # Check VP stuck
-        for pc_id in (1, 2):
+        for pc_id in NETWORK_PC_LIST:
             fun_test.log('{} dpc: Get resource PC {} stats'.format(f1, pc_id))
             output = nc_obj.peek_resource_pc_stats(pc_id=pc_id)
             output_list.append({'resource pc {}'.format(pc_id): output})
@@ -300,6 +311,11 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
                             nc_obj.debug_backtrace(vp_no=vp_no)
                         else:
                             fun_test.log('{} dpc: flow blocked {} {} has no callee_dest'.format(f1, hu_fn, flow_t))
+
+        # Flow list
+        for huid in HU_ID_LIST:
+            output = nc_obj.flow_list(huid=huid)
+            output_list.append({'flow list {}'.format(huid): output})
 
         # Upload stats output file
         dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
@@ -538,3 +554,45 @@ def mlx5_irq_affinity(linux_obj):
         cmds_chg.append('echo 7f00 > /proc/irq/{}/smp_affinity'.format(i))
     linux_obj.sudo_command(';'.join(cmds_chg))
     linux_obj.command(';'.join(cmds_cat))
+
+
+def redis_del_fcp_ftep(linux_obj):
+    """In redis, delete FCP FTEP to tear down FCP tunnel."""
+    # TODO: make it setup independent
+    ftep_dict = {
+        'F1-0': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.2']",
+        'F1-1': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']",
+    }
+    for k in ftep_dict:
+        cmd_prefix = 'docker exec {} bash -c'.format(k)
+        cmd_op = 'DEL {}'.format(ftep_dict[k])
+        cmd_chk = 'KEYS *fcp-tunnel*'
+
+        # op
+        cmds = ['SELECT 1', cmd_op]
+        linux_obj.command('{} "touch del"'.format(cmd_prefix))
+        for cmd in cmds:
+            linux_obj.command('{} "echo {} > del"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "redis-cli < del"'.format(cmd_prefix))
+
+        # check
+        cmds = ['SELECT 1', cmd_chk]
+        linux_obj.command('{} touch check'.format(cmd_prefix))
+        for cmd in cmds:
+            linux_obj.command('{} "echo {} > check"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
+
+
+def collect_funcp_logs(linux_obj, path='/scratch'):
+    """Populate the FunCP log files to job log dir"""
+    output = linux_obj.command('ls -l {}/*.log'.format(path))
+    log_files = re.findall(r'(\S+.log)', output)
+    for log_file in log_files:
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(
+            post_fix_name='{}_{}.txt'.format(linux_obj.host_ip, log_file))
+        fun_test.scp(source_ip=linux_obj.host_ip,
+                     source_file_path='{}/{}'.format(path, log_file),
+                     source_username=linux_obj.ssh_username,
+                     source_password=linux_obj.ssh_password,
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(log_file), filename=artifact_file_name)

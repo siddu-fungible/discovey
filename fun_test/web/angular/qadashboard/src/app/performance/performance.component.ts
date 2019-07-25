@@ -1,4 +1,4 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, Injector, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
@@ -6,6 +6,7 @@ import {CommonService} from "../services/common/common.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
+import {PerformanceService} from "./performance.service";
 
 
 class ChildInfo {
@@ -45,6 +46,9 @@ class Node {
   positive: boolean = true;
   workInProgress: boolean = false;
   tags: string = null;
+  companionCharts: number[] = null;
+  chartInfo: any = null;
+  pastStatus: any = null;
 }
 
 class FlatNode {
@@ -64,6 +68,8 @@ class FlatNode {
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
   }
+
+
 }
 
 enum Mode {
@@ -102,6 +108,7 @@ export class PerformanceComponent implements OnInit {
   miniGridMaxWidth: string;
   miniGridMaxHeight: string;
   status: string = null;
+  flatNodesMap: any = {};
 
   currentRegressionUrl: string = null;
   currentJenkinsUrl: string = null;
@@ -120,9 +127,9 @@ export class PerformanceComponent implements OnInit {
   passedDateTime: string = null;
   gitDiagnose: boolean = false;
 
-  lsfUrl: string = "http://palladium-jobs.fungible.local:8080/job/";
-  jenkinsUrl: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
-  regressionUrl: string = "/regression/suite_detail/";
+  static LSF_BASE_URL: string = "http://palladium-jobs.fungible.local:8080/job/";
+  static JENKINS_BASE_URL: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
+  static REGRESSION_BASE_URL: string = "/regression/suite_detail/";
 
   globalSettings: any = null;
   toolTipMessage: string = null;
@@ -158,7 +165,9 @@ export class PerformanceComponent implements OnInit {
     private title: Title,
     private commonService: CommonService,
     private activatedRoute: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private renderer: Renderer2,
+    private service: PerformanceService
   ) {
   }
 
@@ -274,7 +283,8 @@ export class PerformanceComponent implements OnInit {
           }
 
         }
-      })
+      });
+
     }, error => {
       this.loggerService.error("fetchDag");
     });
@@ -297,11 +307,13 @@ export class PerformanceComponent implements OnInit {
     statusNode.hide = false;
     statusNode.special = true;
     this.flatNodes.push(statusNode);
+    this.flatNodesMap[statusNode.gUid] = statusNode;
     for (let child in statusFlatNode) {
       let statusChild = statusFlatNode[child];
       statusChild.indent = 1;
       statusNode.addChild(statusChild);
       this.flatNodes.push(statusChild);
+      this.flatNodesMap[statusChild.gUid] = statusChild;
     }
   }
 
@@ -323,6 +335,7 @@ export class PerformanceComponent implements OnInit {
     node.showAddJira = false;
     node.positive = dagEntry.positive;
     node.workInProgress = dagEntry.work_in_progress;
+    node.companionCharts = dagEntry.companion_charts;
     if (metricId in this.tagsForId) {
       node.tags = this.tagsForId[metricId];
     }
@@ -362,18 +375,13 @@ export class PerformanceComponent implements OnInit {
 
   expandFromLineage(parent): void {
     this.chartReady = false;
-    for (let flatNode of this.flatNodes) {
-      let node = flatNode.node;
-      if (Number(parent.guid) === flatNode.gUid) {
-        this.expandNode(flatNode);
-        if (node.metricModelName === 'MetricContainer') {
-          this.showNonAtomicMetric(flatNode);
-          break;
-        } else {
-          this.showAtomicMetric(flatNode);
-          break;
-        }
-      }
+    let flatNode = this.flatNodesMap[parent.guid];
+    let node = flatNode.node;
+    this.expandNode(flatNode);
+    if (node.metricModelName === 'MetricContainer') {
+      this.showNonAtomicMetric(flatNode);
+    } else {
+      this.showAtomicMetric(flatNode);
     }
     this.chartReady = true;
   }
@@ -540,6 +548,7 @@ export class PerformanceComponent implements OnInit {
     }
     this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
     this.flatNodes.push(thisFlatNode);
+    this.flatNodesMap[thisFlatNode.gUid] = thisFlatNode;
     //this.loggerService.log('Node:' + nodeInfo.chart_name);
     let parentsGuid = {};
     parentsGuid["guid"] = thisFlatNode.gUid;
@@ -821,13 +830,13 @@ export class PerformanceComponent implements OnInit {
     this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
       let result = data.data;
       if (result.last_suite_execution_id && result.last_suite_execution_id !== -1) {
-        this.currentRegressionUrl = this.regressionUrl + result.last_suite_execution_id;
+        this.currentRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.last_suite_execution_id;
       }
       if (result.last_jenkins_job_id && result.last_jenkins_job_id !== -1) {
-        this.currentJenkinsUrl = this.jenkinsUrl + result.last_jenkins_job_id;
+        this.currentJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.last_jenkins_job_id;
       }
       if (result.last_lsf_job_id && result.last_lsf_job_id !== -1) {
-        this.currentLsfUrl = this.lsfUrl + result.last_lsf_job_id;
+        this.currentLsfUrl = PerformanceComponent.LSF_BASE_URL + result.last_lsf_job_id;
       }
       if (result.last_git_commit && result.last_git_commit !== "") {
         this.currentGitCommit = result.last_git_commit;
@@ -843,13 +852,13 @@ export class PerformanceComponent implements OnInit {
         this.failedDateTime = result.failed_date_time;
       }
       if (result.failed_suite_execution_id && result.failed_suite_execution_id !== -1) {
-        this.failedRegressionUrl = this.regressionUrl + result.failed_suite_execution_id;
+        this.failedRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.failed_suite_execution_id;
       }
       if (result.failed_jenkins_job_id && result.failed_jenkins_job_id !== -1) {
-        this.failedJenkinsUrl = this.jenkinsUrl + result.failed_jenkins_job_id;
+        this.failedJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.failed_jenkins_job_id;
       }
       if (result.failed_lsf_job_id && result.failed_lsf_job_id !== -1) {
-        this.failedLsfUrl = this.lsfUrl + result.failed_lsf_job_id;
+        this.failedLsfUrl = PerformanceComponent.LSF_BASE_URL + result.failed_lsf_job_id;
       }
       if (result.failed_git_commit && result.failed_git_commit !== "") {
         this.failedGitCommit = result.failed_git_commit;
@@ -858,13 +867,13 @@ export class PerformanceComponent implements OnInit {
         this.passedDateTime = result.passed_date_time;
       }
       if (result.passed_suite_execution_id && result.passed_suite_execution_id !== -1) {
-        this.passedRegressionUrl = this.regressionUrl + result.passed_suite_execution_id;
+        this.passedRegressionUrl = PerformanceComponent.REGRESSION_BASE_URL + result.passed_suite_execution_id;
       }
       if (result.passed_jenkins_job_id && result.passed_jenkins_job_id !== -1) {
-        this.passedJenkinsUrl = this.jenkinsUrl + result.passed_jenkins_job_id;
+        this.passedJenkinsUrl = PerformanceComponent.JENKINS_BASE_URL + result.passed_jenkins_job_id;
       }
       if (result.passed_lsf_job_id && result.passed_lsf_job_id !== -1) {
-        this.passedLsfUrl = this.lsfUrl + result.passed_lsf_job_id;
+        this.passedLsfUrl = PerformanceComponent.LSF_BASE_URL + result.passed_lsf_job_id;
       }
       if (result.passed_git_commit && result.passed_git_commit !== "") {
         this.passedGitCommit = result.passed_git_commit;
@@ -931,6 +940,25 @@ export class PerformanceComponent implements OnInit {
     });
   };
 
+  fetchChartInfo(flatNode) {
+    if (flatNode.node.leaf && (!flatNode.node.chartInfo || !flatNode.node.pastStatus)) {
+      this.service.chartInfo(flatNode.node.metricId).subscribe((response) => {
+        flatNode.node.chartInfo = response;
+        this.service.pastStatus(flatNode.node.metricId).subscribe((response) => {
+          flatNode.node.pastStatus = response;
+        }, error => {
+          console.error("Unable to fetch past status"); //TODO
+        })
+
+      }, error => {
+        console.error("Unable to fetch chartInfo");
+      })
+
+    }
+
+  }
+
+
   showAtomicMetric = (flatNode) => {
     this.chartReady = false;
     if (this.currentNode && this.currentNode.showAddJira) {
@@ -951,6 +979,7 @@ export class PerformanceComponent implements OnInit {
     this.commonService.scrollTo("chart-info");
     this.chartReady = true;
     this.navigateByQuery(flatNode);
+    this.fetchChartInfo(flatNode);
 
   };
 
@@ -969,6 +998,9 @@ export class PerformanceComponent implements OnInit {
       }
       this.showBugPanel = false;
       this.currentNode = flatNode.node;
+      if (this.currentNode && this.currentNode.companionCharts) {
+        this.currentNode.companionCharts = [...this.currentNode.companionCharts];
+      }
       this.currentFlatNode = flatNode;
       this.mode = Mode.ShowingNonAtomicMetric;
       this.expandNode(flatNode);
@@ -982,6 +1014,7 @@ export class PerformanceComponent implements OnInit {
     }
     if (!flatNode.special)
       this.navigateByQuery(flatNode);
+    this.fetchChartInfo(flatNode);
   };
 
   navigateByQuery(flatNode) {
@@ -1068,7 +1101,71 @@ export class PerformanceComponent implements OnInit {
     if (value) {
       this.showBugPanel = false;
     }
-
   }
+
+  static _tooltipInfoElementHelper(self, text, baseUrl, jobId) {
+    let urlElement = self.renderer.createElement('a');
+    let url = baseUrl + jobId;
+    self.renderer.setProperty(urlElement, "href", url);
+    self.renderer.setProperty(urlElement, "target", "_blank");
+    let textElement = self.renderer.createText(text);
+    self.renderer.appendChild(urlElement, textElement);
+    return urlElement;
+  }
+
+  static _tooltipInfoHelper(self, header, headerValue, lsfJobId, jenkinsJobId, regressionJobId) {
+    let divElement = self.renderer.createElement('div');
+    let headerElement = self.renderer.createElement('b');
+    self.renderer.appendChild(headerElement, self.renderer.createText(header));
+    if (headerValue) {
+      self.renderer.appendChild(headerElement, self.renderer.createText(headerValue));
+    }
+
+    let lsfElement = PerformanceComponent._tooltipInfoElementHelper(self, "LSF log", PerformanceComponent.LSF_BASE_URL, lsfJobId);
+    let jenkinsElement = PerformanceComponent._tooltipInfoElementHelper(self, "Jenkins log", PerformanceComponent.JENKINS_BASE_URL, jenkinsJobId);
+    let regressionElement = PerformanceComponent._tooltipInfoElementHelper(self, "Regression log", PerformanceComponent.REGRESSION_BASE_URL, regressionJobId);
+
+    let elements = [headerElement, lsfElement, jenkinsElement, regressionElement];
+    for (let element of elements) {
+      let br = self.renderer.createElement('br');
+      self.renderer.appendChild(element, br);
+      self.renderer.appendChild(divElement, element);
+    }
+    return divElement;
+  }
+
+  tooltipCallback(self, flatNode) {
+    let content = this.renderer.createElement("span");
+    if (!flatNode.node.chartInfo || !flatNode.node.pastStatus) {
+      const text = this.renderer.createText("Data not yet available. Try again in 10 seconds");
+      this.renderer.appendChild(content, text);
+    } else {
+
+      let passedElement = PerformanceComponent._tooltipInfoHelper(this, "Last passed:",
+        this.commonService.getPrettyLocalizeTime(flatNode.node.pastStatus.passedDateTime),
+        flatNode.node.pastStatus.passedLsfJobId,
+        flatNode.node.pastStatus.passedJenkinsJobId,
+        flatNode.node.pastStatus.passedSuiteExecutionId);
+      this.renderer.appendChild(content, passedElement);
+
+      let currentFailedElement = PerformanceComponent._tooltipInfoHelper(this, "Current failure:",
+        "",
+        flatNode.node.chartInfo.lastLsfJobId,
+        flatNode.node.chartInfo.lastJenkinsJobId,
+        flatNode.node.chartInfo.lastSuiteExecutionId);
+      this.renderer.appendChild(content, currentFailedElement);
+
+      let firstFailedElement = PerformanceComponent._tooltipInfoHelper(this, "First failure:",
+        this.commonService.getPrettyLocalizeTime(flatNode.node.pastStatus.failedDateTime),
+        flatNode.node.chartInfo.failedLsfJobId,
+        flatNode.node.chartInfo.failedJenkinsJobId,
+        flatNode.node.chartInfo.failedSuiteExecutionId);
+      this.renderer.appendChild(content, firstFailedElement);
+
+
+    }
+    return content;
+  }
+
 
 }

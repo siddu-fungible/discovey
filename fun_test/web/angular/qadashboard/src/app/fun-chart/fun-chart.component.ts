@@ -22,6 +22,10 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
   @Output() pointInfo: EventEmitter<any> = new EventEmitter();
+  @Input() enableLegend: boolean = true;
+  @Input() backgroundColor: string = null;
+  @Input() seriesColors: string[] = null;
+
   chart: any;
   point: any = null;
 
@@ -46,13 +50,19 @@ export class FunChartComponent implements OnInit, OnChanges {
           categories: this.xValues,
           labels: {
             formatter: function () {
-              return self.xAxisFormatter(this.value);
+              if (self.xAxisFormatter)
+                return self.xAxisFormatter(this.value);
+              else
+                return this.value;
             }
           },
         },
         tooltip: {
           formatter: function () {
-            return self.tooltipFormatter(this.x, this.y);
+            if (self.tooltipFormatter)
+              return self.tooltipFormatter(this.x, this.y, this.point.metaData);
+            else
+              return this.y;
           }
         },
         yAxis: {
@@ -77,7 +87,7 @@ export class FunChartComponent implements OnInit, OnChanges {
               events: {
                 select: function () {
                   if (self.pointClickCallback) {
-                    self.point = self.pointClickCallback(this.category, this.y);
+                    self.point = self.pointClickCallback(this.category, this.y, this.metaData);
                     self.pointInfo.emit(self.point);
                   }
                 }
@@ -126,14 +136,22 @@ export class FunChartComponent implements OnInit, OnChanges {
           }
         }
       }
-    }
-    else if (this.chartType === 'vertical_colored_bar_chart') {
+      if (this.backgroundColor) {
+        chartOptions.chart["backgroundColor"] = this.backgroundColor;
+      }
+      if (this.seriesColors) {
+        chartOptions.colors = this.seriesColors;
+        chartOptions.plotOptions.series["lineWidth"] = 1.5;
+      }
+    } else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
         chart: {
           type: "column"
         },
         title: {
-          text: this.title
+          text: this.title,
+          useHTML: true
+
         },
         xAxis: {
           categories: this.xValues,
@@ -150,7 +168,8 @@ export class FunChartComponent implements OnInit, OnChanges {
           },
         },
         legend: {
-          reversed: true
+          reversed: true,
+          enabled: this.enableLegend
         },
         plotOptions: {
           series: {

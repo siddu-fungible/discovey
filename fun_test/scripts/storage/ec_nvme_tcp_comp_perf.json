@@ -6,7 +6,7 @@
     "num_ssd": 6,
     "num_volume": 1,
     "command_timeout": 5,
-    "reboot_timeout": 300,
+    "reboot_timeout": 360,
     "ethernet_adapter": "Mellanox",
     "csr_network": {
       "0": {
@@ -59,7 +59,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1,
       "compress": true,
-      "zip_effort": "ZIP_EFFORT_AUTO",
+      "zip_effort": "ZIP_EFFORT_64Gbps",
       "zip_filter": "FILTER_TYPE_DEFLATE"
     },
     "command_timeout": 30,

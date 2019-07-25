@@ -5,12 +5,13 @@ import re
 
 class ApcPdu():
     PROMPT = "apc>"
+
     def __init__(self, host_ip, username, password, port=23, context=None):
         self.host_ip = host_ip
-        self.username = username
-        self.password = password
+        self.username = str(username)
+        self.password = str(password)
         self.logged_in = None
-        self.port = port
+        self.port = int(port)
         self.handle = None
         self.context = context
 
@@ -77,3 +78,9 @@ class ApcPdu():
         if re.search(r'Outlet\s+' + outlet_number + r'.*On', status):
             result = True
         return result
+
+if __name__ == "__main__":
+    import json
+    d = {"host_ip":"10.1.105.249", "username": "localadmin", "password":"Precious1*"}
+    a = ApcPdu(**json.loads(json.dumps(d)))
+    a.outlet_status("1")

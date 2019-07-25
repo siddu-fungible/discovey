@@ -1,3 +1,5 @@
+from fun_global import Codes
+
 class SchedulingType:
     ASAP = "asap"
     PERIODIC = "periodic"  # Like Monday, Tuesdays at 1PM
@@ -9,7 +11,7 @@ class SchedulingType:
         return [SchedulingType.PERIODIC, SchedulingType.REPEAT, SchedulingType.TODAY]
 
 
-class SchedulerStates:
+class SchedulerStates(Codes):
     SCHEDULER_STATE_UNKNOWN = "SCHEDULER_STATE_UNKNOWN"
     SCHEDULER_STATE_STARTING = "SCHEDULER_STATE_STARTING"
     SCHEDULER_STATE_RUNNING = "SCHEDULER_STATE_RUNNING"
@@ -17,6 +19,7 @@ class SchedulerStates:
     SCHEDULER_STATE_RESTARTING = "SCHEDULER_STATET_RESTARTING"
     SCHEDULER_STATE_STOPPED = "SCHEDULER_STATE_STOPPED"
     SCHEDULER_STATE_STOPPING = "SCHEDULER_STATE_STOPPING"
+    SCHEDULER_STATE_PAUSED = "SCHEDULER_STATE_PAUSED"
 
 
 class SuiteType:
@@ -66,3 +69,8 @@ class JobStatusType:
     @staticmethod
     def is_completed(state):
         return state <= JobStatusType.COMPLETED
+
+
+class SchedulerDirectiveTypes(Codes):
+    PAUSE_QUEUE_WORKER = 1
+    UNPAUSE_QUEUE_WORKER = 2

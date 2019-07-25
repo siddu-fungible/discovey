@@ -52,6 +52,7 @@ class TopologyHelper:
                 self.spec = spec
 
         self.expanded_topology = ExpandedTopology(spec=self.spec)
+        fun_test.register_topologies(self.expanded_topology)
         spec = self.spec
 
         disabled_hosts = spec.get("disabled_hosts", [])
@@ -236,6 +237,8 @@ class TopologyHelper:
             while not dut_ready_timer.is_expired() and not dut_ready:
                 dut_instance = dut_obj.get_instance()
                 dut_ready = dut_instance.is_ready()
+                fun_test.simple_assert(not dut_instance.is_boot_up_error(), "bootup error")
+
                 fun_test.sleep("DUT: {} readiness check. Remaining time: {}".format(dut_index, dut_ready_timer.remaining_time()))
                 dut_instance.post_bootup()
             fun_test.test_assert(dut_ready, "DUT: {} ready".format(dut_index))
@@ -246,14 +249,20 @@ class TopologyHelper:
                 if peer:
                     if peer.type == peer.END_POINT_TYPE_BARE_METAL:
                         host_ready_max_wait_time = 360
+                        try:
+                            extra_attributes = peer.get_host_instance().extra_attributes
+                            if extra_attributes:
+                                host_ready_max_wait_time = extra_attributes.get("reboot_time", host_ready_max_wait_time)
+                                fun_test.log("Setting custom reboot time for host: {}".format(peer.get_instance()))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                         host_ready_timer = FunTimer(max_time=host_ready_max_wait_time)
                         host_is_ready = False
                         while not host_is_ready and not host_ready_timer.is_expired():
                             host_is_ready = peer.is_ready(max_wait_time=host_ready_max_wait_time)
-                            fun_test.sleep("Host: {} readiness check. Remaining time: {}".format(peer.get_instance(),
-                                                                                                 host_ready_timer.remaining_time()))
+                            fun_test.sleep("Host: {} readiness check. Remaining time: {}: Host ready: {}".format(peer.get_instance(), host_ready_timer.remaining_time(), host_is_ready))
 
-                        fun_test.test_assert(not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
+                        fun_test.test_assert(host_is_ready or not host_ready_timer.is_expired(), "Host: {} ready".format(str(peer.get_instance())))
                         """
                         host_instance = peer_info.get_host_instance()
                         ipmi_details = None

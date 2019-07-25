@@ -65,6 +65,15 @@ IPSEC_DEC_MULTI_TUNNEL = "ipsec_dec_multi_tunnel_teramark"
 VOLTEST_LSV = "qa_voltest_lsv_performance"
 VOLTEST_LSV_4 = "qa_voltest_lsv_4_performance"
 CHANNEL_PARALL = "qa_channel_parall"
+SOAK_FLOWS_BUSY_LOOP = "qa_soak_flows_busy_loop"
+SOAK_FLOWS_MEMCPY = "qa_soak_flows_memcpy_non_coh"
+
+VOLTEST_BLT_1 = "qa_voltest_blt_performance"
+VOLTEST_BLT_8 = "qa_voltest_blt_8_performance"
+VOLTEST_BLT_12 = "qa_voltest_blt_12_performance"
+TERAMARK_EC_S1 = "qa_s1_ec_teramark"
+TERAMARK_JPEG_S1 = "qa_s1_jpeg_teramark"
+TERAMARK_ZIP_S1 = "qa_s1_zip_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -76,7 +85,7 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 networking_models = ["HuThroughputPerformance", "HuLatencyPerformance", "TeraMarkFunTcpThroughputPerformance",
                      "NuTransitPerformance", "TeraMarkJuniperNetworkingPerformance", "HuLatencyUnderLoadPerformance",
-                     "TeraMarkFunTcpConnectionsPerSecondPerformance"]
+                     "TeraMarkFunTcpConnectionsPerSecondPerformance", "AlibabaRdmaPerformance"]
 
 
 def get_rounded_time():
@@ -170,7 +179,8 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            hardware_version="",
                            completion_date=completion_date,
                            build_properties="", lsf_job_id="",
-                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
+                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id,
+                           add_associated_suites=False)
 
 
 class MyScript(FunTestScript):
@@ -190,7 +200,8 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_READ_ALL, RCNVME_WRITE_ALL,
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
-                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL]
+                VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
+                VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_S1]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -592,7 +603,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         reset_cut_done = False
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
+            log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
             fun_test.test_assert(log, "fetched boot time uart log")
             log = log.split("\n")
             for line in log:
@@ -684,7 +695,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
                         metrics["output_boot_success_boot_time_unit"] = "msecs"
 
-            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
+            log = self.lsf_status_server.get_human_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
             fun_test.test_assert(log, "fetched mmc time uart log")
             log = log.split("\n")
             for line in log:
@@ -926,9 +937,29 @@ class FlowTestPerformanceTc(PalladiumPerformanceTc):
                               summary="Flow Test Performance",
                               steps="Steps 1")
 
+    def run(self):
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            lines = self.lsf_status_server.get_human_file(job_id=self.job_id, console_name="PCI Script Output")
+            self.lines = lines.split("\n")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt, platform=self.platform)
+
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=self.model, platform=self.platform)
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 
 class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_ZIP
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=21,
@@ -937,6 +968,7 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
 
     def run(self):
         metrics = collections.OrderedDict()
+        metrics['input_platform'] = self.platform
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             teramark_begin = False
@@ -1002,6 +1034,7 @@ class TeraMarkDfaPerformanceTc(PalladiumPerformanceTc):
 
 class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=23,
@@ -1047,6 +1080,7 @@ class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
 
                         try:
                             metrics = {}
+                            metrics['input_platform'] = self.platform
                             if not compression_ratio_found:
                                 if d["Operation"] in jpeg_operations:
                                     metrics["input_operation"] = jpeg_operations[d["Operation"]]
@@ -1460,6 +1494,7 @@ class VoltestLsvPerformanceTc(PalladiumPerformanceTc):
                               summary="Voltest LSV Performance with numinstance 1",
                               steps="Steps 1")
 
+
 class VoltestLsv4PerformanceTc(PalladiumPerformanceTc):
     tag = VOLTEST_LSV_4
     model = "VoltestLsv4Performance"
@@ -1479,6 +1514,61 @@ class ChannelParallPerformanceTc(PalladiumPerformanceTc):
     def describe(self):
         self.set_test_details(id=58,
                               summary="Channel parall Performance on F1",
+                              steps="Steps 1")
+
+
+class SoakFlowsBusyLoopPerformanceTc(PalladiumPerformanceTc):
+    tag = SOAK_FLOWS_BUSY_LOOP
+    model = "SoakFlowsBusyLoop10usecs"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=59,
+                              summary="soak flows busy loop 10 usecs performance",
+                              steps="Steps 1")
+
+
+class SoakFlowsMemcpy1MbNonCohPerformanceTc(PalladiumPerformanceTc):
+    tag = SOAK_FLOWS_MEMCPY
+    model = "SoakFlowsMemcpy1MBNonCoh"
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=60,
+                              summary="soak flows memcpy 1MB non coh performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt1PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_1
+    model = 'VoltestBlt1Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=61,
+                              summary="Voltest instance 1 BLT performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt8PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_8
+    model = 'VoltestBlt8Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=62,
+                              summary="Voltest instance 8 BLT performance",
+                              steps="Steps 1")
+
+
+class VoltestBlt12PerformanceTc(PalladiumPerformanceTc):
+    tag = VOLTEST_BLT_12
+    model = 'VoltestBlt12Performance'
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=63,
+                              summary="Voltest instance 12 BLT performance",
                               steps="Steps 1")
 
 
@@ -1541,5 +1631,10 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestLsvPerformanceTc())
     myscript.add_test_case(VoltestLsv4PerformanceTc())
     myscript.add_test_case(ChannelParallPerformanceTc())
+    myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
+    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
+    myscript.add_test_case(VoltestBlt1PerformanceTc())
+    myscript.add_test_case(VoltestBlt8PerformanceTc())
+    myscript.add_test_case(VoltestBlt12PerformanceTc())
 
     myscript.run()

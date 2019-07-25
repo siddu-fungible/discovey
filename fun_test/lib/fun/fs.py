@@ -53,6 +53,7 @@ class BootPhases:
     U_BOOT_COMPLETE = "u-boot: complete"
 
     FS_BRING_UP_INIT = "FS_BRING_UP_INIT"
+    FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE = "FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE"
     FS_BRING_UP_BMC_INITIALIZE = "FS_BRING_UP_BMC_INITIALIZE"
     FS_BRING_UP_FPGA_INITIALIZE = "FS_BRING_UP_FPGA_INITIALIZE"
     FS_BRING_UP_U_BOOT = "FS_BRING_UP_U_BOOT"
@@ -61,6 +62,7 @@ class BootPhases:
     FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
     FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD = "FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
+    FS_BRING_UP_ERROR = "FS_BRING_UP_ERROR"
 
 
 
@@ -82,12 +84,15 @@ class Fpga(Linux):
         result = True
         return result
 
-    def reset_f1(self, f1_index):
-        self.command("./f1reset -s {0} 0; sleep 2; ./f1reset -s {0} 1".format(f1_index))
+    def reset_f1(self, f1_index, keep_low=False):
+        self.command("./f1reset -s {0} 0; sleep 2;".format(f1_index))
+        if not keep_low:
+            self.command("./f1reset -s {0} 1".format(f1_index))
         output = self.command("./f1reset -g")
-        fun_test.simple_assert(expression="F1_{} is out of reset".format(f1_index) in output,
-                               message="F1 {} out of reset".format(f1_index),
-                               context=self.context)
+        if not keep_low:
+            fun_test.simple_assert(expression="F1_{} is out of reset".format(f1_index) in output,
+                                   message="F1 {} out of reset".format(f1_index),
+                                   context=self.context)
 
     def _set_term_settings(self):
         self.command("stty cols %d" % 1024)
@@ -167,6 +172,33 @@ class Bmc(Linux):
         }
         return ipmi_details
 
+    def come_power_cycle(self):
+        ipmi_details = self._get_ipmi_details()
+        ipmi_host_ip = ipmi_details["host_ip"]
+        ipmi_username = ipmi_details["username"]
+        ipmi_password = ipmi_details["password"]
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        power_on_result = False
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        else:
+            fun_test.log("Regression service host could not be instantiated. Trying BMC")
+            service_host = self
+
+        try:
+            service_host.ipmi_power_off(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+            fun_test.log("IPMI power-cycle off complete")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        try:
+            power_on_result = service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+            fun_test.log("IPMI power-cycle on complete")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        fun_test.simple_assert(power_on_result, "IPMI power on")
+        return True
+
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         ipmi_details = self._get_ipmi_details()
@@ -182,14 +214,10 @@ class Bmc(Linux):
         fun_test.test_assert(expression=reboot_result,
                              message="ComE reboot {}".format(reboot_info_string),
                              context=self.context)
-        # if not non_blocking:
-        #    fun_test.test_assert(self.ensure_come_is_up(come=come, max_wait_time=max_wait_time, power_cycle=power_cycle), "Ensure ComE is up")
-
         return True
 
-    def ensure_come_is_up(self, come, max_wait_time=240, power_cycle=True):
-        come_up = False
-        come_up = come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=self._get_ipmi_details())
+    def ensure_come_is_up(self, come, max_wait_time=300, power_cycle=True):
+        come_up = come.ensure_host_is_up(max_wait_time=max_wait_time, ipmi_details=self._get_ipmi_details(), power_cycle=power_cycle)
         return come_up
 
     def set_boot_phase(self, index, phase):
@@ -205,7 +233,7 @@ class Bmc(Linux):
         fun_test.log(message=output, context=self.context)
         if expected:
             fun_test.simple_assert(expression=expected in output,
-                                   message="{} not in output".format(expected),
+                                   message="{} in output".format(expected),
                                    context=self.context)
         output = nc.close()
         self.u_boot_logs[f1_index] += output
@@ -386,7 +414,7 @@ class Bmc(Linux):
     def _get_context_prefix(self, data):
         s = "{}".format(data)
         if self.original_context_description:
-            s = "{} {}".format(self.original_context_description, data)
+            s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
     def cleanup(self):
@@ -400,7 +428,7 @@ class Bmc(Linux):
                 self.kill_process(signal=15, process_id=int(log_listener_process))
                 self.kill_process(signal=9, process_id=log_listener_process)
 
-                artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
                 fun_test.scp(source_ip=self.host_ip,
                              source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
                              source_username=self.ssh_username,
@@ -450,20 +478,28 @@ class ComEInitializationWorker(Thread):
         self.fs = fs
 
     def run(self):
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
-        come = self.fs.get_come()
-        bmc = self.fs.get_bmc()
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
-        fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True),
-                             message="Ensure ComE is up",
-                             context=self.fs.context)
+        try:
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
+            come = self.fs.get_come()
+            bmc = self.fs.get_bmc()
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
+            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
+                                 message="Ensure ComE is up",
+                                 context=self.fs.context)
 
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-        fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
-                             message="ComE initialized",
-                             context=self.fs.context)
-        self.fs.come_initialized = True
-        self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+            fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
+                                 message="ComE initialized",
+                                 context=self.fs.context)
+
+            if self.fs.fun_cp_callback:
+                fun_test.log("Calling fun CP callback from Fs")
+                self.fs.fun_cp_callback(self.fs.get_come())
+            self.fs.come_initialized = True
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+        except Exception as ex:
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
+            raise ex
 
 
 class ComE(Linux):
@@ -613,14 +649,14 @@ class ComE(Linux):
     def _get_context_prefix(self, data):
         s = "{}".format(data)
         if self.original_context_description:
-            s = "{} {}".format(self.original_context_description, data)
+            s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
     def cleanup(self):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_dpc_log.txt".format(f1_index))
+            artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
                                         filename=artifact_file_name)
@@ -689,7 +725,9 @@ class Fs(object, ToDictMixin):
                  non_blocking=None,
                  context=None,
                  setup_bmc_support_files=None,
-                 apc_info=None):
+                 apc_info=None,
+                 fun_cp_callback=None,
+                 skip_funeth_come_power_cycle=None):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -712,11 +750,13 @@ class Fs(object, ToDictMixin):
         self.f1_parameters = f1_parameters
         self.gateway_ip = gateway_ip
         self.retimer_workround = retimer_workaround
+        self.skip_funeth_come_power_cycle = skip_funeth_come_power_cycle
         self.non_blocking = non_blocking
         self.context = context
         self.set_boot_phase(BootPhases.FS_BRING_UP_INIT)
         self.apc_info = apc_info
         self.original_context_description = None
+        self.fun_cp_callback = fun_cp_callback
         if self.context:
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
@@ -775,7 +815,9 @@ class Fs(object, ToDictMixin):
             f1_parameters=None,
             non_blocking=None,
             context=None,
-            setup_bmc_support_files=None):  #TODO
+            setup_bmc_support_files=None,
+            fun_cp_callback=None,
+            power_cycle_come=False):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -801,6 +843,7 @@ class Fs(object, ToDictMixin):
         gateway_ip = fs_spec.get("gateway_ip", None)
         workarounds = fs_spec.get("workarounds", {})
         retimer_workaround = workarounds.get("retimer_workaround", None)
+        skip_funeth_come_power_cycle = workarounds.get("skip_funeth_come_power_cycle", None)
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
@@ -821,7 +864,10 @@ class Fs(object, ToDictMixin):
                   non_blocking=non_blocking,
                   context=context,
                   setup_bmc_support_files=setup_bmc_support_files,
-                  apc_info=apc_info)
+                  apc_info=apc_info,
+                  fun_cp_callback=fun_cp_callback,
+                  power_cycle_come=power_cycle_come,
+                  skip_funeth_come_power_cycle=skip_funeth_come_power_cycle)
 
     def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
         self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
@@ -833,6 +879,10 @@ class Fs(object, ToDictMixin):
             self._apply_retimer_workaround()
 
         fun_test.test_assert(expression=self.set_f1s(), message="Set F1s", context=self.context)
+
+        if not self.skip_funeth_come_power_cycle:
+            self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
+            fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
         self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
         fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
@@ -892,22 +942,12 @@ class Fs(object, ToDictMixin):
         bmc.command("sleep 2")
         fun_test.add_checkpoint(checkpoint="Retimer workarounds applied", context=self.context)
 
+    def is_boot_up_error(self):
+        return self.boot_phase == BootPhases.FS_BRING_UP_ERROR
+
     def is_ready(self):
         fun_test.log(message="Boot-phase: {}".format(self.get_boot_phase()), context=self.context)
         return self.boot_phase == BootPhases.FS_BRING_UP_COMPLETE
-
-    def is_ready_old(self):
-        if not self.come_initialized:
-            come = self.get_come()
-            fun_test.test_assert(expression=self.bmc.ensure_come_is_up(come=come, max_wait_time=240, power_cycle=True),
-                                 message="Ensure ComE is up",
-                                 context=self.context)
-            fun_test.test_assert(expression=come.initialize(disable_f1_index=self.disable_f1_index),
-                                 message="ComE initialized",
-                                 context=self.context)
-            self.come_initialized = True
-            self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
-        return self.come_initialized
 
     def come_reset(self, power_cycle=None, non_blocking=None, max_wait_time=300):
         return self.bmc.come_reset(come=self.get_come(),
@@ -928,6 +968,20 @@ class Fs(object, ToDictMixin):
         for f1_index, f1 in self.f1s.iteritems():
             self.bmc.start_uart_log_listener(f1_index=f1_index)
         return True
+
+    def funeth_reset(self):
+        fpga = self.get_fpga()
+
+        for f1_index, f1 in self.f1s.iteritems():
+            fpga.reset_f1(f1_index=f1_index, keep_low=True)
+        fun_test.add_checkpoint("Reset and hold F1")
+
+        bmc = self.get_bmc()
+        fun_test.test_assert(bmc.come_power_cycle(), "Trigger ComE power-cycle")
+        come = self.get_come()
+        fun_test.test_assert(come.ensure_host_is_up(max_wait_time=300), "Ensure ComE is up")
+        return True
+
 
     def get_bmc(self, disable_f1_index=None):
         if not self.bmc:
@@ -957,7 +1011,8 @@ class Fs(object, ToDictMixin):
                              ssh_username=self.come_mgmt_ssh_username,
                              ssh_password=self.come_mgmt_ssh_password,
                              set_term_settings=True,
-                             context=self.context)
+                             context=self.context,
+                             ipmi_info=self.get_bmc()._get_ipmi_details())
             self.come.disable_f1_index = self.disable_f1_index
         return self.come
 

@@ -195,13 +195,13 @@ class MetricLib():
         self.save_data_sets(data_sets=data_sets, chart=chart)
 
     def clone_chart(self, old_chart, internal_chart_name, data_sets):
-        try:
-            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
-        except ObjectDoesNotExist:
+        if not MetricChart.objects.filter(internal_chart_name=internal_chart_name).exists():
             metric_id = LastMetricId.get_next_id()
             peer_id = []
             peer_id.append(old_chart.metric_id)
+            print("Metric id:{}".format(metric_id))
             MetricChart(chart_name=old_chart.chart_name,
+                        platform=FunPlatform.S1,
                         metric_id=metric_id,
                         internal_chart_name=internal_chart_name,
                         data_sets=json.dumps(data_sets),
@@ -218,4 +218,28 @@ class MetricLib():
                         peer_ids=json.dumps(peer_id)).save()
             old_chart.peer_ids = json.dumps([metric_id])
             old_chart.save()
+
+    def update_weights_for_wip(self):
+        charts = MetricChart.objects.filter(metric_model_name="MetricContainer")
+        for container in charts:
+            children = json.loads(container.children)
+            for child in children:
+                chart = MetricChart.objects.get(metric_id=child)
+                if chart and chart.work_in_progress:
+                    container.add_child_weight(child_id=child, weight=0)
+
+    def reset_reference_value(self, chart):
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            data_set["output"]["reference"] = -1
+            data_set["output"]["expected"] = -1
+            data_set["output"]["min"] = 0
+            data_set["output"]["max"] = -1
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+
+if __name__ == "__main__":
+    ml = MetricLib()
+    ml.update_weights_for_wip()
+
 

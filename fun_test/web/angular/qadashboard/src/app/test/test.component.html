@@ -1,73 +1,50 @@
-<div class="component">
-
-  <app-jenkins-form></app-jenkins-form>
+<div *ngIf="isDone" class="component">
 
 
-  <a href="#1">Example 1</a>
+  <div class="card" style="width:400px; margin: 100px;">
+    <div class="card-header">
+      <h3 class="card-title">Smoke Test</h3>
+      F1 Storage
+    </div>
+    <div class=card-body>
 
-  <a href="#2">Example 2</a>
+      <table>
 
-    <span tooltip [tooltipContentString]="'some tooltip string'" placement="right" delay="1" id="1">
-      ABC
-    </span>
+        <ng-container *ngFor="let i of numbers">
+          <tr>
+            <td tooltip [tooltipContentString]="lastTwoResults[i]" placement="left" style="width: 200px">
+              <ng-container [ngSwitch]="lastTwoResults[i]">
+                <img
+                  *ngSwitchCase="'PASSED'"
+                  [src]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-80plus.png'" style="width:20%">
+                <img
+                  *ngSwitchCase="'IN_PROGRESS'"
+                  [src]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-60to79.png'" style="width:20%">
+                <img
+                  *ngSwitchCase="'FAILED'"
+                  [src]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-00to19.png'" style="width:20%">
+              </ng-container>
+            </td>
+            <td style="width: 200px">
+              <div class="card-text"
+                   *ngIf="lastTwoTestSuites[i].fields.state == this.stateMap.COMPLETED; else elseBlock">
+                {{trimTime(lastTwoTestSuites[i].fields.completed_time)}}
+              </div>
+              <ng-template #elseBlock>
+                <div class="card-text">{{trimTime(lastTwoTestSuites[i].fields.scheduled_time)}}</div>
+              </ng-template>
+              <div>Tests Passed: {{lastTwoTestSuites[i].num_passed}}</div>
+              <div>Tests Failed: {{lastTwoTestSuites[i].num_failed}}</div>
+            </td>
+          </tr>
+        </ng-container>
+      </table>
+    </div>
+    <p class="card-text"></p>
+    <div class="card-footer">
 
-
-  <br>
-
-  <span tooltip [tooltipContentCallback]="tooltipCallback" placement="right" delay="1" id="1">
-      DEF
-    </span>
-
-
-  <div >
-    What is Lorem Ipsum?
-    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's
-    standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a
-    type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting,
-    remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing
-    Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of
-    Lorem Ipsum.
+    </div>
   </div>
 
-  <br>
-  <br>
-  <br>
-  <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br> <br>
-  <br>
-  <br>
-  <div id="2">
-
-    There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some
-    form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a
-    passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. All the
-    Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true
-    generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence
-    structures, to generate Lorem Ipsum which looks reasonable. The generated Lorem Ipsum is therefore always free from
-    repetition, injected humour, or non-characteristic words etc.
-
-  </div>
 
 </div>
-

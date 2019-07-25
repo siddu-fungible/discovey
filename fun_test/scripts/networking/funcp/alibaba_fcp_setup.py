@@ -16,44 +16,29 @@ CHECK_HPING3_ON_HOSTS = True
 
 class ScriptSetup(FunTestScript):
 
+    server_key = {}
     def describe(self):
-        self.set_test_details(steps="1. Make sure correct FS system is selected")
-
+        self.set_test_details(steps="""
+                              1. BringUP both F1s
+                              2. Bringup FunCP
+                              3. Create MPG Interfacfes and get IPs using DHCP
+                              4. Get MPG IPs
+                              5. execute abstract config for both F1
+                              """) 
     def setup(self):
+        global funcp_obj, servers_mode, servers_list, test_bed_type
         testbed_info = fun_test.parse_file_to_json(
             fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
         fun_test.shared_variables['testbed_info'] = testbed_info
-
-    def cleanup(self):
-
-        fun_test.shared_variables["topology"].cleanup()
-
-
-class BringupSetup(FunTestCase):
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Bringup FCP Setup",
-                              steps="""
-                              1. BringUP both F1s
-                              2. Bringup FunCP
-                              3. Create MPG Interfacfes and get IPs using DHCP
-                              4. Get MPG IPs
-                              5. execute abstract config for both F1
-                              """)
-
-    def setup(self):
-
-        pass
-
-    def run(self):
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
         testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
-
         # Removing any funeth driver from COMe and and all the connected server
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
@@ -62,11 +47,9 @@ class BringupSetup(FunTestCase):
             servers_mode = server_key["fs"][fs_name]
             for server in servers_mode:
                 print server
-                fun_test.test_assert(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")  
-
+                critical_log(expression=rmmod_funeth_host(hostname=server), message="rmmod funeth on host")
         print "\n\n\n Booting of FS started \n\n\n"
-        print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') 
-        
+        print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         # Boot up FS1600
         f1_0_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_0']
         f1_1_boot_args = testbed_info['fs'][test_bed_type]['bootargs_f1_1']
@@ -84,7 +67,6 @@ class BringupSetup(FunTestCase):
 
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name, hostprefix=fs_name)
-
             print "\n\n\n Booting of Control Plane  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
             # Bringup FunCP
@@ -98,27 +80,26 @@ class BringupSetup(FunTestCase):
                                      f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']))
             #funcp_obj.fetch_mpg_ips() #Only if not running the full script
             #execute abstract file
-
             abstract_json_file0 = \
                 fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_0']
             abstract_json_file1 = \
                 fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_1']
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
-         
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             print "\n\n\n Booting HU unit  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-            tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))  
+            tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))
             funeth_obj = Funeth(tb_config_obj)
             fun_test.shared_variables['funeth_obj'] = funeth_obj
-            setup_hu_host(funeth_obj, update_driver=False)
+            setup_hu_host(funeth_obj, update_driver=True)
             print "\n\n\n Booting HU unit  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
-    def cleanup(self):
-        pass
 
+    def cleanup(self):
+        fun_test.log("Cleanup")
+        fun_test.shared_variables["topology"].cleanup()
 
 class TestIntraF1Pings(FunTestCase):
     hosts = []
@@ -196,11 +177,11 @@ class TestCcCcPing(FunTestCase):
         funcp2_obj._get_vlan1_ips()
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp1_obj.fs_name, funcp2_obj.fs_name)
-        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips, from_vlan=True, interval=0.01)
+        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips.values(), from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp2_obj.fs_name, funcp1_obj.fs_name)
-        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips, from_vlan=True, interval=0.01)
+        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips.values(), from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         fun_test.add_checkpoint("Ensure all vlans can ping its neighbour FS vlans")
@@ -288,7 +269,7 @@ class TestInterRackPings(FunTestCase):
 
 class TestHostPCIeLanes(FunTestCase):
     def describe(self):
-        self.set_test_details(id=5, summary="Test PCIe speeds for HU servers",
+        self.set_test_details(id=6, summary="Test PCIe speeds for HU servers",
                               steps="""
                                       1. SSH into each host
                                       2. Check PCIe link
@@ -315,7 +296,6 @@ class TestHostPCIeLanes(FunTestCase):
 
 if __name__ == '__main__':
     ts = ScriptSetup()
-    ts.add_test_case(BringupSetup())
     ts.add_test_case(TestCcCcPing())
     ts.add_test_case(TestIntraF1Pings())
     ts.add_test_case(TestIntraFsPings())

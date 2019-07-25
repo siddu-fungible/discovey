@@ -7,7 +7,8 @@
       "host_ip": "poc-server-05-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
-    }
+    },
+    "reboot_time": 600
   },
   "poc-server-01": {
     "host_ip": "poc-server-01",
@@ -92,6 +93,16 @@
       "password": "ADMIN"
     }
   },
+    "cab03-qa-03": {
+    "host_ip": "cab03-qa-03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "cab03-qa-03-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
    "cab03-qa-04": {
     "host_ip": "cab03-qa-04",
     "ssh_username": "localadmin",
@@ -119,6 +130,11 @@
   },
   "nu-lab-04": {
     "host_ip": "nu-lab-04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
+  "nu-lab-06": {
+    "host_ip": "nu-lab-06",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*"
   },
@@ -413,11 +429,21 @@
     }
   },
       "mktg16": {
-    "host_ip": "mktg16",
+    "host_ip": "10.1.22.135",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
       "host_ip": "mktg16-ilo",
+      "username": "ADMIN",
+      "password": "ADMIN"
+    }
+  },
+     "systems-lab-01": {
+    "host_ip": "10.1.44.43",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {
+      "host_ip": "systems-lab-01-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }

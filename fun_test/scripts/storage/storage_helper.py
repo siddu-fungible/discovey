@@ -4,6 +4,8 @@ import re
 from prettytable import PrettyTable
 import time
 from collections import OrderedDict
+from lib.host.storage_controller import StorageController
+from lib.system import utils
 
 DPCSH_COMMAND_TIMEOUT = 5
 
@@ -19,6 +21,8 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                        "fio_job_name"]
 
+vp_stats_thread_stop_status = {}
+resource_bam_stats_thread_stop_status = {}
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
                  read_iops,
@@ -233,17 +237,22 @@ def build_simple_table(data, column_headers=[]):
 
 
 def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3, non_zero_stats_only=True,
-                           command_timeout=DPCSH_COMMAND_TIMEOUT):
+                           threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
     output = False
     column_headers = ["VP", "Utilization"]
+
+    # If threaded is enabled
+    if threaded:
+        global vp_stats_thread_stop_status
+        vp_stats_thread_stop_status[storage_controller] = False
     try:
         with open(output_file, 'a') as f:
             timer = FunTimer(max_time=interval * count)
             while not timer.is_expired():
                 lines = []
                 dpcsh_result = storage_controller.debug_vp_util(command_timeout=command_timeout)
-                fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                if dpcsh_result["data"] is not None:
+                # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
+                if dpcsh_result["status"] and dpcsh_result["data"] is not None:
                     vp_util = dpcsh_result["data"]
                 else:
                     vp_util = {}
@@ -260,8 +269,143 @@ def collect_vp_utils_stats(storage_controller, output_file, interval=10, count=3
                 lines.append(table_data.get_string())
                 lines.append("\n\n")
                 f.writelines(lines)
+                if threaded and vp_stats_thread_stop_status[storage_controller]:
+                    fun_test.log("I was asked to stop....So I'm exiting now...")
+                    break
                 fun_test.sleep("for the next iteration", seconds=interval)
         output = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+def check_come_health(storage_controller):
+    blt_vol_info = {
+        "type": "VOL_TYPE_BLK_LOCAL_THIN",
+        "capacity": 10485760,
+        "block_size": 4096,
+        "name": "thin-block1"}
+    result = False
+    try:
+        blt_uuid = utils.generate_uuid()
+        response = storage_controller.create_thin_block_volume(capacity=blt_vol_info["capacity"],
+                                                               block_size=blt_vol_info["block_size"],
+                                                               name=blt_vol_info['name'],
+                                                               uuid=blt_uuid,
+                                                               command_duration=30)
+        if response["status"]:
+            result = True
+    except Exception as ex:
+        fun_test.critical(ex.message)
+    return result
+
+
+def collect_resource_bam_stats(storage_controller, output_file, interval=10, count=3, threaded=False,
+                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+    output = False
+    column_headers = ["Field Name", "Counters"]
+
+    # If threaded is enabled
+    if threaded:
+        global resource_bam_stats_thread_stop_status
+        resource_bam_stats_thread_stop_status[storage_controller] = False
+    try:
+        with open(output_file, 'a') as f:
+            timer = FunTimer(max_time=interval * count)
+            while not timer.is_expired():
+                lines = []
+                dpcsh_result = storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                if dpcsh_result["status"] and dpcsh_result["data"] is not None:
+                    resource_bam_stats = dpcsh_result["data"]
+                else:
+                    resource_bam_stats = {}
+
+                table_data = build_simple_table(data=resource_bam_stats, column_headers=column_headers)
+                lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                lines.append(table_data.get_string())
+                lines.append("\n\n")
+                f.writelines(lines)
+                if threaded and resource_bam_stats_thread_stop_status[storage_controller]:
+                    fun_test.log("Resource BAM stats collection was asked to stop....So exiting now...")
+                    break
+                fun_test.sleep("for the next iteration - Resource BAM stats collection", seconds=interval)
+        output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+class CollectStats(object):
+    def __init__(self, storage_controller):
+        self.storage_controller = storage_controller
+        self.stop_all = False
+        self.stop_vp_utils = False
+        self.stop_resource_bam = False
+
+    def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=False,
+                               command_timeout=DPCSH_COMMAND_TIMEOUT):
+        output = False
+        column_headers = ["VP", "Utilization"]
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_vp_utils or self.stop_all):
+                        fun_test.log("Stopping VP Utils stats collection thread")
+                        break
+                    dpcsh_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
+                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
+                        vp_util = dpcsh_result["data"]
+                    else:
+                        vp_util = {}
+
+                    if non_zero_stats_only:
+                        filtered_vp_util = OrderedDict()
+                        for key, value in sorted(vp_util.iteritems()):
+                            if value != 0.0 or value != 0:
+                                filtered_vp_util[key] = value
+                        vp_util = filtered_vp_util
+
+                    table_data = build_simple_table(data=vp_util, column_headers=column_headers)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - VP utils stats collection", seconds=interval)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_resource_bam_stats(self, output_file, interval=10, count=3, threaded=False,
+                                   command_timeout=DPCSH_COMMAND_TIMEOUT):
+        output = False
+        column_headers = ["Field Name", "Counters"]
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_resource_bam or self.stop_all):
+                        fun_test.log("Stopping Resource BAM stats collection thread")
+                        break
+                    dpcsh_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
+                        resource_bam_stats = dpcsh_result["data"]
+                    else:
+                        resource_bam_stats = {}
+
+                    table_data = build_simple_table(data=resource_bam_stats, column_headers=column_headers)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - Resource BAM stats collection", seconds=interval)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
