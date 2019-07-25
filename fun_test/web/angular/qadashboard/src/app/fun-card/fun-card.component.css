@@ -37,11 +37,12 @@ table {
 
 .flex-container {
   display: flex;
-  flex-wrap: wrap;
+  height: inherit;
 }
 
-.flex-container div {
-  padding: 10px;
+.flex-container > div {
+  padding-right: 10px;
+  height: inherit;
 }
 
 
@@ -54,4 +55,11 @@ table {
   height: 40px;
 }
 
+.flex-container-wrapper{
+  display: flex;
+  flex-direction: column;
+}
 
+div > span{
+  height: inherit;
+}
