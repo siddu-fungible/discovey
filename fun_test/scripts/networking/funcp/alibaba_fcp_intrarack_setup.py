@@ -39,7 +39,6 @@ class ScriptSetup(FunTestScript):
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
-        '''
         # Removing any funeth driver from COMe and and all the connected server
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             funcp_obj = FunControlPlaneBringup(fs_name=fs_name)
@@ -96,7 +95,6 @@ class ScriptSetup(FunTestScript):
             setup_hu_host(funeth_obj, update_driver=True)
             print "\n\n\n Booting HU unit  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-        '''
 
     def cleanup(self):
         fun_test.log("Cleanup")
