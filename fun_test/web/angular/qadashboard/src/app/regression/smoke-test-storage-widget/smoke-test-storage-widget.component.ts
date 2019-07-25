@@ -27,7 +27,7 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
   iconDict: any = {
     'PASSED': "/static/media/sun_icon.png",
     'FAILED': "/static/media/storm_icon.png",
-    'IN_PROGRESS': "/static/media/Bars-1.3s-100px.svg"
+    'IN_PROGRESS': "/static/media/loading_bars.gif"
   };
 
 

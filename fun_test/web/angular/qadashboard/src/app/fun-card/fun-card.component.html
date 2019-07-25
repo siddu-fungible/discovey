@@ -7,7 +7,7 @@
 
     <div class="flex-container">
       <div
-        style="height: 50%; width: 50%; display: flex; justify-content: center; flex: 1 50%; align-items: center; align-content: center">
+        style="height: 50%; width: 50%; display: flex; justify-content: center; flex: 1 50%; align-items: center">
         <span tooltip [tooltipContentString]="tooltip" placement="left">
           <img style="max-width: 100%; max-height: 100%" [src]="icon">
           </span>
@@ -21,15 +21,15 @@
 
   </div>
 
-  <div class="card-footer" style="height: 40px">
+  <div class="card-footer">
 
-    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end; height: inherit">
-      <div style="display: flex; min-height: 0; height: inherit">
-        <span tooltip [tooltipContentString]="footerTooltip" placement="left">
+    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end">
+      <div style="display: flex">
+        <span tooltip [tooltipContentString]="footerTooltip" placement="left" style="vertical-align: middle; min-height: 0">
           <img style="max-width: 100%; max-height: 100%" [src]="footerIcon">
         </span>
       </div>
-      <div style="display: flex; min-height: 0; height: inherit">
+      <div style="display: flex;">
         <p class="footer-text">{{footerText}}</p>
       </div>
     </div>
