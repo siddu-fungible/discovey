@@ -215,6 +215,10 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
         ]
     }
 
+    # num_flows, 512k
+    for nc_obj in overlay_config_dict:
+        nc_obj.overlay_num_flows(512 * 1024)
+
     nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
     for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
         for nc_obj in (nc_obj_src, nc_obj_dst):
@@ -235,8 +239,6 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 dst_flows = src['flows']
                 vif_table_mac_entries = dst['vif_table_mac_entries']
 
-            # num_flows, 512k
-            nc_obj.overlay_num_flows(512*1024)
             # vif
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
