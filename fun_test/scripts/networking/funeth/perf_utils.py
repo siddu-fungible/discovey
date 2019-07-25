@@ -564,22 +564,39 @@ def redis_del_fcp_ftep(linux_obj):
         'F1-1': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']",
     }
     for k in ftep_dict:
-        cmd_prefix = 'docker exec {} -c'.format(k)
+        cmd_prefix = 'docker exec {} bash -c'.format(k)
         cmd_op = 'DEL {}'.format(ftep_dict[k])
         cmd_chk = 'KEYS *fcp-tunnel*'
 
-        # op
+        # check
+        cmds = ['SELECT 1', cmd_chk]
+        linux_obj.command('{} "touch check"'.format(cmd_prefix))
+        for cmd in cmds:
+            linux_obj.command('{} \'echo \"{}\" >> check\''.format(cmd_prefix, cmd))
+        linux_obj.command('{} "cat check"'.format(cmd_prefix))
+
+        # del
         cmds = ['SELECT 1', cmd_op]
         linux_obj.command('{} "touch del"'.format(cmd_prefix))
         for cmd in cmds:
-            linux_obj.command('{} "echo {} > del"'.format(cmd_prefix, cmd))
-        linux_obj.command('{} "redis-cli < del"'.format(cmd_prefix))
+            linux_obj.command('{} \'echo \"{}\" >> del\''.format(cmd_prefix, cmd))
+        linux_obj.command('{} "cat del"'.format(cmd_prefix))
 
-        # check
-        cmds = ['SELECT 1', cmd_chk]
-        linux_obj.command('{} touch check'.format(cmd_prefix))
-        for cmd in cmds:
-            linux_obj.command('{} "echo {} > check"'.format(cmd_prefix, cmd))
+        linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
+        linux_obj.command('{} "redis-cli < del"'.format(cmd_prefix))
         linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
 
 
+def collect_funcp_logs(linux_obj, path='/scratch'):
+    """Populate the FunCP log files to job log dir"""
+    output = linux_obj.command('cd {}; ls -l *.log'.format(path))
+    log_files = re.findall(r'(\S+.log)', output)
+    for log_file in log_files:
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(
+            post_fix_name='{}_{}.txt'.format(linux_obj.host_ip, log_file))
+        fun_test.scp(source_ip=linux_obj.host_ip,
+                     source_file_path='{}/{}'.format(path, log_file),
+                     source_username=linux_obj.ssh_username,
+                     source_password=linux_obj.ssh_password,
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(log_file), filename=artifact_file_name)
