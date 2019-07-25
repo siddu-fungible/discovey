@@ -422,6 +422,7 @@ class FunethSanity(FunTestScript):
 
             if control_plane and cleanup:
                 try:
+                    perf_utils.collect_funcp_logs(self.come_linux_obj)
                     self.come_linux_obj.sudo_command('rmmod funeth')
                     self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
                     self.come_linux_obj.sudo_command('rm -fr /tmp/*')
