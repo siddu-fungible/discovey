@@ -62,12 +62,6 @@
                         "label": "Close Fin"
                       }
                     ]
-                  },
-                  {
-                    "metric_model_name": "MetricContainer",
-                    "name": "funtcp_server_cc",
-                    "label": "Concurrent Connections",
-                    "children": []
                   }
                 ]
               }
@@ -260,7 +254,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "HU_HU_NFCP_2f1_teramark",
-                    "label": "Host->Host (2 F1s)",
+                    "label": "Host->Host NFCP (2 F1s)",
                     "reference": true
                   },
                   {
@@ -2115,7 +2109,7 @@
               {
                 "metric_model_name": "MetricContainer",
                 "name": "HU_HU_NFCP_2f1_teramark",
-                "label": "Host->Host (2 F1s)",
+                "label": "Host->Host NFCP (2 F1s)",
                 "children": [
                   {
                     "metric_model_name": "MetricContainer",
@@ -2363,6 +2357,11 @@
                             "metric_model_name": "BltVolumePerformance",
                             "name": "read_qd128_pcie_output_latency",
                             "label": "Latency, QDepth=128"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "read_qd256_pcie_output_latency",
+                            "label": "Latency, QDepth=256"
                           }
                         ]
                       },
@@ -2400,6 +2399,11 @@
                             "metric_model_name": "BltVolumePerformance",
                             "name": "rand_read_qd128_pcie_output_latency",
                             "label": "Latency, QDepth=128"
+                          },
+                          {
+                            "metric_model_name": "BltVolumePerformance",
+                            "name": "rand_read_qd256_pcie_output_latency",
+                            "label": "Latency, QDepth=256"
                           }
                         ]
                       },
@@ -3791,7 +3795,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "alibaba_rdma_host",
-                    "label": "Host -> Host (2F1s)",
+                    "label": "Host->Host FCP (2F1s)",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
@@ -4281,7 +4285,7 @@
                           {
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_networking_underlay_host_host_2",
-                            "label": "Host->Host (2 F1s)",
+                            "label": "Host->Host NFCP (2 F1s)",
                             "children": [
                               {
                                 "metric_model_name": "MetricContainer",
@@ -4467,7 +4471,7 @@
                           {
                             "metric_model_name": "MetricContainer",
                             "name": "alibaba_bmv_networking_overlay_host_host_2",
-                            "label": "Host->Host (2 F1s)",
+                            "label": "Host->Host NFCP (2 F1s)",
                             "children": [
                               {
                                 "metric_model_name": "MetricContainer",
@@ -4583,7 +4587,7 @@
                       {
                         "metric_model_name": "MetricContainer",
                         "name": "HU_HU_NFCP_2f1_teramark",
-                        "label": "Host->Host (2 F1s)",
+                        "label": "Host->Host NFCP (2 F1s)",
                         "reference": true
                       },
                       {
@@ -4950,6 +4954,103 @@
                 "name": "Bcopy: Flood DMA: Avg Latency_S1",
                 "label": "Bcopy: Flood DMA: Avg Latency",
                 "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "TeraMarks_S1",
+        "label": "TeraMarks",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "Erasure-coding_S1",
+            "label": "Erasure-coding",
+            "children": [
+              {
+                "metric_model_name": "EcPerformance",
+                "name": "EC 8:4 Throughput_S1",
+                "label": "EC 8:4 Throughput",
+                "children": []
+              }
+            ]
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "TeraMark Compression_S1",
+            "label": "Compression",
+            "children": [
+              {
+              "metric_model_name": "MetricContainer",
+              "name": "JPEG_S1",
+              "label": "JPEG",
+              "children": [
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "Compression throughput with Driver_output_average_bandwidth_S1",
+                  "label": "Compression Throughput",
+                  "children": []
+                },
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "JPEG Decompress_output_average_bandwidth_S1",
+                  "label": "Decompression Throughput",
+                  "children": []
+                },
+                {
+                  "metric_model_name": "TeraMarkJpegPerformance",
+                  "name": "JPEG Compression_Compression-ratio_S1",
+                  "label": "Compression ratio",
+                  "children": []
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "Zip_S1",
+                "label": "Zip",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "Deflate_S1",
+                    "label": "Deflate",
+                    "children": [
+                      {
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "name": "Deflate Compression Throughput_S1",
+                        "label": "Compression Throughput",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "name": "Deflate Decompression Throughput_S1",
+                        "label": "Decompression Throughput",
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "Lzma_S1",
+                    "label": "Lzma",
+                    "children": [
+                      {
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "name": "Lzma Compression Throughput_S1",
+                        "label": "Compression Throughput",
+                        "children": []
+                      },
+                      {
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "name": "Lzma Decompression Throughput_S1",
+                        "label": "Decompression Throughput",
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }

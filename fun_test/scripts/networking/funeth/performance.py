@@ -82,7 +82,7 @@ class FunethPerformance(sanity.FunethSanity):
         funsdk_bld = super(FunethPerformance, self).__getattribute__('funsdk_bld')
         driver_commit = super(FunethPerformance, self).__getattribute__('driver_commit')
         driver_bld =  super(FunethPerformance, self).__getattribute__('driver_bld')
-        come_linux_obj =  super(FunethPerformance, self).__getattribute__('come_linux_obj')
+        come_linux_obj = super(FunethPerformance, self).__getattribute__('come_linux_obj')
         fun_test.shared_variables['funsdk_commit'] = funsdk_commit
         fun_test.shared_variables['funsdk_bld'] = funsdk_bld
         fun_test.shared_variables['driver_commit'] = driver_commit
@@ -176,6 +176,8 @@ class FunethPerformance(sanity.FunethSanity):
                                                fun_test.shared_variables['driver_commit'],
                                                fun_test.shared_variables['driver_bld'],
                                                '00_summary_of_results.txt')
+            for nc_obj in fun_test.shared_variables['network_controller_objs']:
+                nc_obj.disconnect()
         except:
             pass
         super(FunethPerformance, self).cleanup()
@@ -233,7 +235,8 @@ class FunethPerformanceBase(FunTestCase):
         if flow_type.startswith('HU_HU'):  # HU --> HU
             # TODO: handle exception if hu_hosts len is 1
             num_hu_hosts = len(funeth_obj.hu_hosts)
-            if flow_type.startswith('HU_HU_NFCP_2F1') or flow_type.startswith('HU_HU_FCP'):  # Under 2 F1s
+            flow_types_2f1 = ('HU_HU_NFCP_2F1', 'HU_HU_NFCP_OL', 'HU_HU_FCP')
+            if any(flow_type.startswith(f) for f in flow_types_2f1):  # Under 2 F1s
                 for i in range(0, num_hu_hosts/2):
                     host_pairs.append([funeth_obj.hu_hosts[i], funeth_obj.hu_hosts[i+2]])
                     if num_flows == 1:
