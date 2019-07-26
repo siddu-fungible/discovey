@@ -113,8 +113,7 @@ class LsfStatusServer:
                 if "completion_secs" not in job_info:
                     fun_test.critical("Job: {} has no field named completion_secs".format(job_info["job_id"]))
                     continue
-                completion_secs = job_info["completion_secs"]
-                completion_date = datetime.fromtimestamp(completion_secs)
+                completion_date = self.get_completion_date(job_info=job_info)
                 dt = get_localized_time(completion_date)
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
@@ -137,6 +136,10 @@ class LsfStatusServer:
     def get_job_text_by_path(self, job_id, log_path):
         url = "{}/job/{}/human_file/{}".format(self.base_url, job_id, log_path)
         return self._get(url=url)
+
+    def get_completion_date(self, job_info):
+        completion_secs = job_info["completion_secs"]
+        return datetime.fromtimestamp(completion_secs)
 
     def get_human_file(self, job_id, file_name=None, console_name=None):
         result = None
@@ -177,8 +180,7 @@ class LsfStatusServer:
             pass
         result = {}
         if "completion_secs" in job_info:
-            completion_secs = job_info["completion_secs"]
-            completion_date = datetime.fromtimestamp(completion_secs)
+            completion_date = self.get_completion_date(job_info=job_info)
             lsf_id = job_info["job_id"]
             jenkins_url = job_info["jenkins_url"]
             build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
