@@ -114,6 +114,10 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "disable_dsld" in job_inputs:
+            self.disable_dsld = job_inputs["disable_dsld"]
+        else:
+            self.disable_dsld = False
         if "f1_in_use" in job_inputs:
             self.f1_in_use = job_inputs["f1_in_use"]
 
@@ -167,6 +171,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
                     self.bootargs[i] += " --disable-wu-watchdog"
+                if self.disable_dsld:
+                    self.bootargs[i] += " --disable-dsld"
 
             for dut_index in self.available_dut_indexes:
                 self.topology_helper.set_dut_parameters(dut_index=dut_index,
@@ -527,7 +533,6 @@ class ECVolumeLevelScript(FunTestScript):
                 self.fs.come_reset(max_wait_time=self.reboot_timeout)
         except Exception as ex:
             fun_test.critical(str(ex))
-
         self.topology.cleanup()
 
 
@@ -952,6 +957,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
+                self.storage_controller.verbose = False
                 stats_obj = CollectStats(self.storage_controller)
                 vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
                 vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
@@ -1086,6 +1092,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
                 fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
 
+                self.storage_controller.verbose = True
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
                     try:
@@ -1099,8 +1106,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                             final_stats[iodepth]["eqm_stats"] = command_result["data"]
                         else:
                             final_stats[iodepth]["eqm_stats"] = {}
-                        fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
-                            iodepth, initial_stats[iodepth]))
+                        fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".
+                                     format(iodepth, initial_stats[iodepth]))
                     except Exception as ex:
                         fun_test.critical(str(ex))
 

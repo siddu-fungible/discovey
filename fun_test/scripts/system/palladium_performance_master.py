@@ -179,7 +179,8 @@ def add_version_to_jenkins_job_id_map(date_time, version):
                            hardware_version="",
                            completion_date=completion_date,
                            build_properties="", lsf_job_id="",
-                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
+                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id,
+                           add_associated_suites=False)
 
 
 class MyScript(FunTestScript):

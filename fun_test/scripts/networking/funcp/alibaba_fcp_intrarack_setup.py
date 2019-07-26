@@ -98,7 +98,7 @@ class ScriptSetup(FunTestScript):
 
     def cleanup(self):
         fun_test.log("Cleanup")
-        fun_test.shared_variables["topology"].cleanup()
+        #fun_test.shared_variables["topology"].cleanup()
 
 class TestIntraF1Pings(FunTestCase):
     hosts = []
@@ -176,11 +176,11 @@ class TestCcCcPing(FunTestCase):
         funcp2_obj._get_vlan1_ips()
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp1_obj.fs_name, funcp2_obj.fs_name)
-        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips, from_vlan=True, interval=0.01)
+        res = funcp1_obj.test_cc_pings_remote_fs(dest_ips=funcp2_obj.vlan1_ips.values(), from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         checkpoint = "Ensure %s vlans can ping %s vlans" % (funcp2_obj.fs_name, funcp1_obj.fs_name)
-        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips, from_vlan=True, interval=0.01)
+        res = funcp2_obj.test_cc_pings_remote_fs(dest_ips=funcp1_obj.vlan1_ips.values(), from_vlan=True, interval=0.01)
         fun_test.test_assert(res, checkpoint)
 
         fun_test.add_checkpoint("Ensure all vlans can ping its neighbour FS vlans")
@@ -229,6 +229,43 @@ class TestIntraFsPings(FunTestCase):
         pass
 
 
+class TestInterRackPings(FunTestCase):
+    fs_per_rack = None
+
+    def describe(self):
+        self.set_test_details(id=5, summary="Test Inter Rack pings",
+                              steps="""
+                              1. Fetch hosts connected to both FS (FS-48 is in 1 rack and FS-60 is in different rack)
+                              2. Do a ping from hosts connected to FS-48 to hosts connected to FS-60 across racks
+                              3. Ensure ping is working fine
+                              4. Do a hping3 between hosts
+                              5. Validate dpcsh stats
+                              """)
+
+    def setup(self):
+        global CHECK_HPING3_ON_HOSTS
+        topology_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/topo_description.json')
+        self.fs_per_rack = FunControlPlaneBringup.get_list_of_fs_per_rack(topology_info=topology_info)
+
+        if CHECK_HPING3_ON_HOSTS:
+            all_hosts = FunControlPlaneBringup.get_list_of_all_hosts(topology_info=topology_info)
+            for host in all_hosts:
+                hping_installed = ensure_hping_install(host_ip=host['name'], host_username=host['ssh_username'],
+                                                       host_password=host['ssh_password'])
+                fun_test.simple_assert(hping_installed, "Ensure Hping3 is installed on host: %s" % host['name'])
+
+        fun_test.log("FS per rack: %s" % self.fs_per_rack)
+
+    def run(self):
+        checkpoint = "Ensure Inter Rack ping works"
+        funcp_obj = FunControlPlaneBringup(fs_name='FS-48')
+        result = funcp_obj.validate_inter_rack_ping(fs_per_rack=self.fs_per_rack)
+        fun_test.test_assert(result, checkpoint)
+
+    def cleanup(self):
+        pass
+
+
 class TestHostPCIeLanes(FunTestCase):
     def describe(self):
         self.set_test_details(id=6, summary="Test PCIe speeds for HU servers",
@@ -261,5 +298,6 @@ if __name__ == '__main__':
     ts.add_test_case(TestCcCcPing())
     ts.add_test_case(TestIntraF1Pings())
     ts.add_test_case(TestIntraFsPings())
+    ts.add_test_case(TestInterRackPings())
     ts.add_test_case(TestHostPCIeLanes())
     ts.run()

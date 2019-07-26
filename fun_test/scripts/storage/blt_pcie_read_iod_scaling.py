@@ -365,6 +365,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     fio_job_iodepth = 64
                 elif combo == "(8, 16)":
                     fio_job_iodepth = 128
+                elif combo == "(8, 32)":
+                    fio_job_iodepth = 256
                 self.fio_cmd_args[
                     "runtime"] = self.optimum_run_time if fio_job_iodepth in self.optimum_iodepth_list else self.default_run_time
                 self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 10

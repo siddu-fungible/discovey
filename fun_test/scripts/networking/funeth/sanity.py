@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from fun_settings import DATA_STORE_DIR
 from fun_settings import SCRIPTS_DIR
 from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
@@ -47,6 +48,7 @@ try:
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
+        configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
         fundrv_branch = inputs.get('fundrv_branch', None)
@@ -58,6 +60,7 @@ try:
         control_plane = False  # default False
         update_driver = True  # default True
         hu_host_vm = False  # default False
+        configure_overlay = False  # default False
         bootup_funos = True  # default True
         cleanup = True  # default True
         fundrv_branch = None
@@ -69,6 +72,7 @@ except:
     control_plane = False
     update_driver = True
     hu_host_vm = False
+    configure_overlay = False
     bootup_funos = True
     cleanup = True
 
@@ -195,7 +199,11 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
         ]
     }
 
-    nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
+    # num_flows, 512k
+    for nc_obj in overlay_config_dict:
+        nc_obj.overlay_num_flows(512 * 1024)
+
+    nc_obj_src, nc_obj_dst = network_controller_obj_f1_0, network_controller_obj_f1_1
     for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
         for nc_obj in (nc_obj_src, nc_obj_dst):
             if nc_obj == nc_obj_src:
@@ -215,23 +223,29 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 dst_flows = src['flows']
                 vif_table_mac_entries = dst['vif_table_mac_entries']
 
-            # num_flows, 512k
-            nc_obj.overlay_num_flows(512*1024)
             # vif
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
                 # nh
-                nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
-                nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                for nh_type in ('vxlan_encap', 'vxlan_decap'):
+                    nc_obj.overlay_nh_add(nh_type=nh_type, src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 # flows
                 for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
                     for sip, dip in zip(src_flows, dst_flows):
                         if flow_type == 'vxlan_encap':
                             flow_sip, flow_dip = sip, dip
-                            flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
-                        else:
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                        elif flow_type == 'vxlan_decap':
                             flow_sip, flow_dip = dip, sip
-                            flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
                         nc_obj.overlay_flow_add(flow_type=flow_type,
                                                 nh_index=nh_index,
                                                 vif=lport_num,
@@ -371,7 +385,10 @@ class FunethSanity(FunTestScript):
             setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
 
             # Configure overlay
-            #configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+            if configure_overlay:
+                configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+                network_controller_obj_f1_0.disconnect()
+                network_controller_obj_f1_1.disconnect()
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'
@@ -403,19 +420,29 @@ class FunethSanity(FunTestScript):
                     if cleanup:
                         fun_test.log("Unload funeth driver")
                         funeth_obj.unload()
+
+                # Temp workaround to clean up idel ssh sessions
+                funeth_obj = fun_test.shared_variables['funeth_obj']
+                for nu in funeth_obj.nu_hosts:
+                    linux_obj = funeth_obj.linux_obj_dict[nu]
+                    cmd = 'pkill sshd'
+                    fun_test.log("{} in {}".format(cmd, linux_obj.host_ip))
+                    linux_obj.command(cmd)
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                     for host_ip, host_info in hu_hosts.iteritems():
                         host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
-            if control_plane and cleanup:
-                try:
-                    self.come_linux_obj.sudo_command('rmmod funeth')
-                    self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
-                    self.come_linux_obj.sudo_command('rm -fr /tmp/*')
-                except:
-                    self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
+            if control_plane:
+                perf_utils.collect_funcp_logs(self.come_linux_obj)
+                if cleanup:
+                    try:
+                        self.come_linux_obj.sudo_command('rmmod funeth')
+                        self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
+                        self.come_linux_obj.sudo_command('rm -fr /tmp/*')
+                    except:
+                        self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
 def collect_stats(when='before'):
@@ -603,7 +630,7 @@ class FunethTestScpBase(FunTestCase):
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
-        tmp_filename = '{}/funeth_sanity_scp_test_file'.format(fun_test.get_logs_directory())
+        tmp_filename = '{}/networking/funeth_sanity_scp_test_file'.format(DATA_STORE_DIR)
         fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, tmp_filename))
         with open(tmp_filename, 'w') as f:
             f.write(content)

@@ -314,7 +314,7 @@ pci_table = {
 @task 
 def show_dev():
     """Query fungible device on pcie from COMe system"""
-    sudo('lspci -d1dad: -nnmm')
+    return sudo('lspci -d1dad: -nnmm')
 
 @roles('come')
 @task 
