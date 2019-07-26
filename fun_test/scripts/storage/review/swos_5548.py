@@ -927,31 +927,37 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Collecting initial network stats
             if self.collect_network_stats:
-                initial_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
-                initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
-                initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
-                initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
-                command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
-                                                              command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
-                initial_stats[iodepth]["eqm_stats"] = command_result["data"]
-                fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
-                    iodepth, initial_stats[iodepth]))
+                try:
+                    initial_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                    initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                    initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                    initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                    command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                  command_duration=self.command_timeout)
+                    if "status" in command_result and command_result["status"]:
+                        initial_stats[iodepth]["eqm_stats"] = command_result["data"]
+                    else:
+                        initial_stats[iodepth]["eqm_stats"] = {}
+                    fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
+                        iodepth, initial_stats[iodepth]))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
             # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
+                stats_obj = CollectStats(self.storage_controller)
                 vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
                 vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
-                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
-                                                                storage_controller=self.storage_controller,
+                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1,
+                                                                func=stats_obj.collect_vp_utils_stats,
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
                                                                 count=int(mpstat_count), threaded=True)
                 resource_bam_post_fix_name = "resource_bam_iodepth_{}.txt".format(iodepth)
                 resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=resource_bam_post_fix_name)
-                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=10, func=collect_resource_bam_stats,
-                                                                     storage_controller=self.storage_controller,
+                stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
+                                                                     func=stats_obj.collect_resource_bam_stats,
                                                                      output_file=resource_bam_artifact_file,
                                                                      interval=self.resource_bam_args["interval"],
                                                                      count=int(mpstat_count), threaded=True)
@@ -1057,55 +1063,77 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
+            finally:
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    global vp_stats_thread_stop_status
-                    vp_stats_thread_stop_status[self.storage_controller] = True
-                    fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+                    stats_obj.stop_all = True
+                    stats_obj.stop_vp_utils = True
+                    # fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
                 # Checking whether the resource bam stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
                     fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
-                    global resource_bam_stats_thread_stop_status
-                    resource_bam_stats_thread_stop_status[self.storage_controller] = True
-                    fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
-            finally:
+                    stats_obj.stop_all = True
+                    stats_obj.stop_resource_bam = True
+                    # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+
+                fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
+                fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
-                    final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
-                    final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
-                    final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
-                    final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
-                    command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
-                                                                  command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
-                    final_stats[iodepth]["eqm_stats"] = command_result["data"]
-                    fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
-                        iodepth, initial_stats[iodepth]))
+                    try:
+                        final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                        final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                        final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                        final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                        command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                      command_duration=self.command_timeout)
+                        if "status" in command_result and command_result["status"]:
+                            final_stats[iodepth]["eqm_stats"] = command_result["data"]
+                        else:
+                            final_stats[iodepth]["eqm_stats"] = {}
+                        fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".
+                                     format(iodepth, initial_stats[iodepth]))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
 
                     # Stats diff between final stats and initial stats
-                    resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["peek_psw_global_stats"],
-                        old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
+                    resultant_stats[iodepth]["peek_psw_global_stats"] = {}
+                    if final_stats[iodepth]["peek_psw_global_stats"] and initial_stats[iodepth]["peek_psw_global_stats"]:
+                        resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["peek_psw_global_stats"],
+                            old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
                     fun_test.log("\nStat difference for peek_psw_global_stats at the end iteration for iodepth {} is: "
                                  "\n{}\n".format(iodepth, json.dumps(resultant_stats[iodepth]["peek_psw_global_stats"],
                                                                      indent=2)))
-                    resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["peek_vp_packets"],
-                        old_stats=initial_stats[iodepth]["peek_vp_packets"])
+
+                    resultant_stats[iodepth]["peek_vp_packets"] = {}
+                    if final_stats[iodepth]["peek_vp_packets"] and initial_stats[iodepth]["peek_vp_packets"]:
+                        resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["peek_vp_packets"],
+                            old_stats=initial_stats[iodepth]["peek_vp_packets"])
                     fun_test.log(
                         "\nStat difference for peek_vp_packets at the end iteration for iodepth {} is: \n{}\n".format(
                             iodepth, json.dumps(resultant_stats[iodepth]["peek_vp_packets"], indent=2)))
-                    resultant_stats[iodepth]["cdu"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
+
+                    resultant_stats[iodepth]["cdu"] = {}
+                    if final_stats[iodepth]["cdu"] and initial_stats[iodepth]["cdu"]:
+                        resultant_stats[iodepth]["cdu"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
                     fun_test.log("\nStat difference for cdu at the end iteration for iodepth {} is: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["cdu"], indent=2)))
-                    resultant_stats[iodepth]["ca"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
+
+                    resultant_stats[iodepth]["ca"] = {}
+                    if final_stats[iodepth]["ca"] and initial_stats[iodepth]["ca"]:
+                        resultant_stats[iodepth]["ca"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
                     fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
-                    resultant_stats[iodepth]["eqm_stats"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["eqm_stats"], old_stats=initial_stats[iodepth]["eqm_stats"])
+
+                    resultant_stats[iodepth]["eqm_stats"] = {}
+                    if final_stats[iodepth]["eqm_stats"] and initial_stats[iodepth]["eqm_stats"]:
+                        resultant_stats[iodepth]["eqm_stats"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["eqm_stats"], old_stats=initial_stats[iodepth]["eqm_stats"])
                     fun_test.log("\nStat difference for eqm_stats at the end iteration for iodepth {}: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["eqm_stats"], indent=2)))
                     '''
@@ -1174,22 +1202,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                             format(host_name, row_data_dict["iodepth"]),
                                             filename=mpstat_artifact_file[host_name])
 
-            # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-            if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                global vp_stats_thread_stop_status
-                vp_stats_thread_stop_status[self.storage_controller] = True
-                fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
-            fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)
-            # Checking whether the resource_bam stats collection thread is still running...If so stopping it...
-            if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
-                fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
-                global resource_bam_stats_thread_stop_status
-                resource_bam_stats_thread_stop_status[self.storage_controller] = True
-                fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
-            fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=resource_bam_artifact_file)
 
