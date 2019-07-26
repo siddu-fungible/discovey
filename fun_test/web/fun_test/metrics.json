@@ -4126,7 +4126,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
