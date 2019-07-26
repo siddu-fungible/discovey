@@ -336,7 +336,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let key = "";
     try {
       let dateString = xDate.split('.')[0];
-      key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+      // key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+      key = dateString; //removed the completion date and is dependent on build date
     }
     catch (e) {
       this.loggerService.error("Date on xAxis is empty for tooltip and point click call back");
