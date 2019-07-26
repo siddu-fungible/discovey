@@ -560,31 +560,33 @@ def redis_del_fcp_ftep(linux_obj):
     """In redis, delete FCP FTEP to tear down FCP tunnel."""
     # TODO: make it setup independent
     ftep_dict = {
-        'F1-0': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.2']",
-        'F1-1': "openconfig-fcp:fcp-tunnel[ftep='9.0.0.1']",
+        'F1-0': r"openconfig-fcp:fcp-tunnel[ftep=\'9.0.0.2\']",
+        'F1-1': r"openconfig-fcp:fcp-tunnel[ftep=\'9.0.0.1\']",
     }
     for k in ftep_dict:
         cmd_prefix = 'docker exec {} bash -c'.format(k)
         cmd_op = 'DEL {}'.format(ftep_dict[k])
         cmd_chk = 'KEYS *fcp-tunnel*'
+        chk_file = 'check_{}'.format(k)
+        del_file = 'del_{}'.format(k)
 
         # check
         cmds = ['SELECT 1', cmd_chk]
-        linux_obj.command('{} "touch check"'.format(cmd_prefix))
+        linux_obj.command('{0} "rm {1}; touch {1}"'.format(cmd_prefix, chk_file))
         for cmd in cmds:
-            linux_obj.command('{} \'echo \"{}\" >> check\''.format(cmd_prefix, cmd))
-        linux_obj.command('{} "cat check"'.format(cmd_prefix))
+            linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, chk_file))
+        linux_obj.command('{} "cat {}"'.format(cmd_prefix, chk_file))
 
         # del
         cmds = ['SELECT 1', cmd_op]
-        linux_obj.command('{} "touch del"'.format(cmd_prefix))
+        linux_obj.command('{0} "rm {1}; touch {1}"'.format(cmd_prefix, del_file))
         for cmd in cmds:
-            linux_obj.command('{} \'echo \"{}\" >> del\''.format(cmd_prefix, cmd))
-        linux_obj.command('{} "cat del"'.format(cmd_prefix))
+            linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, chk_file))
+        linux_obj.command('{} "cat {}"'.format(cmd_prefix, del_file))
 
-        linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
-        linux_obj.command('{} "redis-cli < del"'.format(cmd_prefix))
-        linux_obj.command('{} "redis-cli < check"'.format(cmd_prefix))
+        linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
+        linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, del_file))
+        linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
 
 
 def collect_funcp_logs(linux_obj, path='/scratch'):
