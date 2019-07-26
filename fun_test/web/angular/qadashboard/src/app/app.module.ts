@@ -75,7 +75,6 @@ import { FunCardComponent } from './fun-card/fun-card.component';
 import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
 import { NetworkSanityWidgetComponent } from './regression/network-sanity-widget/network-sanity-widget.component';
 import { WorkspaceComponent } from './performance/workspace/workspace.component';
-import { CreateWorkspaceComponent } from './performance/workspace/create-workspace/create-workspace.component';
 
 
 @NgModule({
@@ -135,8 +134,7 @@ import { CreateWorkspaceComponent } from './performance/workspace/create-workspa
     FunCardComponent,
     SmokeTestStorageWidgetComponent,
     NetworkSanityWidgetComponent,
-    WorkspaceComponent,
-    CreateWorkspaceComponent
+    WorkspaceComponent
   ],
   imports: [
     BsDropdownModule,

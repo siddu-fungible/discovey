@@ -34,18 +34,17 @@ def users(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def profiles(request, id):
+def profile(request, id):
     result = None
     if request.method == "POST":
         request_json = json.loads(request.body)
         first_name = request_json["first_name"]
         last_name = request_json["last_name"]
         email = request_json["email"]
-        interested_metrics = request_json["interested_metrics"]
 
         if PerformanceUserProfile.objects.filter(email=email).count():
             raise Exception("User with email: {} already exists".format(email))
-        metric_ids = interested_metrics.split(',')
+        metric_ids = []
         interested_metrics = {}
         for metric_id in metric_ids:
             interested_metrics[metric_id] = {"notify": False}
@@ -64,3 +63,10 @@ def profiles(request, id):
         user = PerformanceUserProfile.objects.get(id=id)
         user.delete()
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def edit_profile(request, id):
+    result = None
+
