@@ -924,12 +924,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                 initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
                 initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
                 initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
-                command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
-                                                              command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
-                initial_stats[iodepth]["eqm_stats"] = command_result["data"]
-                fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
-                    iodepth, initial_stats[iodepth]))
+                try:
+                    command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                  command_duration=self.command_timeout)
+                    # fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
+                    initial_stats[iodepth]["eqm_stats"] = command_result["data"]
+                    fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
+                        iodepth, initial_stats[iodepth]))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
             # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
@@ -1069,12 +1072,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                     final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
                     final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
                     final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
-                    command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
-                                                                  command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
-                    final_stats[iodepth]["eqm_stats"] = command_result["data"]
-                    fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
-                        iodepth, initial_stats[iodepth]))
+                    try:
+                        command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                      command_duration=self.command_timeout)
+                        # fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
+                        final_stats[iodepth]["eqm_stats"] = command_result["data"]
+                        fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
+                            iodepth, initial_stats[iodepth]))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
 
                     # Stats diff between final stats and initial stats
                     resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
@@ -1097,10 +1103,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                         new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
                     fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
-                    resultant_stats[iodepth]["eqm_stats"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["eqm_stats"], old_stats=initial_stats[iodepth]["eqm_stats"])
-                    fun_test.log("\nStat difference for eqm_stats at the end iteration for iodepth {}: \n{}\n".format(
-                        iodepth, json.dumps(resultant_stats[iodepth]["eqm_stats"], indent=2)))
+                    try:
+                        resultant_stats[iodepth]["eqm_stats"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["eqm_stats"], old_stats=initial_stats[iodepth]["eqm_stats"])
+                        fun_test.log("\nStat difference for eqm_stats at the end iteration for iodepth {}: \n{}\n".format(
+                            iodepth, json.dumps(resultant_stats[iodepth]["eqm_stats"], indent=2)))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
                     '''
                     aggregate_resultant_stats[iodepth] = get_diff_stats(
                         new_stats=final_stats[iodepth], old_stats=initial_stats[iodepth])
