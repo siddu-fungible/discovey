@@ -284,7 +284,6 @@ class TestL4IPsecPerformance(FunTestCase):
         fun_test.test_assert(subscribe_results['result'], "Subscribing to results")
         del subscribe_results['result']
 
-        import pdb; pdb.set_trace()
         result = {}
         port_list = template_obj.stc_manager.get_port_list()
         num_ports = len(port_list)
