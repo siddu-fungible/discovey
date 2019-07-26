@@ -110,12 +110,12 @@ class LsfStatusServer:
                 last_job = past_jobs[int(local_past_jobs_index)]
             for past_job in [last_job]:
                 job_info = past_job
-                if "completion_date" not in job_info:
-                    fun_test.critical("Job: {} has no field named completion_date".format(job_info["job_id"]))
+                if "completion_secs" not in job_info:
+                    fun_test.critical("Job: {} has no field named completion_secs".format(job_info["job_id"]))
                     continue
-                completion_date = "20" + job_info["completion_date"]
-                dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
-                # dt = dt.astimezone(pytz.timezone('Etc/Greenwich'))
+                completion_secs = job_info["completion_secs"]
+                completion_date = datetime.fromtimestamp(completion_secs)
+                dt = get_localized_time(completion_date)
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
                 response = self.get_job_by_id(job_id=job_info["job_id"])  # Workaround
@@ -176,13 +176,13 @@ class LsfStatusServer:
         except:
             pass
         result = {}
-        if "completion_date" in job_info:
-            completion_date = "20" + job_info["completion_date"]
+        if "completion_secs" in job_info:
+            completion_secs = job_info["completion_secs"]
+            completion_date = datetime.fromtimestamp(completion_secs)
             lsf_id = job_info["job_id"]
             jenkins_url = job_info["jenkins_url"]
             build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
             build_properties = self._get(url=build_properties_url)
-            build_date = parser.parse(completion_date)
             suite_execution_id = fun_test.get_suite_execution_id()
             if build_properties == None:
                 build_properties = ""
@@ -191,10 +191,9 @@ class LsfStatusServer:
                                    git_commit=job_info["git_commit"],
                                    software_date=job_info["software_date"],
                                    hardware_version=job_info["hardware_version"],
-                                   completion_date=completion_date,
-                                   build_properties=build_properties, lsf_job_id=lsf_id, build_date=build_date,
+                                   build_properties=build_properties, lsf_job_id=lsf_id, build_date=completion_date,
                                    suite_execution_id=suite_execution_id, add_associated_suites=False)
-            dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
+            dt = get_localized_time(completion_date)
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response_dict = {"output_text": "-1"}
@@ -209,7 +208,7 @@ class LsfStatusServer:
             result["date_time"] = dt
             result["output_text"] = output_text
         else:
-            print("XXX ERROR: Completion date not found in job: {}".format(job_info["job_id"]))
+            print("XXX ERROR: Completion secs not found in job: {}".format(job_info["job_id"]))
         return result
 
 
