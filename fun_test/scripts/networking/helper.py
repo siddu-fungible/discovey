@@ -1121,7 +1121,10 @@ def populate_ddr_output_file(network_controller_obj, filename, display_output=Fa
     try:
         lines = list()
 
-        result = network_controller_obj.peek_ddr_stats()
+        result_1 = network_controller_obj.peek_ddr_stats()
+        fun_test.sleep("Let time go for another second", seconds=1)
+        result_2 = network_controller_obj.peek_ddr_stats()
+        result = get_diff_results(old_result=result_1, new_result=result_2)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         for key, val in result.iteritems():
 
@@ -1153,6 +1156,8 @@ def populate_cdu_output_file(network_controller_obj, filename, display_output=Fa
         lines = list()
 
         result = network_controller_obj.peek_cdu_stats()
+        fun_test.sleep("Let time go for another second", seconds=1)
+        result = network_controller_obj.peek_cdu_stats()
         master_table_obj = get_nested_dict_stats(result=result)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         lines.append(master_table_obj.get_string())
@@ -1181,7 +1186,10 @@ def populate_ca_output_file(network_controller_obj, filename, display_output=Fal
     try:
         lines = list()
 
-        result = network_controller_obj.peek_ca_stats()
+        result_1 = network_controller_obj.peek_ca_stats()
+        fun_test.sleep("Let time go for another second", seconds=1)
+        result_2 = network_controller_obj.peek_ca_stats()
+        result = get_diff_results(old_result=result_1, new_result=result_2)
         lines.append("\n########################  %s ########################\n" % str(get_timestamp()))
         for key, val in result.iteritems():
 
@@ -1205,3 +1213,18 @@ def populate_ca_output_file(network_controller_obj, filename, display_output=Fal
     except Exception as ex:
         fun_test.critical(str(ex))
     return output
+
+
+def get_diff_results(old_result, new_result):
+    result = {}
+    try:
+        for key, val in new_result.iteritems():
+            if isinstance(val, dict):
+                result[key] = get_diff_results(old_result=old_result[key], new_result=new_result[key])
+            else:
+                if not key in old_result:
+                    old_result[key] = 0
+                result[key] = new_result[key] - old_result[key]
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
