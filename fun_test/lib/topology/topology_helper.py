@@ -13,7 +13,7 @@ from lib.system.utils import parse_file_to_json
 from lib.host.linux import Linux
 from lib.host.router import Router
 from lib.topology.host import Host
-from lib.fun.fs import ComE
+from lib.fun.fs import ComE, BootPhases
 
 
 class TopologyHelper:
@@ -294,6 +294,7 @@ class TopologyHelper:
 
             # Fetch storage container orchestrator
 
+            # Check if DUTs FS boot up complete
             for dut_index, dut_obj in duts.items():
                 if dut_index in self.disabled_dut_indexes:
                     continue
@@ -306,28 +307,57 @@ class TopologyHelper:
                 fun_test.debug("Allocating the DUT")
                 self.allocate_dut(dut_index=dut_index, dut_obj=dut_obj, orchestrator_obj=orchestrator)
 
-                fun_test.debug("Setting up peers on the interfaces")
+            peer_allocation_duts = duts.values()  # DUT indexes that need peer allocation
 
-                for interface_index, interface_info in dut_obj.interfaces.items():
-                    fun_test.debug("Setting up DUT interface {}".format(interface_index))
-                    peer_info = interface_info.peer_info
-                    # fun_test.simple_assert(peer_info, "Peer info")
-                    if peer_info:
+            """
+            Give up time is function of number of DUTs but for now lets keep it 10 minutes
+            """
+            f1_bringup_all_duts_time = 60 * 10
+            f1_bringup_all_duts_timer = FunTimer(max_time=f1_bringup_all_duts_time)
+            fun_test.simple_assert(peer_allocation_duts, "At least one DUT is required")
+            while peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired():
 
-                        if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
-                            instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
-                                                                orchestrator_obj=orchestrator)
-                            fun_test.simple_assert(instance, "Bare-metal instance")
+                fun_test.sleep("allocate_topology: Waiting for F1 bringup on al DUTs", seconds=10)
+                for dut_obj in peer_allocation_duts:
+                    if dut_obj.index in self.disabled_dut_indexes:
+                        continue
+                    fun_test.debug("Setting up peers on the interfaces")
 
-                            if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
-                                fun_test.test_assert(peer_info.reboot(), "Host instance: {} rebooted issued".format(str(instance)))
+                    dut_instance = dut_obj.get_instance()
+                    boot_phase = dut_instance.get_boot_phase()
+                    # fun_test.log("DUT: {} current boot-phase".format(boot_phase))
+                    fun_test.simple_assert(boot_phase != BootPhases.FS_BRING_UP_ERROR, "DUT: {} Bring up error".format(dut_instance))
+                    if dut_instance.get_boot_phase() != BootPhases.FS_BRING_UP_COMPLETE:
+                        # fun_test.log("DUT: {} bootup not complete".format(dut_instance))
+                        continue
 
-                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
-                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=orchestrator)
-                        elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
-                            self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=orchestrator)
+                    for interface_index, interface_info in dut_obj.interfaces.items():
+                        fun_test.debug("Setting up DUT interface {}".format(interface_index))
+                        peer_info = interface_info.peer_info
+                        # fun_test.simple_assert(peer_info, "Peer info")
+                        if peer_info:
+
+                            if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
+                                instance = self.allocate_bare_metal(bare_metal_end_point=peer_info,
+                                                                    orchestrator_obj=orchestrator)
+                                fun_test.simple_assert(instance, "Bare-metal instance")
+
+                                if interface_info.type == DutInterface.INTERFACE_TYPE_PCIE:
+                                    fun_test.test_assert(peer_info.reboot(), "Host instance: {} rebooted issued".format(str(instance)))
+
+                            elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
+                                self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                         orchestrator_obj=orchestrator)
+                            elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
+                                self.allocate_hypervisor(hypervisor_end_point=peer_info,
+                                                         orchestrator_obj=orchestrator)
+                    peer_allocation_duts.remove(dut_obj)
+            if peer_allocation_duts:
+                for dut_obj in peer_allocation_duts:
+                    dut_instance = dut_obj.get_instance()
+                    fun_test.log("DUT: {} bringup incomplete".format(dut_instance))
+            fun_test.test_assert(not peer_allocation_duts, "All DUT's bringups are complete")
+            fun_test.simple_assert(not f1_bringup_all_duts_timer.is_expired(), "F1 bringup all DUTS not expired")
 
             for dut_index, dut_obj in duts.items():
                 for f1_index, interface_info in dut_obj.fpg_interfaces.iteritems():
@@ -397,6 +427,7 @@ class TopologyHelper:
         dut_instance = orchestrator_obj.launch_dut_instance(dut_index=dut_index, dut_obj=dut_obj)
         fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
         dut_obj.set_instance(dut_instance)
+        return dut_instance
 
     @fun_test.safe
     def allocate_switch(self, switch_name, switch_obj):
