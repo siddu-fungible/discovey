@@ -137,7 +137,6 @@ def get_periodic_scheduling_time_in_seconds(days, requested_hour, requested_minu
             if extra_seconds >= 0:
                 break
 
-
         if requested_day > current_day_of_week:
             # process something
             derived_time = now.replace(hour=requested_hour, minute=requested_minute)

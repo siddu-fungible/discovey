@@ -612,6 +612,12 @@ class Asset(FunModel):
             self.save()
 
 
+class Task(models.Model):
+    name = models.TextField(default="TBD")
+    task_id = models.IntegerField(unique=True)
+    category = models.TextField()   # From TaskCategory
+
+
 class TaskStatus(models.Model):
     path = models.TextField(unique=True, default="")
     name = models.TextField(unique=True)
@@ -626,7 +632,12 @@ class TaskStatus(models.Model):
 
     @staticmethod
     def set_state(path, name, state=JobStatusType.UNKNOWN):
-        TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state})
+        TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state, "date_time": get_current_time()})
+
+    @staticmethod
+    def get(path, name, state=JobStatusType.UNKNOWN):
+        obj, _ = TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state, "date_time": get_current_time()})
+        return obj
 
     @staticmethod
     def get_state(path, name):
