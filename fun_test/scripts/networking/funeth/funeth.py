@@ -662,7 +662,7 @@ class Funeth:
                              source_username=linux_obj.ssh_username,
                              source_password=linux_obj.ssh_password,
                              target_file_path=artifact_file_name)
-                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                fun_test.add_auxillary_file(description="{} {}".format(log_file.split('.')[0], linux_obj.host_ip),
                                             filename=artifact_file_name)
 
     def collect_dmesg(self):
@@ -678,5 +678,5 @@ class Funeth:
                              source_username=linux_obj.ssh_username,
                              source_password=linux_obj.ssh_password,
                              target_file_path=artifact_file_name)
-                fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]),
+                fun_test.add_auxillary_file(description="{} {}".format(log_file.split('.')[0], linux_obj.host_ip),
                                             filename=artifact_file_name)
