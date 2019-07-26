@@ -392,18 +392,14 @@ class BltVolumePerformanceHelper(MetricHelper):
             try:
                 fun_test.log("Entering the jenkins job id map entry for {} and  {}".format(date_time, version))
                 completion_date = timezone.localtime(one_entry.input_date_time)
-                completion_date = str(completion_date).split(":")
-                completion_date = completion_date[0] + ":" + completion_date[1]
-                build_date = parser.parse(completion_date)
                 suite_execution_id = fun_test.get_suite_execution_id()
                 add_jenkins_job_id_map(jenkins_job_id=0,
                                        fun_sdk_branch="",
                                        git_commit="",
                                        software_date=0,
                                        hardware_version="",
-                                       completion_date=completion_date,
                                        build_properties="", lsf_job_id="",
-                                       sdk_version=version, build_date=build_date,
+                                       sdk_version=version, build_date=completion_date,
                                        suite_execution_id=suite_execution_id)
             except Exception as ex:
                 fun_test.critical(str(ex))
@@ -485,9 +481,6 @@ class ModelHelper(MetricHelper):
                 self.id = super(ModelHelper, self).add_entry(**new_kwargs)
                 if "input_version" in new_kwargs and "input_date_time" in new_kwargs:
                     date_time = timezone.localtime(new_kwargs["input_date_time"])
-                    date_time = str(date_time).split(":")
-                    completion_date = date_time[0] + ":" + date_time[1]
-                    build_date = parser.parse(completion_date)
                     version = new_kwargs["input_version"]
                     suite_execution_id = fun_test.get_suite_execution_id()
                     add_jenkins_job_id_map(jenkins_job_id=0,
@@ -495,9 +488,8 @@ class ModelHelper(MetricHelper):
                                            git_commit="",
                                            software_date=0,
                                            hardware_version="",
-                                           completion_date=completion_date,
                                            build_properties="", lsf_job_id="",
-                                           sdk_version=version, build_date=build_date,
+                                           sdk_version=version, build_date=date_time,
                                            suite_execution_id=suite_execution_id)
                 result = True
             except Exception as ex:
