@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from fun_settings import DATA_STORE_DIR
 from fun_settings import SCRIPTS_DIR
 from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
@@ -202,7 +203,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
     for nc_obj in overlay_config_dict:
         nc_obj.overlay_num_flows(512 * 1024)
 
-    nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
+    nc_obj_src, nc_obj_dst = network_controller_obj_f1_0, network_controller_obj_f1_1
     for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
         for nc_obj in (nc_obj_src, nc_obj_dst):
             if nc_obj == nc_obj_src:
@@ -239,7 +240,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                                 flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
                             elif nc_obj == nc_obj_dst:
                                 flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
-                        else:
+                        elif flow_type == 'vxlan_decap':
                             flow_sip, flow_dip = dip, sip
                             if nc_obj == nc_obj_src:
                                 flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
@@ -629,7 +630,7 @@ class FunethTestScpBase(FunTestCase):
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
-        tmp_filename = '{}/funeth_sanity_scp_test_file'.format(fun_test.get_logs_directory())
+        tmp_filename = '{}/networking/funeth_sanity_scp_test_file'.format(DATA_STORE_DIR)
         fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, tmp_filename))
         with open(tmp_filename, 'w') as f:
             f.write(content)

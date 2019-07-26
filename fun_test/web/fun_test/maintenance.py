@@ -215,7 +215,7 @@ if __name__ == "__main_l4_firewall__":
             chart.save()
     print "added 1500B datasets for 124M flows"
 
-if __name__ == "__main__":
+if __name__ == "__main_qd256__":
     internal_iops_chart_names = ["read_qd_pcie_output_iops", "rand_read_qd_pcie_output_iops"]
     for internal_chart_name in internal_iops_chart_names:
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
@@ -260,5 +260,33 @@ if __name__ == "__main__":
                         work_in_progress=False,
                         platform=FunPlatform.F1).save()
     print "added charts for 256 qdepth latency"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.filter(leaf=True)
+    for entry in entries:
+        if ("underlay" in entry.internal_chart_name or "overlay" in entry.internal_chart_name) and \
+                "latency" not in entry.internal_chart_name:
+            # print "overlay or underlay chart is {}".format(entry.internal_chart_name)
+            if "overlay" in entry.internal_chart_name:
+                index = entry.internal_chart_name.find('_overlay')
+            else:
+                index = entry.internal_chart_name.find('_underlay')
+            internal_chart_name = entry.internal_chart_name[:index]
+            # print "original chart is {}".format(internal_chart_name)
+            overlay_underlay_data_sets = json.loads(entry.data_sets)
+            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                for ou_data_set in overlay_underlay_data_sets:
+                    if data_set["name"] == ou_data_set["name"]:
+                        if data_set["output"]["unit"] == ou_data_set["output"]["unit"]:
+                            ou_data_set["output"]["expected"] = data_set["output"]["expected"]
+                        else:
+                            print entry.internal_chart_name, data_set["name"]
+
+            entry.data_sets = json.dumps(overlay_underlay_data_sets)
+            entry.save()
+
+
 
 
