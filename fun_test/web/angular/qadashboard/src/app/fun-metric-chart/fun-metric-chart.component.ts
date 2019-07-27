@@ -241,16 +241,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //checks if the given fieldname is relevant to display in show tables
   isFieldRelevant(fieldName): boolean {
     let relevant = false;
-    if (fieldName === "input_date_time") {
-      relevant = true;
-    }
     this.filterDataSets.forEach((oneDataSet) => {
       Object.keys(oneDataSet.inputs).forEach((key) => {
         if (key === fieldName) {
           relevant = true;
         }
       });
-      if (fieldName === oneDataSet.output.name) {
+      if (fieldName === oneDataSet.output.name || fieldName === "input_date_time" || fieldName === oneDataSet.output.name + "_unit") {
         relevant = true;
       }
     });
@@ -339,7 +336,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let key = "";
     try {
       let dateString = xDate.split('.')[0];
-      key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+      // key = dateString.slice(0, -2) + '00'; //added since the past values do not have accurate timestamp
+      key = dateString; //removed the completion date and is dependent on build date
     }
     catch (e) {
       this.loggerService.error("Date on xAxis is empty for tooltip and point click call back");

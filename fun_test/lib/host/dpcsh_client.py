@@ -78,7 +78,7 @@ class DpcshClient(object):
                 fun_test.log("DPCSH Send:" + command + "\n")
 
             self.sendall(command, command_duration)
-            time.sleep(sleep_duration)
+            #time.sleep(sleep_duration)
             output = self._read(command_duration, chunk)
             if output:
                 actual_output = self._parse_actual_output(output=output)
