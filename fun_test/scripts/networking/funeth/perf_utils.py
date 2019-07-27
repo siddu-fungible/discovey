@@ -323,9 +323,9 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
         output_list.append({'cdu': output})
 
         # ca stats
-        fun_test.log('{} dpc: Get ca stats'.format(f1))
-        output = nc_obj.peek_ca_stats()
-        output_list.append({'ca': output})
+        #fun_test.log('{} dpc: Get ca stats'.format(f1))
+        #output = nc_obj.peek_ca_stats()
+        #output_list.append({'ca': output})
 
         # Upload stats output file
         dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
