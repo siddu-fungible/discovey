@@ -108,7 +108,7 @@ def setup_nu_host(funeth_obj):
                 linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro off; sudo ethtool -k fpg0')
 
 
-def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
+def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
@@ -135,6 +135,12 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
         else:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+
+        # TODO: no need after LSO/checksum offload is enabled for overlay
+        if not tx_offload:
+            fun_test.test_assert(funeth_obj.enable_tx_offload(hu, disable=True),
+                                 'Disable HU host {} funeth interfaces Tx offload.'.format(linux_obj.host_ip))
+
         if is_vm:
             cpu_list = CPU_LIST_VM
         else:
@@ -404,7 +410,7 @@ class FunethSanity(FunTestScript):
             fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
 
             setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
-            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True, tx_offload=False)
 
             # Configure overlay
             if configure_overlay:
