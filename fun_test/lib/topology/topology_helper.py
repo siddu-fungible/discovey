@@ -315,7 +315,7 @@ class TopologyHelper:
             f1_bringup_all_duts_time = 60 * 10
             f1_bringup_all_duts_timer = FunTimer(max_time=f1_bringup_all_duts_time)
             fun_test.simple_assert(peer_allocation_duts, "At least one DUT is required")
-            while peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired():
+            while peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
 
                 fun_test.sleep("allocate_topology: Waiting for F1 bringup on al DUTs", seconds=10)
                 for dut_obj in peer_allocation_duts:
@@ -327,7 +327,7 @@ class TopologyHelper:
                     boot_phase = dut_instance.get_boot_phase()
                     # fun_test.log("DUT: {} current boot-phase".format(boot_phase))
                     fun_test.simple_assert(boot_phase != BootPhases.FS_BRING_UP_ERROR, "DUT: {} Bring up error".format(dut_instance))
-                    if dut_instance.get_boot_phase() != BootPhases.FS_BRING_UP_COMPLETE:
+                    if not dut_instance.is_u_boot_complete():
                         # fun_test.log("DUT: {} bootup not complete".format(dut_instance))
                         continue
 
