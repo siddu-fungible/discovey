@@ -1917,7 +1917,7 @@ class NetworkController(DpcshClient):
     def overlay_vif_table_add_mac_entry(self, vnid, mac_addr, egress_vif):
         stats = None
         try:
-            cmd = ['vif_table', 'vnid', vnid, 'mac', '"{}"'.format(mac_addr), 'egress_vif', egress_vif]
+            cmd = ['vif_table', 'vnid', vnid, 'mac', '{}'.format(mac_addr), 'egress_vif', egress_vif]
             msg = "Overlay {}".format(cmd)
             fun_test.debug(msg)
             result = self.json_execute(verb="overlay", data=cmd, command_duration=self.COMMAND_DURATION)
