@@ -345,6 +345,34 @@ class Funeth:
 
         return result
 
+    def enable_namespace_interfaces_tx_offload(self, nu_or_hu, ns=None, disable=False):
+        """Enable interfaces Tx offload in a namespace."""
+        result = True
+        op = 'off' if disable else 'on'
+        for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            cmd = 'ethtool -K {} tx {}'.format(intf, op)
+            cmd_chk = 'ethtool -k {}'.format(intf)
+            if ns is None or 'netns' in cmd:
+                cmds = ['sudo {}; {}'.format(cmd, cmd_chk)]
+            else:
+                cmds = ['sudo ip netns exec {0} {1}; sudo ip netns exec {0} {2}'.format(ns, cmd, cmd_chk)]
+            if ns:
+                cmds = ['sudo ip netns add {}'.format(ns), 'sudo ip link set {} netns {}'.format(intf, ns)] + cmds
+            output = self.linux_obj_dict[nu_or_hu].command(';'.join(cmds))
+
+            match = re.search(r'tx-checksum-ip-generic: {0}.*tcp-segmentation-offload: {0}'.format(op), output, re.DOTALL)
+            result &= match is not None
+
+        return result
+
+    def enable_tx_offload(self, nu_or_hu, disable=False):
+        """Enable Tx offload to the interfaces."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            result &= self.enable_namespace_interfaces_tx_offload(nu_or_hu, ns, disable=disable)
+
+        return result
+
     def enable_namespace_interfaces_tso(self, nu_or_hu, ns=None, disable=False):
         """Enable interfaces TSO in a namespace."""
         result = True
