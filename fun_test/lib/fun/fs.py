@@ -546,6 +546,7 @@ class BootupWorker(Thread):
                 bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
 
             fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
+            fs.u_boot_complete = True
 
             come = fs.get_come()
             fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
@@ -887,6 +888,7 @@ class Fs(object, ToDictMixin):
         if disable_u_boot_version_validation is not None:
             self.validate_u_boot_version = not disable_u_boot_version_validation
         self.bootup_worker = None
+        self.u_boot_complete = False
 
     def __str__(self):
         name = self.spec.get("name", None)
@@ -894,6 +896,8 @@ class Fs(object, ToDictMixin):
             name = "FS"
         return name
 
+    def is_u_boot_complete(self):
+        return self.u_boot_complete
 
     def get_workaround(self, variable):
         value = None
