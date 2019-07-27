@@ -613,8 +613,12 @@ class Asset(FunModel):
 
 class Task(models.Model):
     name = models.TextField(default="TBD")
-    task_id = models.IntegerField(unique=True)
     category = models.TextField()   # From TaskCategory
+    short_description = models.TextField(default="")
+    long_description = models.TextField(default="")
+
+    class Meta:
+        unique_together = ('name', 'category',)
 
 
 class TaskStatus(models.Model):
