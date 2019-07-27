@@ -174,7 +174,7 @@ def setup_funcp(test_bed_type):
     abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
     funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
                                     abstract_config_f1_1=abstract_json_file_f1_1)
-    fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
+    #fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
     # TODO: sanity check of control plane
 
 
