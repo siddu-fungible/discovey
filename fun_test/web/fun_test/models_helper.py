@@ -463,7 +463,10 @@ def _get_suite_executions(execution_id=None,
         q = q & Q(test_bed_type=test_bed_type)
     if suite_path:
         q = q & Q(suite_path=suite_path)
-    q = q & (Q(started_time__gt=get_current_time() - timedelta(days=30)) | Q(state=JobStatusType.AUTO_SCHEDULED))
+    if execution_id is not None:
+        q = q
+    else:
+        q = q & (Q(started_time__gt=get_current_time() - timedelta(days=30)) | Q(state=JobStatusType.AUTO_SCHEDULED))
     all_objects = SuiteExecution.objects.filter(q).order_by('-started_time')
 
     if get_count:
