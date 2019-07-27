@@ -42,7 +42,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
                             fun_cp_callback=fun_cp_callback, power_cycle_come=True)
             self.dut_instance = fs_obj
             # Start Fs
-            fun_test.test_assert(fs_obj.bootup(non_blocking=True), "FS bootup non-blocking initiated")
+            fun_test.test_assert(fs_obj.bootup(non_blocking=True, threaded=True), "FS bootup non-blocking initiated")
 
             # TODO: Just for backward compatibility with simulation scripts
             come = fs_obj.get_come()
