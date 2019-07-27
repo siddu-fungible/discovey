@@ -594,6 +594,7 @@ def redis_del_fcp_ftep(linux_obj):
             linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, del_file))
         linux_obj.command('{} "cat {}"'.format(cmd_prefix, del_file))
 
+        fun_test.log("Check and delete FCP FTEP to tear down FCP tunnel in {}".format(k))
         linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
         linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, del_file))
         linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
