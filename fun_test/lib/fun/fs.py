@@ -1016,8 +1016,7 @@ class Fs(object, ToDictMixin):
                   skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
                   spec=fs_spec)
 
-    def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
-        threaded = True
+    def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False, threaded=False):
         if not threaded:
 
             self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
