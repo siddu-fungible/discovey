@@ -39,9 +39,11 @@ class TopologyHelper:
     @fun_test.safe
     def get_expanded_topology(self):
         spec = self.spec
-
+        is_mode_simulation = False
         if not self.spec:
             test_bed_name = fun_test.get_job_environment_variable(variable="test_bed_type")
+            if test_bed_name == "simulation":
+                is_mode_simulation = True
             if test_bed_name == "suite-based":
                 custom_test_bed_spec = fun_test.get_suite_run_time_environment_variable(name="custom_test_bed_spec")
                 self.spec = custom_test_bed_spec
@@ -88,6 +90,8 @@ class TopologyHelper:
                     fun_test.log("Skipping initialization for Dut-index: {}".format(dut_index))
                     continue
 
+                if "mode" in dut_info and dut_info["mode"] == Dut.MODE_SIMULATION:
+                    is_mode_simulation = True
                 dut_type = dut_info["type"]
 
                 start_mode = F1.START_MODE_NORMAL
@@ -95,7 +99,8 @@ class TopologyHelper:
                     start_mode = dut_info["start_mode"]
 
                 # Create DUT object
-                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode)
+                dut_mode = Dut.MODE_REAL if not is_mode_simulation else Dut.MODE_SIMULATION
+                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode, mode=dut_mode)
                 if "dut" in dut_info:
                     dut_obj.set_name(name=dut_info["dut"])
 
@@ -308,14 +313,19 @@ class TopologyHelper:
                 self.allocate_dut(dut_index=dut_index, dut_obj=dut_obj, orchestrator_obj=orchestrator)
 
             peer_allocation_duts = duts.values()  # DUT indexes that need peer allocation
+            simulation_mode_found = False
+            for dut in peer_allocation_duts:
+                if dut.mode == Dut.MODE_SIMULATION:
+                    simulation_mode_found = True
+                    break
 
             """
             Give up time is function of number of DUTs but for now lets keep it 10 minutes
             """
             f1_bringup_all_duts_time = 60 * 10
             f1_bringup_all_duts_timer = FunTimer(max_time=f1_bringup_all_duts_time)
-            fun_test.simple_assert(peer_allocation_duts, "At least one DUT is required")
-            while peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
+            fun_test.simple_assert(peer_allocation_duts or simulation_mode_found, "At least one DUT is required")
+            while not simulation_mode_found and peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
 
                 fun_test.sleep("allocate_topology: Waiting for F1 bringup on al DUTs", seconds=10)
                 for dut_obj in peer_allocation_duts:
@@ -352,12 +362,12 @@ class TopologyHelper:
                                 self.allocate_hypervisor(hypervisor_end_point=peer_info,
                                                          orchestrator_obj=orchestrator)
                     peer_allocation_duts.remove(dut_obj)
-            if peer_allocation_duts:
+            if peer_allocation_duts and not simulation_mode_found:
                 for dut_obj in peer_allocation_duts:
                     dut_instance = dut_obj.get_instance()
                     fun_test.log("DUT: {} bringup incomplete".format(dut_instance))
-            fun_test.test_assert(not peer_allocation_duts, "All DUT's bringups are complete")
-            fun_test.simple_assert(not f1_bringup_all_duts_timer.is_expired(), "F1 bringup all DUTS not expired")
+            fun_test.test_assert(not peer_allocation_duts or simulation_mode_found, "All DUT's bringups are complete")
+            fun_test.simple_assert(not f1_bringup_all_duts_timer.is_expired() or simulation_mode_found, "F1 bringup all DUTS not expired")
 
             for dut_index, dut_obj in duts.items():
                 for f1_index, interface_info in dut_obj.fpg_interfaces.iteritems():
