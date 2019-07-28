@@ -611,11 +611,23 @@ class Asset(FunModel):
             self.save()
 
 
-class Task(models.Model):
+class SuiteItems(models.Model):
+    script_path = models.TextField()
+    inputs = JSONField(default=None)
+    test_case_ids = ArrayField(models.IntegerField(default=-1), default=None)
+
+
+class Suite(models.Model):
     name = models.TextField(default="TBD")
-    category = models.TextField()   # From TaskCategory
+    category = models.TextField(default="category")   #
+    sub_category = models.TextField(default="sub-category")
+
     short_description = models.TextField(default="")
     long_description = models.TextField(default="")
+    tags = JSONField(default=[])
+    custom_test_bed_spec = JSONField(default=None)
+
+
 
     class Meta:
         unique_together = ('name', 'category',)
