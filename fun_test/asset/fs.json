@@ -37,6 +37,9 @@
   },
   {
     "name": "fs-6",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "bmc": {
       "mgmt_ip": "10.1.20.153",
       "mgmt_ssh_username": "sysadmin",
@@ -112,6 +115,9 @@
     }
   }, {
     "name": "fs-21",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "gateway_ip": "10.1.20.1",
     "bmc": {
       "mgmt_ip": "fs21-bmc.fungible.local",
