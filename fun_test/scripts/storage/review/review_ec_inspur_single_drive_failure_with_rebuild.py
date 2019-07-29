@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 import random
@@ -8,10 +8,31 @@ from lib.topology.topology_helper import TopologyHelper
 from collections import OrderedDict
 from scripts.storage.storage_helper import *
 from lib.templates.storage.storage_fs_template import *
+from fun_global import PerfUnit
 
 '''
 Script to test single drive failure scenarios for 4:2 EC config
 '''
+
+
+def add_to_data_base(value_dict):
+    '''
+    value_dict = {"date_time": get_data_collection_time(), "num_hosts": 1, "num_f1s": 1, "base_file_copy_time": 1.32,
+                  "copy_time_during_plex_fail": 2.13, "file_copy_time_during_rebuild": 3.123, "plex_rebuild_time": 4.12}
+    '''
+
+    unit_dict = {"base_file_copy_time_unit": PerfUnit.UNIT_SECS, "copy_time_during_plex_fail_unit": PerfUnit.UNIT_SECS,
+                 "file_copy_time_during_rebuild_unit": PerfUnit.UNIT_SECS, "plex_rebuild_time_unit": PerfUnit.UNIT_SECS}
+
+    model_name = "InspurSingleDiskFailurePerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
 
 
 class ECVolumeLevelScript(FunTestScript):
@@ -129,10 +150,6 @@ class ECVolumeLevelScript(FunTestScript):
                                                                        1: {"boot_args": self.bootargs[1]}})
             self.topology = self.topology_helper.deploy()
             fun_test.test_assert(self.topology, "Topology deployed")
-
-            # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_multi_drive_failure_with_rebuild")
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
             if self.testbed_type != "suite-based":
@@ -792,10 +809,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if re.search("([0-9].*)", search_time.group(1)):
                         result[num] = search_time.group(1)
             fun_test.log("Recorded start time: {} and end time: {} for file copy".format(result[0], result[1]))
-            copy_time = int(result[1]) - int(result[0])
-            fun_test.log("Base File is copied in: {} sec".format(copy_time))
+            base_file_copy_time = int(result[1]) - int(result[0])
+            fun_test.log("Base File is copied in: {} sec".format(base_file_copy_time))
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
-            row_data_dict["base_copy_time"] = copy_time
+            row_data_dict["base_copy_time"] = base_file_copy_time
 
             # Checking if iostat process is still running...If so killing it...
             iostat_pid_check = host_handle.get_process_id("iostat")
@@ -957,10 +974,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if re.search("([0-9].*)", search_time.group(1)):
                         result[num] = search_time.group(1)
             fun_test.log("Recorded start time: {} and end time: {} for file copy".format(result[0], result[1]))
-            copy_time = int(result[1]) - int(result[0])
-            fun_test.log("Time to copy the file during drive/plex failure: {} sec".format(copy_time))
+            copy_time_during_plex_fail = int(result[1]) - int(result[0])
+            fun_test.log("Time to copy the file during drive/plex failure: {} sec".format(copy_time_during_plex_fail))
 
-            row_data_dict["copy_time_during_plex_fail"] = copy_time
+            row_data_dict["copy_time_during_plex_fail"] = copy_time_during_plex_fail
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
             # Checking if iostat process is still running...If so killing it...
@@ -1115,11 +1132,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                     if re.search("([0-9].*)", search_time.group(1)):
                         result[num] = search_time.group(1)
             fun_test.log("Recorded start time: {} and end time: {} for file copy".format(result[0], result[1]))
-            copy_time = int(result[1]) - int(result[0])
-            fun_test.log("Time to copy the file during volume rebuild: {} sec".format(copy_time))
+            file_copy_time_during_rebuild = int(result[1]) - int(result[0])
+            fun_test.log("Time to copy the file during volume rebuild: {} sec".format(file_copy_time_during_rebuild))
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
-            row_data_dict["copy_time_during_rebuild"] = copy_time
+            row_data_dict["copy_time_during_rebuild"] = file_copy_time_during_rebuild
             row_data_dict["fio_job_name"] = "inspur_functional_8_7_1_f1_{}_vol_{}_host_{}".format(
                 self.num_f1s, self.ec_info["num_volumes"], self.num_hosts)
             row_data_dict["vol_size"] = str(self.ec_info["capacity"] / (1024 ** 3)) + "G"
@@ -1205,9 +1222,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                         break
                 else:
                     fun_test.test_assert(False, "Rebuild operation on plex {} completed".format(spare_uuid))
-                rebuild_time = rebuild_stop_time - rebuild_start_time
-                fun_test.log("Time taken to rebuild plex: {}".format(rebuild_time))
-                row_data_dict["plex_rebuild_time"] = rebuild_time
+                plex_rebuild_time = rebuild_stop_time - rebuild_start_time
+                fun_test.log("Time taken to rebuild plex: {}".format(plex_rebuild_time))
+                row_data_dict["plex_rebuild_time"] = plex_rebuild_time
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -1219,6 +1236,21 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
+
+            # Datetime required for daily Dashboard data filter
+            self.db_log_time = get_data_collection_time()
+            fun_test.log("Data collection time: {}".format(self.db_log_time))
+            # Building value_dict for dashboard update
+            value_dict = {
+                "date_time": self.db_log_time,
+                "num_hosts": self.num_hosts,
+                "num_f1s": self.num_f1s,
+                "base_file_copy_time": base_file_copy_time,
+                "copy_time_during_plex_fail": copy_time_during_plex_fail,
+                "file_copy_time_during_rebuild": file_copy_time_during_rebuild,
+                "plex_rebuild_time": plex_rebuild_time
+            }
+            add_to_data_base(value_dict)
             # post_results("Inspur Performance Test", test_method, *row_data_list)
 
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
