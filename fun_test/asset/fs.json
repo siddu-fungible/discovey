@@ -380,6 +380,9 @@
   },
   {
     "name": "fs-66",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+      },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "fs66-bmc",
