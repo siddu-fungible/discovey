@@ -19,6 +19,7 @@ def users(request, id):
         new_user = User(first_name=first_name, last_name=last_name, email=email)
         new_user.save()
         result = new_user.to_dict()
+        PerformanceUserProfile(email=email).save()
 
     elif request.method == "GET":
         users = User.objects.all().order_by('first_name')
@@ -42,16 +43,8 @@ def profile(request, id):
         last_name = request_json["last_name"]
         email = request_json["email"]
 
-        if PerformanceUserProfile.objects.filter(email=email).count():
-            raise Exception("User with email: {} already exists".format(email))
-        metric_ids = []
-        interested_metrics = {}
-        for metric_id in metric_ids:
-            interested_metrics[metric_id] = {"notify": False}
-        new_user = PerformanceUserProfile(first_name=first_name, last_name=last_name, email=email,
-                                          interested_metrics=interested_metrics)
-        new_user.save()
-        result = new_user.to_dict()
+        profile = PerformanceUserProfile.objects.get(email=email)
+        result = profile.to_dict()
 
     elif request.method == "GET":
         users = PerformanceUserProfile.objects.all().order_by('first_name')

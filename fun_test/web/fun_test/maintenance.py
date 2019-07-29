@@ -9,6 +9,7 @@ from fun_global import ChartType, FunChartType
 from web.fun_test.metrics_models import *
 from collections import OrderedDict
 from web.fun_test.metrics_lib import MetricLib
+from web.fun_test.models import *
 
 METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
@@ -262,7 +263,7 @@ if __name__ == "__main_qd256__":
                         platform=FunPlatform.F1).save()
     print "added charts for 256 qdepth latency"
 
-if __name__ == "__main__":
+if __name__ == "__main_setting_expected__":
     entries = MetricChart.objects.filter(leaf=True)
     for entry in entries:
         if ("underlay" in entry.internal_chart_name or "overlay" in entry.internal_chart_name) and \
@@ -287,4 +288,10 @@ if __name__ == "__main__":
 
             entry.data_sets = json.dumps(overlay_underlay_data_sets)
             entry.save()
+
+if __name__ == "__main__":
+    users = User.objects.all()
+    for user in users:
+        PerformanceUserProfile(email=user.email).save()
+    print "added users for performance profile"
 
