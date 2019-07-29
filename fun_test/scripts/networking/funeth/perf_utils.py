@@ -317,6 +317,16 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             output = nc_obj.flow_list(huid=huid)
             output_list.append({'flow list {}'.format(huid): output})
 
+        # cdu stats
+        fun_test.log('{} dpc: Get cdu stats'.format(f1))
+        output = nc_obj.peek_cdu_stats()
+        output_list.append({'cdu': output})
+
+        # ca stats
+        #fun_test.log('{} dpc: Get ca stats'.format(f1))
+        #output = nc_obj.peek_ca_stats()
+        #output_list.append({'ca': output})
+
         # Upload stats output file
         dpc_stats_filename = '{}_{}_{}_dpc_stats_{}.txt'.format(str(version), tc_id, f1, when)
         file_path = fun_test.get_test_case_artifact_file_name(dpc_stats_filename)
@@ -581,9 +591,10 @@ def redis_del_fcp_ftep(linux_obj):
         cmds = ['SELECT 1', cmd_op]
         linux_obj.command('{0} "rm {1}; touch {1}"'.format(cmd_prefix, del_file))
         for cmd in cmds:
-            linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, chk_file))
+            linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, del_file))
         linux_obj.command('{} "cat {}"'.format(cmd_prefix, del_file))
 
+        fun_test.log("Check and delete FCP FTEP to tear down FCP tunnel in {}".format(k))
         linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))
         linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, del_file))
         linux_obj.command('{} "redis-cli < {}"'.format(cmd_prefix, chk_file))

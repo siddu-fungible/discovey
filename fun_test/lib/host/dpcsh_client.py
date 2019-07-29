@@ -66,7 +66,7 @@ class DpcshClient(object):
         self.sock = None
         return True
 
-    def command(self, command, legacy=False, command_duration=2, sleep_duration=2, chunk=4096):
+    def command(self, command, legacy=False, command_duration=2, sleep_duration=0.1, chunk=4096):
         result = {"status": False, "data": None, "error_message": None, "command": command}
         output = ""
         try:
@@ -78,7 +78,7 @@ class DpcshClient(object):
                 fun_test.log("DPCSH Send:" + command + "\n")
 
             self.sendall(command, command_duration)
-            #time.sleep(sleep_duration)
+            time.sleep(sleep_duration)
             output = self._read(command_duration, chunk)
             if output:
                 actual_output = self._parse_actual_output(output=output)
@@ -125,7 +125,7 @@ class DpcshClient(object):
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_execute(self, verb, data=None, command_duration=1, sleep_duration=2, tid=0, chunk=4096):
+    def json_execute(self, verb, data=None, command_duration=1, sleep_duration=0.1, tid=0, chunk=4096):
         jdict = None
         if data:
             if type(data) is not list:

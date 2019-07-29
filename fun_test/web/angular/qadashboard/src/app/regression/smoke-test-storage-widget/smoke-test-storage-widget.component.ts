@@ -85,7 +85,6 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
         suite.numFailed = i.num_failed;
         suite.numPassed = i.num_passed;
         this.lastTwoSuites.push(suite);
-
       }
       this.isDone = true;
       return of(true);
