@@ -71,6 +71,9 @@ SOAK_FLOWS_MEMCPY = "qa_soak_flows_memcpy_non_coh"
 VOLTEST_BLT_1 = "qa_voltest_blt_performance"
 VOLTEST_BLT_8 = "qa_voltest_blt_8_performance"
 VOLTEST_BLT_12 = "qa_voltest_blt_12_performance"
+TERAMARK_EC_S1 = "qa_s1_ec_teramark"
+TERAMARK_JPEG_S1 = "qa_s1_jpeg_teramark"
+TERAMARK_ZIP_S1 = "qa_s1_zip_teramark"
 
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -164,19 +167,15 @@ def set_networking_chart_status(platform=FunPlatform.F1):
 
 
 def add_version_to_jenkins_job_id_map(date_time, version):
-    date_time = timezone.localtime(date_time)
-    date_time = str(date_time).split(":")
-    completion_date = date_time[0] + ":" + date_time[1]
-    build_date = parse(completion_date)
     suite_execution_id = fun_test.get_suite_execution_id()
     add_jenkins_job_id_map(jenkins_job_id=0,
                            fun_sdk_branch="",
                            git_commit="",
                            software_date=0,
                            hardware_version="",
-                           completion_date=completion_date,
                            build_properties="", lsf_job_id="",
-                           sdk_version=version, build_date=build_date, suite_execution_id=suite_execution_id)
+                           sdk_version=version, build_date=date_time, suite_execution_id=suite_execution_id,
+                           add_associated_suites=False)
 
 
 class MyScript(FunTestScript):
@@ -197,7 +196,7 @@ class MyScript(FunTestScript):
                 RCNVME_RANDOM_WRITE_ALL, TLS_1_TUNNEL, TLS_32_TUNNEL, TLS_64_TUNNEL, SOAK_DMA_MEMCPY_THRESHOLD,
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
                 VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
-                VOLTEST_BLT_8, VOLTEST_BLT_12]
+                VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_S1]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -955,6 +954,7 @@ class FlowTestPerformanceTc(PalladiumPerformanceTc):
 
 class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_ZIP
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=21,
@@ -963,6 +963,7 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
 
     def run(self):
         metrics = collections.OrderedDict()
+        metrics['input_platform'] = self.platform
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             teramark_begin = False
@@ -1028,6 +1029,7 @@ class TeraMarkDfaPerformanceTc(PalladiumPerformanceTc):
 
 class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
+    platform = F1
 
     def describe(self):
         self.set_test_details(id=23,
@@ -1073,6 +1075,7 @@ class TeraMarkJpegPerformanceTc(PalladiumPerformanceTc):
 
                         try:
                             metrics = {}
+                            metrics['input_platform'] = self.platform
                             if not compression_ratio_found:
                                 if d["Operation"] in jpeg_operations:
                                     metrics["input_operation"] = jpeg_operations[d["Operation"]]

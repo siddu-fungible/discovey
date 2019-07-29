@@ -73,6 +73,7 @@ import {AnnouncementComponent} from './announcement/announcement.component';
 import { PerformanceSummaryWidgetComponent } from './performance/performance-summary-widget/performance-summary-widget.component';
 import { FunCardComponent } from './fun-card/fun-card.component';
 import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
+import { NetworkSanityWidgetComponent } from './regression/network-sanity-widget/network-sanity-widget.component';
 
 @NgModule({
   declarations: [
@@ -129,7 +130,8 @@ import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage
     PerformanceSummaryWidgetComponent,
     AnnouncementComponent,
     FunCardComponent,
-    SmokeTestStorageWidgetComponent
+    SmokeTestStorageWidgetComponent,
+    NetworkSanityWidgetComponent
   ],
   imports: [
     BsDropdownModule,

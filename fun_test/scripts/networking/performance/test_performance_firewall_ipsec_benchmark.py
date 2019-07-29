@@ -33,9 +33,8 @@ class ScriptSetup(FunTestScript):
         if not f1_index:
             f1_index = 0
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server\
-                                    --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
-                                    override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
+            bootargs = 'app=hw_hsu_test sku=SKU_FS1600_0 --dpc-server --dis-stats --dpc-uart --csr-replay --all_100g --disable-wu-watchdog \
+                                                override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303'
             #fs = Fs.get(disable_f1_index=f1_index)
             fs = Fs.get(disable_f1_index=f1_index, boot_args=bootargs)
             fun_test.shared_variables['fs'] = fs
@@ -242,7 +241,7 @@ class TestL4IPsecPerformance(FunTestCase):
         multi_flow_encrypt_64B_start_data_mpps = 60
         multi_flow_encrypt_64B_end_data_mpps = 100
         multi_flow_encrypt_64B_step_data_mpps = 5
-        multi_flow_encrypt_IMIX_start_data_mpps = 60
+        multi_flow_encrypt_IMIX_start_data_mpps = 59
         multi_flow_encrypt_IMIX_end_data_mpps = 100
         multi_flow_encrypt_IMIX_step_data_mpps = 5
         single_flow_encrypt_64B_start_data_mpps = 2.6
@@ -349,6 +348,8 @@ class TestL4IPsecPerformance(FunTestCase):
                     template_obj.stc_manager.update_stream_block(traffic_streamblock, update_attributes)
                 fun_test.log("Updated frame load to %s on each port" % single_port_rate)
 
+                run_time_psw_stats_before = network_controller_obj.peek_psw_global_stats()
+
                 start_streams = template_obj.stc_manager.start_traffic_stream(
                     stream_blocks_list=current_test_streamblocks)
                 fun_test.sleep("Started streamblock %s" % current_test_streamblocks)
@@ -368,21 +369,28 @@ class TestL4IPsecPerformance(FunTestCase):
 
                 fun_test.log("total Tx Frame rate is %s and Rx frame rate is %s for stream %s at load %s mpps" %
                              (total_tx_generator_fps, total_rx_analyzer_fps, stream, current_data))
-                lower_fps_limit = total_tx_generator_fps - frame_threshold
-                upper_fps_limit = total_rx_analyzer_fps + frame_threshold
-                if total_rx_analyzer_fps >= lower_fps_limit and total_rx_analyzer_fps <= upper_fps_limit and total_rx_analyzer_fps != 0.0:
+
+                run_time_psw_stats_after = network_controller_obj.peek_psw_global_stats()
+                output = get_psw_diff_counters(hnu_1=False, hnu_2=False, input_list=['main_pkt_drop_eop'],
+                                               psw_stats_nu_1=run_time_psw_stats_before, psw_stats_nu_2=run_time_psw_stats_after)
+
+                main_pkt_drop = int(output["input"]['main_pkt_drop_eop'])
+                if main_pkt_drop <= 10:
                     result[stream]['pps'] = total_rx_analyzer_fps
                     result[stream]['throughput'] = self.calculate_throughput(current_data, frame_size)
                     fun_test.log("Max fps and throughput seen when pps %s are running is %s and %s" % (
                         total_rate, result[stream]['pps'], result[stream]['throughput']))
                     working_load = single_port_rate
                 else:
+                    fun_test.log("main pkt eop drop seen is %s" % main_pkt_drop)
                     fun_test.log("Difference seen for pps Tx: %s and Rx: %s for frame %s at rate %s" % (total_tx_generator_fps, total_rx_analyzer_fps,
                                                                                                         stream, single_port_rate * num_ports))
                     continue_higher = False
 
-                    stop_streams = template_obj.stc_manager.stop_traffic_stream(
-                        stream_blocks_list=current_test_streamblocks)
+                stop_streams = template_obj.stc_manager.stop_traffic_stream(
+                    stream_blocks_list=current_test_streamblocks)
+
+                fun_test.sleep("Letting traffic be dispersed")
 
                 fun_test.log("Updating load value")
                 current_data = current_data + step_data

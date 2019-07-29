@@ -490,8 +490,8 @@ class FunControlPlaneBringup:
                 linux_obj = FunCpDockerContainer(name=host.rstrip(), host_ip=self.fs_spec['come']['mgmt_ip'],
                                                  ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                                  ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
-                fun_test.simple_assert((self.is_valid_ip(ip=self.vlan1_ips[host.rstrip()]) and
-                                       self.is_valid_ip(self.vlan1_ips[docker])), "Ensure valid vlan ip address")
+                #fun_test.simple_assert((self.is_valid_ip(ip=self.vlan1_ips[host.rstrip()]) and
+                #                       self.is_valid_ip(self.vlan1_ips[docker])), "Ensure valid vlan ip address")
                 output = linux_obj.command("sudo ping -c 5 -i %s -I %s %s " % (interval,
                                                                                self.vlan1_ips[host.rstrip()],
                                                                                self.vlan1_ips[docker]))
@@ -534,8 +534,8 @@ class FunControlPlaneBringup:
             for ips in dest_ips:
                 result = False
                 percentage_loss = 100
-                fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(ips)),
-                                       "Ensure valid vlan ip address")
+                #fun_test.simple_assert((self.is_valid_ip(self.vlan1_ips[host.rstrip()]) and self.is_valid_ip(ips)),
+                #                       "Ensure valid vlan ip address")
                 if from_vlan:
                     command = "sudo ping -c 5 -i %s -I %s  %s " % (interval, self.vlan1_ips[host.rstrip()], ips)
                 else:
