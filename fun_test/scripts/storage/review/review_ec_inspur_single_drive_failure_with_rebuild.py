@@ -514,7 +514,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                        str(self.transport_port), self.nvme_subsystem,
                                        self.host_info[host_name]["ip"][0])
                         else:
-                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {} -Q 16". \
                                 format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
                                        str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
                                        self.host_info[host_name]["ip"][0])
@@ -691,8 +691,34 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                                            mount_point))
                 '''
 
-            ''' start: base file copy to measure time without any failure or rebuild '''
+            # Setting nr_requests value tot 4, to limit request_queue (to limit flow control)
+            try:
+                host_handle.sudo_command("echo '{}' > /sys/block/nvme0n2/queue/nr_requests".format(self.nr_requests))
+                # fun_test.simple_assert(expression=host_handle.exit_status() == 0,
+                # message="nr_requests on host {} is set to: {}".format(host_name, self.nr_requests))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
+            # Start background load on other volume
+            if hasattr(self, "back_pressure") and self.back_pressure:
+                try:
+                    # Start the fio here to produce the back pressure
+                    fio_pid = None
+                    check_pid = None
+                    self.back_pressure_io["fio_cmd_args"] += "--filename={}".\
+                        format(nvme_block_device_list[self.test_volume_start_index-1])
+                    fio_pid = host_handle.start_bg_process(command=self.back_pressure_io["fio_cmd_args"],
+                                                           timeout=self.back_pressure_io["timeout"])
+                    fun_test.test_assert(expression=fio_pid is not None, message="Back pressure is started")
+                    fun_test.sleep("Allowing FIO to warmup", 10)
+                    # Re-checking if FIO processes are not died due to any issue
+                    check_pid = host_handle.get_process_id(process_name="fio")
+                    fun_test.test_assert(expression=check_pid is not None, message="Back pressure is active")
+                    fun_test.log("Back pressure is still running pid/s: {}".format(fio_pid))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+            ''' start: base file copy to measure time without any failure or rebuild '''
             # Creating input file
             self.host_info[host_name]["src_file"]["base_file"] = {}
             self.host_info[host_name]["src_file"]["base_file"]["md5sum"] = []
@@ -733,29 +759,43 @@ class ECVolumeLevelTestcase(FunTestCase):
             else:
                 fun_test.critical("Not starting the iostat collection because of lack of interval and count details")
 
+            fun_test.log("Performing sync operation before starting file copy")
+            host_handle.sudo_command("sync", timeout=cp_timeout / 2)
+            fun_test.simple_assert(expression=host_handle.exit_status() == 0,
+                                   message="Sync command done before base file copy")
+
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 dst_file1.append(self.mount_path + str(num + 1) + "/base_file")
-                fun_test.log("Performing sync operation before starting file copy")
-                host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-                start_time = time.time()
-                cp_cmd = "sudo cp {} {}".format(source_file, dst_file1[-1])
-                host_handle.start_bg_process(command=cp_cmd)
+                cp_cmd = 'sudo sh -c "date +%s; cp {} {}; sync; date +%s"'.format(source_file, dst_file1[-1])
+                cp_file_output = "{}_{}_{}.out".format(self.file_copy_output, num, self.src_md5sum[-4:])
+                cp_pid = host_handle.start_bg_process(command=cp_cmd, output_file=cp_file_output)
+                fun_test.log("File copy is started in background, pid is: {}".format(cp_pid))
 
+            # Waiting till file copy completes
             timer = FunTimer(max_time=cp_timeout)
             while not timer.is_expired():
                 fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
-                output = host_handle.get_process_id_by_pattern(process_pat=cp_cmd, multiple=True)
+                output = host_handle.get_process_id_by_pattern(process_pat=cp_pid, multiple=True)
                 if not output:
                     fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file1))
                     break
             else:
                 fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file1))
 
-            host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to copy base file {}".format(time_taken))
+            # Parsing copy time output and recording time taken to copy file
+            read_output = host_handle.read_file(file_name=cp_file_output)
+            lines = read_output.split("\n")
+            result = {}
+            for num, line in enumerate(lines):
+                search_time = re.search(r'(\d+)', line)
+                if search_time:
+                    if re.search("([0-9].*)", search_time.group(1)):
+                        result[num] = search_time.group(1)
+            fun_test.log("Recorded start time: {} and end time: {} for file copy".format(result[0], result[1]))
+            copy_time = int(result[1]) - int(result[0])
+            fun_test.log("Base File is copied in: {} sec".format(copy_time))
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
+            row_data_dict["base_copy_time"] = copy_time
 
             # Checking if iostat process is still running...If so killing it...
             iostat_pid_check = host_handle.get_process_id("iostat")
@@ -769,6 +809,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.add_auxillary_file(description="Host {} IOStat Usage - Base File copy".format(host_name),
                                         filename=iostat_artifact_file[host_name])
 
+            # Validating data integrity after file copy
             self.host_info[host_name]["dst_file"]["base_file"] = {}
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 if num not in self.host_info[host_name]["dst_file"]["base_file"]:
@@ -786,18 +827,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                                               message="Comparing md5sum of source & destination file")
                 self.host_info[host_name]["dst_file"]["base_file"][num]["md5sum"].append(self.dst_md5sum)
 
-            # Deleting the base file
-            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                # Deleting the base file from local disk, to free up disk space for next test files
                 try:
-                    rm_cmd = "rm -f {}".format(dst_file1[-1])
+                    rm_cmd = "rm -f {}".format(source_file)
                     host_handle.sudo_command(command=rm_cmd)
-                    fun_test.simple_assert(expression=host_handle.exit_status() == 0, message="base file is deleted")
+                    fun_test.simple_assert(expression=host_handle.exit_status() == 0,
+                                           message="Source base file is deleted")
+                    host_handle.sudo_command("sync", timeout=cp_timeout / 2)
+                    host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
                 except Exception as ex:
                     fun_test.critical(str(ex))
-                host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-                host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
-
-            row_data_dict["base_copy_time"] = time_taken
             ''' finish: base file copy to measure time without any failure or rebuild'''
 
             ''' start: File copy while the BLT volume is marked failed '''
@@ -821,24 +860,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             if cp_timeout < self.min_timeout:
                 cp_timeout = self.min_timeout
 
-            if hasattr(self, "back_pressure") and self.back_pressure:
-                try:
-                    # Start the fio here to produce the back pressure
-                    fio_pid = None
-                    check_pid = None
-                    self.back_pressure_io["fio_cmd_args"] += "--filename={}".\
-                        format(nvme_block_device_list[self.test_volume_start_index-1])
-                    fio_pid = host_handle.start_bg_process(command=self.back_pressure_io["fio_cmd_args"],
-                                                           timeout=self.back_pressure_io["timeout"])
-                    fun_test.test_assert(expression=fio_pid is not None, message="Back pressure is started")
-                    fun_test.sleep("Allowing FIO to warmup", 10)
-                    # Re-checking if FIO processes are not died due to any issue
-                    check_pid = host_handle.get_process_id(process_name="fio")
-                    fun_test.test_assert(expression=check_pid is not None, message="Back pressure is active")
-                    fun_test.log("Back pressure is still running pid/s: {}".format(fio_pid))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-
             # Copying the file into the all the test volumes
             source_file = self.dd_create_file["output_file"]
             dst_file1 = []
@@ -859,16 +880,19 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 dst_file1.append(self.mount_path + str(num + 1) + "/file1")
-                start_time = time.time()
-                cp_cmd = "sudo cp {} {}".format(source_file, dst_file1[-1])
-                host_handle.start_bg_process(command=cp_cmd)
+                cp_cmd = 'sudo sh -c "date +%s; cp {} {}; sync; date +%s"'.format(source_file, dst_file1[-1])
+                cp_file_output = "{}_{}_{}.out".format(self.file_copy_output, num, self.src_md5sum[-4:])
+                cp_pid = host_handle.start_bg_process(command=cp_cmd, output_file=cp_file_output)
+                fun_test.log("File copy is started in background, pid is: {}".format(cp_pid))
 
             # Check whether the drive failure needs to be triggered
             if hasattr(self, "trigger_failure") and self.trigger_failure:
                 # Sleep for sometime before triggering the drive failure
                 wait_time = 2
+                '''
                 if hasattr(self, "failure_start_time_ratio"):
                     wait_time = int(round(cp_timeout * self.failure_start_time_ratio))
+                '''
                 fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
                                seconds=wait_time)
                 # Check whether the drive index to be failed is given or not. If not pick a random one
@@ -885,11 +909,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                         self.failure_drive_index[num - self.test_volume_start_index]]
                     if self.fail_drive:
                         ''' Marking drive as failed '''
+                        # Inducing failure in drive
                         fun_test.log("Initiating drive failure")
                         device_fail_status = self.storage_controller.disable_device(
                             device_id=fail_device, command_duration=self.command_timeout)
                         fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
-
                         # Validate if Device is marked as Failed
                         device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
                         device_stats = self.storage_controller.peek(device_props_tree)
@@ -900,6 +924,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         ''' Marking drive as failed '''
                     else:
                         ''' Marking Plex as failed '''
+                        # Inducing failure in one of the Plex of the volume
                         fun_test.log("Initiating Plex failure")
                         volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
                         fun_test.test_assert(volume_fail_status["status"], "Disabling Plex UUID {}".format(fail_uuid))
@@ -911,21 +936,31 @@ class ECVolumeLevelTestcase(FunTestCase):
                             expected=1, actual=volume_stats["data"]["stats"]["fault_injection"],
                             message="Plex is marked as Failed")
                         ''' Marking Plex as failed '''
+
             timer = FunTimer(max_time=cp_timeout)
             while not timer.is_expired():
                 fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
-                output = host_handle.get_process_id_by_pattern(process_pat=cp_cmd, multiple=True)
+                output = host_handle.get_process_id_by_pattern(process_pat=cp_pid, multiple=True)
                 if not output:
                     fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file1))
                     break
             else:
                 fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file1))
 
-            host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to copy during failed plex/drive {}".format(time_taken))
-            row_data_dict["copy_time_during_plex_fail"] = time_taken
+            # Parsing copy time output and recording time taken to copy file
+            read_output = host_handle.read_file(file_name=cp_file_output)
+            lines = read_output.split("\n")
+            result = {}
+            for num, line in enumerate(lines):
+                search_time = re.search(r'(\d+)', line)
+                if search_time:
+                    if re.search("([0-9].*)", search_time.group(1)):
+                        result[num] = search_time.group(1)
+            fun_test.log("Recorded start time: {} and end time: {} for file copy".format(result[0], result[1]))
+            copy_time = int(result[1]) - int(result[0])
+            fun_test.log("Time to copy the file during drive/plex failure: {} sec".format(copy_time))
+
+            row_data_dict["copy_time_during_plex_fail"] = copy_time
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
             # Checking if iostat process is still running...If so killing it...
@@ -956,6 +991,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected=self.src_md5sum, actual=self.dst_md5sum,
                                               message="Comparing md5sum of source & destination file")
                 self.host_info[host_name]["dst_file"]["file1"][num]["md5sum"].append(self.dst_md5sum)
+
+                # Deleting the base file from local disk, to free up disk space for next test files
+                try:
+                    rm_cmd = "rm -f {}".format(source_file)
+                    host_handle.sudo_command(command=rm_cmd)
+                    fun_test.simple_assert(expression=host_handle.exit_status() == 0,
+                                           message="Source base file is deleted")
+                    host_handle.sudo_command("sync", timeout=cp_timeout / 2)
+                    host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
             ''' Finish: File copy while the BLT volume is marked failed '''
 
             ''' start: File copy while the BLT volume is rebuilding '''
@@ -994,12 +1040,13 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.critical(
                         "Not starting the iostat collection because of lack of interval and count details")
 
-                start_time = time.time()
-                cp_cmd = "sudo cp {} {}".format(source_file, dst_file2[-1])
-                host_handle.start_bg_process(command=cp_cmd)
+                cp_cmd = 'sudo sh -c "date +%s; cp {} {}; sync; date +%s"'.format(source_file, dst_file2[-1])
+                cp_file_output = "{}_{}_{}.out".format(self.file_copy_output, num, self.src_md5sum[-4:])
+                cp_pid = host_handle.start_bg_process(command=cp_cmd, output_file=cp_file_output)
+                fun_test.log("File copy is started in background, pid is: {}".format(cp_pid))
+
             fun_test.sleep(message="Sleeping for {} seconds before before bringing up the failed device(s) & "
                                    "plex rebuild".format(wait_time), seconds=wait_time)
-
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 fail_uuid = self.ec_info["uuids"][num]["blt"][
                     self.failure_drive_index[num - self.test_volume_start_index]]
@@ -1009,7 +1056,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if not self.rebuild_on_spare_volume:
                     if self.fail_drive:
                         ''' Marking drive as online '''
-                        ''''''
                         device_up_status = self.storage_controller.enable_device(device_id=fail_device,
                                                                                  command_duration=self.command_timeout)
                         fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
@@ -1017,10 +1063,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                         device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
                         device_stats = self.storage_controller.peek(device_props_tree)
                         fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
-                        fun_test.test_assert_expected(
-                            expected="DEV_ONLINE", actual=device_stats["data"]["device state"],
-                            message="Device ID {} is Enabled again".format(fail_device))
-                        ''''''
+                        fun_test.test_assert_expected(expected="DEV_ONLINE",
+                                                      actual=device_stats["data"]["device state"],
+                                                      message="Device ID {} is Enabled again".format(fail_device))
                         ''' Marking drive as online '''
                     else:
                         ''' Marking Plex as online '''
@@ -1036,7 +1081,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                       message="Plex is marked as online")
                         ''' Marking Plex as online '''
 
-                # Rebuil failed plex
+                # Rebuild failed plex
                 if self.rebuild_on_spare_volume:
                     spare_uuid = self.spare_vol_uuid
                     fun_test.log("Rebuilding on spare volume: {}".format(spare_uuid))
@@ -1053,20 +1098,28 @@ class ECVolumeLevelTestcase(FunTestCase):
             timer = FunTimer(max_time=cp_timeout)
             while not timer.is_expired():
                 fun_test.sleep("Waiting for the copy to complete", seconds=self.status_interval)
-                output = host_handle.get_process_id_by_pattern(process_pat=cp_cmd, multiple=True)
+                output = host_handle.get_process_id_by_pattern(process_pat=cp_pid, multiple=True)
                 if not output:
                     fun_test.log("Copying file {} to {} got completed".format(source_file, dst_file2))
                     break
             else:
                 fun_test.test_assert(False, "Copying {} bytes file into {}".format(self.test_file_size, dst_file2))
 
-            host_handle.sudo_command("sync", timeout=cp_timeout / 2)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to copy during volume rebuild {}".format(time_taken))
+            # Parsing copy time output and recording time taken to copy file
+            read_output = host_handle.read_file(file_name=cp_file_output)
+            lines = read_output.split("\n")
+            result = {}
+            for num, line in enumerate(lines):
+                search_time = re.search(r'(\d+)', line)
+                if search_time:
+                    if re.search("([0-9].*)", search_time.group(1)):
+                        result[num] = search_time.group(1)
+            fun_test.log("Recorded start time: {} and end time: {} for file copy".format(result[0], result[1]))
+            copy_time = int(result[1]) - int(result[0])
+            fun_test.log("Time to copy the file during volume rebuild: {} sec".format(copy_time))
             host_handle.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=cp_timeout / 2)
 
-            row_data_dict["copy_time_during_rebuild"] = time_taken
+            row_data_dict["copy_time_during_rebuild"] = copy_time
             row_data_dict["fio_job_name"] = "inspur_functional_8_7_1_f1_{}_vol_{}_host_{}".format(
                 self.num_f1s, self.ec_info["num_volumes"], self.num_hosts)
             row_data_dict["vol_size"] = str(self.ec_info["capacity"] / (1024 ** 3)) + "G"
@@ -1137,7 +1190,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 rebuild_start_time = int(round(float(rebuild_start_time.rstrip())))
                 fun_test.log("Rebuild operation started at : {}".format(rebuild_start_time))
 
-                timer = FunTimer(max_time=600)
+                timer = FunTimer(max_time=self.rebuild_timeout)
                 while not timer.is_expired():
                     search_pattern = "'Rebuild operation complete for plex'"
                     fun_test.sleep("Waiting for plex rebuild to complete", seconds=(self.status_interval * 5))
