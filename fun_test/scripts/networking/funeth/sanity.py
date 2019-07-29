@@ -908,7 +908,7 @@ class FunethTestComeReboot(FunTestCase):
         nu = fun_test.shared_variables['sanity_nu']
         hu = fun_test.shared_variables['sanity_hu']
         linux_obj = fun_test.shared_variables["come_linux_obj"]
-        hostname = linux_obj.host_ip()
+        hostname = linux_obj.host_ip
         fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot COMe {}'.format(hostname))
         fun_test.sleep("Sleeping for COMe to come up from reboot", seconds=180)
         fun_test.test_assert(linux_obj.is_host_up(), 'Come {} is up'.format(hostname))
