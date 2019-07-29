@@ -64,11 +64,18 @@ for baseline_suite_execution_id in baseline_suite_execution_ids:
 
 
 def move_directory(source):
-    shutil.move(src=source, dst=RECOVERY_DIRECTORY + "/")
+    try:
+        shutil.move(src=source, dst=RECOVERY_DIRECTORY + "/")
+    except Exception as ex:
+        print ("Move directory: {}".format(str(ex)))
 
 for file in files:
-    suite_execution_id = file.replace(LOGS_DIR, "").replace("/s_", "")
-    suite_execution_id = int(suite_execution_id)
+    try:
+        suite_execution_id = file.replace(LOGS_DIR, "").replace("/s_", "")
+        suite_execution_id = int(suite_execution_id)
+    except Exception as ex:
+        print "Unable to parse: {}".format(file)
+        continue
     if suite_execution_id in baseline_suite_execution_ids:
         logger.debug("Skipping {} as it is a baseline".format(suite_execution_id))
         continue

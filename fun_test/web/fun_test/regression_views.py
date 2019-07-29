@@ -43,6 +43,8 @@ import glob
 from django.db import transaction
 from django.db.models import Q
 from scheduler.scheduler_global import SchedulerJobPriority, QueueOperations
+import datetime
+from django.utils import timezone
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -536,9 +538,8 @@ def build_to_date_map(request):
     build_info = {}
     for entry in filtered_entries:
         try:
-            key = str(entry.build_date)
-            key = key.split('+')[0]
-            build_info[key] = {"software_date": entry.software_date,
+            key = timezone.localtime(entry.build_date)
+            build_info[str(key)] = {"software_date": entry.software_date,
                                "hardware_version": entry.hardware_version,
                                "fun_sdk_branch": entry.fun_sdk_branch,
                                "git_commit": entry.git_commit,
