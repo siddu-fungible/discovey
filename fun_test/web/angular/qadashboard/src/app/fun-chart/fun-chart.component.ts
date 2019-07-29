@@ -41,7 +41,8 @@ export class FunChartComponent implements OnInit, OnChanges {
           type: 'line'
         },
         title: {
-          text: this.title
+          text: this.title,
+          useHTML: true
         },
         xAxis: {
           title: {

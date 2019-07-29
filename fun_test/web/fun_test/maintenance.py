@@ -183,7 +183,7 @@ if __name__ == "__main_s1_teramarks__":
                 result = set_internal_name(tera_mark)
                 print json.dumps(result)
 
-if __name__ == "__main__":
+if __name__ == "__main_l4_firewall__":
     internal_chart_names = ["l4_firewall_flow_128m_flows_throughput", "l4_firewall_flow_128m_flows_pps",
                             "l4_firewall_flow_128m_flows_latency_full_load", "l4_firewall_flow_128m_flows_latency_half_load"]
     for internal_chart_name in internal_chart_names:
@@ -214,3 +214,79 @@ if __name__ == "__main__":
             chart.data_sets = json.dumps(data_sets)
             chart.save()
     print "added 1500B datasets for 124M flows"
+
+if __name__ == "__main_qd256__":
+    internal_iops_chart_names = ["read_qd_pcie_output_iops", "rand_read_qd_pcie_output_iops"]
+    for internal_chart_name in internal_iops_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        data_sets = json.loads(chart.data_sets)
+        for data_set in data_sets:
+            if data_set["name"] == "qd128":
+                one_data_set = data_set
+                one_data_set["name"] = "qd256"
+                one_data_set["inputs"]["input_fio_job_name"] = one_data_set["inputs"]["input_fio_job_name"].replace(
+                    "128", "256")
+                one_data_set["output"]["expected"] = -1
+                one_data_set["output"]["reference"] = -1
+        data_sets = json.loads(chart.data_sets)
+        data_sets.append(one_data_set)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "added 256 for random/sequentail read iops"
+    internal_latency_chart_names = ["read_qd256_pcie_output_latency", "rand_read_qd256_pcie_output_latency"]
+    for internal_chart_name in internal_latency_chart_names:
+        copy_chart = MetricChart.objects.get(internal_chart_name=internal_chart_name.replace("256", "128"))
+        if copy_chart:
+            data_sets = json.loads(copy_chart.data_sets)
+            for data_set in data_sets:
+                data_set["inputs"]["input_fio_job_name"] = data_set["inputs"]["input_fio_job_name"].replace("128",
+                                                                                                            "256")
+                data_set["output"]["expected"] = -1
+                data_set["output"]["reference"] = -1
+            metric_id = LastMetricId.get_next_id()
+            MetricChart(chart_name="temp",
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description=copy_chart.description,
+                        owner_info=copy_chart.owner_info,
+                        source=copy_chart.source,
+                        positive=copy_chart.positive,
+                        y1_axis_title=copy_chart.y1_axis_title,
+                        visualization_unit=copy_chart.visualization_unit,
+                        metric_model_name=copy_chart.metric_model_name,
+                        base_line_date=copy_chart.base_line_date,
+                        work_in_progress=False,
+                        platform=FunPlatform.F1).save()
+    print "added charts for 256 qdepth latency"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.filter(leaf=True)
+    for entry in entries:
+        if ("underlay" in entry.internal_chart_name or "overlay" in entry.internal_chart_name) and \
+                "latency" not in entry.internal_chart_name:
+            # print "overlay or underlay chart is {}".format(entry.internal_chart_name)
+            if "overlay" in entry.internal_chart_name:
+                index = entry.internal_chart_name.find('_overlay')
+            else:
+                index = entry.internal_chart_name.find('_underlay')
+            internal_chart_name = entry.internal_chart_name[:index]
+            # print "original chart is {}".format(internal_chart_name)
+            overlay_underlay_data_sets = json.loads(entry.data_sets)
+            chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+            data_sets = json.loads(chart.data_sets)
+            for data_set in data_sets:
+                for ou_data_set in overlay_underlay_data_sets:
+                    if data_set["name"] == ou_data_set["name"]:
+                        if data_set["output"]["unit"] == ou_data_set["output"]["unit"]:
+                            ou_data_set["output"]["expected"] = data_set["output"]["expected"]
+                        else:
+                            print entry.internal_chart_name, data_set["name"]
+
+            entry.data_sets = json.dumps(overlay_underlay_data_sets)
+            entry.save()
+
+
+
+

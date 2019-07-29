@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from fun_settings import DATA_STORE_DIR
 from fun_settings import SCRIPTS_DIR
 from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
@@ -107,7 +108,7 @@ def setup_nu_host(funeth_obj):
                 linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro off; sudo ethtool -k fpg0')
 
 
-def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
+def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
@@ -134,6 +135,12 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
         else:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+
+        # TODO: no need after LSO/checksum offload is enabled for overlay
+        if not tx_offload:
+            fun_test.test_assert(funeth_obj.enable_tx_offload(hu, disable=True),
+                                 'Disable HU host {} funeth interfaces Tx offload.'.format(linux_obj.host_ip))
+
         if is_vm:
             cpu_list = CPU_LIST_VM
         else:
@@ -167,7 +174,7 @@ def setup_funcp(test_bed_type):
     abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
     funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
                                     abstract_config_f1_1=abstract_json_file_f1_1)
-    fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
+    #fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
     # TODO: sanity check of control plane
 
 
@@ -202,7 +209,7 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
     for nc_obj in overlay_config_dict:
         nc_obj.overlay_num_flows(512 * 1024)
 
-    nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
+    nc_obj_src, nc_obj_dst = network_controller_obj_f1_0, network_controller_obj_f1_1
     for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
         for nc_obj in (nc_obj_src, nc_obj_dst):
             if nc_obj == nc_obj_src:
@@ -226,17 +233,25 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
                 # nh
-                nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
-                nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                for nh_type in ('vxlan_encap', 'vxlan_decap'):
+                    nc_obj.overlay_nh_add(nh_type=nh_type, src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 # flows
                 for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
                     for sip, dip in zip(src_flows, dst_flows):
                         if flow_type == 'vxlan_encap':
                             flow_sip, flow_dip = sip, dip
-                            flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
-                        else:
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                        elif flow_type == 'vxlan_decap':
                             flow_sip, flow_dip = dip, sip
-                            flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
                         nc_obj.overlay_flow_add(flow_type=flow_type,
                                                 nh_index=nh_index,
                                                 vif=lport_num,
@@ -373,7 +388,7 @@ class FunethSanity(FunTestScript):
             fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
 
             setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
-            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True, tx_offload=False)
 
             # Configure overlay
             if configure_overlay:
@@ -416,10 +431,9 @@ class FunethSanity(FunTestScript):
                 funeth_obj = fun_test.shared_variables['funeth_obj']
                 for nu in funeth_obj.nu_hosts:
                     linux_obj = funeth_obj.linux_obj_dict[nu]
-                    if linux_obj.host_ip == 'poc-server-06':
-                        cmd = 'pkill sshd'
-                        fun_test.log("{} in {}".format(cmd, inux_obj.host_ip))
-                        linux_obj.command(cmd)
+                    cmd = 'pkill sshd'
+                    fun_test.log("{} in {}".format(cmd, linux_obj.host_ip))
+                    linux_obj.command(cmd)
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
@@ -622,7 +636,7 @@ class FunethTestScpBase(FunTestCase):
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
-        tmp_filename = '{}/funeth_sanity_scp_test_file'.format(fun_test.get_logs_directory())
+        tmp_filename = '{}/networking/funeth_sanity_scp_test_file'.format(DATA_STORE_DIR)
         fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, tmp_filename))
         with open(tmp_filename, 'w') as f:
             f.write(content)
