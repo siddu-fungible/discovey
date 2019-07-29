@@ -14,7 +14,8 @@ export class RegressionSummaryWidgetComponent implements OnInit {
 
   initialFilterData = [{info: "Networking overall", payload: {module: "networking"}}, {
     info: "Storage overall",
-    payload: {module: "storage"}}, {
+    payload: {module: "storage"}
+  }, {
     info: "Networking sanity", payload: {module: "networking", test_case_execution_tags: ["networking-sanity"]}
   }
   ];

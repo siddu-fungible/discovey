@@ -1,5 +1,6 @@
 #all-cards {
   padding: 20px;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
 }
 
 
@@ -16,3 +17,13 @@
 
 
 
+.flex-container {
+  display: flex;
+  height: inherit;
+}
+
+.flex-container > div {
+  padding-right: 10px;
+  height: inherit;
+  justify-content: center;
+}
