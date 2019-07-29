@@ -72,4 +72,21 @@ export class CommonService {
     }
     return result;
   }
+
+  addLeadingZeroesToDate(localDate): string {
+    let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
+    let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
+    let localYearString = String(localDate.getFullYear());
+    // let keySplitString = localDate.toLocaleString("default", {hourCycle: "h24"}).split(" ");
+    // let timeString = keySplitString[1].split(":");
+    let localHour = (localDate.getHours());
+    let localMinutes = (localDate.getMinutes());
+    let localSeconds = (localDate.getSeconds());
+    let hour = ((Number(localHour) < 10) ? '0' : '') + localHour + ":";
+    let minutes = ((Number(localMinutes) < 10) ? '0' : '') + localMinutes + ":";
+    let seconds = ((Number(localSeconds) < 10) ? '0' : '') + localSeconds;
+    let keyString = localMonthString + "/" + localDateString + "/" + localYearString + ", " + hour + minutes + seconds;
+    return keyString;
+  }
+
 }

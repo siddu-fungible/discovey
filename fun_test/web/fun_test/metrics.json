@@ -3676,7 +3676,7 @@
                 "name": "inspur_875_data_reconstruction",
                 "label": "8_7_5:Data_Reconstruction",
                 "children": [
-                   {
+                  {
                     "metric_model_name": "InspurDataReconstructionPerformance",
                     "name": "inspur_functional_875_iops",
                     "label": "IOPS",
@@ -3990,7 +3990,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_NU_NFCP_8TCP_offloads_disabled_underlay",
-                                "label": "8 TCP Flow(s), 1 Host(s)",
+                                "label": "8 TCP Flow(s), 1 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4017,7 +4017,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_NU_NFCP_8TCP_offloads_disabled_2hosts_underlay",
-                                "label": "8 TCP Flow(s), 2 Host(s)",
+                                "label": "8 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4045,7 +4045,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_NU_NFCP_1TCP_offloads_disabled_underlay",
-                                "label": "1 TCP Flow(s), 1 Host(s)",
+                                "label": "1 TCP Flow(s), 1 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4079,7 +4079,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "NU_HU_NFCP_8TCP_offloads_disabled_underlay",
-                                "label": "8 TCP Flow(s), 1 Host(s)",
+                                "label": "8 TCP Flow(s), 1 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4106,7 +4106,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_underlay",
-                                "label": "8 TCP Flow(s), 2 Host(s)",
+                                "label": "8 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4126,7 +4126,33 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "NU_HU_NFCP_8TCP_offloads_disabled_2hosts_output_latency_under_load_underlay",
-
+                                    "label": "Latency under load"
+                                  }
+                                ]
+                              },
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "NU_HU_NFCP_1TCP_offloads_disabled_underlay",
+                                "label": "1 TCP Flow(s), 1 VM(s)",
+                                "children": [
+                                  {
+                                    "metric_model_name": "HuThroughputPerformance",
+                                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_throughput_underlay",
+                                    "label": "Throughput"
+                                  },
+                                  {
+                                    "metric_model_name": "HuThroughputPerformance",
+                                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_pps_underlay",
+                                    "label": "Packets per sec"
+                                  },
+                                  {
+                                    "metric_model_name": "HuLatencyPerformance",
+                                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_underlay",
+                                    "label": "Latency"
+                                  },
+                                  {
+                                    "metric_model_name": "HuLatencyUnderLoadPerformance",
+                                    "name": "NU_HU_NFCP_1TCP_offloads_disabled_output_latency_under_load_underlay",
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -4141,7 +4167,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_8TCP_2H_offloads_disabled_underlay",
-                                "label": "8 TCP Flow(s), 2 Host(s)",
+                                "label": "8 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4168,7 +4194,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_1TCP_2H_offloads_disabled_underlay",
-                                "label": "1 TCP Flow(s), 2 Host(s)",
+                                "label": "1 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4202,7 +4228,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_underlay",
-                                "label": "8 TCP Flow(s), 2 Host(s)",
+                                "label": "8 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4229,7 +4255,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_underlay",
-                                "label": "8 TCP Flow(s), 4 Host(s)",
+                                "label": "8 TCP Flow(s), 4 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4256,7 +4282,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_underlay",
-                                "label": "1 TCP Flow(s), 2 Host(s)",
+                                "label": "1 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4290,7 +4316,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_underlay",
-                                "label": "8 TCP Flow(s), 2 Host(s)",
+                                "label": "8 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4310,7 +4336,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -4318,7 +4343,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_underlay",
-                                "label": "8 TCP Flow(s), 4 Host(s)",
+                                "label": "8 TCP Flow(s), 4 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4338,7 +4363,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -4346,7 +4370,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_underlay",
-                                "label": "1 TCP Flow(s), 2 Host(s)",
+                                "label": "1 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4366,7 +4390,6 @@
                                   {
                                     "metric_model_name": "HuLatencyUnderLoadPerformance",
                                     "name": "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_output_latency_under_load_underlay",
-
                                     "label": "Latency under load"
                                   }
                                 ]
@@ -4388,7 +4411,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_FCP_8TCP_1H_offloads_enabled_overlay",
-                                "label": "8 TCP Flow(s), 2 Host(s)",
+                                "label": "8 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4415,7 +4438,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_FCP_8TCP_2H_offloads_enabled_overlay",
-                                "label": "8 TCP Flow(s), 4 Host(s)",
+                                "label": "8 TCP Flow(s), 4 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4442,7 +4465,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_FCP_1TCP_1H_offloads_enabled_overlay",
-                                "label": "1 TCP Flow(s), 2 Host(s)",
+                                "label": "1 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4476,7 +4499,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_2f1_8TCP_1H_offloads_enabled_overlay",
-                                "label": "8 TCP Flow(s), 2 Host(s)",
+                                "label": "8 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4503,7 +4526,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_2f1_8TCP_2H_offloads_enabled_overlay",
-                                "label": "8 TCP Flow(s), 4 Host(s)",
+                                "label": "8 TCP Flow(s), 4 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4530,7 +4553,7 @@
                               {
                                 "metric_model_name": "MetricContainer",
                                 "name": "HU_HU_NFCP_2f1_1TCP_1H_offloads_enabled_overlay",
-                                "label": "1 TCP Flow(s), 2 Host(s)",
+                                "label": "1 TCP Flow(s), 2 VM(s)",
                                 "children": [
                                   {
                                     "metric_model_name": "HuThroughputPerformance",
@@ -4574,18 +4597,6 @@
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "HU_NU_NFCP",
-                        "label": "Host->Network",
-                        "reference": true
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
-                        "name": "NU_HU_NFCP",
-                        "label": "Network->Host",
-                        "reference": true
-                      },
-                      {
-                        "metric_model_name": "MetricContainer",
                         "name": "HU_HU_NFCP_2f1_teramark",
                         "label": "Host->Host NFCP (2 F1s)",
                         "reference": true
@@ -4605,8 +4616,14 @@
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",
-                        "name": "HU_HU_NFCP_teramark",
-                        "label": "Host->Host (1 F1)",
+                        "name": "HU_HU_NFCP_2f1_teramark",
+                        "label": "Host->Host NFCP (2 F1s)",
+                        "reference": true
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "HU_HU_FCP_2f1_teramark",
+                        "label": "Host->Host FCP (2 F1s)",
                         "reference": true
                       }
                     ]
@@ -4983,27 +5000,27 @@
             "label": "Compression",
             "children": [
               {
-              "metric_model_name": "MetricContainer",
-              "name": "JPEG_S1",
-              "label": "JPEG",
-              "children": [
-                {
-                  "metric_model_name": "TeraMarkJpegPerformance",
-                  "name": "Compression throughput with Driver_output_average_bandwidth_S1",
-                  "label": "Compression Throughput",
-                  "children": []
-                },
-                {
-                  "metric_model_name": "TeraMarkJpegPerformance",
-                  "name": "JPEG Decompress_output_average_bandwidth_S1",
-                  "label": "Decompression Throughput",
-                  "children": []
-                },
-                {
-                  "metric_model_name": "TeraMarkJpegPerformance",
-                  "name": "JPEG Compression_Compression-ratio_S1",
-                  "label": "Compression ratio",
-                  "children": []
+                "metric_model_name": "MetricContainer",
+                "name": "JPEG_S1",
+                "label": "JPEG",
+                "children": [
+                  {
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "name": "Compression throughput with Driver_output_average_bandwidth_S1",
+                    "label": "Compression Throughput",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "name": "JPEG Decompress_output_average_bandwidth_S1",
+                    "label": "Decompression Throughput",
+                    "children": []
+                  },
+                  {
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "name": "JPEG Compression_Compression-ratio_S1",
+                    "label": "Compression ratio",
+                    "children": []
                   }
                 ]
               },

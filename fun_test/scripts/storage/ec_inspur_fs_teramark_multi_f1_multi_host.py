@@ -7,6 +7,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from collections import OrderedDict, Counter
+from scripts.networking.helper import *
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -500,13 +501,72 @@ class ECVolumeLevelTestcase(FunTestCase):
             for host_name in self.host_info:
                 self.host_info[host_name]["num_volumes"] = self.final_host_ips.count(self.host_info[host_name]["ip"])
 
+            initial_nu_stats = {}
+            final_nu_stats = {}
+            diff_nu_stats = {}
+            # Collecting the network related stats from the cconfiguration
+            if self.collect_network_stats:
+                for index, sc in enumerate(self.sc_obj):
+                    if index not in initial_nu_stats:
+                        initial_nu_stats[index] = {}
+                    initial_nu_stats[index]["peek_psw_global_stats"] = {}
+                    initial_nu_stats[index]["peek_vp_packets"] = {}
+                    initial_nu_stats[index]["cdu"] = {}
+                    initial_nu_stats[index]["ca"] = {}
+                    try:
+                        initial_nu_stats[index]["peek_psw_global_stats"] = sc.peek_psw_global_stats()
+                        initial_nu_stats[index]["peek_vp_packets"] = sc.peek_vp_packets()
+                        initial_nu_stats[index]["cdu"] = sc.peek_cdu_stats()
+                        initial_nu_stats[index]["ca"] = sc.peek_ca_stats()
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
             # Creating EC volume
             self.ec_info["storage_controller_list"] = self.sc_obj
             self.ec_info["f1_ips"] = self.f1_ips
             self.ec_info["host_ips"] = self.final_host_ips
-            (ec_config_status, self.ec_info) = configure_ec_volume_across_f1s(self.ec_info, self.command_timeout)
-            fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
+            ec_config_status = True
+            try:
+                (ec_config_status, self.ec_info) = configure_ec_volume_across_f1s(self.ec_info, self.command_timeout)
+            except Exception as ex:
+                ec_config_status = False
+            finally:
+                if self.collect_network_stats:
+                    for index, sc in enumerate(self.sc_obj):
+                        if index not in final_nu_stats:
+                            final_nu_stats[index] = {}
+                            diff_nu_stats[index] = {}
+                        final_nu_stats[index]["peek_psw_global_stats"] = {}
+                        final_nu_stats[index]["peek_vp_packets"] = {}
+                        final_nu_stats[index]["cdu"] = {}
+                        final_nu_stats[index]["ca"] = {}
+                        try:
+                            final_nu_stats[index]["peek_psw_global_stats"] = sc.peek_psw_global_stats()
+                            final_nu_stats[index]["peek_vp_packets"] = sc.peek_vp_packets()
+                            final_nu_stats[index]["cdu"] = sc.peek_cdu_stats()
+                            final_nu_stats[index]["ca"] = sc.peek_ca_stats()
+                        except Exception as ex:
+                            fun_test.critical(ex)
 
+                # Stats diff between final stats and initial stats
+                diff_nu_stats = get_diff_stats(new_stats=final_nu_stats, old_stats=initial_nu_stats)
+                if self.collect_network_stats:
+                    for index in xrange(len(self.sc_obj)):
+                        fun_test.log("\nStat difference for peek_psw_global_stats at the end of configuration in {} "
+                                     "F1 is: \n{}\n".format(index,
+                                                            json.dumps(diff_nu_stats[index]["peek_psw_global_stats"],
+                                                                       indent=2)))
+                        fun_test.log("\nStat difference for peek_vp_packets at the end of configuration in {} F1 is: "
+                                     "\n{}\n".format(index, json.dumps(diff_nu_stats[index]["peek_vp_packets"],
+                                                                       indent=2)))
+                        fun_test.log("\nStat difference for cdu at the end of configuration in {} F1 is: "
+                                     "\n{}\n".format(index, json.dumps(diff_nu_stats[index]["cdu"], indent=2)))
+                        fun_test.log("\nStat difference for ca at the end of configuration in {} F1 is: "
+                                     "\n{}\n".format(index, json.dumps(diff_nu_stats[index]["ca"], indent=2)))
+                if not ec_config_status:
+                    raise ex
+
+            fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
             fun_test.log("EC details after configuring EC Volume:")
             for k, v in self.ec_info.items():
                 fun_test.log("{}: {}".format(k, v))
