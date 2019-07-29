@@ -323,7 +323,11 @@ class CatalogTestCaseExecution(models.Model):
 
 class Module(models.Model):
     name = models.TextField(unique=True)
-    verbose_name = models.TextField(default="Verbose Name")
+    verbose_name = models.TextField(default="Verbose name")
+
+class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
+    name = models.TextField(unique=True)
+    verbose_name = models.TextField(default="Verbose name")
 
 class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()
