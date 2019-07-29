@@ -288,10 +288,10 @@ export class SubmitJobComponent implements OnInit {
     if (this.selectedTestBedType) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
-    if (this.type) {
+    /*if (this.type) {
       payload["suite_type"] = this.type;
       payload["environment"]["test_bed_type"] = "tasks"
-    }
+    }*/
 
     if (this.isTestBedFs()) {
       if (!this.withJenkinsBuild) {
