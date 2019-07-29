@@ -619,18 +619,13 @@ class SuiteItems(models.Model):
 
 class Suite(models.Model):
     name = models.TextField(default="TBD")
-    category = models.TextField(default="category")   #
-    sub_category = models.TextField(default="sub-category")
+    categories = JSONField(default=[])
+    sub_categories = JSONField(default=[])
 
     short_description = models.TextField(default="")
     long_description = models.TextField(default="")
     tags = JSONField(default=[])
     custom_test_bed_spec = JSONField(default=None)
-
-
-
-    class Meta:
-        unique_together = ('name', 'category',)
 
 
 class TaskStatus(models.Model):
