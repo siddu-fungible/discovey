@@ -22,6 +22,9 @@ export class JenkinsFormComponent implements OnInit {
       this.jenkinsParameters['DISABLE_ASSERTIONS'] = value.DISABLE_ASSERTIONS;
       this.jenkinsParameters['HW_MODEL'] = value.HW_MODEL;
       this.jenkinsParameters['PCI_MODE'] = value.PCI_MODE;
+      this.jenkinsParameters['REMOTE_SCRIPT'] = value.REMOTE_SCRIPT;
+      this.jenkinsParameters['HW_VERSION'] = value.HW_VERSION;
+
 
       //console.log(this.jenkinsParameters);
       if (this.submissionForm.valid) {
@@ -41,7 +44,9 @@ export class JenkinsFormComponent implements OnInit {
       'DISABLE_ASSERTIONS': [true],
       'FUNOS_MAKEFLAGS': [''],
       'HW_MODEL': [''],
-      'PCI_MODE': ['']
+      'PCI_MODE': [''],
+      'REMOTE_SCRIPT': [''],
+      'HW_VERSION': ['Ignored']
     });
     if (this.submissionForm.valid) {
       this.data.emit(this.jenkinsParameters);

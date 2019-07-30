@@ -22,12 +22,12 @@ export class FunCardComponent implements OnInit {
   @Input() subtitle: string;
   @Input() textTitle: string;
   @Input() iconLink: string;
-  @Input() tooltip: string;
+  @Input() tooltipText: string;
   @Input() text: string;
   @Input() footerTextTitle: string;
   @Input() footerText: string;
   @Input() footerIconLink: string;
-  @Input() footerTooltip: string;
+  @Input() footerTooltipText: string;
   @Input() enableFooter: boolean = false;
   @Input() icon: string;
   @Input() footerIcon: string;

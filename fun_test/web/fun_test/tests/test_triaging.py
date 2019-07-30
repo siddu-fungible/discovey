@@ -355,6 +355,7 @@ class TrialStateMachine:
             lsf_server = LsfStatusServer()  # TODO
             job_info = lsf_server.get_last_job(tag=trial.tag)
             if triage.triage_type == TriagingTypes.REGEX_MATCH:
+                regex_match_found = False
                 if "output_text" in job_info:
                     lines = job_info["output_text"].split("\n")
 
@@ -363,8 +364,26 @@ class TrialStateMachine:
                         m = re.search(triage.regex_match_string, line)
                         if m:
                             trial.regex_match = m.group(0)
+                            regex_match_found = True
                     trial.status = TriageTrialStates.COMPLETED
                     trial.save()
+                if not regex_match_found:
+                    # Try human file
+                    lsf_server = LsfStatusServer()
+                    if job_info and "job_id" in job_info:
+                        job_id = job_info["job_id"]
+                        for file_name in ["odp/uartout0.0.txt", "odp/uartout0.1.txt"]:
+                            uart_txt = lsf_server.get_human_file(job_id=job_id, file_name=file_name)
+                            for line in uart_txt.split("\n"):
+                                m = re.search(triage.regex_match_string, line)
+                                if m:
+                                    trial.regex_match = m.group(0)
+                                    regex_match_found = True
+                                    if regex_match_found:
+                                        break
+                    trial.status = TriageTrialStates.COMPLETED
+                    trial.save()
+                    pass
             elif triage.triage_type == TriagingTypes.PASS_OR_FAIL:
                 code, message = self.validate_lsf_job(trial=trial)
                 if code == 0:
