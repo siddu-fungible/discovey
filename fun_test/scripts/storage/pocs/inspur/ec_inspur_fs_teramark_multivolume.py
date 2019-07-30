@@ -922,11 +922,24 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             if "bs" in self.fio_cmd_args:
                 fio_block_size = self.fio_cmd_args["bs"]
-            else:
-                fio_block_size = "Mixed"
+            elif "multiple_jobs" in self.fio_cmd_args:
+                match = re.search("--bs=(\d+\S)", self.fio_cmd_args["multiple_jobs"])
+                if match:
+                    if match.group(1) is not None:
+                        fio_block_size = match.group(1)
+                else:
+                    match = re.search("--bssplit=(\d+\w)", self.fio_cmd_args["multiple_jobs"])
+                    if match:
+                        if match.group(0) is not None:
+                            fio_block_size = "Mixed"
 
             if "rw" in self.fio_cmd_args:
                 row_data_dict["mode"] = self.fio_cmd_args["rw"]
+            elif "multiple_jobs" in self.fio_cmd_args:
+                match = re.search("--rw=\D\w*", self.fio_cmd_args["multiple_jobs"])
+                if match:
+                    if match.group(1) is not None:
+                        row_data_dict["mode"] = match.group(0).split("=")[1]
             else:
                 row_data_dict["mode"] = "Combined"
 
@@ -1235,7 +1248,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur TC 8.11.1: 8k data block random read/write IOPS performance of Multiple"
+                              summary="Inspur TC 8.11.1.1: 8k data block random read/write IOPS performance of Multiple"
                                       " EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -1258,9 +1271,61 @@ class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
         super(RandReadWrite8kBlocks, self).cleanup()
 
 
-class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
+class RandRead8kBlocks(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
+                              summary="Inspur TC 8.11.1.2: 8k data block random read IOPS performance of Multiple"
+                                      " EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using FIO
+        8. Run the Performance for 8k transfer size Random read IOPS
+        """)
+
+    def setup(self):
+        super(RandRead8kBlocks, self).setup()
+
+    def run(self):
+        super(RandRead8kBlocks, self).run()
+
+    def cleanup(self):
+        super(RandRead8kBlocks, self).cleanup()
+
+
+class RandWrite8kBlocks(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Inspur TC 8.11.1.3: 8k data block random write IOPS performance of Multiple"
+                                      " EC volume",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using FIO
+        8. Run the Performance for 8k transfer size Random write IOPS
+        """)
+
+    def setup(self):
+        super(RandWrite8kBlocks, self).setup()
+
+    def run(self):
+        super(RandWrite8kBlocks, self).run()
+
+    def cleanup(self):
+        super(RandWrite8kBlocks, self).cleanup()
+
+
+class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
                               summary="Inspur TC 8.11.2: 1024k data block sequential write IOPS performance"
                                       "of Multiple EC volume",
                               steps="""
@@ -1286,7 +1351,7 @@ class SequentialReadWrite1024kBlocks(ECVolumeLevelTestcase):
 
 class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=5,
                               summary="Inspur TC 8.11.3: Integrated model read/write IOPS performance of Multiple"
                                       " EC volume",
                               steps="""
@@ -1312,7 +1377,7 @@ class MixedRandReadWriteIOPS(ECVolumeLevelTestcase):
 
 class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=6,
                               summary="Inspur TC 8.11.4: OLTP Model read/read IOPS performance of Multiple EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -1337,7 +1402,7 @@ class OLTPModelReadWriteIOPS(ECVolumeLevelTestcase):
 
 class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=7,
                               summary="Inspur TC 8.11.5: OLAP Model read/write IOPS performance of Multiple EC volume",
                               steps="""
         1. Bring up F1 in FS1600
@@ -1363,6 +1428,8 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
+    ecscript.add_test_case(RandRead8kBlocks())
+    ecscript.add_test_case(RandWrite8kBlocks())
     # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(MixedRandReadWriteIOPS())
     # ecscript.add_test_case(OLTPModelReadWriteIOPS())
