@@ -41,6 +41,7 @@ const routes: Routes = [
   {path: 'dashboard', component: DashboardComponent},
   {path: 'performance', component: PerformanceComponent},
   {path: 'performance/workspace', component: WorkspaceComponent},
+  {path: 'performance/workspace/:emailId', component: WorkspaceComponent},
   {path: 'performance/atomic/:id', component: FunMetricChartComponent},
   {path: 'regression/summary', component: RegressionSummaryComponent},
   {path: 'regression/admin', component: RegressionAdminComponent},

@@ -1,0 +1,82 @@
+<div class="component">
+  <table class="table table-nonfluid table-borderless">
+    <tr>
+      <td class="no-wrap">
+        <label for="submitter" class="required-label">Workspace:</label>
+      </td>
+      <td>
+        <select id="submitter" [(ngModel)]="selectedUser" (ngModelChange)="onUserChange($event)">
+          <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+            ({{ user.email }})
+          </option>
+        </select>
+        &nbsp;
+        <a href="/users" target="_blank">Can't find your name? Add user</a>
+      </td>
+    </tr>
+  </table>
+  <div *ngIf="showWorkspace" class="card">
+    <div class="card-header">
+      <h5 class="card-title">{{ selectedUser.first_name }}&nbsp;{{ selectedUser.last_name }}</h5>
+      <h6 class="card-subtitle">{{ selectedUser.email }}</h6>
+    </div>
+    <div class=card-body>
+      <app-smart-label [simulateLink]="false"
+                               [type]="'primary'" [value]="'Add Workspace'"
+                               (click)="addWorkspace()"></app-smart-label>
+      <div>
+        <table *ngIf="addingWorkspace" class="table table-borderless" style="margin: 20px; width: 100%;">
+          <tr>
+            <th>
+              Workspace name
+            </th>
+            <th>
+              Interested metrics
+            </th>
+          </tr>
+          <tr>
+            <td>
+              <input type="text" [(ngModel)]="workspaceName">&nbsp;&nbsp;<app-smart-label [simulateLink]="false"
+                                                                                          [type]="'primary'"
+                                                                                          [value]="'Close'"
+                                                                                          (click)="closeWorkspace()"></app-smart-label>
+            </td>
+            <td *ngIf="workspaceName">
+              <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
+                               [workspaceName]="workspaceName"></app-performance>
+            </td>
+          </tr>
+        </table>
+        <table *ngIf="profile.length > 0" class="table table-borderless" style="margin: 20px; width: 100%;">
+          <tr>
+            <th></th>
+            <th>
+              Workspace name
+            </th>
+            <th>Interested Metrics</th>
+          </tr>
+          <tr *ngFor="let workspace of profile">
+            <td *ngIf="!workspace.editingWorkspace">
+              <a [routerLink]="" (click)="editWorkspace(workspace)">Edit</a>
+            </td>
+            <td *ngIf="workspace.editingWorkspace">
+              <app-smart-label [simulateLink]="false"
+                               [type]="'primary'" [value]="'Close'"
+                               (click)="workspace.editingWorkspace = false"></app-smart-label>
+            </td>
+            <td>
+              {{ workspace.name }}
+            </td>
+            <td *ngIf="!workspace.editingWorkspace">
+              {{ getString(workspace.interestedMetrics) }}
+            </td>
+            <td *ngIf="workspace.editingWorkspace">
+              <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
+                               [workspaceName]="workspace.name" [interestedMetrics]="workspace.interestedMetrics"></app-performance>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
