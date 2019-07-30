@@ -535,10 +535,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                                        str(self.transport_port), self.nvme_subsystem,
                                        self.host_info[host_name]["ip"][0])
                         else:
-                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {} -Q 16". \
+                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {} -Q {}". \
                                 format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
                                        str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
-                                       self.host_info[host_name]["ip"][0])
+                                       self.host_info[host_name]["ip"][0], str(self.queue_size))
 
                     try:
                         nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
