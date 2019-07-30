@@ -3,10 +3,10 @@
     [subtitle]="'<a href = /regression?tag=smoke>F1 storage smoke test</a>'"
     [icon]="iconDict[lastTwoSuites[0].result]"
     [textTitle]="'passed: ' + lastTwoSuites[0].numPassed + ' failed: ' + lastTwoSuites[0].numFailed"
-    [tooltip]="lastTwoSuites[0].result"
+    [tooltipText]="lastTwoSuites[0].result"
     [text]="lastTwoSuites[0].time + ' (current run)'"
     [footerIcon]="iconDict[lastTwoSuites[1].result]"
-    [footerTooltip]="lastTwoSuites[1].result"
+    [footerTooltipText]="lastTwoSuites[1].result"
     [enableFooter]="true"
     [footerText]="'passed: ' + lastTwoSuites[1].numPassed + ' failed: ' + lastTwoSuites[1].numFailed + ' ' + lastTwoSuites[1].time + ' (previous run)'">
   </fun-card>

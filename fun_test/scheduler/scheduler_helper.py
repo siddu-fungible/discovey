@@ -9,7 +9,7 @@ import logging.handlers
 import sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url, set_annoucement, clear_announcements
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR, TASKS_DIR
 from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS, get_current_time
 from lib.utilities.send_mail import send_mail
@@ -137,7 +137,6 @@ def get_periodic_scheduling_time_in_seconds(days, requested_hour, requested_minu
             if extra_seconds >= 0:
                 break
 
-
         if requested_day > current_day_of_week:
             # process something
             derived_time = now.replace(hour=requested_hour, minute=requested_minute)
@@ -227,10 +226,13 @@ def validate_spec(spec):
         error_message = "scheduling type cannot be empty"
     return valid, error_message
 
-def parse_suite(suite_name=None, dynamic_suite_file=None):
+
+def parse_suite(suite_name=None, dynamic_suite_file=None, suite_type=SuiteType.STATIC):
     suite_file_name = None
     if not dynamic_suite_file:
         suite_file_name = SUITES_DIR + "/" + suite_name
+        if suite_type == SuiteType.TASK:
+            suite_file_name = TASKS_DIR + "/" + suite_name
     else:
         suite_file_name = dynamic_suite_file
     if not suite_file_name.endswith(".json"):
