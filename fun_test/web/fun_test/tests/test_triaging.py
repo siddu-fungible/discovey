@@ -287,6 +287,10 @@ class TrialStateMachine:
         trial.status = TriageTrialStates.ERROR
         trial.save()
 
+    def debug(self, message):
+        s = "{}: {}".format(self._get_trial_string(), str(message))
+        logger.debug(s)
+
     def _get_trial_string(self):
         return "T: {} S: {}".format(self.triage_id, self.fun_os_sha)
 
@@ -339,11 +343,14 @@ class TrialStateMachine:
                 trial.save()
         elif status == TriageTrialStates.IN_LSF:
             lsf_server = LsfStatusServer()  #TODO
+            logger.debug("Getting past jobs by tag")
             past_jobs = lsf_server.get_past_jobs_by_tag(add_info_to_db=False, tag=trial.tag)
             if past_jobs:
                 trial.status = TriageTrialStates.IN_LSF
                 trial.save()
+                logger.debug("Getting get last job by tag")
                 job_info = lsf_server.get_last_job(tag=trial.tag)
+                logger.debug("Got last job by tag")
                 if job_info and "job_id" in job_info:
                     trial.lsf_job_id = job_info["job_id"]
                 if job_info and "state" in job_info:
@@ -354,7 +361,9 @@ class TrialStateMachine:
         elif status == TriageTrialStates.PREPARING_RESULTS:
             lsf_server = LsfStatusServer()  # TODO
             job_info = lsf_server.get_last_job(tag=trial.tag)
+            # import pdb; pdb.set_trace()
             if triage.triage_type == TriagingTypes.REGEX_MATCH:
+                regex_match_found = False
                 if "output_text" in job_info:
                     lines = job_info["output_text"].split("\n")
 
@@ -363,7 +372,31 @@ class TrialStateMachine:
                         m = re.search(triage.regex_match_string, line)
                         if m:
                             trial.regex_match = m.group(0)
+                            regex_match_found = True
                     trial.status = TriageTrialStates.COMPLETED
+                    trial.save()
+                if not regex_match_found:
+                    # Try human file
+                    lsf_server = LsfStatusServer()
+                    if job_info and "job_id" in job_info:
+                        job_id = job_info["job_id"]
+                        self.debug("Regex match for Job: {}".format(job_id))
+                        for file_name in ["odp/uartout0.0.txt", "odp/uartout0.1.txt"]:
+                            uart_txt = lsf_server.get_human_file(job_id=job_id, file_name=file_name)
+                            self.debug("Searching : {}".format(file_name))
+                            for line in uart_txt.split("\n"):
+                                m = re.search(triage.regex_match_string, line)
+                                if m:
+                                    trial.regex_match = m.group(0)
+                                    regex_match_found = True
+                                    if regex_match_found:
+                                        break
+                            self.debug("Completed searching : {}".format(file_name))
+                    trial.status = TriageTrialStates.COMPLETED
+                    trial.save()
+                    pass
+                if not regex_match_found:
+                    trial.regex_match = "LSF return code: {} Regex: {} Not found".format(job_info["return_code"], triage.regex_match_string)
                     trial.save()
             elif triage.triage_type == TriagingTypes.PASS_OR_FAIL:
                 code, message = self.validate_lsf_job(trial=trial)
@@ -445,4 +478,4 @@ if __name__ == "__main__":
 
             except Exception as ex:
                 logger.exception(ex)
-        time.sleep(5)
+        time.sleep(60)

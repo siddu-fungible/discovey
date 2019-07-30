@@ -42,6 +42,7 @@ class TriagingTypes(Codes):
     PASS_OR_FAIL = 1
     SCORE = 2
     REGEX_MATCH = 3
+    PASS_OR_FAIL_INTEGRATION = 4
 
 
 

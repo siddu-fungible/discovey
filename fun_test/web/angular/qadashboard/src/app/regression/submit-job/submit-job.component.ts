@@ -6,6 +6,9 @@ import {Title} from "@angular/platform-browser";
 import {Sort} from "@angular/material";
 import {Validators} from "@angular/forms";
 import {animate, state, style, transition, trigger} from "@angular/animations";
+import {switchMap} from "rxjs/operators";
+import {of} from "rxjs";
+import {ActivatedRoute} from "@angular/router";
 
 @Component({
   selector: 'app-submit-job',
@@ -77,15 +80,15 @@ export class SubmitJobComponent implements OnInit {
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
   description: string = null;
-
-
+  type: string = "regular"; // some other type like task
+  queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
   moreJenkinsOptions: boolean = false;
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,
-              private title: Title) {
+              private title: Title, private route: ActivatedRoute) {
   }
 
   ngOnInit() {
@@ -111,16 +114,24 @@ export class SubmitJobComponent implements OnInit {
     this.schedulingOptions = false;
     this.jobId = null;
     let self = this;
-    this.apiService.get("/regression/suites").subscribe((result) => {
-      let suitesInfo = result.data;
-      self.suitesInfo = suitesInfo;
-
-      for (let suites of Object.keys(suitesInfo)) {
-        self.suitesInfoKeys.push(suites);
+    this.getQueryParam().subscribe((response) => {
+      this.queryParams = response;
+      let queryParamString = "";
+      if (this.type === "task") {
+        queryParamString = "?suite_type=task";
       }
-      self.suitesInfoKeys.sort();
+      this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
+        let suitesInfo = result.data;
+        self.suitesInfo = suitesInfo;
+
+        for (let suites of Object.keys(suitesInfo)) {
+          self.suitesInfoKeys.push(suites);
+        }
+        self.suitesInfoKeys.sort();
+      });
 
     });
+
     this.selectedTags = [];
     this.tags = [];
     this.fetchUsers();
@@ -128,6 +139,16 @@ export class SubmitJobComponent implements OnInit {
     this.fetchTestBeds();
     this.emailOnFailOnly = false;
   }
+
+  getQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('type')) {
+        this.type = params["type"];
+      }
+      return of(params);
+    }))
+  }
+
 
   onItemSelect (item:any): void {
     console.log(item);
@@ -249,6 +270,7 @@ export class SubmitJobComponent implements OnInit {
     payload["email_on_fail_only"] = this.emailOnFailOnly;
     payload["test_bed_type"] = this.selectedTestBedType;
     payload["submitter_email"] = this.selectedUser.email;
+
     if (this.emails) {
       this.emails = this.emails.split(",");
       payload["email_list"] = this.emails
@@ -266,7 +288,10 @@ export class SubmitJobComponent implements OnInit {
     if (this.selectedTestBedType) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
-
+    /*if (this.type) {
+      payload["suite_type"] = this.type;
+      payload["environment"]["test_bed_type"] = "tasks"
+    }*/
 
     if (this.isTestBedFs()) {
       if (!this.withJenkinsBuild) {

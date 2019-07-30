@@ -38,7 +38,7 @@ class RegexTemplate(Linux):
 
         @fun_test.safe
         def get_ffac_version(self):
-            op = self.command('ffac ')
+            op = self.command('ffac | grep tag')
             version = re.search("bld_\d+", op).group()
             return version
 
@@ -333,6 +333,7 @@ class RegexTemplate(Linux):
         @fun_test.safe
         def compile_only(self, mem_dist, pat_path, res_path, exclude_lst=[], engine="", juniper_style="", time_out=2 * 60):
             print "Entered here!"
+            base = ""
             jstyle = "yes"
             pat_files_dict = self.list_files(pat_path)
             pat_files = [fn['filename'] for fn in pat_files_dict]
@@ -347,106 +348,117 @@ class RegexTemplate(Linux):
                 jstyle = "no"
 
             for idx, pat in enumerate(pat_files):
-                if not pat.endswith(".pat"):
-                    fun_test.log(pat + " File is not a pattern file (xyz.pat)")
-                    continue
-                base = pat.strip(".pat")
-                # for mem in ["dflt", "rbm", "exm", "exm_plr", "rbm_exm", "rbm_exm_plr"]:
-                #for mem in ["exm"]:
-                for mem in mem_dist:
-                    graph_name = base + "_" + mem + "_graph.json"
-                    try:
-                        if engine == "0":
-                            if mem == "dflt":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", e=engine, r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", e=engine, r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "exm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", B="0", e=engine,
-                                                    r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
-                            if mem == "exm_plr":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", B="0", L=" ", e=engine,
-                                                    r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm_exm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", e=engine, r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm_exm_plr":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", L=" ", e=engine,
-                                                    r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
+                print "pat:", pat
+                if pat.endswith(".pat"):
+                    base = pat.strip(".pat")
+                else:
+                    if not pat.isdigit():
+                        base = pat
 
-                        elif engine == "1":
-                            if mem == "dflt":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", e=engine, r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", e=engine, r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "exm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", e=engine, r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "exm_plr":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", L=" ", e=engine,
-                                                    r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm_exm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", e=engine, r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm_exm_plr":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", L=" ", e=engine,
-                                                    r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
+                if base:
+                    ### for mem in ["dflt", "rbm", "exm", "exm_plr", "rbm_exm", "rbm_exm_plr"]:
+                    #for mem in ["exm"]:
+                    for mem in mem_dist:
+                        graph_name = base + "_" + mem + "_graph.json"
+                        try:
+                            if engine == "0":
+                                if mem == "dflt":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", e=engine, r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", e=engine, r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "exm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", B="0", e=engine,
+                                                        r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
+                                if mem == "exm_plr":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", B="0", L=" ", e=engine,
+                                                        r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm_exm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", e=engine, r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm_exm_plr":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", L=" ", e=engine,
+                                                        r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
 
-                        else:
-                            if mem == "dflt":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "exm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", B="0", H="0", r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "exm_plr":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", B="0", H="0", L=" ", r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm_exm":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", B="10", H="10", r=pat_path + pat,
-                                                    o=res_path + graph_name, time_out=time_out)
-                            if mem == "rbm_exm_plr":
-                                op = self.compile_re(j=jstyle, drop_unsupported=" ", B="10", H="10", L=" ",
-                                                    r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
+                            elif engine == "1":
+                                if mem == "dflt":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", e=engine, r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", e=engine, r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "exm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", e=engine, r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "exm_plr":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="0", L=" ", e=engine,
+                                                        r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm_exm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", e=engine, r=pat_path + pat,
+                                                       o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm_exm_plr":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", H="10", L=" ", e=engine,
+                                                        r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
 
-                    except Exception as e:
-                        op = (False, 'TIMEOUT', '0.0')
-                        fun_test.log("Compilation failed")
-                    actual_op = op[1]
-                    fun_test.log("COMPILER OUTPUT:")
-                    fun_test.log(op)
-
-                    time_size = ""
-                    graph_sz = ""
-                    compile_time = ""
-                    if op[0] is True:
-                        graph_sz = op[3]
-                        compile_time = op[2]
-                        time_size = " graph size:" + graph_sz + " compilation time:" + compile_time
-
-                    result_str = "Compile: (" + strategy + " Strategy) " + RegexTemplate.mem_dict[
-                        mem] + ": " + pat + "=> " + build + time_size
-
-
-                    try:
-                        if op[0] is False:
-                            if 'TIMEOUT' in op[1]:
-                                result_str += 'TIMEOUT'
                             else:
-                                fail_op_lst = op[1].split("\n")
-                                result_str += "".join(fail_op_lst[-5:])
-                        fun_test.test_assert(op[0], result_str + "\n")
-                        print "we are here now, can return build ", build
-                        #return build
-                    except:
-                        pass
+                                if mem == "dflt":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", no_exm=" ", r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "exm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", B="0", H="0", r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "exm_plr":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", B="0", H="0", L=" ", r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm_exm":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", B="10", H="10", r=pat_path + pat,
+                                                        o=res_path + graph_name, time_out=time_out)
+                                if mem == "rbm_exm_plr":
+                                    op = self.compile_re(j=jstyle, drop_unsupported=" ", B="10", H="10", L=" ",
+                                                        r=pat_path + pat, o=res_path + graph_name, time_out=time_out)
+
+                        except Exception as e:
+                            op = (False, 'TIMEOUT', '0.0')
+                            fun_test.log("Compilation failed")
+                        actual_op = op[1]
+                        #fun_test.log("COMPILER OUTPUT:")
+                        fun_test.log(op[1])
+                        myslices = ""
+                        dfa_slices = str(re.findall("Mapped DFA.*", op[1]))
+                        nfa_slices = str(re.findall("Mapped NFA.*", op[1]))
+                        print "DFA:", dfa_slices, " NFA:", nfa_slices
+                        myslices = dfa_slices + nfa_slices
+                        print "myslices:", myslices
+
+                        time_size = ""
+                        graph_sz = ""
+                        compile_time = ""
+                        if op[0] is True:
+                            graph_sz = op[3]
+                            compile_time = op[2]
+                            time_size = " size:" + myslices + " compilation time:" + compile_time
+
+                        result_str = "Compile: (" + strategy + " Strategy) " + RegexTemplate.mem_dict[
+                            mem] + ": " + pat + "=> " + build + time_size
+
+
+                        try:
+                            if op[0] is False:
+                                fail_count += 1
+                                if 'TIMEOUT' in op[1]:
+                                    result_str += 'TIMEOUT'
+                                else:
+                                    fail_op_lst = op[1].split("\n")
+                                    result_str += "".join(fail_op_lst[-5:])
+                            fun_test.test_assert(op[0], result_str + "\n")
+                            print "we are here now, can return build ", build
+                            #return build
+                        except:
+                            pass
 
         @fun_test.safe
         def validate_matches(self, actual_lst = [], expeted_lst =[]):

@@ -133,7 +133,6 @@ class ECVolumeLevelScript(FunTestScript):
             self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
             self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
             self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
-            print "**** Full DUT Indexes: {}".format(self.full_dut_indexes)
             # Skipping DUTs not required for this test
             self.skip_dut_list = []
             for index in xrange(0, self.dut_start_index):
