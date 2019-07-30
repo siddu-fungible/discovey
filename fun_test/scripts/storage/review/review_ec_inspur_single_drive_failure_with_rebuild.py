@@ -104,7 +104,7 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
             self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
             self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
-            self.full_dut_indexes = self.testbed_config["dut_info"]
+            self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
             # Skipping DUTs not required for this test
             self.skip_dut_list = []
             for index in xrange(0, self.dut_start_index):
@@ -285,13 +285,17 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
         come_reboot = False
-        '''
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
                 self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             try:
+                self.ec_info = fun_test.shared_variables["ec_info"]
+                self.attach_transport = fun_test.shared_variables["attach_transport"]
+                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
+
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
@@ -304,51 +308,58 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
                                                 filename=pcap_artifact_file)
 
-                self.ec_info = fun_test.shared_variables["ec_info"]
-                self.attach_transport = fun_test.shared_variables["attach_transport"]
-                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                # Executing NVMe disconnect from all the hosts
+                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="{} - NVME Disconnect Status".format(host_name))
+
                 # Detaching all the EC/LS volumes to the external server
-                """for num in xrange(self.ec_info["num_volumes"]):
+                for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
+                        ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
                     fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume from DUT".format(num))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
 
-                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                           command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")"""
+                # Deleting all the storage controller
+                for index in xrange(len(self.host_info)):
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
+                                                                               command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
+                                         format(self.ctrlr_uuid[index]))
                 self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
 
-            try:
-                for index in xrange(self.num_duts):
-                    stop_containers = self.funcp_obj[index].stop_container()
-                    fun_test.test_assert_expected(expected=True, actual=stop_containers,
-                                                  message="Docker containers are stopped")
-                    self.come_obj[index].command("sudo rmmod funeth")
-                    fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
-                                                  message="funeth module is unloaded")
-            except Exception as ex:
-                fun_test.critical(str(ex))
-                come_reboot = True
+        try:
+            for index in xrange(self.num_duts):
+                stop_containers = self.funcp_obj[index].stop_container()
+                fun_test.test_assert_expected(expected=True, actual=stop_containers,
+                                              message="Docker containers are stopped")
+                self.come_obj[index].command("sudo rmmod funeth")
+                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                              message="funeth module is unloaded")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            come_reboot = True
 
-            try:
-                if come_reboot:
-                    self.fs.fpga_initialize()
-                    fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
-                    self.fs.come_reset(max_wait_time=self.reboot_timeout)
-            except Exception as ex:
-                fun_test.critical(str(ex))
+        try:
+            if come_reboot:
+                self.fs.fpga_initialize()
+                fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
+                self.fs.come_reset(max_wait_time=self.reboot_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
-            self.topology.cleanup()
-        '''
+        self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
@@ -384,6 +395,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         fun_test.shared_variables["attach_transport"] = self.attach_transport
+        fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
 
         # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
         # to be used in this test. If so, override the script default with the user provided config
