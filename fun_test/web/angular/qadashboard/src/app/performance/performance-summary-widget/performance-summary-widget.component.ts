@@ -12,6 +12,8 @@ import {CommonService} from "../../services/common/common.service";
 })
 export class PerformanceSummaryWidgetComponent implements OnInit {
 
+  clickURLs: any = {};
+
 
   y1Values: any = [];
   x1Values: any = [];
@@ -37,6 +39,7 @@ export class PerformanceSummaryWidgetComponent implements OnInit {
 
 
   ngOnInit() {
+    console.log('test');
 
     this.initializeY1Values();
 
@@ -59,6 +62,7 @@ export class PerformanceSummaryWidgetComponent implements OnInit {
       let dag = response.data[0].children_info;
       for (let i in dag) {
         this.x1Values.push(dag[i].chart_name);
+        this.clickURLs[dag[i].chart_name] = '/performance?goto=F1%2F' + dag[i].chart_name;
         let recentScore = dag[i].last_two_scores[0];
         recentScore = +recentScore.toFixed(2);
         if (recentScore <= 50) {

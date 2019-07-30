@@ -25,9 +25,10 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() enableLegend: boolean = true;
   @Input() backgroundColor: string = null;
   @Input() seriesColors: string[] = null;
-
+  @Input() clickURLs;
   chart: any;
   point: any = null;
+
 
   constructor() {
   }
@@ -186,6 +187,11 @@ export class FunChartComponent implements OnInit, OnChanges {
             },
             point: {
               events: {
+
+                click: function() {
+                  location.href = self.clickURLs[this.category];
+                },
+
                 select: function () {
                   if (self.pointClickCallback) {
                     let metadata = null;
