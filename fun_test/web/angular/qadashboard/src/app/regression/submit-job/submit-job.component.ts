@@ -9,6 +9,13 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {switchMap} from "rxjs/operators";
 import {of} from "rxjs";
 import {ActivatedRoute} from "@angular/router";
+import {TriageService} from "../triage2/triage.service";
+
+class Mode {
+  static REGULAR = "REGULAR";
+  static TASK = "TASK";
+  static TRIAGE = "TRIAGE"
+}
 
 @Component({
   selector: 'app-submit-job',
@@ -80,15 +87,18 @@ export class SubmitJobComponent implements OnInit {
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
   description: string = null;
-  type: string = "regular"; // some other type like task
+  //type: string = "regular"; // some other type like task
   queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
   moreJenkinsOptions: boolean = false;
-
+  mode: Mode = Mode.REGULAR;
+  Mode = Mode;
+  triageTypes = [{value: 4, description: "Pass or Fail"}, {value: 5, description: "Regex match"}];  //Taken from TriagingTypes
 
   constructor(private apiService: ApiService, private logger: LoggerService,
-              private title: Title, private route: ActivatedRoute) {
+              private title: Title, private route: ActivatedRoute,
+              private triageService: TriageService) {
   }
 
   ngOnInit() {
@@ -117,7 +127,7 @@ export class SubmitJobComponent implements OnInit {
     this.getQueryParam().subscribe((response) => {
       this.queryParams = response;
       let queryParamString = "";
-      if (this.type === "task") {
+      if (this.mode === Mode.TASK) {
         queryParamString = "?suite_type=task";
       }
       this.apiService.get("/regression/suites" + queryParamString).subscribe((result) => {
@@ -142,8 +152,8 @@ export class SubmitJobComponent implements OnInit {
 
   getQueryParam() {
     return this.route.queryParams.pipe(switchMap(params => {
-      if (params.hasOwnProperty('type')) {
-        this.type = params["type"];
+      if (params.hasOwnProperty('mode')) {
+        this.mode = params["mode"];
       }
       return of(params);
     }))

@@ -2,7 +2,14 @@
   <div class="row">
     <div class="col">
       <div class="card" style="margin: 4px;">
-        <div class="card-header">Submit {{ type === 'regular'? 'Job': 'Task' }}</div>
+        <div class="card-header">
+          <ng-container [ngSwitch]="mode">
+            <ng-container *ngSwitchCase="Mode.REGULAR"> Submit job</ng-container>
+            <ng-container *ngSwitchCase="Mode.TASK"> Submit task</ng-container>
+            <ng-container *ngSwitchCase="Mode.TRIAGE"> Submit triage</ng-container>
+
+          </ng-container>
+        </div>
         <div class="card-body">
           <table class="table table-nonfluid table-borderless">
             <tr>
@@ -20,7 +27,23 @@
               </td>
             </tr>
 
-            <ng-container *ngIf="type === 'regular'">
+            <ng-container *ngIf="mode === Mode.REGULAR || mode === Mode.TRIAGE">
+
+              <tr>
+                <td>
+                  <label for="triage_type">Type: </label>
+                </td>
+                <td>
+                  <select class="form-control" id="triage_type" formControlName="triage_type">
+                    <option *ngFor="let triageType of triageTypes" [value]="triageType.value">{{ triageType.description }}
+                    </option>
+                  </select>
+                </td>
+
+
+              </tr>
+
+
               <tr>
                 <td class="no-wrap">
                   <label for="testbed-type" class="required-label">Testbed type</label>
@@ -78,7 +101,7 @@
                                [checked]="disableAssertions"> DISABLE_ASSERTIONS
                     </td>
                   </tr>
-                  <tr>
+                  <tr *ngIf="mode === Mode.REGULAR">
                     <td><label for="branch-funos">BRANCH_FunOS</label></td>
                     <td><input style="width: 100%" id="branch-funos" name="branch-funos" [(ngModel)]="branchFunOs"
                                type="text"></td>
