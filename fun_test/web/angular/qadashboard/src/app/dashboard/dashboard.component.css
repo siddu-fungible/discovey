@@ -3,6 +3,10 @@
   font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
 }
 
+.card-header{
+  height: 50px;
+}
+
 
 .card {
   box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
@@ -19,6 +23,8 @@
 
 .flex-container {
   display: flex;
+  flex: 1 1 25%;
+  align-content: flex-start;
   height: inherit;
 }
 
