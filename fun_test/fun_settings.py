@@ -36,6 +36,9 @@ SCHEDULER_REQUESTS_DIR = JOBS_DIR + "/requests"
 TEST_CASE_SPEC_DIR = SCRIPTS_DIR + "/test_case_spec"
 SUITES_DIR = TEST_CASE_SPEC_DIR + "/suites"
 
+TASKS_SPEC_DIR = SCRIPTS_DIR + "/tasks_spec"
+TASKS_DIR = TASKS_SPEC_DIR
+
 JIRA_URL = "http://jira.fungible.local"
 TCMS_PROJECT = "TCM"
 

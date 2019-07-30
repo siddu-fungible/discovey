@@ -167,6 +167,7 @@ class SuiteExecution(models.Model):
     emails = models.TextField(default="[]", null=True)  # email addresses to send reports to
     email_on_failure_only = models.BooleanField(default=False)
     finalized = models.BooleanField(default=False)
+    preserve_logs = models.NullBooleanField(default=False, null=True)  # Preserve logs do not archive
 
     """
     Execution
@@ -322,7 +323,11 @@ class CatalogTestCaseExecution(models.Model):
 
 class Module(models.Model):
     name = models.TextField(unique=True)
-    verbose_name = models.TextField(default="Verbose Name")
+    verbose_name = models.TextField(default="Verbose name")
+
+class SubModules(FunModel):   # Say Module: Networking, sub-module: PSW
+    name = models.TextField(unique=True)
+    verbose_name = models.TextField(default="Verbose name")
 
 class JenkinsJobIdMap(models.Model):
     jenkins_job_id = models.IntegerField()
@@ -615,6 +620,55 @@ class Asset(FunModel):
         if self.manual_lock_user == manual_lock_user:
             self.manual_lock_user = None
             self.save()
+
+
+class SuiteItems(models.Model):
+    script_path = models.TextField()
+    inputs = JSONField(default=None)
+    test_case_ids = ArrayField(models.IntegerField(default=-1), default=None)
+
+
+class Suite(models.Model):
+    name = models.TextField(default="TBD")
+    categories = JSONField(default=[])
+    sub_categories = JSONField(default=[])
+
+    short_description = models.TextField(default="")
+    long_description = models.TextField(default="")
+    tags = JSONField(default=[])
+    custom_test_bed_spec = JSONField(default=None)
+
+
+class TaskStatus(models.Model):
+    path = models.TextField(unique=True, default="")
+    name = models.TextField(unique=True)
+    last_counter = models.IntegerField(default=0)
+    state = models.TextField(default="")   # Job status type
+    """ 
+    Tasks logs switch between index 0 and index 1.
+    One of these is the previous log and the other is
+    is the current log
+    """
+    date_time = models.DateTimeField(default=datetime.now)
+
+    @staticmethod
+    def set_state(path, name, state=JobStatusType.UNKNOWN):
+        TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state, "date_time": get_current_time()})
+
+    @staticmethod
+    def get(path, name, state=JobStatusType.UNKNOWN):
+        obj, _ = TaskStatus.objects.update_or_create(path=path, name=name, defaults={"state": state, "date_time": get_current_time()})
+        return obj
+
+    @staticmethod
+    def get_state(path, name):
+        state = None
+        try:
+            t = TaskStatus.objects.get(path=path, name=name)
+            state = t.state
+        except ObjectDoesNotExist:
+            logger.error("Task status: {} {} Object does not exist".format(path, name))
+        return state
 
 
 class TestbedNotificationEmails(FunModel):
