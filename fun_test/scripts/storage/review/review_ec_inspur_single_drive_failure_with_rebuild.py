@@ -137,6 +137,9 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
                              message="Testbed has enough DUTs")
 
+        self.db_log_time = get_data_collection_time()
+        fun_test.log("Data collection time: {}".format(self.db_log_time))
+
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
             for i in range(len(self.bootargs)):
@@ -408,6 +411,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.test_network = {}
             self.test_network["f1_loopback_ip"] = self.f1_ips
             self.num_duts = fun_test.shared_variables["num_duts"]
+            self.db_log_time = fun_test.shared_variables["db_log_time"]
             self.num_hosts = len(self.host_info)
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
@@ -1237,25 +1241,27 @@ class ECVolumeLevelTestcase(FunTestCase):
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
 
-            # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time()
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
-            # Building value_dict for dashboard update
-            value_dict = {
-                "date_time": self.db_log_time,
-                "num_hosts": self.num_hosts,
-                "num_f1s": self.num_f1s,
-                "base_file_copy_time": base_file_copy_time,
-                "copy_time_during_plex_fail": copy_time_during_plex_fail,
-                "file_copy_time_during_rebuild": file_copy_time_during_rebuild,
-                "plex_rebuild_time": plex_rebuild_time
-            }
-            add_to_data_base(value_dict)
-            # post_results("Inspur Performance Test", test_method, *row_data_list)
-
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
             fun_test.add_table(panel_header="Single Drive Failure Result Table", table_name=self.summary,
                                table_data=table_data)
+
+            # Datetime required for daily Dashboard data filter
+            try:
+                # Building value_dict for dashboard update
+                value_dict = {
+                    "date_time": self.db_log_time,
+                    "num_hosts": self.num_hosts,
+                    "num_f1s": self.num_f1s,
+                    "base_file_copy_time": base_file_copy_time,
+                    "copy_time_during_plex_fail": copy_time_during_plex_fail,
+                    "file_copy_time_during_rebuild": file_copy_time_during_rebuild,
+                    "plex_rebuild_time": plex_rebuild_time
+                }
+                add_to_data_base(value_dict)
+                # post_results("Inspur Performance Test", test_method, *row_data_list)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
             try:
                 if hasattr(self, "back_pressure") and self.back_pressure:
                     # Check if back pressure is still running, if yes, stop it
