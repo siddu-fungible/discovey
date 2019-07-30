@@ -1,6 +1,6 @@
 from lib.system.fun_test import *
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, ModelHelper, get_data_collection_time
 from lib.fun.fs import Fs
 import re
 from lib.topology.topology_helper import TopologyHelper
@@ -8,6 +8,7 @@ from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from collections import OrderedDict, Counter
+from fun_global import PerfUnit
 
 '''
 Script for Inspur Functional Testing of Data Reconstruction With Disk Disk Failure and monitor Performance impact
@@ -56,6 +57,29 @@ def post_results(volume, test, num_host, block_size, io_depth, size, operation, 
         result.append(str(eval(arg)))
     result = ",".join(result)
     fun_test.log("Result: {}".format(result))
+
+
+def add_to_data_base(value_dict):
+    unit_dict = {
+        "write_iops_unit": PerfUnit.UNIT_OPS, "read_iops_unit": PerfUnit.UNIT_OPS,
+        "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC, "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+        "write_avg_latency_unit": PerfUnit.UNIT_USECS, "write_90_latency_unit": PerfUnit.UNIT_USECS,
+        "write_95_latency_unit": PerfUnit.UNIT_USECS, "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+        "write_99_latency_unit": PerfUnit.UNIT_USECS, "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+        "read_90_latency_unit": PerfUnit.UNIT_USECS, "read_95_latency_unit": PerfUnit.UNIT_USECS,
+        "read_99_99_latency_unit": PerfUnit.UNIT_USECS, "read_99_latency_unit": PerfUnit.UNIT_USECS,
+        "plex_rebuild_time_unit": PerfUnit.UNIT_SECS
+    }
+
+    model_name = "InspurDataReconstructionPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
 
 
 class DataReconstructOnDiskFailScript(FunTestScript):
@@ -177,7 +201,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
             fun_test.test_assert(self.topology, "Topology deployed")
 
             # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_data_reconstruction_single_disk_failure")
+            self.db_log_time = get_data_collection_time()
             fun_test.log("Data collection time: {}".format(self.db_log_time))
 
             # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
@@ -333,13 +357,18 @@ class DataReconstructOnDiskFailScript(FunTestScript):
     def cleanup(self):
 
         come_reboot = False
-        '''
+
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
                 self.fs = self.fs_obj[0]
                 self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
             try:
+                self.ec_info = fun_test.shared_variables["ec_info"]
+                self.attach_transport = fun_test.shared_variables["attach_transport"]
+                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
+
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
@@ -352,24 +381,30 @@ class DataReconstructOnDiskFailScript(FunTestScript):
                     fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
                                                 filename=pcap_artifact_file)
 
-                self.ec_info = fun_test.shared_variables["ec_info"]
-                self.attach_transport = fun_test.shared_variables["attach_transport"]
-                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                # Executing NVMe disconnect from all the hosts
+                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="{} - NVME Disconnect Status".format(host_name))
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid, ns_id=num + 1, command_duration=self.command_timeout)
+                        ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
                     fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume on DUT".format(num))
+                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume from DUT".format(num))
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
-
-                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                           command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+                # Deleting all the storage controller
+                for index in xrange(len(self.host_info)):
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                               command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
+                                         format(self.ctrlr_uuid[index]))
                 self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
@@ -396,7 +431,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        '''
+
         self.topology.cleanup()
 
 
@@ -438,6 +473,7 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
         fun_test.shared_variables["attach_transport"] = self.attach_transport
+        fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
 
         # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
         # to be used in this test. If so, override the script default with the user provided config
@@ -463,6 +499,7 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
             self.test_network["f1_loopback_ip"] = self.f1_ips
             self.num_duts = fun_test.shared_variables["num_duts"]
             self.num_hosts = len(self.host_info)
+            self.db_log_time = fun_test.shared_variables["db_log_time"]
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
@@ -845,23 +882,30 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
 
             # Collecting initial network stats
             if self.collect_network_stats:
-                initial_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
-                initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
-                initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
-                initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
-                command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
-                                                              command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
-                initial_stats[iodepth]["eqm_stats"] = command_result["data"]
-                fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
-                    iodepth, initial_stats[iodepth]))
+                try:
+                    initial_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                    initial_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                    initial_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                    initial_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                    command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                  command_duration=self.command_timeout)
+                    # fun_test.test_assert(command_result["status"], "Collecting eqm stats for iodepth {}".format(iodepth))
+                    if "status" in command_result and command_result["status"]:
+                        initial_stats[iodepth]["eqm_stats"] = command_result["data"]
+                    else:
+                        initial_stats[iodepth]["eqm_stats"] = {}
+                    fun_test.log("\nInitial stats collected for iodepth {} after iteration: \n{}\n".format(
+                        iodepth, initial_stats[iodepth]))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
             # Starting the thread to collect the vp_utils stats and resource_bam stats for the current iteration
             if start_stats:
+                stats_obj = CollectStats(self.storage_controller)
                 vp_util_post_fix_name = "vp_util_iodepth_{}.txt".format(iodepth)
                 vp_util_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=vp_util_post_fix_name)
-                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=collect_vp_utils_stats,
-                                                                storage_controller=self.storage_controller,
+                stats_thread_id = fun_test.execute_thread_after(time_in_seconds=1,
+                                                                func=stats_obj.collect_vp_utils_stats,
                                                                 output_file=vp_util_artifact_file,
                                                                 interval=self.vp_util_args["interval"],
                                                                 count=int(mpstat_count), threaded=True)
@@ -869,8 +913,7 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                 resource_bam_artifact_file = fun_test.get_test_case_artifact_file_name(
                     post_fix_name=resource_bam_post_fix_name)
                 stats_rbam_thread_id = fun_test.execute_thread_after(time_in_seconds=10,
-                                                                     func=collect_resource_bam_stats,
-                                                                     storage_controller=self.storage_controller,
+                                                                     func=stats_obj.collect_resource_bam_stats,
                                                                      output_file=resource_bam_artifact_file,
                                                                      interval=self.resource_bam_args["interval"],
                                                                      count=int(mpstat_count), threaded=True)
@@ -979,8 +1022,10 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
             if hasattr(self, "trigger_failure") and self.trigger_failure:
                 # Sleep for sometime before triggering the drive failure
                 wait_time = self.trigger_failure_wait_time
+                '''
                 if hasattr(self, "failure_start_time_ratio"):
                     wait_time = int(round(self.fio_cmd_args["timeout"] * self.failure_start_time_ratio))
+                '''
                 fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
                                seconds=wait_time)
                 # Check whether the drive index to be failed is given or not. If not pick a random one
@@ -999,7 +1044,6 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                         device_fail_status = self.storage_controller.disable_device(
                             device_id=fail_device, command_duration=self.command_timeout)
                         fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
-
                         # Validate if Device is marked as Failed
                         device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
                         device_stats = self.storage_controller.peek(device_props_tree)
@@ -1023,11 +1067,11 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                         ''' Marking Plex as failed '''
 
                     fun_test.log("\nPlex/Drive Failure is injected at: {}\n".format(time.ctime()))
-                    fun_test.sleep("After injecting failure in drive/plex", 10)
+                    fun_test.sleep("After injecting failure in drive/plex & wait before initiating rebuild",
+                                   self.trigger_rebuild_wait_time)
                     if not self.rebuild_on_spare_volume:
                         if self.fail_drive:
                             ''' Marking drive as online '''
-                            ''''''
                             device_up_status = self.storage_controller.enable_device(
                                 device_id=fail_device, command_duration=self.command_timeout)
                             fun_test.test_assert(device_up_status["status"],
@@ -1040,7 +1084,6 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                             fun_test.test_assert_expected(
                                 expected="DEV_ONLINE", actual=device_stats["data"]["device state"],
                                 message="Device ID {} is Enabled again".format(fail_device))
-                            ''''''
                             ''' Marking drive as online '''
                         else:
                             ''' Marking Plex as online '''
@@ -1082,56 +1125,78 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
+            finally:
                 # Checking whether the vp_util stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
                     fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                    global vp_stats_thread_stop_status
-                    vp_stats_thread_stop_status[self.storage_controller] = True
-                    fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
+                    stats_obj.stop_all = True
+                    stats_obj.stop_vp_utils = True
+                    # fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
                 # Checking whether the resource bam stats collection thread is still running...If so stopping it...
                 if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
                     fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
-                    global resource_bam_stats_thread_stop_status
-                    resource_bam_stats_thread_stop_status[self.storage_controller] = True
-                    fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
-            finally:
+                    stats_obj.stop_all = True
+                    stats_obj.stop_resource_bam = True
+                    # fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
+                fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
+                fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
+
                 # Collecting final network stats and finding diff between final and initial stats
                 if self.collect_network_stats:
-                    final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
-                    final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
-                    final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
-                    final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
-                    command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
-                                                                  command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"],
-                                         "Collecting eqm stats for iodepth {}".format(iodepth))
-                    final_stats[iodepth]["eqm_stats"] = command_result["data"]
-                    fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
-                        iodepth, initial_stats[iodepth]))
+                    try:
+                        final_stats[iodepth]["peek_psw_global_stats"] = self.storage_controller.peek_psw_global_stats()
+                        final_stats[iodepth]["peek_vp_packets"] = self.storage_controller.peek_vp_packets()
+                        final_stats[iodepth]["cdu"] = self.storage_controller.peek_cdu_stats()
+                        final_stats[iodepth]["ca"] = self.storage_controller.peek_ca_stats()
+                        command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False,
+                                                                      command_duration=self.command_timeout)
+                        if "status" in command_result and command_result["status"]:
+                            final_stats[iodepth]["eqm_stats"] = command_result["data"]
+                        else:
+                            final_stats[iodepth]["eqm_stats"] = {}
+                        fun_test.log("\nFinal stats collected for iodepth {} after IO: \n{}\n".format(
+                            iodepth, initial_stats[iodepth]))
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
 
                     # Stats diff between final stats and initial stats
-                    resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["peek_psw_global_stats"],
-                        old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
+                    resultant_stats[iodepth]["peek_psw_global_stats"] = {}
+                    if final_stats[iodepth]["peek_psw_global_stats"] and initial_stats[iodepth][
+                        "peek_psw_global_stats"]:
+                        resultant_stats[iodepth]["peek_psw_global_stats"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["peek_psw_global_stats"],
+                            old_stats=initial_stats[iodepth]["peek_psw_global_stats"])
                     fun_test.log("\nStat difference for peek_psw_global_stats at the end iteration for iodepth {} is: "
                                  "\n{}\n".format(iodepth, json.dumps(resultant_stats[iodepth]["peek_psw_global_stats"],
                                                                      indent=2)))
-                    resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["peek_vp_packets"],
-                        old_stats=initial_stats[iodepth]["peek_vp_packets"])
+
+                    resultant_stats[iodepth]["peek_vp_packets"] = {}
+                    if final_stats[iodepth]["peek_vp_packets"] and initial_stats[iodepth]["peek_vp_packets"]:
+                        resultant_stats[iodepth]["peek_vp_packets"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["peek_vp_packets"],
+                            old_stats=initial_stats[iodepth]["peek_vp_packets"])
                     fun_test.log(
                         "\nStat difference for peek_vp_packets at the end iteration for iodepth {} is: \n{}\n".format(
                             iodepth, json.dumps(resultant_stats[iodepth]["peek_vp_packets"], indent=2)))
-                    resultant_stats[iodepth]["cdu"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
+
+                    resultant_stats[iodepth]["cdu"] = {}
+                    if final_stats[iodepth]["cdu"] and initial_stats[iodepth]["cdu"]:
+                        resultant_stats[iodepth]["cdu"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["cdu"], old_stats=initial_stats[iodepth]["cdu"])
                     fun_test.log("\nStat difference for cdu at the end iteration for iodepth {} is: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["cdu"], indent=2)))
-                    resultant_stats[iodepth]["ca"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
+
+                    resultant_stats[iodepth]["ca"] = {}
+                    if final_stats[iodepth]["ca"] and initial_stats[iodepth]["ca"]:
+                        resultant_stats[iodepth]["ca"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["ca"], old_stats=initial_stats[iodepth]["ca"])
                     fun_test.log("\nStat difference for ca at the end iteration for iodepth {} is: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["ca"], indent=2)))
-                    resultant_stats[iodepth]["eqm_stats"] = get_diff_stats(
-                        new_stats=final_stats[iodepth]["eqm_stats"], old_stats=initial_stats[iodepth]["eqm_stats"])
+
+                    resultant_stats[iodepth]["eqm_stats"] = {}
+                    if final_stats[iodepth]["eqm_stats"] and initial_stats[iodepth]["eqm_stats"]:
+                        resultant_stats[iodepth]["eqm_stats"] = get_diff_stats(
+                            new_stats=final_stats[iodepth]["eqm_stats"], old_stats=initial_stats[iodepth]["eqm_stats"])
                     fun_test.log("\nStat difference for eqm_stats at the end iteration for iodepth {}: \n{}\n".format(
                         iodepth, json.dumps(resultant_stats[iodepth]["eqm_stats"], indent=2)))
                     '''
@@ -1177,7 +1242,7 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                 rebuild_start_time = int(round(float(rebuild_start_time.rstrip())))
                 fun_test.log("Rebuild operation started at : {}".format(rebuild_start_time))
 
-                timer = FunTimer(max_time=3600)
+                timer = FunTimer(max_time=self.rebuild_timeout)
                 while not timer.is_expired():
                     search_pattern = "'Rebuild operation complete for plex'"
                     fun_test.sleep("Waiting for plex rebuild to complete", seconds=self.status_interval)
@@ -1229,6 +1294,29 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
             table_data_rows.append(row_data_list)
             # post_results("Inspur Performance Test", test_method, *row_data_list)
 
+            value_dict = {
+                "date_time": self.db_log_time,
+                "num_hosts": self.num_hosts,
+                "block_size": row_data_dict["block_size"],
+                "operation": row_data_dict["mode"],
+                "write_iops": row_data_dict["writeiops"],
+                "read_iops": row_data_dict["readiops"],
+                "write_throughput": row_data_dict["writebw"],
+                "read_throughput": row_data_dict["readbw"],
+                "write_avg_latency": row_data_dict["writeclatency"],
+                "write_90_latency": row_data_dict["writelatency90"],
+                "write_95_latency": row_data_dict["writelatency95"],
+                "write_99_99_latency": row_data_dict["writelatency9999"],
+                "write_99_latency": row_data_dict["writelatency99"],
+                "read_avg_latency": row_data_dict["readclatency"],
+                "read_90_latency": row_data_dict["readlatency90"],
+                "read_95_latency": row_data_dict["readlatency95"],
+                "read_99_99_latency": row_data_dict["readlatency9999"],
+                "read_99_latency": row_data_dict["readlatency99"],
+                "plex_rebuild_time": row_data_dict["plex_rebuild_time"]
+            }
+            add_to_data_base(value_dict)
+
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:
                 host_handle = self.host_info[host_name]["handle"]
@@ -1257,22 +1345,8 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                                             format(host_name, row_data_dict["iodepth"]),
                                             filename=iostat_artifact_file[host_name])
 
-            # Checking whether the vp_util stats collection thread is still running...If so stopping it...
-            if fun_test.fun_test_threads[stats_thread_id]["thread"].is_alive():
-                fun_test.critical("VP utilization stats collection thread is still running...Stopping it now")
-                global vp_stats_thread_stop_status
-                vp_stats_thread_stop_status[self.storage_controller] = True
-                fun_test.fun_test_threads[stats_thread_id]["thread"]._Thread__stop()
-            fun_test.join_thread(fun_test_thread_id=stats_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(description="F1 VP Utilization - IO depth {}".format(row_data_dict["iodepth"]),
                                         filename=vp_util_artifact_file)
-            # Checking whether the resource_bam stats collection thread is still running...If so stopping it...
-            if fun_test.fun_test_threads[stats_rbam_thread_id]["thread"].is_alive():
-                fun_test.critical("Resource bam stats collection thread is still running...Stopping it now")
-                global resource_bam_stats_thread_stop_status
-                resource_bam_stats_thread_stop_status[self.storage_controller] = True
-                fun_test.fun_test_threads[stats_rbam_thread_id]["thread"]._Thread__stop()
-            fun_test.join_thread(fun_test_thread_id=stats_rbam_thread_id, sleep_time=1)
             fun_test.add_auxillary_file(
                 description="F1 Resource bam stats - IO depth {}".format(row_data_dict["iodepth"]),
                 filename=resource_bam_artifact_file)
