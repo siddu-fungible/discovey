@@ -1,4 +1,4 @@
-import {Component, Injector, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {Component, Injector, OnInit, Renderer2, ViewChild, Input} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
@@ -64,6 +64,8 @@ class FlatNode {
   children: FlatNode[] = [];
   lineage: any = [];
   special: boolean = false;
+  showAddLeaf: boolean = false;
+  notify: boolean = false;
 
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
@@ -86,6 +88,12 @@ enum Mode {
 })
 
 export class PerformanceComponent implements OnInit {
+  @Input() selectMode: boolean = false;
+  @Input() userProfileEmail: string = null;
+  @Input() workspaceName: string = null;
+  @Input() interestedMetrics = null;
+  workspace: any = [];
+
   numGridColumns: number;
   lastStatusUpdateTime: any;
   mode: Mode = Mode.None;
@@ -184,7 +192,6 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxWidth = '25%';
       this.miniGridMaxHeight = '25%';
     }
-    this.status = null;
     this.buildInfo = null;
     this.fetchBuildInfo();
     this.fetchDag();
@@ -288,6 +295,17 @@ export class PerformanceComponent implements OnInit {
 
         }
       });
+      if (this.selectMode && this.interestedMetrics) {
+        for (let flatNode of this.flatNodes) {
+          for (let metricId of this.interestedMetrics) {
+            if (flatNode.node.metricId in metricId) {
+              flatNode.showAddLeaf = true;
+            }
+          }
+
+        }
+      }
+      this.status = null;
 
     }, error => {
       this.loggerService.error("fetchDag");
@@ -964,32 +982,7 @@ export class PerformanceComponent implements OnInit {
 
 
   showAtomicMetric = (flatNode) => {
-    this.chartReady = false;
-    if (this.currentNode && this.currentNode.showAddJira) {
-      this.currentNode.showAddJira = false;
-    }
-    if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
-      this.currentFlatNode.showJiraInfo = false;
-    }
-    if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
-      this.currentFlatNode.showGitInfo = false;
-    }
-    this.showBugPanel = false;
-    this.currentNode = flatNode.node;
-    this.currentFlatNode = flatNode;
-    this.currentNode.showAddJira = true;
-    this.mode = Mode.ShowingAtomicMetric;
-    this.expandNode(flatNode);
-    this.commonService.scrollTo("chart-info");
-    this.chartReady = true;
-    this.navigateByQuery(flatNode);
-    this.fetchChartInfo(flatNode);
-
-  };
-
-
-  showNonAtomicMetric = (flatNode) => {
-    if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
+    if (!this.selectMode) {
       this.chartReady = false;
       if (this.currentNode && this.currentNode.showAddJira) {
         this.currentNode.showAddJira = false;
@@ -1002,23 +995,87 @@ export class PerformanceComponent implements OnInit {
       }
       this.showBugPanel = false;
       this.currentNode = flatNode.node;
-      if (this.currentNode && this.currentNode.companionCharts) {
-        this.currentNode.companionCharts = [...this.currentNode.companionCharts];
-      }
       this.currentFlatNode = flatNode;
-      this.mode = Mode.ShowingNonAtomicMetric;
+      this.currentNode.showAddJira = true;
+      this.mode = Mode.ShowingAtomicMetric;
       this.expandNode(flatNode);
-      this.prepareGridNodes(flatNode.node);
       this.commonService.scrollTo("chart-info");
       this.chartReady = true;
-    } else {
-      this.chartReady = false;
-      this.expandNode(flatNode);
-      this.chartReady = true;
-    }
-    if (!flatNode.special)
       this.navigateByQuery(flatNode);
-    this.fetchChartInfo(flatNode);
+      this.fetchChartInfo(flatNode);
+    } else {
+      flatNode.showAddLeaf = true;
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+    }
+
+  };
+
+  submitInterestedMetrics(): void {
+    let flatNodes = this.getInterestedNodes();
+    let metricDetails = {};
+    for (let flatNode of flatNodes) {
+      if (!(flatNode.node.metricId in metricDetails)) {
+        metricDetails[flatNode.node.metricId] = {"notify": flatNode.notify};
+        this.workspace.push(metricDetails);
+      }
+    }
+
+    let payload = {};
+    payload["email"] = this.userProfileEmail;
+    let workspace = {};
+    workspace[this.workspaceName] = this.workspace;
+    payload["workspace"] = workspace;
+    this.apiService.post("/api/v1/profile", payload).subscribe(response => {
+      console.log("submitted successfully");
+    }, error => {
+      this.loggerService.error("Unable to submit interested metrics");
+    });
+  }
+
+  getInterestedNodes = () => {
+    return this.flatNodes.filter(flatNode => {
+      return flatNode.showAddLeaf
+    })
+  };
+
+  showNonAtomicMetric = (flatNode) => {
+    if (!this.selectMode) {
+      if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
+        this.chartReady = false;
+        if (this.currentNode && this.currentNode.showAddJira) {
+          this.currentNode.showAddJira = false;
+        }
+        if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
+          this.currentFlatNode.showJiraInfo = false;
+        }
+        if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
+          this.currentFlatNode.showGitInfo = false;
+        }
+        this.showBugPanel = false;
+        this.currentNode = flatNode.node;
+        if (this.currentNode && this.currentNode.companionCharts) {
+          this.currentNode.companionCharts = [...this.currentNode.companionCharts];
+        }
+        this.currentFlatNode = flatNode;
+        this.mode = Mode.ShowingNonAtomicMetric;
+        this.expandNode(flatNode);
+        this.prepareGridNodes(flatNode.node);
+        this.commonService.scrollTo("chart-info");
+        this.chartReady = true;
+      } else {
+        this.chartReady = false;
+        this.expandNode(flatNode);
+        this.chartReady = true;
+      }
+      if (!flatNode.special)
+        this.navigateByQuery(flatNode);
+      this.fetchChartInfo(flatNode);
+    } else {
+      this.expandNode(flatNode);
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+    }
   };
 
   navigateByQuery(flatNode) {

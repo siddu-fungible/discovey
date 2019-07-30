@@ -39,22 +39,23 @@ def profile(request, id):
     result = None
     if request.method == "POST":
         request_json = json.loads(request.body)
-        first_name = request_json["first_name"]
-        last_name = request_json["last_name"]
         email = request_json["email"]
+        workspace = None
+        if "workspace" in request_json:
+            workspace = request_json["workspace"]
 
         profile = PerformanceUserProfile.objects.get(email=email)
+        if workspace:
+            profile.workspace.append(workspace)
+            profile.save()
         result = profile.to_dict()
 
     elif request.method == "GET":
-        users = PerformanceUserProfile.objects.all().order_by('first_name')
-        user_list = []
-        for user in users:
-            user_list.append(user.to_dict())
-        result = user_list
+        profile = PerformanceUserProfile.objects.get(email=id)
+        result = profile.to_dict()
     elif request.method == "DELETE":
-        user = PerformanceUserProfile.objects.get(id=id)
-        user.delete()
+        profile = PerformanceUserProfile.objects.get(id=id)
+        profile.delete()
     return result
 
 

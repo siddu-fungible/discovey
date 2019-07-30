@@ -527,7 +527,6 @@ class User(FunModel):
 
 class PerformanceUserProfile(FunModel):
     email = models.EmailField(max_length=60, unique=True)
-    interested_metrics = JSONField(default=[])
     workspace = JSONField(default=[])
 
     def __str__(self):

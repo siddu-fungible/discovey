@@ -292,6 +292,10 @@ if __name__ == "__main_setting_expected__":
 if __name__ == "__main__":
     users = User.objects.all()
     for user in users:
-        PerformanceUserProfile(email=user.email).save()
+        if user.email == "ashwin.s@fungible.com":
+            entry = PerformanceUserProfile.objects.get(email=user.email)
+            entry.workspace = []
+            entry.save()
+        # PerformanceUserProfile(email=user.email).save()
     print "added users for performance profile"
 
