@@ -1069,10 +1069,11 @@ class FunTest:
         checkpoint = self._get_context_prefix(context=context, message=checkpoint)
         if self.profiling:
             checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
-        self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
-                                        result=result,
-                                        expected=expected,
-                                        actual=actual)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
+                                            result=result,
+                                            expected=expected,
+                                            actual=actual)
 
     def exit_gracefully(self, sig, _):
         self.critical("Unexpected Exit")
