@@ -923,23 +923,20 @@ class ECVolumeLevelTestcase(FunTestCase):
             if "bs" in self.fio_cmd_args:
                 fio_block_size = self.fio_cmd_args["bs"]
             elif "multiple_jobs" in self.fio_cmd_args:
-                match = re.search("--bs=(\d+\S)", self.fio_cmd_args["multiple_jobs"])
+                match = re.search("--bs=(\w+)", self.fio_cmd_args["multiple_jobs"])
                 if match:
-                    if match.group(1) is not None:
-                        fio_block_size = match.group(1)
+                    fio_block_size = match.group(1)
                 else:
-                    match = re.search("--bssplit=(\d+\w)", self.fio_cmd_args["multiple_jobs"])
+                    match = re.search("--bssplit=((\w+/\w+:*)+)", self.fio_cmd_args["multiple_jobs"])
                     if match:
-                        if match.group(0) is not None:
-                            fio_block_size = "Mixed"
+                        fio_block_size = "Mixed"
 
             if "rw" in self.fio_cmd_args:
                 row_data_dict["mode"] = self.fio_cmd_args["rw"]
             elif "multiple_jobs" in self.fio_cmd_args:
-                match = re.search("--rw=\D\w*", self.fio_cmd_args["multiple_jobs"])
+                match = re.search("--rw=(\w+)", self.fio_cmd_args["multiple_jobs"])
                 if match:
-                    if match.group(1) is not None:
-                        row_data_dict["mode"] = match.group(0).split("=")[1]
+                    row_data_dict["mode"] = match.group(1)
             else:
                 row_data_dict["mode"] = "Combined"
 

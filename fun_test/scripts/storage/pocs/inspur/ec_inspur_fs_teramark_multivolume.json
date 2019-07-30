@@ -91,7 +91,7 @@
     "fio_iodepth": [32, 64, 96, 128],
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read_write",
-    "mpstat_args": {"interval": 60, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"},
+    "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
     "collect_network_stats": true
@@ -143,7 +143,7 @@
     "fio_iodepth": [32, 64, 96, 128],
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_read",
-    "mpstat_args": {"interval": 60, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"},
+    "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
     "collect_network_stats": true
@@ -195,7 +195,7 @@
     "fio_iodepth": [32, 64, 96, 128],
     "full_run_iodepth": [32, 64, 96, 128],
     "fio_job_name": "inspur_8k_random_write",
-    "mpstat_args": {"interval": 60, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"},
+    "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "vp_util_args": {"interval": 60},
     "resource_bam_args": {"interval": 60},
     "collect_network_stats": true
@@ -242,7 +242,7 @@
     "fio_modes": ["rw"],
     "fio_iodepth": [1, 8, 16, 32, 64, 128, 256],
     "fio_job_name": "inspur_1024k_sequential_read_write",
-    "mpstat_args": {"interval":  5, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
+    "mpstat_args": {"interval":  5, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"}
   },
   "MixedRandReadWriteIOPS": {
     "ec_info": {
@@ -286,7 +286,7 @@
     "fio_modes": ["randrw"],
     "fio_iodepth": [1, 8, 16, 32, 64, 128, 256],
     "fio_job_name": "inspur_mixed_random_read_write",
-    "mpstat_args": {"interval":  5, "output_file":  "/tmp/mpstat.out", "cpu_list": "ALL"}
+    "mpstat_args": {"interval":  5, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"}
   },
   "OLTPModelReadWriteIOPS": {
     "ec_info": {
