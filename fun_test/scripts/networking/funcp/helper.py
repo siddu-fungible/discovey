@@ -156,6 +156,20 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
                 fun_test.critical("%s cannot reach %s" % (host, hosts))
 
 
+def setup_nu_host(funeth_obj):
+    if not funeth_obj.nu_hosts:
+        return
+    for nu in funeth_obj.nu_hosts:
+        linux_obj = funeth_obj.linux_obj_dict[nu]
+
+        fun_test.test_assert(linux_obj.is_host_up(), 'NU host {} is up'.format(linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_interfaces(nu), 'Configure NU host {} interface'.format(
+            linux_obj.host_ip))
+        fun_test.test_assert(funeth_obj.configure_ipv4_routes(nu, configure_gw_arp=False),
+                             'Configure NU host {} IPv4 routes'.format(
+            linux_obj.host_ip))
+
+
 def setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4):
     fun_test.log("===================")
     fun_test.log("Configuring HU host")

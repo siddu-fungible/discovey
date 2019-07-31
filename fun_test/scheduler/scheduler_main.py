@@ -161,8 +161,6 @@ class QueueWorker(Thread):
                 valid_jobs = self.get_valid_jobs()
                 not_available = {}
 
-
-
                 for queued_job in valid_jobs:
 
                     """
@@ -178,6 +176,9 @@ class QueueWorker(Thread):
                         suite_based_spec = None
                         if queued_job.test_bed_type.startswith("suite-based"):
                             suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
+                            if not suite_based_spec:
+                                scheduler_logger.error("suite-based is requested for: {} but it is invalid".format(queued_job.job_id))
+                                break
                         availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type,
                                                                                suite_base_test_bed_spec=suite_based_spec)
                         if availability["status"]:
@@ -468,11 +469,11 @@ class SuiteWorker(Thread):
             else:
                 item["tags"] = tags
 
-    def get_scripts(self, suite_execution_id, suite_file=None, dynamic_suite_spec=None):
+    def get_scripts(self, suite_execution_id, suite_file=None, dynamic_suite_spec=None, suite_type=SuiteType.STATIC):
         all_tags = []
         items = []
         if suite_file:
-            suite_spec = parse_suite(suite_name=suite_file)
+            suite_spec = parse_suite(suite_name=suite_file, suite_type=suite_type)
             suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
             all_tags.extend(suite_level_tags)
             items = suite_spec
@@ -583,14 +584,20 @@ class SuiteWorker(Thread):
             script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
                                                       suite_file=self.job_suite_path)
 
+        elif self.job_suite_path and self.job_suite_type == SuiteType.TASK:
+            script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
+                                                      suite_file=self.job_suite_path,
+                                                      suite_type=self.job_suite_type)
         elif self.job_script_path:
             script_items.append({"path": self.job_script_path})
         elif self.job_suite_type == SuiteType.DYNAMIC:
             script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
                                                       dynamic_suite_spec=self.job_dynamic_suite_spec)
-            # TODO: Delete dynamic spec
 
         script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))
+        if self.job_suite_type == SuiteType.TASK:
+            script_paths = map(lambda f: TASKS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))
+
         scripts_exist, error_message = self.ensure_scripts_exists(script_paths)
         if not scripts_exist:
             self.abort_suite(error_message=error_message)
@@ -658,9 +665,14 @@ class SuiteWorker(Thread):
             s.run_time["scheduler"] = None
             s.save()
 
+    def _get_task_index(self, script_path):
+        pass
+
     def start_script(self, script_item, script_item_index):
-        print ("Start_script: {}".format(script_item))
+        # print ("Start_script: {}".format(script_item))
         script_path = SCRIPTS_DIR + "/" + script_item["path"]
+        if self.job_suite_type == SuiteType.TASK:
+            script_path = TASKS_DIR + "/" + script_item["path"]
         self.last_script_path = script_path
         self.update_suite_run_time("last_script_path", self.last_script_path)
 
@@ -675,10 +687,15 @@ class SuiteWorker(Thread):
             return
 
         relative_path = script_path.replace(SCRIPTS_DIR, "")
+        if self.job_suite_type == SuiteType.TASK:
+            relative_path = script_path.replace(TASKS_DIR, "")
         self.debug("Before running script: {}".format(script_path))
 
         console_log_file_name = self.job_dir + "/" + get_flat_console_log_file_name("/{}".format(script_path),
                                                                                     script_item_index)
+        if self.job_suite_type == SuiteType.TASK:
+            console_log_file_name = self.job_dir + "/" + os.path.basename(script_path) + ".task.log.txt"
+
         try:
             with open(console_log_file_name, "w") as console_log:
                 self.local_scheduler_logger.info("Executing: {}".format(script_path))

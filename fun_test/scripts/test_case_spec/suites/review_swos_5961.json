@@ -1,0 +1,4 @@
+[
+  {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 3}, "Host": {"num": 1}}}}},
+  {"path": "storage/review/swos_5961.py", "inputs": {"num_volumes": 1, "num_hosts": 1}}
+]

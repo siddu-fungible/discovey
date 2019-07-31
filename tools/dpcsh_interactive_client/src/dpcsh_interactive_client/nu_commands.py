@@ -8,6 +8,10 @@ from uuid import uuid4
 import json
 
 TIME_INTERVAL = 1
+TOTAL_CLUSTERS = 8
+TOTAL_CORES_PER_CLUSTER = 6
+TOTAL_VPS_PER_CORE = 4
+START_VP_NUMBER = 8
 
 class PortCommands(object):
     def __init__(self, dpc_client):
@@ -1813,7 +1817,42 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
         return result
 
-    def peek_stats_per_vp(self, vp_number=None, grep_regex=None, get_result_only=False):
+    def _get_vp_numbers_from_core_id(self, core_id):
+        result = []
+        try:
+            start_vp_num = START_VP_NUMBER
+            if core_id != 0:
+                start_vp_num = START_VP_NUMBER + TOTAL_VPS_PER_CORE * core_id
+            end_vp_num = start_vp_num + TOTAL_VPS_PER_CORE
+            result = range(start_vp_num, end_vp_num, 1)
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+        return result
+
+    def _get_cluster_core_parsed_dict(self, output_dict, cluster_id, core_id=None, pc_resource=False):
+        result = {}
+        try:
+            if pc_resource and (core_id is not None):
+                core_id = '0' + str(core_id)
+                dict_keys = output_dict.keys()
+                for key in dict_keys:
+                    if str(core_id) in key.split(":")[1]:
+                        result[key] = output_dict[key]
+            else:
+                dict_keys = output_dict.keys()
+                for key in dict_keys:
+                    if str(cluster_id) in key.split(":")[0]:
+                        if core_id is not None:
+                            vp_num_list = self._get_vp_numbers_from_core_id(core_id=core_id)
+                            if int(key.split(":")[1]) in vp_num_list:
+                                result[key] = output_dict[key]
+                        else:
+                            result[key] = output_dict[key]
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+        return result
+
+    def peek_stats_per_vp(self, cluster_id=None, core_id=None, grep_regex=None, get_result_only=False):
         try:
             prev_result = None
             while True:
@@ -1825,6 +1864,7 @@ class PeekCommands(object):
                     master_table_obj.border = False
                     master_table_obj.header = False
                     if result:
+                        '''
                         if vp_number:
                             vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
                             result = result[vp_key]
@@ -1849,30 +1889,25 @@ class PeekCommands(object):
                                     else:
                                         table_obj.add_row([_key, result[_key]])
                                 master_table_obj.add_row([table_obj])
+                        '''
+                        # Print table for cluster id and core id given
+                        if (cluster_id is not None) and (core_id is not None):
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id,
+                                                                        core_id=core_id)
+
+                        # Print table for cluster id given
+                        elif cluster_id:
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id)
+
+                        # Print master table
+                        if prev_result:
+                            self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
+                                                                         result=result, prev_result=prev_result,
+                                                                         grep_regex=grep_regex)
                         else:
-                            if prev_result:
-                                diff_result = self._get_difference(result=result, prev_result=prev_result)
-                                for key in sorted(result):
-                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result[key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                    master_table_obj.add_row([key, table_obj])
-                            else:
-                                for key in sorted(result):
-                                    table_obj = PrettyTable(['Field Name', 'Counter'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result[key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[key][_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[key][_key]])
-                                    master_table_obj.add_row([key, table_obj])
+                            self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
+                                                             grep_regex=grep_regex)
+
                         if get_result_only:
                             return cmd, master_table_obj
                         prev_result = result
@@ -1969,7 +2004,32 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_pervppkts_stats(self, vp_number=None, cluster_id=0, grep_regex=None, get_result_only=False):
+    def print_diff_result_single_dict_table_obj(self, master_table_obj, result, prev_result, grep_regex=None):
+        diff_result = self._get_difference(result=result, prev_result=prev_result)
+        for key in sorted(result):
+            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+            table_obj.align = 'l'
+            for _key in sorted(result[key]):
+                if grep_regex:
+                    if re.search(grep_regex, key, re.IGNORECASE):
+                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                else:
+                    table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+            master_table_obj.add_row([key, table_obj])
+
+    def print_single_dict_table_obj(self, master_table_obj, result, grep_regex=None):
+        for key in sorted(result):
+            table_obj = PrettyTable(['Field Name', 'Counter'])
+            table_obj.align = 'l'
+            for _key in sorted(result[key]):
+                if grep_regex:
+                    if re.search(grep_regex, key, re.IGNORECASE):
+                        table_obj.add_row([_key, result[key][_key]])
+                else:
+                    table_obj.add_row([_key, result[key][_key]])
+            master_table_obj.add_row([key, table_obj])
+
+    def peek_pervppkts_stats(self, cluster_id, core_id=None, grep_regex=None, get_result_only=False):
         try:
             prev_result = None
             while True:
@@ -1980,7 +2040,9 @@ class PeekCommands(object):
                     master_table_obj.align = 'l'
                     master_table_obj.border = False
                     master_table_obj.header = False
+
                     if result:
+                        '''
                         if vp_number:
                             vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
                             result = result[vp_key]
@@ -2005,31 +2067,18 @@ class PeekCommands(object):
                                     else:
                                         table_obj.add_row([_key, result[_key]])
                                 master_table_obj.add_row([table_obj])
-
+                        '''
+                        if core_id is not None:
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id,
+                                                                        core_id=core_id)
+                        if prev_result:
+                            self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
+                                                                         result=result, prev_result=prev_result,
+                                                                         grep_regex=grep_regex)
                         else:
-                            if prev_result:
-                                diff_result = self._get_difference(result=result, prev_result=prev_result)
-                                for key in sorted(result):
-                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result[key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                    master_table_obj.add_row([key, table_obj])
-                            else:
-                                for key in sorted(result):
-                                    table_obj = PrettyTable(['Field Name', 'Counter'])
-                                    table_obj.align = 'l'
-                                    for _key in sorted(result[key]):
-                                        if grep_regex:
-                                            if re.search(grep_regex, key, re.IGNORECASE):
-                                                table_obj.add_row([_key, result[key][_key]])
-                                        else:
-                                            table_obj.add_row([_key, result[key][_key]])
-                                    master_table_obj.add_row([key, table_obj])
+                            self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
+                                                             grep_regex=grep_regex)
+
                         if get_result_only:
                             return cmd, master_table_obj
                         prev_result = result
@@ -2185,9 +2234,73 @@ class PeekCommands(object):
         else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
-    def peek_pc_resource_stats(self, cluster_id, grep_regex=None):
-        cmd = "stats/resource/pc/[%s]" % cluster_id
-        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+    def peek_pc_resource_stats(self, cluster_id, core_id=None, grep_regex=None, get_result_only=False):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "stats/resource/pc/[%s]" % cluster_id
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    master_table_obj = PrettyTable()
+                    master_table_obj.align = 'l'
+                    master_table_obj.border = False
+                    master_table_obj.header = False
+
+                    if result:
+                        '''
+                        if vp_number:
+                            vp_key = self._get_vp_number_key(output_dict=result, vp_number=vp_number)
+                            result = result[vp_key]
+                            if prev_result:
+                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[_key], diff_result[_key]])
+                                master_table_obj.add_row([table_obj])
+                            else:
+                                table_obj = PrettyTable(['Field Name', 'Counter'])
+                                table_obj.align = 'l'
+                                for _key in sorted(result):
+                                    if grep_regex:
+                                        if re.search(grep_regex, _key, re.IGNORECASE):
+                                            table_obj.add_row([_key, result[_key]])
+                                    else:
+                                        table_obj.add_row([_key, result[_key]])
+                                master_table_obj.add_row([table_obj])
+                        '''
+                        if core_id is not None:
+                            result = self._get_cluster_core_parsed_dict(output_dict=result, cluster_id=cluster_id,
+                                                                        core_id=core_id, pc_resource=True)
+                        if prev_result:
+                            self.print_diff_result_single_dict_table_obj(master_table_obj=master_table_obj,
+                                                                         result=result, prev_result=prev_result,
+                                                                         grep_regex=grep_regex)
+                        else:
+                            self.print_single_dict_table_obj(master_table_obj=master_table_obj, result=result,
+                                                             grep_regex=grep_regex)
+
+                        if get_result_only:
+                            return cmd, master_table_obj
+                        prev_result = result
+                        print master_table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
 
     def peek_cc_resource_stats(self, grep_regex=None):
         cmd = "stats/resource/cc"

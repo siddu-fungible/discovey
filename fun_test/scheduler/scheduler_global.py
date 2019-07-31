@@ -26,6 +26,7 @@ class SuiteType:
     STATIC = "regular"
     DYNAMIC = "dynamic"  # Usually for re-runs
     CONTAINER = "container"
+    TASK = "task"
 
 class SchedulerJobPriority:
     LOW = "low"
@@ -74,3 +75,7 @@ class JobStatusType:
 class SchedulerDirectiveTypes(Codes):
     PAUSE_QUEUE_WORKER = 1
     UNPAUSE_QUEUE_WORKER = 2
+
+
+class TaskCategory(Codes):
+    SYSTEM = 0
