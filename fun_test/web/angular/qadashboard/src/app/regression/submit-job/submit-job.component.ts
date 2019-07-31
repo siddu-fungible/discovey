@@ -94,7 +94,14 @@ export class SubmitJobComponent implements OnInit {
   moreJenkinsOptions: boolean = false;
   mode: Mode = Mode.REGULAR;
   Mode = Mode;
+
+  // For Triaging
   triageTypes = [{value: 4, description: "Pass or Fail"}, {value: 5, description: "Regex match"}];  //Taken from TriagingTypes
+  gitShasValid: boolean = false;
+  validateShasStatus: string = null;
+  fromFunOsSha: string = null;
+  toFunOsSha: string = null;
+  commitsInBetween: string[] = [];
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
@@ -157,6 +164,26 @@ export class SubmitJobComponent implements OnInit {
       }
       return of(params);
     }))
+  }
+
+  validateShas() {
+    if ((!this.fromFunOsSha) || (!this.toFunOsSha)) {
+      return this.logger.error("Git commits are invalid");
+    }
+    let url = "/api/v1/git_commits_fun_os/" + this.fromFunOsSha + "/" + this.toFunOsSha;
+    this.validateShasStatus = "Validating commits";
+    this.apiService.get(url).subscribe((response) => {
+      this.commitsInBetween = response.data;
+      if (this.commitsInBetween && this.commitsInBetween.length) {
+        this.gitShasValid = true;
+        this.validateShasStatus = null;
+
+      }
+    }, error => {
+      this.logger.error("Git commits are invalid");
+      this.validateShasStatus = null;
+
+    })
   }
 
 

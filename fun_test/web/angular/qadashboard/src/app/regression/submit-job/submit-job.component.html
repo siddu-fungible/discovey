@@ -27,21 +27,49 @@
               </td>
             </tr>
 
+
             <ng-container *ngIf="mode === Mode.REGULAR || mode === Mode.TRIAGE">
 
-              <tr>
+              <tr *ngIf="mode === Mode.TRIAGE">
                 <td>
                   <label for="triage_type">Type: </label>
                 </td>
                 <td>
-                  <select class="form-control" id="triage_type" formControlName="triage_type">
+                  <select class="form-control" id="triage_type">
                     <option *ngFor="let triageType of triageTypes" [value]="triageType.value">{{ triageType.description }}
                     </option>
                   </select>
                 </td>
-
-
               </tr>
+
+              <tr>
+                <td>
+                  <label for="from_fun_os_sha">From FunOS commit: </label>
+                </td>
+                <td>
+                  <input style="width: 400px" [(ngModel)]="fromFunOsSha" id="from_fun_os_sha">
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <label  for="to_fun_os_sha">To FunOS commit: </label>
+                </td>
+                <td>
+                  <input style="width: 400px" [(ngModel)]="toFunOsSha" id="to_fun_os_sha">
+                  <ng-container *ngIf="!gitShasValid">
+                    <div style="margin-left: 20px; display: inline-block">
+                      <button *ngIf="!validateShasStatus" class="btn btn-primary btn-sm" (click)="validateShas()">Validate commits</button>
+                      <fun-spinner [status]="validateShasStatus"></fun-spinner>
+                    </div>
+                  </ng-container>
+                  <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid  (Commits: {{ commitsInBetween.length }})</span>
+
+                </td>
+             </tr>
+
+
+
 
 
               <tr>
@@ -55,7 +83,7 @@
                   </select>
                 </td>
               </tr>
-              <tr *ngIf="selectedTestBedType && isTestBedFs()">
+              <tr *ngIf="selectedTestBedType && isTestBedFs() && mode === Mode.REGULAR">
                 <td class="no-wrap">
                   <label for="tftp-path">TFTP path (F1 stripped image)</label>
                 </td>
