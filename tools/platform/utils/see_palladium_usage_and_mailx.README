@@ -1,0 +1,9 @@
+Things to do -
+- ssh to the VNC emulation environment server
+- add below line in users crontab
+
+########################
+####### check palladium every 10 minutes, if user <pmanjrekar> crossed max limit of 30 minutes and send email to him
+########################
+0-58/10 * * * * bash /home/pmanjrekar/bin/see_palladium_usage_and_mailx.sh pmanjrekar 30 parag.manjrekar@fungible.com > /dev/null 2>&1
+
