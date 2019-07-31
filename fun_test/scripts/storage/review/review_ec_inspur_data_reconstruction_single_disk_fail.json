@@ -77,7 +77,7 @@
     "trigger_failure": true,
     "trigger_failure_wait_time": 10,
     // If 'fail_drive' is true, initiate drive failure else initiate plex failure
-    "fail_drive": false,
+    "fail_drive": true,
     "trigger_rebuild_wait_time": 10,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
