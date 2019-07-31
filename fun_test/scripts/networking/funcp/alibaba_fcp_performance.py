@@ -240,6 +240,7 @@ class FunPerformance(FunTestCase):
         suffixes = ('n2h', 'h2n', 'h2h')
         arg_dicts = []
         pingable = True
+        linux_obj_src = None
         dip = None
         for shost, dhost in host_pairs:
             linux_obj_src = funeth_obj.linux_obj_dict[shost]
@@ -303,7 +304,6 @@ class FunPerformance(FunTestCase):
                                                              version,
                                                              when='before')
 
-        linux_obj_src = None
         if pingable and not sth_stuck_before:
 
             # TODO: calculate dpc stats collection duration and add it to test duration*2
@@ -400,7 +400,41 @@ class HuHuFCP(FunPerformance):
         pass
 
     def run(self):
-        FunPerformance._run(self, flow_type="HU_HU_FCP", num_flows=8, num_hosts=4, frame_size=1400, duration=30)
+        FunPerformance._run(self, flow_type="HU_HU_FCP", num_flows=8, num_hosts=4, frame_size=1500, duration=30)
+
+    def cleanup(self):
+        pass
+
+
+class HuNu(FunPerformance):
+    def describe(self):
+        self.set_test_details(id=1, summary="HU HU perf",
+                              steps="""
+
+                                      """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        FunPerformance._run(self, flow_type="HU_NU_NFCP", num_flows=8, num_hosts=2, frame_size=1500, duration=30)
+
+    def cleanup(self):
+        pass
+
+
+class NuHu(FunPerformance):
+    def describe(self):
+        self.set_test_details(id=1, summary="HU HU perf",
+                              steps="""
+
+                                      """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        FunPerformance._run(self, flow_type="NU_HU_NFCP", num_flows=8, num_hosts=2, frame_size=1500, duration=30)
 
     def cleanup(self):
         pass
@@ -409,5 +443,7 @@ class HuHuFCP(FunPerformance):
 if __name__ == '__main__':
     ts = SetupBringup()
     ts.add_test_case(HuHuFCP())
+    ts.add_test_case(HuNu())
+    ts.add_test_case(NuHu())
     # ts.add_test_case(HuHuNonFCP())
     ts.run()
