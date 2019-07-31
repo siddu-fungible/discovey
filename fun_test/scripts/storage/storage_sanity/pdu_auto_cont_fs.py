@@ -70,10 +70,11 @@ class BLTVolumeSanityScript(FunTestScript):
 
         print ('host_ip {} username {} password {}'.format(apc_info['host_ip'], apc_info['username'], apc_info['password']))
 
-        apc_pdu = ApcPdu(host_ip = str(apc_info['host_ip']), username = str(apc_info['username']), password = str(apc_info['password']))
-
         for pc_no in range(0, no_of_powercycles):
             fun_test.log("Iteation no: {} out of {}".format(pc_no + 1, no_of_powercycles))
+            apc_pdu = ApcPdu(host_ip = str(apc_info['host_ip']), username = str(apc_info['username']), password = str(apc_info['password']))
+
+            sleep (5)
             apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
             fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
             sleep (5)
@@ -104,15 +105,13 @@ class BLTVolumeSanityScript(FunTestScript):
                                                                         message="ComE reachable after APC power-cycle")
             fun_test.log("COMe is up")
 
-        try:
-            apc_pdu.disconnect()
-        except:
-            pass
+            try:
+                apc_pdu.disconnect()
+            except:
+                pass
 
         import pdb
         pdb.set_trace()
-
-
 
 
     def cleanup(self):

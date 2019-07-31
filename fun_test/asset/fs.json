@@ -193,6 +193,12 @@
       "mgmt_ip": "10.1.105.156",
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
+    },
+      "apc_info": {
+      "host_ip": "10.1.105.249",
+      "username": "localadmin",
+      "password": "Precious1*",
+      "outlet_number": 15
     }
   },
   {
