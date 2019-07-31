@@ -408,7 +408,7 @@ class HuHuFCP(FunPerformance):
 
 class HuNu(FunPerformance):
     def describe(self):
-        self.set_test_details(id=1, summary="HU HU perf",
+        self.set_test_details(id=3, summary="HU HU perf",
                               steps="""
 
                                       """)
@@ -425,7 +425,7 @@ class HuNu(FunPerformance):
 
 class NuHu(FunPerformance):
     def describe(self):
-        self.set_test_details(id=1, summary="HU HU perf",
+        self.set_test_details(id=4, summary="HU HU perf",
                               steps="""
 
                                       """)
