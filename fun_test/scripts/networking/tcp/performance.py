@@ -57,6 +57,31 @@ class TcpPerformance(FunTestScript):
             fs = Fs.get(disable_f1_index=f1_index)
             fun_test.shared_variables['fs'] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+        host_lists = ['nu-lab-04']
+        for host in host_lists:
+            linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+            linux_obj.reboot()
+
+        for host in host_lists:
+            linux_obj = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+            count = 0
+            while True:
+                count += 1
+                response = os.system("ping -c 1 " + host)
+                if count > 10:
+                    fun_test.test_assert(expression=False, message="Cannot reach host %s" % host)
+                    break
+                if response == 0:
+                    if not linux_obj.check_ssh():
+                        fun_test.sleep(message="Can ping host, but cannot SSH", seconds=15)
+                        continue
+                    else:
+                        fun_test.log("Host %s reachable" % host)
+                        break
+                else:
+                    fun_test.log("Cannot ping Host %s" % host)
+                    fun_test.sleep(message="Cannot ping host", seconds=15)
+
 
         private_funos_branch = fun_test.get_build_parameter(parameter='BRANCH_FunOS')
         if private_funos_branch:

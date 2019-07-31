@@ -25,7 +25,7 @@
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
-      "mgmt_ip": "10.1.20.190",
+      "mgmt_ip": "10.1.20.180",
       "mgmt_ssh_username": "root",
       "mgmt_ssh_password": "root"
     },
@@ -37,6 +37,9 @@
   },
   {
     "name": "fs-6",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "bmc": {
       "mgmt_ip": "10.1.20.153",
       "mgmt_ssh_username": "sysadmin",
@@ -112,6 +115,9 @@
     }
   }, {
     "name": "fs-21",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
     "gateway_ip": "10.1.20.1",
     "bmc": {
       "mgmt_ip": "fs21-bmc.fungible.local",
@@ -374,6 +380,9 @@
   },
   {
     "name": "fs-66",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+      },
     "gateway_ip": "10.1.105.1",
     "bmc": {
       "mgmt_ip": "fs66-bmc",

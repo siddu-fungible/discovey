@@ -7,6 +7,7 @@ from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_global import is_production_mode, is_triaging_mode, get_current_time
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL, SCRIPTS_DIR
+from fun_settings import TASKS_DIR
 from scheduler.scheduler_helper import queue_dynamic_suite, queue_job3, LOG_DIR_PREFIX
 from scheduler.scheduler_helper import move_to_higher_queue, move_to_queue_head, increase_decrease_priority, delete_queued_job
 import scheduler.scheduler_helper
@@ -31,6 +32,7 @@ from web.fun_test.models import TestBed
 from lib.utilities.send_mail import send_mail
 from web.fun_test.web_interface import get_suite_detail_url
 from web.fun_test.models import User, SiteConfig
+from web.fun_test.models import SuiteType
 import logging
 import subprocess
 import dateutil.parser
@@ -41,6 +43,8 @@ import glob
 from django.db import transaction
 from django.db.models import Q
 from scheduler.scheduler_global import SchedulerJobPriority, QueueOperations
+import datetime
+from django.utils import timezone
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -149,7 +153,7 @@ def submit_job(request):
         if "test_bed_type" in request_json:
             test_bed_type = request_json["test_bed_type"]
 
-        suite_type = "static"
+        suite_type = SuiteType.STATIC
         if "suite_type" in request_json:
             suite_type = request_json["suite_type"]
         tags = None
@@ -193,7 +197,6 @@ def submit_job(request):
             repeat_in_minutes = request_json["repeat_in_minutes"]
         description = request_json.get("description", None)
 
-
         if suite_path:
             job_id = queue_job3(suite_path=suite_path,
                                 build_url=build_url,
@@ -210,7 +213,8 @@ def submit_job(request):
                                 repeat_in_minutes=repeat_in_minutes,
                                 submitter_email=submitter_email,
                                 inputs=inputs,
-                                description=description)
+                                description=description,
+                                suite_type=suite_type)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -228,7 +232,8 @@ def submit_job(request):
                                 repeat_in_minutes=repeat_in_minutes,
                                 submitter_email=submitter_email,
                                 inputs=inputs,
-                                description=description)
+                                description=description,
+                                suite_type=suite_type)
         elif dynamic_suite_spec:
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                 emails=emails,
@@ -247,7 +252,7 @@ def submit_job(request):
             pass
 
         contents = "Hi {}".format(submitter_user_name) + "<br>"
-        contents += "Your integration job's progress can be tracked at {}".format(get_suite_detail_url(suite_execution_id=job_id)) + "<br>"
+        contents += "Your Integration job's progress can be tracked at {}".format(get_suite_detail_url(suite_execution_id=job_id)) + "<br>"
         contents += "Thank you<br>Regression team<br>"
         send_mail(to_addresses=[submitter_email], subject="Regression: Integration Job: {} submitted".format(job_id), content=contents)
     return job_id
@@ -293,6 +298,7 @@ def parse_suite(suite_file):
 @api_safe_json_response
 def suites(request):
     suite_path = None
+    suite_type = SuiteType.STATIC
     if request.method == 'POST':
         if request.body:
             request_json = json.loads(request.body)
@@ -300,8 +306,14 @@ def suites(request):
             if not suite_path.endswith(".json"):
                 suite_path += ".json"
 
+    suite_type = request.GET.get("suite_type", SuiteType.STATIC)
     suites_info = collections.OrderedDict()
-    suite_files = glob.glob(SUITES_DIR + "/*.json")
+    suite_files = []
+    if suite_type == SuiteType.STATIC:
+        suite_files = glob.glob(SUITES_DIR + "/*.json")
+    elif suite_type == SuiteType.TASK:
+        suite_files = glob.glob(TASKS_DIR + "/*.json")
+
     for suite_file in suite_files:
         if suite_path:
             if not suite_file.endswith("/{}".format(suite_path)):
@@ -526,9 +538,8 @@ def build_to_date_map(request):
     build_info = {}
     for entry in filtered_entries:
         try:
-            key = str(entry.build_date)
-            key = key.split('+')[0]
-            build_info[key] = {"software_date": entry.software_date,
+            key = timezone.localtime(entry.build_date)
+            build_info[str(key)] = {"software_date": entry.software_date,
                                "hardware_version": entry.hardware_version,
                                "fun_sdk_branch": entry.fun_sdk_branch,
                                "git_commit": entry.git_commit,

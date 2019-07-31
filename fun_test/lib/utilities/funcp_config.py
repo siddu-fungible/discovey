@@ -56,10 +56,15 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
+
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=0),
+                                 "Setup nc serial proxy connection")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
         fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device=None)
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
+                             "Setup nc serial proxy connection")
         fun_test.test_assert(
             fs_0.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args,
                                        gateway_ip=gatewayip),
@@ -103,6 +108,8 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=0),
+                                 "Setup nc serial proxy connection")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
@@ -144,6 +151,8 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
         fun_test.test_assert(fs.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
+                             "Setup nc serial proxy connection")
         fun_test.test_assert(fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs.tftp_image_path,
                                                         boot_args=fs.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(1))
@@ -899,13 +908,13 @@ class FunControlPlaneBringup:
                             for fpg in remote_spine_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=fpg),
-                                    stat_type=OCTETS_RECEIVED_OK)
+                                    stat_type=OCTETS_RECEIVED_OK, tx=False)
                                 remote_spine_links_bytes['before'][fpg] = stats
 
                             for fpg in remote_fabric_links:
                                 stats = get_dut_output_stats_value(
                                     result_stats=remote_dpc_obj.peek_fpg_port_stats(port_num=fpg),
-                                    stat_type=OCTETS_RECEIVED_OK)
+                                    stat_type=OCTETS_RECEIVED_OK, tx=False)
                                 remote_fabric_links_bytes['before'][fpg] = stats
 
                             checkpoint = "hping from %s to %s" % (host['ip'], hu_interface_ip)
@@ -928,9 +937,9 @@ class FunControlPlaneBringup:
                             fun_test.log("Source F1 FCP Diff stats: %s" % source_diff_stats)
                             fun_test.log("Remote F1 FCP Diff stats: %s" % remote_diff_stats)
 
-                            #fun_test.simple_assert(self.validate_fcp_stats_remote_local_f1(
-                            #    src_diff_stats=source_diff_stats, remote_diff_stats=remote_diff_stats,
-                            #    tolerance_in_percent=0.1), checkpoint)
+                            fun_test.simple_assert(self.validate_fcp_stats_remote_local_f1(
+                                src_diff_stats=source_diff_stats, remote_diff_stats=remote_diff_stats,
+                                tolerance_in_percent=0.1), checkpoint)
 
                             checkpoint = "Validate Source F1 vppkts stats"
                             src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
@@ -945,8 +954,7 @@ class FunControlPlaneBringup:
                             fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
                                                                diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
                                                    message=checkpoint)
-                            ''' 
-                            checkpoint = "Assert Disabled: SWOS-5865 Validate Source F1 FPG spine and fabric links stats with tolerance of %s " \
+                            checkpoint = "Validate Source F1 FPG spine and fabric links stats with tolerance of %s " \
                                          "percent" % tolerance_in_percent
                             for spine in spine_links:
                                 stats = get_dut_output_stats_value(
@@ -962,11 +970,11 @@ class FunControlPlaneBringup:
                                 source_fabric_links_bytes['after'][fabric] = stats
                                 source_fabric_links_bytes['diff'][fabric] = stats - source_fabric_links_bytes['before'][
                                     fabric]
-                            #fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
-                            #    spine_stats=source_spine_links_bytes, fabric_stats=source_fabric_links_bytes,
-                            #    tolerance_in_percent=tolerance_in_percent), checkpoint)
+                            fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
+                                spine_stats=source_spine_links_bytes, fabric_stats=source_fabric_links_bytes,
+                                tolerance_in_percent=5.0), checkpoint)
 
-                            checkpoint = "Assert Disabled: SWOS-5865 Validate Source F1 FPG spine and fabric links stats with tolerance of %s " \
+                            checkpoint = " Validate Remote F1 FPG spine and fabric links stats with tolerance of %s " \
                                          "percent" % tolerance_in_percent
                             for spine in remote_spine_links:
                                 stats = get_dut_output_stats_value(
@@ -982,9 +990,9 @@ class FunControlPlaneBringup:
                                 remote_fabric_links_bytes['after'][fab] = stats
                                 remote_fabric_links_bytes['diff'][fab] = stats - remote_fabric_links_bytes['before'][
                                     fab]
-                            #fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
-                            #    spine_stats=remote_spine_links_bytes, fabric_stats=remote_fabric_links_bytes,
-                            #    tolerance_in_percent=tolerance_in_percent), checkpoint)
+                            fun_test.simple_assert(self.validate_spine_fabric_fpg_stats(
+                                spine_stats=remote_spine_links_bytes, fabric_stats=remote_fabric_links_bytes,
+                                tolerance_in_percent=5.0), checkpoint)
 
                             checkpoint = "Validate Source F1 vppkts stats"
                             src_vp_stats = get_vp_pkts_stats_values(network_controller_obj=source_dpc_obj)
@@ -999,7 +1007,6 @@ class FunControlPlaneBringup:
                             fun_test.simple_assert(expression=(diff_stats[VP_PACKETS_OUT_HU] >= count and
                                                                diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
                                                    message=checkpoint)
-                             ''' 
 
                     linux_obj.disconnect()
                     source_dpc_obj.disconnect()

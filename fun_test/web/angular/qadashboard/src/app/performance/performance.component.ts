@@ -200,7 +200,11 @@ export class PerformanceComponent implements OnInit {
   //populates buildInfo
   fetchBuildInfo(): void {
     this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = response.data;
+      this.buildInfo = {};
+      Object.keys(response.data).forEach((key) => {
+        let localizedKey = this.commonService.convertToLocalTimezone(key);
+        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
+      });
     }, error => {
       this.loggerService.error("regression/build_to_date_map");
     });

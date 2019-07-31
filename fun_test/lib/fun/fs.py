@@ -9,33 +9,18 @@ from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 
 from threading import Thread
+from datetime import datetime
 import re
 import os
 
-class UartLogger(Thread):
-    def __init__(self, ip, port):
-        super(UartLogger, self).__init__()
-        self.ip = ip
-        self.port = port
-        self.stopped = False
-        self.buf = ""
-        self.nc = None
-
-    def run(self):
-        self.nc = Netcat(ip=self.ip, port=self.port)
-        try:
-            while not self.stopped and not fun_test.closed:
-                self.buf += self.nc.read_until(expected_data="PUlsAr", timeout=5)
-        except Exception as ex:
-            pass
-
-    def get_log(self):
-        return self.buf
-
-    def close(self):
-        self.stopped = True
-        if self.nc:
-            self.buf += self.nc.close()
+"""
+Possible workarounds:
+    "workarounds": {
+      "disable_u_boot_version_validation": true,
+      "retimer_workaround": true,
+      "skip_funeth_come_power_cycle": true
+    }
+"""
 
 
 class BootPhases:
@@ -57,8 +42,10 @@ class BootPhases:
     FS_BRING_UP_BMC_INITIALIZE = "FS_BRING_UP_BMC_INITIALIZE"
     FS_BRING_UP_FPGA_INITIALIZE = "FS_BRING_UP_FPGA_INITIALIZE"
     FS_BRING_UP_U_BOOT = "FS_BRING_UP_U_BOOT"
+    FS_BRING_UP_U_BOOT_COMPLETE = "FS_BRING_UP_U_BOOT_COMPLETE"
     FS_BRING_UP_COME_REBOOT_INITIATE = "FS_BRING_UP_COME_REBOOT_INITIATE"
     FS_BRING_UP_COME_ENSURE_UP = "FS_BRING_UP_COME_ENSURE_UP"
+    FS_BRING_UP_CALL_FUNCP_CALLBACK = "FS_BRING_UP_CALL_FUNCP_CALLBACK"
     FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
     FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD = "FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
@@ -123,6 +110,7 @@ class Bmc(Linux):
         if self.context:
             self.original_context_description = self.context.description
         self.setup_support_files = setup_support_files
+        self.nc = {}  # nc connections to serial proxy indexed by f1_index
 
     @fun_test.safe
     def ping(self,
@@ -203,16 +191,16 @@ class Bmc(Linux):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         ipmi_details = self._get_ipmi_details()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=max_wait_time,
-                                                    ipmi_details=ipmi_details,
-                                                    power_cycle=power_cycle),
+                                                               ipmi_details=ipmi_details,
+                                                               power_cycle=power_cycle),
                              message="Ensure ComE is reachable before reboot",
                              context=self.context)
 
-        fun_test.log("Rebooting ComE")
+        fun_test.log("Rebooting ComE (Graceful)")
         reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
         reboot_info_string = "initiated" if non_blocking else "complete"
         fun_test.test_assert(expression=reboot_result,
-                             message="ComE reboot {}".format(reboot_info_string),
+                             message="ComE reboot {} (Graceful)".format(reboot_info_string),
                              context=self.context)
         return True
 
@@ -226,8 +214,8 @@ class Bmc(Linux):
         fun_test.log_section(message="F1_{}:{}".format(index, phase), context=self.context)
 
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
-        # fun_test.log("Sending u-boot command: {}".format(command))
-        nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+        # nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+        nc = self.nc[f1_index]
         nc.write(command + "\n")
         output = nc.read_until(expected_data=expected, timeout=timeout)
         fun_test.log(message=output, context=self.context)
@@ -235,7 +223,7 @@ class Bmc(Linux):
             fun_test.simple_assert(expression=expected in output,
                                    message="{} in output".format(expected),
                                    context=self.context)
-        output = nc.close()
+        # output = nc.close()
         self.u_boot_logs[f1_index] += output
         return output
 
@@ -248,6 +236,35 @@ class Bmc(Linux):
 
     def _get_boot_args_for_index(self, boot_args, f1_index):
         return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+
+    def setup_serial_proxy_connection(self, f1_index):
+        self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+        nc = self.nc[f1_index]
+        fun_test.execute_thread_after(0, nc.read_until, expected_data=self.U_BOOT_F1_PROMPT, timeout=20)
+        # output = nc.read_until(expected_data=self.U_BOOT_F1_PROMPT, timeout=2)
+        # fun_test.log(message=output, context=self.context)
+
+        return True
+
+    def validate_u_boot_version(self, f1_index, minimum_date):
+        result = False
+        nc = self.nc[f1_index]
+        nc.stop_reading()
+        fun_test.sleep("Reading preamble")
+        output = nc.get_buffer()
+        fun_test.log(message=output, context=self.context)
+
+        m = re.search("U-Boot\s+\S+\s+\((.*)\s+-", output)  # Based on U-Boot 2017.01-00000-bld_6654 (May 29 2019 - 05:38:02 +0000)
+        if m:
+            try:
+                this_date = datetime.strptime(m.group(1), "%b %d %Y")
+                fun_test.add_checkpoint("u-boot date: {}".format(this_date))
+                fun_test.log("Mininum u-boot build date: {}".format(minimum_date))
+                fun_test.test_assert(this_date >= minimum_date, "Valid u-boot build date")
+                result = True
+            except Exception as ex:
+                fun_test.critical("Unable to parse u-boot build date")
+        return result
 
     def u_boot_load_image(self,
                           index,
@@ -327,6 +344,11 @@ class Bmc(Linux):
                                  context=self.context)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_COMPLETE)
         result = True
+        try:
+            self.nc[index].close()
+            fun_test.log("Disconnected nc")
+        except Exception as ex:
+            fun_test.critical(str(ex))
         return result
 
     def _reset_microcom(self):
@@ -472,6 +494,104 @@ class Bmc(Linux):
         return "/tmp/f1_{}_uart_log.txt".format(f1_index)
 
 
+class BootupWorker(Thread):
+    def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
+        super(BootupWorker, self).__init__()
+        self.fs = fs
+        self.power_cycle_come = power_cycle_come
+        self.non_blocking = non_blocking
+        self.context = context
+
+    def run(self):
+        fs = self.fs
+        bmc = self.fs.get_bmc()
+        try:
+            fs.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
+            fun_test.test_assert(expression=fs.bmc_initialize(), message="BMC initialize", context=self.context)
+
+            if fs.retimer_workround:
+                fs._apply_retimer_workaround()
+
+            fun_test.test_assert(expression=fs.set_f1s(), message="Set F1s", context=self.context)
+
+            if not fs.skip_funeth_come_power_cycle:
+                fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
+                fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+
+            for f1_index, f1 in fs.f1s.iteritems():
+                fun_test.test_assert(bmc.setup_serial_proxy_connection(f1_index=f1_index),
+                                     "Setup nc serial proxy connection")
+
+            fs.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
+            fun_test.test_assert(expression=fs.fpga_initialize(), message="FPGA initiaize", context=self.context)
+
+            fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
+            for f1_index, f1 in fs.f1s.iteritems():
+                if f1_index == fs.disable_f1_index:
+                    continue
+                boot_args = fs.boot_args
+                if fs.f1_parameters:
+                    if f1_index in fs.f1_parameters:
+                        if "boot_args" in fs.f1_parameters[f1_index]:
+                            boot_args = fs.f1_parameters[f1_index]["boot_args"]
+                if fs.validate_u_boot_version:
+                    fun_test.test_assert(
+                        bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=fs.MIN_U_BOOT_DATE),
+                        "Validate preamble")
+                fun_test.test_assert(
+                    expression=bmc.u_boot_load_image(index=f1_index, tftp_image_path=fs.tftp_image_path,
+                                                          boot_args=boot_args, gateway_ip=fs.gateway_ip),
+                    message="U-Bootup f1: {} complete".format(f1_index),
+                    context=self.context)
+                fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
+                bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
+
+            fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
+            fs.u_boot_complete = True
+
+            come = fs.get_come()
+            fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
+            fun_test.test_assert(expression=fs.come_reset(power_cycle=self.power_cycle_come, non_blocking=self.non_blocking),
+                                 message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
+                                 context=self.context)
+
+            self.worker = ComEInitializationWorker(fs=self.fs)
+            self.worker.run()
+            for f1_index, f1 in fs.f1s.iteritems():
+                f1.set_dpc_port(come.get_dpc_port(f1_index))
+            try:
+                fs.get_bmc().disconnect()
+                fun_test.log(message="BMC disconnect", context=self.context)
+                fs.get_fpga().disconnect()
+                fs.get_come().disconnect()
+            except:
+                pass
+
+            come = self.fs.get_come()
+            bmc = self.fs.get_bmc()
+            """
+            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
+                                 message="Ensure ComE is up",
+                                 context=self.fs.context)
+
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+            fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
+                                 message="ComE initialized",
+                                 context=self.fs.context)
+            """
+
+            if self.fs.fun_cp_callback:
+                fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
+                fun_test.log("Calling fun CP callback from Fs")
+                self.fs.fun_cp_callback(self.fs.get_come())
+            self.fs.come_initialized = True
+            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+
+        except Exception as ex:
+            fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
+            raise ex
+
+
 class ComEInitializationWorker(Thread):
     def __init__(self, fs):
         super(ComEInitializationWorker, self).__init__()
@@ -492,11 +612,11 @@ class ComEInitializationWorker(Thread):
                                  message="ComE initialized",
                                  context=self.fs.context)
 
-            if self.fs.fun_cp_callback:
-                fun_test.log("Calling fun CP callback from Fs")
-                self.fs.fun_cp_callback(self.fs.get_come())
+            # if self.fs.fun_cp_callback:
+            #    fun_test.log("Calling fun CP callback from Fs")
+            #    self.fs.fun_cp_callback(self.fs.get_come())
             self.fs.come_initialized = True
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+            # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
         except Exception as ex:
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
@@ -690,8 +810,9 @@ class F1InFs:
 
 
 class Fs(object, ToDictMixin):
-    #  sku=SKU_FS1600_{}
     DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
+    MIN_U_BOOT_DATE = datetime(year=2019, month=5, day=29)
+
 
     TO_DICT_VARS = ["bmc_mgmt_ip",
                     "bmc_mgmt_ssh_username",
@@ -727,7 +848,9 @@ class Fs(object, ToDictMixin):
                  setup_bmc_support_files=None,
                  apc_info=None,
                  fun_cp_callback=None,
-                 skip_funeth_come_power_cycle=None):
+                 skip_funeth_come_power_cycle=None,
+                 spec=None):
+        self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -760,6 +883,29 @@ class Fs(object, ToDictMixin):
         if self.context:
             self.original_context_description = self.context.description
         self.setup_bmc_support_files = setup_bmc_support_files
+        self.validate_u_boot_version = True
+        disable_u_boot_version_validation = self.get_workaround("disable_u_boot_version_validation")
+        if disable_u_boot_version_validation is not None:
+            self.validate_u_boot_version = not disable_u_boot_version_validation
+        self.bootup_worker = None
+        self.u_boot_complete = False
+
+    def __str__(self):
+        name = self.spec.get("name", None)
+        if not name:
+            name = "FS"
+        return name
+
+    def is_u_boot_complete(self):
+        return self.u_boot_complete
+
+    def get_workaround(self, variable):
+        value = None
+        if self.spec:
+            workarounds = self.spec.get("workarounds", None)
+            if workarounds:
+                value = workarounds.get(variable, None)
+        return value
 
     def post_bootup(self):
         self.get_bmc().reset_context()
@@ -867,70 +1013,90 @@ class Fs(object, ToDictMixin):
                   apc_info=apc_info,
                   fun_cp_callback=fun_cp_callback,
                   power_cycle_come=power_cycle_come,
-                  skip_funeth_come_power_cycle=skip_funeth_come_power_cycle)
+                  skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
+                  spec=fs_spec)
 
-    def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False):
-        self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
-        if reboot_bmc:
-            fun_test.test_assert(expression=self.reboot_bmc(), message="Reboot BMC", context=self.context)
-        fun_test.test_assert(expression=self.bmc_initialize(), message="BMC initialize", context=self.context)
+    def bootup(self, reboot_bmc=False, power_cycle_come=True, non_blocking=False, threaded=False):
+        if not threaded:
 
-        if self.retimer_workround:
-            self._apply_retimer_workaround()
-
-        fun_test.test_assert(expression=self.set_f1s(), message="Set F1s", context=self.context)
-
-        if not self.skip_funeth_come_power_cycle:
-            self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
-            fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
-
-        self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
-        fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
-
-        self.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
-        for f1_index, f1 in self.f1s.iteritems():
-            if f1_index == self.disable_f1_index:
-                continue
-            boot_args = self.boot_args
-            if self.f1_parameters:
-                if f1_index in self.f1_parameters:
-                    if "boot_args" in self.f1_parameters[f1_index]:
-                        boot_args = self.f1_parameters[f1_index]["boot_args"]
-            fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
-                                 message="U-Bootup f1: {} complete".format(f1_index),
+            self.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
+            if reboot_bmc:
+                fun_test.test_assert(expression=self.reboot_bmc(), message="Reboot BMC", context=self.context)
+            fun_test.test_assert(expression=self.bmc_initialize(), message="BMC initialize", context=self.context)
+    
+            if self.retimer_workround:
+                self._apply_retimer_workaround()
+    
+            fun_test.test_assert(expression=self.set_f1s(), message="Set F1s", context=self.context)
+    
+            if not self.skip_funeth_come_power_cycle:
+                self.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
+                fun_test.test_assert(expression=self.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
+    
+            for f1_index, f1 in self.f1s.iteritems():
+                fun_test.test_assert(self.bmc.setup_serial_proxy_connection(f1_index=f1_index),
+                                     "Setup nc serial proxy connection")
+    
+            self.set_boot_phase(BootPhases.FS_BRING_UP_FPGA_INITIALIZE)
+            fun_test.test_assert(expression=self.fpga_initialize(), message="FPGA initiaize", context=self.context)
+    
+            self.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
+            for f1_index, f1 in self.f1s.iteritems():
+                if f1_index == self.disable_f1_index:
+                    continue
+                boot_args = self.boot_args
+                if self.f1_parameters:
+                    if f1_index in self.f1_parameters:
+                        if "boot_args" in self.f1_parameters[f1_index]:
+                            boot_args = self.f1_parameters[f1_index]["boot_args"]
+                if self.validate_u_boot_version:
+                    fun_test.test_assert(self.bmc.validate_u_boot_version(f1_index=f1_index, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
+                fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=boot_args, gateway_ip=self.gateway_ip),
+                                     message="U-Bootup f1: {} complete".format(f1_index),
+                                     context=self.context)
+                fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
+                self.bmc.start_uart_log_listener(f1_index=f1_index, serial_device=self.f1s.get(f1_index).serial_device_path)
+    
+            self.get_come()
+            self.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
+            fun_test.test_assert(expression=self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come,
+                                                            non_blocking=non_blocking),
+                                 message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
                                  context=self.context)
-            fun_test.update_job_environment_variable("tftp_image_path", self.tftp_image_path)
-            self.bmc.start_uart_log_listener(f1_index=f1_index, serial_device=self.f1s.get(f1_index).serial_device_path)
+    
+            if not non_blocking:
+                self.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+                fun_test.test_assert(expression=self.come.initialize(disable_f1_index=self.disable_f1_index),
+                                     message="ComE initialized",
+                                     context=self.context)
 
-        self.get_come()
-        self.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
-        fun_test.test_assert(expression=self.come_reset(power_cycle=self.power_cycle_come or power_cycle_come,
-                                                        non_blocking=non_blocking),
-                             message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
-                             context=self.context)
+                if self.fun_cp_callback:
+                    fun_test.log("Calling fun CP callback from Fs")
+                #    self.fs.fun_cp_callback(self.fs.get_come())
+                self.come_initialized = True
 
-        if not non_blocking:
-            self.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-            fun_test.test_assert(expression=self.come.initialize(disable_f1_index=self.disable_f1_index),
-                                 message="ComE initialized",
-                                 context=self.context)
-            self.come_initialized = True
-            self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+                self.come_initialized = True
+                self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+            else:
+                # Start thread
+                self.worker = ComEInitializationWorker(fs=self)
+                self.worker.start()
+            for f1_index, f1 in self.f1s.iteritems():
+                f1.set_dpc_port(self.come.get_dpc_port(f1_index))
+    
+    
+            try:
+                self.get_bmc().disconnect()
+                fun_test.log(message="BMC disconnect", context=self.context)
+                self.get_fpga().disconnect()
+                self.get_come().disconnect()
+            except:
+                pass
+
         else:
-            # Start thread
-            self.worker = ComEInitializationWorker(fs=self)
-            self.worker.start()
-        for f1_index, f1 in self.f1s.iteritems():
-            f1.set_dpc_port(self.come.get_dpc_port(f1_index))
-
-
-        try:
-            self.get_bmc().disconnect()
-            fun_test.log(message="BMC disconnect", context=self.context)
-            self.get_fpga().disconnect()
-            self.get_come().disconnect()
-        except:
-            pass
+            self.bootup_worker = BootupWorker(fs=self, power_cycle_come=power_cycle_come, non_blocking=non_blocking, context=self.context)
+            self.bootup_worker.start()
+            fun_test.sleep("Bootup worker start", seconds=3)
         return True
 
     def _apply_retimer_workaround(self): #TODO:

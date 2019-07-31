@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from fun_settings import DATA_STORE_DIR
 from fun_settings import SCRIPTS_DIR
 from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
@@ -38,7 +39,7 @@ except (KeyError, ValueError):
     DPC_PROXY_PORT = 40220
     DPC_PROXY_IP2 = '10.1.20.22'
     DPC_PROXY_PORT2 = 40221
-    TB = 'FS11'
+    TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
 try:
     inputs = fun_test.get_job_inputs()
@@ -47,6 +48,7 @@ try:
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
+        configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
         bootup_funos = (inputs.get('bootup_funos', 1) == 1)  # Boot up FunOS or not
         cleanup = (inputs.get('cleanup', 1) == 1)  # Clean up funeth and control plane or not
         fundrv_branch = inputs.get('fundrv_branch', None)
@@ -58,6 +60,7 @@ try:
         control_plane = False  # default False
         update_driver = True  # default True
         hu_host_vm = False  # default False
+        configure_overlay = False  # default False
         bootup_funos = True  # default True
         cleanup = True  # default True
         fundrv_branch = None
@@ -69,6 +72,7 @@ except:
     control_plane = False
     update_driver = True
     hu_host_vm = False
+    configure_overlay = False
     bootup_funos = True
     cleanup = True
 
@@ -77,7 +81,7 @@ NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
 MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
-supported_testbed_types = ('fs-11', )
+supported_testbed_types = ('fs-11', 'fs-48', )
 
 
 def setup_nu_host(funeth_obj):
@@ -104,7 +108,7 @@ def setup_nu_host(funeth_obj):
                 linux_obj.sudo_command('sudo pkill dockerd; sudo ethtool -K fpg0 lro off; sudo ethtool -k fpg0')
 
 
-def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
+def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     funsdk_commit = funsdk_bld = driver_commit = driver_bld = None
     if update_driver:
         funeth_obj.setup_workspace()
@@ -131,6 +135,12 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False):
         else:
             fun_test.test_assert(funeth_obj.enable_tso(hu, disable=True),
                                  'Disable HU host {} funeth interfaces TSO.'.format(linux_obj.host_ip))
+
+        # TODO: no need after LSO/checksum offload is enabled for overlay
+        if not tx_offload:
+            fun_test.test_assert(funeth_obj.enable_tx_offload(hu, disable=True),
+                                 'Disable HU host {} funeth interfaces Tx offload.'.format(linux_obj.host_ip))
+
         if is_vm:
             cpu_list = CPU_LIST_VM
         else:
@@ -164,6 +174,23 @@ def setup_funcp(test_bed_type):
     abstract_json_file_f1_1 = '{}/networking/tb_configs/FS11_F1_1.json'.format(SCRIPTS_DIR)
     funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
                                     abstract_config_f1_1=abstract_json_file_f1_1)
+    #fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
+    # TODO: sanity check of control plane
+
+
+def setup_funcp_on_fs(test_bed_type):
+
+    testbed_info = fun_test.parse_file_to_json(SCRIPTS_DIR +
+                                               '/networking/funcp/abstract_config/abstract_config_key.json')
+    funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+    funcp_obj.bringup_funcp(prepare_docker=True)
+    funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type]['mpg1']),
+                             f1_0_mpg=str(testbed_info['fs'][test_bed_type]['mpg0']))
+
+    abstract_json_file_f1_0 = '%s/networking/tb_configs/%s_F1_0.json' % (SCRIPTS_DIR, TB)
+    abstract_json_file_f1_1 = '%s/networking/tb_configs/%s_F1_1.json' % (SCRIPTS_DIR, TB)
+    funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                    abstract_config_f1_1=abstract_json_file_f1_1)
     fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
     # TODO: sanity check of control plane
 
@@ -195,7 +222,11 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
         ]
     }
 
-    nc_obj_src, nc_obj_dst = overlay_config_dict.keys()
+    # num_flows, 512k
+    for nc_obj in overlay_config_dict:
+        nc_obj.overlay_num_flows(512 * 1024)
+
+    nc_obj_src, nc_obj_dst = network_controller_obj_f1_0, network_controller_obj_f1_1
     for src, dst in zip(overlay_config_dict[nc_obj_src], overlay_config_dict[nc_obj_dst]):
         for nc_obj in (nc_obj_src, nc_obj_dst):
             if nc_obj == nc_obj_src:
@@ -215,23 +246,29 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 dst_flows = src['flows']
                 vif_table_mac_entries = dst['vif_table_mac_entries']
 
-            # num_flows, 512k
-            nc_obj.overlay_num_flows(512*1024)
             # vif
             nc_obj.overlay_vif_add(lport_num=lport_num)
             for vnid in vnids:
                 # nh
-                nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
-                nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_encap', src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
+                #nc_obj.overlay_nh_add(nh_type='vxlan_decap', src_vtep=dst_vtep, dst_vtep=src_vtep, vnid=vnid)
+                for nh_type in ('vxlan_encap', 'vxlan_decap'):
+                    nc_obj.overlay_nh_add(nh_type=nh_type, src_vtep=src_vtep, dst_vtep=dst_vtep, vnid=vnid)
                 # flows
                 for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
                     for sip, dip in zip(src_flows, dst_flows):
                         if flow_type == 'vxlan_encap':
                             flow_sip, flow_dip = sip, dip
-                            flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
-                        else:
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                        elif flow_type == 'vxlan_decap':
                             flow_sip, flow_dip = dip, sip
-                            flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            if nc_obj == nc_obj_src:
+                                flow_sport, flow_dport = netperf_manager.NETSERVER_PORT, 0
+                            elif nc_obj == nc_obj_dst:
+                                flow_sport, flow_dport = 0, netperf_manager.NETSERVER_PORT
                         nc_obj.overlay_flow_add(flow_type=flow_type,
                                                 nh_index=nh_index,
                                                 vif=lport_num,
@@ -289,8 +326,12 @@ class FunethSanity(FunTestScript):
             #TB = 'FS11'
             TB = ''.join(test_bed_type.split('-')).upper()
             if control_plane:
-                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
-                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                if test_bed_type == 'fs-11':
+                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                if test_bed_type == 'fs-48':
+                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -329,7 +370,8 @@ class FunethSanity(FunTestScript):
         # TODO: make it work for other setup
         if test_bed_type == 'fs-11' and control_plane:
             setup_funcp(test_bed_type)
-
+        elif test_bed_type != 'fs-11' and control_plane:
+            setup_funcp_on_fs(test_bed_type)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
                             fundrv_branch=fundrv_branch,
@@ -368,12 +410,13 @@ class FunethSanity(FunTestScript):
             fun_test.sleep("Sleeping for a while waiting for VMs to come up", seconds=10)
 
             setup_hu_host(funeth_obj=funeth_obj_ul_vm, update_driver=update_driver, is_vm=True)
-            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True)
+            setup_hu_host(funeth_obj=funeth_obj_ol_vm, update_driver=update_driver, is_vm=True, tx_offload=False)
 
             # Configure overlay
-            #configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
-            #network_controller_obj_f1_0.disconnect()
-            #network_controller_obj_f1_1.disconnect()
+            if configure_overlay:
+                configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1)
+                network_controller_obj_f1_0.disconnect()
+                network_controller_obj_f1_1.disconnect()
 
         if test_bed_type == 'fs-11':
             nu = 'nu2'
@@ -410,24 +453,24 @@ class FunethSanity(FunTestScript):
                 funeth_obj = fun_test.shared_variables['funeth_obj']
                 for nu in funeth_obj.nu_hosts:
                     linux_obj = funeth_obj.linux_obj_dict[nu]
-                    if linux_obj.host_ip == 'poc-server-06':
-                        cmd = 'pkill sshd'
-                        fun_test.log("{} in {}".format(cmd, inux_obj.host_ip))
-                        linux_obj.command(cmd)
+                    cmd = 'pkill sshd'
+                    fun_test.log("{} in {}".format(cmd, linux_obj.host_ip))
+                    linux_obj.command(cmd)
             except:
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                     for host_ip, host_info in hu_hosts.iteritems():
                         host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
-            if control_plane and cleanup:
-                try:
-                    perf_utils.collect_funcp_logs(self.come_linux_obj)
-                    self.come_linux_obj.sudo_command('rmmod funeth')
-                    self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
-                    self.come_linux_obj.sudo_command('rm -fr /tmp/*')
-                except:
-                    self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
+            if control_plane:
+                perf_utils.collect_funcp_logs(self.come_linux_obj)
+                if cleanup:
+                    try:
+                        self.come_linux_obj.sudo_command('rmmod funeth')
+                        self.come_linux_obj.sudo_command('docker kill F1-0 F1-1')
+                        self.come_linux_obj.sudo_command('rm -fr /tmp/*')
+                    except:
+                        self.come_linux_obj.ensure_host_is_up(max_wait_time=0, power_cycle=True)
 
 
 def collect_stats(when='before'):
@@ -615,7 +658,7 @@ class FunethTestScpBase(FunTestCase):
         lista = list(range(0, file_size/4))
         packer = struct.Struct('I ' * (file_size/4))
         content = packer.pack(*lista)
-        tmp_filename = '{}/funeth_sanity_scp_test_file'.format(fun_test.get_logs_directory())
+        tmp_filename = '{}/networking/funeth_sanity_scp_test_file'.format(DATA_STORE_DIR)
         fun_test.log("Write {} 32-bit sequential patterns to file {}".format(file_size/4, tmp_filename))
         with open(tmp_filename, 'w') as f:
             f.write(content)
@@ -887,10 +930,10 @@ class FunethTestComeReboot(FunTestCase):
         nu = fun_test.shared_variables['sanity_nu']
         hu = fun_test.shared_variables['sanity_hu']
         linux_obj = fun_test.shared_variables["come_linux_obj"]
-        hostname = linux_obj.host_ip()
+        hostname = linux_obj.host_ip
         fun_test.test_assert(linux_obj.reboot(non_blocking=True), 'Reboot COMe {}'.format(hostname))
         fun_test.sleep("Sleeping for COMe to come up from reboot", seconds=180)
-        fun_test.test_assert(linux_obj.is_host_up(), 'Come {} is up'.format(hostname))
+        fun_test.test_assert(linux_obj.ensure_host_is_up(), 'Come {} is up'.format(hostname))
 
         tb_config_obj = fun_test.shared_variables['funeth_obj'].tb_config_obj
         pf_interface = tb_config_obj.get_hu_pf_interface(hu)

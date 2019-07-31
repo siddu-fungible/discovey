@@ -1,0 +1,44 @@
+{
+    "fs": {
+              "fs-48": {
+                  "gatewayip": "10.1.105.1",
+                  "abtract_config_f1_0": "/abstract_config/alibaba_fcp_configs_fs48_f1_0.json",
+                  "abtract_config_intra_f1_0": "/abstract_config/alibaba_fcp_configs_fs48_intra_f1_0.json",
+                  "abtract_config_f1_1": "/abstract_config/alibaba_fcp_configs_fs48_f1_1.json",
+                  "abtract_config_intra_f1_1": "/abstract_config/alibaba_fcp_configs_fs48_intra_f1_1.json",
+                  "prepare_docker":true,
+                  "mpg0":"10.1.105.174",
+                  "mpg1":"10.1.105.175"
+              },
+            "fs-45": {
+                  "gatewayip": "10.1.105.1",
+                  "abtract_config_f1_0": "/abstract_config/alibaba_fcp_configs_fs45_f1_0.json",
+                  "abtract_config_f1_1": "/abstract_config/alibaba_fcp_configs_fs45_f1_1.json",
+                  "prepare_docker":true,
+                  "mpg0":"10.1.105.172",
+                  "mpg1":"10.1.105.173"
+              },
+              "fs-60": {
+                  "gatewayip": "10.1.105.1",
+                  "abtract_config_f1_0": "/abstract_config/alibaba_fcp_configs_fs60_f1_0.json",
+                  "abtract_config_intra_f1_0": "/abstract_config/alibaba_fcp_configs_fs60_intra_f1_0.json",
+                  "abtract_config_f1_1": "/abstract_config/alibaba_fcp_configs_fs60_f1_1.json",
+                  "abtract_config_intra_f1_1": "/abstract_config/alibaba_fcp_configs_fs60_intra_f1_1.json",
+                  "prepare_docker":true,
+                  "mpg0":"10.1.105.176",
+                  "mpg1":"10.1.105.177"
+          },
+          "fs-15": {
+
+                  "gatewayip": "10.1.20.1",
+                  "abtract_config_f1_0": "/abstract_config/FS-15-F1-0_abstract_cfg.json",
+                  "abtract_config_f1_1": "/abstract_config/FS-15-F1-1_abstract_cfg.json",
+                  "prepare_docker":true,
+                  "mpg0":"10.1.23.34",
+                  "mpg0_netmask":"255.255.252.0",
+                  "mpg1":"10.1.23.35",
+                  "mpg1_netmask":"255.255.252.0"
+
+          }
+     }
+}
