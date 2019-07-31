@@ -92,7 +92,7 @@ class ScriptSetup(FunTestScript):
             tb_config_obj = tb_configs.TBConfigs(str('FS' + fs_name.split('-')[1]))
             funeth_obj = Funeth(tb_config_obj)
             fun_test.shared_variables['funeth_obj'] = funeth_obj
-            setup_hu_host(funeth_obj, update_driver=True)
+            setup_hu_host(funeth_obj, update_driver=True, num_queues=8)
             print "\n\n\n Booting HU unit  ended\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
