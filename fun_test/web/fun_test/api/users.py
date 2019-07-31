@@ -45,9 +45,19 @@ def profile(request, id):
             workspace = request_json["workspace"]
 
         profile = PerformanceUserProfile.objects.get(email=email)
+        match_found = False
         if workspace:
-            profile.workspace.append(workspace)
-            profile.save()
+            for ws in profile.workspace:
+                if ws["name"] == workspace["name"]:
+                    match_found = True
+            if not match_found:
+                profile.workspace.append(workspace)
+                profile.save()
+            else:
+                for ws in profile.workspace:
+                    if ws["name"] == workspace["name"]:
+                        ws["interested_metrics"] = workspace["interested_metrics"]
+                profile.save()
         result = profile.to_dict()
 
     elif request.method == "GET":

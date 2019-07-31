@@ -5,6 +5,7 @@ import {ApiService} from "../../services/api/api.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
+import {CommonService} from "../../services/common/common.service";
 
 @Component({
   selector: 'app-workspace',
@@ -19,11 +20,18 @@ export class WorkspaceComponent implements OnInit {
   editingWorkspace: boolean = false;
   addingWorkspace: boolean = false;
   workspaceName: string = null;
+  showChartsForWorkspace: boolean = false;
+  grids: any = [];
+  gridLength: number = 0;
+  createError: string = null;
+  currentWorkspace: any = null;
+  buildInfo: any = null;
 
-  constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router, private route: ActivatedRoute) {
+  constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router, private route: ActivatedRoute, private commonService: CommonService) {
   }
 
   ngOnInit() {
+    this.fetchBuildInfo();
     this.route.params.subscribe(params => {
       if (params['emailId']) {
         let user = {};
@@ -32,7 +40,32 @@ export class WorkspaceComponent implements OnInit {
       }
     });
     this.workspaceName = null;
-    this.fetchUsers();
+     new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.fetchUsers();
+      })).subscribe(response => {
+      console.log("fetched users");
+    }, error => {
+      this.loggerService.error("Unable to fetch users");
+    });
+  }
+
+    //populates buildInfo
+  fetchBuildInfo(): void {
+    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
+      this.buildInfo = {};
+      Object.keys(response.data).forEach((key) => {
+        let localizedKey = this.commonService.convertToLocalTimezone(key);
+        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
+      });
+    }, error => {
+      this.loggerService.error("regression/build_to_date_map");
+    });
   }
 
   fetchUsersWorkspace(user): void {
@@ -86,7 +119,6 @@ export class WorkspaceComponent implements OnInit {
 
   onUserChange(newUser): void {
     this.addingWorkspace = false;
-    this.fetchWorkspace(newUser);
     let url = "/performance/workspace/" + newUser.email;
     this.router.navigateByUrl(url);
   }
@@ -96,17 +128,95 @@ export class WorkspaceComponent implements OnInit {
       let profiles = response.data;
       this.profile = [];
       for (let workspace of profiles.workspace) {
-        Object.keys(workspace).forEach(name => {
-          let newWorkspace = {};
-          newWorkspace["name"] = name;
-          newWorkspace["interestedMetrics"] = workspace[name];
-          newWorkspace["editingWorkspace"] = false;
-          this.profile.push(newWorkspace);
-        });
+        // Object.keys(workspace).forEach(name => {
+        let newWorkspace = {};
+        newWorkspace["name"] = workspace.name;
+        newWorkspace["interestedMetrics"] = workspace.interested_metrics;
+        newWorkspace["editingWorkspace"] = false;
+        if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
+          this.currentWorkspace = newWorkspace;
+        }
+        this.profile.push(newWorkspace);
+        // });
       }
       this.showWorkspace = true;
       return of(true);
     }));
+  }
+
+  createWorkspace(): void {
+    let error = false;
+    for (let ws of this.profile) {
+      if (ws.name == this.workspaceName) {
+        error = true;
+      }
+    }
+    if (!error) {
+      this.createError = null;
+      new Observable(observer => {
+        observer.next(true);
+        observer.complete();
+        return () => {
+        }
+      }).pipe(
+        switchMap(response => {
+          return this.submitWorkspace();
+        }),
+        switchMap(response => {
+          return this.fetchWorkspace(this.selectedUser);
+        })).subscribe(response => {
+        console.log("fetched workspace after creating the workspace");
+      }, error => {
+          this.addingWorkspace = false;
+          this.workspaceName = null;
+        this.loggerService.error("Unable to fetch workspace after creating");
+      });
+    } else {
+      this.createError = "Workspace name already taken. Please choose a different one"
+    }
+  }
+
+  updateStatus(submitted, workspace): void {
+    if (submitted) {
+      this.addingWorkspace = false;
+      this.grids = [];
+      this.showChartsForWorkspace = false;
+      workspace.editingWorkspace = false;
+      new Observable(observer => {
+        observer.next(true);
+        observer.complete();
+        return () => {
+        }
+      }).pipe(
+        switchMap(response => {
+          return this.fetchWorkspace(this.selectedUser);
+        })).subscribe(response => {
+        console.log("fetched workspace after editing the workspace");
+        this.openWorkspace(this.currentWorkspace);
+      }, error => {
+        this.loggerService.error("Unable to fetch workspace after editing");
+      });
+    }
+  }
+
+  submitWorkspace(): any {
+    let payload = {};
+    payload["email"] = this.selectedUser.email;
+    let workspace = {};
+    workspace["name"] = this.workspaceName;
+    workspace["interested_metrics"] = [];
+    payload["workspace"] = workspace;
+    return this.apiService.post("/api/v1/profile/", payload).pipe(switchMap(response => {
+      console.log("created workspace name successfully");
+      return of(true);
+    }));
+  }
+
+  openWorkspace(workspace): void {
+    this.showChartsForWorkspace = true;
+    this.currentWorkspace = workspace;
+    this.gridLength = 2;
+    this.grids = [...workspace["interestedMetrics"]];
   }
 
   getString(dict): string {
@@ -124,20 +234,21 @@ export class WorkspaceComponent implements OnInit {
   closeWorkspace(): void {
     this.addingWorkspace = false;
     this.workspaceName = null;
+    this.createError = null;
   }
 
 
-  submitWorkspace(user): void {
-    let payload = {};
-    payload["email"] = user.email;
-    payload["interested_metrics"] = user.interested_metrics;
-    this.apiService.post("/api/v1/profile", payload).subscribe(response => {
-      this.profile = response.data;
-      this.showWorkspace = true;
-    }, error => {
-      this.loggerService.error("Unable to fetch users");
-    });
-    this.fetchWorkspace(user);
-    this.editingWorkspace = false;
-  }
+  // submitWorkspace(user): void {
+  //   let payload = {};
+  //   payload["email"] = user.email;
+  //   payload["interested_metrics"] = user.interested_metrics;
+  //   this.apiService.post("/api/v1/profile", payload).subscribe(response => {
+  //     this.profile = response.data;
+  //     this.showWorkspace = true;
+  //   }, error => {
+  //     this.loggerService.error("Unable to fetch users");
+  //   });
+  //   this.fetchWorkspace(user);
+  //   this.editingWorkspace = false;
+  // }
 }

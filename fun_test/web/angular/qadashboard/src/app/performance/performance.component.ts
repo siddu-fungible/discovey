@@ -1,4 +1,4 @@
-import {Component, Injector, OnInit, Renderer2, ViewChild, Input} from '@angular/core';
+import {Component, Injector, OnInit, Renderer2, ViewChild, Input, Output, EventEmitter} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
@@ -65,7 +65,8 @@ class FlatNode {
   lineage: any = [];
   special: boolean = false;
   showAddLeaf: boolean = false;
-  notify: boolean = false;
+  track: boolean = false;
+  subscribe: boolean = false;
 
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
@@ -92,6 +93,7 @@ export class PerformanceComponent implements OnInit {
   @Input() userProfileEmail: string = null;
   @Input() workspaceName: string = null;
   @Input() interestedMetrics = null;
+  @Output() submitted: EventEmitter<boolean> = new EventEmitter();
   workspace: any = [];
 
   numGridColumns: number;
@@ -300,6 +302,8 @@ export class PerformanceComponent implements OnInit {
           for (let metricId of this.interestedMetrics) {
             if (flatNode.node.metricId in metricId) {
               flatNode.showAddLeaf = true;
+              flatNode.track = true;
+              flatNode.subscribe = metricId[flatNode.node.metricId].subscribe;
             }
           }
 
@@ -1014,30 +1018,52 @@ export class PerformanceComponent implements OnInit {
   submitInterestedMetrics(): void {
     let flatNodes = this.getInterestedNodes();
     let metricDetails = {};
+    this.workspace = [];
     for (let flatNode of flatNodes) {
       if (!(flatNode.node.metricId in metricDetails)) {
-        metricDetails[flatNode.node.metricId] = {"notify": flatNode.notify};
-        this.workspace.push(metricDetails);
+        metricDetails[flatNode.node.metricId] = {"subscribe": flatNode.subscribe};
       }
     }
+    this.workspace.push(metricDetails);
 
     let payload = {};
     payload["email"] = this.userProfileEmail;
     let workspace = {};
-    workspace[this.workspaceName] = this.workspace;
+    workspace["name"] = this.workspaceName;
+    workspace["interested_metrics"] = this.workspace;
     payload["workspace"] = workspace;
     this.apiService.post("/api/v1/profile", payload).subscribe(response => {
       console.log("submitted successfully");
+      this.submitted.emit(true);
     }, error => {
+      this.submitted.emit(false);
       this.loggerService.error("Unable to submit interested metrics");
     });
   }
 
   getInterestedNodes = () => {
     return this.flatNodes.filter(flatNode => {
-      return flatNode.showAddLeaf
+      return flatNode.track
     })
   };
+
+  removeFromList(metricId): void {
+    for (let flatNode of this.flatNodes) {
+      if (flatNode.node.metricId == metricId) {
+        flatNode.track = false;
+        flatNode.subscribe = false;
+        flatNode.showAddLeaf = false;
+      }
+    }
+  }
+
+  onChangeSubscribeTo(subscribed, flatNode): void {
+    flatNode.subscribe = subscribed;
+  }
+
+  onChangeTrack(tracking, flatNode): void {
+    flatNode.track = tracking;
+  }
 
   showNonAtomicMetric = (flatNode) => {
     if (!this.selectMode) {

@@ -52,15 +52,18 @@
                    (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
                 *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                             [type]="'warning'"></app-smart-label></span>
-                <span *ngIf="flatNode.showAddLeaf">&nbsp;&nbsp;&nbsp;Notify: &nbsp;<label class="switch"
-                                                                                          style="margin: 0;
-                vertical-align: middle; padding: 0">
-                  <input type="checkbox" [checked]="flatNode.notify" [(ngModel)]="flatNode.notify"
-                         class="switch" data-toggle="toggle">
-                  <span class="slider round"></span>
-                </label>&nbsp;
+                <span *ngIf="flatNode.showAddLeaf">&nbsp;&nbsp;&nbsp;Subscribe: &nbsp;
+                  <!--<label class="switch"-->
+                                                                                          <!--style="margin: 0;-->
+                <!--vertical-align: middle; padding: 0">-->
+                  <!--<input type="checkbox" [checked]="flatNode.notify" [(ngModel)]="flatNode.notify"-->
+                         <!--class="switch" data-toggle="toggle">-->
+                  <!--<span class="slider round"></span>-->
+                <!--</label>&nbsp;-->
+                  <app-toggle-button [checked]="flatNode.subscribe"
+                                     (changed)="onChangeSubscribeTo($event, flatNode)"></app-toggle-button>
                   <i class="fa fa-times fa-fw close-color"
-                     (click)="flatNode.showAddLeaf = false"></i>
+                     (click)="removeFromList(flatNode.node.metricId)"></i>
                </span>
 
               </ng-container>

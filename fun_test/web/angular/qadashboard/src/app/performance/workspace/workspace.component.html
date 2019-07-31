@@ -1,12 +1,14 @@
 <div class="component">
-  <table class="table table-nonfluid table-borderless">
+  <table class="table table-nonfluid table-borderless" style="margin: 20px">
     <tr>
       <td class="no-wrap">
-        <label for="submitter" class="required-label">Workspace:</label>
+        <label for="submitter" class="required-label">User:</label>
       </td>
       <td>
         <select id="submitter" [(ngModel)]="selectedUser" (ngModelChange)="onUserChange($event)">
-          <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
+          <option *ngFor="let user of users" [ngValue]="user">{{
+            user.first_name }} {{
+            user.last_name }}
             ({{ user.email }})
           </option>
         </select>
@@ -22,29 +24,37 @@
     </div>
     <div class=card-body>
       <app-smart-label [simulateLink]="false"
-                               [type]="'primary'" [value]="'Add Workspace'"
-                               (click)="addWorkspace()"></app-smart-label>
+                       [type]="'primary'" [value]="'Add Workspace'"
+                       (click)="addWorkspace()"></app-smart-label>
       <div>
         <table *ngIf="addingWorkspace" class="table table-borderless" style="margin: 20px; width: 100%;">
           <tr>
             <th>
               Workspace name
             </th>
-            <th>
-              Interested metrics
-            </th>
+            <!--<th>-->
+            <!--Interested metrics-->
+            <!--</th>-->
           </tr>
           <tr>
             <td>
-              <input type="text" [(ngModel)]="workspaceName">&nbsp;&nbsp;<app-smart-label [simulateLink]="false"
-                                                                                          [type]="'primary'"
-                                                                                          [value]="'Close'"
-                                                                                          (click)="closeWorkspace()"></app-smart-label>
+              <input type="text" [(ngModel)]="workspaceName">&nbsp;&nbsp;
+              <app-smart-label [simulateLink]="false"
+                               [type]="'passed'"
+                               [value]="'Create'"
+                               (click)="createWorkspace()"></app-smart-label>
+              &nbsp;&nbsp;<app-smart-label [simulateLink]="false"
+                                           [type]="'primary'"
+                                           [value]="'Close'"
+                                           (click)="closeWorkspace()"></app-smart-label>
             </td>
-            <td *ngIf="workspaceName">
-              <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
-                               [workspaceName]="workspaceName"></app-performance>
-            </td>
+            <!--<td *ngIf="workspaceName">-->
+            <!--<app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"-->
+            <!--[workspaceName]="workspaceName" (submitted)="updateStatus($event)"></app-performance>-->
+            <!--</td>-->
+          </tr>
+          <tr *ngIf="createError">
+            <label style="color: red">{{ createError }}</label>
           </tr>
         </table>
         <table *ngIf="profile.length > 0" class="table table-borderless" style="margin: 20px; width: 100%;">
@@ -53,7 +63,7 @@
             <th>
               Workspace name
             </th>
-            <th>Interested Metrics</th>
+            <th>Tracked metrics</th>
           </tr>
           <tr *ngFor="let workspace of profile">
             <td *ngIf="!workspace.editingWorkspace">
@@ -65,18 +75,42 @@
                                (click)="workspace.editingWorkspace = false"></app-smart-label>
             </td>
             <td>
-              {{ workspace.name }}
+              <a [routerLink]="" (click)="openWorkspace(workspace)">{{ workspace.name }}</a>
             </td>
             <td *ngIf="!workspace.editingWorkspace">
               {{ getString(workspace.interestedMetrics) }}
             </td>
             <td *ngIf="workspace.editingWorkspace">
               <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
-                               [workspaceName]="workspace.name" [interestedMetrics]="workspace.interestedMetrics"></app-performance>
+                               [workspaceName]="workspace.name"
+                               [interestedMetrics]="workspace.interestedMetrics"
+                               (submitted)="updateStatus($event, workspace)"></app-performance>
             </td>
           </tr>
         </table>
       </div>
     </div>
+  </div>
+  <div *ngIf="showChartsForWorkspace"
+       style="background-color: whitesmoke" class="card">
+    <div class="card-header">
+      <h5 class="card-title">{{ currentWorkspace.name }}</h5>
+    </div>
+    <div class="card-body">
+      <!--<div *ngIf="currentNode.grid.length">-->
+      <div *ngFor="let rows of grids">
+        <!--<div *ngFor="let node of row" id="grid"-->
+        <!--[ngStyle]="{'width': miniGridMaxWidth, 'height': miniGridMaxHeight, 'padding': '20px'}">-->
+        <!-- Fun Metric Chart component -->
+        <div *ngFor="let row of rows | keyvalue">
+          <fun-metric-chart [id]="row.key" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
+        </div>
+
+        <!--</div>-->
+        <!--</div>-->
+        <div class="closed-section"></div>
+      </div>
+    </div>
+
   </div>
 </div>
