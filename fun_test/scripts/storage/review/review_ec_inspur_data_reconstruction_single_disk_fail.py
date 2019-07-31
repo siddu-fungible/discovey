@@ -8,7 +8,7 @@ from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from collections import OrderedDict, Counter
-from fun_global import PerfUnit
+from fun_global import PerfUnit, FunPlatform
 
 '''
 Script for Inspur Functional Testing of Data Reconstruction With Disk Disk Failure and monitor Performance impact
@@ -870,11 +870,21 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
 
             if "bs" in self.fio_cmd_args:
                 fio_block_size = self.fio_cmd_args["bs"]
-            else:
-                fio_block_size = "Mixed"
+            elif "multiple_jobs" in self.fio_cmd_args:
+                match = re.search("--bs=(\w+)", self.fio_cmd_args["multiple_jobs"])
+                if match:
+                    fio_block_size = match.group(1)
+                else:
+                    match = re.search("--bssplit=((\w+/\w+:*)+)", self.fio_cmd_args["multiple_jobs"])
+                    if match:
+                        fio_block_size = "Mixed"
 
             if "rw" in self.fio_cmd_args:
                 row_data_dict["mode"] = self.fio_cmd_args["rw"]
+            elif "multiple_jobs" in self.fio_cmd_args:
+                match = re.search("--rw=(\w+)", self.fio_cmd_args["multiple_jobs"])
+                if match:
+                    row_data_dict["mode"] = match.group(1)
             else:
                 row_data_dict["mode"] = "Combined"
 
@@ -1296,6 +1306,8 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
 
             value_dict = {
                 "date_time": self.db_log_time,
+                "platform": FunPlatform.F1,
+                "version": fun_test.get_version(),
                 "num_hosts": self.num_hosts,
                 "block_size": row_data_dict["block_size"],
                 "operation": row_data_dict["mode"],
