@@ -56,7 +56,7 @@
     "mount_path": "/mnt/ssd",
     "trigger_failure": true,
     // If 'fail_drive' is true, initiate drive failure else initiate plex failure
-    "fail_drive": false,
+    "fail_drive": true,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
     "rebuild_timeout": 3600,
