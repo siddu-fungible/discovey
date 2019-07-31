@@ -20,29 +20,7 @@
     "command_timeout": 5,
     "reboot_timeout": 600,
     "ethernet_adapter": "Mellanox",
-    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
-    "csr_network": {
-      "0": {
-        "test_interface_ip": "20.1.1.1/24",
-        "test_interface_mac": "fe:dc:ba:44:66:30",
-        "test_net_route": {
-          "net": "29.1.1.0/24",
-          "gw": "20.1.1.2",
-          "arp": "00:de:ad:be:ef:00"
-        },
-        "f1_loopback_ip": "29.1.1.1"
-      },
-      "4": {
-        "test_interface_ip": "21.1.1.1/24",
-        "test_interface_mac": "fe:dc:ba:44:66:31",
-        "test_net_route": {
-          "net": "29.1.1.0/24",
-          "gw": "21.1.1.2",
-          "arp": "00:de:ad:be:ef:00"
-        },
-        "f1_loopback_ip": "29.1.1.1"
-      }
-    }
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"}
   },
   "DataReconstructionSingleDiskFailure": {
     "ec_info": {
@@ -97,11 +75,13 @@
     "resource_bam_args": {"interval": 60},
     "collect_network_stats": true,
     "trigger_failure": true,
-    "trigger_failure_wait_time": 30,
+    "trigger_failure_wait_time": 10,
     // If 'fail_drive' is true, initiate drive failure else initiate plex failure
-    "fail_drive": false,
+    "fail_drive": true,
+    "trigger_rebuild_wait_time": 10,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
+    "rebuild_timeout": 3600,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     //"failure_start_time_ratio": 0.05,
