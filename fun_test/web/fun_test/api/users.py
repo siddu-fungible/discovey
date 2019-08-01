@@ -61,6 +61,7 @@ def profile(request, email, workspace_name=None):
                 for ws in profile.workspace:
                     if ws["name"] == workspace["name"]:
                         ws["interested_metrics"] = workspace["interested_metrics"]
+                        ws["description"] = workspace["description"]
                 profile.save()
         result = profile.to_dict()
 
@@ -78,6 +79,18 @@ def profile(request, email, workspace_name=None):
 
 @csrf_exempt
 @api_safe_json_response
-def edit_profile(request, id):
+def edit_workspace(request, email):
     result = None
-
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        workspace_name = request_json["workspace_name"]
+        interested_metrics = request_json["interested_metrics"]
+        description = request_json["description"]
+        profile = PerformanceUserProfile.objects.get(email=email)
+        for ws in profile.workspace:
+            if ws["name"] == workspace_name:
+                ws["interested_metrics"] = interested_metrics
+                ws["description"] = description
+        profile.save()
+        result = profile.to_dict()
+    return result

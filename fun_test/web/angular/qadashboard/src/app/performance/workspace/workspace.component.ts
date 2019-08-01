@@ -6,6 +6,8 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {CommonService} from "../../services/common/common.service";
+import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
+import {Title} from "@angular/platform-browser";
 
 @Component({
   selector: 'app-workspace',
@@ -26,11 +28,58 @@ export class WorkspaceComponent implements OnInit {
   createError: string = null;
   currentWorkspace: any = null;
   buildInfo: any = null;
+  closeResult: string = null;
+  description: string = null;
+  deletingWorkspace: any  = null;
 
-  constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router, private route: ActivatedRoute, private commonService: CommonService) {
+  constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router,
+              private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal, private title: Title) {
+  }
+
+  openAddWorkspace(content) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-add-workspace'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+      this.modalService.dismissAll();
+
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  }
+
+  openEditWorkspace(content, workspace) {
+    this.currentWorkspace = workspace;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-edit-workspace', size: 'lg'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+      // this.modalService.dismissAll();
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+      this.fetchWorkspaceAfterEditing();
+    });
+  }
+
+  openDeleteWorkspace(content, workspace) {
+    this.deletingWorkspace = workspace;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-delete-workspace'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+      this.fetchWorkspaceAfterEditing();
+    });
+  }
+
+
+  private getDismissReason(reason: any): string {
+    if (reason === ModalDismissReasons.ESC) {
+      return 'by pressing ESC';
+    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
+      return 'by clicking on a backdrop';
+    } else {
+      return `with: ${reason}`;
+    }
   }
 
   ngOnInit() {
+    this.title.setTitle('Workspace');
     this.fetchBuildInfo();
     this.route.params.subscribe(params => {
       if (params['emailId']) {
@@ -100,10 +149,19 @@ export class WorkspaceComponent implements OnInit {
     }
   }
 
+  deleteMetricInWorkspace(metricId): void {
+    Object.keys(this.currentWorkspace.interestedMetrics[0]).forEach(key => {
+      if (Number(key) === Number(metricId)) {
+        delete this.currentWorkspace.interestedMetrics[0][key];
+      }
+    });
+  }
+
   onDeleteWorkspace(workspace) {
     this.apiService.delete("/api/v1/profile/" + this.selectedUser.email + "/" + workspace.name).subscribe(response => {
       this.loggerService.success(`Deleted ${this.selectedUser.email} ${workspace.name}`);
       this.fetchWorkspaceAfterEditing();
+      this.modalService.dismissAll();
     }, error => {
       this.loggerService.error(`Delete failed for ${this.selectedUser.email} ${workspace.name}`);
     })
@@ -120,28 +178,6 @@ export class WorkspaceComponent implements OnInit {
     this.addingWorkspace = false;
     let url = "/performance/workspace/" + newUser.email;
     this.router.navigateByUrl(url);
-  }
-
-  fetchWorkspace(user): any {
-    return this.apiService.get("/api/v1/profile/" + user.email).pipe(switchMap(response => {
-      let profiles = response.data;
-      this.profile = [];
-      for (let workspace of profiles.workspace) {
-        // Object.keys(workspace).forEach(name => {
-        let newWorkspace = {};
-        newWorkspace["name"] = workspace.name;
-        newWorkspace["interestedMetrics"] = workspace.interested_metrics;
-        newWorkspace["editingWorkspace"] = false;
-        if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
-          this.currentWorkspace.interstedMetrics = newWorkspace["interestedMetrics"]
-
-        }
-        this.profile.push(newWorkspace);
-        // });
-      }
-      this.showWorkspace = true;
-      return of(true);
-    }));
   }
 
   createWorkspace(): void {
@@ -174,9 +210,12 @@ export class WorkspaceComponent implements OnInit {
         console.log("fetched workspace after creating the workspace");
         this.addingWorkspace = false;
         this.workspaceName = null;
+        this.description = null;
+        this.modalService.dismissAll();
       }, error => {
         this.addingWorkspace = false;
         this.workspaceName = null;
+        this.description = null;
         this.loggerService.error("Unable to fetch workspace after creating");
       });
     } else if (this.createError === null) {
@@ -186,6 +225,7 @@ export class WorkspaceComponent implements OnInit {
 
   updateStatus(submitted, workspace): void {
     if (submitted) {
+      workspace.editingWorkspace = false;
       this.addingWorkspace = false;
       this.grids = [];
       this.showChartsForWorkspace = false;
@@ -204,12 +244,32 @@ export class WorkspaceComponent implements OnInit {
         return this.fetchWorkspace(this.selectedUser);
       })).subscribe(response => {
       console.log("fetched workspace after editing the workspace");
-      if (this.currentWorkspace) {
-        this.openWorkspace(this.currentWorkspace);
-      }
+      // if (this.currentWorkspace) {
+      //   this.openWorkspace(this.currentWorkspace);
+      // }
     }, error => {
       this.loggerService.error("Unable to fetch workspace after editing");
     });
+  }
+
+  fetchWorkspace(user): any {
+    return this.apiService.get("/api/v1/profile/" + user.email).pipe(switchMap(response => {
+      let profiles = response.data;
+      this.profile = [];
+      for (let workspace of profiles.workspace) {
+        let newWorkspace = {};
+        newWorkspace["name"] = workspace.name;
+        newWorkspace["description"] = workspace.description;
+        newWorkspace["interestedMetrics"] = workspace.interested_metrics;
+        newWorkspace["editingWorkspace"] = false;
+        if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
+          this.currentWorkspace.interestedMetrics = newWorkspace["interestedMetrics"];
+        }
+        this.profile.push(newWorkspace);
+      }
+      this.showWorkspace = true;
+      return of(true);
+    }));
   }
 
   submitWorkspace(): any {
@@ -217,6 +277,7 @@ export class WorkspaceComponent implements OnInit {
     payload["email"] = this.selectedUser.email;
     let workspace = {};
     workspace["name"] = this.workspaceName;
+    workspace["description"] = this.description;
     workspace["interested_metrics"] = [];
     payload["workspace"] = workspace;
     return this.apiService.post("/api/v1/profile/", payload).pipe(switchMap(response => {
@@ -228,7 +289,6 @@ export class WorkspaceComponent implements OnInit {
   openWorkspace(workspace): void {
     this.showChartsForWorkspace = true;
     this.currentWorkspace = workspace;
-    this.gridLength = 2;
     this.grids = [...workspace["interestedMetrics"]];
   }
 
@@ -237,6 +297,7 @@ export class WorkspaceComponent implements OnInit {
   }
 
   editWorkspace(workspace): void {
+    this.currentWorkspace = workspace;
     workspace.editingWorkspace = true;
   }
 
@@ -250,18 +311,35 @@ export class WorkspaceComponent implements OnInit {
     this.createError = null;
   }
 
+  onChangeSubscribeTo(subscribed, metricId): void {
+    Object.keys(this.currentWorkspace.interestedMetrics[0]).forEach(key => {
+      if (Number(key) === Number(metricId)) {
+        this.currentWorkspace.interestedMetrics[0][key]["subscribe"] = subscribed;
+      }
+    });
+  }
 
-  // submitWorkspace(user): void {
-  //   let payload = {};
-  //   payload["email"] = user.email;
-  //   payload["interested_metrics"] = user.interested_metrics;
-  //   this.apiService.post("/api/v1/profile", payload).subscribe(response => {
-  //     this.profile = response.data;
-  //     this.showWorkspace = true;
-  //   }, error => {
-  //     this.loggerService.error("Unable to fetch users");
-  //   });
-  //   this.fetchWorkspace(user);
-  //   this.editingWorkspace = false;
-  // }
+  onChangeTrack(tracking, metricId): void {
+    Object.keys(this.currentWorkspace.interestedMetrics[0]).forEach(key => {
+      if (Number(key) === Number(metricId)) {
+        this.currentWorkspace.interestedMetrics[0][key]["track"] = tracking;
+      }
+    });
+  }
+
+  saveWorkspace(): void {
+    console.log("hello");
+    let payload = {};
+    payload["email"] = this.selectedUser.email;
+    payload["workspace_name"] = this.currentWorkspace.name;
+    payload["description"] = this.currentWorkspace.description;
+    payload["interested_metrics"] = this.currentWorkspace.interestedMetrics;
+    this.apiService.post("/api/v1/profile/edit_workspace/" + this.selectedUser.email, payload).subscribe(response => {
+      this.loggerService.success(`Edited ${this.selectedUser.email} ${this.currentWorkspace.name}`);
+      this.fetchWorkspaceAfterEditing();
+    }, error => {
+      this.loggerService.error(`Edit failed for ${this.selectedUser.email} ${this.currentWorkspace.name}`);
+    });
+  }
+
 }

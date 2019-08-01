@@ -530,9 +530,13 @@ class User(FunModel):
     def __str__(self):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
 
-class PerformanceUserProfile(FunModel):
-    email = models.EmailField(max_length=60, unique=True)
-    workspace = JSONField(default=[])
+class PerformanceUserWorkspaces(FunModel):
+    email = models.EmailField(max_length=60)
+    interested_metrics = JSONField(default=[])
+    name = models.TextField(default="")
+    description = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
 
     def __str__(self):
         return (str(self.__dict__))

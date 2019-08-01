@@ -548,47 +548,10 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
-        metrics['input_platform'] = self.platform
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            teramark_begin = False
-            for line in self.lines:
-                if "TeraMark Begin" in line:
-                    teramark_begin = True
-                if "TeraMark End" in line:
-                    teramark_begin = False
-                if teramark_begin:
-                    m = re.search(
-                        r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}',
-                        line)
-                    if m:
-                        input_type = m.group("type")
-                        input_operation = m.group("operation")
-                        input_effort = int(m.group("effort"))
-                        bandwidth_json = json.loads(m.group("throughput_json"))
-                        output_bandwidth_avg = bandwidth_json['value']
-                        output_bandwidth_avg_unit = bandwidth_json["unit"]
-                        latency_json = json.loads(m.group("latency_json"))
-                        output_latency_avg = latency_json['value']
-                        output_latency_unit = latency_json["unit"]
-
-                        fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
-                                                                                            input_effort,
-                                                                                            bandwidth_json))
-                        metrics["input_type"] = input_type
-                        metrics["input_operation"] = input_operation
-                        metrics["input_effort"] = input_effort
-                        metrics["output_bandwidth_avg"] = output_bandwidth_avg
-                        metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
-                        metrics["output_latency_avg"] = output_latency_avg
-                        metrics["output_latency_avg_unit"] = output_latency_unit
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        if input_type == "Deflate":
-                            MetricHelper(model=TeraMarkZipDeflatePerformance).add_entry(**d)
-                        else:
-                            MetricHelper(model=TeraMarkZipLzmaPerformance).add_entry(**d)
-
+            parsed_result = MetricParser().parse_it(model_name="TeraMarkZip" ,logs=self.lines,
+                                                    auto_add_to_db=False,date_time=self.dt, platform=self.platform)
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -637,49 +600,8 @@ class TeraMarkNuTransitPerformanceTc(PalladiumPerformanceTc):
     def run(self):
         try:
             fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
-            for file in self.lines:
-                for line in file:
-                    metrics = collections.OrderedDict()
-                    if "flow_type" in line:
-                        if line["flow_type"] in nu_transit_flow_types:
-                            line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                        metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                        metrics["input_mode"] = line.get("mode", "")
-                        metrics["input_version"] = line["version"]
-                        metrics["input_frame_size"] = line["frame_size"]
-                        date_time = get_time_from_timestamp(line["timestamp"])
-                        metrics["output_throughput"] = (float(
-                            line["throughput"]) / 1000) if "throughput" in line and line[
-                            "throughput"] != -1 else -1
-                        metrics["output_pps"] = (float(
-                            line["pps"]) / 1000000) if "pps" in line and line[
-                            "pps"] != -1 else -1
-                        metrics["output_latency_max"] = line.get("latency_max", -1)
-                        metrics["output_latency_min"] = line.get("latency_min", -1)
-                        metrics["output_latency_avg"] = line.get("latency_avg", -1)
-                        if self.model == "NuTransitPerformance":
-                            metrics["output_latency_P99"] = line.get("latency_P99", -1)
-                            metrics["output_latency_P90"] = line.get("latency_P90", -1)
-                            metrics["output_latency_P50"] = line.get("latency_P50", -1)
-                        else:
-                            metrics["input_half_load_latency"] = line.get("half_load_latency", False)
-                        metrics["input_num_flows"] = line.get("num_flows", 512000)
-                        metrics["input_offloads"] = line.get("offloads", False)
-                        metrics["input_protocol"] = line.get("protocol", "UDP")
-                        metrics["output_jitter_max"] = line.get("jitter_max", -1)
-                        metrics["output_jitter_min"] = line.get("jitter_min", -1)
-                        metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
-                        fun_test.log(
-                            "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
-                                metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
-                                metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        d["input_date_time"] = date_time
-                        if date_time.year >= 2019:
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=False, platform=self.platform)
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
