@@ -671,6 +671,10 @@ class ComE(Linux):
         self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
         return True
 
+    def setup_tools(self):
+        if not self.command_exists("fio"):
+            self.sudo_command("apt install -y fio")
+
     def cleanup_dpc(self):
         # self.command("cd $WORKSPACE/FunControlPlane")
         self.sudo_command("pkill dpc")
@@ -1280,7 +1284,7 @@ class Fs(object, ToDictMixin):
         return True
 
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")
     fs.get_bmc().position_support_scripts()
     # fs.bootup(reboot_bmc=False)
@@ -1289,3 +1293,8 @@ if __name__ == "__main__":
     # come = fs.get_come()
     # come.detect_pfs()
     # come.setup_dpc()
+
+
+if __name__ == "__main__":
+    come = ComE(host_ip="fs21-come.fungible.local", ssh_username="fun", ssh_password="123")
+    print come.setup_tools()
