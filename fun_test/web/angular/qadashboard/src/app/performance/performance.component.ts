@@ -1021,7 +1021,8 @@ export class PerformanceComponent implements OnInit {
     this.workspace = [];
     for (let flatNode of flatNodes) {
       if (!(flatNode.node.metricId in metricDetails)) {
-        metricDetails[flatNode.node.metricId] = {"subscribe": flatNode.subscribe};
+        metricDetails[flatNode.node.metricId] = {"subscribe": flatNode.subscribe, "track": flatNode.track,
+          "lineage": flatNode.lineage};
       }
     }
     this.workspace.push(metricDetails);
@@ -1043,7 +1044,7 @@ export class PerformanceComponent implements OnInit {
 
   getInterestedNodes = () => {
     return this.flatNodes.filter(flatNode => {
-      return flatNode.track
+      return flatNode.track || flatNode.subscribe
     })
   };
 
@@ -1057,12 +1058,20 @@ export class PerformanceComponent implements OnInit {
     }
   }
 
-  onChangeSubscribeTo(subscribed, flatNode): void {
-    flatNode.subscribe = subscribed;
+  onChangeSubscribeTo(subscribed, metricId): void {
+    for (let flatNode of this.flatNodes) {
+      if (flatNode.node.metricId == metricId) {
+        flatNode.subscribe = subscribed;
+      }
+    }
   }
 
-  onChangeTrack(tracking, flatNode): void {
-    flatNode.track = tracking;
+  onChangeTrack(tracking, metricId): void {
+    for (let flatNode of this.flatNodes) {
+      if (flatNode.node.metricId == metricId) {
+        flatNode.track = tracking;
+      }
+    }
   }
 
   showNonAtomicMetric = (flatNode) => {

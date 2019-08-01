@@ -52,16 +52,13 @@
                    (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a><span
                 *ngIf="flatNode.node.workInProgress">&nbsp;<app-smart-label [value]="'work in progress'"
                                                                             [type]="'warning'"></app-smart-label></span>
-                <span *ngIf="flatNode.showAddLeaf">&nbsp;&nbsp;&nbsp;Subscribe: &nbsp;
-                  <!--<label class="switch"-->
-                                                                                          <!--style="margin: 0;-->
-                <!--vertical-align: middle; padding: 0">-->
-                  <!--<input type="checkbox" [checked]="flatNode.notify" [(ngModel)]="flatNode.notify"-->
-                         <!--class="switch" data-toggle="toggle">-->
-                  <!--<span class="slider round"></span>-->
-                <!--</label>&nbsp;-->
+                <span *ngIf="flatNode.showAddLeaf">&nbsp;&nbsp;&nbsp;Subscribe:&nbsp;
+
                   <app-toggle-button [checked]="flatNode.subscribe"
-                                     (changed)="onChangeSubscribeTo($event, flatNode)"></app-toggle-button>
+                                     (changed)="onChangeSubscribeTo($event, flatNode.node.metricId)"></app-toggle-button>
+                  &nbsp;Track:&nbsp;
+                  <app-toggle-button [checked]="flatNode.track"
+                                     (changed)="onChangeTrack($event, flatNode.node.metricId)"></app-toggle-button>&nbsp;
                   <i class="fa fa-times fa-fw close-color"
                      (click)="removeFromList(flatNode.node.metricId)"></i>
                </span>
@@ -88,10 +85,6 @@
             </td>
             <td *ngIf="!flatNode.special && !selectMode" class="text-center">
               <div class="score-label">
-                <!--<span style="vertical-align: top"-->
-                <!--[innerHTML]="getTrendHtml(flatNode.node) | safeHtml">-->
-                <!---->
-                <!--</span>-->
                 <span style="vertical-align: top;">
                     <span *ngIf="flatNode.node.chartName!='All metrics'">
                       <span *ngIf="flatNode.node.trend > 0">
@@ -185,8 +178,8 @@
           </tr>
         </ng-container>
       </table>
-      <app-smart-label *ngIf="selectMode" [simulateLink]="false" [type]="'passed'" [value]="'Submit'"
-                             (click)="submitInterestedMetrics()"></app-smart-label>
+      <button *ngIf="selectMode" type="button" class="btn btn-success btn-sm" (click)="submitInterestedMetrics()">
+        Submit</button>
     </div>
     <!-- right side of the perf page dispalying the charts -->
     <div *ngIf="!selectMode" class="col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col">

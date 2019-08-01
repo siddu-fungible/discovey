@@ -1,6 +1,7 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.models import User, PerformanceUserProfile
+from django.core.exceptions import ObjectDoesNotExist
 import json
 
 
@@ -19,7 +20,10 @@ def users(request, id):
         new_user = User(first_name=first_name, last_name=last_name, email=email)
         new_user.save()
         result = new_user.to_dict()
-        PerformanceUserProfile(email=email).save()
+        try:
+            perf_user = PerformanceUserProfile.objects.get(email=email)
+        except ObjectDoesNotExist:
+            PerformanceUserProfile(email=email).save()
 
     elif request.method == "GET":
         users = User.objects.all().order_by('first_name')
@@ -35,7 +39,7 @@ def users(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def profile(request, id):
+def profile(request, email, workspace_name=None):
     result = None
     if request.method == "POST":
         request_json = json.loads(request.body)
@@ -61,11 +65,14 @@ def profile(request, id):
         result = profile.to_dict()
 
     elif request.method == "GET":
-        profile = PerformanceUserProfile.objects.get(email=id)
+        profile = PerformanceUserProfile.objects.get(email=email)
         result = profile.to_dict()
     elif request.method == "DELETE":
-        profile = PerformanceUserProfile.objects.get(id=id)
-        profile.delete()
+        profile = PerformanceUserProfile.objects.get(email=email)
+        for ws in profile.workspace:
+            if ws["name"] == workspace_name:
+                profile.workspace.remove(ws)
+        profile.save()
     return result
 
 

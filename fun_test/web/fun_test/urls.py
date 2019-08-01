@@ -195,6 +195,7 @@ users_urls = [
 
 api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
+    url(r'^profile/(.*)/(.*)$', users.profile),
     url(r'^profile/?(.*)?$', users.profile),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),
     url(r'^regression/suite_executions/?(.*)?$', regression.suite_executions),

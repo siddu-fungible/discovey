@@ -12,14 +12,3 @@
   display: flex;
   height: inherit;
 }
-
-.flex-container > div {
-  padding-right: 10px;
-  height: inherit;
-  justify-content: center;
-}
-
-.flex-container-wrapper{
-  display: flex;
-  flex-direction: column;
-}
