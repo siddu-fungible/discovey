@@ -197,7 +197,7 @@ class MyScript(FunTestScript):
                 IPSEC_ENC_SINGLE_TUNNEL, IPSEC_ENC_MULTI_TUNNEL, IPSEC_DEC_MULTI_TUNNEL, IPSEC_DEC_SINGLE_TUNNEL,
                 VOLTEST_LSV, VOLTEST_LSV_4, CHANNEL_PARALL, SOAK_FLOWS_BUSY_LOOP, SOAK_FLOWS_MEMCPY, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_S1]
-        self.lsf_status_server.workaround(tags=tags)
+        # self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
@@ -548,47 +548,10 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
-        metrics['input_platform'] = self.platform
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            teramark_begin = False
-            for line in self.lines:
-                if "TeraMark Begin" in line:
-                    teramark_begin = True
-                if "TeraMark End" in line:
-                    teramark_begin = False
-                if teramark_begin:
-                    m = re.search(
-                        r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}',
-                        line)
-                    if m:
-                        input_type = m.group("type")
-                        input_operation = m.group("operation")
-                        input_effort = int(m.group("effort"))
-                        bandwidth_json = json.loads(m.group("throughput_json"))
-                        output_bandwidth_avg = bandwidth_json['value']
-                        output_bandwidth_avg_unit = bandwidth_json["unit"]
-                        latency_json = json.loads(m.group("latency_json"))
-                        output_latency_avg = latency_json['value']
-                        output_latency_unit = latency_json["unit"]
-
-                        fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
-                                                                                            input_effort,
-                                                                                            bandwidth_json))
-                        metrics["input_type"] = input_type
-                        metrics["input_operation"] = input_operation
-                        metrics["input_effort"] = input_effort
-                        metrics["output_bandwidth_avg"] = output_bandwidth_avg
-                        metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
-                        metrics["output_latency_avg"] = output_latency_avg
-                        metrics["output_latency_avg_unit"] = output_latency_unit
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        if input_type == "Deflate":
-                            MetricHelper(model=TeraMarkZipDeflatePerformance).add_entry(**d)
-                        else:
-                            MetricHelper(model=TeraMarkZipLzmaPerformance).add_entry(**d)
-
+            parsed_result = MetricParser().parse_it(model_name="DummyTeramarkZip" ,logs=self.lines,
+                                                    auto_add_to_db=False,date_time=self.dt, platform=self.platform)
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -637,49 +600,8 @@ class TeraMarkNuTransitPerformanceTc(PalladiumPerformanceTc):
     def run(self):
         try:
             fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
-            for file in self.lines:
-                for line in file:
-                    metrics = collections.OrderedDict()
-                    if "flow_type" in line:
-                        if line["flow_type"] in nu_transit_flow_types:
-                            line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                        metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                        metrics["input_mode"] = line.get("mode", "")
-                        metrics["input_version"] = line["version"]
-                        metrics["input_frame_size"] = line["frame_size"]
-                        date_time = get_time_from_timestamp(line["timestamp"])
-                        metrics["output_throughput"] = (float(
-                            line["throughput"]) / 1000) if "throughput" in line and line[
-                            "throughput"] != -1 else -1
-                        metrics["output_pps"] = (float(
-                            line["pps"]) / 1000000) if "pps" in line and line[
-                            "pps"] != -1 else -1
-                        metrics["output_latency_max"] = line.get("latency_max", -1)
-                        metrics["output_latency_min"] = line.get("latency_min", -1)
-                        metrics["output_latency_avg"] = line.get("latency_avg", -1)
-                        if self.model == "NuTransitPerformance":
-                            metrics["output_latency_P99"] = line.get("latency_P99", -1)
-                            metrics["output_latency_P90"] = line.get("latency_P90", -1)
-                            metrics["output_latency_P50"] = line.get("latency_P50", -1)
-                        else:
-                            metrics["input_half_load_latency"] = line.get("half_load_latency", False)
-                        metrics["input_num_flows"] = line.get("num_flows", 512000)
-                        metrics["input_offloads"] = line.get("offloads", False)
-                        metrics["input_protocol"] = line.get("protocol", "UDP")
-                        metrics["output_jitter_max"] = line.get("jitter_max", -1)
-                        metrics["output_jitter_min"] = line.get("jitter_min", -1)
-                        metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
-                        fun_test.log(
-                            "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
-                                metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
-                                metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        d["input_date_time"] = date_time
-                        if date_time.year >= 2019:
-                            metric_model = app_config.get_metric_models()[self.model]
-                            MetricHelper(model=metric_model).add_entry(**d)
-                            add_version_to_jenkins_job_id_map(date_time=date_time, version=metrics["input_version"])
-
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=False, platform=self.platform)
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1080,66 +1002,66 @@ class VoltestBlt12PerformanceTc(PalladiumPerformanceTc):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTc())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
-    myscript.add_test_case(FlowTestPerformanceTc())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
+    # myscript.add_test_case(TeraMarkCryptoPerformanceTc())
+    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
+    # myscript.add_test_case(FlowTestPerformanceTc())
     myscript.add_test_case(TeraMarkZipPerformanceTc())
-    myscript.add_test_case(TeraMarkDfaPerformanceTc())
-    myscript.add_test_case(TeraMarkJpegPerformanceTc())
-    myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
-    myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
-    myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
-    myscript.add_test_case(SoakDmaMemsetPerformanceTc())
-    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTc())
-    myscript.add_test_case(F1FlowTestPerformanceTc())
-    myscript.add_test_case(TeraMarkNfaPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
-    myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTc())
-    myscript.add_test_case(RcnvmeReadAllPerformanceTc())
-    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
-    myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
-    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
-    myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperTls32TunnelPerformanceTc())
-    myscript.add_test_case(JuniperTls64TunnelPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
-    myscript.add_test_case(WuLatencyUngatedPerformanceTc())
-    myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
-    myscript.add_test_case(SetNetworkingStatusTc())
-    myscript.add_test_case(VoltestLsvPerformanceTc())
-    myscript.add_test_case(VoltestLsv4PerformanceTc())
-    myscript.add_test_case(ChannelParallPerformanceTc())
-    myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
-    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
-    myscript.add_test_case(VoltestBlt1PerformanceTc())
-    myscript.add_test_case(VoltestBlt8PerformanceTc())
-    myscript.add_test_case(VoltestBlt12PerformanceTc())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTc())
+    # myscript.add_test_case(TeraMarkJpegPerformanceTc())
+    # myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
+    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
+    # myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemsetPerformanceTc())
+    # myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTc())
+    # myscript.add_test_case(F1FlowTestPerformanceTc())
+    # myscript.add_test_case(TeraMarkNfaPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
+    # myscript.add_test_case(JuniperCryptoSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperCryptoMultiTunnelPerformanceTc())
+    # myscript.add_test_case(RcnvmeReadAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
+    # myscript.add_test_case(JuniperTlsSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperTls32TunnelPerformanceTc())
+    # myscript.add_test_case(JuniperTls64TunnelPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
+    # myscript.add_test_case(WuLatencyUngatedPerformanceTc())
+    # myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
+    # myscript.add_test_case(SetNetworkingStatusTc())
+    # myscript.add_test_case(VoltestLsvPerformanceTc())
+    # myscript.add_test_case(VoltestLsv4PerformanceTc())
+    # myscript.add_test_case(ChannelParallPerformanceTc())
+    # myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
+    # myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
+    # myscript.add_test_case(VoltestBlt1PerformanceTc())
+    # myscript.add_test_case(VoltestBlt8PerformanceTc())
+    # myscript.add_test_case(VoltestBlt12PerformanceTc())
 
     myscript.run()
