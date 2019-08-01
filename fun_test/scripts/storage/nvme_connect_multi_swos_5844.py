@@ -628,7 +628,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                                                     pcap_fail_file))
                     fun_test.log(command_result)
 
-                    fun_test.sleep("Wait for couple of seconds before taking tcpdump", 10)
+                    fun_test.sleep("Wait for couple of seconds before taking tcpdump", 2)
 
                     pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
                         post_fix_name="{}".format(pcap_file.split('/')[-1]))
@@ -659,8 +659,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
                         #self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGTERM $i;done")
                         self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
-
-                        fun_test.sleep("Wait for couple of seconds after taking tcpdump", 1)
 
                         fun_test.scp(source_port=self.host_handles[key].ssh_port,
                                      source_username=self.host_handles[key].ssh_username,
