@@ -1008,6 +1008,7 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
             elif start_counter >= max_loop_count:
                 sequencer_passed = True
                 fun_test.log("Sequencer did not stop in expected time. Forcefully looping out")
+            start_counter += 1
 
     except Exception as ex:
         fun_test.critical(str(ex))
