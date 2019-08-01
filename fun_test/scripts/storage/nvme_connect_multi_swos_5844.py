@@ -639,9 +639,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                                              conn_no))
                         # self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGKILL $i;done")
                         self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
-
-                        # Get one PASS log too.
-                        if conn_no == 0:
+                        # Get one tcpdump PASS log too.
+                        if conn_no == 1:
                             fun_test.scp(source_port=self.host_handles[key].ssh_port,
                                         source_username=self.host_handles[key].ssh_username,
                                         source_password=self.host_handles[key].ssh_password,
