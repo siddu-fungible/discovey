@@ -967,7 +967,8 @@ class Fs(object, ToDictMixin):
             context=None,
             setup_bmc_support_files=None,
             fun_cp_callback=None,
-            power_cycle_come=False):  #TODO
+            power_cycle_come=False,
+            already_deployed=False):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -978,9 +979,10 @@ class Fs(object, ToDictMixin):
             fs_spec = am.get_fs_by_name(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
-        if not tftp_image_path:
-            tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
-        fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
+        if not already_deployed:
+            if not tftp_image_path:
+                tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
+            fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
         if not boot_args:
             boot_args = fun_test.get_build_parameter("BOOTARGS")
