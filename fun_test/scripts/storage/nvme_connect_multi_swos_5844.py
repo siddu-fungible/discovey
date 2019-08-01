@@ -625,7 +625,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     except:
                         nvme_connect_failed = True
                         fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed,
-                                                                                                    pcap_fail_file))
+                                                                                                    pcap_file))
                     fun_test.log(command_result)
 
                     fun_test.sleep("Wait for couple of seconds before taking tcpdump", 2)
@@ -654,7 +654,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     else:
                         fun_test.log(
                             "nvme connect for host {} for iteration {} is failed. Check pcap file {} for errors".format(
-                                self.host_handles[key], conn_no, pcap_fail_file))
+                                self.host_handles[key], conn_no, pcap_file))
 
                         #self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGTERM $i;done")
                         self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
@@ -668,9 +668,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         fun_test.add_auxillary_file(
                             description="Host {} NVME connect pcap".format(self.host_handles[key]),
                             filename=pcap_artifact_file)
-
-                        import pdb;
-                        pdb.set_trace()
 
                     fun_test.test_assert(expression=not nvme_connect_failed,
                                          message="nvme connect hit issue - SWOS-5844")
