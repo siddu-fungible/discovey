@@ -52,6 +52,10 @@ class ECVolumeLevelScript(FunTestScript):
             self.num_volume = 1
 
         fun_test.log("Global Config: {}".format(self.__dict__))
+        job_inputs = fun_test.get_job_inputs()
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        fun_test.shared_variables["post_result"] = job_inputs[
+            "post_result"] if job_inputs and "post_result" in job_inputs else True
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0,
@@ -197,7 +201,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 perf_stats['job_name'] = self.read_fio_cmd_args['name']
                 perf_stats['size'] = self.read_fio_cmd_args['size']
 
-                if fun_global.is_production_mode():
+                if fun_global.is_production_mode() and fun_test.shared_variables["post_result"]:
                     fun_test.log("Updating the following stats on database: {}".format(perf_stats))
                     self.post_results(test=testcase, test_stats=perf_stats)  # publish only compression stats on db
                 table_row1.insert(0, "<b>{}</b>".format(mode.capitalize()))

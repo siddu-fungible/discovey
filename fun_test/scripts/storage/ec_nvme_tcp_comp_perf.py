@@ -40,8 +40,11 @@ class ECVolumeLevelScript(FunTestScript):
                 setattr(self, k, v)
 
         job_inputs = fun_test.get_job_inputs()
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
         if job_inputs and "boot_args" in job_inputs:
             self.bootargs = job_inputs["boot_args"]
+        fun_test.shared_variables["post_result"] = job_inputs[
+            "post_result"] if job_inputs and "post_result" in job_inputs else True
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0,
@@ -274,7 +277,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             row_data_list.append(row_data_dict[i])
 
                     table_data_rows.append(row_data_list)
-                    if fun_global.is_production_mode():
+                    if fun_global.is_production_mode() and fun_test.shared_variables["post_result"]:
                         post_results(testcase,
                                      test_method,
                                      fun_test.shared_variables["db_log_time"],
