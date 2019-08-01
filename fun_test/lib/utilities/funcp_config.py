@@ -265,14 +265,11 @@ class FunControlPlaneBringup:
             # ping MPG IPs before executing abstract config
             ping_mpg = linux_obj.ping(self.mpg_ips[f1])
 
-            if ping_mpg:
-                fun_test.test_assert(expression=True, message="MPG IP %s is reachable" % self.mpg_ips[f1])
-            else:
+            if not ping_mpg:
                 fun_test.sleep(message="Waiting to retry mpg ping")
                 ping_mpg = linux_obj.ping(self.mpg_ips[f1], count=15)
-                if not ping_mpg:
-                    fun_test.critical(message="cannot ping MPG IP %s from COMe" % self.mpg_ips[f1])
-                    continue
+
+            fun_test.test_assert(expression=ping_mpg, message="Ping MPG IP %s from COMe" % self.mpg_ips[f1])
 
             file_contents = None
             file_name = str(f1).strip() + "_abstract.json"
