@@ -893,6 +893,7 @@ class Fs(object, ToDictMixin):
             self.validate_u_boot_version = not disable_u_boot_version_validation
         self.bootup_worker = None
         self.u_boot_complete = False
+        self.come_initialized = False
 
     def __str__(self):
         name = self.spec.get("name", None)
@@ -1079,8 +1080,6 @@ class Fs(object, ToDictMixin):
                 if self.fun_cp_callback:
                     fun_test.log("Calling fun CP callback from Fs")
                 #    self.fs.fun_cp_callback(self.fs.get_come())
-                self.come_initialized = True
-
                 self.come_initialized = True
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
             else:
