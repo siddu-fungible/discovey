@@ -1,4 +1,4 @@
-<div *ngIf="isDone" style="width:100%;margin: 0 auto">
+<div *ngIf="isDone">
   <fun-chart
     [title]="'<a href = /performance>F1 performance (today)</a>'"
     [y1AxisLabel]="'Results'"
@@ -6,7 +6,8 @@
     [xValues]="x1Values"
     [enableLegend]="false"
     [chartType]="'vertical_colored_bar_chart'"
-    [clickURLs]="clickURLs">
+    [clickURLs]="clickURLs"
+    [chartHeight]="300">
   </fun-chart>
 </div>
 

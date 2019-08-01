@@ -26,6 +26,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() backgroundColor: string = null;
   @Input() seriesColors: string[] = null;
   @Input() clickURLs;
+  @Input() chartHeight;
   chart: any;
   point: any = null;
 
@@ -148,6 +149,7 @@ export class FunChartComponent implements OnInit, OnChanges {
     } else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
         chart: {
+          height: this.chartHeight,
           type: "column"
         },
         title: {

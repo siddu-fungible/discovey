@@ -168,67 +168,43 @@
 <!--</div>-->
 
 
-
-
-
-<div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-start">
-  <div style="display: flex">
-    <div class="card">
-          <div class="card-header">
-            Release progress
-          </div>
-          <div class="card-body">
-            <div>
-              <a href="http://qa-ubuntu-02/testrail/index.php?/runs/view/25&group_by=cases:section_id&group_order=asc">Inspur</a>
-            </div>
-            <div>
-              <a
-                href="http://qa-ubuntu-02/testrail/index.php?/suites/view/27&group_by=cases:section_id&group_order=asc&group_id=280">Regex</a>
-            </div>
-            <span>(Username: regression@fungible.com, Password: fun123)</span>
-
-          </div>
-        </div>
-
+<div class="flex-container">
+  <div class="dashboard-card" style="flex-basis: 250px">
+    Release progress
+    <div>
+      <a
+        href="http://qa-ubuntu-02/testrail/index.php?/runs/view/25&group_by=cases:section_id&group_order=asc">Inspur</a>
+    </div>
+    <div>
+      <a
+        href="http://qa-ubuntu-02/testrail/index.php?/suites/view/27&group_by=cases:section_id&group_order=asc&group_id=280">Regex</a>
+    </div>
+    <span>(Username: regression@fungible.com, Password: fun123)</span>
   </div>
 </div>
 
-<div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-start">
-  <div style="display: flex">
-    <div class="card">
-          <div class="card-header">
-            Performance
-          </div>
-          <div class="card-body">
-            <app-performance-summary-widget></app-performance-summary-widget>
-          </div>
-        </div>
-
+<div class="flex-container">
+  <div class="dashboard-card" style="flex-basis: 500px; padding: 10px">
+    <app-performance-summary-widget></app-performance-summary-widget>
   </div>
-  <div style="display: flex">
-        <div class="card">
-          <div class="card-header">
-            <p>Regression</p>
-          </div>
-          <div class="card-body">
-            <app-regression-summary-widget></app-regression-summary-widget>
-          </div>
-        </div>
-
+  <div class="dashboard-card" style="flex-basis: 500px; padding: 10px">
+    <app-regression-summary-widget></app-regression-summary-widget>
   </div>
 
 </div>
 
 
-
-<div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-start">
-  <div style="display: flex">
+<div class="flex-container">
+      <div class="flex-container" style="flex-direction: column; flex-basis: 250px">
+  <div style="padding: 10px; flex-basis: 250px">
+        <app-smoke-test-storage-widget></app-smoke-test-storage-widget>
+    </div>
+  </div>
+  <div style="padding: 10px; flex-basis: 250px; height: 250px">
     <app-network-sanity-widget></app-network-sanity-widget>
   </div>
-  <div style="display: flex">
-    <app-smoke-test-storage-widget></app-smoke-test-storage-widget>
-  </div>
 </div>
+
 
 
 

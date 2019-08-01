@@ -107,10 +107,10 @@ export class RegressionSummaryWidgetComponent implements OnInit {
   }
 
   populateResults(index, numPassed, numFailed, numNotRun, numInProgress) {
-    this.y1Values[0].data[index] = 5; //make these local vars, pass to populateResults
-    this.y1Values[1].data[index] = 5;
-    this.y1Values[2].data[index] = 5;
-    this.y1Values[3].data[index] = 5;
+    this.y1Values[0].data[index] = numPassed; //make these local vars, pass to populateResults
+    this.y1Values[1].data[index] = numFailed;
+    this.y1Values[2].data[index] = numNotRun;
+    this.y1Values[3].data[index] = numInProgress;
     this.y1Values = [...this.y1Values];
   }
 }

@@ -1,35 +1,20 @@
-#all-cards {
-  padding: 20px;
-  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
-}
 
-.card-header{
-  height: 50px;
-}
-
-
-.card {
+.dashboard-card {
   box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
   transition: 0.3s;
-  width: 500px;
-  margin: 20px;
+  margin: 10px;
 }
 
-.card:hover {
+.card-body {
+}
+
+.dashboard-card:hover {
   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
 }
 
 
-
 .flex-container {
   display: flex;
-  flex: 1 1 25%;
-  align-content: flex-start;
-  height: inherit;
-}
-
-.flex-container > div {
-  padding-right: 10px;
-  height: inherit;
-  justify-content: center;
+  justify-content: flex-start;
+  flex-direction: row;
 }
