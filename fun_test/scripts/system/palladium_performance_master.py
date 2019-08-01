@@ -550,7 +550,7 @@ class TeraMarkZipPerformanceTc(PalladiumPerformanceTc):
     def run(self):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            parsed_result = MetricParser().parse_it(model_name="DummyTeramarkZip" ,logs=self.lines,
+            parsed_result = MetricParser().parse_it(model_name="TeraMarkZip" ,logs=self.lines,
                                                     auto_add_to_db=False,date_time=self.dt, platform=self.platform)
             self.result = fun_test.PASSED
 

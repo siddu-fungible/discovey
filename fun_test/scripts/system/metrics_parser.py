@@ -107,7 +107,7 @@ class MetricParser():
             return self.boot_time(logs=logs, date_time=date_time, platform=platform)
         elif "NuTransit" in model_name:
             return self.teramark_nu_transit(logs=logs, date_time=date_time, platform=platform, model_name=model_name)
-        elif "DummyTeramarkZip" in model_name:
+        elif "TeraMarkZip" in model_name:
             return self.teramark_zip(logs=logs, date_time=date_time, platform=platform)
         else:
             return {}
