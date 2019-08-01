@@ -15,11 +15,13 @@ import re
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
 '''
 
+
 def fio_parser(arg1, host_index, **kwargs):
     fio_output = arg1.pcie_fio(**kwargs)
     fun_test.shared_variables["fio"][host_index] = fio_output
     fun_test.test_assert(fio_output, "Fio test for thread {}".format(host_index), ignore_on_success=True)
     arg1.disconnect()
+
 
 def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
     host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
@@ -38,7 +40,6 @@ def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
                  read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
-
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -185,7 +186,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Deploying of DUTs
         for dut_index in self.available_dut_indexes:
             self.topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                    1: {"boot_args": self.bootargs[1]}})
+                                                                   1: {"boot_args": self.bootargs[1]}})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -396,8 +397,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         for fs in fun_test.shared_variables["fs_objs"]:
             fs.cleanup()
 
-        #self.storage_controller.disconnect()
-        self.topology.cleanup()     # Why is this needed?
+        # self.storage_controller.disconnect()
+        self.topology.cleanup()  # Why is this needed?
+
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
     def describe(self):
@@ -424,32 +426,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        # Setting the list of numjobs and IO depth combo
-        # TODO: Check if block size is not required
-        if 'fio_jobs_iodepth' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['fio_jobs_iodepth']:
-            benchmark_parsing = False
-            fun_test.critical("Numjobs and IO depth combo to be used for this {} testcase is not available in "
-                              "the {} file".format(testcase, benchmark_file))
-
-        # Setting expected FIO results
-        if 'expected_fio_result' not in benchmark_dict[testcase] or not benchmark_dict[testcase]['expected_fio_result']:
-            benchmark_parsing = False
-            fun_test.critical("Benchmarking results for the block size and IO depth combo needed for this {} "
-                              "testcase is not available in the {} file".format(testcase, benchmark_file))
-
-        if "fio_sizes" in benchmark_dict[testcase]:
-            if len(self.fio_sizes) != len(self.expected_fio_result.keys()):
-                benchmark_parsing = False
-                fun_test.critical("Mismatch in FIO sizes and its benchmarking results")
-        elif "fio_jobs_iodepth" in benchmark_dict[testcase]:
-            if len(self.fio_jobs_iodepth) != len(self.expected_fio_result.keys()):
-                benchmark_parsing = False
-                fun_test.critical("Mismatch in numjobs and IO depth combo and its benchmarking results")
-
-        if 'fio_pass_threshold' not in benchmark_dict[testcase]:
-            self.fio_pass_threshold = .05
-            fun_test.log("Setting passing threshold to {} for this {} testcase, because its not set in the {} file".
-                         format(self.fio_pass_threshold, testcase, benchmark_file))
 
         if not hasattr(self, "num_ssd"):
             self.num_ssd = 12
@@ -457,13 +433,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.blt_count = 12
         if not hasattr(self, "no_of_nvme_connect"):
             self.no_of_nvme_connect = 10
-
-        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
-                     format(testcase, self.fio_jobs_iodepth))
-        fun_test.log("Benchmarking results going to be used for this {} testcase: \n{}".
-                     format(testcase, self.expected_fio_result))
-        # End of benchmarking json file parsing
 
         self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog = fun_test.shared_variables["syslog_level"]
@@ -503,7 +472,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.blt_count = job_inputs["blt_count"]
 
         if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]) :
+                and (not fun_test.shared_variables["blt"]["warmup_done"]):
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt"]["warmup_done"] = False
@@ -537,8 +506,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     uuid=cur_uuid,
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
-                #self.nvme_block_device.append(vol_details["name"])
+                fun_test.test_assert(command_result["status"],
+                                     "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
+                # self.nvme_block_device.append(vol_details["name"])
 
                 self.vol_list.append(vol_details)
 
@@ -566,22 +536,22 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                      format(self.transport_type, cur_uuid))
 
                 # Attach controller to BLTs
-                ns_id = 1   #ns_id is 1 since there is 1 vol per controller
+                ns_id = 1  # ns_id is 1 since there is 1 vol per controller
                 command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
-                                                                    vol_uuid=self.vol_list[i]["vol_uuid"],
-                                                                    ns_id=ns_id,
-                                                                    command_duration=self.command_timeout)
+                                                                                     vol_uuid=self.vol_list[i][
+                                                                                         "vol_uuid"],
+                                                                                     ns_id=ns_id,
+                                                                                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
-                                    format(self.thin_uuid_list[i], cur_uuid))
+                                     format(self.thin_uuid_list[i], cur_uuid))
                 self.vol_list[i]["vol_name"] = self.nvme_device + "n" + str(ns_id)
                 self.nvme_block_device.append(self.vol_list[i]["vol_name"])
                 self.vol_list[i]["ns_id"] = ns_id
 
             fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
 
-
-            # Setting the syslog level to 2
+            # Setting the syslog level to 6
             command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
             fun_test.test_assert(command_result["status"], "Setting syslog level to {}".format(self.syslog))
 
@@ -589,16 +559,17 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
                                           message="Checking syslog level")
 
-            for conn_no in range(0, self.no_of_nvme_connect):
+            for conn_no in range(1, self.no_of_nvme_connect + 1):
 
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
                     nqn = self.vol_list[i]["nqn"]
-                    self.host_handles[key].sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-                    self.host_handles[key].sudo_command("/etc/init.d/irqbalance stop")
-                    irq_bal_stat = self.host_handles[key].command("/etc/init.d/irqbalance status")
 
                     if conn_no == 0:
+
+                        self.host_handles[key].sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+                        self.host_handles[key].sudo_command("/etc/init.d/irqbalance stop")
+                        irq_bal_stat = self.host_handles[key].command("/etc/init.d/irqbalance status")
 
                         if "dead" in irq_bal_stat:
                             fun_test.log("IRQ balance stopped on {}".format(i))
@@ -607,7 +578,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                             install_status = self.host_handles[key].install_package("tuned")
                             fun_test.test_assert(install_status, "tuned installed successfully")
 
-                            self.host_handles[key].sudo_command("tuned-adm profile network-throughput && tuned-adm active")
+                            self.host_handles[key].sudo_command(
+                                "tuned-adm profile network-throughput && tuned-adm active")
 
                         command_result = self.host_handles[key].command("lsmod | grep -w nvme")
                         if "nvme" in command_result:
@@ -624,289 +596,119 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                             self.host_handles[key].modprobe("nvme_tcp")
                             self.host_handles[key].modprobe("nvme_fabrics")
 
-                    pcap_fail_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(str(self.host_handles[key]).split()[1], conn_no)
-                    self.host_handles[key].start_bg_process(command="sudo tcpdump -i enp216s0 -w {}".format(pcap_fail_file))
+                    pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(
+                        str(self.host_handles[key]).split()[1], conn_no)
+
+                    # self.host_handles[key].start_bg_process(command="sudo tcpdump -i enp216s0 -w {}".format(pcap_file))
+                    pcap_pid = self.host_handles[key].tcpdump_capture_start(interface="enp216s0",
+                                                                            tcpdump_filename=pcap_file, snaplen=1500)
                     nvme_connect_failed = False
 
                     try:
                         if hasattr(self, "nvme_io_q"):
                             command_result = self.host_handles[key].sudo_command(
-                                "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
-                                                                                  self.test_network["f1_loopback_ip"],
-                                                                                  self.transport_port,
-                                                                                  nqn,
-                                                                                  self.nvme_io_q,
-                                                                                  self.host_ips[i]))
+                                "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
+                                    unicode.lower(self.transport_type),
+                                    self.test_network["f1_loopback_ip"],
+                                    self.transport_port,
+                                    nqn,
+                                    self.nvme_io_q,
+                                    self.host_ips[i]), timeout=60)
                             fun_test.log(command_result)
                         else:
                             command_result = self.host_handles[key].sudo_command(
                                 "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
-                                                                            self.test_network["f1_loopback_ip"],
-                                                                            self.transport_port,
-                                                                            nqn,
-                                                                            self.host_ips[i]))
+                                                                                    self.test_network["f1_loopback_ip"],
+                                                                                    self.transport_port,
+                                                                                    nqn,
+                                                                                    self.host_ips[i]), timeout=60)
                     except:
                         nvme_connect_failed = True
-                        fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed, pcap_fail_file))
+                        fun_test.log("NVME connect failed - the status {} and pcap file  {}".format(nvme_connect_failed,
+                                                                                                    pcap_fail_file))
                     fun_test.log(command_result)
-
-                    last_command_result = self.host_handles[key].sudo_command("echo $?")
-                    fun_test.log(last_command_result)
-
-                    # exec_status = re.search(r"(\d+)", last_command_result , re.IGNORECASE | re.DOTALL | re.MULTILINE);
 
                     fun_test.sleep("Wait for couple of seconds before taking tcpdump", 10)
 
+                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name="{}".format(pcap_file.split('/')[-1]))
+
                     if nvme_connect_failed == False:
-                        fun_test.log("nvme connect for host {} for iteration {} is successful".format(self.host_handles[key], conn_no))
-                        # TCP Dump not required. Dont have to flush during kill
+                        fun_test.log(
+                            "nvme connect for host {} for iteration {} is successful".format(self.host_handles[key],
+                                                                                             conn_no))
                         # self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGKILL $i;done")
-                        self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGTERM $i;done")
+                        self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
+
+                        # Get one PASS log too.
+                        if conn_no == 0:
+                            fun_test.scp(source_port=self.host_handles[key].ssh_port,
+                                        source_username=self.host_handles[key].ssh_username,
+                                        source_password=self.host_handles[key].ssh_password,
+                                        source_ip=self.host_handles[key].host_ip,
+                                        source_file_path=pcap_file,
+                                        target_file_path=pcap_artifact_file)
+                            fun_test.add_auxillary_file(
+                                description="Host {} NVME connect pcap".format(self.host_handles[key]),
+                                filename=pcap_artifact_file)
+
                     else:
-                        fun_test.log("nvme connect for host {} for iteration {} is failed. Check pcap file {} for errors".format(self.host_handles[key], conn_no, pcap_fail_file))
-                        # TCP Dump required. Do it later.
-                        self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGTERM $i;done")
+                        fun_test.log(
+                            "nvme connect for host {} for iteration {} is failed. Check pcap file {} for errors".format(
+                                self.host_handles[key], conn_no, pcap_fail_file))
+
+                        #self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGTERM $i;done")
+                        self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
+
                         fun_test.sleep("Wait for couple of seconds after taking tcpdump", 1)
 
-                        pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name="SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(str(self.host_handles[key]).split()[1], conn_no))
                         fun_test.scp(source_port=self.host_handles[key].ssh_port,
                                      source_username=self.host_handles[key].ssh_username,
                                      source_password=self.host_handles[key].ssh_password,
                                      source_ip=self.host_handles[key].host_ip,
-                                     source_file_path=pcap_fail_file,
+                                     source_file_path=pcap_file,
                                      target_file_path=pcap_artifact_file)
-                        fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(self.host_handles[key]),
-                                                    filename=pcap_artifact_file)
+                        fun_test.add_auxillary_file(
+                            description="Host {} NVME connect pcap".format(self.host_handles[key]),
+                            filename=pcap_artifact_file)
 
-                    fun_test.test_assert(expression=not nvme_connect_failed, message="nvme connect hit issue - SWOS-5844")
+                        import pdb;
+                        pdb.set_trace()
+
+                    fun_test.test_assert(expression=not nvme_connect_failed,
+                                         message="nvme connect hit issue - SWOS-5844")
 
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
                     nqn = self.vol_list[i]["nqn"]
-                    command_result = self.host_handles[key].sudo_command("nvme disconnect -n {} -d nvme0n1".format(self.nqn))
+                    command_result = self.host_handles[key].sudo_command("nvme disconnect -n {}".format(self.nqn))
                     fun_test.log(command_result)
-
 
     def run(self):
         pass
-        testcase = self.__class__.__name__
-        test_method = testcase[3:]
-
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
-        # & read only modes
-        fio_result = {}
-        fio_output = {}
-        internal_result = {}
-        initial_volume_status = {}
-        final_volume_status = {}
-        diff_volume_stats = {}
-        initial_stats = {}
-        final_stats = {}
-        diff_stats = {}
-
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
-                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
-                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
-                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
-                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
-        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           "fio_job_name"]
-        table_data_rows = []
-
-        for combo in self.fio_jobs_iodepth:
-            thread_id = {}
-            end_host_thread = {}
-            iostat_thread = {}
-            thread_count = 1
-            final_fio_output = {}
-
-            for i in range(0, self.blt_count):
-                key = self.host_ips[i]
-                fio_result[combo] = {}
-                fio_output[combo] = {}
-                final_fio_output[combo] = {}
-                internal_result[combo] = {}
-                initial_volume_status[combo] = {}
-                final_volume_status[combo] = {}
-                diff_volume_stats[combo] = {}
-                initial_stats[combo] = {}
-                final_stats[combo] = {}
-                diff_stats[combo] = {}
-
-                end_host_thread[thread_count] = self.host_handles[key].clone()
-
-                for mode in self.fio_modes:
-                    tmp = combo.split(',')
-                    fio_block_size = self.fio_bs
-                    fio_numjobs = tmp[0].strip('() ')
-                    fio_iodepth = tmp[1].strip('() ')
-                    fio_result[combo][mode] = True
-                    internal_result[combo][mode] = True
-                    row_data_dict = {}
-                    row_data_dict["mode"] = mode
-                    row_data_dict["block_size"] = fio_block_size
-                    row_data_dict["iodepth"] = int(fio_iodepth) * int(fio_numjobs)
-                    row_data_dict["num_jobs"] = fio_numjobs
-                    file_size_in_gb = self.blt_details["capacity"] / 1073741824
-                    row_data_dict["size"] = str(file_size_in_gb) + "GB"
-
-                    fun_test.log("Running FIO {} only test for block size: {} using num_jobs: {}, IO depth: {}".
-                                 format(mode, fio_block_size, fio_numjobs, fio_iodepth))
-
-                    if int(fio_numjobs) == 1:
-                        cpus_allowed = "1"
-                    elif int(fio_numjobs) == 4:
-                        cpus_allowed = "1-4"
-                    elif int(fio_numjobs) > 4:
-                        cpus_allowed = "1-19,40-59"
-
-                    # Flush cache before read test
-                    self.end_host.sudo_command("sync")
-                    self.end_host.sudo_command("echo 3 > /proc/sys/vm/drop_caches")
-
-                    fun_test.log("Running FIO...")
-                    fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_" + self.fio_job_name[mode]
-                    # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
-                    fio_output[combo][mode] = {}
-                    final_fio_output[combo][mode] = {}
-                    """
-                    if hasattr(self, "test_blt_count") and self.test_blt_count == 1:
-                        fio_filename = fun_test.shared_variables["nvme_block_device_list"][0]
-                    else:
-                        fio_filename = fun_test.shared_variables["nvme_block_device_str"]
-                    """
-                    fio_filename = str(fun_test.shared_variables["vol_list"][i]["vol_name"])
-                    wait_time = self.num_hosts + 1 - thread_count
-                    """
-                    fio_output[combo][mode] = self.end_host.pcie_fio(filename=fio_filename,
-                                                                    numjobs=fio_numjobs,
-                                                                    rw=mode,
-                                                                    bs=fio_block_size,
-                                                                    iodepth=fio_iodepth,
-                                                                    name=fio_job_name,
-                                                                    cpus_allowed=cpus_allowed,
-                                                                    **self.fio_cmd_args)
-                    """
-                    thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                            func=fio_parser,
-                                                                            arg1=end_host_thread[thread_count],
-                                                                            host_index=thread_count,
-                                                                            filename=fio_filename,
-                                                                            rw=mode,
-                                                                            numjobs=fio_numjobs,
-                                                                            bs=fio_block_size,
-                                                                            iodepth=fio_iodepth,
-                                                                            name=fio_job_name,
-                                                                            cpus_allowed=cpus_allowed,
-                                                                            **self.fio_cmd_args)
-
-                    fun_test.sleep("Fio threadzz", seconds=1)
-                    thread_count += 1
-
-            fun_test.sleep("Fio threads started", 10)
-            for i in range(1, self.blt_count + 1):
-                fun_test.log("Joining fio thread {}".format(i))
-                fun_test.join_thread(fun_test_thread_id=thread_id[i])
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fun_test.shared_variables["fio"][i])
-                fun_test.test_assert(fun_test.shared_variables["fio"][i], "Fio threaded test")
-                fio_output[combo][mode][i] = {}
-                fio_output[combo][mode][i] = fun_test.shared_variables["fio"][i]
-            final_fio_output[combo][mode] = fio_output[combo][mode][1]
-
-            fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
-
-            for i in range(2, self.blt_count + 1):
-                # Boosting the fio output with the testbed performance multiplier
-                multiplier = 1
-                for op, stats in self.expected_fio_result[combo][mode].items():
-                    for field, value in stats.items():
-                        if field == "latency":
-                            fio_output[combo][mode][i][op][field] = int(round(value / multiplier))
-                        final_fio_output[combo][mode][op][field] += fio_output[combo][mode][i][op][field]
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval))
-
-            # Comparing the FIO results with the expected value for the current block size and IO depth combo
-            for op, stats in self.expected_fio_result[combo][mode].items():
-                for field, value in stats.items():
-                    # fun_test.log("op is: {} and field is: {} ".format(op, field))
-                    actual = final_fio_output[combo][mode][op][field]
-                    if "latency" in str(field):
-                        actual = int(round(actual / self.blt_count))
-                    row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
-                                                int((value * (1 + self.fio_pass_threshold))))
-
-            row_data_dict["fio_job_name"] = fio_job_name
-
-            # Building the table row for this variation for both the script table and performance dashboard
-            row_data_list = []
-            for i in table_data_cols:
-                if i not in row_data_dict:
-                    row_data_list.append(-1)
-                else:
-                    row_data_list.append(row_data_dict[i])
-
-            table_data_rows.append(row_data_list)
-            post_results("Multi_host_TCP", test_method, *row_data_list)
-
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Multiple hosts over TCP Perf Table", table_name=self.summary, table_data=table_data)
-
-        # Posting the final status of the test result
-        test_result = True
-        fun_test.log(fio_result)
-        fun_test.log(internal_result)
-        for combo in self.fio_jobs_iodepth:
-            for mode in self.fio_modes:
-                if not fio_result[combo][mode] or not internal_result[combo][mode]:
-                    test_result = False
-
-        fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
         pass
 
-class MultiHostFioRandRead(MultiHostVolumePerformanceTestcase):
+
+class MultiNvmeConnect(MultiHostVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Random read performance for muiltple hosts on TCP "
-                                      "with different levels of numjobs & iodepth & block size 4K",
+                              summary="Connect no of hosts with one blt each"
+                                      "and issue nvme connect disconnect continously until hit the issue",
                               steps='''
-        1. Create 1 BLT volumes on F1 attached
-        2. Create a storage controller for TCP and attach above volumes to this controller   
-        3. Connect to this volume from remote host
-        4. Run the FIO Random read test(without verify) for various block size and IO depth from the 
-        remote host and check the performance are inline with the expected threshold. 
+        1. Create 1 BLT volumes fro each host
+        2. Create a storage controller for TCP and attach above volumes to this controller. Strt TCPDUMP
+        3. Do NVME connect from each host see if you are hitting swos-5844.
+        4. If pass disconnect and do for next iteration. if fails stop TCPDUMP and collect the logs
         ''')
 
     def run(self):
         pass
 
 
-class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
-
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Random write performance for multiple hosts on TCP "
-                                      "with different levels of numjobs & iodepth & block size 4K",
-                              steps='''
-        1. Create 1 BLT volumes on F1 attached
-        2. Create a storage controller for TCP and attach above volumes to this controller   
-        3. Connect to this volume from remote host
-        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
-        remote host and check the performance are inline with the expected threshold. 
-        ''')
-
-
 if __name__ == "__main__":
-
     bltscript = MultiHostVolumePerformanceScript()
-    bltscript.add_test_case(MultiHostFioRandRead())
-    #bltscript.add_test_case(MultiHostFioRandWrite())
+    bltscript.add_test_case(MultiNvmeConnect())
     bltscript.run()
