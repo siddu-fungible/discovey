@@ -325,9 +325,7 @@ if __name__ == "__main__":
     owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
              "ec_inspur_fs_teramark_multivolume.py"
-    positive = False
     platform = FunPlatform.F1
-    y1_axis_title = PerfUnit.UNIT_OPS
     model_name = "BltVolumePerformance"
     description = "TBD"
 
@@ -340,10 +338,14 @@ if __name__ == "__main__":
         if "iops" in internal_chart_name:
             field = "iops"
             add_name = ""
+            y1_axis_title = PerfUnit.UNIT_OPS
+            positive = False
             chart_name = "IOPS, QDepth={}".format(iodepth)
         elif "latency" in internal_chart_name:
             field = "avg_latency"
             add_name = "-avg"
+            y1_axis_title = PerfUnit.UNIT_USECS
+            positive = True
             chart_name = "Latency, QDepth={}".format(iodepth)
 
         one_data_set = {}
