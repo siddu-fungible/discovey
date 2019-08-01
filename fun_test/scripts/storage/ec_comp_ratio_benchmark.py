@@ -282,7 +282,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         end_host_tmp_dir = "/tmp/"
         lsv_uuid = test_case_info['lsv_uuid']
 
-        end_host.flush_cache_mem(timeout=120)
+        end_host.flush_cache_mem(timeout=200)
         init_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
 
         table_rows = []
@@ -296,7 +296,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(end_host.check_file_directory_exists(corpus_dest_path),
                                  message="Check corpus got copied to mount dir",
                                  ignore_on_success=True)
-            end_host.flush_cache_mem(timeout=120)
+            end_host.flush_cache_mem(timeout=200)
 
             curr_write_count = get_lsv_write_count(storage_controller, lsv_uuid)
             comp_size = curr_write_count - init_write_count

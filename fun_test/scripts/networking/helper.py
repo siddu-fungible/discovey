@@ -957,7 +957,11 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
         if half_load_latency:
             latency = "half_load_latency"
         flow_latency = "%s_%s" % (flow, latency)
-        sleep_time = int(test_time/10)
+        time_delta = 10
+        sleep_time = int(test_time/time_delta)
+        total_stream_runs = 3
+        total_trails = 6
+        max_loop_count = total_stream_runs * total_trails * time_delta
 
         common_file_name = str(version) + "_" + flow_latency
         if test_type:
@@ -980,6 +984,7 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
         artifact_cdu_file = fun_test.get_test_case_artifact_file_name(post_fix_name=cdu_stats_file)
         artifact_ca_file = fun_test.get_test_case_artifact_file_name(post_fix_name=ca_stats_file)
 
+        start_counter = 0
         while not sequencer_passed:
             fun_test.log_module_filter("random_module")
             populate_pc_resource_output_file(network_controller_obj=network_controller_obj,
@@ -1000,6 +1005,10 @@ def run_dpcsh_commands(template_obj, sequencer_handle, network_controller_obj, s
             if state.lower() == template_obj.PASSED.lower():
                 sequencer_passed = True
                 fun_test.log("Sequencer passed. Stopping dpcsh commands")
+            elif start_counter >= max_loop_count:
+                sequencer_passed = True
+                fun_test.log("Sequencer did not stop in expected time. Forcefully looping out")
+            start_counter += 1
 
     except Exception as ex:
         fun_test.critical(str(ex))

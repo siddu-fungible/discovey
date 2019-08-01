@@ -327,7 +327,7 @@ class TopologyHelper:
             fun_test.simple_assert(peer_allocation_duts or simulation_mode_found, "At least one DUT is required")
             while not simulation_mode_found and peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
 
-                fun_test.sleep("allocate_topology: Waiting for F1 bringup on al DUTs", seconds=10)
+                fun_test.sleep("allocate_topology: Waiting for F1 bringup on all DUTs", seconds=10)
                 for dut_obj in peer_allocation_duts:
                     if dut_obj.index in self.disabled_dut_indexes:
                         continue
