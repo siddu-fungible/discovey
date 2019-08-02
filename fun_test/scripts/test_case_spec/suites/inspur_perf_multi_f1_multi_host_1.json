@@ -1,4 +1,4 @@
 [
   {"info": {"custom_test_bed_spec": {"base_test_bed": "fs-inspur", "asset_request": {"DUT": {"num": 3}, "Host": {"num": 1}}}}},
-  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark_multi_f1_multi_host.py", "inputs": {"num_volumes": 1, "num_hosts": 1}}
+  {"path": "storage/pocs/inspur/ec_inspur_fs_teramark_multi_f1_multi_host.py", "inputs": {"num_volumes": 1, "num_hosts": 1, "post_results": true}}
 ]

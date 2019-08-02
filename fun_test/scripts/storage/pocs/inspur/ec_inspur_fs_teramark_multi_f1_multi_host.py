@@ -466,6 +466,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
+        else:
+            self.post_results = False
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -993,7 +997,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            if self.post_results:
+                fun_test.log("Posting results on dashboard")
+                post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:
