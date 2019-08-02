@@ -699,6 +699,8 @@ class Linux(object, ToDictMixin):
         :return: None/False if process_id does not exist, True otherwise
         """
         result = None
+        if process_id is not None:
+            process_id = int(process_id)
         command = "ps -ef | grep {}".format(process_id)
         if sudo:
             output = self.sudo_command(command)
