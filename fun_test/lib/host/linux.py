@@ -691,6 +691,30 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def process_exists(self, process_id, sudo=False):
+        """
+        Check if a process id exists
+        :param process_id:
+        :param sudo: set to True if the ps command needs to be executed with sudo
+        :return: None/False if process_id does not exist, True otherwise
+        """
+        result = None
+        if process_id is not None:
+            process_id = int(process_id)
+        command = "ps -ef | grep {}".format(process_id)
+        if sudo:
+            output = self.sudo_command(command)
+        else:
+            output = self.command(command)
+        if output:
+            m = re.search(r'(\S+)\s+(\d+)\s+(\d+).*', output)
+            if m:
+                pid = int(m.group(2))
+                if pid:
+                    result = pid == process_id
+        return result
+
+    @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, sudo=False, **kwargs):
 
         result = 0
@@ -824,6 +848,10 @@ class Linux(object, ToDictMixin):
                      kill_seconds=5,
                      minimum_process_id=50,
                      sudo=True):
+        if process_id is not None:
+            process_id = int(process_id)
+        if job_id is not None:
+            job_id = int(job_id)
         if not process_id and not job_id:
             fun_test.critical(message="Please provide a valid process-id or job-id")
             return
@@ -2707,3 +2735,8 @@ class LinuxBackup:
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
         linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
+
+
+if __name__ == "__main__":
+    l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+    print l.process_exists(process_id=22635)

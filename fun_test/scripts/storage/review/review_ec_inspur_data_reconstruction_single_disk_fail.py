@@ -8,7 +8,7 @@ from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from collections import OrderedDict, Counter
-from fun_global import PerfUnit
+from fun_global import PerfUnit, FunPlatform
 
 '''
 Script for Inspur Functional Testing of Data Reconstruction With Disk Disk Failure and monitor Performance impact
@@ -484,6 +484,10 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
+        else:
+            self.post_results = False
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -870,11 +874,21 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
 
             if "bs" in self.fio_cmd_args:
                 fio_block_size = self.fio_cmd_args["bs"]
-            else:
-                fio_block_size = "Mixed"
+            elif "multiple_jobs" in self.fio_cmd_args:
+                match = re.search("--bs=(\w+)", self.fio_cmd_args["multiple_jobs"])
+                if match:
+                    fio_block_size = match.group(1)
+                else:
+                    match = re.search("--bssplit=((\w+/\w+:*)+)", self.fio_cmd_args["multiple_jobs"])
+                    if match:
+                        fio_block_size = "Mixed"
 
             if "rw" in self.fio_cmd_args:
                 row_data_dict["mode"] = self.fio_cmd_args["rw"]
+            elif "multiple_jobs" in self.fio_cmd_args:
+                match = re.search("--rw=(\w+)", self.fio_cmd_args["multiple_jobs"])
+                if match:
+                    row_data_dict["mode"] = match.group(1)
             else:
                 row_data_dict["mode"] = "Combined"
 
@@ -1296,6 +1310,8 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
 
             value_dict = {
                 "date_time": self.db_log_time,
+                "platform": FunPlatform.F1,
+                "version": fun_test.get_version(),
                 "num_hosts": self.num_hosts,
                 "block_size": row_data_dict["block_size"],
                 "operation": row_data_dict["mode"],
@@ -1315,7 +1331,9 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                 "read_99_latency": row_data_dict["readlatency99"],
                 "plex_rebuild_time": row_data_dict["plex_rebuild_time"]
             }
-            add_to_data_base(value_dict)
+            if self.post_results:
+                fun_test.log("Posting results on dashboard")
+                add_to_data_base(value_dict)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:

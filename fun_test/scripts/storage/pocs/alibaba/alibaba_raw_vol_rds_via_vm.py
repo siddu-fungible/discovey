@@ -99,9 +99,9 @@ class RawVolumePerfScript(FunTestScript):
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
 
         abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-            self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
+                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
         abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-            self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
+                              self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
 
         funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                         abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
@@ -131,7 +131,7 @@ class RawVolumePerfScript(FunTestScript):
                                         % servers_mode[server])
 
         # install drivers on PCIE connected servers
-        tb_config_obj = tb_configs.TBConfigs(str(fs_name) + "2")
+        tb_config_obj = tb_configs.TBConfigs(str(fs_name))
         funeth_obj = Funeth(tb_config_obj)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         setup_hu_host(funeth_obj, update_driver=False, sriov=4, num_queues=4)
@@ -160,17 +160,20 @@ class RawVolumePerfScript(FunTestScript):
         fun_test.shared_variables["topology"].cleanup()
 
 
-class RawVolumeLocalPerfTestcase(FunTestCase):
+class RawVolumeRemotePerfTestcase(FunTestCase):
     server_key = {}
 
     def describe(self):
         self.set_test_details(
             id=1,
-            summary="Perf test for locally attached F1 over PCIe",
+            summary="Perf test for remotely attached SSD via F1",
             steps="""
             1. Create a BLT volume on F1_1
-            2. Attach it to NVMe VF on the PCIe attached x86 
-            3. Run random read fio for numjobs [1, 2, 4, ..., 256]
+            2. Create a RDS controller on F1_1 and attach above BLT to it
+            3. Create PCIe controller on F1_0 for the NVMe VF
+            4. Create RDS_BLK volume on F1_0 with remote as F1_1
+            5. Attach above volume to the PCIe controller created in step 3
+            6. Run random read and write fio for numjobs [1, 2, 4, ..., 256]
             """)
 
     def setup(self):
@@ -179,108 +182,184 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
         self.server_key = fun_test.parse_file_to_json(testconfig_file)
         fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.server_key["fs"][fs_name]["fs-name"])
 
-        servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
-
         testconfig_dict = utils.parse_file_to_json(testconfig_file)
-
         for k, v in testconfig_dict[testcase].iteritems():
             setattr(self, k, v)
 
-        host_obj = Linux(host_ip=self.server_key["fs"][fs_name]["hu_host"][0],
-                         ssh_username="localadmin",
-                         ssh_password="Precious1*")
+        servers_with_vms = self.server_key["fs"][fs_name]["vm_config"]
 
         for server in servers_with_vms:
             i = 1
+
+            host_obj = Linux(host_ip=str(server),
+                             ssh_username=servers_with_vms[server]["user"],
+                             ssh_password=servers_with_vms[server]["password"])
+
+            udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+            for service in udev_services:
+                service_status = host_obj.systemctl(service_name=service, action="stop")
+            host_obj.command(command="echo 4 | sudo tee /sys/module/nvme/parameters/io_queue_depth ")
+            # fun_test.test_assert(service_status, "Stopping {} service".format(service))
+
             # Configure storage controller for DPU 1 (since we are testing SSD on DPU 1)
-            storage_controller = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
-                                                   target_port=40221)
-            command_result = storage_controller.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
-                                                       port=servers_with_vms[server]["local_controller_port"])
+            storage_controller_dpu_0 = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
+                                                         target_port=servers_with_vms[server]["dpc_port_local"])
+            storage_controller_dpu_1 = StorageController(target_ip=fs_spec['come']['mgmt_ip'],
+                                                         target_port=servers_with_vms[server]["dpc_port_remote"])
+
+            print("\n")
+            print("===================================")
+            print("IP cfg for DPU 0 - Local controller")
+            print("===================================\n")
+            command_result = storage_controller_dpu_0.ip_cfg(ip=servers_with_vms[server]["local_controller_ip"],
+                                                             port=servers_with_vms[server]["local_controller_port"])
 
             fun_test.test_assert(command_result["status"], "Configuring IP {}:{} to storage controller".
                                  format(servers_with_vms[server]["local_controller_ip"],
                                         servers_with_vms[server]["local_controller_port"]))
+
+            print("\n")
+            print("===================================")
+            print("IP cfg for DPU 1 - Remote controller")
+            print("===================================\n")
+            command_result = storage_controller_dpu_1.ip_cfg(ip=servers_with_vms[server]["remote_controller_ip"],
+                                                             port=servers_with_vms[server]["remote_controller_port"])
+
+            fun_test.test_assert(command_result["status"], "Configuring IP {}:{} to storage controller".
+                                 format(servers_with_vms[server]["remote_controller_ip"],
+                                        servers_with_vms[server]["remote_controller_port"]))
+
             result_dict = {}
 
             for vm in servers_with_vms[server]["vms"]:
                 result_dict[vm] = {}
+
+                print servers_with_vms[server]["vms"][vm]["storage"]
+
                 blt_volume_dpu_1 = utils.generate_uuid()
-                controller_dpu_1 = utils.generate_uuid()
-                print("\n")
-                print("==================================")
-                print("Creating PCIe Controller on DPU 1")
-                print("==================================\n")
-                print servers_with_vms[server]["vms"][vm]["local_storage"]
-                command_result = storage_controller.create_controller(ctrlr_uuid=controller_dpu_1,
-                                                                      transport="PCI",
-                                                                      fnid=int(servers_with_vms[server]["vms"][vm][
-                                                                                   "fnid"]),
-                                                                      ctlid=int(servers_with_vms[server]["ctlid"]),
-                                                                      huid=int(servers_with_vms[server]["huid"]),
-                                                                      command_duration=servers_with_vms[server]["vms"][
-                                                                          vm]["local_storage"]["command_timeout"])
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
-                                     format(controller_dpu_1))
-                result_dict[vm]["controller_dpu_1"] = controller_dpu_1
 
                 print("\n")
                 print("==============================")
                 print("Creating Local Volume on DPU 1")
                 print("==============================\n")
 
-                local_volume_create(storage_controller=storage_controller,
-                                    vm_dict=servers_with_vms[server]["vms"][vm]["local_storage"],
+                local_volume_create(storage_controller=storage_controller_dpu_1,
+                                    vm_dict=servers_with_vms[server]["vms"][vm]["storage"],
                                     uuid=blt_volume_dpu_1, count=i)
                 result_dict[vm]["blt_volume_dpu_1"] = blt_volume_dpu_1
 
+                rds_controller_dpu_1 = utils.generate_uuid()
                 print("\n")
-                print("===========================================")
-                print("Attach Local Volume to Controller on DPU 1")
-                print("===========================================\n")
-                command_timeout = servers_with_vms[server]["vms"][vm]["local_storage"]["command_timeout"]
-                command_result = storage_controller.attach_volume_to_controller(ctrlr_uuid=controller_dpu_1,
-                                                                                vol_uuid=blt_volume_dpu_1,
-                                                                                ns_id=int(i),
-                                                                                command_duration=command_timeout)
+                print("==================================")
+                print("Creating RDS Controller on DPU 1")
+                print("==================================\n")
+                command_result = storage_controller_dpu_1.create_controller(ctrlr_uuid=rds_controller_dpu_1,
+                                                                            transport=self.remote_transport,
+                                                                            remote_ip=servers_with_vms[server]
+                                                                            ["local_controller_ip"],
+                                                                            nqn="nqn" + str(i),
+                                                                            port=servers_with_vms[server]
+                                                                            ["remote_controller_port"],
+                                                                            command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Creating controller with uuid {}".
+                                     format(rds_controller_dpu_1))
+                result_dict[vm]["rds_controller_dpu_1"] = rds_controller_dpu_1
+
+                print("\n")
+                print("==============================================")
+                print("Attach Local Volume to RDS Controller on DPU 1")
+                print("==============================================\n")
+                command_result = storage_controller_dpu_1.attach_volume_to_controller(ctrlr_uuid=rds_controller_dpu_1,
+                                                                                      vol_uuid=blt_volume_dpu_1,
+                                                                                      ns_id=int(i),
+                                                                                      command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Attaching volume {} to controller {}"
-                                     .format(blt_volume_dpu_1, controller_dpu_1))
+                                     .format(blt_volume_dpu_1, rds_controller_dpu_1))
+
+                pci_controller_dpu_0 = utils.generate_uuid()
+                print("\n")
+                print("==================================")
+                print("Creating PCIe Controller on DPU 0")
+                print("==================================\n")
+                command_result = storage_controller_dpu_0.create_controller(ctrlr_uuid=pci_controller_dpu_0,
+                                                                            transport=self.local_transport,
+                                                                            fnid=int(
+                                                                                servers_with_vms[server]["vms"][vm]
+                                                                                ["fnid"]),
+                                                                            ctlid=int(
+                                                                                servers_with_vms[server]["ctlid"]),
+                                                                            huid=int(servers_with_vms[server]["huid"]),
+                                                                            command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Creating PCI controller with uuid {}".
+                                     format(pci_controller_dpu_0))
+                result_dict[vm]["pci_controller_dpu_0"] = pci_controller_dpu_0
+
+                rds_blk_vol_dpu_0 = utils.generate_uuid()
+                print("\n")
+                print("==================================")
+                print("Creating RDS BLK Volume on DPU 0")
+                print("==================================\n")
+                command_result = storage_controller_dpu_0.create_rds_volume(
+                    uuid=rds_blk_vol_dpu_0,
+                    name="rds-blk-" + str(rds_blk_vol_dpu_0),
+                    capacity=servers_with_vms[server]["vms"][vm]["storage"]["rds_vol_capacity"],
+                    block_size=servers_with_vms[server]["vms"][vm]["storage"]["rds_vol_block_size"],
+                    remote_ip=servers_with_vms[server]["remote_controller_ip"],
+                    port=servers_with_vms[server]["remote_controller_port"],
+                    remote_nsid=int(i),
+                    command_duration=servers_with_vms[server]["vms"][vm]["storage"]["command_timeout"])
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Creating RDS volume with uuid {}".
+                                     format(rds_blk_vol_dpu_0))
+                result_dict[vm]["rds_blk_vol_dpu_0"] = rds_blk_vol_dpu_0
+
+                print("\n")
+                print("===================================================")
+                print("Attaching RDS BLK Volume to PCI controller on DPU 0")
+                print("===================================================\n")
+                command_result = storage_controller_dpu_0.attach_volume_to_controller(ctrlr_uuid=pci_controller_dpu_0,
+                                                                                      vol_uuid=rds_blk_vol_dpu_0,
+                                                                                      ns_id=int(i) + 1,
+                                                                                      command_duration=
+                                                                                      self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Attaching PCI controller {} to RDS volume {}".
+                                     format(pci_controller_dpu_0, rds_blk_vol_dpu_0))
 
                 # Workaround for connecting to the VM via SSH
                 host_obj.sudo_command("sysctl -w net.bridge.bridge-nf-call-iptables=0")
 
                 # Reloading nvme driver on VM
                 reload_nvme_driver(host=servers_with_vms[server]["vms"][vm]["hostname"],
-                                   username="localadmin",
-                                   password="Precious1*")
-
-                # Check if volume exists
-                # TODO: Check for vol
+                                   username=servers_with_vms[server]["vms"][vm]["user"],
+                                   password=servers_with_vms[server]["vms"][vm]["password"],
+                                   ns_id=int(i))
 
                 """
                 # Get the nvme device name from the VMs
                 fun_test.shared_variables["nvme_block_device"] = \
                     get_nvme_dev(servers_with_vms[server]["vms"][vm]["hostname"])
                 """
-                self.nvme_block_device = "/dev/nvme0n1"
+                self.nvme_block_device = "/dev/nvme0n" + str(i)
                 fun_test.shared_variables["nvme_block_device"] = self.nvme_block_device
                 fun_test.shared_variables["vol_size"] = \
-                    int(servers_with_vms[server]["vms"][vm]["local_storage"]["blt_vol_capacity"])
+                    int(servers_with_vms[server]["vms"][vm]["storage"]["blt_vol_capacity"])
                 result_dict[vm]["nvme_block_device"] = fun_test.shared_variables["nvme_block_device"]
 
-                self.end_host = Linux(host_ip=servers_with_vms[server]["vms"][vm]["hostname"],
-                                      ssh_username="localadmin",
-                                      ssh_password="Precious1*")
-                fun_test.shared_variables["end_host_obj"] = self.end_host
+                self.vm_obj = Linux(host_ip=servers_with_vms[server]["vms"][vm]["hostname"],
+                                    ssh_username="localadmin",
+                                    ssh_password="Precious1*")
+                fun_test.shared_variables["vm_obj"] = self.vm_obj
 
                 # Run warmup
                 if self.warm_up_traffic:
                     fun_test.log(
                         "Initial Write IO to volume, this might take long time depending on fio --size provided")
                     for i in range(0, 2):
-                        fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device,
-                                                            **self.warm_up_fio_cmd_args)
+                        fio_output = self.vm_obj.pcie_fio(filename=self.nvme_block_device,
+                                                          **self.warm_up_fio_cmd_args)
                         fun_test.test_assert(fio_output, "Pre-populating the volume")
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
 
@@ -321,7 +400,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                            "read_99_latency", "read_99_99_latency"]
         table_data_rows = []
 
-        self.end_host = fun_test.shared_variables["end_host_obj"]
+        self.vm_obj = fun_test.shared_variables["vm_obj"]
 
         for mode in self.fio_modes:
             fio_result[mode] = {}
@@ -361,15 +440,15 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[mode][combo] = {}
                 fio_filename = fun_test.shared_variables["nvme_block_device"]
-                fio_output[mode][combo] = self.end_host.pcie_fio(filename=fio_filename,
-                                                                 numjobs=fio_numjobs,
-                                                                 rw=mode,
-                                                                 bs=fio_block_size,
-                                                                 iodepth=fio_iodepth,
-                                                                 name=fio_job_name,
-                                                                 size=str(file_size_in_gb) + "G",
-                                                                 cpus_allowed=cpus_allowed,
-                                                                 **self.fio_cmd_args)
+                fio_output[mode][combo] = self.vm_obj.pcie_fio(filename=fio_filename,
+                                                               numjobs=fio_numjobs,
+                                                               rw=mode,
+                                                               bs=fio_block_size,
+                                                               iodepth=fio_iodepth,
+                                                               name=fio_job_name,
+                                                               size=str(file_size_in_gb) + "G",
+                                                               cpus_allowed=cpus_allowed,
+                                                               **self.fio_cmd_args)
 
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[mode][combo])
@@ -381,8 +460,8 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
 
                 for op, stats in fio_output[mode][combo].items():
                     # TODO: "operation" gets overwritten here; Set operation based on mode
-                    value_dict["operation"] = op
                     if op == "read":
+                        value_dict["operation"] = op
                         value_dict["read_iops"] = stats["iops"]
                         value_dict["read_throughput"] = int(round(stats["bw"] / 1000))
                         value_dict["read_avg_latency"] = stats["clatency"]
@@ -391,6 +470,7 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
                         value_dict["read_99_99_latency"] = stats["latency9999"]
                         value_dict["read_99_latency"] = stats["latency99"]
                     else:
+                        value_dict["operation"] = op
                         value_dict["write_iops"] = stats["iops"]
                         value_dict["write_throughput"] = int(round(stats["bw"] / 1000))
                         value_dict["write_avg_latency"] = stats["clatency"]
@@ -428,22 +508,24 @@ class RawVolumeLocalPerfTestcase(FunTestCase):
         pass
 
 
-class LocalSSDVM(RawVolumeLocalPerfTestcase):
+class RemoteSSDVM(RawVolumeRemotePerfTestcase):
 
     def describe(self):
-        self.set_test_details(id=1,
-                              summary="Random Read/Write performance for 1 volumes on TCP "
-                                      "with different levels of numjobs & iodepth & block size 4K",
-                              steps='''
-        1. Create 1 BLT volumes on F1 attached
-        2. Create a storage controller for PCIe and attach above volumes to this controller   
-        3. Pass this associated PF to a VM on the PCIe attached host
-        4. Run the FIO Random Read & Write test(without verify) for block size of 4k and IO depth from the 
-        host and check the performance are inline with the expected threshold. 
+        self.set_test_details(
+            id=2,
+            summary="Random Read/Write performance for 1 volumes over RDS"
+                    "with different levels of numjobs & iodepth & block size 4K",
+            steps='''
+            1. Create a BLT volume on F1_1
+            2. Create a RDS controller on F1_1 and attach above BLT to it
+            3. Create PCIe controller on F1_0 for the NVMe VF
+            4. Create RDS_BLK volume on F1_0 with remote as F1_1
+            5. Attach above volume to the PCIe controller created in step 3
+            6. Run random read and write fio for numjobs [1, 2, 4, ..., 256]
         ''')
 
 
 if __name__ == "__main__":
     bltscript = RawVolumePerfScript()
-    bltscript.add_test_case(LocalSSDVM())
+    bltscript.add_test_case(RemoteSSDVM())
     bltscript.run()

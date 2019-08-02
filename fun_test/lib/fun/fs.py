@@ -671,6 +671,10 @@ class ComE(Linux):
         self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
         return True
 
+    def setup_tools(self):
+        if not self.command_exists("fio"):
+            self.sudo_command("apt install -y fio")
+
     def cleanup_dpc(self):
         # self.command("cd $WORKSPACE/FunControlPlane")
         self.sudo_command("pkill dpc")
@@ -889,6 +893,7 @@ class Fs(object, ToDictMixin):
             self.validate_u_boot_version = not disable_u_boot_version_validation
         self.bootup_worker = None
         self.u_boot_complete = False
+        self.come_initialized = False
 
     def __str__(self):
         name = self.spec.get("name", None)
@@ -963,7 +968,8 @@ class Fs(object, ToDictMixin):
             context=None,
             setup_bmc_support_files=None,
             fun_cp_callback=None,
-            power_cycle_come=False):  #TODO
+            power_cycle_come=False,
+            already_deployed=False):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -974,9 +980,10 @@ class Fs(object, ToDictMixin):
             fs_spec = am.get_fs_by_name(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
-        if not tftp_image_path:
-            tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
-        fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
+        if not already_deployed:
+            if not tftp_image_path:
+                tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
+            fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
         if not boot_args:
             boot_args = fun_test.get_build_parameter("BOOTARGS")
@@ -1073,8 +1080,6 @@ class Fs(object, ToDictMixin):
                 if self.fun_cp_callback:
                     fun_test.log("Calling fun CP callback from Fs")
                 #    self.fs.fun_cp_callback(self.fs.get_come())
-                self.come_initialized = True
-
                 self.come_initialized = True
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
             else:
@@ -1280,7 +1285,7 @@ class Fs(object, ToDictMixin):
         return True
 
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")
     fs.get_bmc().position_support_scripts()
     # fs.bootup(reboot_bmc=False)
@@ -1289,3 +1294,8 @@ if __name__ == "__main__":
     # come = fs.get_come()
     # come.detect_pfs()
     # come.setup_dpc()
+
+
+if __name__ == "__main__":
+    come = ComE(host_ip="fs21-come.fungible.local", ssh_username="fun", ssh_password="123")
+    print come.setup_tools()

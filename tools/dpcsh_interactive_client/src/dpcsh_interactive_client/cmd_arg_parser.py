@@ -1010,7 +1010,8 @@ peek_hnu_sfg_stats_parser.add_argument('-grep', help="Grep regex pattern", defau
 
 # Per VP stats
 peek_per_vp_stats_parser = peek_stats_parsers.add_parser('per_vp', help="Peek Per VP Stats")
-peek_per_vp_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
+peek_per_vp_stats_parser.add_argument('-cluster_id', type=int, help="Cluster_id 0..7", default=None)
+peek_per_vp_stats_parser.add_argument('-core_id', type=int, help="Core_id 0..5", default=None)
 peek_per_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # nwqm stats
@@ -1032,7 +1033,8 @@ peek_mpg_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=N
 # Nu per vppkts
 peek_pervppkts_stats_parser = peek_stats_parsers.add_parser('pervppkts', help='Peek per vppkts stats')
 peek_pervppkts_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID")
-peek_pervppkts_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
+peek_pervppkts_stats_parser.add_argument('-core_id', type=int, help="Core id", default=None)
+#peek_pervppkts_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
 peek_pervppkts_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
 
 # nhp stats
@@ -1048,6 +1050,7 @@ peek_resource_stats_parser = peek_stats_parsers.add_parser('resource', help="Res
 peek_resource_stats_parsers = peek_resource_stats_parser.add_subparsers(title='subcommands', help="")
 peek_pc_resource_stats_parser = peek_resource_stats_parsers.add_parser('pc', help='Peek pc resource stats')
 peek_pc_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID", default=None)
+peek_pc_resource_stats_parser.add_argument('-core_id', type=int, help="Core ID", default=None)
 peek_pc_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_cc_resource_stats_parser = peek_resource_stats_parsers.add_parser('cc', help='Peek cc resource stats')
