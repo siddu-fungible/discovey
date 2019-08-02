@@ -1005,9 +1005,9 @@ class FunControlPlaneBringup:
                                                                diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
                                                    message=checkpoint)
 
+                        remote_dpc_obj.disconnect()
                     linux_obj.disconnect()
                     source_dpc_obj.disconnect()
-                    remote_dpc_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
