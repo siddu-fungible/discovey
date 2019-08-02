@@ -23,7 +23,7 @@ export class RegressionSummaryWidgetComponent implements OnInit {
   y1Values: any = [];
   payload: any = {};
   x1Values: string[] = ['Networking overall', 'Storage overall', 'Networking sanity'];
-  clickURLs: any = {};
+  clickUrls: any = {};
   numInProgress: number = 0;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
@@ -85,7 +85,7 @@ export class RegressionSummaryWidgetComponent implements OnInit {
     let numInProgress = 0;
     let today = new Date();
     let payload = this.initialFilterData[index].payload;
-    this.clickURLs[this.initialFilterData[index].info] =  "/regression/summary";
+    this.clickUrls[this.initialFilterData[index].info] =  "/regression/summary";
     return this.apiService.post("/regression/get_test_case_executions_by_time" + "?days_in_past=1", payload).pipe(switchMap((response) => {
       for (let i in response.data) {
         let historyTime = new Date(this.commonService.convertToLocalTimezone(response.data[i].started_time));
