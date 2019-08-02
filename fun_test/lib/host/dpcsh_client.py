@@ -5,12 +5,21 @@ import os, sys
 
 
 class DpcshClient(object):
-    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
+    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, auto_disconnect=False):
+        """
+
+        :param mode:
+        :param target_ip:
+        :param target_port:
+        :param verbose:
+        :param auto_disconnect: If set dpcsh client will auto disconnect after each command
+        """
         self.target_ip = target_ip
         self.target_port = target_port
         self.sock = None
         self.mode = mode
         self.verbose = verbose
+        self.auto_disconnect = auto_disconnect
 
     def sendall(self, data, command_duration=1):
         start = time.time()
@@ -110,6 +119,8 @@ class DpcshClient(object):
             fun_test.log("Command failed: " + fun_test.dict_to_json_string(result))
         if self.verbose:
             self.print_result(result=result)
+        if self.auto_disconnect:
+            self.disconnect()
         return result
 
     def _parse_actual_output(self, output):
@@ -141,3 +152,14 @@ class DpcshClient(object):
     def json_command(self, data, action="", additional_info="", command_duration=1):
         return self.command('#!sh {} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),
                             command_duration=command_duration)
+
+
+if __name__ == "__main__":
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220)
+    d.json_execute(verb="perf", data="reinit", command_duration=4)
+    d.json_execute(verb="perf", data="start", command_duration=4)
+    d.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+    d.json_execute(verb="perf", data="stop", command_duration=4)
+    d.json_execute(verb="perf", data="offload", command_duration=4)
+
+    # d.command("peek help", legacy=False)
