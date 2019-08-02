@@ -169,7 +169,17 @@
 
 
 <div class="flex-container">
-  <div class="dashboard-card" style="flex-basis: 250px">
+
+</div>
+
+<div class="flex-container">
+  <div class="dashboard-card" style="flex-basis: 500px; padding: 10px">
+    <app-performance-summary-widget></app-performance-summary-widget>
+  </div>
+  <div class="dashboard-card" style="flex-basis: 500px; padding: 10px">
+    <app-regression-summary-widget></app-regression-summary-widget>
+  </div>
+  <div class="dashboard-card" style="flex-basis: 500px; padding: 10px">
     Release progress
     <div>
       <a
@@ -183,24 +193,12 @@
   </div>
 </div>
 
-<div class="flex-container">
-  <div class="dashboard-card" style="flex-basis: 500px; padding: 10px">
-    <app-performance-summary-widget></app-performance-summary-widget>
-  </div>
-  <div class="dashboard-card" style="flex-basis: 500px; padding: 10px">
-    <app-regression-summary-widget></app-regression-summary-widget>
-  </div>
-
-</div>
-
 
 <div class="flex-container">
-      <div class="flex-container" style="flex-direction: column; flex-basis: 250px">
   <div style="padding: 10px; flex-basis: 250px">
-        <app-smoke-test-storage-widget></app-smoke-test-storage-widget>
-    </div>
+    <app-smoke-test-storage-widget></app-smoke-test-storage-widget>
   </div>
-  <div style="padding: 10px; flex-basis: 250px; height: 250px">
+  <div style="padding: 10px; flex-basis: 250px">
     <app-network-sanity-widget></app-network-sanity-widget>
   </div>
 </div>
