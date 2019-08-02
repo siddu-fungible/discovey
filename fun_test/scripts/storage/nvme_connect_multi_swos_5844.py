@@ -12,72 +12,8 @@ from collections import OrderedDict
 import re
 
 '''
-Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
+script to hit nvme connect swos-5844 issue
 '''
-
-
-def fio_parser(arg1, host_index, **kwargs):
-    fio_output = arg1.pcie_fio(**kwargs)
-    fun_test.shared_variables["fio"][host_index] = fio_output
-    fun_test.test_assert(fio_output, "Fio test for thread {}".format(host_index), ignore_on_success=True)
-    arg1.disconnect()
-
-
-def get_iostat(host_thread, sleep_time, iostat_interval, iostat_iter):
-    host_thread.sudo_command("sleep {} ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
-                             format(sleep_time, iostat_interval, iostat_iter), timeout=400)
-    host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d > /tmp/iostat_final.log")
-
-    fun_test.shared_variables["avg_tps"] = host_thread.sudo_command(
-        "awk '{ total += $2 } END { print total/NR }' /tmp/iostat_final.log")
-
-    fun_test.shared_variables["avg_kbr"] = host_thread.sudo_command(
-        "awk '{ total += $3 } END { print total/NR }' /tmp/iostat_final.log")
-
-    host_thread.disconnect()
-
-
-def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
-    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
-              "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
-              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
-        if eval("type({}) is tuple".format(i)):
-            exec ("{0} = {0}[0]".format(i))
-
-    db_log_time = fun_test.shared_variables["db_log_time"]
-    num_ssd = fun_test.shared_variables["num_ssd"]
-    num_volume = fun_test.shared_variables["blt_count"]
-
-    blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
-                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
-                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
-                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
-                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
-                  read_99_99_latency_unit="usecs")
-
-    result = []
-    arg_list = post_results.func_code.co_varnames[:12]
-    for arg in arg_list:
-        result.append(str(eval(arg)))
-    result = ",".join(result)
-    fun_test.log("Result: {}".format(result))
-
-
-def compare(actual, expected, threshold, operation):
-    if operation == "lesser":
-        return (actual < (expected * (1 - threshold)) and ((expected - actual) > 2))
-    else:
-        return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
 class MultiHostVolumePerformanceScript(FunTestScript):
@@ -426,7 +362,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         for k, v in benchmark_dict[testcase].iteritems():
             setattr(self, k, v)
 
-
         if not hasattr(self, "num_ssd"):
             self.num_ssd = 12
         if not hasattr(self, "blt_count"):
@@ -475,7 +410,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 and (not fun_test.shared_variables["blt"]["warmup_done"]):
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
-            fun_test.shared_variables["blt"]["warmup_done"] = False
             fun_test.shared_variables["blt_details"] = self.blt_details
 
             # Enabling counters
@@ -550,7 +484,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.vol_list[i]["ns_id"] = ns_id
 
             fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
-            fun_test.shared_variables["blt"]["setup_created"] = True
 
             # Setting the syslog level to 6
             command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
@@ -561,10 +494,15 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                           message="Checking syslog level")
 
             for conn_no in range(1, self.no_of_nvme_connect + 1):
+
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
                     nqn = self.vol_list[i]["nqn"]
+
+                    hostname = str(self.host_handles[key]).split()[1]
+
                     if conn_no == 1:
+
                         self.host_handles[key].sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                         self.host_handles[key].sudo_command("/etc/init.d/irqbalance stop")
                         irq_bal_stat = self.host_handles[key].command("/etc/init.d/irqbalance status")
@@ -585,17 +523,17 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         else:
                             fun_test.log("Loading nvme")
                             self.host_handles[key].modprobe("nvme")
+                            self.host_handles[key].modprobe("nvme_core")
                         command_result = self.host_handles[key].lsmod("nvme_tcp")
                         if "nvme_tcp" in command_result:
                             fun_test.log("nvme_tcp driver is loaded")
                         else:
                             fun_test.log("Loading nvme_tcp")
                             self.host_handles[key].modprobe("nvme_tcp")
+                            self.host_handles[key].modprobe("nvme_fabrics")
 
-                    pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(
-                        str(self.host_handles[key]).split()[1], conn_no)
+                    pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(hostname, conn_no)
 
-                    # self.host_handles[key].start_bg_process(command="sudo tcpdump -i enp216s0 -w {}".format(pcap_file))
                     pcap_pid = self.host_handles[key].tcpdump_capture_start(interface="enp216s0",
                                                                             tcpdump_filename=pcap_file, snaplen=1500)
                     nvme_connect_failed = False
@@ -625,32 +563,30 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fun_test.log(command_result)
 
                     fun_test.sleep("Wait for couple of seconds before taking tcpdump", 2)
-                    self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
 
                     pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
                         post_fix_name="{}".format(pcap_file.split('/')[-1]))
 
+                    self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
+
                     if not nvme_connect_failed:
                         fun_test.log(
-                            "nvme connect for host {} for iteration {} is successful".format(self.host_handles[key],
-                                                                                             conn_no))
-                        # self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGKILL $i;done")
-                        # Get one tcpdump PASS log too.
+                            "nvme connect on host {} for iteration {} is successful".format(hostname, conn_no))
                         if conn_no == 1:
                             fun_test.scp(source_port=self.host_handles[key].ssh_port,
-                                        source_username=self.host_handles[key].ssh_username,
-                                        source_password=self.host_handles[key].ssh_password,
-                                        source_ip=self.host_handles[key].host_ip,
-                                        source_file_path=pcap_file,
-                                        target_file_path=pcap_artifact_file)
+                                         source_username=self.host_handles[key].ssh_username,
+                                         source_password=self.host_handles[key].ssh_password,
+                                         source_ip=self.host_handles[key].host_ip,
+                                         source_file_path=pcap_file,
+                                         target_file_path=pcap_artifact_file)
                             fun_test.add_auxillary_file(
-                                description="Host {} NVME connect pcap".format(self.host_handles[key]),
+                                description="Host {} NVME connect passed pcap".format(hostname),
                                 filename=pcap_artifact_file)
+
                     else:
                         fun_test.log(
-                            "nvme connect for host {} for iteration {} is failed. Check pcap file {} for errors".format(
-                                self.host_handles[key], conn_no, pcap_file))
-                        #self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGTERM $i;done")
+                            "nvme connect on host {} failed on iteration: {}. Check pcap file {} for errors".format(
+                                hostname, conn_no, pcap_file))
                         fun_test.scp(source_port=self.host_handles[key].ssh_port,
                                      source_username=self.host_handles[key].ssh_username,
                                      source_password=self.host_handles[key].ssh_password,
@@ -658,17 +594,19 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                      source_file_path=pcap_file,
                                      target_file_path=pcap_artifact_file)
                         fun_test.add_auxillary_file(
-                            description="Host {} NVME connect pcap".format(self.host_handles[key]),
+                            description="Host {} NVME connect failed pcap".format(hostname),
                             filename=pcap_artifact_file)
 
                     fun_test.test_assert(expression=not nvme_connect_failed,
-                                         message="SWOS-5844 NVMe connect attempt {}".format(conn_no))
+                                         message="SWOS-5844: nvme connect hit issue on host {}".format(hostname))
 
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
                     nqn = self.vol_list[i]["nqn"]
-                    command_result = self.host_handles[key].sudo_command("nvme disconnect -n {}".format(self.nqn))
+                    command_result = self.host_handles[key].sudo_command("nvme disconnect -n {}".format(nqn))
                     fun_test.log(command_result)
+
+            fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
         pass
