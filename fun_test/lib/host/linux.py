@@ -848,6 +848,10 @@ class Linux(object, ToDictMixin):
                      kill_seconds=5,
                      minimum_process_id=50,
                      sudo=True):
+        if process_id is not None:
+            process_id = int(process_id)
+        if job_id is not None:
+            job_id = int(job_id)
         if not process_id and not job_id:
             fun_test.critical(message="Please provide a valid process-id or job-id")
             return
