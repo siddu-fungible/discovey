@@ -550,6 +550,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.vol_list[i]["ns_id"] = ns_id
 
             fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
+            fun_test.shared_variables["blt"]["setup_created"] = True
 
             # Setting the syslog level to 6
             command_result = self.storage_controller.poke("params/syslog/level {}".format(self.syslog))
@@ -560,13 +561,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                           message="Checking syslog level")
 
             for conn_no in range(1, self.no_of_nvme_connect + 1):
-
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
                     nqn = self.vol_list[i]["nqn"]
-
-                    if conn_no == 0:
-
+                    if conn_no == 1:
                         self.host_handles[key].sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                         self.host_handles[key].sudo_command("/etc/init.d/irqbalance stop")
                         irq_bal_stat = self.host_handles[key].command("/etc/init.d/irqbalance status")
@@ -587,14 +585,12 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                         else:
                             fun_test.log("Loading nvme")
                             self.host_handles[key].modprobe("nvme")
-                            self.host_handles[key].modprobe("nvme_core")
                         command_result = self.host_handles[key].lsmod("nvme_tcp")
                         if "nvme_tcp" in command_result:
                             fun_test.log("nvme_tcp driver is loaded")
                         else:
                             fun_test.log("Loading nvme_tcp")
                             self.host_handles[key].modprobe("nvme_tcp")
-                            self.host_handles[key].modprobe("nvme_fabrics")
 
                     pcap_file = "/tmp/SWOS-5844-{}_nvme_connect_auto_{}.pcap".format(
                         str(self.host_handles[key]).split()[1], conn_no)
@@ -629,16 +625,16 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fun_test.log(command_result)
 
                     fun_test.sleep("Wait for couple of seconds before taking tcpdump", 2)
+                    self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
 
                     pcap_artifact_file = fun_test.get_test_case_artifact_file_name(
                         post_fix_name="{}".format(pcap_file.split('/')[-1]))
 
-                    if nvme_connect_failed == False:
+                    if not nvme_connect_failed:
                         fun_test.log(
                             "nvme connect for host {} for iteration {} is successful".format(self.host_handles[key],
                                                                                              conn_no))
                         # self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGKILL $i;done")
-                        self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
                         # Get one tcpdump PASS log too.
                         if conn_no == 1:
                             fun_test.scp(source_port=self.host_handles[key].ssh_port,
@@ -650,15 +646,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                             fun_test.add_auxillary_file(
                                 description="Host {} NVME connect pcap".format(self.host_handles[key]),
                                 filename=pcap_artifact_file)
-
                     else:
                         fun_test.log(
                             "nvme connect for host {} for iteration {} is failed. Check pcap file {} for errors".format(
                                 self.host_handles[key], conn_no, pcap_file))
-
                         #self.host_handles[key].sudo_command("for i in `pgrep tcpdump`;do kill -SIGTERM $i;done")
-                        self.host_handles[key].tcpdump_capture_stop(process_id=pcap_pid)
-
                         fun_test.scp(source_port=self.host_handles[key].ssh_port,
                                      source_username=self.host_handles[key].ssh_username,
                                      source_password=self.host_handles[key].ssh_password,
@@ -670,7 +662,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                             filename=pcap_artifact_file)
 
                     fun_test.test_assert(expression=not nvme_connect_failed,
-                                         message="nvme connect hit issue - SWOS-5844")
+                                         message="SWOS-5844 NVMe connect attempt {}".format(conn_no))
 
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
