@@ -1,4 +1,6 @@
 from lib.system.fun_test import fun_test
+from lib.host.linux import Linux
+from fun_settings import TFTP_SERVER_IP, TFTP_DIRECTORY, TFTP_SERVER_SSH_PASSWORD, TFTP_SERVER_SSH_USERNAME
 # Connect to tracing server
 # Setup networking
 # Setup job directory
@@ -10,6 +12,7 @@ BASE_JOB_DIRECTORY = "/tmp/trace_jobs"
 TOOLS_DIRECTORY = "/home/localadmin"
 PERF_LISTENER = "perf_listener.py"
 PERF_LISTENER_PATH = TOOLS_DIRECTORY + "/" + PERF_LISTENER
+FUNOS_F1_NAME = "funos-f1.gz"
 
 
 class PdTraceTemplate():
@@ -53,18 +56,44 @@ class PdTraceTemplate():
 
     def stop(self):
         self.move_trace_files(source_directory=TOOLS_DIRECTORY, job_directory=self.job_directory)
+        uart_log_path = "/Users/johnabraham/PycharmProjects/fun_test/Integration/fun_test/web/static/logs/test_fs_nu.py_3829_100_DUT_0_fs-21_f1_0_uart_log.txt"
+        self.move_uart_log(uart_log_path=uart_log_path)
+        self.move_f1_binary(tftp_image_path="s_21048_funos-f1.stripped.gz")
 
     def move_trace_files(self, source_directory, job_directory):
-        self.perf_host.command("mv {}/trace_cluster* {}/odp/trace_dumps/", )
+        self.perf_host.command("mv {}/trace_cluster* {}/odp/trace_dumps/".format(source_directory, job_directory))
+
+    def move_uart_log(self, uart_log_path):
+        target_file_path = "{}/odp/uartout0.0.txt".format(self.job_directory)
+        fun_test.scp(source_file_path=uart_log_path,
+                     target_file_path=target_file_path,
+                     target_ip=self.perf_host.host_ip,
+                     target_username=self.perf_host.ssh_username, target_password=self.perf_host.ssh_password)
+        fun_test.test_assert(self.perf_host.check_file_directory_exists(target_file_path), "trace files in the right location")
+
+    def move_f1_binary(self, tftp_image_path):
+        fun_test.get_asset_manager().get_regression_service_host_spec()
+        target_file_path = "{}/{}".format(self.job_directory, FUNOS_F1_NAME)
+        tftp_server = Linux(host_ip=TFTP_SERVER_IP,
+                            ssh_username=TFTP_SERVER_SSH_USERNAME,
+                            ssh_password=TFTP_SERVER_SSH_PASSWORD)
+        tftp_server.scp(source_file_path="{}/{}".format(TFTP_DIRECTORY,
+                                                        tftp_image_path),
+                        target_ip=self.perf_host.host_ip,
+                        target_username=self.perf_host.ssh_username,
+                        target_password=self.perf_host.ssh_password,
+                        target_file_path=target_file_path)
+        fun_test.test_assert(self.perf_host.check_file_directory_exists(target_file_path), "funos-f1 in the right location")
+
 
     def setup_networking(self):
         pass
 
-    def setup_job_directory(self):
-        pass
+
 
 
 if __name__ == "__main__":
     p = PdTraceTemplate(perf_collector_host_name="poc-server-04")
     p.prepare()
     p.start(listener_ip="20.1.1.1")
+    p.stop()
