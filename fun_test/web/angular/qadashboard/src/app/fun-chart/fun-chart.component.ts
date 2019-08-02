@@ -190,7 +190,7 @@ export class FunChartComponent implements OnInit, OnChanges {
             point: {
               events: {
 
-                click: function() {
+                click: function () {
                   location.href = self.clickURLs[this.category];
                 },
 

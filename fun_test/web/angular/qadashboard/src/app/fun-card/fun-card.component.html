@@ -1,5 +1,3 @@
-
-
 <div class="fun-card">
   <div class="flex-container">
     <div class="header">
@@ -16,7 +14,8 @@
         <div class="text">{{text}}</div>
       </div>
     </div>
-    <div class="footer flex-container" style="flex-direction: row; display: flex; justify-content: flex-end; align-items: center">
+    <div class="footer flex-container"
+         style="flex-direction: row; display: flex; justify-content: flex-end; align-items: center">
       <div>
         <span tooltip [tooltipContentString]="footerTooltipText" placement="left">
           <img *ngIf="footerIcon != null" style="height: 30px; width: 30px" [src]="footerIcon">
