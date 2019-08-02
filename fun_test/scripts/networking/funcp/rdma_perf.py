@@ -444,7 +444,7 @@ class Rocebwtest(FunTestCase):
                         "{}_bandwidth".format(rt): avg_bandwidth,
                         "{}_msg_rate".format(rt): msg_rate
                     }
-                    # add_to_data_base(value_dict)
+                    add_to_data_base(value_dict)
                     table_data = {"headers": table_data_headers, "rows": table_data_rows}
                 for ids in f10_pid_list:
                     ids["handle"].kill_process(ids["pid"])
