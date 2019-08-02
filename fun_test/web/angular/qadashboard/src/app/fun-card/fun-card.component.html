@@ -1,40 +1,34 @@
-<div class="card">
-  <div class="card-header">
-    <h3 class="card-title" [innerHTML]="title"></h3>
-    <h5 class="card-subtitle" [innerHTML]="subtitle"></h5>
-  </div>
-  <div class=card-body>
-    <div class="flex-container">
-      <div
-        style="height: auto; width: 50%; display: flex; justify-content: center; flex: 1 50%; align-items: center">
-        <span tooltip [tooltipContentString]="tooltipText" placement="left">
-          <img style="max-width: 75%; max-height: 75%" [src]="icon">
-          </span>
-      </div>
-      <div style="height: auto; width: 50%; display: flex; justify-content: center; flex: 1 50%; align-items: center; flex-direction: column;">
-        <div class="card-text-title">{{textTitle}}</div>
-        <div class="card-text">{{text}}</div>
-      </div>
-
+<div class="fun-card">
+  <div class="flex-container">
+    <div class="header">
+      <div class="title" [innerHTML]="title"></div>
     </div>
-
-  </div>
-
-  <div class="card-footer">
-
-    <div class="flex-container" style="display: flex; flex-direction: row; justify-content: flex-end">
-      <div style="display: flex; justify-content: right; vertical-align: center; align-items: center">
-        <span tooltip [tooltipContentString]="footerTooltipText" placement="left"
-              style="vertical-align: middle; min-height: 0">
-          <img style="max-width: 100%; max-height: 100%; height: auto" [src]="footerIcon">
+    <div class="body flex-container" style="display: flex; flex-direction: row; align-items: center">
+      <div style="flex: 1">
+            <span style="display: inline-block" tooltip [tooltipContentString]="tooltipText" placement="right">
+              <img *ngIf="icon != null" style="max-width: 100%; max-height: 100%" [src]="icon">
+            </span>
+      </div>
+      <div class="flex-container" style="display: flex; flex: 1; flex-direction: column; align-items: center">
+        <div class="text-title">{{textTitle}}</div>
+        <div class="text">{{text}}</div>
+      </div>
+    </div>
+    <div class="footer flex-container"
+         style="flex-direction: row; display: flex; justify-content: flex-end; align-items: center">
+      <div>
+        <span tooltip [tooltipContentString]="footerTooltipText" placement="left">
+          <img *ngIf="footerIcon != null" style="height: 30px; width: 30px" [src]="footerIcon">
         </span>
       </div>
-      <div style="display: flex; justify-content: right; vertical-align: center; align-items: center">
-        <p class="footer-text">{{footerText}}</p>
+      <div>
+        <div class="footer-text-title">{{footerTextTitle}}</div>
+        <div class="footer-text">{{footerText}}</div>
       </div>
     </div>
   </div>
 </div>
+
 
 
 
