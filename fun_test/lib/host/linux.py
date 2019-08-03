@@ -2720,6 +2720,31 @@ class Linux(object, ToDictMixin):
 
         return iostat_output
 
+    def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", io_queues=None, hostnqn=None,
+                     retries=2, timeout=61):
+        result = False
+        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(transport.lower(), target_ip, port,
+                                                                         nvme_subsystem)
+        if io_queues:
+            nvme_connect_cmd += " -i {}".format(io_queues)
+        if hostnqn:
+            nvme_connect_cmd += " -q {}".format(hostnqn)
+
+        for i in range(retries):
+            try:
+                nvme_connect_output = self.sudo_command(command=nvme_connect_cmd, timeout=timeout)
+                nvme_connect_exit_status = self.exit_status()
+                fun_test.log("NVMe connect output: {}".format(nvme_connect_output))
+                if not nvme_connect_exit_status:
+                    result = True
+                    break
+            except Exception as ex:
+                fun_test.critical("NVMe connect attempt failed...Going to retry one more time...\n")
+                fun_test.critical(str(ex))
+                fun_test.sleep("before retrying")
+
+        return result
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
