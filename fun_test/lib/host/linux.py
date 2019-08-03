@@ -2739,9 +2739,14 @@ class Linux(object, ToDictMixin):
                     result = True
                     break
             except Exception as ex:
-                fun_test.critical("NVMe connect attempt failed...Going to retry one more time...\n")
-                fun_test.critical(str(ex))
-                fun_test.sleep("before retrying")
+                remaining = retries - i - 1
+                if remaining:
+                    fun_test.critical("NVMe connect attempt failed...Going to retry {} more time(s)...\n".
+                                      format(remaining))
+                    fun_test.critical(str(ex))
+                    fun_test.sleep("before retrying")
+                else:
+                    fun_test.critical("Maximum number of retires({}) failed...So bailing out...".format(retries))
 
         return result
 
