@@ -776,7 +776,7 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def list_files(self, path):
-        o = self.command("ls -ltr " + path)
+        o = self.command("ls -ltrd " + path)
         lines = o.split('\n')
         files = []
         for line in lines:
