@@ -1,7 +1,8 @@
 from lib.system.fun_test import *
 from lib.host.dpcsh_client import DpcshClient
 from lib.topology.topology_helper import TopologyHelper
-from lib.templates.pd_trace.pd_trace_template import PdTraceTemplate
+from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
+
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -16,7 +17,6 @@ class MyScript(FunTestScript):
 
     def cleanup(self):
         fun_test.log("Script-level cleanup")
-
 
 
 def configure_endhost_interface(end_host, test_network, interface_name, timeout=30):
@@ -139,7 +139,7 @@ class FunTestCase1(FunTestCase):
         configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=end_host.extra_attributes["test_interface_name"])
 
         if csi_perf_enabled:
-            p = PdTraceTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=fs)
+            p = CsiPerfTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=fs)
             p.prepare(f1_index=0)
             p.start(f1_index=0)
             for i in range(1):
