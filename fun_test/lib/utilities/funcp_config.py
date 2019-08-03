@@ -56,10 +56,15 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
+
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=0),
+                                 "Setup nc serial proxy connection")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
         fs_0.bmc.start_uart_log_listener(f1_index=0, serial_device=None)
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
+                             "Setup nc serial proxy connection")
         fun_test.test_assert(
             fs_0.bmc.u_boot_load_image(index=1, tftp_image_path=fs_1.tftp_image_path, boot_args=fs_1.boot_args,
                                        gateway_ip=gatewayip),
@@ -103,6 +108,8 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
         fun_test.test_assert(fs_0.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=0),
+                                 "Setup nc serial proxy connection")
         fun_test.test_assert(fs_0.bmc.u_boot_load_image(index=0, tftp_image_path=fs_0.tftp_image_path,
                                                         boot_args=fs_0.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(0))
@@ -144,6 +151,8 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(fs.set_f1s(), "Set F1s")
         fun_test.test_assert(fs.fpga_initialize(), "FPGA initiaize")
+        fun_test.test_assert(fs_0.bmc.setup_serial_proxy_connection(f1_index=1),
+                             "Setup nc serial proxy connection")
         fun_test.test_assert(fs.bmc.u_boot_load_image(index=1, tftp_image_path=fs.tftp_image_path,
                                                         boot_args=fs.boot_args, gateway_ip=gatewayip),
                              "U-Bootup f1: {} complete".format(1))
@@ -256,14 +265,11 @@ class FunControlPlaneBringup:
             # ping MPG IPs before executing abstract config
             ping_mpg = linux_obj.ping(self.mpg_ips[f1])
 
-            if ping_mpg:
-                fun_test.test_assert(expression=True, message="MPG IP %s is reachable" % self.mpg_ips[f1])
-            else:
+            if not ping_mpg:
                 fun_test.sleep(message="Waiting to retry mpg ping")
                 ping_mpg = linux_obj.ping(self.mpg_ips[f1], count=15)
-                if not ping_mpg:
-                    fun_test.critical(message="cannot ping MPG IP %s from COMe" % self.mpg_ips[f1])
-                    continue
+
+            fun_test.test_assert(expression=ping_mpg, message="Ping MPG IP %s from COMe" % self.mpg_ips[f1])
 
             file_contents = None
             file_name = str(f1).strip() + "_abstract.json"
@@ -304,29 +310,51 @@ class FunControlPlaneBringup:
 
             linux_containers[docker_name].command(command="sudo ifconfig mpg up", timeout=300)
 
-            if not static:
-                random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
+            random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
                               random.randint(0x00, 0xff)]
-                mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
-                fun_test.test_assert(expression=mac, message="Generate Random MAC")
+            mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
+            fun_test.test_assert(expression=mac, message="Generate Random MAC")
 
-                try:
-                    linux_containers[docker_name].command(command="sudo ifconfig mpg hw ether " + mac, timeout=60)
+            try:
+                linux_containers[docker_name].command(command="sudo ifconfig mpg hw ether " + mac, timeout=60)
 
-                except:
-                    linux_containers[docker_name].command(command="ifconfig mpg")
-                    op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
-                    for line in op:
-                        ether = False
-                        for word in line.split():
-                            if "ether" == word:
-                                ether = True
-                                continue
-                            if ether:
-                                fun_test.test_assert_expected(expected=mac, actual=word,
-                                                              message="Make sure MAC is updated "
-                                                                      "on %s" % docker_name)
-                                break
+            except:
+                linux_containers[docker_name].command(command="ifconfig mpg")
+                op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
+                for line in op:
+                    ether = False
+                    for word in line.split():
+                        if "ether" == word:
+                            ether = True
+                            continue
+                        if ether:
+                            fun_test.test_assert_expected(expected=mac, actual=word,
+                                                          message="Make sure MAC is updated "
+                                                                  "on %s" % docker_name)
+
+            if not static:
+                #random_mac = [0x00, 0xf1, 0x1d, random.randint(0x00, 0x7f), random.randint(0x00, 0xff),
+                #              random.randint(0x00, 0xff)]
+                #mac = ':'.join(map(lambda x: "%02x" % x, random_mac))
+                #fun_test.test_assert(expression=mac, message="Generate Random MAC")
+
+                #try:
+                #    linux_containers[docker_name].command(command="sudo ifconfig mpg hw ether " + mac, timeout=60)
+
+                #except:
+                #    linux_containers[docker_name].command(command="ifconfig mpg")
+                #    op = linux_containers[docker_name].command(command="ifconfig mpg").split('\r\n')
+                #    for line in op:
+                #        ether = False
+                #        for word in line.split():
+                #            if "ether" == word:
+                #                ether = True
+                #                continue
+                #            if ether:
+                #                fun_test.test_assert_expected(expected=mac, actual=word,
+                #                                              message="Make sure MAC is updated "
+                #                                                      "on %s" % docker_name)
+                #                break
                 linux_containers[docker_name].sudo_command(command="dhclient -v -i mpg", timeout=300)
 
             else:
@@ -999,9 +1027,9 @@ class FunControlPlaneBringup:
                                                                diff_stats[VP_PACKETS_OUT_NU_ETP] >= count),
                                                    message=checkpoint)
 
+                        remote_dpc_obj.disconnect()
                     linux_obj.disconnect()
                     source_dpc_obj.disconnect()
-                    remote_dpc_obj.disconnect()
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

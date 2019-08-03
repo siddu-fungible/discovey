@@ -95,6 +95,9 @@ class Dut(ToDictMixin):
     def set_name(self, name):
         self.name = name
 
+    def get_name(self):
+        return self.name
+
     def get_ssd_interfaces(self):
         return self.interfaces
 
@@ -122,6 +125,8 @@ class Dut(ToDictMixin):
         self.bond_interfaces[f1_index][index] = dut_interface_obj
         return dut_interface_obj
 
+    def get_spec(self):
+        return self.spec
 
     def set_start_mode(self, mode):
         self.start_mode = mode

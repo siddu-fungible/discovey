@@ -23,6 +23,20 @@ class CmdController(Cmd):
         self._flow_cmd_obj = FlowCommands(dpc_client=self.dpc_client)
         self._storage_peek_obj = StoragePeekCommands(dpc_client=self.dpc_client)
 
+    def check_cluster_id_range(self, cluster_id):
+        result = True
+        if not ((cluster_id <= 7) and (cluster_id >= 0)):
+            print "Enter cluster id between 0 and 7. You entered %s" % cluster_id
+            result = False
+        return result
+
+    def check_core_id_range(self, core_id):
+        result = True
+        if not ((core_id <= 5) and (core_id >= 0)):
+            print "Enter core id between 0 and 5. You entered %s" % core_id
+            result = False
+        return result
+
     def set_system_time_interval(self, args):
         time_interval = args.time
         self._sys_cmd_obj.time_interval(time_interval=time_interval)
@@ -711,8 +725,19 @@ class CmdController(Cmd):
 
     def peek_per_vp_stats(self, args):
         grep_regex = args.grep
-        vp_num = args.vp_num
-        self._peek_cmd_obj.peek_stats_per_vp(vp_number=vp_num, grep_regex=grep_regex)
+        cluster_id = args.cluster_id
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and not cluster_id:
+            print "Please enter value for cluster_id with "
+            return self.dpc_client.disconnect()
+        if cid_flag and core_id_flag:
+            self._peek_cmd_obj.peek_stats_per_vp(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
 
     def peek_nwqm_stats(self, args):
         grep_regex = args.grep
@@ -730,10 +755,20 @@ class CmdController(Cmd):
         self._peek_cmd_obj.peek_mpg_stats()
 
     def peek_pervppkts_stats(self, args):
-        cluster_id = args.cluster_id
         grep_regex = args.grep
-        vp_num = args.vp_num
-        self._peek_cmd_obj.peek_pervppkts_stats(vp_number=vp_num, cluster_id=cluster_id, grep_regex=grep_regex)
+        cluster_id = args.cluster_id
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and not cluster_id:
+            print "Please enter value for cluster_id with "
+            return self.dpc_client.disconnect()
+        if cid_flag and core_id_flag:
+            self._peek_cmd_obj.peek_pervppkts_stats(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
 
     def peek_stats_nhp(self, args):
         grep_regex = args.grep
@@ -746,7 +781,18 @@ class CmdController(Cmd):
     def peek_pc_resource_stats(self, args):
         grep_regex = args.grep
         cluster_id = args.cluster_id
-        self._peek_cmd_obj.peek_pc_resource_stats(cluster_id=cluster_id, grep_regex=grep_regex)
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and not cluster_id:
+            print "Please enter value for cluster_id with "
+            return self.dpc_client.disconnect()
+        if cid_flag and core_id_flag:
+            self._peek_cmd_obj.peek_pc_resource_stats(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
 
     def peek_cc_resource_stats(self, args):
         grep_regex = args.grep
@@ -1205,7 +1251,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.105.168", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.105.178", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

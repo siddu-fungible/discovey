@@ -185,6 +185,8 @@ class JenkinsManager():
                 if m:
                     image_path = m.group(1)
                     print "Image-path: {}".format(image_path)
+        if image_path:
+            fun_test.update_job_environment_variable("jenkins_build_path", image_path)
         return image_path
 
 if __name__ == "__main__":

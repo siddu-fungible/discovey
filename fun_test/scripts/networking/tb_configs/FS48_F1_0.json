@@ -1,0 +1,49 @@
+{
+    "Description": "F1-0-FS-48_abstract",
+    "F1Index" : 1,
+    "Interfaces" : [
+	{
+	    "name" : "fpg0",
+            "mtu": 9000,
+	    "address" : "21.1.1.2",
+	    "prefix length" : 30,
+	    "spine_index" : 0,
+	    "gph_index" : 0,
+	    "enable" : true
+	},
+        {
+            "name" : "fpg4",
+            "mtu": 9000,
+            "address" : "22.1.1.2",
+            "prefix length" : 30,
+            "spine_index" : 1,
+            "gph_index" : 1,
+            "enable" : true
+        },
+        {
+            "name" : "fpg8",
+            "mtu": 9000,
+            "enable" : true
+        },
+	{
+	    "name" : "lo:0",
+	    "address" : "7.7.7.7",
+	    "prefix length" : 32,
+	    "enable" : true
+	},
+        {
+            "name" : "vlan1",
+            "address" : "41.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ],
+    "BGP" : {
+	"Local AS": 62002,
+	"Neighbors" : [
+	    { "peer" : "21.1.1.1", "peer-as": 62001},
+	    { "peer" : "22.1.1.1", "peer-as": 62001}
+
+	]
+    }
+}

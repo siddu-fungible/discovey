@@ -45,6 +45,7 @@ class BootPhases:
     FS_BRING_UP_U_BOOT_COMPLETE = "FS_BRING_UP_U_BOOT_COMPLETE"
     FS_BRING_UP_COME_REBOOT_INITIATE = "FS_BRING_UP_COME_REBOOT_INITIATE"
     FS_BRING_UP_COME_ENSURE_UP = "FS_BRING_UP_COME_ENSURE_UP"
+    FS_BRING_UP_CALL_FUNCP_CALLBACK = "FS_BRING_UP_CALL_FUNCP_CALLBACK"
     FS_BRING_UP_COME_INITIALIZE = "FS_BRING_UP_COME_INITIALIZE"
     FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD = "FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD"
     FS_BRING_UP_COMPLETE = "FS_BRING_UP_COMPLETE"
@@ -100,7 +101,6 @@ class Bmc(Linux):
 
     def __init__(self, disable_f1_index=None, disable_uart_logger=False, setup_support_files=None, **kwargs):
         super(Bmc, self).__init__(**kwargs)
-        self.uart_log_threads = {}
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
         self.uart_log_listener_process_ids = []
@@ -144,12 +144,6 @@ class Bmc(Linux):
         self.sendline(chr(0))
         self.handle.expect(self.prompt_terminator, timeout=1)
         return True
-
-    def get_uart_log(self):
-        for f1_index in range(self.NUM_F1S):
-            if f1_index == self.disable_f1_index:
-                continue
-            self.uart_log_threads[f1_index].close()
 
     def _get_ipmi_details(self):
         ipmi_details = {
@@ -438,6 +432,22 @@ class Bmc(Linux):
             s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
+    def get_uart_log_file(self, f1_index, post_fix=None):
+        if post_fix is not None:
+            post_fix = "_pf_{}_".format(post_fix)
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(
+            self._get_context_prefix("f1_{}{}_uart_log.txt".format(f1_index, post_fix)))
+        fun_test.scp(source_ip=self.host_ip,
+                     source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
+                     source_username=self.ssh_username,
+                     source_password=self.ssh_password,
+                     target_file_path=artifact_file_name)
+        with open(artifact_file_name, "r+") as f:
+            content = f.read()
+            f.seek(0, 0)
+            f.write(self.u_boot_logs[f1_index] + '\n' + content)
+        return artifact_file_name
+
     def cleanup(self):
         fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
 
@@ -558,7 +568,6 @@ class BootupWorker(Thread):
             self.worker.run()
             for f1_index, f1 in fs.f1s.iteritems():
                 f1.set_dpc_port(come.get_dpc_port(f1_index))
-            fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
             try:
                 fs.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
@@ -569,7 +578,6 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
             """
             fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
                                  message="Ensure ComE is up",
@@ -582,6 +590,7 @@ class BootupWorker(Thread):
             """
 
             if self.fs.fun_cp_callback:
+                fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
                 fun_test.log("Calling fun CP callback from Fs")
                 self.fs.fun_cp_callback(self.fs.get_come())
             self.fs.come_initialized = True
@@ -612,11 +621,11 @@ class ComEInitializationWorker(Thread):
                                  message="ComE initialized",
                                  context=self.fs.context)
 
-            if self.fs.fun_cp_callback:
-                fun_test.log("Calling fun CP callback from Fs")
-                self.fs.fun_cp_callback(self.fs.get_come())
+            # if self.fs.fun_cp_callback:
+            #    fun_test.log("Calling fun CP callback from Fs")
+            #    self.fs.fun_cp_callback(self.fs.get_come())
             self.fs.come_initialized = True
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+            # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
         except Exception as ex:
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
@@ -670,6 +679,10 @@ class ComE(Linux):
         # self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")
         self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
         return True
+
+    def setup_tools(self):
+        if not self.command_exists("fio"):
+            self.sudo_command("apt install -y fio")
 
     def cleanup_dpc(self):
         # self.command("cd $WORKSPACE/FunControlPlane")
@@ -789,11 +802,11 @@ class F1InFs:
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
 
-    def get_dpc_client(self):
+    def get_dpc_client(self, auto_disconnect=False):
         come = self.fs.get_come()
         host_ip = come.host_ip
         dpc_port = come.get_dpc_port(self.index)
-        dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port)
+        dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
     def get_dpc_storage_controller(self):
@@ -808,11 +821,9 @@ class F1InFs:
         self.dpc_port = port
 
 
-
 class Fs(object, ToDictMixin):
     DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
     MIN_U_BOOT_DATE = datetime(year=2019, month=5, day=29)
-
 
     TO_DICT_VARS = ["bmc_mgmt_ip",
                     "bmc_mgmt_ssh_username",
@@ -889,6 +900,12 @@ class Fs(object, ToDictMixin):
             self.validate_u_boot_version = not disable_u_boot_version_validation
         self.bootup_worker = None
         self.u_boot_complete = False
+        self.come_initialized = False
+
+        self.csi_perf_templates = {}
+
+    def get_tftp_image_path(self):
+        return self.tftp_image_path
 
     def __str__(self):
         name = self.spec.get("name", None)
@@ -963,7 +980,8 @@ class Fs(object, ToDictMixin):
             context=None,
             setup_bmc_support_files=None,
             fun_cp_callback=None,
-            power_cycle_come=False):  #TODO
+            power_cycle_come=False,
+            already_deployed=False):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -974,9 +992,10 @@ class Fs(object, ToDictMixin):
             fs_spec = am.get_fs_by_name(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
-        if not tftp_image_path:
-            tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
-        fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
+        if not already_deployed:
+            if not tftp_image_path:
+                tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
+            fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
         if not boot_args:
             boot_args = fun_test.get_build_parameter("BOOTARGS")
@@ -1069,6 +1088,10 @@ class Fs(object, ToDictMixin):
                 fun_test.test_assert(expression=self.come.initialize(disable_f1_index=self.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.context)
+
+                if self.fun_cp_callback:
+                    fun_test.log("Calling fun CP callback from Fs")
+                #    self.fs.fun_cp_callback(self.fs.get_come())
                 self.come_initialized = True
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
             else:
@@ -1273,8 +1296,22 @@ class Fs(object, ToDictMixin):
                                                                           message="ComE reachable after APC power-cycle")
         return True
 
+    def get_dpc_client(self, f1_index, auto_disconnect=False):
+        f1 = self.get_f1(index=f1_index)
+        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect)
+        return dpc_client
 
-if __name__ == "__main__":
+    def _get_context_prefix(self, data):
+        s = "{}".format(data)
+        if self.original_context_description:
+            s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
+        return s
+
+    def get_uart_log_file(self, f1_index, post_fix=None):
+        return self.get_bmc().get_uart_log_file(f1_index=f1_index, post_fix=post_fix)
+
+
+if __name__ == "__main2__":
     fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")
     fs.get_bmc().position_support_scripts()
     # fs.bootup(reboot_bmc=False)
@@ -1283,3 +1320,8 @@ if __name__ == "__main__":
     # come = fs.get_come()
     # come.detect_pfs()
     # come.setup_dpc()
+
+
+if __name__ == "__main__":
+    come = ComE(host_ip="fs21-come.fungible.local", ssh_username="fun", ssh_password="123")
+    print come.setup_tools()

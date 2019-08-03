@@ -200,7 +200,18 @@ class FunTest:
             self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
         re_run_info = self.get_re_run_info()
         if re_run_info:
-            self.selected_test_case_ids = [int(x) for x in re_run_info.keys()]
+            re_run_ids = [int(x) for x in re_run_info]
+            if self.selected_test_case_ids:
+
+                ordered_list = []
+                for selected_id in self.selected_test_case_ids:
+                    for re_run_id in re_run_ids:
+                        if int(selected_id) == int(re_run_id):
+                            ordered_list.append(re_run_id)
+                self.selected_test_case_ids = ordered_list
+            else:
+                # scheduler never sent test_case_ids
+                self.selected_test_case_ids = sorted(re_run_ids)
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
@@ -366,6 +377,12 @@ class FunTest:
         run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
         result = run_time.get(name, None)
         return result
+
+    def set_suite_run_time_environment_variable(self, variable, value):
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            if suite_execution:
+                suite_execution.add_run_time_variable(variable, value)
 
     def get_job_environment_variable(self, variable):
         result = None

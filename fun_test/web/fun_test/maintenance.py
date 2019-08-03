@@ -261,7 +261,7 @@ if __name__ == "__main_qd256__":
                         platform=FunPlatform.F1).save()
     print "added charts for 256 qdepth latency"
 
-if __name__ == "__main__":
+if __name__ == "__main__underlay":
     entries = MetricChart.objects.filter(leaf=True)
     for entry in entries:
         if ("underlay" in entry.internal_chart_name or "overlay" in entry.internal_chart_name) and \
@@ -286,6 +286,129 @@ if __name__ == "__main__":
 
             entry.data_sets = json.dumps(overlay_underlay_data_sets)
             entry.save()
+
+if __name__ == "__main__":
+    internal_chart_names = OrderedDict([  # read iops
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_iops", 16),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_iops", 32),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_iops", 64),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_iops", 96),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_iops", 128),
+                                        # write iops
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_iops", 1),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_iops", 8),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_iops", 16),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_iops", 32),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_iops", 64),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_iops", 96),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_iops", 128),
+                                        # read latency
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_1_latency", 1),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_8_latency", 8),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_16_latency", 16),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_32_latency", 32),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_64_latency", 64),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_96_latency", 96),
+                                        ("pocs_inspur_8111_8k_rand_read_iodepth_128_latency", 128),
+                                        # write latency
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_1_latency", 1),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_8_latency", 8),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_16_latency", 16),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_32_latency", 32),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_64_latency", 64),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_96_latency", 96),
+                                        ("pocs_inspur_8111_8k_rand_write_iodepth_128_latency", 128),
+                                        ])
+
+    owner_info = "Ravi Hulle (ravi.hulle@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/" \
+             "ec_inspur_fs_teramark_multivolume.py"
+    platform = FunPlatform.F1
+    model_name = "BltVolumePerformance"
+    description = "TBD"
+
+    for internal_chart_name in internal_chart_names:
+        iodepth = internal_chart_names[internal_chart_name]
+        if "read" in internal_chart_name:
+            mode = "read"
+        elif "write" in internal_chart_name:
+            mode = "write"
+        if "iops" in internal_chart_name:
+            field = "iops"
+            add_name = ""
+            y1_axis_title = PerfUnit.UNIT_OPS
+            positive = False
+            chart_name = "IOPS, QDepth={}".format(iodepth)
+        elif "latency" in internal_chart_name:
+            field = "avg_latency"
+            add_name = "-avg"
+            y1_axis_title = PerfUnit.UNIT_USECS
+            positive = True
+            chart_name = "Latency, QDepth={}".format(iodepth)
+
+        one_data_set = {}
+        data_sets = []
+
+        output_name = "output_{}_{}".format(mode, field)
+
+        if iodepth == 1 or iodepth == 8 or iodepth == 16:
+            fio_job_name = "inspur_8k_random_{}_{}".format(mode, iodepth)
+            naming = "{}{}(1 vol)".format(mode, add_name)
+            input_fio_job_names = OrderedDict([(fio_job_name, naming)])
+        elif iodepth == 32 or iodepth == 64 or iodepth == 128 or iodepth == 96:
+            if iodepth == 96:
+                volumes_list = [4, 8]
+            else:
+                volumes_list = [1, 4, 8]
+            input_fio_job_names = OrderedDict()
+            for vol in volumes_list:
+                if vol == 1:
+                    fio_job_name = "inspur_8k_random_{}_{}".format(mode, iodepth)
+                else:
+                    fio_job_name = "inspur_8k_random_{}_iodepth_{}_vol_{}".format(mode, iodepth, vol)
+
+                input_fio_job_names[fio_job_name] = "{}{}({} vol)".format(mode, add_name, vol)
+
+        for input_fio_job_name in input_fio_job_names:
+            inputs = {
+                "input_platform": platform,
+                "input_fio_job_name": input_fio_job_name
+            }
+
+            output = {
+                "name": output_name,
+                "unit": y1_axis_title,
+                "min": 0,
+                "max": -1,
+                "expected": -1,
+                "reference": -1
+            }
+            one_data_set["name"] = input_fio_job_names[input_fio_job_name]
+            one_data_set["inputs"] = inputs
+            one_data_set["output"] = output
+            data_sets.append(one_data_set.copy())
+
+        metric_id = LastMetricId.get_next_id()
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description=description,
+                    owner_info=owner_info,
+                    source=source,
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    platform=platform,
+                    work_in_progress=False).save()
+        print ("Metric id: {}".format(metric_id))
+        print ("Data sets: {}".format(data_sets))
+
+
 
 
 

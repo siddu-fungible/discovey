@@ -39,7 +39,7 @@ except (KeyError, ValueError):
     DPC_PROXY_PORT = 40220
     DPC_PROXY_IP2 = '10.1.20.22'
     DPC_PROXY_PORT2 = 40221
-    TB = 'FS11'
+    TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
 try:
     inputs = fun_test.get_job_inputs()
@@ -81,7 +81,7 @@ NUM_QUEUES_TX = 8
 NUM_QUEUES_RX = 8
 MAX_MTU = 1500  # TODO: check SWLINUX-290 and update
 
-supported_testbed_types = ('fs-11', )
+supported_testbed_types = ('fs-11', 'fs-48', )
 
 
 def setup_nu_host(funeth_obj):
@@ -175,6 +175,23 @@ def setup_funcp(test_bed_type):
     funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
                                     abstract_config_f1_1=abstract_json_file_f1_1)
     #fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
+    # TODO: sanity check of control plane
+
+
+def setup_funcp_on_fs(test_bed_type):
+
+    testbed_info = fun_test.parse_file_to_json(SCRIPTS_DIR +
+                                               '/networking/funcp/abstract_config/abstract_config_key.json')
+    funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+    funcp_obj.bringup_funcp(prepare_docker=True)
+    funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=str(testbed_info['fs'][test_bed_type]['mpg1']),
+                             f1_0_mpg=str(testbed_info['fs'][test_bed_type]['mpg0']))
+
+    abstract_json_file_f1_0 = '%s/networking/tb_configs/%s_F1_0.json' % (SCRIPTS_DIR, TB)
+    abstract_json_file_f1_1 = '%s/networking/tb_configs/%s_F1_1.json' % (SCRIPTS_DIR, TB)
+    funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file_f1_0,
+                                    abstract_config_f1_1=abstract_json_file_f1_1)
+    fun_test.sleep("Sleeping for a while waiting for control plane to converge", seconds=10)
     # TODO: sanity check of control plane
 
 
@@ -309,8 +326,12 @@ class FunethSanity(FunTestScript):
             #TB = 'FS11'
             TB = ''.join(test_bed_type.split('-')).upper()
             if control_plane:
-                f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
-                f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                if test_bed_type == 'fs-11':
+                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0,1 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                if test_bed_type == 'fs-48':
+                    f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                    f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -349,7 +370,8 @@ class FunethSanity(FunTestScript):
         # TODO: make it work for other setup
         if test_bed_type == 'fs-11' and control_plane:
             setup_funcp(test_bed_type)
-
+        elif test_bed_type != 'fs-11' and control_plane:
+            setup_funcp_on_fs(test_bed_type)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
                             fundrv_branch=fundrv_branch,

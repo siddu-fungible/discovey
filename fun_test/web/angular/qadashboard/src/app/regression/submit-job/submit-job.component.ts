@@ -91,6 +91,7 @@ export class SubmitJobComponent implements OnInit {
   queryParams: any = null;
   jobInputs: string = null; // input dictionary to be sent to the scheduler
 
+  csiPerf: boolean = false;
   moreJenkinsOptions: boolean = false;
   mode: Mode = Mode.REGULAR;
   Mode = Mode;
@@ -361,6 +362,10 @@ export class SubmitJobComponent implements OnInit {
 
     if (this.privateFunosTgzUrl && this.privateFunosTgzUrl !== "") {
       payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
+    }
+
+    if (this.csiPerf) {
+      payload["environment"]["csi_perf"] = this.csiPerf;
     }
 
     if (this.description) {
