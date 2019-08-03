@@ -86,9 +86,17 @@ class FunTestCase1(FunTestCase):
     def run(self):
         # fs = Fs.get(disable_f1_index=1)
         topology_helper = TopologyHelper()
-        bootargs = "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --perf csi-local-ip=29.1.1.2 csi-remote-ip=20.1.1.1 pdtrace-hbm-size-kb=204800"
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=bootargs)
-        expanded_topology = topology_helper.get_expanded_topology()
+        f1_parameters = {0: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr"},
+                         1: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr"}}
+
+        perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
+        perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec
+        csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+        if csi_perf_enabled:
+            f1_parameters[0]["boot_args"] = f1_parameters[0]["boot_args"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+            # f1_parameters[1]["boot_args"] = f1_parameters[1]["boot_args"] + " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
+
+        topology_helper.set_dut_parameters(dut_index=0, f1_parameters=f1_parameters)
 
         # s = SomeClass()
         # topology_helper.set_dut_parameters(dut_index=0, fun_cp_callback=s.some_callback)
@@ -129,16 +137,21 @@ class FunTestCase1(FunTestCase):
         }
 
         configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=end_host.extra_attributes["test_interface_name"])
-        p = PdTraceTemplate(perf_collector_host_name="poc-server-04", listener_ip="20.1.1.1", fs=fs)
-        p.prepare(f1_index=0)
-        p.start(f1_index=0)
-        for i in range(1):
-            try:
-                dpcsh_client = fs.get_dpc_client(f1_index=0)
-                dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=10)
-            except Exception as ex:
-                fun_test.critical(str(ex))
-        p.stop(f1_index=0)
+
+        if csi_perf_enabled:
+            p = PdTraceTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=fs)
+            p.prepare(f1_index=0)
+            p.start(f1_index=0)
+            for i in range(1):
+                try:
+                    dpcsh_client = fs.get_dpc_client(f1_index=0, auto_disconnect=True)
+                    # do some activity
+                    # dpcsh_client.json_execute(verb="peek", data="stats/vppkts", command_duration=10)
+                    dpcsh_client.json_execute(verb="echo", command_duration=10)
+
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+            p.stop(f1_index=0)
 
 
 
