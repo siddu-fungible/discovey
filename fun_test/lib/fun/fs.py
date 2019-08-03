@@ -442,7 +442,10 @@ class Bmc(Linux):
                      source_username=self.ssh_username,
                      source_password=self.ssh_password,
                      target_file_path=artifact_file_name)
-
+        with open(artifact_file_name, "r+") as f:
+            content = f.read()
+            f.seek(0, 0)
+            f.write(self.u_boot_logs[f1_index] + '\n' + content)
         return artifact_file_name
 
     def cleanup(self):
