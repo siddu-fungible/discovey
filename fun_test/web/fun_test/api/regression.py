@@ -13,7 +13,8 @@ from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
 from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
-
+from web.fun_test.models import Module
+from web.fun_test.fun_serializer import model_instance_to_dict
 
 @csrf_exempt
 @api_safe_json_response
@@ -233,3 +234,22 @@ def assets(request, name):
         except:
             pass #TODO
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def categories(request):
+    result = []
+    all_categories = Module.objects.all().order_by('name')
+    for category in all_categories:
+        result.append(model_instance_to_dict(category))
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def sub_categories(request):
+    pass
+
+if __name__ == "__main__":
+    from web.fun_test.django_interactive import *
+    print categories(None)
