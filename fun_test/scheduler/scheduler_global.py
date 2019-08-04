@@ -28,6 +28,7 @@ class SuiteType:
     CONTAINER = "container"
     TASK = "task"
 
+
 class SchedulerJobPriority:
     LOW = "low"
     NORMAL = "normal"

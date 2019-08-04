@@ -86,8 +86,8 @@ class FunTestCase1(FunTestCase):
     def run(self):
         # fs = Fs.get(disable_f1_index=1)
         topology_helper = TopologyHelper()
-        f1_parameters = {0: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr"},
-                         1: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr"}}
+        f1_parameters = {0: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"},
+                         1: {"boot_args": "app=mdt_test,load_mods,hw_hsu_test workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --disable-wu-watchdog"}}
 
         perf_listener_host_name = "poc-server-04"  # figure this out from the topology spec
         perf_listener_ip = "20.1.1.1"              # figure this out from the topology spec
