@@ -1439,7 +1439,12 @@ class FunTestScript(object):
     def _cleanup_hosts(self):
         for host in fun_test.get_hosts():
             try:
+                if host.handle:
+                    host.command("exit")
+                    host.command("exit")
+                    host.command("exit")
                 host.disconnect()
+                fun_test.log("Host: {} properly disconnected".format(host))
             except:
                 pass
 
