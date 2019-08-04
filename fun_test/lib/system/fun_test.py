@@ -1440,9 +1440,13 @@ class FunTestScript(object):
         for host in fun_test.get_hosts():
             try:
                 if host.handle:
-                    host.command("exit")
-                    host.command("exit")
-                    host.command("exit")
+                    try:
+                        host.send_control_c()
+                        host.command("exit")
+                        host.command("exit")
+                        host.command("exit")
+                    except:
+                        pass
                 host.disconnect()
                 fun_test.log("Host: {} properly disconnected".format(host))
             except:
