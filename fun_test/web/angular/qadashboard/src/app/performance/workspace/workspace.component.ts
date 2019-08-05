@@ -20,7 +20,6 @@ export class WorkspaceComponent implements OnInit {
   showWorkspace: boolean = false;
   profile: any = null;
   editingWorkspace: boolean = false;
-  addingWorkspace: boolean = false;
   workspaceName: string = null;
   showChartsForWorkspace: boolean = false;
   grids: any = [];
@@ -28,42 +27,64 @@ export class WorkspaceComponent implements OnInit {
   createError: string = null;
   currentWorkspace: any = null;
   buildInfo: any = null;
-  closeResult: string = null;
   description: string = null;
-  deletingWorkspace: any  = null;
+  deletingWorkspace: any = null;
 
   constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router,
               private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal, private title: Title) {
   }
 
+  ngOnInit() {
+    this.title.setTitle('Workspace');
+    this.fetchBuildInfo();
+    this.route.params.subscribe(params => {
+      if (params['emailId']) {
+        let user = {};
+        user["email"] = params["emailId"];
+        this.fetchUsersWorkspaces(user);
+      } else {
+        new Observable(observer => {
+          observer.next(true);
+          observer.complete();
+          return () => {
+          }
+        }).pipe(
+          switchMap(response => {
+            return this.fetchUsers();
+          })).subscribe(response => {
+          console.log("fetched users");
+        }, error => {
+          this.loggerService.error("Unable to fetch users");
+        });
+      }
+    });
+    this.workspaceName = null;
+  }
+
   openAddWorkspace(content) {
     this.modalService.open(content, {ariaLabelledBy: 'modal-add-workspace'}).result.then((result) => {
-      this.closeResult = `Closed with: ${result}`;
       this.modalService.dismissAll();
 
     }, (reason) => {
-      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
   }
 
   openEditWorkspace(content, workspace) {
     this.currentWorkspace = workspace;
     this.modalService.open(content, {ariaLabelledBy: 'modal-edit-workspace', size: 'lg'}).result.then((result) => {
-      this.closeResult = `Closed with: ${result}`;
       // this.modalService.dismissAll();
     }, (reason) => {
-      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-      this.fetchWorkspaceAfterEditing();
+      this.fetchWorkspacesAfterEditing();
     });
   }
 
   openDeleteWorkspace(content, workspace) {
     this.deletingWorkspace = workspace;
     this.modalService.open(content, {ariaLabelledBy: 'modal-delete-workspace'}).result.then((result) => {
-      this.closeResult = `Closed with: ${result}`;
+      // this.closeResult = `Closed with: ${result}`;
     }, (reason) => {
-      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-      this.fetchWorkspaceAfterEditing();
+      // this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+      this.fetchWorkspacesAfterEditing();
     });
   }
 
@@ -76,32 +97,6 @@ export class WorkspaceComponent implements OnInit {
     } else {
       return `with: ${reason}`;
     }
-  }
-
-  ngOnInit() {
-    this.title.setTitle('Workspace');
-    this.fetchBuildInfo();
-    this.route.params.subscribe(params => {
-      if (params['emailId']) {
-        let user = {};
-        user["email"] = params["emailId"];
-        this.fetchUsersWorkspace(user);
-      }
-    });
-    this.workspaceName = null;
-    new Observable(observer => {
-      observer.next(true);
-      observer.complete();
-      return () => {
-      }
-    }).pipe(
-      switchMap(response => {
-        return this.fetchUsers();
-      })).subscribe(response => {
-      console.log("fetched users");
-    }, error => {
-      this.loggerService.error("Unable to fetch users");
-    });
   }
 
   //populates buildInfo
@@ -117,7 +112,19 @@ export class WorkspaceComponent implements OnInit {
     });
   }
 
-  fetchUsersWorkspace(user): void {
+  fetchUsers(): any {
+    return this.apiService.get("/api/v1/users").pipe(switchMap(response => {
+      this.users = response.data;
+      return of(true);
+    }));
+  }
+
+    onUserChange(newUser): void {
+    let url = "/performance/workspace/" + newUser.email;
+    this.router.navigateByUrl(url);
+  }
+
+  fetchUsersWorkspaces(user): void {
     new Observable(observer => {
       observer.next(true);
       observer.complete();
@@ -132,7 +139,7 @@ export class WorkspaceComponent implements OnInit {
         return of(true);
       }),
       switchMap(response => {
-        return this.fetchWorkspace(user);
+        return this.fetchWorkspaces(user);
       })).subscribe(response => {
       console.log("fetched user and workspace from URL");
     }, error => {
@@ -149,38 +156,29 @@ export class WorkspaceComponent implements OnInit {
     }
   }
 
-  deleteMetricInWorkspace(metricId): void {
-    Object.keys(this.currentWorkspace.interestedMetrics[0]).forEach(key => {
-      if (Number(key) === Number(metricId)) {
-        delete this.currentWorkspace.interestedMetrics[0][key];
+  fetchWorkspaces(user): any {
+    return this.apiService.get("/api/v1/workspaces/" + user.email).pipe(switchMap(response => {
+      let workspaces = response.data;
+      this.profile = [];
+      if (workspaces.length) {
+        for (let workspace of workspaces.workspace) {
+        let newWorkspace = {};
+        newWorkspace["name"] = workspace.name;
+        newWorkspace["description"] = workspace.description;
+        newWorkspace["interestedMetrics"] = workspace.interested_metrics;
+        newWorkspace["editingWorkspace"] = false;
+        if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
+          this.currentWorkspace.interestedMetrics = newWorkspace["interestedMetrics"];
+        }
+        this.profile.push(newWorkspace);
       }
-    });
-  }
-
-  onDeleteWorkspace(workspace) {
-    this.apiService.delete("/api/v1/profile/" + this.selectedUser.email + "/" + workspace.name).subscribe(response => {
-      this.loggerService.success(`Deleted ${this.selectedUser.email} ${workspace.name}`);
-      this.fetchWorkspaceAfterEditing();
-      this.modalService.dismissAll();
-    }, error => {
-      this.loggerService.error(`Delete failed for ${this.selectedUser.email} ${workspace.name}`);
-    })
-  }
-
-  fetchUsers(): any {
-    return this.apiService.get("/api/v1/users").pipe(switchMap(response => {
-      this.users = response.data;
+      }
+      this.showWorkspace = true;
       return of(true);
     }));
   }
 
-  onUserChange(newUser): void {
-    this.addingWorkspace = false;
-    let url = "/performance/workspace/" + newUser.email;
-    this.router.navigateByUrl(url);
-  }
-
-  createWorkspace(): void {
+    createWorkspace(): void {
     let error = false;
     if (this.workspaceName === null || this.workspaceName.trim() === "") {
       this.createError = "Enter some workspace name";
@@ -205,15 +203,13 @@ export class WorkspaceComponent implements OnInit {
           return this.submitWorkspace();
         }),
         switchMap(response => {
-          return this.fetchWorkspace(this.selectedUser);
+          return this.fetchWorkspaces(this.selectedUser);
         })).subscribe(response => {
         console.log("fetched workspace after creating the workspace");
-        this.addingWorkspace = false;
         this.workspaceName = null;
         this.description = null;
         this.modalService.dismissAll();
       }, error => {
-        this.addingWorkspace = false;
         this.workspaceName = null;
         this.description = null;
         this.loggerService.error("Unable to fetch workspace after creating");
@@ -223,17 +219,7 @@ export class WorkspaceComponent implements OnInit {
     }
   }
 
-  updateStatus(submitted, workspace): void {
-    if (submitted) {
-      workspace.editingWorkspace = false;
-      this.addingWorkspace = false;
-      this.grids = [];
-      this.showChartsForWorkspace = false;
-      this.fetchWorkspaceAfterEditing();
-    }
-  }
-
-  fetchWorkspaceAfterEditing(): void {
+    fetchWorkspacesAfterEditing(): void {
     new Observable(observer => {
       observer.next(true);
       observer.complete();
@@ -241,7 +227,7 @@ export class WorkspaceComponent implements OnInit {
       }
     }).pipe(
       switchMap(response => {
-        return this.fetchWorkspace(this.selectedUser);
+        return this.fetchWorkspaces(this.selectedUser);
       })).subscribe(response => {
       console.log("fetched workspace after editing the workspace");
       // if (this.currentWorkspace) {
@@ -252,39 +238,59 @@ export class WorkspaceComponent implements OnInit {
     });
   }
 
-  fetchWorkspace(user): any {
-    return this.apiService.get("/api/v1/profile/" + user.email).pipe(switchMap(response => {
-      let profiles = response.data;
-      this.profile = [];
-      for (let workspace of profiles.workspace) {
-        let newWorkspace = {};
-        newWorkspace["name"] = workspace.name;
-        newWorkspace["description"] = workspace.description;
-        newWorkspace["interestedMetrics"] = workspace.interested_metrics;
-        newWorkspace["editingWorkspace"] = false;
-        if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
-          this.currentWorkspace.interestedMetrics = newWorkspace["interestedMetrics"];
-        }
-        this.profile.push(newWorkspace);
-      }
-      this.showWorkspace = true;
-      return of(true);
-    }));
-  }
-
   submitWorkspace(): any {
     let payload = {};
     payload["email"] = this.selectedUser.email;
-    let workspace = {};
-    workspace["name"] = this.workspaceName;
-    workspace["description"] = this.description;
-    workspace["interested_metrics"] = [];
-    payload["workspace"] = workspace;
-    return this.apiService.post("/api/v1/profile/", payload).pipe(switchMap(response => {
+    payload["name"] = this.workspaceName;
+    payload["description"] = this.description;
+    return this.apiService.post("/api/v1/workspaces/", payload).pipe(switchMap(response => {
       console.log("created workspace name successfully");
       return of(true);
     }));
   }
+
+
+
+
+
+
+
+
+
+
+
+  deleteMetricInWorkspace(metricId): void {
+    Object.keys(this.currentWorkspace.interestedMetrics[0]).forEach(key => {
+      if (Number(key) === Number(metricId)) {
+        delete this.currentWorkspace.interestedMetrics[0][key];
+      }
+    });
+  }
+
+  onDeleteWorkspace(workspace) {
+    this.apiService.delete("/api/v1/workspaces/" + this.selectedUser.email + "/" + workspace.name).subscribe(response => {
+      this.loggerService.success(`Deleted ${this.selectedUser.email} ${workspace.name}`);
+      this.fetchWorkspacesAfterEditing();
+      this.modalService.dismissAll();
+    }, error => {
+      this.loggerService.error(`Delete failed for ${this.selectedUser.email} ${workspace.name}`);
+    })
+  }
+
+
+
+
+
+  updateStatus(submitted, workspace): void {
+    if (submitted) {
+      workspace.editingWorkspace = false;
+      this.grids = [];
+      this.showChartsForWorkspace = false;
+      this.fetchWorkspacesAfterEditing();
+    }
+  }
+
+
 
   openWorkspace(workspace): void {
     this.showChartsForWorkspace = true;
@@ -301,15 +307,6 @@ export class WorkspaceComponent implements OnInit {
     workspace.editingWorkspace = true;
   }
 
-  addWorkspace(): void {
-    this.addingWorkspace = true;
-  }
-
-  closeWorkspace(): void {
-    this.addingWorkspace = false;
-    this.workspaceName = null;
-    this.createError = null;
-  }
 
   onChangeSubscribeTo(subscribed, metricId): void {
     Object.keys(this.currentWorkspace.interestedMetrics[0]).forEach(key => {
@@ -334,9 +331,9 @@ export class WorkspaceComponent implements OnInit {
     payload["workspace_name"] = this.currentWorkspace.name;
     payload["description"] = this.currentWorkspace.description;
     payload["interested_metrics"] = this.currentWorkspace.interestedMetrics;
-    this.apiService.post("/api/v1/profile/edit_workspace/" + this.selectedUser.email, payload).subscribe(response => {
+    this.apiService.post("/api/v1/workspaces/edit_workspace/" + this.selectedUser.email, payload).subscribe(response => {
       this.loggerService.success(`Edited ${this.selectedUser.email} ${this.currentWorkspace.name}`);
-      this.fetchWorkspaceAfterEditing();
+      this.fetchWorkspacesAfterEditing();
     }, error => {
       this.loggerService.error(`Edit failed for ${this.selectedUser.email} ${this.currentWorkspace.name}`);
     });

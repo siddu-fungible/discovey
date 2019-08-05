@@ -1,6 +1,6 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.models import User, PerformanceUserProfile
+from web.fun_test.models import User, PerformanceUserWorkspaces
 from django.core.exceptions import ObjectDoesNotExist
 import json
 
@@ -21,9 +21,9 @@ def users(request, id):
         new_user.save()
         result = new_user.to_dict()
         try:
-            perf_user = PerformanceUserProfile.objects.get(email=email)
+            perf_user = PerformanceUserWorkspaces.objects.get(email=email)
         except ObjectDoesNotExist:
-            PerformanceUserProfile(email=email).save()
+            PerformanceUserWorkspaces(email=email).save()
 
     elif request.method == "GET":
         users = User.objects.all().order_by('first_name')
@@ -39,37 +39,27 @@ def users(request, id):
 
 @csrf_exempt
 @api_safe_json_response
-def profile(request, email, workspace_name=None):
-    result = None
+def workspaces(request, email, workspace_name=None):
+    result = []
     if request.method == "POST":
         request_json = json.loads(request.body)
         email = request_json["email"]
-        workspace = None
-        if "workspace" in request_json:
-            workspace = request_json["workspace"]
-
-        profile = PerformanceUserProfile.objects.get(email=email)
-        match_found = False
-        if workspace:
-            for ws in profile.workspace:
-                if ws["name"] == workspace["name"]:
-                    match_found = True
-            if not match_found:
-                profile.workspace.append(workspace)
-                profile.save()
-            else:
-                for ws in profile.workspace:
-                    if ws["name"] == workspace["name"]:
-                        ws["interested_metrics"] = workspace["interested_metrics"]
-                        ws["description"] = workspace["description"]
-                profile.save()
-        result = profile.to_dict()
-
+        name = request_json["name"]
+        description = request_json["description"]
+        try:
+            entry = PerformanceUserWorkspaces.objects.get(email=email, name=name)
+            if entry:
+                entry.description = description
+                entry.save()
+        except ObjectDoesNotExist:
+            entry = PerformanceUserWorkspaces(email=email, name=name, description=description).save()
+        result = entry.to_dict()
     elif request.method == "GET":
-        profile = PerformanceUserProfile.objects.get(email=email)
-        result = profile.to_dict()
+        workspaces = PerformanceUserWorkspaces.objects.filter(email=email)
+        for workspace in workspaces:
+            result.append(workspace.to_dict())
     elif request.method == "DELETE":
-        profile = PerformanceUserProfile.objects.get(email=email)
+        profile = PerformanceUserWorkspaces.objects.get(email=email)
         for ws in profile.workspace:
             if ws["name"] == workspace_name:
                 profile.workspace.remove(ws)
@@ -86,7 +76,7 @@ def edit_workspace(request, email):
         workspace_name = request_json["workspace_name"]
         interested_metrics = request_json["interested_metrics"]
         description = request_json["description"]
-        profile = PerformanceUserProfile.objects.get(email=email)
+        profile = PerformanceUserWorkspaces.objects.get(email=email)
         for ws in profile.workspace:
             if ws["name"] == workspace_name:
                 ws["interested_metrics"] = interested_metrics

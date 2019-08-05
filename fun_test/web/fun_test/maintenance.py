@@ -414,7 +414,7 @@ if __name__ == "__main__":
     users = User.objects.all()
     for user in users:
         if user.email == "ashwin.s@fungible.com":
-            entry = PerformanceUserProfile.objects.get(email=user.email)
+            entry = PerformanceUserWorkspaces.objects.get(email=user.email)
             entry.workspace = []
             entry.save()
         # PerformanceUserProfile(email=user.email).save()
