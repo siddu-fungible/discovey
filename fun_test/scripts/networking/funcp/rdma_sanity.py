@@ -442,10 +442,12 @@ class IbBwTest(FunTestCase):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw", client_cmd=True)
+                f10_hosts[0]["handle"].disconnect()
+                f11_hosts[0]["handle"].disconnect()
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
 
-        fun_test.sleep("sleep", 3)
+        fun_test.test_assert(True, "IB_BW test passed")
 
     def cleanup(self):
         fun_test.shared_variables["f10_host_roce"].cleanup()
@@ -498,14 +500,17 @@ class IbLatTest(FunTestCase):
                     fun_test.sleep("ib_bw test on f11_host", 2)
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_lat")
                 f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_lat", client_cmd=True)
+                f10_hosts[0]["handle"].disconnect()
+                f11_hosts[0]["handle"].disconnect()
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
 
-        fun_test.sleep("sleep", 3)
+        fun_test.test_assert(True, "IB_LAT test passed")
 
     def cleanup(self):
         fun_test.shared_variables["f10_host_roce"].cleanup()
         fun_test.shared_variables["f10_host_roce"].cleanup()
+
 
 if __name__ == '__main__':
     ts = ScriptSetup()
