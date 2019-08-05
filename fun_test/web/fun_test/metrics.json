@@ -5247,13 +5247,13 @@
               {
                 "metric_model_name": "TeraMarkCryptoPerformance",
                 "name": "crypto_dp_tunnel_perf_S1",
-                "label": "Crypto dp tunnel perf",
+                "label": "Crypto dp tunnel perf S1",
                 "children": []
               },
               {
                 "metric_model_name": "TeraMarkCryptoPerformance",
                 "name": "crypto_ipsec_perf_S1",
-                "label": "Ipsec perf",
+                "label": "Ipsec perf S1",
                 "children": []
               }
             ]
