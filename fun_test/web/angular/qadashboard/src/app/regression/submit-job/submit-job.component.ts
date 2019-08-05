@@ -62,7 +62,7 @@ export class SubmitJobComponent implements OnInit {
 
   withJenkinsBuild: boolean = true;
 
-  disableAssertions: boolean = true;
+  disableAssertions: boolean = false;
   funOsMakeFlags: string = null;
   branchFunOs: string = null;
   branchFunSdk: string = null;
