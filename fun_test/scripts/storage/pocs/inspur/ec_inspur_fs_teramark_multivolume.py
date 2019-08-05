@@ -688,7 +688,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 pcap_stopped[host_name] = True
                 pcap_pid[host_name] = {}
                 pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
-                                                             tcpdump_filename="/tmp/nvme_connect.pcap")
+                                                                        tcpdump_filename="/tmp/nvme_connect.pcap",
+                                                                        snaplen=1500)
                 if pcap_pid[host_name]:
                     fun_test.log("Started packet capture in {}".format(host_name))
                     pcap_started[host_name] = True

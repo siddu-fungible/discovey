@@ -605,7 +605,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 pcap_stopped[host_name] = True
                 pcap_pid[host_name] = {}
                 pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
-                                                             tcpdump_filename="/tmp/nvme_connect.pcap")
+                                                                        tcpdump_filename="/tmp/nvme_connect.pcap",
+                                                                        snaplen=1500)
                 if pcap_pid[host_name]:
                     fun_test.log("Started packet capture in {}".format(host_name))
                     pcap_started[host_name] = True
@@ -625,32 +626,24 @@ class ECVolumeLevelTestcase(FunTestCase):
                         if host_ip in self.ec_info[sc_obj]:
                             # Building nvme connect command
                             if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
-                                    format(self.attach_transport.lower(), self.f1_ips[sc_index],
-                                           str(self.transport_port),
-                                           self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
-                                           self.host_info[host_name]["ip"])
+                                nvme_connect_status = host_handle.nvme_connect(
+                                    target_ip=self.f1_ips[sc_index],
+                                    nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
+                                    port=self.transport_port, transport=self.attach_transport,
+                                    hostnqn=self.host_info[host_name]["ip"])
                             else:
-                                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
-                                    format(self.attach_transport.lower(), self.f1_ips[sc_index],
-                                           str(self.transport_port),
-                                           self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
-                                           str(self.io_queues), self.host_info[host_name]["ip"])
-                            try:
-                                nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
-                                nvme_connect_exit_status = host_handle.exit_status()
-                                fun_test.log("nvme_connect_output output is: {}".format(nvme_connect_output))
-                                if nvme_connect_exit_status and pcap_started[host_name]:
-                                    host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                                    pcap_stopped[host_name] = True
-                            except Exception as ex:
-                                # Stopping the packet capture if it is started
-                                if pcap_started[host_name]:
-                                    host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                                    pcap_stopped[host_name] = True
+                                nvme_connect_status = host_handle.nvme_connect(
+                                    target_ip=self.f1_ips[sc_index],
+                                    nvme_subsystem=self.ec_info[sc_obj][host_ip][self.attach_transport]["nqn"],
+                                    port=self.transport_port, transport=self.attach_transport,
+                                    io_queues=self.io_queues, hostnqn=self.host_info[host_name]["ip"])
 
-                            fun_test.test_assert_expected(expected=0, actual=nvme_connect_exit_status,
-                                                          message="{} - NVME Connect Status".format(host_name))
+                            if pcap_started[host_name]:
+                                host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
+                                pcap_stopped[host_name] = True
+
+                            fun_test.test_assert(nvme_connect_status,
+                                                 message="{} - NVME Connect Status".format(host_name))
 
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
