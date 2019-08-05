@@ -372,18 +372,28 @@ export class SubmitJobComponent implements OnInit {
       payload["description"] = this.description;
     }
 
-    this.submitting = "Submitting job";
-    let ctrl = this;
-    this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
-      self.jobId = parseInt(result.data);
-      window.location.href = "/regression/suite_detail/" + self.jobId;
-      ctrl.logger.success(`Job: ${self.jobId} Submitted`);
-      console.log("Job: " + self.jobId + " Submitted");
-      ctrl.submitting = null;
-    }, error => {
-      self.logger.error("Unable to submit job");
-      ctrl.submitting = null;
-    });
+    if (this.mode === Mode.TRIAGE) {
+      
+    }
+
+    if (this.mode === Mode.REGULAR) {
+      this.submitting = "Submitting job";
+      let ctrl = this;
+      this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
+        self.jobId = parseInt(result.data);
+        window.location.href = "/regression/suite_detail/" + self.jobId;
+        ctrl.logger.success(`Job: ${self.jobId} Submitted`);
+        console.log("Job: " + self.jobId + " Submitted");
+        ctrl.submitting = null;
+      }, error => {
+        self.logger.error("Unable to submit job");
+        ctrl.submitting = null;
+      });
+    }
+
+
+
+
   }
 
   singleSelectPkEvent(pk) {
