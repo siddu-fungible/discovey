@@ -22,6 +22,7 @@ from scripts.networking.helper import *
 from lib.fun.fs import *
 from lib.host.trex_manager import TrexManager, TREX_CONFIG_FILE
 import copy
+from lib.topology.topology_helper import TopologyHelper
 
 network_controller_obj = None
 nu_lab_handle = None
@@ -52,10 +53,20 @@ class TcpPerformance(FunTestScript):
         f1_index = nu_config_obj.get_f1_index()
         inputs = fun_test.get_job_inputs()
         fun_test.shared_variables['inputs'] = inputs
-        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
-            fs = Fs.get(disable_f1_index=f1_index)
-            fun_test.shared_variables['fs'] = fs
-            fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+        #if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+        #    fs = Fs.get(disable_f1_index=f1_index)
+        #    fun_test.shared_variables['fs'] = fs
+        #    fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+        f1_1_boot_args = "app=hw_hsu_test cc_huid=2 --dpc-server --dpc-uart --csr-replay --all_100g"
+
+        topology_t_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(f1_parameters={1: {"boot_args": f1_1_boot_args}}, disable_f1_index=0)
+
+        topology = topology_helper.deploy()
+        fun_test.shared_variables["topology"] = topology
+        fun_test.test_assert(topology, "Topology deployed")
 
         private_funos_branch = fun_test.get_build_parameter(parameter='BRANCH_FunOS')
         if private_funos_branch:
@@ -103,9 +114,11 @@ class TcpPerformance(FunTestScript):
         fun_test.shared_variables['trex_manager'] = trex_manager
 
     def cleanup(self):
-        if 'fs' in fun_test.shared_variables:
-            fs = fun_test.shared_variables['fs']
-            fs.cleanup()
+        #if 'fs' in fun_test.shared_variables:
+        #    fs = fun_test.shared_variables['fs']
+        #    fs.cleanup()
+        fun_test.log("Cleanup")
+        fun_test.shared_variables["topology"].cleanup()
 
 
 class TestCloseResetCps(FunTestCase):

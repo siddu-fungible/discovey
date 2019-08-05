@@ -216,6 +216,14 @@ def get_suite_run_time(execution_id):
         result = s.run_time
     return result
 
+def set_suite_run_time(execution_id, run_time):
+    result = None
+    s = get_suite_execution(suite_execution_id=execution_id)
+    if s:
+        s.run_time = run_time
+        s.save()
+    return result
+
 def get_new_suite_execution_id():
     last_suite_execution_id = LastSuiteExecution.objects.all()
     if not last_suite_execution_id:

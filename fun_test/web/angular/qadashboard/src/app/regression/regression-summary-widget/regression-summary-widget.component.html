@@ -1,10 +1,12 @@
-<div style="width:100%;margin: 0 auto">
+<div>
   <fun-chart
-    [title]="'<a href = /regression/summary>Regression Summary (Today)</a>'"
+    [title]="'<a href = /regression/summary>Regression summary (today)</a>'"
     [y1AxisLabel]="'Results'"
     [y1Values]="y1Values"
     [xValues]="x1Values"
-    [chartType]="'vertical_colored_bar_chart'">
+    [chartType]="'vertical_colored_bar_chart'"
+    [clickUrls]="clickUrls"
+    [chartHeight]="300">
   </fun-chart>
 </div>
 

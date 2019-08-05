@@ -1,18 +1,27 @@
-#all-cards {
-  padding: 20px;
-}
 
-
-.card {
-  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+.dashboard-card {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
   transition: 0.3s;
-  width: 500px;
-  margin: 20px;
+  margin: 10px;
+  flex-basis: 500px;
+  padding: 10px
 }
 
-.card:hover {
-  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+.card-body {
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
 
+.flex-container {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
+}
 
+.fun-card-container {
+  margin: 10px;
+  flex-basis: 240px;
+}

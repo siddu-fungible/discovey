@@ -37,7 +37,10 @@
     "host_ip": "poc-server-04",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
-    "test_interface_name": "enp216s0"
+    "test_interface_name": "enp216s0",
+    "csi_perf": {
+      "tools_directory": "/home/localadmin"
+    }
   },
   "poc-server-06": {
     "host_ip": "poc-server-06",

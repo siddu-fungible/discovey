@@ -69,7 +69,7 @@ class TestBedWorker(Thread):
                 if test_bed.name not in self.warn_list:
                     if get_current_time() > expiry_time:
                         scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
-                        un_lock_warning_time = 60 * 10
+                        un_lock_warning_time = 60 * 30
                         # self.test_bed_lock_timers[test_bed.name] = threading.Timer(ONE_HOUR, self.test_bed_unlock_dispatch, (self, test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name] = threading.Timer(un_lock_warning_time, self.test_bed_unlock_dispatch, (test_bed.name,))
                         self.test_bed_lock_timers[test_bed.name].start()
@@ -85,6 +85,11 @@ class QueueWorker(Thread):
     def __init__(self):
         super(QueueWorker, self).__init__()
         self.job_threads = {}
+        self.not_available_suite_based_test_beds = []
+
+    def is_high_priority(self, queued_job):
+        this_jobs_priority = queued_job.priority
+        return this_jobs_priority >= SchedulerJobPriority.RANGES[SchedulerJobPriority.HIGH][0] and this_jobs_priority <= SchedulerJobPriority.RANGES[SchedulerJobPriority.HIGH][1]
 
     def submit_container_suite(self, container_suite_execution_id):
         # print ("Submit container suite")
@@ -145,6 +150,13 @@ class QueueWorker(Thread):
         container_suite_execution.state = state
         container_suite_execution.save()
 
+    def is_not_available_suite_based(self, queued_job, suite_based_spec):
+        result = False
+        base_test_bed = suite_based_spec.get("base_test_bed", None)
+        if base_test_bed and base_test_bed in self.not_available_suite_based_test_beds:
+            result = True
+        return result
+
     def run(self):
         from asset.asset_manager import AssetManager
         asset_manager = AssetManager()
@@ -160,6 +172,7 @@ class QueueWorker(Thread):
                 de_queued_jobs = []
                 valid_jobs = self.get_valid_jobs()
                 not_available = {}
+                self.not_available_suite_based_test_beds = []
 
                 for queued_job in valid_jobs:
 
@@ -172,13 +185,32 @@ class QueueWorker(Thread):
                         de_queued_jobs.append(queued_job)
                         continue
 
+                    if queued_job.suspend:
+                        scheduler_logger.debug("Queued Job: {} suspended".format(queued_job.job_id))
+                        queued_job.message = "De-queueing suspended"
+                        queued_job.save()
+                        continue
+
+                    suite_based_spec = None
+                    if queued_job.is_suite_based():
+                        suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
+                        if not suite_based_spec:
+                            scheduler_logger.error(
+                                "suite-based is requested for: {} but it is invalid".format(queued_job.job_id))
+                            queued_job.message = "Spec is invalid"
+                            queued_job.save()
+                            continue
+
                     if queued_job.test_bed_type not in not_available:
-                        suite_based_spec = None
-                        if queued_job.test_bed_type.startswith("suite-based"):
-                            suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
-                            if not suite_based_spec:
-                                scheduler_logger.error("suite-based is requested for: {} but it is invalid".format(queued_job.job_id))
-                                break
+
+                        if queued_job.is_suite_based():
+                            if self.is_not_available_suite_based(queued_job=queued_job, suite_based_spec=suite_based_spec):
+                                scheduler_logger.debug(
+                                    "Queued job: {} unavailable spec: {}".format(queued_job.job_id, suite_based_spec))
+                                queued_job.message = "Possibly non-preemptable job is queued"
+                                queued_job.save()
+                                continue
+
                         availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type,
                                                                                suite_base_test_bed_spec=suite_based_spec)
                         if availability["status"]:
@@ -191,8 +223,15 @@ class QueueWorker(Thread):
                                                                                             custom_test_bed_spec=custom_test_bed_spec)
 
                         else:
-                            if not queued_job.test_bed_type.startswith("suite-based"):
+                            if not queued_job.is_suite_based():
                                 not_available[queued_job.test_bed_type] = availability["message"]
+                            if queued_job.is_suite_based():
+                                if not queued_job.pre_emption_allowed or self.is_high_priority(queued_job):
+                                    if suite_based_spec:
+                                        base_test_bed = suite_based_spec.get("base_test_bed", None)
+                                        if base_test_bed:
+                                            self.not_available_suite_based_test_beds.append(base_test_bed)
+
                             # print("Not available: {}".format(availability["message"]))
                             queued_job.message = availability["message"]
                             queued_job.save()

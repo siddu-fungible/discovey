@@ -141,6 +141,8 @@ class Linux(object, ToDictMixin):
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
         fun_test.register_hosts(host=self)
+        self.was_power_cycled = False
+        self.spawn_pid = None
         self.post_init()
 
     @staticmethod
@@ -268,6 +270,7 @@ class Linux(object, ToDictMixin):
                         self.handle = pexpect.spawn("bash",
                                                     env={"TERM": "dumb"},
                                                     maxread=4096)
+                    self.spawn_pid = self.handle.pid
                 else:
                     fun_test.debug(
                         "Attempting Telnet connect to %s username: %s password: %s" % (self.host_ip,
@@ -699,6 +702,8 @@ class Linux(object, ToDictMixin):
         :return: None/False if process_id does not exist, True otherwise
         """
         result = None
+        if process_id is not None:
+            process_id = int(process_id)
         command = "ps -ef | grep {}".format(process_id)
         if sudo:
             output = self.sudo_command(command)
@@ -758,6 +763,15 @@ class Linux(object, ToDictMixin):
         self.command("rm -rf %s/" % (directory.strip("/")))
         return True
 
+    def remove_directory(self, directory):
+        result = False
+        if directory in ["/", "/root"]:
+            fun_test.critical("Removing {} is not permitted".format(directory))
+            result = True
+        else:
+            self.command("rm -rf {}".format(directory))
+        return result
+
     def remove_temp_file(self, file_name):
         return self.remove_file(file_name=self.get_temp_file_path(file_name=file_name))
 
@@ -774,7 +788,7 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def list_files(self, path):
-        o = self.command("ls -ltr " + path)
+        o = self.command("ls -ltrd " + path)
         lines = o.split('\n')
         files = []
         for line in lines:
@@ -846,6 +860,10 @@ class Linux(object, ToDictMixin):
                      kill_seconds=5,
                      minimum_process_id=50,
                      sudo=True):
+        if process_id is not None:
+            process_id = int(process_id)
+        if job_id is not None:
+            job_id = int(job_id)
         if not process_id and not job_id:
             fun_test.critical(message="Please provide a valid process-id or job-id")
             return
@@ -2120,24 +2138,29 @@ class Linux(object, ToDictMixin):
             result = False
             fun_test.critical("Host: {} is not reachable".format(self.host_ip))
 
+
         if not host_is_up and service_host:
             result = False
 
             if not ipmi_details:
                 if self.ipmi_info:
                     ipmi_details = self.ipmi_info
-                    
+
             if not result and ipmi_details and power_cycle:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
                 ipmi_password = ipmi_details["password"]
                 try:
+                    self.was_power_cycled = False
                     service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     fun_test.log("IPMI power-cycle complete")
+                    self.was_power_cycled = True
+
                 except Exception as ex:
                     fun_test.critical(str(ex))
                     service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                    self.was_power_cycled = True
                 finally:
                     return self.ensure_host_is_up(max_wait_time=max_wait_time, power_cycle=False)
         return result
@@ -2714,6 +2737,47 @@ class Linux(object, ToDictMixin):
 
         return iostat_output
 
+    def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", io_queues=None, hostnqn=None,
+                     retries=2, timeout=61):
+        result = False
+        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(transport.lower(), target_ip, port,
+                                                                         nvme_subsystem)
+        if io_queues:
+            nvme_connect_cmd += " -i {}".format(io_queues)
+        if hostnqn:
+            nvme_connect_cmd += " -q {}".format(hostnqn)
+
+        for i in range(retries):
+            try:
+                nvme_connect_output = self.sudo_command(command=nvme_connect_cmd, timeout=timeout)
+                nvme_connect_exit_status = self.exit_status()
+                fun_test.log("NVMe connect output: {}".format(nvme_connect_output))
+                if not nvme_connect_exit_status:
+                    result = True
+                    break
+            except Exception as ex:
+                remaining = retries - i - 1
+                if remaining:
+                    fun_test.critical("NVMe connect attempt failed...Going to retry {} more time(s)...\n".
+                                      format(remaining))
+                    fun_test.critical(str(ex))
+                    fun_test.sleep("before retrying")
+                else:
+                    fun_test.critical("Maximum number of retires({}) failed...So bailing out...".format(retries))
+
+        return result
+
+    @fun_test.safe
+    def destroy(self):
+        try:
+            self.disconnect()
+        except:
+            pass
+        try:
+            if self.spawn_pid > 1:
+                os.kill(self.spawn_pid, 9)
+        except:
+            pass
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
@@ -2729,6 +2793,7 @@ class LinuxBackup:
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
         linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
+
 
 
 if __name__ == "__main__":
