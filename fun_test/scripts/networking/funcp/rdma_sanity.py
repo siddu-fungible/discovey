@@ -67,6 +67,16 @@ class BringupSetup(FunTestCase):
         else:
             deploy_status = True
             fun_test.shared_variables["deploy_status"] = deploy_status
+        if "quick_sanity" in job_inputs:
+            quick_sanity = job_inputs["quick_sanity"]
+            fun_test.shared_variables["quick_sanity"] = quick_sanity
+        ib_bw_tests = []
+        if "test_type" in job_inputs:
+            ib_bw_tests.append(job_inputs["test_type"])
+            fun_test.shared_variables["test_type"] = ib_bw_tests
+        else:
+            ib_bw_tests = ["write", "read"]
+            fun_test.shared_variables["test_type"] = ib_bw_tests
 
         if deploy_status:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -219,15 +229,15 @@ class NicEmulation(FunTestCase):
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
         # Update RDMA Core & perftest on hosts
-        for obj in host_objs:
-            if obj == "f1_0":
-                host_count = fun_test.shared_variables["host_len_f10"]
-            elif obj == "f1_1":
-                host_count = fun_test.shared_variables["host_len_f11"]
-            for x in xrange(0, host_count):
-                host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
-                # host_objs[obj][x].command("hostname")
-        fun_test.sleep("Building rdma_perf & core", seconds=120)
+        # for obj in host_objs:
+        #     if obj == "f1_0":
+        #         host_count = fun_test.shared_variables["host_len_f10"]
+        #     elif obj == "f1_1":
+        #         host_count = fun_test.shared_variables["host_len_f11"]
+        #     for x in xrange(0, host_count):
+        #         host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
+        #         # host_objs[obj][x].command("hostname")
+        # fun_test.sleep("Building rdma_perf & core", seconds=120)
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -297,9 +307,8 @@ class SrpingTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
-        start_size = 32
-        for iter in xrange(1, 2048):
-            size = start_size * iter
+        size = 32
+        while (size <= 65536):
             if size == 65536:
                 size = 65534
             f10_host_test = f10_host_roce.srping_test(size=size, count=10, debug=True)
@@ -309,12 +318,13 @@ class SrpingTest(FunTestCase):
                 fun_test.sleep("Srping on f10_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                 fun_test.sleep("Srping on f11_host", 2)
-            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"])
-            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"])
+            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="srping")
+            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="srping", client_cmd=True)
             f10_hosts[0]["handle"].disconnect()
             f11_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
+            size = size * 2
 
         fun_test.test_assert(True, "Srping test passed")
 
@@ -358,9 +368,8 @@ class RpingTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
-        start_size = 32
-        for iter in xrange(1, 2048):
-            size = start_size * iter
+        size = 32
+        while (size<=65536):
             if size == 65536:
                 size = 65534
             f10_host_test = f10_host_roce.rping_test(size=size, count=10, debug=True)
@@ -370,12 +379,13 @@ class RpingTest(FunTestCase):
                 fun_test.sleep("Rping on f10_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
                 fun_test.sleep("Rping on f11_host", 2)
-            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"])
-            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"])
+            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="rping")
+            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="rping", client_cmd=True)
             f10_hosts[0]["handle"].disconnect()
             f11_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
+            size = size * 2
 
         fun_test.test_assert(True, "Rping test passed")
 
@@ -386,11 +396,124 @@ class RpingTest(FunTestCase):
         fun_test.shared_variables["f10_host_roce"].cleanup()
 
 
+class IbBwTest(FunTestCase):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="IB_BW* Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start IB_BW write/read test for different sizes
+                                  """)
+
+    def setup(self):
+
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+
+    def run(self):
+        global funcp_obj, servers_mode, servers_list, fs_name
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        f10_hosts = fun_test.shared_variables["f10_hosts"]
+        f11_hosts = fun_test.shared_variables["f11_hosts"]
+
+        f10_host_roce = fun_test.shared_variables["f10_host_roce"]
+        f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_type_list = fun_test.shared_variables["test_type"]
+
+        # Load RDMA modules
+        f10_host_roce.rdma_setup()
+        f11_host_roce.rdma_setup()
+
+        # Kill all RDMA tools
+        f10_host_roce.cleanup()
+        f11_host_roce.cleanup()
+
+        for test in test_type_list:
+            print test
+            packet_size = ["1", "128", "256", "512", "1024", "2048", "4096"]
+            for size in packet_size:
+                f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size)
+                f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, server_ip=f10_hosts[0]["ipaddr"])
+                while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                    fun_test.sleep("ib_bw test on f10_host", 2)
+                while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
+                    fun_test.sleep("ib_bw test on f11_host", 2)
+                f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
+                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw", client_cmd=True)
+                fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
+                fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
+
+        fun_test.sleep("sleep", 3)
+
+    def cleanup(self):
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+
+
+class IbLatTest(FunTestCase):
+    server_key = {}
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="IB_LAT* Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start IB_BW write/read test for different sizes
+                                  """)
+
+    def setup(self):
+
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+
+    def run(self):
+        global funcp_obj, servers_mode, servers_list, fs_name
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        f10_hosts = fun_test.shared_variables["f10_hosts"]
+        f11_hosts = fun_test.shared_variables["f11_hosts"]
+
+        f10_host_roce = fun_test.shared_variables["f10_host_roce"]
+        f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+        test_type_list = fun_test.shared_variables["test_type"]
+
+        # Load RDMA modules
+        f10_host_roce.rdma_setup()
+        f11_host_roce.rdma_setup()
+
+        # Kill all RDMA tools
+        f10_host_roce.cleanup()
+        f11_host_roce.cleanup()
+
+        for test in test_type_list:
+            print test
+            packet_size = ["1", "128", "256", "512", "1024", "2048", "4096"]
+            for size in packet_size:
+                f10_host_test = f10_host_roce.ib_lat_test(test_type=test, size=size)
+                f11_host_test = f11_host_roce.ib_lat_test(test_type=test, size=size, server_ip=f10_hosts[0]["ipaddr"])
+                while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                    fun_test.sleep("ib_bw test on f10_host", 2)
+                while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
+                    fun_test.sleep("ib_bw test on f11_host", 2)
+                f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_lat")
+                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_lat", client_cmd=True)
+                fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
+                fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
+
+        fun_test.sleep("sleep", 3)
+
+    def cleanup(self):
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
     ts.add_test_case(SrpingTest())
     ts.add_test_case(RpingTest())
+    ts.add_test_case(IbBwTest())
+    ts.add_test_case(IbLatTest())
 
     ts.run()
