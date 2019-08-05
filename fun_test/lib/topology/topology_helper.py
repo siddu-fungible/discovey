@@ -337,8 +337,13 @@ class TopologyHelper:
                     boot_phase = dut_instance.get_boot_phase()
                     # fun_test.log("DUT: {} current boot-phase".format(boot_phase))
                     fun_test.simple_assert(boot_phase != BootPhases.FS_BRING_UP_ERROR, "DUT: {} Bring up error".format(dut_instance))
+
+                    """
                     if not dut_instance.is_u_boot_complete():
                         # fun_test.log("DUT: {} bootup not complete".format(dut_instance))
+                        continue
+                    """
+                    if not dut_instance.is_ready():
                         continue
 
                     for interface_index, interface_info in dut_obj.interfaces.items():

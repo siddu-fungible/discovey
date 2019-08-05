@@ -484,6 +484,10 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
+        else:
+            self.post_results = False
 
         if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                 self.testbed_config["workarounds"]["enable_funcp"]:
@@ -1327,7 +1331,9 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                 "read_99_latency": row_data_dict["readlatency99"],
                 "plex_rebuild_time": row_data_dict["plex_rebuild_time"]
             }
-            add_to_data_base(value_dict)
+            if self.post_results:
+                fun_test.log("Posting results on dashboard")
+                add_to_data_base(value_dict)
 
             # Checking if mpstat process is still running...If so killing it...
             for host_name in self.host_info:

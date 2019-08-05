@@ -68,6 +68,13 @@ class Netcat:
 
 if __name__ == "__main__":
 
+    from lib.fun.fs import Fpga
+
+    fpga_ip = "fs21-fpga.fungible.local"
+    f = Fpga(host_ip=fpga_ip, ssh_username="root", ssh_password="root")
+    f.reset_f1(0)
+
+    tftp_image = "s_21048_funos-f1.stripped.gz"
 
     bmc_ip = "fs21-bmc.fungible.local"
     gateway_ip = "10.1.20.1"
@@ -86,7 +93,7 @@ if __name__ == "__main__":
     print nc.read_until("f1 #")
     nc.write("dhcp\n")
     print nc.read_until("f1 #")
-    nc.write("tftpboot 0xa800000080000000 10.1.21.48:s_19079_funos-f1.stripped.gz\n")
+    nc.write("tftpboot 0xa800000080000000 10.1.21.48:{}\n".format(tftp_image))
     print nc.read_until("f1 #")
     nc.write("unzip 0xa800000080000000 0xffffffff99000000;\n")
     print nc.read_until("f1 #")
@@ -94,7 +101,7 @@ if __name__ == "__main__":
     print nc.read_until("f1 #", timeout=30)
 
 
-
+    """
 
     bmc_ip = "fs21-bmc.fungible.local"
     gateway_ip = "10.1.20.1"
@@ -119,3 +126,4 @@ if __name__ == "__main__":
     print nc.read_until("f1 #")
     nc.write("bootelf -p 0xffffffff99000000\n")
     print nc.read_until("f1 #", timeout=30)
+    """

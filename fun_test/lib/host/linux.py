@@ -691,6 +691,30 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def process_exists(self, process_id, sudo=False):
+        """
+        Check if a process id exists
+        :param process_id:
+        :param sudo: set to True if the ps command needs to be executed with sudo
+        :return: None/False if process_id does not exist, True otherwise
+        """
+        result = None
+        if process_id is not None:
+            process_id = int(process_id)
+        command = "ps -ef | grep {}".format(process_id)
+        if sudo:
+            output = self.sudo_command(command)
+        else:
+            output = self.command(command)
+        if output:
+            m = re.search(r'(\S+)\s+(\d+)\s+(\d+).*', output)
+            if m:
+                pid = int(m.group(2))
+                if pid:
+                    result = pid == process_id
+        return result
+
+    @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, sudo=False, **kwargs):
 
         result = 0
@@ -736,6 +760,15 @@ class Linux(object, ToDictMixin):
         self.command("rm -rf %s/" % (directory.strip("/")))
         return True
 
+    def remove_directory(self, directory):
+        result = False
+        if directory in ["/", "/root"]:
+            fun_test.critical("Removing {} is not permitted".format(directory))
+            result = True
+        else:
+            self.command("rm -rf {}".format(directory))
+        return result
+
     def remove_temp_file(self, file_name):
         return self.remove_file(file_name=self.get_temp_file_path(file_name=file_name))
 
@@ -752,7 +785,7 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def list_files(self, path):
-        o = self.command("ls -ltr " + path)
+        o = self.command("ls -ltrd " + path)
         lines = o.split('\n')
         files = []
         for line in lines:
@@ -824,6 +857,10 @@ class Linux(object, ToDictMixin):
                      kill_seconds=5,
                      minimum_process_id=50,
                      sudo=True):
+        if process_id is not None:
+            process_id = int(process_id)
+        if job_id is not None:
+            job_id = int(job_id)
         if not process_id and not job_id:
             fun_test.critical(message="Please provide a valid process-id or job-id")
             return
@@ -2692,6 +2729,36 @@ class Linux(object, ToDictMixin):
 
         return iostat_output
 
+    def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", io_queues=None, hostnqn=None,
+                     retries=2, timeout=61):
+        result = False
+        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(transport.lower(), target_ip, port,
+                                                                         nvme_subsystem)
+        if io_queues:
+            nvme_connect_cmd += " -i {}".format(io_queues)
+        if hostnqn:
+            nvme_connect_cmd += " -q {}".format(hostnqn)
+
+        for i in range(retries):
+            try:
+                nvme_connect_output = self.sudo_command(command=nvme_connect_cmd, timeout=timeout)
+                nvme_connect_exit_status = self.exit_status()
+                fun_test.log("NVMe connect output: {}".format(nvme_connect_output))
+                if not nvme_connect_exit_status:
+                    result = True
+                    break
+            except Exception as ex:
+                remaining = retries - i - 1
+                if remaining:
+                    fun_test.critical("NVMe connect attempt failed...Going to retry {} more time(s)...\n".
+                                      format(remaining))
+                    fun_test.critical(str(ex))
+                    fun_test.sleep("before retrying")
+                else:
+                    fun_test.critical("Maximum number of retires({}) failed...So bailing out...".format(retries))
+
+        return result
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
@@ -2707,3 +2774,8 @@ class LinuxBackup:
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
         linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
+
+
+if __name__ == "__main__":
+    l = Linux(host_ip="qa-ubuntu-02", ssh_username="auto_admin", ssh_password="fun123")
+    print l.process_exists(process_id=22635)

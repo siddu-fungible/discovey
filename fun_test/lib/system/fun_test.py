@@ -378,6 +378,12 @@ class FunTest:
         result = run_time.get(name, None)
         return result
 
+    def set_suite_run_time_environment_variable(self, variable, value):
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            if suite_execution:
+                suite_execution.add_run_time_variable(variable, value)
+
     def get_job_environment_variable(self, variable):
         result = None
         job_environment = self.get_job_environment()
@@ -1433,7 +1439,16 @@ class FunTestScript(object):
     def _cleanup_hosts(self):
         for host in fun_test.get_hosts():
             try:
+                if host.handle:
+                    try:
+                        host.send_control_c()
+                        host.command("exit")
+                        host.command("exit")
+                        host.command("exit")
+                    except:
+                        pass
                 host.disconnect()
+                fun_test.log("Host: {} properly disconnected".format(host))
             except:
                 pass
 

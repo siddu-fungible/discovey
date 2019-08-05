@@ -1082,7 +1082,9 @@ def scheduler_queue(request, job_id):
                            "priority": queue_element.priority,
                            "test_bed_type": queue_element.test_bed_type,
                            "job_spec": _get_job_spec(job_id=queue_element.job_id),
-                           "message": queue_element.message}
+                           "message": queue_element.message,
+                           "suspend": queue_element.suspend,
+                           "pre_emption_allowed": queue_element.pre_emption_allowed}
             result.append(one_element)
     elif request.method == 'POST':
         result = None
@@ -1107,7 +1109,17 @@ def scheduler_queue(request, job_id):
             queue_entry.delete()
         except ObjectDoesNotExist:
             pass
-
+    elif request.method == "PUT":
+        try:
+            queue_entry = JobQueue.objects.get(job_id=int(job_id))
+            request_json = json.loads(request.body)
+            if "suspend" in request_json:
+                queue_entry.suspend = request_json["suspend"]
+            if "pre_emption_allowed" in request_json:
+                queue_entry.pre_emption_allowed = request_json["pre_emption_allowed"]
+            queue_entry.save()
+        except ObjectDoesNotExist:
+            pass
     return result
 
 
