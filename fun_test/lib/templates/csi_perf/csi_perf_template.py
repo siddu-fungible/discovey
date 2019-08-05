@@ -56,6 +56,11 @@ class CsiPerfTemplate():
         pass
         self.perf_host = self.get_perf_host()
         files = self.perf_host.list_files(BASE_JOB_DIRECTORY + "/s_*")
+        if len(files) >= num_allowed_trace_job_directories:
+            # remove the oldest directory
+            fun_test.log("Removing oldest directory: {}".format(files[0]["filename"]))
+            self.perf_host.remove_directory(files[0]["filename"])
+            files = self.perf_host.list_files(BASE_JOB_DIRECTORY + "/s_*")
         return len(files) < num_allowed_trace_job_directories
 
     def get_perf_host(self):
