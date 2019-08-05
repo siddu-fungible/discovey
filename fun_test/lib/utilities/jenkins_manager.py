@@ -46,7 +46,8 @@ DEFAULT_BUILD_PARAMS = {
     "BRANCH_FunTools": "",
     "RUN_PIPELINE": "",
     "BRANCH_FunControlPlane": "",
-    "SKIP_DASM_C": "true"
+    "SKIP_DASM_C": "true",
+    "RELEASE_BUILD": "false"
 }
 
 class JenkinsManager():

@@ -325,6 +325,8 @@ class FunTest:
                 self.build_parameters["BOOTARGS"] = self.build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
             if "DISABLE_ASSERTIONS" in user_supplied_build_parameters:
                 self.build_parameters["DISABLE_ASSERTIONS"] = user_supplied_build_parameters["DISABLE_ASSERTIONS"]
+            if "RELEASE_BUILD" in user_supplied_build_parameters:
+                self.build_parameters["RELEASE_BUILD"] = user_supplied_build_parameters["RELEASE_BUILD"]
             if "FUNOS_MAKEFLAGS" in user_supplied_build_parameters:
                 self.build_parameters["FUNOS_MAKEFLAGS"] = user_supplied_build_parameters["FUNOS_MAKEFLAGS"]
             if "BRANCH_FunOS" in user_supplied_build_parameters:
