@@ -760,6 +760,15 @@ class Linux(object, ToDictMixin):
         self.command("rm -rf %s/" % (directory.strip("/")))
         return True
 
+    def remove_directory(self, directory):
+        result = False
+        if directory in ["/", "/root"]:
+            fun_test.critical("Removing {} is not permitted".format(directory))
+            result = True
+        else:
+            self.command("rm -rf {}".format(directory))
+        return result
+
     def remove_temp_file(self, file_name):
         return self.remove_file(file_name=self.get_temp_file_path(file_name=file_name))
 
