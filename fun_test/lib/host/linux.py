@@ -141,6 +141,7 @@ class Linux(object, ToDictMixin):
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
         fun_test.register_hosts(host=self)
+        self.was_power_cycled = False
         self.post_init()
 
     @staticmethod
@@ -2135,24 +2136,29 @@ class Linux(object, ToDictMixin):
             result = False
             fun_test.critical("Host: {} is not reachable".format(self.host_ip))
 
+
         if not host_is_up and service_host:
             result = False
 
             if not ipmi_details:
                 if self.ipmi_info:
                     ipmi_details = self.ipmi_info
-                    
+
             if not result and ipmi_details and power_cycle:
                 fun_test.log("Trying IPMI power-cycle".format(self.host_ip))
                 ipmi_host_ip = ipmi_details["host_ip"]
                 ipmi_username = ipmi_details["username"]
                 ipmi_password = ipmi_details["password"]
                 try:
+                    self.was_power_cycled = False
                     service_host.ipmi_power_cycle(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
                     fun_test.log("IPMI power-cycle complete")
+                    self.was_power_cycled = True
+
                 except Exception as ex:
                     fun_test.critical(str(ex))
                     service_host.ipmi_power_on(host=ipmi_host_ip, user=ipmi_username, passwd=ipmi_password, chassis=True)
+                    self.was_power_cycled = True
                 finally:
                     return self.ensure_host_is_up(max_wait_time=max_wait_time, power_cycle=False)
         return result
