@@ -229,15 +229,15 @@ class NicEmulation(FunTestCase):
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
         # Update RDMA Core & perftest on hosts
-        # for obj in host_objs:
-        #     if obj == "f1_0":
-        #         host_count = fun_test.shared_variables["host_len_f10"]
-        #     elif obj == "f1_1":
-        #         host_count = fun_test.shared_variables["host_len_f11"]
-        #     for x in xrange(0, host_count):
-        #         host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
-        #         # host_objs[obj][x].command("hostname")
-        # fun_test.sleep("Building rdma_perf & core", seconds=120)
+        for obj in host_objs:
+            if obj == "f1_0":
+                host_count = fun_test.shared_variables["host_len_f10"]
+            elif obj == "f1_1":
+                host_count = fun_test.shared_variables["host_len_f11"]
+            for x in xrange(0, host_count):
+                host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
+                # host_objs[obj][x].command("hostname")
+        fun_test.sleep("Building rdma_perf & core", seconds=120)
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
