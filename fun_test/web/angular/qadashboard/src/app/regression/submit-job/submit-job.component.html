@@ -144,18 +144,6 @@
 
               </ng-container>
 
-              <tr>
-                <td class="no-wrap">
-                  <label>Select a tag: </label>
-                </td>
-                <td>
-                  <div class="field-width">
-                    <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
-                                             [settings]="dropdownSettings">
-                    </ng-multiselect-dropdown>
-                  </div>
-                </td>
-              </tr>
             </ng-container>
 
             <tr>
@@ -222,6 +210,20 @@
                 </textarea>
               </td>
             </tr>
+
+            <tr>
+              <td class="no-wrap">
+                <label>Select a tag: </label>
+              </td>
+              <td>
+                <div class="field-width">
+                  <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
+                                           [settings]="dropdownSettings">
+                  </ng-multiselect-dropdown>
+                </div>
+              </td>
+            </tr>
+
 
             <tr>
               <td class="no-wrap">
