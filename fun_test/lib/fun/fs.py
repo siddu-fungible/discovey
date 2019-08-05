@@ -600,6 +600,7 @@ class BootupWorker(Thread):
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
         except Exception as ex:
+            fun_test.critical(str(ex))
             fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 

@@ -142,6 +142,7 @@ class Linux(object, ToDictMixin):
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
         fun_test.register_hosts(host=self)
         self.was_power_cycled = False
+        self.spawn_pid = None
         self.post_init()
 
     @staticmethod
@@ -269,6 +270,7 @@ class Linux(object, ToDictMixin):
                         self.handle = pexpect.spawn("bash",
                                                     env={"TERM": "dumb"},
                                                     maxread=4096)
+                    self.spawn_pid = self.handle.pid
                 else:
                     fun_test.debug(
                         "Attempting Telnet connect to %s username: %s password: %s" % (self.host_ip,
@@ -2765,6 +2767,17 @@ class Linux(object, ToDictMixin):
 
         return result
 
+    @fun_test.safe
+    def destroy(self):
+        try:
+            self.disconnect()
+        except:
+            pass
+        try:
+            if self.spawn_pid > 1:
+                os.kill(self.spawn_pid, 9)
+        except:
+            pass
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
@@ -2780,6 +2793,7 @@ class LinuxBackup:
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
         linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
+
 
 
 if __name__ == "__main__":
