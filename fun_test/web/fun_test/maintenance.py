@@ -289,11 +289,7 @@ if __name__ == "__main__underlay":
             entry.data_sets = json.dumps(overlay_underlay_data_sets)
             entry.save()
 
-<<<<<<< HEAD
 if __name__ == "__main_inspur__":
-=======
-if __name__ == "__main__inspur_charts":
->>>>>>> 82cc82450e7b4da2ff33d480ee0f620a17e25514
     internal_chart_names = OrderedDict([  # read iops
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_1_iops", 1),
                                         ("pocs_inspur_8111_8k_rand_read_iodepth_8_iops", 8),
