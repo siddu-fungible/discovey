@@ -192,42 +192,49 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
 
         fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
+        self.host_info = OrderedDict()
         self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []
         self.host_numa_cpus = {}
         self.total_numa_cpus = {}
         for host_name, host_obj in self.required_hosts.items():
+            if host_name not in self.host_info:
+                self.host_info[host_name] = {}
+                self.host_info[host_name]["ip"] = []
             # Retrieving host ips
-            # test_interfaces = host.get_test_interfaces()
             if host_name not in self.hosts_test_interfaces:
                 self.hosts_test_interfaces[host_name] = []
             test_interface = host_obj.get_test_interface(index=0)
             self.hosts_test_interfaces[host_name].append(test_interface)
+            self.host_info[host_name]["test_interface"] = test_interface
             host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
             self.host_ips.append(host_ip)
+            self.host_info[host_name]["ip"].append(host_ip)
             fun_test.log("Host-IP: {}".format(host_ip))
             # Retrieving host handles
             host_instance = host_obj.get_instance()
             self.host_handles[host_ip] = host_instance
+            self.host_info[host_name]["handle"] = host_instance
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
-        for key in self.host_handles:
+        for host_name in self.host_info:
+            host_handle = self.host_info[host_name]["handle"]
             if self.override_numa_node["override"]:
-                self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
-                self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                    self.override_numa_node["override_node"]]
             else:
-                self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+                self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
             # Calculating the number of CPUs available in the given numa
-            self.total_numa_cpus[key] = 0
-            for cpu_group in self.host_numa_cpus[key].split(","):
+            self.host_info[host_name]["total_numa_cpus"] = 0
+            for cpu_group in self.host_info[host_name]["host_numa_cpus"].split(","):
                 cpu_range = cpu_group.split("-")
-                self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-            fun_test.log("Rebooting host: {}".format(key))
-            self.host_handles[key].reboot(non_blocking=True)
-        fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-        fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+                self.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+            fun_test.log("Rebooting host: {}".format(host_name))
+            host_handle.reboot(non_blocking=True)
+        fun_test.log("Hosts info: {}".format(self.host_info))
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -288,6 +295,7 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["f1_objs"] = self.f1_objs
             fun_test.shared_variables["sc_obj"] = self.sc_objs
             fun_test.shared_variables["f1_ips"] = self.f1_ips
+            fun_test.shared_variables["host_info"] = self.host_info
             fun_test.shared_variables["host_handles"] = self.host_handles
             fun_test.shared_variables["host_ips"] = self.host_ips
             fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
@@ -591,11 +599,12 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             self.f1 = fun_test.shared_variables["f1_objs"][0][0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+            self.host_info = fun_test.shared_variables["host_info"]
             self.host_handles = fun_test.shared_variables["host_handles"]
             self.host_ips = fun_test.shared_variables["host_ips"]
             self.end_host = self.host_handles[self.host_ips[0]]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
+            # self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
+            # self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
             self.num_f1s = fun_test.shared_variables["num_f1s"]
             self.test_network = {}
             self.test_network["f1_loopback_ip"] = self.f1_ips
@@ -638,14 +647,15 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             for i in range(0, self.blt_count, 1):
                 cur_uuid = utils.generate_uuid()
                 self.thin_uuid_list.append(cur_uuid)
-                command_result = self.storage_controller.create_thin_block_volume(
-                    capacity=self.blt_details["capacity"],
-                    block_size=self.blt_details["block_size"],
-                    name="thin_block" + str(i + 1),
-                    uuid=cur_uuid,
-                    command_duration=self.command_timeout)
+                command_result = self.storage_controller.create_volume(type=self.blt_details["type"],
+                                                                       capacity=self.blt_details["capacity"],
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="thin_block" + str(i + 1), group_id=i+1,
+                                                                       uuid=cur_uuid,
+                                                                       command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
+                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1,
+                                                                                                          cur_uuid))
                 self.nvme_block_device.append(self.nvme_device + "n" + str(i + 1))
             fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
@@ -767,6 +777,10 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
                                                                 threaded=True)
 
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
+                # Adding the allowed CPUs into the fio warmup command
+                host_name = self.host_info.keys()[0]
+                self.warm_up_fio_cmd_args["multiple_jobs"] += " --cpus_allowed={}".\
+                    format(self.host_info[host_name]["host_numa_cpus"])
                 warm_up_fio_cmd_args = {}
                 jobs = ""
                 if "multiple_jobs" in self.warm_up_fio_cmd_args:
@@ -790,7 +804,6 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
 
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
-
 
     def run(self):
 
