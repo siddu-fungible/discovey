@@ -129,6 +129,125 @@
           }
         }
       }
+    },
+    "suite-editor": {
+      "root": "projects/suite-editor/",
+      "sourceRoot": "projects/suite-editor/src",
+      "projectType": "application",
+      "prefix": "app",
+      "schematics": {},
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/suite-editor",
+            "index": "projects/suite-editor/src/index.html",
+            "main": "projects/suite-editor/src/main.ts",
+            "polyfills": "projects/suite-editor/src/polyfills.ts",
+            "tsConfig": "projects/suite-editor/tsconfig.app.json",
+            "assets": [
+              "projects/suite-editor/src/favicon.ico",
+              "projects/suite-editor/src/assets"
+            ],
+            "styles": [
+              "projects/suite-editor/src/styles.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/suite-editor/src/environments/environment.ts",
+                  "with": "projects/suite-editor/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "suite-editor:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "suite-editor:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "suite-editor:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/suite-editor/src/test.ts",
+            "polyfills": "projects/suite-editor/src/polyfills.ts",
+            "tsConfig": "projects/suite-editor/tsconfig.spec.json",
+            "karmaConfig": "projects/suite-editor/karma.conf.js",
+            "styles": [
+              "projects/suite-editor/src/styles.css"
+            ],
+            "scripts": [],
+            "assets": [
+              "projects/suite-editor/src/favicon.ico",
+              "projects/suite-editor/src/assets"
+            ]
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/suite-editor/tsconfig.app.json",
+              "projects/suite-editor/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
+    },
+    "suite-editor-e2e": {
+      "root": "projects/suite-editor-e2e/",
+      "projectType": "application",
+      "architect": {
+        "e2e": {
+          "builder": "@angular-devkit/build-angular:protractor",
+          "options": {
+            "protractorConfig": "projects/suite-editor-e2e/protractor.conf.js",
+            "devServerTarget": "suite-editor:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "suite-editor:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": "projects/suite-editor-e2e/tsconfig.e2e.json",
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "qadashboard"
