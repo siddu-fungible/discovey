@@ -24,7 +24,7 @@
                         <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed
                       </button>
                     </div>
-                    <div class="re-run-div">
+                    <div class="re-run-div" *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'">
                       <button (click)="togglereUseBuildImage()" class="btn click-button"
                               [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i
                         class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image
