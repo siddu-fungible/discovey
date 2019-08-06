@@ -1,6 +1,6 @@
 from web.web_global import api_safe_json_response
 from django.views.decorators.csrf import csrf_exempt
-from web.fun_test.models import User, PerformanceUserWorkspaces
+from web.fun_test.models import User, PerformanceUserWorkspaces, LastWorkspaceId, InterestedMetrics
 from django.core.exceptions import ObjectDoesNotExist
 import json
 from datetime import datetime
@@ -55,15 +55,15 @@ def workspaces(request, email, workspace_name=None):
         else:
             interested_metrics = []
         try:
-            entry = PerformanceUserWorkspaces.objects.get(email=email, name=name)
+            entry = PerformanceUserWorkspaces.objects.get(email=email, workspace_name=name)
             if entry:
                 entry.description = description
-                entry.interested_metrics = interested_metrics
                 entry.date_modified = datetime.now()
                 entry.save()
         except ObjectDoesNotExist:
-            entry = PerformanceUserWorkspaces(email=email, name=name, description=description,
-                                              interested_metrics=interested_metrics)
+            workspace_id = LastWorkspaceId.get_next_id()
+            entry = PerformanceUserWorkspaces(workspace_id=workspace_id, email=email, workspace_name=name,
+                                              description=description)
             entry.save()
         result = entry.to_dict()
     elif request.method == "GET":
@@ -80,4 +80,32 @@ def workspaces(request, email, workspace_name=None):
                 workspace.delete()
                 break
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def interested_metrics(request, email, workspace_id=None):
+    result = []
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        email = request_json["email"]
+        workspace_id = request_json["workspace_id"]
+        interested_metrics = request_json["interested_metrics"]
+        metrics = interested_metrics[0]
+
+        for metric in metrics:
+            metric_id = metric
+            score = metrics[metric].score
+            chart_name = metrics[metric].chart_name
+            subscribe = metrics[metric].subscribe
+            track = metrics[metric].track
+            lineage = metrics[metric].lineage
+            category = metrics[metric].category
+            try:
+                entry = InterestedMetrics.objects.get(workspace_id= workspace_id, metric_id=metric_id)
+            except ObjectDoesNotExist:
+                entry = InterestedMetrics(workspace_id=workspace_id, email=email, metric_id=metric_id, score=score,
+                                          chart_name=chart_name, )
+
+
+
 

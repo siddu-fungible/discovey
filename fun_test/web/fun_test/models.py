@@ -538,10 +538,39 @@ class User(FunModel):
         return "{} {} {}".format(self.first_name, self.last_name, self.email)
 
 class PerformanceUserWorkspaces(FunModel):
+    workspace_id = models.IntegerField(unique=True)
     email = models.EmailField(max_length=60)
-    interested_metrics = JSONField(default=[])
-    name = models.TextField(default="")
+    workspace_name = models.TextField(default="")
     description = models.TextField(default="")
+    date_created = models.DateTimeField(default=datetime.now)
+    date_modified = models.DateTimeField(default=datetime.now)
+
+    def __str__(self):
+        return (str(self.__dict__))
+
+class LastWorkspaceId(models.Model):
+    last_id = models.IntegerField(unique=True, default=100)
+
+    @staticmethod
+    def get_next_id():
+        if not LastWorkspaceId.objects.count():
+            LastWorkspaceId().save()
+        last = LastWorkspaceId.objects.all().last()
+        last.last_id = last.last_id + 1
+        last.save()
+        return last.last_id
+
+
+class InterestedMetrics(FunModel):
+    workspace_id = models.IntegerField()
+    email = models.EmailField(max_length=60)
+    metric_id = models.IntegerField()
+    score = models.FloatField()
+    subscribe = models.BooleanField(default=False)
+    track = models.BooleanField(default=False)
+    chart_name = models.TextField(default='')
+    lineage = models.TextField(default='')
+    category = models.TextField(default='')
     date_created = models.DateTimeField(default=datetime.now)
     date_modified = models.DateTimeField(default=datetime.now)
 

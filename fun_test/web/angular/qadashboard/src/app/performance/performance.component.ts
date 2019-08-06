@@ -1032,7 +1032,7 @@ export class PerformanceComponent implements OnInit {
       if (!(flatNode.node.metricId in metricDetails)) {
         let lineage = this.getStringLineage(flatNode.lineage);
         metricDetails[flatNode.node.metricId] = {"subscribe": flatNode.subscribe, "track": flatNode.track,
-          "lineage": lineage, "chartName": flatNode.node.chartName, "score": flatNode.node.lastScore};
+          "lineage": lineage, "chartName": flatNode.node.chartName, "score": flatNode.node.lastScore, "category": 'General'};
       }
     }
     this.workspace.push(metricDetails);
