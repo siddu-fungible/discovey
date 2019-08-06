@@ -196,10 +196,6 @@
                       </div>
 
                     </ng-template>
-                    <span *ngIf="(suiteExecution.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution.fields.state !== stateMap.ABORTED)"
-                          (click)="reRunModalOpen(content)"
-                          class="dropdown-item anchor-button pseudo-anchor">Re-run options
-                    </span>
                     <ng-container>
                       <span
                         (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, false)"
