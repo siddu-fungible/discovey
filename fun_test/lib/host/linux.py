@@ -2775,8 +2775,9 @@ class Linux(object, ToDictMixin):
             pass
         try:
             if self.spawn_pid > 1:
+                fun_test.log("Killing spawn id: {}".format(self.spawn_pid))
                 os.kill(self.spawn_pid, 9)
-        except:
+        except Exception as ex:
             pass
 
 class LinuxBackup:
