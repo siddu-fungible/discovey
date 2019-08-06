@@ -88,19 +88,29 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="card" style="height: auto; justify-content: left;">
-        <div>
-          Description:
-          <textarea rows="5" [(ngModel)]="currentWorkspace.description" style="min-width: 100%;"></textarea>
+      <div class="edit-description">
+          <b>Description: </b><a *ngIf="!currentWorkspace.editingDescription"
+                                 (click)="currentWorkspace.editingDescription = true"><i
+          class="fa fa-pencil"></i></a>
+        <i *ngIf="currentWorkspace.editingDescription" class="fa fa-check fa-fw tick-color"
+           (click)="currentWorkspace.editingDescription = false"></i>
+        <br>
+          <div *ngIf="!currentWorkspace.editingDescription" [innerHTML]="currentWorkspace.description | safeHtml"></div>
+          <textarea *ngIf="currentWorkspace.editingDescription" rows="5" [(ngModel)]="currentWorkspace.description" style="min-width:
+          100%;"></textarea>
         </div>
+      <div class="card" style="height: auto; justify-content: left;">
         <div class="card-header">
           Tracked metrics
         </div>
         <div class="card-body">
-          <table style="width: 70%">
+          <table style="width: 100%">
             <tr>
+              <th style="width: 30%">
+                Chart name
+              </th>
               <th style="width: 10%">
-                Metric id
+                Last score
               </th>
               <th style="width: 10%">
                 Track
@@ -108,13 +118,19 @@
               <th style="width: 10%">
                 Subscribe to alerts
               </th>
+              <th style="width: 30%">
+                Lineage
+              </th>
               <th style="width: 10%">
 
               </th>
             </tr>
             <tr *ngFor="let metric of currentWorkspace.interestedMetrics[0] | keyvalue">
               <td>
-                {{ metric.key }}
+                {{ metric.value['chartName'] }}
+              </td>
+              <td>
+                {{ metric.value['score'] }}
               </td>
               <td>
                 <app-toggle-button [checked]="metric.value['track']"
@@ -125,6 +141,9 @@
                                    (changed)="onChangeSubscribeTo($event, metric.key)"></app-toggle-button>
               </td>
               <td>
+                {{ metric.value["lineage"] }}
+              </td>
+              <td style="text-align: center">
                 <a [routerLink]="" (click)="deleteMetricInWorkspace(metric.key)">Delete</a>
               </td>
             </tr>
@@ -142,13 +161,16 @@
         <div class="card-body">
           <app-performance [selectMode]="true" [userProfileEmail]="selectedUser.email"
                            [workspaceName]="currentWorkspace.name"
-                           [interestedMetrics]="currentWorkspace.interestedMetrics"
+                           [interestedMetrics]="currentWorkspace.interestedMetrics" [description]="currentWorkspace.description"
                            (submitted)="updateStatus($event, currentWorkspace)"></app-performance>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-outline-success btn-sm" (click)="saveWorkspace()">Save</button>&nbsp;
+      <button *ngIf="!currentWorkspace.editingWorkspace" type="button"
+              class="btn btn-outline-success btn-sm"
+              (click)="saveWorkspace()">Save
+      </button>&nbsp;
       <button type="button" class="btn btn-outline-danger btn-sm" (click)="modal.dismiss('Cancel')">
         Cancel
       </button>
@@ -183,25 +205,6 @@
         </table>
         <p *ngIf="profile.length === 0">No workspaces added</p>
       </div>
-    </div>
-  </div>
-  <!--shows the charts for a particular workspace-->
-  <div *ngIf="showChartsForWorkspace" class="card card-primary">
-    <div class="card-header">
-      <h5 class="card-title">{{ currentWorkspace.name }}</h5>
-      <h6 class="card-subtitle">
-        <a [routerLink]="" (click)="showChartsForWorkspace = false">Close</a>
-      </h6>
-    </div>
-    <div class="card-body">
-      <ng-container *ngIf="!currentWorkspace.editingWorkspace">
-        <div *ngFor="let rows of grids">
-          <div *ngFor="let row of rows | keyvalue">
-            <fun-metric-chart [id]="row.key" [minimal]="'true'" [buildInfo]="buildInfo"></fun-metric-chart>
-          </div>
-          <div class="closed-section"></div>
-        </div>
-      </ng-container>
     </div>
   </div>
 </div>

@@ -8,6 +8,7 @@ import {switchMap} from "rxjs/operators";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {Title} from "@angular/platform-browser";
+import {PerformanceService} from "../performance.service";
 
 @Component({
   selector: 'app-workspace',
@@ -21,22 +22,21 @@ export class WorkspaceComponent implements OnInit {
   profile: any = null;
   editingWorkspace: boolean = false;
   workspaceName: string = null;
-  showChartsForWorkspace: boolean = false;
   grids: any = [];
   gridLength: number = 0;
   createError: string = null;
   currentWorkspace: any = null;
-  buildInfo: any = null;
+
   description: string = null;
   deletingWorkspace: any = null;
 
   constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router,
-              private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal, private title: Title) {
+              private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal,
+              private title: Title, private perfService: PerformanceService) {
   }
 
   ngOnInit() {
     this.title.setTitle('Workspace');
-    this.fetchBuildInfo();
     this.route.params.subscribe(params => {
       if (params['emailId']) {
         let user = {};
@@ -99,17 +99,16 @@ export class WorkspaceComponent implements OnInit {
     }
   }
 
-  //populates buildInfo
-  fetchBuildInfo(): void {
-    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-      this.buildInfo = {};
-      Object.keys(response.data).forEach((key) => {
-        let localizedKey = this.commonService.convertToLocalTimezone(key);
-        this.buildInfo[this.commonService.addLeadingZeroesToDate(localizedKey)] = response.data[key];
-      });
-    }, error => {
-      this.loggerService.error("regression/build_to_date_map");
+  getChartName(metricId, metricObject): string {
+    let result = "";
+    let payload = {};
+    payload["metric_id"] = metricId;
+    this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
+      let chartInfo = response.data;
+    },error => {
+      this.loggerService.error("workspace-component: chart_info");
     });
+    return result;
   }
 
   fetchUsers(): any {
@@ -161,12 +160,13 @@ export class WorkspaceComponent implements OnInit {
       let workspaces = response.data;
       this.profile = [];
       if (workspaces.length) {
-        for (let workspace of workspaces.workspace) {
+        for (let workspace of workspaces) {
         let newWorkspace = {};
         newWorkspace["name"] = workspace.name;
         newWorkspace["description"] = workspace.description;
         newWorkspace["interestedMetrics"] = workspace.interested_metrics;
         newWorkspace["editingWorkspace"] = false;
+        newWorkspace["editingDescription"] = false;
         if (this.currentWorkspace && this.currentWorkspace.name === newWorkspace["name"]) {
           this.currentWorkspace.interestedMetrics = newWorkspace["interestedMetrics"];
         }
@@ -249,16 +249,6 @@ export class WorkspaceComponent implements OnInit {
     }));
   }
 
-
-
-
-
-
-
-
-
-
-
   deleteMetricInWorkspace(metricId): void {
     Object.keys(this.currentWorkspace.interestedMetrics[0]).forEach(key => {
       if (Number(key) === Number(metricId)) {
@@ -277,25 +267,19 @@ export class WorkspaceComponent implements OnInit {
     })
   }
 
-
-
-
-
   updateStatus(submitted, workspace): void {
     if (submitted) {
       workspace.editingWorkspace = false;
       this.grids = [];
-      this.showChartsForWorkspace = false;
       this.fetchWorkspacesAfterEditing();
     }
   }
 
-
-
   openWorkspace(workspace): void {
-    this.showChartsForWorkspace = true;
     this.currentWorkspace = workspace;
     this.grids = [...workspace["interestedMetrics"]];
+    let url = "/performance/workspace/" + this.selectedUser.email + "/" + this.currentWorkspace.name;
+    this.router.navigateByUrl(url);
   }
 
   getString(dict): string {
@@ -328,10 +312,10 @@ export class WorkspaceComponent implements OnInit {
     console.log("hello");
     let payload = {};
     payload["email"] = this.selectedUser.email;
-    payload["workspace_name"] = this.currentWorkspace.name;
+    payload["name"] = this.currentWorkspace.name;
     payload["description"] = this.currentWorkspace.description;
     payload["interested_metrics"] = this.currentWorkspace.interestedMetrics;
-    this.apiService.post("/api/v1/workspaces/edit_workspace/" + this.selectedUser.email, payload).subscribe(response => {
+    this.apiService.post("/api/v1/workspaces/", payload).subscribe(response => {
       this.loggerService.success(`Edited ${this.selectedUser.email} ${this.currentWorkspace.name}`);
       this.fetchWorkspacesAfterEditing();
     }, error => {

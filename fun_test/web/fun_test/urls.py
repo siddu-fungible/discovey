@@ -195,7 +195,6 @@ users_urls = [
 
 api_v1_urls = [
     url(r'^users/?(.*)?$', users.users),
-    url(r'^workspaces/edit_workspace/(.*)$', users.edit_workspace),
     url(r'^workspaces/(.*)/(.*)$', users.workspaces),
     url(r'^workspaces/?(.*)?$', users.workspaces),
     url(r'^regression/test_beds/?(\S+)?$', regression.test_beds),

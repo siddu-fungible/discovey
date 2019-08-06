@@ -30,3 +30,8 @@
 ::ng-deep .modal > .modal-lg {
     max-width: 70% !important;
 }
+
+.edit-description {
+  margin-left: 25px;
+  margin-right: 25px;
+}

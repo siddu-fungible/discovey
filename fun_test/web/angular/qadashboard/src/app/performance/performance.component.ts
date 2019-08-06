@@ -92,7 +92,8 @@ export class PerformanceComponent implements OnInit {
   @Input() selectMode: boolean = false;
   @Input() userProfileEmail: string = null;
   @Input() workspaceName: string = null;
-  @Input() interestedMetrics = null;
+  @Input() interestedMetrics: any = null;
+  @Input() description: string = null;
   @Output() submitted: EventEmitter<boolean> = new EventEmitter();
   workspace: any = [];
 
@@ -1015,25 +1016,33 @@ export class PerformanceComponent implements OnInit {
 
   };
 
+  getStringLineage(lineages): string {
+    let result = "";
+    for (let lineage of lineages[0]) {
+      result += lineage.chartName + "->";
+    }
+    return result.slice(0, -2);//to remove the arrow after the last chart name
+  }
+
   submitInterestedMetrics(): void {
     let flatNodes = this.getInterestedNodes();
     let metricDetails = {};
     this.workspace = [];
     for (let flatNode of flatNodes) {
       if (!(flatNode.node.metricId in metricDetails)) {
+        let lineage = this.getStringLineage(flatNode.lineage);
         metricDetails[flatNode.node.metricId] = {"subscribe": flatNode.subscribe, "track": flatNode.track,
-          "lineage": flatNode.lineage};
+          "lineage": lineage, "chartName": flatNode.node.chartName, "score": flatNode.node.lastScore};
       }
     }
     this.workspace.push(metricDetails);
 
     let payload = {};
     payload["email"] = this.userProfileEmail;
-    let workspace = {};
-    workspace["name"] = this.workspaceName;
-    workspace["interested_metrics"] = this.workspace;
-    payload["workspace"] = workspace;
-    this.apiService.post("/api/v1/profile", payload).subscribe(response => {
+    payload["name"] = this.workspaceName;
+    payload["interested_metrics"] = this.workspace;
+    payload["description"] = this.description;
+    this.apiService.post("/api/v1/workspaces", payload).subscribe(response => {
       console.log("submitted successfully");
       this.submitted.emit(true);
     }, error => {
