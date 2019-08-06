@@ -41,7 +41,7 @@ class BringupSetup(FunTestCase):
         pass
 
     def run(self):
-        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
+        testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/fcp_bgp_alone.json')
         test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
         tftp_image_path = fun_test.get_job_environment_variable('tftp_image_path')
         fun_test.shared_variables["test_bed_type"] = test_bed_type
