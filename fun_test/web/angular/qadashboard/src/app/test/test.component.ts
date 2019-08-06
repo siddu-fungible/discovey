@@ -7,6 +7,13 @@ import {mergeMap, switchMap} from "rxjs/operators";
 import {CommonService} from "../services/common/common.service";
 import {RegressionService} from "../regression/regression.service";
 
+class Suite {
+  result: string;
+  time: string;
+  numPassed: number;
+  numFailed: number;
+}
+
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
@@ -15,15 +22,14 @@ import {RegressionService} from "../regression/regression.service";
 
 
 export class TestComponent implements OnInit {
-  items: any;
-  numList: number[] = [6,1,9];
-  lastTwoTestSuites: any[] = [];
-  lastTwoResults: string[] = [];
-  passed: number = 4;
-  failed: number = 0;
-  result: string;
+    lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
-  numbers: number[] = [0,1];
+  numbers: number[] = [0, 1];
+  iconDict: any = {
+    'PASSED': "/static/media/sun_icon.png",
+    'FAILED': "/static/media/storm_icon.png",
+    'IN_PROGRESS': "/static/media/loading_bars.gif"
+  };
 
 
   constructor(private apiService: ApiService, private logger: LoggerService,

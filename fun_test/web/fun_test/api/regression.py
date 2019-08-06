@@ -150,7 +150,8 @@ def suite_executions(request, id):
                           "state": suite_execution.state,
                           "result": suite_execution.result,
                           "environment": json.loads(suite_execution.environment),
-                          "suite_path": suite_execution.suite_path}
+                          "suite_path": suite_execution.suite_path,
+                          "completed_time": suite_execution.completed_time}
             records.append(one_record)
             if id:
                 result = one_record
