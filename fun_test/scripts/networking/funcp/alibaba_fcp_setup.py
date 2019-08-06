@@ -86,6 +86,8 @@ class ScriptSetup(FunTestScript):
                 fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name]['abtract_config_f1_1']
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
+            fun_test.sleep(message="Waiting for protocol converge", seconds=15)
+
         for fs_name in testbed_info['fs'][test_bed_type]["fs_list"]:
             print "\n\n\n Booting HU unit  Started\n\n\n"
             print  datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
