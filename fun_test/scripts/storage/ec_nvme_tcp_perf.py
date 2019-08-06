@@ -1,10 +1,9 @@
 from lib.system.fun_test import *
 from lib.fun.fs import Fs
-from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
-from lib.host.storage_controller import StorageController
 from storage_helper import *
 import fun_global
+from lib.host.linux import Linux
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -34,11 +33,15 @@ class ECVolumeLevelScript(FunTestScript):
             self.syslog_level = 2
             self.command_timeout = 5
             self.reboot_timeout = 300
+            self.end_host_name = "poc-server-01"
         else:
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
 
         fun_test.log("Global Config: {}".format(self.__dict__))
+        host_spec = fun_test.get_asset_manager().get_host_spec(name=self.end_host_name)
+        self.end_host = Linux(**host_spec)
+        self.end_host.reboot(non_blocking=True)
 
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0,
@@ -77,12 +80,14 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables['db_log_time'] = get_current_time()
         fun_test.shared_variables["remote_ip"] = self.test_network["test_interface_ip"].split('/')[0]
 
+        fun_test.test_assert(self.end_host.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                             message="End Host {} is up".format(self.end_host.host_ip))
         # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
 
         # Configuring Linux host
-        fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
-                             "End Host {} is up".format(self.end_host.host_ip))
+        '''fun_test.test_assert(self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout),
+                             "End Host {} is up".format(self.end_host.host_ip))'''
 
         interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
                                                              self.test_interface_name)
