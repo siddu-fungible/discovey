@@ -233,7 +233,7 @@ def assets(request, name):
                 to_addresses = [TEAM_REGRESSION_EMAIL]
                 if original_manual_lock_user:
                     to_addresses.append(original_manual_lock_user)
-                    if original_manual_lock_user != asset.manual_lock_user:
+                    if (original_manual_lock_user != asset.manual_lock_user) and asset.manual_lock_user:
                         to_addresses.append(asset.manual_lock_user)
                 send_mail(to_addresses=to_addresses, subject="{} {}".format(asset.name, lock_or_unlock))
             asset.save()
