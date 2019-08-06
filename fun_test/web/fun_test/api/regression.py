@@ -129,6 +129,9 @@ def suite_executions(request, id):
 
     if request.method == "GET":
         q = Q()
+        suite_path = request.GET.get('suite_path', None)
+        if suite_path:
+            q = q & Q(suite_path=suite_path)
         test_bed_type = request.GET.get('test_bed_type', None)
         if test_bed_type:
             q = q & Q(test_bed_type=test_bed_type)
@@ -146,9 +149,10 @@ def suite_executions(request, id):
             one_record = {"execution_id": suite_execution.execution_id,
                           "state": suite_execution.state,
                           "result": suite_execution.result,
-                          "environment": json.loads(suite_execution.environment)}
+                          "environment": json.loads(suite_execution.environment),
+                          "suite_path": suite_execution.suite_path}
             records.append(one_record)
-            if id is not None:
+            if id:
                 result = one_record
                 break
         result = records if len(records) else None

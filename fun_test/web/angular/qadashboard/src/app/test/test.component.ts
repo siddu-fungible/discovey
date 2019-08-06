@@ -36,10 +36,6 @@ export class TestComponent implements OnInit {
 
 
   ngOnInit() {
-
-    console.log(this.stateMap);
-    console.log(this.stateStringMap);
-
     new Observable(observer => {
       observer.next(true);
       observer.complete();
@@ -66,28 +62,30 @@ export class TestComponent implements OnInit {
     //display date + result of previous test
     //statemap, statestringmap (in regression service)
     //scheduler_global.py, suite-detail.component
-    let payload = {tags: '["smoke"]', tag: "smoke"};
-    return this.apiService.post("/regression/suite_executions/" + 10 + "/" + 1 + "/" + stateFilter, payload).pipe(switchMap(response => {
-      for (let i of response.data) {
-        if (this.lastTwoResults.length == 2) {
-          break;
-        }
-
-
-        if (i.fields.state == this.stateMap.AUTO_SCHEDULED) {
-        } else if (i.fields.state == this.stateMap.COMPLETED) {
-          this.lastTwoResults.push(i.fields.result);
-          this.lastTwoTestSuites.push(i)
-
-        } else if (i.fields.state < this.stateMap.COMPLETED) {
-          this.lastTwoResults.push('FAILED');
-          this.lastTwoTestSuites.push(i);
-        } else {
-          this.lastTwoResults.push('IN_PROGRESS');
-          this.lastTwoTestSuites.push(i);
-        }
-
-      }
+    //let payload = {tags: '["networking-sanity"]'};
+    return this.apiService.get("/api/v1/regression/suite_executions/?suite_path=networking_funcp_sanity.json").pipe(switchMap(response => {
+      //for (let i of response.data) {
+      //   console.log(i.fields.suite_path);
+      //   // if (this.lastTwoResults.length == 2) {
+      //   //   break;
+      //   // }
+      //
+      //
+      //
+      //   if (i.fields.state == this.stateMap.AUTO_SCHEDULED) {
+      //   } else if (i.fields.state == this.stateMap.COMPLETED) {
+      //     this.lastTwoResults.push(i.fields.result);
+      //     this.lastTwoTestSuites.push(i)
+      //
+      //   } else if (i.fields.state < this.stateMap.COMPLETED) {
+      //     this.lastTwoResults.push('FAILED');
+      //     this.lastTwoTestSuites.push(i);
+      //   } else {
+      //     this.lastTwoResults.push('IN_PROGRESS');
+      //     this.lastTwoTestSuites.push(i);
+      //   }
+      //
+      // }
       this.isDone = true;
       return of(true);
     }));
