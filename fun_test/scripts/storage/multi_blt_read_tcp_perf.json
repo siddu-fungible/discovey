@@ -71,7 +71,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -87,7 +87,7 @@
       "read"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 8)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(32, 4)"],
     "fio_job_name": {
       "read": "scaling"
     },
@@ -117,7 +117,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -133,7 +133,7 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 8)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(32, 4)"],
     "fio_job_name": {
       "randread": "scaling"
     },
@@ -162,7 +162,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19 --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -207,7 +207,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed=0-19",
+      "multiple_jobs": "--ioengine=libaio --size=100% --direct=1 --prio=0 --bs=64k --iodepth=1 --rw=write --cpus_allowed_policy=split",
       "timeout": 7200
     },
     "fio_cmd_args": {
