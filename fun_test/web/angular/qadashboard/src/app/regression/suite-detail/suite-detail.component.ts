@@ -6,6 +6,8 @@ import {ReRunService} from "../re-run.service";
 import {LoggerService} from '../../services/logger/logger.service';
 import {RegressionService} from "../regression.service";
 import {CommonService} from "../../services/common/common.service";
+import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
+import {UserService} from "../../services/user/user.service";
 
 
 class Environment {
@@ -36,7 +38,20 @@ export class SuiteDetailComponent implements OnInit {
   stateMap: any = null;
   environment = new Environment();
 
-  constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService, private commonService: CommonService) {
+    // Re-run options
+  reRunOptionsReRunFailed: boolean = false;
+  reRunOptionsReRunAll: boolean = true;
+  reUseBuildImage: boolean = false;
+  reRunScript: string = null;
+
+
+  constructor(private apiService: ApiService,
+              private route: ActivatedRoute,
+              private reRunService: ReRunService,
+              private logger: LoggerService,
+              private regressionService: RegressionService,
+              private commonService: CommonService,
+              private modalService: NgbModal) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
@@ -247,8 +262,8 @@ export class SuiteDetailComponent implements OnInit {
   }
 
 
-  reRunClick(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null) {
-    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, scriptFilter).subscribe(response => {
+  reRunClick(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null, reUseBuildImage=null) {
+    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, scriptFilter, reUseBuildImage).subscribe(response => {
       alert("Re-run submitted");
       window.location.href = "/regression";
     }, error => {
@@ -360,6 +375,35 @@ export class SuiteDetailComponent implements OnInit {
     }, error => {
       this.logger.error(`Unable kill ${suiteId}`);
     });
+  }
+
+
+  reRunModalOpen(content, scriptPath=null) {
+    this.reRunOptionsReRunFailed = false;
+    this.reRunOptionsReRunAll = true;
+    this.reUseBuildImage = false;
+    this.reRunScript = scriptPath;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+      if (this.reRunOptionsReRunAll) {
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, scriptPath, this.reUseBuildImage);
+      }
+      if (this.reRunOptionsReRunFailed) {
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED', 'NOT_RUN'], scriptPath, this.reUseBuildImage)
+      }
+
+    }, (reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  }
+
+  toggleReRunOptions() {
+    this.reRunOptionsReRunAll = !this.reRunOptionsReRunAll;
+    this.reRunOptionsReRunFailed = !this.reRunOptionsReRunFailed;
+  }
+
+  togglereUseBuildImage() {
+    this.reUseBuildImage = !this.reUseBuildImage;
   }
 
 
