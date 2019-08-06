@@ -13,6 +13,7 @@ import {RegressionService} from "./regression.service";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {UserService} from "../services/user/user.service";
+import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 
 class FilterButton {
   displayString: string = null;
@@ -86,6 +87,12 @@ export class RegressionComponent implements OnInit {
   userMap: any = null;
   showingTestBeds: boolean = false;
 
+  // Re-run options
+  reRunOptionsReRunFailed: boolean = false;
+  reRunOptionsReRunAll: boolean = true;
+  reUseBuildImage: boolean = false;
+
+
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
               private route: ActivatedRoute,
@@ -94,7 +101,8 @@ export class RegressionComponent implements OnInit {
               private logger: LoggerService,
               private regressionService: RegressionService,
               private router: Router,
-              private userService: UserService) {
+              private userService: UserService,
+              private modalService: NgbModal) {
     this.stateStringMap = this.regressionService.stateStringMap;
     this.stateMap = this.regressionService.stateMap;
   }
@@ -392,9 +400,9 @@ export class RegressionComponent implements OnInit {
     }*/
   }
 
-  reRunClick(suiteExecutionId, suitePath, resultFilter=null) {
-    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter).subscribe(response => {
-      alert("Re-run submitted");
+  reRunClick(suiteExecutionId, suitePath, resultFilter=null, reUseBuildImage=null) {
+    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, null, reUseBuildImage).subscribe(response => {
+      this.logger.success("Re-run request submitted");
       window.location.href = "/regression";
     }, error => {
       this.logger.error("Error submitting re-run");
@@ -484,4 +492,30 @@ export class RegressionComponent implements OnInit {
     })
   }
 
+  reRunModalOpen(content) {
+    this.reRunOptionsReRunFailed = false;
+    this.reRunOptionsReRunAll = true;
+    this.reUseBuildImage = false;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
+      if (this.reRunOptionsReRunAll) {
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, this.reUseBuildImage);
+      }
+      if (this.reRunOptionsReRunFailed) {
+        this.reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path,['FAILED', 'NOT_RUN'], this.reUseBuildImage)
+      }
+
+    }, (reason) => {
+      console.log("Rejected");
+      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  }
+
+  toggleReRunOptions() {
+    this.reRunOptionsReRunAll = !this.reRunOptionsReRunAll;
+    this.reRunOptionsReRunFailed = !this.reRunOptionsReRunFailed;
+  }
+
+  togglereUseBuildImage() {
+    this.reUseBuildImage = !this.reUseBuildImage;
+  }
 }

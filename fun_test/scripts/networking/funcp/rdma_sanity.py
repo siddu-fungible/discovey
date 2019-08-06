@@ -77,6 +77,12 @@ class BringupSetup(FunTestCase):
         else:
             ib_bw_tests = ["write", "read"]
             fun_test.shared_variables["test_type"] = ib_bw_tests
+        if "enable_bgp" in job_inputs:
+            enable_bgp = job_inputs["enable_bgp"]
+            fun_test.shared_variables["enable_bgp"] = enable_bgp
+        else:
+            enable_bgp = False
+            fun_test.shared_variables["enable_bgp"] = enable_bgp
 
         if deploy_status:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -186,13 +192,20 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
+        enable_bgp = fun_test.shared_variables["enable_bgp"]
+        abstract_key = ""
+        if enable_bgp:
+            abstract_key = "abstract_configs_bgp"
+        else:
+            abstract_key = "abstract_configs"
 
         if fun_test.shared_variables["deploy_status"]:
+            fun_test.log("Using abstract_key {}".format(abstract_key))
             # execute abstract Configs
             abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                                  self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
+                                  self.server_key["fs"][fs_name][abstract_key]["F1-0"]
             abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                                  self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
+                                  self.server_key["fs"][fs_name][abstract_key]["F1-1"]
 
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
@@ -203,6 +216,9 @@ class NicEmulation(FunTestCase):
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
+            if enable_bgp:
+                ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
+
             for container in ping_dict:
                 funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
@@ -245,7 +261,7 @@ class NicEmulation(FunTestCase):
 
         for objs in host_objs:
             for handle in host_objs[objs]:
-                handle.sudo_command("rm -rf /tmp/*bw*")
+                handle.sudo_command("rm -rf /tmp/*bw* && rm -rf /tmp/*rping* /tmp/*lat*")
                 hostname = handle.command("hostname").strip()
                 iface_name = handle.command(
                     "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
@@ -274,19 +290,19 @@ class NicEmulation(FunTestCase):
         pass
 
 
-class SrpingTest(FunTestCase):
+class SrpingLoopBack(FunTestCase):
     server_key = {}
+    random_io = False
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="SRPING Test",
+                              summary="SRPING Loopback Test",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
-                                  2. Start srping test for different sizes
+                                  2. Start srping test in loop back
                                   """)
 
     def setup(self):
-
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                       '/fs_connected_servers.json')
 
@@ -307,40 +323,258 @@ class SrpingTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
-        size = 32
-        while (size <= 65536):
-            if size == 65536:
-                size = 65534
-            f10_host_test = f10_host_roce.srping_test(size=size, count=10, debug=True)
+        if self.random_io:
+            io_list = []
+            while True:
+                rand_num = random.randint(23, 65534)
+                if rand_num not in io_list:
+                    io_list.append(rand_num)
+                if len(io_list) == 16:
+                    break
+        else:
+            io_list = []
+            size = 32
+            while size <= 65536:
+                if size == 65536:
+                    io_list.append(65534)
+                else:
+                    io_list.append(size)
+                size = size * 2
+
+        for size in io_list:
+            f10_host_server = f10_host_roce.srping_test(size=size, count=10, debug=True, timeout=15)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
-            f11_host_test = f11_host_roce.srping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
-            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
-                fun_test.sleep("Srping on f10_host", 2)
-            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
-                fun_test.sleep("Srping on f11_host", 2)
-            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="srping")
-            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="srping", client_cmd=True)
+            f10_host_client = f10_host_roce.srping_test(size=size, count=10, debug=True,
+                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=15)
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
+                fun_test.sleep("Srping server on f10_host", 2)
+            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
+                fun_test.sleep("Srping client on f10_host", 2)
+            f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping")
+            f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping",
+                                                             client_cmd=True)
             f10_hosts[0]["handle"].disconnect()
+            f10_hosts[0]["handle"].disconnect()
+            fun_test.simple_assert(f10_server_result, "F10_host server result for size {}".format(size))
+            fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
+
+        for size in io_list:
+            f11_host_server = f11_host_roce.srping_test(size=size, count=10, debug=True, timeout=15)
+            fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
+            f11_host_client = f11_host_roce.srping_test(size=size, count=10, debug=True,
+                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=15)
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
+                fun_test.sleep("Srping server on f11_host", 2)
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
+                fun_test.sleep("Srping client on f11_host", 2)
+            f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="srping")
+            f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="srping",
+                                                             client_cmd=True)
             f11_hosts[0]["handle"].disconnect()
-            fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
-            fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
-            size = size * 2
+            f11_hosts[0]["handle"].disconnect()
+            fun_test.simple_assert(f11_server_result, "f11_host server result for size {}".format(size))
+            fun_test.simple_assert(f11_client_result, "f11_host client result for size {}".format(size))
 
-        fun_test.test_assert(True, "Srping test passed")
-
-        fun_test.sleep("sleep", 3)
+        fun_test.test_assert(True, "Srping loop back test")
 
     def cleanup(self):
         fun_test.shared_variables["f10_host_roce"].cleanup()
         fun_test.shared_variables["f10_host_roce"].cleanup()
 
 
-class RpingTest(FunTestCase):
+class RpingLoopBack(FunTestCase):
     server_key = {}
+    random_io = False
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="RPING Test",
+                              summary="RPING Loopback Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start rping test in loop back
+                                  """)
+
+    def setup(self):
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+
+    def run(self):
+        global funcp_obj, servers_mode, servers_list, fs_name
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        f10_hosts = fun_test.shared_variables["f10_hosts"]
+        f11_hosts = fun_test.shared_variables["f11_hosts"]
+
+        f10_host_roce = fun_test.shared_variables["f10_host_roce"]
+        f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+
+        # Load RDMA modules
+        f10_host_roce.rdma_setup()
+        f11_host_roce.rdma_setup()
+
+        # Kill all RDMA tools
+        f10_host_roce.cleanup()
+        f11_host_roce.cleanup()
+
+        if self.random_io:
+            io_list = []
+            while True:
+                rand_num = random.randint(23, 65534)
+                if rand_num not in io_list:
+                    io_list.append(rand_num)
+                if len(io_list) == 16:
+                    break
+        else:
+            io_list = []
+            size = 32
+            while size <= 65536:
+                if size == 65536:
+                    io_list.append(65534)
+                else:
+                    io_list.append(size)
+                size = size * 2
+
+        for size in io_list:
+            f10_host_server = f10_host_roce.rping_test(size=size, count=10, debug=True, timeout=15)
+            fun_test.sleep("Started Rping server for size {}".format(size), seconds=1)
+            f10_host_client = f10_host_roce.rping_test(size=size, count=10, debug=True,
+                                                       server_ip=f10_hosts[0]["ipaddr"], timeout=15)
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
+                fun_test.sleep("Rping server on f10_host", 2)
+            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
+                fun_test.sleep("Rping client on f10_host", 2)
+            f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="rping")
+            f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="rping",
+                                                             client_cmd=True)
+            f10_hosts[0]["handle"].disconnect()
+            f10_hosts[0]["handle"].disconnect()
+            fun_test.simple_assert(f10_server_result, "F10_host server result for size {}".format(size))
+            fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
+
+        for size in io_list:
+            f11_host_server = f11_host_roce.rping_test(size=size, count=10, debug=True, timeout=15)
+            fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
+            f11_host_client = f11_host_roce.rping_test(size=size, count=10, debug=True,
+                                                       server_ip=f11_hosts[0]["ipaddr"], timeout=15)
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
+                fun_test.sleep("Rping server on f11_host", 2)
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
+                fun_test.sleep("Rping client on f11_host", 2)
+            f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="rping")
+            f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="rping",
+                                                             client_cmd=True)
+            f11_hosts[0]["handle"].disconnect()
+            f11_hosts[0]["handle"].disconnect()
+            fun_test.simple_assert(f11_server_result, "f11_host server result for size {}".format(size))
+            fun_test.simple_assert(f11_client_result, "f11_host client result for size {}".format(size))
+
+        fun_test.test_assert(True, "Rping loop back test")
+
+    def cleanup(self):
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+
+
+class SrpingSeqIoTest(FunTestCase):
+    server_key = {}
+    random_io = False
+
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="SRPING Seq IO Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start srping test for different sizes
+                                  """)
+
+    def setup(self):
+        self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
+                                                      '/fs_connected_servers.json')
+
+    def run(self):
+        global funcp_obj, servers_mode, servers_list, fs_name
+        fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        f10_hosts = fun_test.shared_variables["f10_hosts"]
+        f11_hosts = fun_test.shared_variables["f11_hosts"]
+
+        f10_host_roce = fun_test.shared_variables["f10_host_roce"]
+        f11_host_roce = fun_test.shared_variables["f11_host_roce"]
+
+        # Load RDMA modules
+        f10_host_roce.rdma_setup()
+        f11_host_roce.rdma_setup()
+
+        # Kill all RDMA tools
+        f10_host_roce.cleanup()
+        f11_host_roce.cleanup()
+
+        if self.random_io:
+            test = "Random"
+            io_list = []
+            while True:
+                rand_num = random.randint(23, 65534)
+                if rand_num not in io_list:
+                    io_list.append(rand_num)
+                if len(io_list) == 16:
+                    break
+        else:
+            test = "Sequential"
+            io_list = []
+            size = 32
+            while size <= 65536:
+                if size == 65536:
+                    io_list.append(65534)
+                else:
+                    io_list.append(size)
+                size = size * 2
+        f10_pid_there = 0
+        f11_pid_there = 0
+        for size in io_list:
+            f10_host_test = f10_host_roce.srping_test(size=size, count=10, debug=True)
+            fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
+            f11_host_test = f11_host_roce.srping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                fun_test.sleep("Srping test on f10_host", 2)
+                f10_pid_there += 1
+                if f10_pid_there == 60:
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
+            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                fun_test.sleep("Srping test on f11_host", 2)
+                f11_pid_there += 1
+                if f11_pid_there == 60:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
+            f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="srping")
+            f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="srping", client_cmd=True)
+            f10_hosts[0]["handle"].disconnect()
+            f11_hosts[0]["handle"].disconnect()
+            fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
+            fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
+
+        fun_test.test_assert(True, "Srping {} IO test".format(test))
+
+    def cleanup(self):
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+        fun_test.shared_variables["f10_host_roce"].cleanup()
+
+
+class SrpingRandIoTest(SrpingSeqIoTest):
+    random_io = True
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="SRPING Random IO Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start srping test for different sizes
+                                  """)
+
+
+class RpingSeqIoTest(FunTestCase):
+    server_key = {}
+    random_io = False
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="RPING Seq IO Test",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
                                   2. Start rping test for different sizes
@@ -368,40 +602,76 @@ class RpingTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
-        size = 32
-        while (size<=65536):
-            if size == 65536:
-                size = 65534
+        if self.random_io:
+            test = "Random"
+            io_list = []
+            while True:
+                rand_num = random.randint(23, 65534)
+                if rand_num not in io_list:
+                    io_list.append(rand_num)
+                if len(io_list) == 16:
+                    break
+        else:
+            test = "Sequential"
+            io_list = []
+            size = 32
+            while size <= 65536:
+                if size == 65536:
+                    io_list.append(65534)
+                else:
+                    io_list.append(size)
+                size = size * 2
+        f10_pid_there = 0
+        f11_pid_there = 0
+        for size in io_list:
             f10_host_test = f10_host_roce.rping_test(size=size, count=10, debug=True)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
             f11_host_test = f11_host_roce.rping_test(size=size, count=10, debug=True, server_ip=f10_hosts[0]["ipaddr"])
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
-                fun_test.sleep("Rping on f10_host", 2)
-            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
-                fun_test.sleep("Rping on f11_host", 2)
+                fun_test.sleep("Rping test on f10_host", 2)
+                f10_pid_there += 1
+                if f10_pid_there == 60:
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
+            while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
+                fun_test.sleep("Rping test on f11_host", 2)
+                f11_pid_there += 1
+                if f11_pid_there == 60:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
             f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="rping")
             f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="rping", client_cmd=True)
             f10_hosts[0]["handle"].disconnect()
             f11_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
-            size = size * 2
 
-        fun_test.test_assert(True, "Rping test passed")
-
-        fun_test.sleep("sleep", 3)
+        fun_test.test_assert(True, "Rping {} IO test".format(test))
 
     def cleanup(self):
         fun_test.shared_variables["f10_host_roce"].cleanup()
         fun_test.shared_variables["f10_host_roce"].cleanup()
 
 
-class IbBwTest(FunTestCase):
+class RpingRandIoTest(RpingSeqIoTest):
     server_key = {}
+    random_io = True
 
     def describe(self):
-        self.set_test_details(id=5,
-                              summary="IB_BW* Test",
+        self.set_test_details(id=8,
+                              summary="RPING Random IO Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start rping test for different sizes
+                                  """)
+
+
+class IbBwSeqIoTest(FunTestCase):
+    server_key = {}
+    random_io = False
+    use_rdmacm = False
+
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="IB_BW* Seq IO Test",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
                                   2. Start IB_BW write/read test for different sizes
@@ -430,36 +700,104 @@ class IbBwTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
+        if self.use_rdmacm:
+            rdmacm = True
+        else:
+            rdmacm = False
+
+        if self.random_io:
+            io_type = "Random"
+            io_list = []
+            while True:
+                rand_num = random.randint(1, 524288)
+                if rand_num not in io_list:
+                    io_list.append(rand_num)
+                if len(io_list) == 16:
+                    break
+        else:
+            io_type = "Sequential"
+            io_list = ["1", "128", "256", "512", "1024", "2048", "4096"]
+        f10_pid_there = 0
+        f11_pid_there = 0
         for test in test_type_list:
-            print test
-            packet_size = ["1", "128", "256", "512", "1024", "2048", "4096"]
-            for size in packet_size:
-                f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size)
-                f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, server_ip=f10_hosts[0]["ipaddr"])
+            for size in io_list:
+                f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm)
+                f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm,
+                                                         server_ip=f10_hosts[0]["ipaddr"])
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f10_host", 2)
-                while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
+                    f10_pid_there += 1
+                    if f10_pid_there == 60:
+                        f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
+                while f11_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
                     fun_test.sleep("ib_bw test on f11_host", 2)
+                    f11_pid_there += 1
+                    if f11_pid_there == 60:
+                        f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_bw")
-                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw", client_cmd=True)
+                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_bw",
+                                                               client_cmd=True)
                 f10_hosts[0]["handle"].disconnect()
                 f11_hosts[0]["handle"].disconnect()
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
 
-        fun_test.test_assert(True, "IB_BW test passed")
+            fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
 
     def cleanup(self):
         fun_test.shared_variables["f10_host_roce"].cleanup()
         fun_test.shared_variables["f10_host_roce"].cleanup()
 
 
-class IbLatTest(FunTestCase):
+class IbBwRandIoTest(IbBwSeqIoTest):
     server_key = {}
+    random_io = True
 
     def describe(self):
-        self.set_test_details(id=6,
-                              summary="IB_LAT* Test",
+        self.set_test_details(id=10,
+                              summary="IB_BW* Random IO Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
+class IbBwSeqIoRdmaCm(IbBwSeqIoTest):
+    server_key = {}
+    random_io = False
+    use_rdmacm = True
+
+    def describe(self):
+        self.set_test_details(id=11,
+                              summary="IB_BW* Seq IO & RDMA_CM",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
+class IbBwRandIoRdmaCm(IbBwSeqIoTest):
+    server_key = {}
+    random_io = True
+    use_rdmacm = True
+
+    def describe(self):
+        self.set_test_details(id=12,
+                              summary="IB_BW* Random IO & RDMA_CM",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for different sizes
+                                  """)
+
+
+class IbLatSeqIoTest(FunTestCase):
+    server_key = {}
+    random_io = False
+    use_rdmacm = False
+
+    def describe(self):
+        self.set_test_details(id=13,
+                              summary="IB_LAT* Seq IO Test",
                               steps="""
                                   1. Load funrdma & rdma_ucm driver
                                   2. Start IB_BW write/read test for different sizes
@@ -488,37 +826,113 @@ class IbLatTest(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
+        if self.use_rdmacm:
+            rdmacm = True
+        else:
+            rdmacm = False
+
+        if self.random_io:
+            io_type = "Random"
+            io_list = []
+            while True:
+                rand_num = random.randint(1, 524288)
+                if rand_num not in io_list:
+                    io_list.append(rand_num)
+                if len(io_list) == 16:
+                    break
+        else:
+            io_type = "Sequential"
+            io_list = ["1", "128", "256", "512", "1024", "2048", "4096"]
+
+        f10_pid_there = 0
+        f11_pid_there = 0
         for test in test_type_list:
-            print test
-            packet_size = ["1", "128", "256", "512", "1024", "2048", "4096"]
-            for size in packet_size:
-                f10_host_test = f10_host_roce.ib_lat_test(test_type=test, size=size)
-                f11_host_test = f11_host_roce.ib_lat_test(test_type=test, size=size, server_ip=f10_hosts[0]["ipaddr"])
+            for size in io_list:
+                f10_host_test = f10_host_roce.ib_lat_test(test_type=test, size=size, rdma_cm=rdmacm)
+                f11_host_test = f11_host_roce.ib_lat_test(test_type=test, size=size, rdma_cm=rdmacm,
+                                                          server_ip=f10_hosts[0]["ipaddr"])
                 while f10_hosts[0]["handle"].process_exists(process_id=f10_host_test["cmd_pid"]):
-                    fun_test.sleep("ib_bw test on f10_host", 2)
+                    fun_test.sleep("ib_lat test on f10_host", 2)
+                    f10_pid_there += 1
+                    if f10_pid_there == 60:
+                        f10_hosts[0]["handle"].kill_process(process_id=f10_host_test["cmd_pid"])
                 while f11_hosts[0]["handle"].process_exists(process_id=f11_host_test["cmd_pid"]):
-                    fun_test.sleep("ib_bw test on f11_host", 2)
+                    fun_test.sleep("ib_lat test on f11_host", 2)
+                    f11_pid_there += 1
+                    if f11_pid_there == 60:
+                        f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_lat")
-                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_lat", client_cmd=True)
+                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_lat",
+                                                               client_cmd=True)
                 f10_hosts[0]["handle"].disconnect()
                 f11_hosts[0]["handle"].disconnect()
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
 
-        fun_test.test_assert(True, "IB_LAT test passed")
+            fun_test.test_assert(True, "IB_LAT {} test for {} IO".format(test, io_type))
 
     def cleanup(self):
         fun_test.shared_variables["f10_host_roce"].cleanup()
         fun_test.shared_variables["f10_host_roce"].cleanup()
+
+
+class IbLatRandIoTest(IbLatSeqIoTest):
+    server_key = {}
+    random_io = True
+
+    def describe(self):
+        self.set_test_details(id=14,
+                              summary="IB_Lat* Random IO Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
+
+
+class IbLatSeqIoRdmaCm(IbLatSeqIoTest):
+    server_key = {}
+    random_io = False
+    use_rdmacm = True
+
+    def describe(self):
+        self.set_test_details(id=15,
+                              summary="IB_Lat* Seq IO & RDMA_CM Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
+
+
+class IbLatRandIoRdmaCm(IbLatSeqIoTest):
+    server_key = {}
+    random_io = True
+    use_rdmacm = True
+
+    def describe(self):
+        self.set_test_details(id=16,
+                              summary="IB_Lat* Rand IO & RDMA_CM Test",
+                              steps="""
+                                  1. Load funrdma & rdma_ucm driver
+                                  2. Start ib_bw test for random sizes
+                                  """)
 
 
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
     ts.add_test_case(NicEmulation())
-    ts.add_test_case(SrpingTest())
-    ts.add_test_case(RpingTest())
-    ts.add_test_case(IbBwTest())
-    ts.add_test_case(IbLatTest())
-
+    ts.add_test_case(SrpingLoopBack())
+    ts.add_test_case(RpingLoopBack())
+    ts.add_test_case(SrpingSeqIoTest())
+    ts.add_test_case(SrpingRandIoTest())
+    ts.add_test_case(RpingSeqIoTest())
+    ts.add_test_case(RpingRandIoTest())
+    ts.add_test_case(IbBwSeqIoTest())
+    ts.add_test_case(IbBwRandIoTest())
+    ts.add_test_case(IbBwSeqIoRdmaCm())
+    ts.add_test_case(IbBwRandIoRdmaCm())
+    ts.add_test_case(IbLatSeqIoTest())
+    ts.add_test_case(IbLatRandIoTest())
+    ts.add_test_case(IbLatSeqIoRdmaCm())
+    ts.add_test_case(IbLatRandIoRdmaCm())
     ts.run()

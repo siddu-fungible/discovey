@@ -200,7 +200,7 @@ class ECVolumeLevelScript(FunTestScript):
 
             fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
-            self.host_info = {}
+            self.host_info = OrderedDict()
             self.hosts_test_interfaces = {}
             self.host_handles = {}
             self.host_ips = []

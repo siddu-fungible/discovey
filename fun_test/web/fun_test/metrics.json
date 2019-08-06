@@ -5238,25 +5238,6 @@
                 ]
               }
             ]
-          },
-          {
-            "metric_model_name": "MetricContainer",
-            "name": "security_S1",
-            "label": "Security",
-            "children": [
-              {
-                "metric_model_name": "TeraMarkCryptoPerformance",
-                "name": "crypto_dp_tunnel_perf_S1",
-                "label": "Crypto dp tunnel perf S1",
-                "children": []
-              },
-              {
-                "metric_model_name": "TeraMarkCryptoPerformance",
-                "name": "crypto_ipsec_perf_S1",
-                "label": "Ipsec perf S1",
-                "children": []
-              }
-            ]
           }
         ]
       }

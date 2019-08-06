@@ -76,6 +76,8 @@ import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage
 import { NetworkSanityWidgetComponent } from './regression/network-sanity-widget/network-sanity-widget.component';
 import { WorkspaceComponent } from './performance/workspace/workspace.component';
 import { ViewWorkspaceComponent } from './performance/workspace/view-workspace/view-workspace.component';
+import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
+import {ModalModule} from "ngb-modal";
 
 
 @NgModule({
@@ -136,7 +138,8 @@ import { ViewWorkspaceComponent } from './performance/workspace/view-workspace/v
     SmokeTestStorageWidgetComponent,
     NetworkSanityWidgetComponent,
     WorkspaceComponent,
-    ViewWorkspaceComponent
+    ViewWorkspaceComponent,
+    SuiteEditorComponent
   ],
   imports: [
     BsDropdownModule,
@@ -155,7 +158,8 @@ import { ViewWorkspaceComponent } from './performance/workspace/view-workspace/v
     NgbModule,
     NgbTooltipModule,
     NgxJsonViewerModule,
-    ToasterModule.forRoot()
+    ToasterModule.forRoot(),
+    ModalModule
   ],
 
   providers: [ApiService, LoggerService],
