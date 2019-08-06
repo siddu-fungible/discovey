@@ -955,9 +955,9 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestUnloadDriver,
             FunethTestReboot,
-            FunethTestComeReboot,
+            #FunethTestComeReboot,  # TODO: uncomment after SWLINUX-786 is fixed
     ):
         ts.add_test_case(tc())
     ts.run()
