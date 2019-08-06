@@ -245,15 +245,15 @@ class NicEmulation(FunTestCase):
                 test_host_pings(host=host, ips=ping_dict[host], strict=False)
 
         # Update RDMA Core & perftest on hosts
-        # for obj in host_objs:
-        #     if obj == "f1_0":
-        #         host_count = fun_test.shared_variables["host_len_f10"]
-        #     elif obj == "f1_1":
-        #         host_count = fun_test.shared_variables["host_len_f11"]
-        #     for x in xrange(0, host_count):
-        #         host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
-        #         # host_objs[obj][x].command("hostname")
-        # fun_test.sleep("Building rdma_perf & core", seconds=120)
+        for obj in host_objs:
+            if obj == "f1_0":
+                host_count = fun_test.shared_variables["host_len_f10"]
+            elif obj == "f1_1":
+                host_count = fun_test.shared_variables["host_len_f11"]
+            for x in xrange(0, host_count):
+                host_objs[obj][x].start_bg_process("/home/localadmin/mks/update_rdma.sh update update", timeout=1200)
+                # host_objs[obj][x].command("hostname")
+        fun_test.sleep("Building rdma_perf & core", seconds=120)
 
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
@@ -351,7 +351,8 @@ class SrpingLoopBack(FunTestCase):
             while f11_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f10_host", 2)
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping")
-            f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping", client_cmd=True)
+            f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping",
+                                                             client_cmd=True)
             f10_hosts[0]["handle"].disconnect()
             f10_hosts[0]["handle"].disconnect()
             fun_test.simple_assert(f10_server_result, "F10_host server result for size {}".format(size))
@@ -453,7 +454,7 @@ class RpingLoopBack(FunTestCase):
             f11_host_server = f11_host_roce.rping_test(size=size, count=10, debug=True, timeout=15)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
             f11_host_client = f11_host_roce.rping_test(size=size, count=10, debug=True,
-                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=15)
+                                                       server_ip=f11_hosts[0]["ipaddr"], timeout=15)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f11_host", 2)
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
@@ -788,6 +789,7 @@ class IbBwRandIoRdmaCm(IbBwSeqIoTest):
                                   2. Start ib_bw test for different sizes
                                   """)
 
+
 class IbLatSeqIoTest(FunTestCase):
     server_key = {}
     random_io = False
@@ -860,7 +862,8 @@ class IbLatSeqIoTest(FunTestCase):
                     if f11_pid_there == 60:
                         f11_hosts[0]["handle"].kill_process(process_id=f11_host_test["cmd_pid"])
                 f10_host_result = f10_host_roce.parse_test_log(f10_host_test["output_file"], tool="ib_lat")
-                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_lat", client_cmd=True)
+                f11_host_result = f11_host_roce.parse_test_log(f11_host_test["output_file"], tool="ib_lat",
+                                                               client_cmd=True)
                 f10_hosts[0]["handle"].disconnect()
                 f11_hosts[0]["handle"].disconnect()
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
@@ -912,6 +915,8 @@ class IbLatRandIoRdmaCm(IbLatSeqIoTest):
                                   1. Load funrdma & rdma_ucm driver
                                   2. Start ib_bw test for random sizes
                                   """)
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BringupSetup())
@@ -930,7 +935,4 @@ if __name__ == '__main__':
     ts.add_test_case(IbLatRandIoTest())
     ts.add_test_case(IbLatSeqIoRdmaCm())
     ts.add_test_case(IbLatRandIoRdmaCm())
-
-
-
     ts.run()
