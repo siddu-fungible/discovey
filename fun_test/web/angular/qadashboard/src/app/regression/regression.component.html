@@ -213,17 +213,17 @@
                         Re-run failed
                         <span class="dropdown-item-sub-text"> (This will rebuild the image on Jenkins again)</span>
                       </span>
-                      <span
+                      <span *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'"
                         (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, null, true)"
                         class="dropdown-item anchor-button pseudo-anchor">
                         Quick re-run all
-                        <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, the it will re-use the image from original job)</span>
+                        <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, it will re-use the image from original job)</span>
                       </span>
-                      <span
+                      <span *ngIf="suiteExecution.fields.test_bed_type !== 'simulation'"
                         (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'], true)"
                         class="dropdown-item anchor-button pseudo-anchor">
                         Quick re-run failed
-                        <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, the it will re-use the image from original job)</span>
+                        <span class="dropdown-item-sub-text"> (This will not rebuild the image on Jenkins again. Instead, it will re-use the image from original job)</span>
                       </span>
                     </ng-container>
 
