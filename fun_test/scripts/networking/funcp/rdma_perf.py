@@ -138,6 +138,12 @@ class BringupSetup(FunTestCase):
         else:
             roce_speed = "all"
             fun_test.shared_variables["test_speed"] = roce_speed
+        if "enable_bgp" in job_inputs:
+            enable_bgp = job_inputs["enable_bgp"]
+            fun_test.shared_variables["enable_bgp"] = enable_bgp
+        else:
+            enable_bgp = False
+            fun_test.shared_variables["enable_bgp"] = enable_bgp
 
         if deploy_status:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -247,23 +253,35 @@ class NicEmulation(FunTestCase):
 
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
+        enable_bgp = fun_test.shared_variables["enable_bgp"]
+        abstract_key = ""
+        if enable_bgp:
+            abstract_key = "abstract_configs_bgp"
+        else:
+            abstract_key = "abstract_configs"
 
         if fun_test.shared_variables["deploy_status"]:
+            fun_test.log("Using abstract_key {}".format(abstract_key))
             # execute abstract Configs
             abstract_json_file0 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                                  self.server_key["fs"][fs_name]["abstract_configs"]["F1-0"]
+                                  self.server_key["fs"][fs_name][abstract_key]["F1-0"]
             abstract_json_file1 = fun_test.get_script_parent_directory() + '/abstract_config/' + \
-                                  self.server_key["fs"][fs_name]["abstract_configs"]["F1-1"]
+                                  self.server_key["fs"][fs_name][abstract_key]["F1-1"]
 
             funcp_obj.funcp_abstract_config(abstract_config_f1_0=abstract_json_file0,
                                             abstract_config_f1_1=abstract_json_file1, workspace="/scratch")
 
-            # Add static routes on Containers
-            funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
+            if not enable_bgp:
+                # Add static routes on Containers
+                funcp_obj.add_routes_on_f1(routes_dict=self.server_key["fs"][fs_name]["static_routes"])
+
             fun_test.sleep(message="Waiting before ping tests", seconds=10)
 
             # Ping QFX from both F1s
             ping_dict = self.server_key["fs"][fs_name]["cc_pings"]
+            if enable_bgp:
+                ping_dict = self.server_key["fs"][fs_name]["cc_pings_bgp"]
+
             for container in ping_dict:
                 funcp_obj.test_cc_pings_remote_fs(dest_ips=ping_dict[container], docker_name=container)
 
