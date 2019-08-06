@@ -1,0 +1,35 @@
+
+{
+    "Description": "FS66 F1-0 abstract cfg with BGP",
+    "F1Index" : 1,
+    "Interfaces" : [
+        {
+            "name" : "fpg4",
+            "mtu": 9000,
+            "address" : "3.1.1.2",
+            "prefix length" : 24,
+            "spine_index" : 0,
+            "gph_index" : 0,
+            "enable" : true
+        },
+	{
+	    "name" : "lo:0",
+	    "address" : "3.3.3.3",
+	    "prefix length" : 32,
+	    "enable" : true
+	},
+        {
+            "name" : "vlan1",
+            "address" : "12.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ],
+    "BGP" : {
+	"Local AS": 62002,
+	"Neighbors" : [
+	    { "peer" : "3.1.1.1", "peer-as": 62001}
+
+	]
+    }
+}
