@@ -15,12 +15,13 @@ class Suite {
 }
 
 @Component({
-  selector: 'app-network-funeth-sanity-widget',
-  templateUrl: './network-funeth-sanity-widget.component.html',
-  styleUrls: ['./network-funeth-sanity-widget.component.css']
+  selector: 'app-suite-execution-widget',
+  templateUrl: './suite-execution-widget.component.html',
+  styleUrls: ['./suite-execution-widget.component.css']
 })
-export class NetworkFunethSanityWidgetComponent implements OnInit {
-    lastTwoSuites: Suite[] = [];
+export class SuiteExecutionWidgetComponent implements OnInit {
+  @Input() suiteName: string;
+  lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
@@ -43,7 +44,7 @@ export class NetworkFunethSanityWidgetComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
-        return this.fetchData();
+        return this.fetchSuiteExecutions();
       }), switchMap(response => {
         return this.fetchTestCaseExecutions(0);
       }), switchMap(response => {
@@ -64,8 +65,8 @@ export class NetworkFunethSanityWidgetComponent implements OnInit {
 
 
 
-  fetchData() {
-    return this.apiService.get("/api/v1/regression/suite_executions/?suite_path=networking_funeth_sanity.json").pipe(switchMap(response => {
+  fetchSuiteExecutions() {
+    return this.apiService.get("/api/v1/regression/suite_executions/?suite_path=" + this.suiteName).pipe(switchMap(response => {
       for (let i of response.data) {
         let suite = new Suite();
         if (this.lastTwoSuites.length == 2) {
