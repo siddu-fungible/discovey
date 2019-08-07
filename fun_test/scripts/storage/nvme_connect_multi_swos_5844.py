@@ -292,7 +292,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 for i in range(0, fun_test.shared_variables["blt_count"], 1):
                     cur_uuid = fun_test.shared_variables["thin_uuid"][i]
                     command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid, ns_id=i + 1, command_duration=self.command_timeout)
+                        ctrlr_uuid=self.ctrlr_uuid[i], ns_id=i + 1, command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
                     command_result = self.storage_controller.delete_volume(uuid=cur_uuid,
@@ -301,11 +301,10 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                          format(i + 1, cur_uuid))
 
                 # Deleting the controller
-                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Storage Controller Delete")
-
             except:
                 fun_test.log("Clean-up of volumes failed.")
 
@@ -483,6 +482,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.nvme_block_device.append(self.vol_list[i]["vol_name"])
                 self.vol_list[i]["ns_id"] = ns_id
 
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
             fun_test.shared_variables["nvme_block_device_list"] = self.nvme_block_device
 
             # Setting the syslog level to 6
