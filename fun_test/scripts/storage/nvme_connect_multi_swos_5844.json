@@ -11,7 +11,7 @@
     "funcp_mode": "ep",
     "num_f1_per_fs": 1,
     "num_f1s": 1,
-    "num_hosts": 1,
+    "num_hosts": 4,
     "fpg_int_prefix": "fpg",
     "disable_f1_index": 1,
     "f1_in_use": 0,
@@ -54,8 +54,8 @@
   },
   "MultiNvmeConnect": {
     "num_ssd": 12,
-    "blt_count": 1,
-    "no_of_nvme_connect": 500,
+    "blt_count": 4,
+    "no_of_nvme_connect": 50,
     "blt_details": {
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
