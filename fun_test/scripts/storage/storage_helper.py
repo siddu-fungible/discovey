@@ -6,6 +6,7 @@ import time
 from collections import OrderedDict
 from lib.host.storage_controller import StorageController
 from lib.system import utils
+from threading import Lock
 
 DPCSH_COMMAND_TIMEOUT = 5
 
@@ -23,6 +24,7 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
 
 vp_stats_thread_stop_status = {}
 resource_bam_stats_thread_stop_status = {}
+
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,
                  read_iops,
@@ -338,9 +340,11 @@ def collect_resource_bam_stats(storage_controller, output_file, interval=10, cou
 class CollectStats(object):
     def __init__(self, storage_controller):
         self.storage_controller = storage_controller
+        self.socket_lock = Lock()
         self.stop_all = False
         self.stop_vp_utils = False
         self.stop_resource_bam = False
+        self.stop_vol_stats = False
 
     def collect_vp_utils_stats(self, output_file, interval=10, count=3, non_zero_stats_only=True, threaded=False,
                                command_timeout=DPCSH_COMMAND_TIMEOUT):
@@ -355,7 +359,9 @@ class CollectStats(object):
                     if threaded and (self.stop_vp_utils or self.stop_all):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
+                    self.socket_lock.acquire()
                     dpcsh_result = self.storage_controller.debug_vp_util(command_timeout=command_timeout)
+                    self.socket_lock.release()
                     # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
                     if dpcsh_result["status"] and dpcsh_result["data"] is not None:
                         vp_util = dpcsh_result["data"]
@@ -393,7 +399,9 @@ class CollectStats(object):
                     if threaded and (self.stop_resource_bam or self.stop_all):
                         fun_test.log("Stopping Resource BAM stats collection thread")
                         break
+                    self.socket_lock.acquire()
                     dpcsh_result = self.storage_controller.peek_resource_bam_stats(command_timeout=command_timeout)
+                    self.socket_lock.release()
                     if dpcsh_result["status"] and dpcsh_result["data"] is not None:
                         resource_bam_stats = dpcsh_result["data"]
                     else:
@@ -405,6 +413,49 @@ class CollectStats(object):
                     lines.append("\n\n")
                     f.writelines(lines)
                     fun_test.sleep("for the next iteration - Resource BAM stats collection", seconds=interval)
+            output = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output
+
+    def collect_vol_stats(self, output_file, vol_type, vol_uuid, interval=10, count=3, non_zero_stats_only=True,
+                          threaded=False,
+                          command_timeout=DPCSH_COMMAND_TIMEOUT):
+        output = False
+        column_headers = ["Param", "Counter"]
+
+        try:
+            with open(output_file, 'a') as f:
+                timer = FunTimer(max_time=interval * count)
+                while not timer.is_expired():
+                    lines = []
+                    if threaded and (self.stop_vol_stats or self.stop_all):
+                        fun_test.log("Stopping VP Utils stats collection thread")
+                        break
+                    self.socket_lock.acquire()
+                    dpcsh_result = self.storage_controller.peek(
+                        props_tree="storage/volumes/{0}/{1}/stats".format(vol_type, vol_uuid),
+                        command_duration=command_timeout)
+                    self.socket_lock.release()
+                    # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
+                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
+                        vol_stats = dpcsh_result["data"]
+                    else:
+                        vol_stats = {}
+
+                    if non_zero_stats_only:
+                        filtered_vol_stats = OrderedDict()
+                        for key, value in sorted(vol_stats.iteritems()):
+                            if value != 0.0 or value != 0:
+                                filtered_vol_stats[key] = value
+                        vol_stats = filtered_vol_stats
+
+                    table_data = build_simple_table(data=vol_stats, column_headers=column_headers)
+                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
+                    lines.append(table_data.get_string())
+                    lines.append("\n\n")
+                    f.writelines(lines)
+                    fun_test.sleep("for the next iteration - Volume stats collection", seconds=interval)
             output = True
         except Exception as ex:
             fun_test.critical(str(ex))
