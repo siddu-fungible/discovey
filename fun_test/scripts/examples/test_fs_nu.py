@@ -139,8 +139,10 @@ class FunTestCase1(FunTestCase):
                 "f1_loopback_ip": "29.1.1.1"
             }
         }
-
-        configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=end_host.extra_attributes["test_interface_name"])
+        interface_name = "fpg0"
+        if test_bed_type == "fs-21":
+            interface_name = end_host.extra_attributes["test_interface_name"]
+        configure_endhost_interface(end_host=end_host, test_network=csr_network["0"], interface_name=interface_name)
 
         if csi_perf_enabled:
             p = CsiPerfTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=fs)
