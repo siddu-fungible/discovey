@@ -380,6 +380,11 @@ class FunethSanity(FunTestScript):
                             funsdk_commit=funsdk_commit)
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
+        # perf
+        if csi_perf_enabled:
+            p = CsiPerfTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=test_bed_type)
+            self.csi_perf_obj = p
+
         # NU host
         setup_nu_host(funeth_obj)
 

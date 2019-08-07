@@ -347,6 +347,9 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     #    [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     #)
 
+    for nc_obj in network_controller_objs:
+        nc_obj.disconnect()
+
     if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked:
         if eqm_output.get(
                 "EFI->EQC Enqueue Interface valid", None) != eqm_output.get("EQC->EFI Dequeue Interface valid", None):
