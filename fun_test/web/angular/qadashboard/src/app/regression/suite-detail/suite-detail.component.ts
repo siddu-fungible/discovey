@@ -13,6 +13,7 @@ import {UserService} from "../../services/user/user.service";
 class Environment {
   BRANCH_FunOS: string = null;
   DISABLE_ASSERTIONS: boolean = null;
+  RELEASE_BUILD: boolean = null;
 }
 
 @Component({
@@ -103,6 +104,9 @@ export class SuiteDetailComponent implements OnInit {
           }
           if (buildParameters.hasOwnProperty('DISABLE_ASSERTIONS')) {
             ctrl.environment.DISABLE_ASSERTIONS = buildParameters.DISABLE_ASSERTIONS;
+          }
+          if (buildParameters.hasOwnProperty('RELEASE_BUILD')) {
+            ctrl.environment.RELEASE_BUILD = buildParameters.RELEASE_BUILD;
           }
 
         }
