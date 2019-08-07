@@ -45,6 +45,8 @@
 
 .text {
   font-size: 14px;
+  font-weight: lighter;
+  color: #878787;
 }
 
 
@@ -56,8 +58,11 @@
 
 .footer-text {
   font-size: 10px;
+  color: #BABABA;
 }
 
 .footer-text-title {
   font-size: 10px;
+  color: #BABABA;
+
 }
