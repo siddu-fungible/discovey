@@ -447,9 +447,6 @@ class FunethSanity(FunTestScript):
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             topology = fun_test.shared_variables["topology"]
             topology.cleanup()
-            if csi_perf_enabled:
-                p = fun_test.shared_variables['csi_perf_obj']
-                p.stop(f1_index=0)
             try:
                 if hu_host_vm:
                     funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ol_vm', 'funeth_obj']
