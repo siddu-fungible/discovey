@@ -212,7 +212,8 @@ api_v1_urls = [
     url(r'^scheduler/directive_types$', scheduler_api.directive_types),
     url(r'^scheduler/directive$', scheduler_api.directive),
     url(r'^scheduler/info$', scheduler_api.info),
-    url(r'^scheduler/state_types$', scheduler_api.state_types)
+    url(r'^scheduler/state_types$', scheduler_api.state_types),
+    url(r'^regression/test_case_executions/(.*)?$', regression.test_case_executions)
 ]
 
 site_under_construction = False
