@@ -8,8 +8,9 @@
 .fun-card {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
   transition: 0.3s;
-  min-height: 0;
-  max-height: 100%;
+  height: 215px;
+  /*min-height: 0;*/
+  /*max-height: 100%;*/
 }
 
 .body {

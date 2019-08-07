@@ -1,52 +1,14 @@
-<!--<div *ngIf="isDone" class="component">-->
-
-
-<!--  <div class="card" style="width:400px; margin: 100px;">-->
-<!--    <div class="card-header">-->
-<!--      <h3 class="card-title">Smoke Test</h3>-->
-<!--      F1 Storage-->
-<!--    </div>-->
-<!--    <div class=card-body>-->
-
-<!--      <table>-->
-
-<!--        <ng-container *ngFor="let i of numbers">-->
-<!--          <tr>-->
-<!--            <td tooltip [tooltipContentString]="lastTwoResults[i]" placement="left" style="width: 200px">-->
-<!--              <ng-container [ngSwitch]="lastTwoResults[i]">-->
-<!--                <img-->
-<!--                  *ngSwitchCase="'PASSED'"-->
-<!--                  [src]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-80plus.png'" style="width:20%">-->
-<!--                <img-->
-<!--                  *ngSwitchCase="'IN_PROGRESS'"-->
-<!--                  [src]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-60to79.png'" style="width:20%">-->
-<!--                <img-->
-<!--                  *ngSwitchCase="'FAILED'"-->
-<!--                  [src]="'http://jenkins-hw-01:8080/static/d3af0992/images/32x32/health-00to19.png'" style="width:20%">-->
-<!--              </ng-container>-->
-<!--            </td>-->
-<!--            <td style="width: 200px">-->
-<!--              <div class="card-text"-->
-<!--                   *ngIf="lastTwoTestSuites[i].fields.state == this.stateMap.COMPLETED; else elseBlock">-->
-<!--                {{trimTime(lastTwoTestSuites[i].fields.completed_time)}}-->
-<!--              </div>-->
-<!--              <ng-template #elseBlock>-->
-<!--                <div class="card-text">{{trimTime(lastTwoTestSuites[i].fields.scheduled_time)}}</div>-->
-<!--              </ng-template>-->
-<!--              <div>Tests Passed: {{lastTwoTestSuites[i].num_passed}}</div>-->
-<!--              <div>Tests Failed: {{lastTwoTestSuites[i].num_failed}}</div>-->
-<!--            </td>-->
-<!--          </tr>-->
-<!--        </ng-container>-->
-<!--      </table>-->
-<!--    </div>-->
-<!--    <p class="card-text"></p>-->
-<!--    <div class="card-footer">-->
-
-<!--    </div>-->
-<!--  </div>-->
-
-
-<!--</div>-->
-
-<p>working</p>
+<div *ngIf="isDone" style="width:100%;margin: 0 auto">
+  <fun-card
+    [title]="'<a href = /regression?tag=smoke>F1 storage smoke test</a>'"
+    [icon]="iconDict[lastTwoSuites[0].result]"
+    [textTitle]="'passed: ' + lastTwoSuites[0].numPassed + ' failed: ' + lastTwoSuites[0].numFailed"
+    [tooltipText]="lastTwoSuites[0].result"
+    [text]="lastTwoSuites[0].time + ' (current run)'"
+    [footerIcon]="iconDict[lastTwoSuites[1].result]"
+    [footerTooltipText]="lastTwoSuites[1].result"
+    [enableFooter]="true"
+    [footerText]="'passed: ' + lastTwoSuites[1].numPassed + ' failed: ' + lastTwoSuites[1].numFailed"
+    [footerTextTitle]="lastTwoSuites[1].time + ' (previous run)'">
+  </fun-card>
+</div>

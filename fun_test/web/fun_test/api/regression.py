@@ -145,13 +145,14 @@ def suite_executions(request, id):
         is_completed = request.GET.get('is_job_completed', None) # used by qa_trigger.py
 
         records = []
-        suite_executions = SuiteExecution.objects.filter(q).order_by('submitted_time')
+        suite_executions = SuiteExecution.objects.filter(q).order_by('-submitted_time')
         for suite_execution in suite_executions:
             one_record = {"execution_id": suite_execution.execution_id,
                           "state": suite_execution.state,
                           "result": suite_execution.result,
                           "environment": json.loads(suite_execution.environment),
                           "suite_path": suite_execution.suite_path,
+                          "started_time": suite_execution.started_time,
                           "completed_time": suite_execution.completed_time}
             records.append(one_record)
             if id:

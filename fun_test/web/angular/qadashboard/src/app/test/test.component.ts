@@ -42,18 +42,6 @@ export class TestComponent implements OnInit {
 
 
   ngOnInit() {
-    // new Observable(observer => {
-    //   observer.next(true);
-    //   observer.complete();
-    //   return () => {
-    //   }
-    // }).pipe(switchMap(response => {
-    //   return this.fetchData();
-    // })).subscribe(response => {
-    // }, error => {
-    //   this.logger.error('Failed to fetch data');
-    // });
-
     new Observable(observer => {
       observer.next(true);
       observer.complete();
@@ -64,7 +52,10 @@ export class TestComponent implements OnInit {
       }), switchMap(response => {
         return this.fetchTestCaseExecutions(0);
       }), switchMap(response => {
-        return this.fetchTestCaseExecutions(1);
+        let temp = this.fetchTestCaseExecutions(1);
+        this.isDone = true;
+        return temp;
+
       })).subscribe(response => {
 
       }, error => {
@@ -72,11 +63,12 @@ export class TestComponent implements OnInit {
       }
     );
 
+    console.log(this.lastTwoSuites);
+
   }
 
 
   fetchData() {
-    //return this.apiService.get("/api/v1/regression/test_case_executions/?suite_id=19713").pipe(switchMap(response => {
     return this.apiService.get("/api/v1/regression/suite_executions/?suite_path=networking_funcp_sanity.json").pipe(switchMap(response => {
       for (let i of response.data) {
         let suite = new Suite();
@@ -107,7 +99,9 @@ export class TestComponent implements OnInit {
 
   fetchTestCaseExecutions(index) {
     return this.apiService.get(`/api/v1/regression/test_case_executions/?suite_id=${this.lastTwoSuites[index].id}`).pipe(switchMap(response => {
-      console.log(response);
+      this.lastTwoSuites[index].numFailed = response.data.num_failed;
+      this.lastTwoSuites[index].numPassed = response.data.num_passed;
+
       return of(true);
     }));
   }

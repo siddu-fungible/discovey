@@ -4,7 +4,8 @@
   transition: 0.3s;
   margin: 10px;
   flex-basis: 500px;
-  padding: 10px
+  padding: 10px;
+  flex-shrink: 0;
 }
 
 .card-body {
@@ -22,6 +23,8 @@
 }
 
 .fun-card-container {
+  height: 220px;
   margin: 10px;
   flex-basis: 240px;
 }
+
