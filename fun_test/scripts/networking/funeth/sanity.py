@@ -5,6 +5,7 @@ from lib.host.linux import Linux
 from lib.topology.topology_helper import TopologyHelper
 from lib.host import netperf_manager
 from lib.host.network_controller import NetworkController
+from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.utilities.funcp_config import FunControlPlaneBringup
 from scripts.networking.funeth.funeth import Funeth, CPU_LIST_HOST, CPU_LIST_VM
 from scripts.networking.tb_configs import tb_configs
@@ -75,6 +76,10 @@ except:
     configure_overlay = False
     bootup_funos = True
     cleanup = True
+
+csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+perf_listener_host_name = "poc-server-06"
+perf_listener_ip = "20.1.1.1"
 
 NUM_VFs = 4
 NUM_QUEUES_TX = 8
@@ -332,6 +337,8 @@ class FunethSanity(FunTestScript):
                 if test_bed_type == 'fs-48':
                     f1_0_boot_args = "app=hw_hsu_test cc_huid=3 sku=SKU_FS1600_0 retimer=0,1,2 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
                     f1_1_boot_args = "app=hw_hsu_test cc_huid=2 sku=SKU_FS1600_1 retimer=0 --all_100g --dpc-uart --dpc-server --disable-wu-watchdog"
+                if csi_perf_enabled:
+                    f1_0_boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -339,6 +346,8 @@ class FunethSanity(FunTestScript):
                                                    )
             else:
                 boot_args = "app=hw_hsu_test retimer=0,1 --dpc-uart --dpc-server --csr-replay --all_100g --disable-wu-watchdog"
+                if csi_perf_enabled:
+                    boot_args += " --perf csi-local-ip=29.1.1.2 csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(perf_listener_ip)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    custom_boot_args=boot_args)
@@ -438,6 +447,9 @@ class FunethSanity(FunTestScript):
         elif fun_test.get_job_environment_variable('test_bed_type') == 'fs-11':
             topology = fun_test.shared_variables["topology"]
             topology.cleanup()
+            if csi_perf_enabled:
+                p = fun_test.shared_variables['csi_perf_obj']
+                p.stop(f1_index=0)
             try:
                 if hu_host_vm:
                     funeth_obj_descs = ['funeth_obj_ul_vm', 'funeth_obj_ol_vm', 'funeth_obj']
