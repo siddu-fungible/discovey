@@ -725,6 +725,10 @@ class CmdController(Cmd):
 
     def peek_per_vp_stats(self, args):
         grep_regex = args.grep
+        pp = args.pp
+        rx = args.rx
+        tx = args.tx
+        q = args.q
         cluster_id = args.cluster_id
         core_id = args.core_id
         cid_flag = True
@@ -733,11 +737,15 @@ class CmdController(Cmd):
             cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
         if core_id is not None:
             core_id_flag = self.check_core_id_range(core_id=core_id)
-        if core_id and not cluster_id:
-            print "Please enter value for cluster_id with "
+        if core_id and (cluster_id is None):
+            print "Please enter value for cluster_id with core_id"
             return self.dpc_client.disconnect()
-        if cid_flag and core_id_flag:
-            self._peek_cmd_obj.peek_stats_per_vp(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
+        if cid_flag and core_id_flag and pp:
+            self._peek_cmd_obj.peek_stats_per_vp_pp(cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx, q=q,
+                                                    grep_regex=grep_regex)
+        elif cid_flag and core_id_flag:
+            self._peek_cmd_obj.peek_stats_per_vp(cluster_id=cluster_id, core_id=core_id, rx=rx, tx=tx, q=q,
+                                                 grep_regex=grep_regex)
 
     def peek_nwqm_stats(self, args):
         grep_regex = args.grep
@@ -1246,12 +1254,8 @@ class CmdController(Cmd):
         self.dpc_client.disconnect()
 
 
-
-
-
-
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.105.178", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

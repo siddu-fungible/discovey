@@ -327,6 +327,7 @@ class TopologyHelper:
             fun_test.simple_assert(peer_allocation_duts or simulation_mode_found, "At least one DUT is required")
             while not simulation_mode_found and peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
 
+
                 fun_test.sleep("allocate_topology: Waiting for F1 bringup on all DUTs", seconds=10)
                 for dut_obj in peer_allocation_duts:
                     if dut_obj.index in self.disabled_dut_indexes:
@@ -337,8 +338,16 @@ class TopologyHelper:
                     boot_phase = dut_instance.get_boot_phase()
                     # fun_test.log("DUT: {} current boot-phase".format(boot_phase))
                     fun_test.simple_assert(boot_phase != BootPhases.FS_BRING_UP_ERROR, "DUT: {} Bring up error".format(dut_instance))
+
+                    """
                     if not dut_instance.is_u_boot_complete():
                         # fun_test.log("DUT: {} bootup not complete".format(dut_instance))
+                        continue
+                    """
+                    if not dut_instance.is_ready():
+                        if f1_bringup_all_duts_timer.is_expired():
+                            fun_test.critical("FS Bring up error (External Trigger)")
+                            dut_instance.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
                         continue
 
                     for interface_index, interface_info in dut_obj.interfaces.items():
@@ -366,6 +375,8 @@ class TopologyHelper:
                 for dut_obj in peer_allocation_duts:
                     dut_instance = dut_obj.get_instance()
                     fun_test.log("DUT: {} bringup incomplete".format(dut_instance))
+
+
             fun_test.test_assert(not peer_allocation_duts or simulation_mode_found, "All DUT's bringups are complete")
             fun_test.simple_assert(not f1_bringup_all_duts_timer.is_expired() or simulation_mode_found, "F1 bringup all DUTS not expired")
 

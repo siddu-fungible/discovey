@@ -1,52 +1,44 @@
+<div class="flex-container">
 
-<div class="component">
-  <div id="all-cards">
+</div>
 
-    <div class="row">
-      <div class="col">
-        <div class="card">
-          <div class="card-header">
-            Release progress
-          </div>
-          <div class="card-body">
-            <div>
-              <a href="http://qa-ubuntu-02/testrail/index.php?/runs/view/25&group_by=cases:section_id&group_order=asc">Inspur</a>
-            </div>
-            <div>
-              <a
-                href="http://qa-ubuntu-02/testrail/index.php?/suites/view/27&group_by=cases:section_id&group_order=asc&group_id=280">Regex</a>
-            </div>
-            <span>(Username: regression@fungible.com, Password: fun123)</span>
-
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            Performance
-          </div>
-          <div class="card-body">
-            <app-performance-summary-widget>
-
-            </app-performance-summary-widget>
-          </div>
-        </div>
-      </div>
-      <div class="col">
-        <div class="card">
-          <div class="card-header">
-            <p>Regression</p>
-          </div>
-          <div class="card-body">
-            <app-regression-summary-widget></app-regression-summary-widget>
-          </div>
-        </div>
-      </div>
+<div class="flex-container">
+  <div class="dashboard-card">
+    <app-performance-summary-widget></app-performance-summary-widget>
+  </div>
+  <div class="dashboard-card">
+    <app-regression-summary-widget></app-regression-summary-widget>
+  </div>
+  <div class="dashboard-card">
+    Release progress
+    <div>
+      <a
+        href="http://qa-ubuntu-02/testrail/index.php?/runs/view/25&group_by=cases:section_id&group_order=asc">Inspur</a>
     </div>
-    <div class="row">
-      <div class="col">
-        <app-smoke-test-storage-widget></app-smoke-test-storage-widget>
-      </div>
+    <div>
+      <a
+        href="http://qa-ubuntu-02/testrail/index.php?/suites/view/27&group_by=cases:section_id&group_order=asc&group_id=280">Regex</a>
     </div>
+    <span>(Username: regression@fungible.com, Password: fun123)</span>
   </div>
 </div>
-<!--app-site-construction></app-site-construction-->
+
+
+<div class="flex-container">
+  <div class="fun-card-container">
+    <app-smoke-test-storage-widget></app-smoke-test-storage-widget>
+  </div>
+  <div class="fun-card-container">
+    <app-network-sanity-widget></app-network-sanity-widget>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+

@@ -64,6 +64,10 @@
           "F1-0":["2.1.1.1"],
           "F1-1":["2.1.2.1"]
        },
+          "cc_pings_bgp":{
+          "F1-0":["3.1.1.1"],
+          "F1-1":["4.1.1.1"]
+       },
        "host_pings":{
          "cab03-qa-05":["14.1.1.1", "30.1.1.2"],
          "cab03-qa-04":["15.1.1.1", "30.1.1.2"]
@@ -71,6 +75,10 @@
     "abstract_configs":{
       "F1-0":"fs66_configs_f1_0.json",
       "F1-1":"fs66_configs_f1_1.json"
+    },
+         "abstract_configs_bgp":{
+      "F1-0":"fs66_configs_bgp_f1_0.json",
+      "F1-1":"fs66_configs_bgp_f1_1.json"
     },
       "static_routes": {
       "F1-0": {

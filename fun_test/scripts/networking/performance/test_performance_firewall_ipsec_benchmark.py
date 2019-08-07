@@ -95,58 +95,58 @@ class ScriptSetup(FunTestScript):
             single_flow_decrypt_step_data_mpps = 0.5
 
             if 'multi_flow_encrypt_64B_start_data_mpps' in inputs:
-                multi_flow_encrypt_64B_start_data_mpps = int(inputs[multi_flow_encrypt_64B_start_data_mpps])
+                multi_flow_encrypt_64B_start_data_mpps = int(inputs['multi_flow_encrypt_64B_start_data_mpps'])
 
             if 'multi_flow_encrypt_64B_end_data_mpps' in inputs:
-                multi_flow_encrypt_64B_end_data_mpps = int(inputs[multi_flow_encrypt_64B_end_data_mpps])
+                multi_flow_encrypt_64B_end_data_mpps = int(inputs['multi_flow_encrypt_64B_end_data_mpps'])
 
             if 'multi_flow_encrypt_64B_step_data_mpps' in inputs:
-                multi_flow_encrypt_64B_step_data_mpps = int(inputs[multi_flow_encrypt_64B_step_data_mpps])
+                multi_flow_encrypt_64B_step_data_mpps = int(inputs['multi_flow_encrypt_64B_step_data_mpps'])
 
             if 'multi_flow_encrypt_IMIX_start_data_mpps' in inputs:
-                multi_flow_encrypt_IMIX_start_data_mpps = int(inputs[multi_flow_encrypt_IMIX_start_data_mpps])
+                multi_flow_encrypt_IMIX_start_data_mpps = int(inputs['multi_flow_encrypt_IMIX_start_data_mpps'])
 
             if 'multi_flow_encrypt_IMIX_end_data_mpps' in inputs:
-                multi_flow_encrypt_IMIX_end_data_mpps = int(inputs[multi_flow_encrypt_IMIX_end_data_mpps])
+                multi_flow_encrypt_IMIX_end_data_mpps = int(inputs['multi_flow_encrypt_IMIX_end_data_mpps'])
 
             if 'multi_flow_encrypt_IMIX_step_data_mpps' in inputs:
-                multi_flow_encrypt_IMIX_step_data_mpps = int(inputs[multi_flow_encrypt_IMIX_step_data_mpps])
+                multi_flow_encrypt_IMIX_step_data_mpps = int(inputs['multi_flow_encrypt_IMIX_step_data_mpps'])
 
             if 'single_flow_encrypt_64B_start_data_mpps' in inputs:
-                single_flow_encrypt_64B_start_data_mpps = int(inputs[single_flow_encrypt_64B_start_data_mpps])
+                single_flow_encrypt_64B_start_data_mpps = int(inputs['single_flow_encrypt_64B_start_data_mpps'])
 
             if 'single_flow_encrypt_64B_end_data_mpps' in inputs:
-                single_flow_encrypt_64B_end_data_mpps = int(inputs[single_flow_encrypt_64B_end_data_mpps])
+                single_flow_encrypt_64B_end_data_mpps = int(inputs['single_flow_encrypt_64B_end_data_mpps'])
 
             if 'single_flow_encrypt_64B_step_data_mpps' in inputs:
-                single_flow_encrypt_64B_step_data_mpps = int(inputs[single_flow_encrypt_64B_step_data_mpps])
+                single_flow_encrypt_64B_step_data_mpps = int(inputs['single_flow_encrypt_64B_step_data_mpps'])
 
             if 'single_flow_encrypt_IMIX_start_data_mpps' in inputs:
-                single_flow_encrypt_IMIX_start_data_mpps = int(inputs[single_flow_encrypt_IMIX_start_data_mpps])
+                single_flow_encrypt_IMIX_start_data_mpps = int(inputs['single_flow_encrypt_IMIX_start_data_mpps'])
 
             if 'single_flow_encrypt_IMIX_end_data_mpps' in inputs:
-                single_flow_encrypt_IMIX_end_data_mpps = int(inputs[single_flow_encrypt_IMIX_end_data_mpps])
+                single_flow_encrypt_IMIX_end_data_mpps = int(inputs['single_flow_encrypt_IMIX_end_data_mpps'])
 
             if 'single_flow_encrypt_IMIX_step_data_mpps' in inputs:
-                single_flow_encrypt_IMIX_step_data_mpps = int(inputs[single_flow_encrypt_IMIX_step_data_mpps])
+                single_flow_encrypt_IMIX_step_data_mpps = int(inputs['single_flow_encrypt_IMIX_step_data_mpps'])
 
             if 'multi_flow_decrypt_start_data_mpps' in inputs:
-                multi_flow_decrypt_start_data_mpps = int(inputs[multi_flow_decrypt_start_data_mpps])
+                multi_flow_decrypt_start_data_mpps = int(inputs['multi_flow_decrypt_start_data_mpps'])
 
             if 'multi_flow_decrypt_end_data_mpps' in inputs:
-                multi_flow_decrypt_end_data_mpps = int(inputs[multi_flow_decrypt_end_data_mpps])
+                multi_flow_decrypt_end_data_mpps = int(inputs['multi_flow_decrypt_end_data_mpps'])
 
             if 'multi_flow_decrypt_step_data_mpps' in inputs:
-                multi_flow_decrypt_step_data_mpps = int(inputs[multi_flow_decrypt_step_data_mpps])
+                multi_flow_decrypt_step_data_mpps = int(inputs['multi_flow_decrypt_step_data_mpps'])
 
             if 'single_flow_decrypt_start_data_mpps' in inputs:
-                single_flow_decrypt_start_data_mpps = int(inputs[single_flow_decrypt_start_data_mpps])
+                single_flow_decrypt_start_data_mpps = int(inputs['single_flow_decrypt_start_data_mpps'])
 
             if 'single_flow_decrypt_end_data_mpps' in inputs:
-                single_flow_decrypt_end_data_mpps = int(inputs[single_flow_decrypt_end_data_mpps])
+                single_flow_decrypt_end_data_mpps = int(inputs['single_flow_decrypt_end_data_mpps'])
 
             if 'multi_flow_encrypt_64B_start_data_mpps' in inputs:
-                single_flow_decrypt_step_data_mpps = int(inputs[single_flow_decrypt_step_data_mpps])
+                single_flow_decrypt_step_data_mpps = int(inputs['single_flow_decrypt_step_data_mpps'])
 
         if 'funos_branch' in fun_test.shared_variables:
             branch_name = fun_test.shared_variables['funos_branch']
@@ -275,10 +275,9 @@ class ScriptSetup(FunTestScript):
         return tcc_config_path
 
     def cleanup(self):
-        if not load_profile_only:
-            if 'fs' in fun_test.shared_variables:
-                fs = fun_test.shared_variables['fs']
-                fs.cleanup()
+        if 'fs' in fun_test.shared_variables:
+            fs = fun_test.shared_variables['fs']
+            fs.cleanup()
 
 
 class TestL4IPsecPerformance(FunTestCase):

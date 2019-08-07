@@ -12,6 +12,7 @@
         <th>Suite</th>
         <th>Submitter</th>
         <th>Message</th>
+        <th>Options</th>
       </tr>
       <tr *ngFor="let queueEntry of queueOccupancy[category]; let i = index">
         <td>
@@ -39,6 +40,14 @@
         <td>{{ queueEntry.job_spec.suite_path }}</td>
         <td>{{ userMap[queueEntry.job_spec.email].first_name }} {{ userMap[queueEntry.job_spec.email].last_name.charAt(0)}}</td>
         <td [innerHTML]="queueEntry.message | safeHtml"></td>
+        <td style="display: flex; justify-content: flex-start">
+          <div>
+            Suspend: <app-toggle-button [checked]="queueEntry.suspend" (changed)="onChangeSuspend($event, queueEntry)"></app-toggle-button>
+          </div>&nbsp;&nbsp;
+          <div *ngIf="queueEntry.test_bed_type === 'suite-based'">
+            Allow pre-emption: <app-toggle-button [checked]="queueEntry.pre_emption_allowed" (changed)="onChangePreEmption($event, queueEntry)"></app-toggle-button>
+          </div>
+        </td>
 
       </tr>
     </table>

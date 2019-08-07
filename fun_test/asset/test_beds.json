@@ -1680,5 +1680,14 @@
         }
       }
     }
+  },
+  "fs-host-only": {
+    "host_info":[
+      "cab02-qa-09",
+      "cab02-qa-10",
+      "cab02-qa-11",
+      "cab02-qa-12",
+      "cab02-qa-13"
+    ]
   }
 }
