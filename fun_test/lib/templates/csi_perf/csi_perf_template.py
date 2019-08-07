@@ -1,6 +1,8 @@
 from lib.system.fun_test import fun_test
 from lib.host.linux import Linux
 from fun_settings import TFTP_SERVER_IP, TFTP_DIRECTORY, TFTP_SERVER_SSH_PASSWORD, TFTP_SERVER_SSH_USERNAME
+from fun_settings import STASH_DIR
+import os
 # Connect to tracing server
 # Setup networking
 # Setup job directory
@@ -16,6 +18,11 @@ FUNOS_F1_NAME = "funos-f1"
 MAX_TRACE_JOB_DIRECTORIES = 5
 EXPECTED_TOOLS = ["process_perf.sh", "view_perf.sh", "listener_lib.py", "perf_listener.py"]
 EXPECTED_DOCKER_IMAGES = ["docker.fungible.com/perf_processing", "docker.fungible.com/perf_server"]
+EXPECTED_TOOL_LOCATIONS = {"PalladiumOnDemand": [
+    {"source_file_path": "docker/process_perf.sh", "target_file_path": "process_perf.sh"},
+    {"source_file_path": "docker/view_perf.sh", "target_file_path": "view_perf.sh"}],
+    "FunTools": [{"source_file_path": "csi_listeners/perf_listener.py", "target_file_path": "perf_listener.py"},
+                 {"source_file_path": "csi_listeners/listener_lib.py", "target_file_path": "listener_lib.py"}]}
 
 
 class CsiPerfOperation:
@@ -75,6 +82,8 @@ class CsiPerfTemplate():
         if "csi_perf" in self.perf_host.extra_attributes:
             if "tools_directory" in self.perf_host.extra_attributes["csi_perf"]:
                 self.tools_directory = self.perf_host.extra_attributes["csi_perf"]["tools_directory"]
+
+        self.position_files()
         fun_test.simple_assert(self.ensure_space_is_available(), "Ensure space exists on. Please clear trace files/directories from {}. max dirs: {}".format(BASE_JOB_DIRECTORY, MAX_TRACE_JOB_DIRECTORIES))
         fun_test.simple_assert(self.ensure_tools_exists(), "Ensure necessary tools exists")
         fun_test.simple_assert(self.ensure_docker_images_exist(), "Ensure docker images exist")
@@ -156,6 +165,28 @@ class CsiPerfTemplate():
     def setup_networking(self):
         pass
 
+    def repo_exists(self, name):
+        result = None
+        path = STASH_DIR + "/" + name
+        if os.path.exists(path):
+            result = True
+        return result
+
+    def position_files(self):
+        to_position = EXPECTED_TOOL_LOCATIONS
+        for repo_name, values in to_position.iteritems():
+            fun_test.simple_assert(self.repo_exists(name=repo_name), "Repo: {} exists".format(repo_name))
+            for value in values:
+                source_path = STASH_DIR + "/" + repo_name + "/" + value["source_file_path"]
+                fun_test.simple_assert(os.path.exists(source_path), "Source: {} exists".format(source_path))
+                target_file_path = TOOLS_DIRECTORY + "/" + value["target_file_path"]
+                fun_test.scp(source_file_path=source_path,
+                             target_file_path=target_file_path,
+                             target_ip=self.perf_host.host_ip,
+                             target_username=self.perf_host.ssh_username,
+                             target_password=self.perf_host.ssh_password)
+        result = True
+        return result
 
 
 
