@@ -33,7 +33,7 @@ class CsiPerfOperation:
 
 
 class CsiPerfTemplate():
-    def __init__(self, perf_collector_host_name, listener_ip, fs):
+    def __init__(self, perf_collector_host_name, listener_ip, fs, setup_docker=False):
         self.perf_collector_host_name = perf_collector_host_name
         self.perf_host = None
         self.perf_listener_process_id = None
@@ -42,6 +42,7 @@ class CsiPerfTemplate():
         self.fs = fs
         self.instance = 0
         self.tools_directory = TOOLS_DIRECTORY
+        self.setup_docker = setup_docker
 
     def ensure_docker_images_exist(self):
         docker_images_output = self.perf_host.sudo_command("docker images")
@@ -83,7 +84,8 @@ class CsiPerfTemplate():
             if "tools_directory" in self.perf_host.extra_attributes["csi_perf"]:
                 self.tools_directory = self.perf_host.extra_attributes["csi_perf"]["tools_directory"]
 
-        fun_test.simple_assert(self.setup_docker(), "Docker setup")
+        if self.setup_docker:
+            fun_test.simple_assert(self.do_setup_docker(), "Docker setup")
         fun_test.simple_assert(self.position_files(), "Position tools")
         fun_test.simple_assert(self.ensure_space_is_available(), "Ensure space exists on. Please clear trace files/directories from {}. max dirs: {}".format(BASE_JOB_DIRECTORY, MAX_TRACE_JOB_DIRECTORIES))
         fun_test.simple_assert(self.ensure_tools_exists(), "Ensure necessary tools exists")
@@ -189,7 +191,7 @@ class CsiPerfTemplate():
         result = True
         return result
 
-    def setup_docker(self):
+    def do_setup_docker(self):
         pass
         fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
         commands = ["timeout 5 openssl s_client -showcerts -connect docker.fungible.com:443 | tee /tmp/cert.log",
@@ -205,14 +207,13 @@ class CsiPerfTemplate():
         for sudo_command in sudo_commands:
             self.perf_host.command(sudo_command, custom_prompts={'Trust new certificates from certificate authorities?': 'yes', "Certificates to activate:": "fun_cert.crt"})
         self.perf_host.command("apt install -y docker.io")
-        self.perf_host.command("service docker stop")
-        self.perf_host.command("service docker start")
-        sudo_commands = ["docker pull docker.fungible.com/perf_processing",
-                         "docker pull docker.fungible.com/perf_server"]
-        for sudo_command in sudo_commands:
-            self.perf_host.command(sudo_command)
-
         self.perf_host.exit_sudo()
+        self.perf_host.sudo_command("usermod -aG docker $USER")
+        self.perf_host.command("service docker stop", custom_prompts={"Password:": self.perf_host.ssh_password})
+        self.perf_host.command("service docker start", custom_prompts={"Password:": self.perf_host.ssh_password})
+        docker_commands = ["docker pull docker.fungible.com/perf_processing", "docker pull docker.fungible.com/perf_server"]
+        for docker_command in docker_commands:
+            self.perf_host.command(docker_command)
         return True
 
 if __name__ == "__main__":
