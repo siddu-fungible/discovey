@@ -21,13 +21,16 @@ class Suite {
 })
 export class SuiteExecutionWidgetComponent implements OnInit {
   @Input() suiteName: string;
+  @Input() title: string;
+  @Input() url: string;
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
   numbers: number[] = [0, 1];
   iconDict: any = {
     'PASSED': "/static/media/sun_icon.png",
     'FAILED': "/static/media/storm_icon.png",
-    'IN_PROGRESS': "/static/media/loading_bars.gif"};
+    'IN_PROGRESS': "/static/media/loading_bars.gif"
+  };
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private renderer: Renderer2, private commonService: CommonService, private regressionService: RegressionService) {
@@ -38,21 +41,21 @@ export class SuiteExecutionWidgetComponent implements OnInit {
   stateStringMap = this.regressionService.stateStringMap;
 
   ngOnInit() {
-        new Observable(observer => {
+    new Observable(observer => {
       observer.next(true);
       observer.complete();
       return () => {
       }
     }).pipe(switchMap(response => {
-        return this.fetchSuiteExecutions();
-      }), switchMap(response => {
-        return this.fetchTestCaseExecutions(0);
-      }), switchMap(response => {
-        let temp = this.fetchTestCaseExecutions(1);
-        this.isDone = true;
-        return temp;
+      return this.fetchSuiteExecutions();
+    }), switchMap(response => {
+      return this.fetchTestCaseExecutions(0);
+    }), switchMap(response => {
+      let temp = this.fetchTestCaseExecutions(1);
+      this.isDone = true;
+      return temp;
 
-      })).subscribe(response => {
+    })).subscribe(response => {
 
       }, error => {
         this.logger.error('Failed to fetch data');
@@ -61,8 +64,6 @@ export class SuiteExecutionWidgetComponent implements OnInit {
 
     console.log(this.lastTwoSuites);
   }
-
-
 
 
   fetchSuiteExecutions() {
