@@ -249,7 +249,7 @@ class NetperfManager:
                 cpu_list_server = sorted(arg_dict.get('cpu_list_server'))[::-1]  # reversed order
                 cpu_list_client = sorted(arg_dict.get('cpu_list_client'))[::-1]  # reversed order
                 fixed_netperf_port = arg_dict.get('fixed_netperf_port', False)
-                csi_perf_obj = arg_dicts.get('csi_perf_obj', None)
+                csi_perf_obj = arg_dict.get('csi_perf_obj', None)
 
                 if test == 2:
                     num_processes = 1
