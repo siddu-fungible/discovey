@@ -224,8 +224,8 @@
       }
     },
     "host_info": [
-      "mktg-server-11",
-      "mktg-server-12"
+      "mktg-server-02",
+      "mktg-server-03"
     ]
   },
   "fs-43": {
@@ -453,8 +453,16 @@
       }
     },
     "host_info": [
+      "mktg-server-05",
+      "mktg-server-06",
+      "mktg-server-07",
+      "mktg-server-08",
+      "mktg-server-09",
+      "mktg-server-10",
       "mktg-server-11",
-      "mktg-server-10"
+      "mktg-server-12",
+      "mktg-server-13",
+      "mktg-server-14"
     ]
   },
   "fs-inspur": {
