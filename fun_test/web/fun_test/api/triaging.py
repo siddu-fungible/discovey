@@ -96,7 +96,7 @@ def triagings(request, triage_id):
         if not triage_id:
             request_json = json.loads(request.body)
             metric_id = int(request_json["metric_id"])
-            triage_type = request_json.get("triage_type", TriagingTypes.REGEX_MATCH)
+            triage_type = int(request_json.get("triage_type", TriagingTypes.REGEX_MATCH))
             from_fun_os_sha = request_json["from_fun_os_sha"]
             to_fun_os_sha = request_json["to_fun_os_sha"]
             submitter_email = request_json["submitter_email"]
@@ -107,6 +107,8 @@ def triagings(request, triage_id):
             triage_id = LastTriageId.get_next_id()
 
             regex_match_string = request_json.get("regex_match_string", None)
+            if not build_parameters:
+                build_parameters = {}
 
             t = Triage3(triage_id=triage_id, metric_id=metric_id,
                         triage_type=triage_type,
@@ -116,6 +118,11 @@ def triagings(request, triage_id):
                         build_parameters=build_parameters)
             if regex_match_string is not None:
                 t.regex_match_string = regex_match_string
+            if triage_type == TriagingTypes.JENKINS_FUN_OS_ON_DEMAND:
+                test_script = request_json["test_script"]
+                test_script_loop = request_json["test_script_loop"]
+                t.test_script = test_script
+                t.test_script_loop = test_script_loop
             t.save()
             result = t.triage_id
         else:

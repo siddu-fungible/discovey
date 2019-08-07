@@ -119,6 +119,9 @@ class Triage3(models.Model):
     base_tag = models.TextField(default="qa_triage")
     regex_match_string = models.TextField(default="")
 
+    test_script = models.TextField(default="")
+    test_script_loop = models.IntegerField(default=-1)
+
     @staticmethod
     def get_tag(base_tag, other_tag):
         return "{}_{}".format(base_tag, other_tag)

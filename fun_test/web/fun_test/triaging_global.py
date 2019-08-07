@@ -27,6 +27,7 @@ class TriageTrialStates(Codes):
     QUEUED_ON_LSF = 60
     RUNNING_ON_LSF = 70
     PREPARING_RESULTS = 80
+    JENKINS_BUILD_FAILED = 90
 
 
 
@@ -43,6 +44,7 @@ class TriagingTypes(Codes):
     SCORE = 2
     REGEX_MATCH = 3
     PASS_OR_FAIL_INTEGRATION = 4
+    JENKINS_FUN_OS_ON_DEMAND = 5
 
 
 

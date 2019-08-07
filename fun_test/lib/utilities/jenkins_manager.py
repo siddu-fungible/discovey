@@ -83,15 +83,19 @@ class JenkinsManager():
         :return: a queue item if wait_time_for_build_complete is not None, otherwise it returns the result of the build
         """
         # self.jenkins_server.get_job_info('emulation/fun_on_demand', build_number)
-        new_params = self._apply_params(user_params=params)
-        emails = "john.abraham@fungible.com"
-        if extra_emails:
-            emails += ","
-            for extra_email in extra_emails:
-                emails += extra_email + ','
-            if emails.endswith(","):
-                emails = emails[:-1]
-        new_params["EXTRA_EMAIL"] = emails
+        if "funos_on_demand" in self.job_name:
+            new_params = params
+        else:
+            new_params = self._apply_params(user_params=params)
+            emails = "john.abraham@fungible.com"
+            if extra_emails:
+                emails += ","
+                for extra_email in extra_emails:
+                    emails += extra_email + ','
+                if emails.endswith(","):
+                    emails = emails[:-1]
+            new_params["EXTRA_EMAIL"] = emails
+
         result = self.jenkins_server.build_job(self.job_name, new_params)
         fun_test.sleep(message="Waiting for build to be queued", seconds=10)
         queue_item = result
@@ -132,7 +136,10 @@ class JenkinsManager():
         return build_number
 
     def get_build_url(self, build_number):
-        s = "{}/job/emulation/job/fun_on_demand/{}/".format(self.JENKINS_BASE_URL, build_number)
+        if "funos_on_demand" in self.job_name:
+            s = "{}/job/funos/job/funos_on_demand/{}/".format(self.JENKINS_BASE_URL, build_number)
+        else:
+            s = "{}/job/emulation/job/fun_on_demand/{}/".format(self.JENKINS_BASE_URL, build_number)
         return s
 
     def get_job_info(self, build_number):

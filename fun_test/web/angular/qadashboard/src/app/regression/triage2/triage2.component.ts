@@ -43,7 +43,9 @@ export class Triage2Component implements OnInit {
       'to_fun_os_sha': [null, Validators.required],
       'metric_id': [-1],
       'triage_type': [null, Validators.required],
-      'regex_match_string': [null]
+      'regex_match_string': [null],
+      'test_script': [null, Validators.required],
+      'test_script_loop': [null, Validators.required]
     });
     this.submissionForm.get('from_fun_os_sha').valueChanges.subscribe(value => {
       this.gitShasValid = false;
@@ -137,8 +139,10 @@ export class Triage2Component implements OnInit {
     payload["submitter_email"] = this.submissionForm.value.submitter;
     payload["triage_type"] = this.submissionForm.value.triage_type;
     payload["regex_match_string"] = this.submissionForm.value.regex_match_string;
+    payload["test_script"] = this.submissionForm.value.test_script;
+    payload["test_script_loop"] = this.submissionForm.value.test_script_loop;
     payload["build_parameters"] = this.jenkinsParameters;
-    if (!this.jenkinsParameters) {
+    if (!this.jenkinsParameters && this.submissionForm.value.triage_type !== '5') {
       return this.loggerService.error("Jenkins parameters are invalid");
     }
     let url = "/api/v1/triages";
