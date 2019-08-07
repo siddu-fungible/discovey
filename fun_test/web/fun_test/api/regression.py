@@ -13,6 +13,7 @@ from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
 from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
+from web.fun_test.models_helper import _get_suite_executions
 
 
 @csrf_exempt
@@ -183,6 +184,22 @@ def suite_executions(request, id):
             # TODO
             pass
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def test_case_executions(request, id):
+    if request.method == 'GET':
+        suite_id = request.GET.get("suite_id", None)
+        test_executions = TestCaseExecution.objects.filter(suite_execution_id=int(suite_id))
+        num_passed = 0
+        num_failed = 0
+        for test_execution in test_executions:
+            if test_execution.result == 'PASSED':
+                num_passed += 1
+            elif test_execution.result == 'FAILED':
+                num_failed += 1
+        return {"num_passed": num_passed, "num_failed": num_failed}
+
 
 
 @csrf_exempt
