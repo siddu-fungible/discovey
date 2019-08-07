@@ -392,6 +392,7 @@ class FunethSanity(FunTestScript):
         # perf
         if csi_perf_enabled:
             p = CsiPerfTemplate(perf_collector_host_name=perf_listener_host_name, listener_ip=perf_listener_ip, fs=test_bed_type)
+            p.prepare(f1_index=0)
             self.csi_perf_obj = p
 
         # NU host
