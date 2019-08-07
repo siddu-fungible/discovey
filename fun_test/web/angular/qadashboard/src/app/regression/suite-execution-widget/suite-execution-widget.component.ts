@@ -20,9 +20,9 @@ class Suite {
   styleUrls: ['./suite-execution-widget.component.css']
 })
 export class SuiteExecutionWidgetComponent implements OnInit {
-  @Input() suiteName: string;
+  @Input() dataUrl: string;
   @Input() title: string;
-  @Input() url: string;
+  @Input() titleUrl: string;
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
   numbers: number[] = [0, 1];
@@ -67,7 +67,7 @@ export class SuiteExecutionWidgetComponent implements OnInit {
 
 
   fetchSuiteExecutions() {
-    return this.apiService.get("/api/v1/regression/suite_executions/?suite_path=" + this.suiteName).pipe(switchMap(response => {
+    return this.apiService.get("/api/v1/regression/suite_executions/" + this.dataUrl).pipe(switchMap(response => {
       for (let i of response.data) {
         let suite = new Suite();
         if (this.lastTwoSuites.length == 2) {
