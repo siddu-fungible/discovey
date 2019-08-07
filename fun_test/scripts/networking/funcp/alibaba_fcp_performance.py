@@ -361,8 +361,8 @@ class FunPerformance(FunTestCase):
         fun_test.log('NetperfManager Results:\n{}'.format(pprint.pformat(result)))
         if not result:
             passed = False
-        # elif any(v == nm.NA for v in result.values()):
-        #     passed = False
+        elif any(v == nm.NA for v in result.values()):
+            passed = False
         else:
             passed = True
 
