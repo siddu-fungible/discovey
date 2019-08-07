@@ -249,8 +249,16 @@ def assets(request, name):
         request_json = json.loads(request.body)
         try:
             asset = Asset.objects.get(name=name)
+            original_manual_lock_user = asset.manual_lock_user
             if "manual_lock_user" in request_json:
                 asset.manual_lock_user = request_json.get("manual_lock_user")
+                lock_or_unlock = "lock" if asset.manual_lock_user else "un-lock"
+                to_addresses = [TEAM_REGRESSION_EMAIL]
+                if original_manual_lock_user:
+                    to_addresses.append(original_manual_lock_user)
+                    if (original_manual_lock_user != asset.manual_lock_user) and asset.manual_lock_user:
+                        to_addresses.append(asset.manual_lock_user)
+                send_mail(to_addresses=to_addresses, subject="{} {}".format(asset.name, lock_or_unlock))
             asset.save()
             result = True
         except:

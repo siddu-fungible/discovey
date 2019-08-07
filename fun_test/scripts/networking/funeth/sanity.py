@@ -460,7 +460,7 @@ class FunethSanity(FunTestScript):
                 if cleanup:
                     hu_hosts = topology.get_host_instances_on_ssd_interfaces(dut_index=0)
                     for host_ip, host_info in hu_hosts.iteritems():
-                        host_info["host_obj"].ensure_host_is_up(max_wait_time=0, power_cycle=True)
+                        host_info["host_obj"].ensure_host_is_up(max_wait_time=2, power_cycle=True)
 
             if control_plane:
                 perf_utils.collect_funcp_logs(self.come_linux_obj)
@@ -955,9 +955,9 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestUnloadDriver,
             FunethTestReboot,
-            FunethTestComeReboot,
+            #FunethTestComeReboot,  # TODO: uncomment after SWLINUX-786 is fixed
     ):
         ts.add_test_case(tc())
     ts.run()

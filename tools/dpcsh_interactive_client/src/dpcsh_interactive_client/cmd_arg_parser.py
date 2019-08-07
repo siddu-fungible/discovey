@@ -1014,6 +1014,12 @@ peek_per_vp_stats_parser.add_argument('-cluster_id', type=int, help="Cluster_id 
 peek_per_vp_stats_parser.add_argument('-core_id', type=int, help="Core_id 0..5", default=None)
 peek_per_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# New params
+peek_per_vp_stats_parser.add_argument('-rx', type=bool, help="Print Wus received", default=False)
+peek_per_vp_stats_parser.add_argument('-tx', type=bool, help="Print Wus sent", default=False)
+peek_per_vp_stats_parser.add_argument('-q', type=bool, help="Print Wus q depth", default=False)
+peek_per_vp_stats_parser.add_argument('-pp', type=bool, help="PrettyPrint tabular", default=False)
+
 # nwqm stats
 peek_nwqm_stats_parser = peek_stats_parsers.add_parser('nwqm', help="Peek nwqm stats")
 peek_nwqm_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)

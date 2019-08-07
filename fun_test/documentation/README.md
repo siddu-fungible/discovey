@@ -6,6 +6,7 @@ fun_test has the following layout
 3. scripts
 4. scheduler
 5. web
+6. stash (A place to store git repositories)
 
 ## Setup
 ### Setup without the web-server

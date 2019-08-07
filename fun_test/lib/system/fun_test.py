@@ -325,6 +325,8 @@ class FunTest:
                 self.build_parameters["BOOTARGS"] = self.build_parameters["BOOTARGS"].replace(self.BOOT_ARGS_REPLACEMENT_STRING, " ")
             if "DISABLE_ASSERTIONS" in user_supplied_build_parameters:
                 self.build_parameters["DISABLE_ASSERTIONS"] = user_supplied_build_parameters["DISABLE_ASSERTIONS"]
+            if "RELEASE_BUILD" in user_supplied_build_parameters:
+                self.build_parameters["RELEASE_BUILD"] = user_supplied_build_parameters["RELEASE_BUILD"]
             if "FUNOS_MAKEFLAGS" in user_supplied_build_parameters:
                 self.build_parameters["FUNOS_MAKEFLAGS"] = user_supplied_build_parameters["FUNOS_MAKEFLAGS"]
             if "BRANCH_FunOS" in user_supplied_build_parameters:
@@ -377,6 +379,12 @@ class FunTest:
         run_time = models_helper.get_suite_run_time(execution_id=self.suite_execution_id)
         result = run_time.get(name, None)
         return result
+
+    def set_suite_run_time_environment_variable(self, variable, value):
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            if suite_execution:
+                suite_execution.add_run_time_variable(variable, value)
 
     def get_job_environment_variable(self, variable):
         result = None
@@ -1433,7 +1441,12 @@ class FunTestScript(object):
     def _cleanup_hosts(self):
         for host in fun_test.get_hosts():
             try:
-                host.disconnect()
+                if host.handle:
+                    try:
+                        host.destroy()
+                    except:
+                        pass
+                fun_test.log("Host: {} properly disconnected".format(host))
             except:
                 pass
 

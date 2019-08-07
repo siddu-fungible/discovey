@@ -27,6 +27,7 @@ import {AdminComponent} from "./performance/admin/admin.component";
 import {CreateChartComponent} from "./performance/create-chart/create-chart.component";
 import {ScoresTableComponent} from "./performance/scores-table/scores-table.component";
 import {PerformanceTableComponent} from "./performance/performance-table/performance-table.component";
+import {SuiteEditorComponent} from "./regression/suite-editor/suite-editor.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -50,6 +51,7 @@ const routes: Routes = [
   {path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
   {path: 'regression/job_spec_detail/:id', component: JobSpecComponent},
+  {path: 'regression/suite_editor', component: SuiteEditorComponent},
   {path: 'regression', component: RegressionComponent},
   {path: 'regression/scheduler/admin', component: SchedulerAdminComponent},
   {path: 'common/alerts', component: AlertsComponent},

@@ -75,6 +75,9 @@ import { FunCardComponent } from './fun-card/fun-card.component';
 import { SmokeTestStorageWidgetComponent } from './regression/smoke-test-storage-widget/smoke-test-storage-widget.component';
 import { NetworkFunethSanityWidgetComponent } from './regression/network-funeth-sanity-widget/network-funeth-sanity-widget.component';
 import { NetworkFuncpSanityWidgetComponent } from './regression/network-funcp-sanity-widget/network-funcp-sanity-widget.component';
+import { SuiteEditorComponent } from './regression/suite-editor/suite-editor.component';
+import {ModalModule} from "ngb-modal";
+
 
 @NgModule({
   declarations: [
@@ -134,6 +137,7 @@ import { NetworkFuncpSanityWidgetComponent } from './regression/network-funcp-sa
     SmokeTestStorageWidgetComponent,
     NetworkFunethSanityWidgetComponent,
     NetworkFuncpSanityWidgetComponent,
+    SuiteEditorComponent
   ],
   imports: [
     BsDropdownModule,
@@ -152,7 +156,8 @@ import { NetworkFuncpSanityWidgetComponent } from './regression/network-funcp-sa
     NgbModule,
     NgbTooltipModule,
     NgxJsonViewerModule,
-    ToasterModule.forRoot()
+    ToasterModule.forRoot(),
+    ModalModule
   ],
 
   providers: [ApiService, LoggerService],

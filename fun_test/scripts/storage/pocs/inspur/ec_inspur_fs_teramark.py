@@ -513,6 +513,16 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.num_ssd = 1
         # End of benchmarking json file parsing
 
+        # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
+        # to be used in this test. If so, override the script default with the user provided config
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
+        else:
+            self.post_results = False
+
         self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
@@ -841,7 +851,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
             table_data_rows.append(row_data_list)
-            post_results("Inspur Performance Test", test_method, *row_data_list)
+            if self.post_results:
+                fun_test.log("Posting results on dashboard")
+                post_results("Inspur Performance Test", test_method, *row_data_list)
 
             # Checking if mpstat process is still running
             if start_mpstat:

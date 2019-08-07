@@ -183,8 +183,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
         # Deploying of DUTs
         for dut_index in self.available_dut_indexes:
-            self.topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                    1: {"boot_args": self.bootargs[1]}})
+            self.topology_helper.set_dut_parameters(dut_index=dut_index,
+                                                    f1_parameters={0: {"boot_args": self.bootargs[0]},
+                                                                   1: {"boot_args": self.bootargs[1]}})
         self.topology = self.topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -206,42 +207,49 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     self.required_hosts[host_name] = hosts[host_name]
         fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
 
+        self.host_info = OrderedDict()
         self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []
         self.host_numa_cpus = {}
         self.total_numa_cpus = {}
         for host_name, host_obj in self.required_hosts.items():
+            if host_name not in self.host_info:
+                self.host_info[host_name] = {}
+                self.host_info[host_name]["ip"] = []
             # Retrieving host ips
-            # test_interfaces = host.get_test_interfaces()
             if host_name not in self.hosts_test_interfaces:
                 self.hosts_test_interfaces[host_name] = []
             test_interface = host_obj.get_test_interface(index=0)
             self.hosts_test_interfaces[host_name].append(test_interface)
+            self.host_info[host_name]["test_interface"] = test_interface
             host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
             self.host_ips.append(host_ip)
+            self.host_info[host_name]["ip"].append(host_ip)
             fun_test.log("Host-IP: {}".format(host_ip))
             # Retrieving host handles
             host_instance = host_obj.get_instance()
             self.host_handles[host_ip] = host_instance
+            self.host_info[host_name]["handle"] = host_instance
 
         # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
-        for key in self.host_handles:
+        for host_name in self.host_info:
+            host_handle = self.host_info[host_name]["handle"]
             if self.override_numa_node["override"]:
-                self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
-                self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
+                host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+                self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                    self.override_numa_node["override_node"]]
             else:
-                self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
+                self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
 
             # Calculating the number of CPUs available in the given numa
-            self.total_numa_cpus[key] = 0
-            for cpu_group in self.host_numa_cpus[key].split(","):
+            self.host_info[host_name]["total_numa_cpus"] = 0
+            for cpu_group in self.host_info[host_name]["host_numa_cpus"].split(","):
                 cpu_range = cpu_group.split("-")
-                self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-            fun_test.log("Rebooting host: {}".format(key))
-            self.host_handles[key].reboot(non_blocking=True)
-        fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-        fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
+                self.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+            fun_test.log("Rebooting host: {}".format(host_name))
+            host_handle.reboot(non_blocking=True)
+        fun_test.log("Hosts info: {}".format(self.host_info))
 
         # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
         # for all the DUTs going to be used in the test
@@ -300,6 +308,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["f1_objs"] = self.f1_objs
         fun_test.shared_variables["sc_obj"] = self.sc_objs
         fun_test.shared_variables["f1_ips"] = self.f1_ips
+        fun_test.shared_variables["host_info"] = self.host_info
         fun_test.shared_variables["host_handles"] = self.host_handles
         fun_test.shared_variables["host_ips"] = self.host_ips
         fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
@@ -479,12 +488,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.f1 = fun_test.shared_variables["f1_objs"][0][0]
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+        self.host_info = fun_test.shared_variables["host_info"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.host_ips = fun_test.shared_variables["host_ips"]
         self.num_hosts = len(self.host_ips)
         self.end_host = self.host_handles[self.host_ips[0]]
-        self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-        self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
+        # self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
+        # self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
         self.num_f1s = fun_test.shared_variables["num_f1s"]
         self.test_network = {}
         self.test_network["f1_loopback_ip"] = self.f1_ips
@@ -527,14 +537,15 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 cur_uuid = utils.generate_uuid()
                 self.thin_uuid_list.append(cur_uuid)
                 vol_details["vol_uuid"] = cur_uuid
-                command_result = self.storage_controller.create_thin_block_volume(
-                    capacity=self.blt_details["capacity"],
-                    block_size=self.blt_details["block_size"],
-                    name="thin_block" + str(i + 1),
-                    uuid=cur_uuid,
-                    command_duration=self.command_timeout)
+                command_result = self.storage_controller.create_volume(type=self.blt_details["type"],
+                                                                       capacity=self.blt_details["capacity"],
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="thin_block" + str(i + 1), group_id=i+1,
+                                                                       uuid=cur_uuid,
+                                                                       command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1, cur_uuid))
+                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1,
+                                                                                                          cur_uuid))
                 #self.nvme_block_device.append(vol_details["name"])
 
                 self.vol_list.append(vol_details)
@@ -564,10 +575,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
                 # Attach controller to BLTs
                 ns_id = 1   #ns_id is 1 since there is 1 vol per controller
-                command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=cur_uuid,
-                                                                    vol_uuid=self.vol_list[i]["vol_uuid"],
-                                                                    ns_id=ns_id,
-                                                                    command_duration=self.command_timeout)
+                command_result = self.storage_controller.attach_volume_to_controller(
+                    ctrlr_uuid=cur_uuid, vol_uuid=self.vol_list[i]["vol_uuid"], ns_id=ns_id,
+                    command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to controller {}".
                                     format(self.thin_uuid_list[i], cur_uuid))
@@ -657,13 +667,18 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fio_output = {}
                 for i in range(0, self.blt_count):
                     key = self.host_ips[i]
-                    fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
+                    host_name = self.host_info.keys()[i]
+                    fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
+                                 "provided")
                     warm_up_fio_cmd_args = {}
                     jobs = ""
                     fio_output[i] = {}
                     end_host_thread[thread_count] = self.host_handles[key].clone()
                     wait_time = self.num_hosts + 1 - thread_count
                     if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                        # Adding the allowed CPUs into the fio warmup command
+                        self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                            format(self.host_info[host_name]["host_numa_cpus"])
                         for i in range(0, len(self.nvme_block_device)):
                              jobs += " --name=pre-cond-job-{} --filename={}".format(i + 1, self.nvme_block_device[i])
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(jobs)
@@ -676,6 +691,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                                                 filename="nofile",
                                                                                 **warm_up_fio_cmd_args)
                     else:
+                        # Adding the allowed CPUs into the fio warmup command
+                        self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
                         # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
                         filename = str(self.vol_list[i]["vol_name"])
                         thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -745,6 +762,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             for i in range(0, self.blt_count):
                 key = self.host_ips[i]
+                host_name = self.host_info.keys()[i]
                 fio_result[combo] = {}
                 fio_output[combo] = {}
                 final_fio_output[combo] = {}
@@ -776,12 +794,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     fun_test.log("Running FIO {} only test for block size: {} using num_jobs: {}, IO depth: {}".
                                  format(mode, fio_block_size, fio_numjobs, fio_iodepth))
 
+                    starting_core = int(self.host_info[host_name]["host_numa_cpus"].split(',')[0].split('-')[0]) + 1
                     if int(fio_numjobs) == 1:
-                        cpus_allowed = "1"
+                        cpus_allowed = str(starting_core)
                     elif int(fio_numjobs) == 4:
-                        cpus_allowed = "1-4"
+                        cpus_allowed = "{}-4".format(starting_core)
                     elif int(fio_numjobs) > 4:
-                        cpus_allowed = "1-19,40-59"
+                        cpus_allowed = "{}-{}".format(starting_core, self.host_info[host_name]["host_numa_cpus"][2:])
 
                     """
                     # Flush cache before read test

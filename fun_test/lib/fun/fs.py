@@ -101,7 +101,6 @@ class Bmc(Linux):
 
     def __init__(self, disable_f1_index=None, disable_uart_logger=False, setup_support_files=None, **kwargs):
         super(Bmc, self).__init__(**kwargs)
-        self.uart_log_threads = {}
         self.disable_f1_index = disable_f1_index
         self.disable_uart_logger = disable_uart_logger
         self.uart_log_listener_process_ids = []
@@ -145,12 +144,6 @@ class Bmc(Linux):
         self.sendline(chr(0))
         self.handle.expect(self.prompt_terminator, timeout=1)
         return True
-
-    def get_uart_log(self):
-        for f1_index in range(self.NUM_F1S):
-            if f1_index == self.disable_f1_index:
-                continue
-            self.uart_log_threads[f1_index].close()
 
     def _get_ipmi_details(self):
         ipmi_details = {
@@ -197,11 +190,14 @@ class Bmc(Linux):
                              context=self.context)
 
         fun_test.log("Rebooting ComE (Graceful)")
-        reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
-        reboot_info_string = "initiated" if non_blocking else "complete"
-        fun_test.test_assert(expression=reboot_result,
-                             message="ComE reboot {} (Graceful)".format(reboot_info_string),
-                             context=self.context)
+        if not come.was_power_cycled:
+            reboot_result = come.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking, ipmi_details=ipmi_details)
+            reboot_info_string = "initiated" if non_blocking else "complete"
+            fun_test.test_assert(expression=reboot_result,
+                                 message="ComE reboot {} (Graceful)".format(reboot_info_string),
+                                 context=self.context)
+        else:
+            fun_test.log("Skipping reboot as ComE was power-cycled")
         return True
 
     def ensure_come_is_up(self, come, max_wait_time=300, power_cycle=True):
@@ -439,6 +435,22 @@ class Bmc(Linux):
             s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
+    def get_uart_log_file(self, f1_index, post_fix=None):
+        if post_fix is not None:
+            post_fix = "_pf_{}_".format(post_fix)
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(
+            self._get_context_prefix("f1_{}{}_uart_log.txt".format(f1_index, post_fix)))
+        fun_test.scp(source_ip=self.host_ip,
+                     source_file_path=self.get_f1_uart_log_filename(f1_index=f1_index),
+                     source_username=self.ssh_username,
+                     source_password=self.ssh_password,
+                     target_file_path=artifact_file_name)
+        with open(artifact_file_name, "r+") as f:
+            content = f.read()
+            f.seek(0, 0)
+            f.write(self.u_boot_logs[f1_index] + '\n' + content)
+        return artifact_file_name
+
     def cleanup(self):
         fun_test.sleep(message="Allowing time to generate full report", seconds=45, context=self.context)
 
@@ -588,6 +600,7 @@ class BootupWorker(Thread):
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
 
         except Exception as ex:
+            fun_test.critical(str(ex))
             fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
 
@@ -602,21 +615,23 @@ class ComEInitializationWorker(Thread):
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE_WORKER_THREAD)
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
-            fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
-                                 message="Ensure ComE is up",
-                                 context=self.fs.context)
+            if not self.fs.get_boot_phase() == BootPhases.FS_BRING_UP_ERROR:
+                self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_ENSURE_UP)
+                fun_test.test_assert(expression=bmc.ensure_come_is_up(come=come, max_wait_time=300, power_cycle=True),
+                                     message="Ensure ComE is up",
+                                     context=self.fs.context)
 
-            self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
-            fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
-                                 message="ComE initialized",
-                                 context=self.fs.context)
+            if not self.fs.get_boot_phase() == BootPhases.FS_BRING_UP_ERROR:
+                self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+                fun_test.test_assert(expression=self.fs.come.initialize(disable_f1_index=self.fs.disable_f1_index),
+                                     message="ComE initialized",
+                                     context=self.fs.context)
 
-            # if self.fs.fun_cp_callback:
-            #    fun_test.log("Calling fun CP callback from Fs")
-            #    self.fs.fun_cp_callback(self.fs.get_come())
-            self.fs.come_initialized = True
-            # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
+                # if self.fs.fun_cp_callback:
+                #    fun_test.log("Calling fun CP callback from Fs")
+                #    self.fs.fun_cp_callback(self.fs.get_come())
+                self.fs.come_initialized = True
+                # self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
         except Exception as ex:
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
             raise ex
@@ -793,11 +808,11 @@ class F1InFs:
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
 
-    def get_dpc_client(self):
+    def get_dpc_client(self, auto_disconnect=False):
         come = self.fs.get_come()
         host_ip = come.host_ip
         dpc_port = come.get_dpc_port(self.index)
-        dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port)
+        dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
     def get_dpc_storage_controller(self):
@@ -812,11 +827,9 @@ class F1InFs:
         self.dpc_port = port
 
 
-
 class Fs(object, ToDictMixin):
     DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g"
     MIN_U_BOOT_DATE = datetime(year=2019, month=5, day=29)
-
 
     TO_DICT_VARS = ["bmc_mgmt_ip",
                     "bmc_mgmt_ssh_username",
@@ -894,6 +907,11 @@ class Fs(object, ToDictMixin):
         self.bootup_worker = None
         self.u_boot_complete = False
         self.come_initialized = False
+
+        self.csi_perf_templates = {}
+
+    def get_tftp_image_path(self):
+        return self.tftp_image_path
 
     def __str__(self):
         name = self.spec.get("name", None)
@@ -1283,6 +1301,20 @@ class Fs(object, ToDictMixin):
                                                                           power_cycle=True),
                                                                           message="ComE reachable after APC power-cycle")
         return True
+
+    def get_dpc_client(self, f1_index, auto_disconnect=False):
+        f1 = self.get_f1(index=f1_index)
+        dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect)
+        return dpc_client
+
+    def _get_context_prefix(self, data):
+        s = "{}".format(data)
+        if self.original_context_description:
+            s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
+        return s
+
+    def get_uart_log_file(self, f1_index, post_fix=None):
+        return self.get_bmc().get_uart_log_file(f1_index=f1_index, post_fix=post_fix)
 
 
 if __name__ == "__main2__":
