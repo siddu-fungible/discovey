@@ -290,21 +290,26 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
                 # Deleting the volumes
                 for i in range(0, fun_test.shared_variables["blt_count"], 1):
-                    cur_uuid = fun_test.shared_variables["thin_uuid"][i]
+
+                    lun_uuid = fun_test.shared_variables["thin_uuid"][i]
+
                     command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[i], ns_id=i + 1, command_duration=self.command_timeout)
+                        ctrlr_uuid=self.ctrlr_uuid[i], ns_id=1, command_duration=self.command_timeout)
+
                     fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
-                    command_result = self.storage_controller.delete_volume(uuid=cur_uuid,
+                    command_result = self.storage_controller.delete_volume(uuid=lun_uuid,
+                                                                           type=str(self.blt_details['type']),
                                                                            command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
-                                         format(i + 1, cur_uuid))
+                                         format(i + 1, lun_uuid))
 
-                # Deleting the controller
-                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
-                                                                           command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+                    # Deleting the controller
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[i],
+                                                                               command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Storage Controller Delete")
+
             except:
                 fun_test.log("Clean-up of volumes failed.")
 
@@ -427,6 +432,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             # Create BLT's
             self.vol_list = []
             self.thin_uuid_list = []
+
             for i in range(0, self.blt_count):
                 vol_details = {}
                 cur_uuid = utils.generate_uuid()
