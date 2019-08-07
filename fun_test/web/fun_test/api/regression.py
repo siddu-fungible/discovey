@@ -14,6 +14,7 @@ from scheduler.scheduler_helper import kill_job
 from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
 from web.fun_test.models_helper import _get_suite_executions
+from fun_global import RESULTS
 
 
 @csrf_exempt
@@ -195,9 +196,9 @@ def test_case_executions(request, id):
         num_passed = 0
         num_failed = 0
         for test_execution in test_executions:
-            if test_execution.result == 'PASSED':
+            if test_execution.result == RESULTS["PASSED"]:
                 num_passed += 1
-            elif test_execution.result == 'FAILED':
+            elif test_execution.result == RESULTS["FAILED"]:
                 num_failed += 1
         return {"num_passed": num_passed, "num_failed": num_failed}
 
