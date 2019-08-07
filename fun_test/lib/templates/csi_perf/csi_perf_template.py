@@ -112,6 +112,7 @@ class CsiPerfTemplate():
         self.perf_host.command("mkdir -p {}/odp/trace_dumps".format(job_directory))
 
     def start(self, f1_index=0):
+        fun_test.add_checkpoint("CSI perf before start")
         self.instance += 1
         # ensure perf listener is not running
         process_ids = self.perf_host.get_process_id_by_pattern(process_pat=PERF_LISTENER, multiple=True)
@@ -125,8 +126,11 @@ class CsiPerfTemplate():
         dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="reinit", command_duration=4)
         dpc_client.json_execute(verb="perf", data="start", command_duration=4)
+        fun_test.add_checkpoint("CSI perf started")
+
 
     def stop(self, f1_index=0):
+        fun_test.add_checkpoint("CSI perf before stop")
         dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="stop", command_duration=4)
         dpc_client.json_execute(verb="perf", data="offload", command_duration=4)
@@ -134,6 +138,7 @@ class CsiPerfTemplate():
         self.move_trace_files(source_directory=self.tools_directory, job_directory=self.job_directory)
         uart_log_path = self.fs.get_uart_log_file(f1_index=f1_index, post_fix=self.instance)
         self.move_uart_log(uart_log_path=uart_log_path, f1_index=f1_index)
+        fun_test.add_checkpoint("CSI perf after stop")
 
     def move_trace_files(self, source_directory, job_directory):
         trace_files = self.perf_host.list_files("{}/trace_cluster*".format(source_directory))
