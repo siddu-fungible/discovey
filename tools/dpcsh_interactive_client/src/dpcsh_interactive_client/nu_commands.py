@@ -1995,7 +1995,6 @@ class PeekCommands(object):
                     cmd = "stats/per_vp"
                     output_result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                     result = self.get_required_per_vp_result(output_result)
-                    print result
                     if result:
                         def get_sorted_dict(result):
                             sorted_dict = OrderedDict()
