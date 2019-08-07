@@ -1,0 +1,14 @@
+<div *ngIf="isDone" style="width:100%;margin: 0 auto">
+  <fun-card
+    [title]="'<a href = /regression?tag=smoke>Networking-funcp sanity test</a>'"
+    [icon]="iconDict[lastTwoSuites[0].result]"
+    [textTitle]="'passed: ' + lastTwoSuites[0].numPassed + ' failed: ' + lastTwoSuites[0].numFailed"
+    [tooltipText]="lastTwoSuites[0].result"
+    [text]="lastTwoSuites[0].time + ' (current run)'"
+    [footerIcon]="iconDict[lastTwoSuites[1].result]"
+    [footerTooltipText]="lastTwoSuites[1].result"
+    [enableFooter]="true"
+    [footerText]="'passed: ' + lastTwoSuites[1].numPassed + ' failed: ' + lastTwoSuites[1].numFailed"
+    [footerTextTitle]="lastTwoSuites[1].time + ' (previous run)'">
+  </fun-card>
+</div>
