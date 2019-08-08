@@ -80,7 +80,7 @@ export class SmokeTestStorageWidgetComponent implements OnInit {
           suite.time = this.trimTime(i.fields.completed_time);
         } else {
           suite.result = 'IN_PROGRESS'
-          suite.time = this.trimTime(i.fields.scheduled_time);
+          suite.time = this.trimTime(i.fields.started_time);
         }
         suite.numFailed = i.num_failed;
         suite.numPassed = i.num_passed;

@@ -29,7 +29,12 @@
     <app-smoke-test-storage-widget></app-smoke-test-storage-widget>
   </div>
   <div class="fun-card-container">
-    <app-network-sanity-widget></app-network-sanity-widget>
+    <app-suite-execution-widget [dataUrl]="'?suite_path=networking_funcp_sanity.json&order_by=-started_time'" [title]="'Networking-funcp sanity test'"
+                                [titleUrl]="'/regression?tag=networking-sanity&suite_path=networking_funcp_sanity.json'"></app-suite-execution-widget>
+  </div>
+  <div class="fun-card-container">
+    <app-suite-execution-widget [dataUrl]="'?suite_path=networking_funeth_sanity.json&order_by=-started_time'" [title]="'Networking-funeth sanity test'"
+                                [titleUrl]="'/regression?tag=networking-sanity&suite_path=networking_funeth_sanity.json'"></app-suite-execution-widget>
   </div>
 </div>
 

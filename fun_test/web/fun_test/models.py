@@ -515,7 +515,14 @@ class JobQueue(models.Model):
     job_id = models.IntegerField(unique=True)
     test_bed_type = models.TextField(default="", null=True)
     message = models.TextField(default="", null=True)
+    pre_emption_allowed = models.NullBooleanField(default=True)  # Mainly used for suite-based test-beds.
+    # if a suite-based item is on top of the queue, if pre_emption allowed is disabled, all suite-based items of
+    # lower-priority in the queue will not be considered for de-queueing until the highest priority ones get de-queued
+    suspend = models.NullBooleanField(default=False)  # if set, the queued item is not eligible for de-queue
 
+
+    def is_suite_based(self):
+        return self.test_bed_type == "suite-based"
 
 class KilledJob(models.Model):
     job_id = models.IntegerField(unique=True)

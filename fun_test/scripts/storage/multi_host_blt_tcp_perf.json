@@ -71,10 +71,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "randwrite", "bs": "4k",
-      "iodepth": 32, "numjobs": 1,
-      "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "100%", "timeout": 7200
+      "rw": "randwrite", "bs": "4k", "iodepth": 32, "numjobs": 1, "ioengine": "libaio", "direct": 1, "prio": 0,
+      "cpus_allowed_policy": "split", "size": "100%", "timeout": 3600
     },
     "fio_cmd_args": {
       "ioengine": "libaio",
@@ -123,10 +121,8 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "rw": "randwrite", "bs": "4k",
-      "iodepth": 32, "numjobs": 1,
-      "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
-      "size": "100%", "timeout": 7200
+      "rw": "randwrite", "bs": "4k", "iodepth": 32, "numjobs": 1, "ioengine": "libaio", "direct": 1, "prio": 0,
+      "cpus_allowed_policy": "split", "size": "100%", "timeout": 3600
     },
     "fio_cmd_args": {
       "ioengine": "libaio",

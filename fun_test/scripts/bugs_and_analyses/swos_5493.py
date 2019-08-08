@@ -177,7 +177,7 @@ class ECVolumeLevelScript(FunTestScript):
                 if j in required_host_index:
                     self.required_hosts[host_name] = hosts[host_name]
 
-        self.host_info = {}
+        self.host_info = OrderedDict()
         self.hosts_test_interfaces = {}
         self.host_handles = {}
         self.host_ips = []

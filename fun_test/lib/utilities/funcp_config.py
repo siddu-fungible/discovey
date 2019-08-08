@@ -291,7 +291,6 @@ class FunControlPlaneBringup:
                                                  " --json ./abstract_cfg/" + file_name)
             fun_test.test_assert(expression="returned non-zero exit status" not in execute_abstract,
                                  message="Execute abstract config on %s" % f1)
-        fun_test.sleep(message="Waiting for protocol coneverge", seconds=15)
 
         linux_obj.disconnect()
 

@@ -46,7 +46,8 @@ DEFAULT_BUILD_PARAMS = {
     "BRANCH_FunTools": "",
     "RUN_PIPELINE": "",
     "BRANCH_FunControlPlane": "",
-    "SKIP_DASM_C": "true"
+    "SKIP_DASM_C": "true",
+    "RELEASE_BUILD": "false"
 }
 
 class JenkinsManager():
@@ -185,6 +186,8 @@ class JenkinsManager():
                 if m:
                     image_path = m.group(1)
                     print "Image-path: {}".format(image_path)
+        if image_path:
+            fun_test.update_job_environment_variable("jenkins_build_path", image_path)
         return image_path
 
 if __name__ == "__main__":

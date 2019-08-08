@@ -94,6 +94,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             for i in range(num_vol):
                 plex_to_f1_map[num][mindex] = sc_index
                 mindex += 1
+    ec_info["plex_to_f1_map"] = plex_to_f1_map
 
     # Check if Compression has to be enabled on the Device
     if "compress" in ec_info.keys() and ec_info['compress']:

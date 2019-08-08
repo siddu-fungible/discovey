@@ -1,0 +1,91 @@
+{
+  "GlobalSetup": {
+    "bootargs": [
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=3 workload=storage module_log=tcp:DEBUG --serial --memvol --dpc-uart --all_100g --nofreeze",
+      "app=mdt_test,load_mods,hw_hsu_test cc_huid=2 workload=storage module_log=tcp:DEBUG --serial --memvol --dpc-uart --all_100g --nofreeze"
+    ],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": "ep",
+    "num_f1_per_fs": 1,
+    "num_f1s": 1,
+    "num_hosts": 4,
+    "fpg_int_prefix": "fpg",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "load_modules": [
+      "nvme",
+      "nvme_tcp"
+    ],
+    "huid": 7,
+    "ctlid": 0,
+    "syslog": 6,
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {
+      "override": true,
+      "override_node": "NUMA node0 CPU(s)"
+    },
+    "csr_network": {
+      "0": {
+        "test_interface_ip": "20.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:30",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "20.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      },
+      "4": {
+        "test_interface_ip": "21.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:31",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "21.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      }
+    }
+  },
+  "MultiNvmeConnect": {
+    "num_ssd": 12,
+    "blt_count": 4,
+    "no_of_nvme_connect": 50,
+    "blt_details": {
+      "ns_id": 1,
+      "type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "capacity": 99999997952,
+      "block_size": 4096
+    },
+    "controllers": 1,
+    "syslog": 6,
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_q": 16,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {
+      "rw": "write", "bs": "8k",
+      "iodepth": 1, "numjobs": 1,
+      "ioengine": "libaio", "direct": 1, "prio": 0, "cpus_allowed": "1-19",
+      "size": "100%", "timeout": 7200
+    },
+    "fio_modes": [
+      "randread"
+    ],
+    "fio_bs": "4k",
+    "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)"],
+    "fio_job_name": {
+      "randread": "nhosts"
+    },
+    "nvme_device": "/dev/nvme0",
+    "host_count": 1
+  }
+}

@@ -3963,7 +3963,7 @@
                   {
                     "metric_model_name": "MetricContainer",
                     "name": "alibaba_rdma_host",
-                    "label": "Host->Host FCP (2F1s)",
+                    "label": "Host->Host NFCP (2F1s)",
                     "children": [
                       {
                         "metric_model_name": "MetricContainer",

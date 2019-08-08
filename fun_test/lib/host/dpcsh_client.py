@@ -155,11 +155,24 @@ class DpcshClient(object):
 
 
 if __name__ == "__main__":
-    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220)
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
     d.json_execute(verb="perf", data="reinit", command_duration=4)
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+
     d.json_execute(verb="perf", data="start", command_duration=4)
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+
+    d.disconnect()
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+    # d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220)
+
     d.json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
+
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
     d.json_execute(verb="perf", data="stop", command_duration=4)
+
+    d = DpcshClient(target_ip="fs21-come.fungible.local", target_port=40220, auto_disconnect=True)
     d.json_execute(verb="perf", data="offload", command_duration=4)
 
     # d.command("peek help", legacy=False)
