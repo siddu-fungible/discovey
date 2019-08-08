@@ -115,7 +115,7 @@ class CsiPerfTemplate():
         self.perf_host.command("mkdir -p {}/odp".format(job_directory))
         self.perf_host.command("mkdir -p {}/odp/trace_dumps".format(job_directory))
 
-    def start(self, f1_index=0):
+    def start(self, f1_index=0, dpc_client=None):
         fun_test.simple_assert(self.prepare_complete, "Please call prepare() before calling start")
         fun_test.add_checkpoint("CSI perf before start")
         self.instance += 1
@@ -128,15 +128,16 @@ class CsiPerfTemplate():
         command = "python " + PERF_LISTENER_PATH + " --perf-ip={}".format(self.listener_ip)
         self.perf_listener_process_id = self.perf_host.start_bg_process(command, output_file="/tmp/perf_listener_f1_{}.log".format(f1_index))
 
-        dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
+        if not dpc_client:
+            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="reinit", command_duration=4)
         dpc_client.json_execute(verb="perf", data="start", command_duration=4)
         fun_test.add_checkpoint("CSI perf started")
 
-
-    def stop(self, f1_index=0):
+    def stop(self, f1_index=0, dpc_client=None):
         fun_test.add_checkpoint("CSI perf before stop")
-        dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
+        if not dpc_client:
+            dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="stop", command_duration=4)
         dpc_client.json_execute(verb="perf", data="offload", command_duration=4)
         fun_test.sleep("Wait for offload to complete", seconds=120)
@@ -209,8 +210,7 @@ class CsiPerfTemplate():
         return result
 
     def do_setup_docker(self):
-        pass
-        fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
+        # fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
         commands = ["timeout 5 openssl s_client -showcerts -connect docker.fungible.com:443 | tee /tmp/cert.log",
                     "cat /tmp/cert.log | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/cert.pem"]
         for command in commands:
@@ -223,6 +223,7 @@ class CsiPerfTemplate():
         self.perf_host.enter_sudo()
         for sudo_command in sudo_commands:
             self.perf_host.command(sudo_command, custom_prompts={'Trust new certificates from certificate authorities?': 'yes', "Certificates to activate:": "fun_cert.crt"})
+        self.perf_host.command("apt-get update")
         self.perf_host.command("apt install -y docker.io")
         self.perf_host.exit_sudo()
         self.perf_host.sudo_command("usermod -aG docker $USER")
@@ -234,5 +235,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="poc-server-06", listener_ip="123", fs=None)
+    p = CsiPerfTemplate(perf_collector_host_name="mktg-server-14", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)

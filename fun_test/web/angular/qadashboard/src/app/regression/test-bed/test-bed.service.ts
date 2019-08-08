@@ -17,16 +17,16 @@ export class TestBedService {
     }));
   }
 
-  unlockAsset(name) {
-    let url = '/api/v1/regression/assets/' + name;
+  unlockAsset(name, type) {
+    let url = '/api/v1/regression/assets/' + name + "/" + type;
     let payload = {"manual_lock_user": null};
     return this.apiService.put(url, payload).pipe(switchMap(response => {
       return of(response.data);
     }))
   }
 
-  lockAsset(name, submitter) {
-    let url = "/api/v1/regression/assets/" + name;
+  lockAsset(name, type, submitter) {
+    let url = "/api/v1/regression/assets/" + name + "/" + type;
     let payload = {"manual_lock_user": submitter};
     return this.apiService.put(url, payload).pipe(switchMap(response => {
       return of(response.data);
