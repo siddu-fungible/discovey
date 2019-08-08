@@ -218,6 +218,12 @@ class TopologyHelper:
         return self.expanded_topology.get_hosts()
 
     @fun_test.safe
+    def get_available_perf_listener_hosts(self):
+        if not self.expanded_topology:
+            self.expanded_topology = self.get_expanded_topology()
+        return self.expanded_topology.get_perf_listener_hosts()
+
+    @fun_test.safe
     def set_dut_parameters(self, dut_index=None, **kwargs):
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
