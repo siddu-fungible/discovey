@@ -5,6 +5,8 @@ import re
 
 
 NETSERVER_PORT = 12865
+NETSERVER_FIXED_PORT_CONTROL_BASE = 30000
+NETSERVER_FIXED_PORT_DATA_BASE = 40000
 THROUGHPUT = 'throughput'
 LATENCY = 'latency'
 PPS = 'pps'
@@ -190,7 +192,7 @@ class NetperfManager:
             if cpu_list:
                 cmds = []
                 for c in cpu_list:
-                    cmds.append('taskset -c {} netserver -p {}'.format(c, c+10000))  # Netperf control ports
+                    cmds.append('taskset -c {} netserver -p {}'.format(c, c+NETSERVER_FIXED_PORT_CONTROL_BASE))  # Netperf control ports
                 cmd = ';'.join(cmds)
         else:
             if cpu_list:
@@ -441,14 +443,15 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     if fixed_netperf_port:
         if not measure_latency:
             # cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
-            cmd = 'netperf -t {0} -H {1} -v 2 -l {2} -f m -j -p {3},{3} -- -k "THROUGHPUT" -P {4}'.format(t, dip, duration, 10000+cpu, 20000+cpu)
+            cmd = 'netperf -t {0} -H {1} -v 2 -l {2} -f m -j -p {3},{3} -- -k "THROUGHPUT" -P {4}'.format(
+                t, dip, duration, NETSERVER_FIXED_PORT_CONTROL_BASE+cpu, NETSERVER_FIXED_PORT_DATA_BASE+cpu)
             pat = r'THROUGHPUT=(\d+)'
             pat = r'THROUGHPUT=(\d+\.\d+|\d+)'
         else:
             # cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
             # 1 request per 100 msec
             cmd = 'netperf -t {0} -H {1} -v 2 -l {2} -w 10 -b 100 -f m -j -p {3},{3} -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY" -r1,1 -P {4}'.format(
-                t, dip, duration, 10000+cpu, 20000+cpu)
+                t, dip, duration, NETSERVER_FIXED_PORT_CONTROL_BASE+cpu, NETSERVER_FIXED_PORT_DATA_BASE+cpu)
             pat = r'MIN_LATENCY=(\d+\.\d+|\d+).*?MEAN_LATENCY=(\d+\.\d+|\d+).*?P50_LATENCY=(\d+\.\d+|\d+).*?P90_LATENCY=(\d+\.\d+|\d+).*?P99_LATENCY=(\d+\.\d+|\d+).*?MAX_LATENCY=(\d+\.\d+|\d+)'
     else:
         if not measure_latency:

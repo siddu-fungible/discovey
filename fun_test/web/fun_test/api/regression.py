@@ -237,7 +237,7 @@ def script_infos(request, pk):
 
 @csrf_exempt
 @api_safe_json_response
-def assets(request, name):
+def assets(request, name, asset_type):
     result = None
     if request.method == "GET":
         if not name:
@@ -253,7 +253,7 @@ def assets(request, name):
     elif request.method == "PUT":
         request_json = json.loads(request.body)
         try:
-            asset = Asset.objects.get(name=name)
+            asset = Asset.objects.get(name=name, type=asset_type)
             original_manual_lock_user = asset.manual_lock_user
             if "manual_lock_user" in request_json:
                 asset.manual_lock_user = request_json.get("manual_lock_user")
@@ -266,6 +266,6 @@ def assets(request, name):
                 send_mail(to_addresses=to_addresses, subject="{} {}".format(asset.name, lock_or_unlock))
             asset.save()
             result = True
-        except:
+        except Exception as ex:
             pass #TODO
     return result
