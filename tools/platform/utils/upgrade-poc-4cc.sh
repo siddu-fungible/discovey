@@ -5,8 +5,8 @@ DPU=${2:-0}
 PCI=${3:-04:00.1}
 DRYRUN=${4:-yes}
 
-lspci -d1dad: | grep 1dad && echo "searching FUNGIBLE devices ..." || exit 1
-lspci -d1dad: | grep "$PCI" && echo "searching FUNGIBLE device-and-function ..." ||  exit 1
+lspci -d1dad: | grep -F 1dad && echo "searching FUNGIBLE devices ..." || exit 1
+lspci -d1dad: | grep -F "$PCI" && echo "searching FUNGIBLE device-and-function ..." ||  exit 1
 
 PWD=$(pwd)
 
