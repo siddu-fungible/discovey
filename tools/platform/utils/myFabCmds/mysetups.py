@@ -6,7 +6,7 @@ from fabric.api import env
 # default kept this some dummy values to avoid booting from any-image
 ###################################################################################
 env.DEFAULT_NFSFILE   = "/home/users/tftpboot/funos-f1.stripped.gz"
-env.DEFAULT_TFTPFILE = "users/tftpboot/funos-f1.stripped.gz"
+env.DEFAULT_TFTPFILE = "user/tftpboot/funos-f1.stripped.gz"
 #env.DEFAULT_BOOTARGS = "app=hw_hsu_test --memvol --csr-replay --all_100g --nofreeze --dpc-server --dpc-proxy syslog=6"
 #env.DEFAULT_BOOTARGS = 'app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze'
 #env.DEFAULT_BOOTARGS = 'app=hw_hsu_test --serial --memvol --all_100g --dpc-server retimer=0 --dpc-uart --csr-replay'
@@ -201,11 +201,11 @@ setups = {
         'come' : [ '10.1.104.170', 'fun', '123' ]
     },
    'FS55' : {
-        'bmc'  : [ '10.1.20.156', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.20.156', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.20.156', 'admin', 'admin' ],
-        'fpga' : [ '10.1.21.0', 'root', 'root' ],
-        'come' : [ '10.1.20.164', 'fun', '123' ]
+        'bmc'  : [ '10.1.21.28', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.21.28', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.21.28', 'admin', 'admin' ],
+        'fpga' : [ '10.1.20.175', 'root', 'root' ],
+        'come' : [ '10.1.21.32', 'fun', '123' ]
     },
    'FS56' : {
         'bmc'  : [ '10.1.105.70', 'sysadmin', 'superuser' ],
@@ -264,11 +264,11 @@ setups = {
         'come' : [ '10.1.104.133', 'fun', '123' ]
     },
    'FS64' : {
-        'bmc'  : [ '10.1.104.126', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.104.126', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.104.126', 'admin', 'admin' ],
-        'fpga' : [ '10.1.104.152', 'root', 'root' ],
-        'come' : [ '10.1.104.136', 'fun', '123' ]
+        'bmc'  : [ '10.1.104.108', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.108', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.108', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.102', 'root', 'root' ],
+        'come' : [ '10.1.104.112', 'fun', '123' ]
     },
    'FS65' : {
         'bmc'  : [ '10.1.104.164', 'sysadmin', 'superuser' ],

@@ -3,6 +3,7 @@ from fabric.contrib.files import exists, append
 import time, re, os
 import pexpect, sys
 import pprint
+import socket
 
 from mysetups import *
 
@@ -391,6 +392,9 @@ def connectF(index=0, reset=False, force=True):
         if reset:
             execute(resetF, index=index)
             try:
+                i = child.expect (['\nAutoboot in 5 seconds.', '\nf1 # '])
+                if i==0:
+                    child.sendline ('noboot')
                 child.expect ('\nf1 # ')
             except:
                 SESSION_ERROR_MSG = "\n\nspawn error: check why serial sockets are failing on {}\n\n".format(env.host) 
@@ -407,12 +411,12 @@ def connectF(index=0, reset=False, force=True):
 
 def _mac_random_mac(index=0):
     ip = env.thissetup['bmc'][0]
-    a,b,c,d = ip.split('.')
+    a,b,c,d = socket.gethostbyname(ip).split('.')
     return ':'.join(['02'] + [ '1d', 'ad', "%02x"%int(c), "%02x"%int(d)]  + ["%02x" % int(index)])
 
 def _make_gateway(index=0):
     ip = env.thissetup['bmc'][0]
-    a,b,c,d = ip.split('.')
+    a,b,c,d = socket.gethostbyname(ip).split('.')
     return '.'.join([a, b, c, '1'])
 
 @roles('bmc')
