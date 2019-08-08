@@ -250,7 +250,7 @@ class QueueWorker(Thread):
                                 queued_job.save()
                         else:
                             queued_job.message = not_available[queued_job.test_bed_type]
-                            queued_job.savget_valid_jobse()
+                            queued_job.save()
                     except Exception as ex:
                         reason = "Exception: {}: {}".format(str(ex), traceback.format_exc())
                         self.abort_job(queued_job=queued_job, reason=reason)
