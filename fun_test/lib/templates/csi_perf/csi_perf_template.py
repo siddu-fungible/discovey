@@ -210,8 +210,7 @@ class CsiPerfTemplate():
         return result
 
     def do_setup_docker(self):
-        pass
-        fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
+        # fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
         commands = ["timeout 5 openssl s_client -showcerts -connect docker.fungible.com:443 | tee /tmp/cert.log",
                     "cat /tmp/cert.log | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/cert.pem"]
         for command in commands:
@@ -235,5 +234,5 @@ class CsiPerfTemplate():
         return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="poc-server-06", listener_ip="123", fs=None)
+    p = CsiPerfTemplate(perf_collector_host_name="mktg-server-14", listener_ip="123", fs=None, setup_docker=True)
     p.prepare(f1_index=0)
