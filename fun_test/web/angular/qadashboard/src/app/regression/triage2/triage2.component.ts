@@ -6,6 +6,7 @@ import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {UserService} from "../../services/user/user.service";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
+import {Title} from "@angular/platform-browser";
 
 
 @Component({
@@ -31,7 +32,7 @@ export class Triage2Component implements OnInit {
               private loggerService: LoggerService,
               private triageService: TriageService,
               private userService: UserService,
-              private formBuilder: FormBuilder) {
+              private formBuilder: FormBuilder, private title: Title) {
     this.createFormBuilder();
 
   }
@@ -93,6 +94,7 @@ export class Triage2Component implements OnInit {
 
 
   ngOnInit() {
+    this.title.setTitle("Regression Finder");
     new Observable(observer => {
       observer.next(true);
       return () => {
