@@ -144,10 +144,13 @@ class CsiPerfTemplate():
         uart_log_path = self.fs.get_uart_log_file(f1_index=f1_index, post_fix=self.instance)
         self.move_uart_log(uart_log_path=uart_log_path, f1_index=f1_index)
         fun_test.add_checkpoint("CSI perf after stop")
-        fun_test.report_message("CSI perf traces are at trace job directory: {}".format(self.base_job_directory))
+        fun_test.report_message("CSI perf traces are at trace job directory: {}".format(self.job_directory))
         fun_test.report_message("CSI perf host: {} username: {} password: {}".format(self.perf_host.host_ip,
                                                                                      self.perf_host.ssh_username,
                                                                                      self.perf_host.ssh_password))
+        fun_test.report_message("CSI perf base job directory: {}".format(self.base_job_directory))
+        fun_test.report_message("CSI perf: to process perf: #./process_perf.sh {}".format(self.job_directory))
+        fun_test.report_message("CSI perf: to view perf: #./view_perf.sh {}".format(self.base_job_directory))
 
     def move_trace_files(self, source_directory, job_directory):
         trace_files = self.perf_host.list_files("{}/trace_cluster*".format(source_directory))
