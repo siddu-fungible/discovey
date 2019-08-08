@@ -176,22 +176,24 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.testbed_config = self.topology_helper.spec
             self.total_available_duts = len(self.available_dut_indexes)
 
-        print("self.testbed_config is: {}".format(self.testbed_config))
-        self.f1_ip = self.testbed_config["dut_info"]["0"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
-        print("f1 ip is: {}".format(self.f1_ip))
         fun_test.test_assert(expression=self.num_duts <= self.total_available_duts,
                              message="Testbed has enough DUTs")
+
+        self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
+        print("self.csi_perf_enabled value is: {}".format(self.csi_perf_enabled))
+        if self.csi_perf_enabled:
+            print("self.testbed_config is: {}".format(self.testbed_config))
+            self.f1_ip = self.testbed_config["dut_info"]["0"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
+            print("f1 ip is: {}".format(self.f1_ip))
+            self.perf_listener_host_name = "mktg-server-14"  # TODO: figure this out from the topology spec
+            self.perf_listener_ip = "15.1.14.2"  # TODO: figure this out from the topology spec
 
         for i in range(len(self.bootargs)):
             self.bootargs[i] += " --mgmt"
             if self.disable_wu_watchdog:
                 self.bootargs[i] += " --disable-wu-watchdog"
-
-        self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
-        if self.csi_perf_enabled:
-            self.perf_listener_host_name = "mktg-server-14"  # figure this out from the topology spec
-            self.perf_listener_ip = "15.1.14.2"  # figure this out from the topology spec
-            self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+            if self.csi_perf_enabled:
+                self.bootargs[i] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
                 self.f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         # Deploying of DUTs
