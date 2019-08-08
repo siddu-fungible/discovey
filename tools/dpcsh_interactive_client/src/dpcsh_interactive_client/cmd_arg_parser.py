@@ -1199,3 +1199,14 @@ flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=No
 # Flow blocked
 flow_blocked_parser = base_flow_subparsers.add_parser('blocked', help='blocked flows')
 flow_blocked_parser.add_argument('-grep', help="Grep for specific flow", default=None)
+
+# ==================================================================================================
+
+base_debug_parser = ArgumentParser(prog="debug")
+base_debug_subparsers = base_debug_parser.add_subparsers(title="subcommands", help="")
+
+vp_util_parser = base_debug_subparsers.add_parser("vp_util", help="Display vp utilization")
+vp_util_parser.add_argument("-cluster_id", help="Specify cluster id", type=int)
+vp_util_parser.add_argument("-core_id", help="Specify core id", type=int)
+vp_util_parser.add_argument("-pp", help="Pretty Print in tabular")
+vp_util_parser.add_argument('-grep', help="Grep on particular field")

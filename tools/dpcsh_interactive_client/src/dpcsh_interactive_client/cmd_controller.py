@@ -21,11 +21,12 @@ class CmdController(Cmd):
         self._show_cmd_obj = ShowCommands(dpc_client=self.dpc_client)
         self._meter_cmd_obj = MeterCommands(dpc_client=self.dpc_client)
         self._flow_cmd_obj = FlowCommands(dpc_client=self.dpc_client)
+        self._debug_cmd_obj = DebugCommands(dpc_client=self.dpc_client)
         self._storage_peek_obj = StoragePeekCommands(dpc_client=self.dpc_client)
 
     def check_cluster_id_range(self, cluster_id):
         result = True
-        if not ((cluster_id <= 7) and (cluster_id >= 0)):
+        if not ((int(cluster_id) <= 7) and (int(cluster_id) >= 0)):
             print "Enter cluster id between 0 and 7. You entered %s" % cluster_id
             result = False
         return result
@@ -995,6 +996,26 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._flow_cmd_obj.get_flow_blocked(grep_regex=grep_regex)
 
+    def debug_vp_util(self, args):
+        grep_regex = args.grep
+        pp = args.pp
+        cluster_id = args.cluster_id
+        core_id = args.core_id
+        cid_flag = True
+        core_id_flag = True
+        if cluster_id is not None:
+            cid_flag = self.check_cluster_id_range(cluster_id=cluster_id)
+        if core_id is not None:
+            core_id_flag = self.check_core_id_range(core_id=core_id)
+        if core_id and (cluster_id is None):
+            print "Please enter value for cluster_id with core_id"
+            return self.dpc_client.disconnect()
+
+        if cid_flag and core_id_flag and pp:
+            self._debug_cmd_obj.debug_vp_util_pp(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
+        elif cid_flag and core_id_flag:
+            self._debug_cmd_obj.debug_vp_util(cluster_id=cluster_id, core_id=core_id, grep_regex=grep_regex)
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -1202,6 +1223,9 @@ class CmdController(Cmd):
     flow_list_parser.set_defaults(func=get_flow_list)
     flow_blocked_parser.set_defaults(func=get_flow_blocked)
 
+    # -------------- Debug Command Handlers -----------------
+    vp_util_parser.set_defaults(func=debug_vp_util)
+
     @with_argparser(base_set_parser)
     def do_set(self, args):
         func = getattr(args, 'func', None)
@@ -1250,12 +1274,20 @@ class CmdController(Cmd):
         else:
             self.do_help('flow')
 
+    @with_argparser(base_debug_parser)
+    def do_debug(self, args):
+        func = getattr(args, 'func', None)
+        if func is not None:
+            func(self, args)
+        else:
+            self.do_help('debug')
+
     def __del__(self):
         self.dpc_client.disconnect()
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.8", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.132", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

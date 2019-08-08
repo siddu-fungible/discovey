@@ -13,6 +13,8 @@ from scheduler.scheduler_global import JobStatusType
 from scheduler.scheduler_helper import kill_job
 from django.core.exceptions import ObjectDoesNotExist
 from asset.asset_global import AssetType
+from web.fun_test.models_helper import _get_suite_executions
+from fun_global import RESULTS
 
 
 @csrf_exempt
@@ -129,6 +131,9 @@ def suite_executions(request, id):
 
     if request.method == "GET":
         q = Q()
+        suite_path = request.GET.get('suite_path', None)
+        if suite_path:
+            q = q & Q(suite_path=suite_path)
         test_bed_type = request.GET.get('test_bed_type', None)
         if test_bed_type:
             q = q & Q(test_bed_type=test_bed_type)
@@ -137,18 +142,25 @@ def suite_executions(request, id):
             q = q & Q(state=int(state))
         if id:
             q = q & Q(execution_id=id)
+        order_by = request.GET.get('order_by', None)
+        if order_by:
+            suite_execution_objects = SuiteExecution.objects.filter(q).exclude(started_time=None).order_by(order_by)
+        else:
+            suite_execution_objects = SuiteExecution.objects.filter(q).order_by('submitted_time')
 
         is_completed = request.GET.get('is_job_completed', None) # used by qa_trigger.py
 
         records = []
-        suite_executions = SuiteExecution.objects.filter(q).order_by('submitted_time')
-        for suite_execution in suite_executions:
+        for suite_execution in suite_execution_objects:
             one_record = {"execution_id": suite_execution.execution_id,
                           "state": suite_execution.state,
                           "result": suite_execution.result,
-                          "environment": json.loads(suite_execution.environment)}
+                          "environment": json.loads(suite_execution.environment),
+                          "suite_path": suite_execution.suite_path,
+                          "started_time": suite_execution.started_time,
+                          "completed_time": suite_execution.completed_time}
             records.append(one_record)
-            if id is not None:
+            if id:
                 result = one_record
                 break
         result = records if len(records) else None
@@ -178,6 +190,22 @@ def suite_executions(request, id):
             # TODO
             pass
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def test_case_executions(request, id):
+    if request.method == 'GET':
+        suite_id = request.GET.get("suite_id", None)
+        test_executions = TestCaseExecution.objects.filter(suite_execution_id=int(suite_id))
+        num_passed = 0
+        num_failed = 0
+        for test_execution in test_executions:
+            if test_execution.result == RESULTS["PASSED"]:
+                num_passed += 1
+            elif test_execution.result == RESULTS["FAILED"]:
+                num_failed += 1
+        return {"num_passed": num_passed, "num_failed": num_failed}
+
 
 
 @csrf_exempt

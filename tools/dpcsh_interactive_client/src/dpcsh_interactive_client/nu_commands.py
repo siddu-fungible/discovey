@@ -3445,3 +3445,147 @@ class FlowCommands(object):
             self.dpc_client.disconnect()
 
 
+class DebugCommands(PeekCommands):
+
+    def get_filtered_dict(self, output_dict, cluster_id=None, core_id=None):
+        result = OrderedDict()
+        start_key_name = 'CCV'
+        for key, val in output_dict.iteritems():
+            if cluster_id is not None and core_id is not None:
+                key_name = start_key_name + "%s.%s" % (cluster_id, core_id)
+                if key_name in key:
+                    result[key] = val
+            elif cluster_id is not None:
+                key_name = start_key_name + "%s" % (cluster_id)
+                if key_name in key:
+                    result[key] = val
+            else:
+                result = output_dict
+                break
+        return result
+
+    def get_vp_util_table_obj(self, result, prev_result=None):
+        master_table_obj = PrettyTable()
+        complete_dict = OrderedDict()
+        rows_list = ["Cls/Core", "0", "1", "2", "3"]
+        if prev_result:
+            rows_list = ["Cls/Core", "0", "0:diff", "1", "1:diff", "2", "2:diff", "3", "3:diff"]
+        for col_name in rows_list:
+            complete_dict[col_name] = []
+        for key, val in result.iteritems():
+            cluster_id = key.split(".")[0][3]
+            core_id = key.split(".")[1]
+            vp_num = key.split(".")[2]
+            for _key in rows_list:
+                if _key == rows_list[0] and cluster_id + '/' + core_id not in complete_dict[_key]:
+                    complete_dict[_key].append(cluster_id + '/' + core_id)
+                else:
+                    if _key == vp_num:
+                        complete_dict[_key].append(val)
+                        break
+
+        if prev_result:
+            diff_result = self._get_difference(result=result, prev_result=prev_result)
+            for key in sorted(diff_result):
+                vp_num = key.split(".")[2]
+                for _key in rows_list:
+                    if _key != rows_list[0]:
+                        if _key == vp_num + ":diff":
+                            complete_dict[_key].append(diff_result[key])
+                            break
+
+        print_keys = complete_dict.keys()
+        print_values = complete_dict.values()
+        for col_name, col_values in zip(print_keys, print_values):
+            master_table_obj.add_column(col_name, col_values)
+        return master_table_obj
+
+    def debug_vp_util_pp(self, cluster_id=None, core_id=None, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "vp_util"
+                    output_dict = OrderedDict()
+                    output = self.dpc_client.execute(verb='debug', arg_list=[cmd])
+                    for key in sorted(output):
+                        output_dict[key] = output[key]
+
+                    if cluster_id is None and core_id is None:
+                        for x in range(0, 6):
+                            for y in range(2, 4):
+                                if x > 3:
+                                    z = 0
+                                    key = 'CCV8.%s.%s' % (x, z)
+                                    output_dict[key] = 'N/A'
+                                    z = 1
+                                    key = 'CCV8.%s.%s' % (x, z)
+                                    output_dict[key] = 'N/A'
+                                key = 'CCV8.%s.%s' % (x, y)
+                                output_dict[key] = 'N/A'
+                    result = self.get_filtered_dict(output_dict=output_dict, cluster_id=cluster_id, core_id=core_id)
+
+                    master_table_obj = self.get_vp_util_table_obj(result=result, prev_result=prev_result)
+
+                    prev_result = result
+                    print master_table_obj
+                    print "\n########################  %s ########################\n" % \
+                          str(self._get_timestamp())
+                    time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def debug_vp_util(self, cluster_id=None, core_id=None, grep_regex=None, get_result_only=False):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "vp_util"
+                    output_result = self.dpc_client.execute(verb='debug', arg_list=[cmd])
+                    if output_result:
+                        result = self.get_filtered_dict(output_dict=output_result, cluster_id=cluster_id, core_id=core_id)
+
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            for key in sorted(result):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result[key], diff_result[key]])
+                                else:
+                                    table_obj.add_row([key, result[key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counters'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            for key in sorted(result):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result[key]])
+                                else:
+                                    table_obj.add_row([key, result[key]])
+                        if get_result_only:
+                            return cmd, table_obj
+                        prev_result = result
+                        print table_obj
+                        print "\n########################  %s ########################\n" % \
+                              str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+
