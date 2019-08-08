@@ -1,10 +1,10 @@
 import {Component, OnInit, Input, OnChanges, Output, EventEmitter, Renderer2} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 import {from, Observable, of} from "rxjs";
 import {mergeMap, switchMap} from "rxjs/operators";
-import {CommonService} from "../services/common/common.service";
-import {RegressionService} from "../regression/regression.service";
+import {CommonService} from "../../services/common/common.service";
+import {RegressionService} from "../../regression/regression.service";
 
 class Suite {
   id: number
@@ -15,13 +15,14 @@ class Suite {
 }
 
 @Component({
-  selector: 'app-test',
-  templateUrl: './test.component.html',
-  styleUrls: ['./test.component.css']
+  selector: 'app-suite-execution-widget',
+  templateUrl: './suite-execution-widget.component.html',
+  styleUrls: ['./suite-execution-widget.component.css']
 })
-
-
-export class TestComponent implements OnInit {
+export class SuiteExecutionWidgetComponent implements OnInit {
+  @Input() dataUrl: string;
+  @Input() title: string;
+  @Input() titleUrl: string;
   lastTwoSuites: Suite[] = [];
   isDone: boolean = false;
   numbers: number[] = [0, 1];
@@ -31,7 +32,6 @@ export class TestComponent implements OnInit {
     'IN_PROGRESS': "/static/media/loading_bars.gif"
   };
 
-
   constructor(private apiService: ApiService, private logger: LoggerService,
               private renderer: Renderer2, private commonService: CommonService, private regressionService: RegressionService) {
   }
@@ -40,7 +40,6 @@ export class TestComponent implements OnInit {
   stateMap = this.regressionService.stateMap;
   stateStringMap = this.regressionService.stateStringMap;
 
-
   ngOnInit() {
     new Observable(observer => {
       observer.next(true);
@@ -48,15 +47,15 @@ export class TestComponent implements OnInit {
       return () => {
       }
     }).pipe(switchMap(response => {
-        return this.fetchData();
-      }), switchMap(response => {
-        return this.fetchTestCaseExecutions(0);
-      }), switchMap(response => {
-        let temp = this.fetchTestCaseExecutions(1);
-        this.isDone = true;
-        return temp;
+      return this.fetchSuiteExecutions();
+    }), switchMap(response => {
+      return this.fetchTestCaseExecutions(0);
+    }), switchMap(response => {
+      let temp = this.fetchTestCaseExecutions(1);
+      this.isDone = true;
+      return temp;
 
-      })).subscribe(response => {
+    })).subscribe(response => {
 
       }, error => {
         this.logger.error('Failed to fetch data');
@@ -64,12 +63,11 @@ export class TestComponent implements OnInit {
     );
 
     console.log(this.lastTwoSuites);
-
   }
 
 
-  fetchData() {
-    return this.apiService.get("/api/v1/regression/suite_executions/?suite_path=networking_funcp_sanity.json").pipe(switchMap(response => {
+  fetchSuiteExecutions() {
+    return this.apiService.get("/api/v1/regression/suite_executions/" + this.dataUrl).pipe(switchMap(response => {
       for (let i of response.data) {
         let suite = new Suite();
         if (this.lastTwoSuites.length == 2) {
@@ -86,7 +84,7 @@ export class TestComponent implements OnInit {
           suite.time = this.trimTime(i.completed_time);
         } else {
           suite.result = 'IN_PROGRESS'
-          suite.time = this.trimTime(i.scheduled_time);
+          suite.time = this.trimTime(i.started_time);
         }
         suite.id = i.execution_id;
         this.lastTwoSuites.push(suite);

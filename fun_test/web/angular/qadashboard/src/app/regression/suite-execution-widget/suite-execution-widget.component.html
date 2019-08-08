@@ -1,6 +1,6 @@
 <div *ngIf="isDone" style="width:100%;margin: 0 auto">
   <fun-card
-    [title]="'<a href = /regression?tag=smoke>F1 storage smoke test</a>'"
+    [title]="'<a href =' + titleUrl + '>' + title + '</a>'"
     [icon]="iconDict[lastTwoSuites[0].result]"
     [textTitle]="'passed: ' + lastTwoSuites[0].numPassed + ' failed: ' + lastTwoSuites[0].numFailed"
     [tooltipText]="lastTwoSuites[0].result"

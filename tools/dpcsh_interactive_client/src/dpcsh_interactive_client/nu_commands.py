@@ -2045,11 +2045,12 @@ class PeekCommands(object):
                                             added_cluster_list.append(cluster_val)
                                     for _key, _val in val.iteritems():
                                         for item in tabular_list[1:]:
-                                            if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0])) and (not 'diff' in item) and (_key == item.split(":")[1]):
+                                            if (int(vp_val) % TOTAL_VPS_PER_CORE == int(item.split(":")[0])) and (not 'd_' in item) and (_key == item.split(":")[1]):
                                                 complete_dict[item].append(_val)
                                                 break
                             if prev_result:
                                 diff_result = self._get_difference(result=result, prev_result=prev_result)
+                                diff_result = get_sorted_dict(diff_result)
                                 for key, val in diff_result.iteritems():
                                     cluster_val = key.split(":")[0][2]
                                     vp_val = key.split(":")[1]
@@ -2111,6 +2112,8 @@ class PeekCommands(object):
 
                         if core_id is None:
                             result = get_sorted_dict(result)
+                        if prev_result:
+                            prev_result = get_sorted_dict(prev_result)
 
                         master_table_obj = get_per_vp_dict_table_obj(result=result, prev_result=prev_result,
                                                                      cluster_id=cluster_id, core_id=core_id)

@@ -1,6 +1,8 @@
 from lib.system.fun_test import fun_test
 from lib.host.linux import Linux
 from fun_settings import TFTP_SERVER_IP, TFTP_DIRECTORY, TFTP_SERVER_SSH_PASSWORD, TFTP_SERVER_SSH_USERNAME
+from fun_settings import STASH_DIR
+import os
 # Connect to tracing server
 # Setup networking
 # Setup job directory
@@ -8,7 +10,8 @@ from fun_settings import TFTP_SERVER_IP, TFTP_DIRECTORY, TFTP_SERVER_SSH_PASSWOR
 # move funos-binary
 
 
-BASE_JOB_DIRECTORY = "/tmp/trace_jobs"
+TRACE_JOBS_DIRECTORY = "trace_jobs"
+BASE_JOB_DIRECTORY = "/home/localadmin/{}".format(TRACE_JOBS_DIRECTORY)
 TOOLS_DIRECTORY = "/home/localadmin"
 PERF_LISTENER = "perf_listener.py"
 PERF_LISTENER_PATH = TOOLS_DIRECTORY + "/" + PERF_LISTENER
@@ -16,6 +19,11 @@ FUNOS_F1_NAME = "funos-f1"
 MAX_TRACE_JOB_DIRECTORIES = 5
 EXPECTED_TOOLS = ["process_perf.sh", "view_perf.sh", "listener_lib.py", "perf_listener.py"]
 EXPECTED_DOCKER_IMAGES = ["docker.fungible.com/perf_processing", "docker.fungible.com/perf_server"]
+EXPECTED_TOOL_LOCATIONS = {"PalladiumOnDemand": [
+    {"source_file_path": "docker/process_perf.sh", "target_file_path": "process_perf.sh"},
+    {"source_file_path": "docker/view_perf.sh", "target_file_path": "view_perf.sh"}],
+    "FunTools": [{"source_file_path": "csi_listeners/perf_listener.py", "target_file_path": "perf_listener.py"},
+                 {"source_file_path": "csi_listeners/listener_lib.py", "target_file_path": "listener_lib.py"}]}
 
 
 class CsiPerfOperation:
@@ -26,7 +34,7 @@ class CsiPerfOperation:
 
 
 class CsiPerfTemplate():
-    def __init__(self, perf_collector_host_name, listener_ip, fs):
+    def __init__(self, perf_collector_host_name, listener_ip, fs, setup_docker=False):
         self.perf_collector_host_name = perf_collector_host_name
         self.perf_host = None
         self.perf_listener_process_id = None
@@ -35,6 +43,9 @@ class CsiPerfTemplate():
         self.fs = fs
         self.instance = 0
         self.tools_directory = TOOLS_DIRECTORY
+        self.base_job_directory = TOOLS_DIRECTORY + "/trace_jobs"
+        self.setup_docker = setup_docker
+        self.prepare_complete = False
 
     def ensure_docker_images_exist(self):
         docker_images_output = self.perf_host.sudo_command("docker images")
@@ -55,12 +66,12 @@ class CsiPerfTemplate():
         """
         pass
         self.perf_host = self.get_perf_host()
-        files = self.perf_host.list_files(BASE_JOB_DIRECTORY + "/s_*")
+        files = self.perf_host.list_files(self.base_job_directory + "/s_*")
         if len(files) >= num_allowed_trace_job_directories:
             # remove the oldest directory
             fun_test.log("Removing oldest directory: {}".format(files[0]["filename"]))
             self.perf_host.remove_directory(files[0]["filename"])
-            files = self.perf_host.list_files(BASE_JOB_DIRECTORY + "/s_*")
+            files = self.perf_host.list_files(self.base_job_directory + "/s_*")
         return len(files) < num_allowed_trace_job_directories
 
     def get_perf_host(self):
@@ -75,14 +86,19 @@ class CsiPerfTemplate():
         if "csi_perf" in self.perf_host.extra_attributes:
             if "tools_directory" in self.perf_host.extra_attributes["csi_perf"]:
                 self.tools_directory = self.perf_host.extra_attributes["csi_perf"]["tools_directory"]
-        fun_test.simple_assert(self.ensure_space_is_available(), "Ensure space exists on. Please clear trace files/directories from {}. max dirs: {}".format(BASE_JOB_DIRECTORY, MAX_TRACE_JOB_DIRECTORIES))
+                self.base_job_directory = self.tools_directory + "/" + TRACE_JOBS_DIRECTORY
+
+        if self.setup_docker:
+            fun_test.simple_assert(self.do_setup_docker(), "Docker setup")
+        fun_test.simple_assert(self.position_files(), "Position tools")
+        fun_test.simple_assert(self.ensure_space_is_available(), "Ensure space exists on. Please clear trace files/directories from {}. max dirs: {}".format(self.base_job_directory, MAX_TRACE_JOB_DIRECTORIES))
         fun_test.simple_assert(self.ensure_tools_exists(), "Ensure necessary tools exists")
         fun_test.simple_assert(self.ensure_docker_images_exist(), "Ensure docker images exist")
 
         s = "s_{}_{}_f1_{}".format(fun_test.get_suite_execution_id(), fun_test.get_test_case_execution_id(), f1_index)
         if prefix:
             s += "_{}".format(prefix)
-        s = "{}/{}".format(BASE_JOB_DIRECTORY, s)
+        s = "{}/{}".format(self.base_job_directory, s)
         if self.perf_host.check_file_directory_exists(s):
             if remove_old_job_directory:
                 self.perf_host.remove_directory_contents(s)
@@ -92,7 +108,7 @@ class CsiPerfTemplate():
         tftp_image_path = self.fs.get_tftp_image_path()
         self.move_f1_binary(tftp_image_path=tftp_image_path)
         fun_test.add_checkpoint("Perf host: {} Job directory: {}".format(self.perf_host, self.job_directory))
-
+        self.prepare_complete = True
         return True
 
     def _prepare_directory_structure(self, job_directory):
@@ -100,6 +116,8 @@ class CsiPerfTemplate():
         self.perf_host.command("mkdir -p {}/odp/trace_dumps".format(job_directory))
 
     def start(self, f1_index=0):
+        fun_test.simple_assert(self.prepare_complete, "Please call prepare() before calling start")
+        fun_test.add_checkpoint("CSI perf before start")
         self.instance += 1
         # ensure perf listener is not running
         process_ids = self.perf_host.get_process_id_by_pattern(process_pat=PERF_LISTENER, multiple=True)
@@ -113,8 +131,11 @@ class CsiPerfTemplate():
         dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="reinit", command_duration=4)
         dpc_client.json_execute(verb="perf", data="start", command_duration=4)
+        fun_test.add_checkpoint("CSI perf started")
+
 
     def stop(self, f1_index=0):
+        fun_test.add_checkpoint("CSI perf before stop")
         dpc_client = self.fs.get_dpc_client(f1_index=f1_index, auto_disconnect=True)
         dpc_client.json_execute(verb="perf", data="stop", command_duration=4)
         dpc_client.json_execute(verb="perf", data="offload", command_duration=4)
@@ -122,6 +143,11 @@ class CsiPerfTemplate():
         self.move_trace_files(source_directory=self.tools_directory, job_directory=self.job_directory)
         uart_log_path = self.fs.get_uart_log_file(f1_index=f1_index, post_fix=self.instance)
         self.move_uart_log(uart_log_path=uart_log_path, f1_index=f1_index)
+        fun_test.add_checkpoint("CSI perf after stop")
+        fun_test.report_message("CSI perf traces are at trace job directory: {}".format(self.base_job_directory))
+        fun_test.report_message("CSI perf host: {} username: {} password: {}".format(self.perf_host.host_ip,
+                                                                                     self.perf_host.ssh_username,
+                                                                                     self.perf_host.ssh_password))
 
     def move_trace_files(self, source_directory, job_directory):
         trace_files = self.perf_host.list_files("{}/trace_cluster*".format(source_directory))
@@ -156,9 +182,54 @@ class CsiPerfTemplate():
     def setup_networking(self):
         pass
 
+    def repo_exists(self, name):
+        result = None
+        path = STASH_DIR + "/" + name
+        if os.path.exists(path):
+            result = True
+        return result
 
+    def position_files(self):
+        to_position = EXPECTED_TOOL_LOCATIONS
+        for repo_name, values in to_position.iteritems():
+            fun_test.simple_assert(self.repo_exists(name=repo_name), "Repo: {} exists".format(repo_name))
+            for value in values:
+                source_path = STASH_DIR + "/" + repo_name + "/" + value["source_file_path"]
+                fun_test.simple_assert(os.path.exists(source_path), "Source: {} exists".format(source_path))
+                target_file_path = TOOLS_DIRECTORY + "/" + value["target_file_path"]
+                fun_test.scp(source_file_path=source_path,
+                             target_file_path=target_file_path,
+                             target_ip=self.perf_host.host_ip,
+                             target_username=self.perf_host.ssh_username,
+                             target_password=self.perf_host.ssh_password)
+        result = True
+        return result
 
+    def do_setup_docker(self):
+        pass
+        fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
+        commands = ["timeout 5 openssl s_client -showcerts -connect docker.fungible.com:443 | tee /tmp/cert.log",
+                    "cat /tmp/cert.log | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/cert.pem"]
+        for command in commands:
+            self.perf_host.command(command)
+
+        sudo_commands = ["mkdir /usr/share/ca-certificates/extra",
+                         "cp /tmp/cert.pem /usr/share/ca-certificates/fun_cert.crt",
+                         "dpkg-reconfigure ca-certificates",
+                         ]
+        self.perf_host.enter_sudo()
+        for sudo_command in sudo_commands:
+            self.perf_host.command(sudo_command, custom_prompts={'Trust new certificates from certificate authorities?': 'yes', "Certificates to activate:": "fun_cert.crt"})
+        self.perf_host.command("apt install -y docker.io")
+        self.perf_host.exit_sudo()
+        self.perf_host.sudo_command("usermod -aG docker $USER")
+        self.perf_host.command("service docker stop", custom_prompts={"Password:": self.perf_host.ssh_password})
+        self.perf_host.command("service docker start", custom_prompts={"Password:": self.perf_host.ssh_password})
+        docker_commands = ["docker pull docker.fungible.com/perf_processing", "docker pull docker.fungible.com/perf_server"]
+        for docker_command in docker_commands:
+            self.perf_host.command(docker_command)
+        return True
 
 if __name__ == "__main__":
-    p = CsiPerfTemplate(perf_collector_host_name="poc-server-04", listener_ip="123", fs=None)
+    p = CsiPerfTemplate(perf_collector_host_name="poc-server-06", listener_ip="123", fs=None)
     p.prepare(f1_index=0)
