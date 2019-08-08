@@ -1397,10 +1397,10 @@ class NetworkController(DpcshClient):
         stats = None
         try:
             cmd = "stats/per_vp"
-            fun_test.debug("Getting vp per pkt")
+            fun_test.debug("Getting per VP WU stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
-            fun_test.debug("Per vppkts stats: %s" % result['data'])
+            fun_test.simple_assert(expression=result['status'], message="Get per VP WU stats")
+            fun_test.debug("Per VP WU stats: %s" % result['data'])
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))

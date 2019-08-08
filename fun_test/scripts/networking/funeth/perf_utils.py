@@ -211,16 +211,21 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
             if eop_cnt != prv_sent:
                 is_parser_stuck = True
 
-        # VP stats
+        # VP pkt stats
         fun_test.log('{} dpc: Get VP pkts stats'.format(f1))
         output = nc_obj.peek_vp_packets()
         output_list.append({'VP': output})
 
-        # Per VP stats
+        # Per VP pkt stats
         for pc_id in NETWORK_PC_LIST:
             fun_test.log('{} dpc: Get per VP pkts stats from PC {}'.format(f1, pc_id))
             output = nc_obj.peek_per_vppkts_stats(pc_id)
             output_list.append({'Per VP for PC {}'.format(pc_id): output})
+
+        # Per VP WU stats
+        fun_test.log('{} dpc: Get per_vp WU stats from'.format(f1, pc_id))
+        output = nc_obj.peek_per_vp_stats()
+        output_list.append({'per_vp': output})
 
         # NWQM
         #fun_test.log('{} dpc: Get NWQM stats'.format(f1))
