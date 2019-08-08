@@ -223,6 +223,7 @@ class CsiPerfTemplate():
         self.perf_host.enter_sudo()
         for sudo_command in sudo_commands:
             self.perf_host.command(sudo_command, custom_prompts={'Trust new certificates from certificate authorities?': 'yes', "Certificates to activate:": "fun_cert.crt"})
+        self.perf_host.command("apt-get update")
         self.perf_host.command("apt install -y docker.io")
         self.perf_host.exit_sudo()
         self.perf_host.sudo_command("usermod -aG docker $USER")
