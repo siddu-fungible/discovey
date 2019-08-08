@@ -1045,11 +1045,17 @@ def clear_out_old_jobs():
     today = get_current_time()
     past = today - timedelta(days=2)
     old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SUBMITTED, scheduled_time__gt=past)
-    old_jobs.delete()
+    for old_job in old_jobs:
+        old_job.state = JobStatusType.ABORTED
+        old_job.save()
     old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.SCHEDULED)
-    old_jobs.delete()
+    for old_job in old_jobs:
+        old_job.state = JobStatusType.ABORTED
+        old_job.save()
     old_jobs = models_helper.get_suite_executions_by_filter(state=JobStatusType.IN_PROGRESS)
-    old_jobs.delete()
+    for old_job in old_jobs:
+        old_job.state = JobStatusType.ABORTED
+        old_job.save()
 
 def cleanup_unused_assets():
     try:
