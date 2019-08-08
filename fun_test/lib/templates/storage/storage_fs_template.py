@@ -599,7 +599,7 @@ class StorageFsTemplate(object):
         if "mode" not in bond_dict:
             bond_dict["mode"] = "802.3ad"
         if "miimon" not in bond_dict:
-            bond_dict["miimon"] = 0
+            bond_dict["miimon"] = 100
         if "xmit_hash_policy" not in bond_dict:
             bond_dict["xmit_hash_policy"] = "layer3+4"
         if "min_links" not in bond_dict:
