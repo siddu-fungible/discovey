@@ -1631,7 +1631,8 @@
       "mktg-server-12",
       "mktg-server-13",
       "mktg-server-14"
-    ]
+    ],
+    "perf_listener_host_info": ["mktg-server-14"]
   },
   "fs-66": {
     "dut_info": {
