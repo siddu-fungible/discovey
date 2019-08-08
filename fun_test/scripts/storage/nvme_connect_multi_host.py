@@ -12,7 +12,7 @@ from collections import OrderedDict
 import re
 
 '''
-script to hit nvme connect swos-5844 issue
+script to verify fix for nvme connect swos-5844 issue
 '''
 
 
