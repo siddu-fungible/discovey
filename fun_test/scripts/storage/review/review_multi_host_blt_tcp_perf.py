@@ -187,12 +187,12 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             if self.disable_wu_watchdog:
                 self.bootargs[i] += " --disable-wu-watchdog"
 
-        self.perf_listener_host_name = "mktg-server-14"  # figure this out from the topology spec
-        self.perf_listener_ip = "15.1.14.2"  # figure this out from the topology spec
         self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
         if self.csi_perf_enabled:
-            self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb=204800".format(
-                self.f1_ip, self.perf_listener_ip)
+            self.perf_listener_host_name = "mktg-server-14"  # figure this out from the topology spec
+            self.perf_listener_ip = "15.1.14.2"  # figure this out from the topology spec
+            self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                self.f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         # Deploying of DUTs
         for dut_index in self.available_dut_indexes:

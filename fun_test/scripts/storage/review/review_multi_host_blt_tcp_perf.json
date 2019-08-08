@@ -29,6 +29,7 @@
       "override": true,
       "override_node": "NUMA node0 CPU(s)"
     },
+    "csi_perf_pdtrace_hbm_size_kb": 204800,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
