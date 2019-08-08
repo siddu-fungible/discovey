@@ -284,7 +284,8 @@ def configure_overlay(network_controller_obj_f1_0, network_controller_obj_f1_1):
                 #                                flow_proto=6
                 #                                )
                 for i in CPU_LIST_VM:
-                    for j in (10000, 20000):  # For Netperf control (1000x) and data (2000x)
+                    for j in (netperf_manager.NETSERVER_FIXED_PORT_CONTROL_BASE,
+                              netperf_manager.NETSERVER_FIXED_PORT_DATA_BASE):
                         for flow_type, nh_index in zip(('vxlan_encap', 'vxlan_decap'), (0, 1)):
                             for sip, dip in zip(src_flows, dst_flows):
                                 if flow_type == 'vxlan_encap':
