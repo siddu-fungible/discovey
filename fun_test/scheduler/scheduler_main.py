@@ -91,6 +91,18 @@ class QueueWorker(Thread):
         this_jobs_priority = queued_job.priority
         return this_jobs_priority >= SchedulerJobPriority.RANGES[SchedulerJobPriority.HIGH][0] and this_jobs_priority <= SchedulerJobPriority.RANGES[SchedulerJobPriority.HIGH][1]
 
+    def abort_job(self, queued_job, reason):
+        self.shutdown_reason = ShutdownReason.ABORTED
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
+        models_helper.update_suite_execution(suite_execution_id=queued_job.job_id,
+                                             result=RESULTS["ABORTED"],
+                                             state=JobStatusType.ABORTED)
+        models_helper.finalize_suite_execution(suite_execution_id=queued_job.job_id)
+        send_mail(to_addresses=[suite_execution.submitter_email, TEAM_REGRESSION_EMAIL],
+                  subject="Regression: ERROR: Queue worker could not process the job: {}".format(queued_job.job_id),
+                  content="Reason: {}".format(reason))
+
+
     def submit_container_suite(self, container_suite_execution_id):
         # print ("Submit container suite")
         # return
@@ -176,75 +188,79 @@ class QueueWorker(Thread):
 
                 for queued_job in valid_jobs:
 
-                    """
-                    schedule a container if needed
-                    """
-                    suite_execution = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
-                    if suite_execution.suite_type == SuiteType.CONTAINER:
-                        self.submit_container_suite(container_suite_execution_id=suite_execution.execution_id)
-                        de_queued_jobs.append(queued_job)
-                        continue
+                    try:
+                        """
+                        schedule a container if needed
+                        """
+                        suite_execution = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
+                        if suite_execution.suite_type == SuiteType.CONTAINER:
+                            self.submit_container_suite(container_suite_execution_id=suite_execution.execution_id)
+                            de_queued_jobs.append(queued_job)
+                            continue
 
-                    if queued_job.suspend:
-                        scheduler_logger.debug("Queued Job: {} suspended".format(queued_job.job_id))
-                        queued_job.message = "De-queueing suspended"
-                        queued_job.save()
-                        continue
-
-                    suite_based_spec = None
-                    if queued_job.is_suite_based():
-                        suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
-                        if not suite_based_spec:
-                            scheduler_logger.error(
-                                "suite-based is requested for: {} but it is invalid".format(queued_job.job_id))
-                            queued_job.message = "Spec is invalid"
+                        if queued_job.suspend:
+                            scheduler_logger.debug("Queued Job: {} suspended".format(queued_job.job_id))
+                            queued_job.message = "De-queueing suspended"
                             queued_job.save()
                             continue
 
-                    if queued_job.test_bed_type not in not_available:
-
+                        suite_based_spec = None
                         if queued_job.is_suite_based():
-                            if self.is_not_available_suite_based(queued_job=queued_job, suite_based_spec=suite_based_spec):
-                                scheduler_logger.debug(
-                                    "Queued job: {} unavailable spec: {}".format(queued_job.job_id, suite_based_spec))
-                                queued_job.message = "Possibly non-preemptable job is queued"
+                            suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
+                            if not suite_based_spec:
+                                scheduler_logger.error(
+                                    "suite-based is requested for: {} but it is invalid".format(queued_job.job_id))
+                                queued_job.message = "Spec is invalid"
                                 queued_job.save()
                                 continue
 
-                        availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type,
-                                                                               suite_base_test_bed_spec=suite_based_spec)
-                        if availability["status"]:
-                            de_queued_jobs.append(queued_job)
-                            assets_required = availability["assets_required"]
-                            custom_test_bed_spec = availability.get("custom_test_bed_spec", None)
-                            # self.job_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
-                            job_id_threads[suite_execution.execution_id] = self.execute_job(job_id=queued_job.job_id,
-                                                                                            assets_required=assets_required,
-                                                                                            custom_test_bed_spec=custom_test_bed_spec)
+                        if queued_job.test_bed_type not in not_available:
 
-                        else:
-                            if not queued_job.is_suite_based():
-                                not_available[queued_job.test_bed_type] = availability["message"]
                             if queued_job.is_suite_based():
-                                if not queued_job.pre_emption_allowed or self.is_high_priority(queued_job):
-                                    if suite_based_spec:
-                                        base_test_bed = suite_based_spec.get("base_test_bed", None)
-                                        if base_test_bed:
-                                            self.not_available_suite_based_test_beds.append(base_test_bed)
+                                if self.is_not_available_suite_based(queued_job=queued_job, suite_based_spec=suite_based_spec):
+                                    scheduler_logger.debug(
+                                        "Queued job: {} unavailable spec: {}".format(queued_job.job_id, suite_based_spec))
+                                    queued_job.message = "Possibly non-preemptable job is queued"
+                                    queued_job.save()
+                                    continue
 
-                            # print("Not available: {}".format(availability["message"]))
-                            queued_job.message = availability["message"]
-                            queued_job.save()
-                    else:
-                        queued_job.message = not_available[queued_job.test_bed_type]
-                        queued_job.save()
+                            availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type,
+                                                                                   suite_base_test_bed_spec=suite_based_spec)
+                            if availability["status"]:
+                                de_queued_jobs.append(queued_job)
+                                assets_required = availability["assets_required"]
+                                custom_test_bed_spec = availability.get("custom_test_bed_spec", None)
+                                # self.job_threads[suite_execution.execution_id] = self.execute_job(queued_job.job_id)
+                                job_id_threads[suite_execution.execution_id] = self.execute_job(job_id=queued_job.job_id,
+                                                                                                assets_required=assets_required,
+                                                                                                custom_test_bed_spec=custom_test_bed_spec)
 
+                            else:
+                                if not queued_job.is_suite_based():
+                                    not_available[queued_job.test_bed_type] = availability["message"]
+                                if queued_job.is_suite_based():
+                                    if not queued_job.pre_emption_allowed or self.is_high_priority(queued_job):
+                                        if suite_based_spec:
+                                            base_test_bed = suite_based_spec.get("base_test_bed", None)
+                                            if base_test_bed:
+                                                self.not_available_suite_based_test_beds.append(base_test_bed)
+
+                                # print("Not available: {}".format(availability["message"]))
+                                queued_job.message = availability["message"]
+                                queued_job.save()
+                        else:
+                            queued_job.message = not_available[queued_job.test_bed_type]
+                            queued_job.savget_valid_jobse()
+                    except Exception as ex:
+                        reason = "Exception: {}: {}".format(str(ex), traceback.format_exc())
+                        self.abort_job(queued_job=queued_job, reason=reason)
                 time.sleep(5)
 
                 for de_queued_job in de_queued_jobs:
                     scheduler_logger.info("Job: {} Dequeuing".format(de_queued_job.job_id))
                     d = JobQueue.objects.get(job_id=de_queued_job.job_id)
                     d.delete()
+
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
             # scheduler_logger.info("QueueWorker: Before lock release")
