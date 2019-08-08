@@ -47,6 +47,7 @@ try:
     if inputs:
         enable_tso = (inputs.get('lso', 1) == 1)  # Enable TSO or not
         control_plane = (inputs.get('control_plane', 0) == 1)  # Use control plane or not
+        update_funcp = (inputs.get('update_funcp', 1) == 1)  # Update FunControlPlane binary or not
         update_driver = (inputs.get('update_driver', 1) == 1)  # Update driver or not
         hu_host_vm = (inputs.get('hu_host_vm', 0) == 1)  # HU host runs VMs or not
         configure_overlay = (inputs.get('configure_overlay', 0) == 1)  # Enable overlay config or not
@@ -59,6 +60,7 @@ try:
     else:
         enable_tso = True  # default True
         control_plane = False  # default False
+        update_funcp = True  # default True
         update_driver = True  # default True
         hu_host_vm = False  # default False
         configure_overlay = False  # default False
@@ -71,6 +73,7 @@ try:
 except:
     enable_tso = True
     control_plane = False
+    update_funcp = True
     update_driver = True
     hu_host_vm = False
     configure_overlay = False
@@ -167,9 +170,9 @@ def setup_hu_host(funeth_obj, update_driver=True, is_vm=False, tx_offload=True):
     return funsdk_commit, funsdk_bld, driver_commit, driver_bld
 
 
-def setup_funcp(test_bed_type):
+def setup_funcp(test_bed_type, update_funcp=True):
     funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
-    funcp_obj.bringup_funcp(prepare_docker=True)
+    funcp_obj.bringup_funcp(prepare_docker=update_funcp)
     # TODO: Make it setup independent
     funcp_obj.assign_mpg_ips(static=True, f1_1_mpg='10.1.20.241', f1_0_mpg='10.1.20.242',
                              f1_0_mpg_netmask="255.255.252.0",
@@ -379,9 +382,9 @@ class FunethSanity(FunTestScript):
 
         # TODO: make it work for other setup
         if test_bed_type == 'fs-11' and control_plane:
-            setup_funcp(test_bed_type)
+            setup_funcp(test_bed_type, update_funcp=update_funcp)
         elif test_bed_type != 'fs-11' and control_plane:
-            setup_funcp_on_fs(test_bed_type)
+            setup_funcp_on_fs(test_bed_type, update_funcp=update_funcp)
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj,
                             fundrv_branch=fundrv_branch,
@@ -956,7 +959,7 @@ class FunethTestComeReboot(FunTestCase):
         vf_interface = tb_config_obj.get_hu_vf_interface(hu)
         verify_nu_hu_datapath(funeth_obj, interfaces_excludes=[pf_interface, vf_interface], nu=nu, hu=hu)
 
-        setup_funcp(fun_test.shared_variables["test_bed_type"])
+        setup_funcp(fun_test.shared_variables["test_bed_type"], update_funcp=False)
         #setup_hu_host(funeth_obj, update_driver=False)
         verify_nu_hu_datapath(funeth_obj, nu=nu, hu=hu)
 
