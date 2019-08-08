@@ -347,6 +347,9 @@ def collect_dpc_stats(network_controller_objs, fpg_interfaces, fpg_intf_dict,  v
     #    [fpg_stats[i][0].get('port_{}-PORT_MAC_TX_aFramesTransmittedOK'.format(i), 0) for i in fpg_interfaces]
     #)
 
+    for nc_obj in network_controller_objs:
+        nc_obj.disconnect()
+
     if is_vp_stuck or is_parser_stuck or is_etp_queue_stuck or is_flow_blocked:
         if eqm_output.get(
                 "EFI->EQC Enqueue Interface valid", None) != eqm_output.get("EQC->EFI Dequeue Interface valid", None):
@@ -566,7 +569,7 @@ def mlx5_irq_affinity(linux_obj):
     linux_obj.command(';'.join(cmds_cat))
 
 
-def redis_del_fcp_ftep(linux_obj):
+def redis_del_fcp_ftep(linux_obj, ws='/scratch'):
     """In redis, delete FCP FTEP to tear down FCP tunnel."""
     # TODO: make it setup independent
     ftep_dict = {
@@ -575,23 +578,19 @@ def redis_del_fcp_ftep(linux_obj):
     }
     for k in ftep_dict:
         cmd_prefix = 'docker exec {} bash -c'.format(k)
-        cmd_op = 'DEL {}'.format(ftep_dict[k])
-        cmd_chk = 'KEYS *fcp-tunnel*'
         chk_file = 'check_{}'.format(k)
         del_file = 'del_{}'.format(k)
 
         # check
-        cmds = ['SELECT 1', cmd_chk]
-        linux_obj.command('{0} "rm {1}; touch {1}"'.format(cmd_prefix, chk_file))
-        for cmd in cmds:
-            linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, chk_file))
+        contents = "SELECT 1 \nKEYS *fcp-tunnel*"
+        linux_obj.command('{0} "rm {1}"'.format(cmd_prefix, chk_file))
+        linux_obj.create_file('{}/{}'.format(ws, chk_file), contents=contents)
         linux_obj.command('{} "cat {}"'.format(cmd_prefix, chk_file))
 
         # del
-        cmds = ['SELECT 1', cmd_op]
-        linux_obj.command('{0} "rm {1}; touch {1}"'.format(cmd_prefix, del_file))
-        for cmd in cmds:
-            linux_obj.command('{} \"echo {} >> {}\"'.format(cmd_prefix, cmd, del_file))
+        contents = "SELECT 1 \nDEL \"{}\"".format(ftep_dict[k])
+        linux_obj.command('{0} "rm {1}"'.format(cmd_prefix, del_file))
+        linux_obj.create_file('{}/{}'.format(ws, del_file), contents=contents)
         linux_obj.command('{} "cat {}"'.format(cmd_prefix, del_file))
 
         fun_test.log("Check and delete FCP FTEP to tear down FCP tunnel in {}".format(k))
