@@ -210,7 +210,12 @@ class CsiPerfTemplate():
         return result
 
     def do_setup_docker(self):
+        user = self.perf_host.command("echo $USER")
+        user = user.strip()
         # fun_test.simple_assert(self.perf_host.command_exists("docker"), "Docker installed")
+        self.perf_host.sudo_command("usermod -aG docker {}".format(user))
+        self.perf_host.sudo_command("setfacl -m user:{}:rw /var/run/docker.sock".format(user))
+
         commands = ["timeout 5 openssl s_client -showcerts -connect docker.fungible.com:443 | tee /tmp/cert.log",
                     "cat /tmp/cert.log | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > /tmp/cert.pem"]
         for command in commands:
@@ -226,7 +231,6 @@ class CsiPerfTemplate():
         self.perf_host.command("apt-get update")
         self.perf_host.command("apt install -y docker.io")
         self.perf_host.exit_sudo()
-        self.perf_host.sudo_command("usermod -aG docker $USER")
         self.perf_host.command("service docker stop", custom_prompts={"Password:": self.perf_host.ssh_password})
         self.perf_host.command("service docker start", custom_prompts={"Password:": self.perf_host.ssh_password})
         docker_commands = ["docker pull docker.fungible.com/perf_processing", "docker pull docker.fungible.com/perf_server"]
