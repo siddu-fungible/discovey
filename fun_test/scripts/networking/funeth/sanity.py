@@ -36,9 +36,9 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.40.24'
     #DPC_PROXY_PORT = 40221
     #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.22'
+    DPC_PROXY_IP = 'fs11-come'
     DPC_PROXY_PORT = 40220
-    DPC_PROXY_IP2 = '10.1.20.22'
+    DPC_PROXY_IP2 = 'fs11-come'
     DPC_PROXY_PORT2 = 40221
     TB = ''.join(fun_test.get_job_environment_variable('test_bed_type').split('-')).upper()
 
