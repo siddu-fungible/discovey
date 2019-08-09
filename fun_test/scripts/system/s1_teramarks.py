@@ -153,7 +153,7 @@ class JpegTeramarkTc(PalladiumTc):
     tags = "qa_s1_jpeg_teramark"
     note = "JPEG teramark app on S1"
     fun_os_make_flags = "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list"
-    extra_emails = ["aamir.shaikh@fungible.com"]
+    extra_emails = ["aamir.shaikh@fungible.com", "abhishek.dikshit@fungible.com", "hara.bandhakavi@fungible.com"]
 
     def describe(self):
         self.set_test_details(id=6,

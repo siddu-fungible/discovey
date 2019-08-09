@@ -1680,6 +1680,7 @@ class NetworkController(DpcshClient):
 
 
     def set_nu_benchmark_1(self, fpg=None, mode=None, num_flows=None, flow_le_ddr=None, flow_state_ddr=None,
+                           flow_state_cache=None,
                            sport=None, dport=None, protocol=None, ip_sa=None, ip_da=None, flow_offset=None,
                            flow_inport=None, flow_outport=None, show=None, num_tunnels=None, is_encryption=None,
                            spi=None, tunnel_src=None, tunnel_dst=None, ipsec=None):
@@ -1696,6 +1697,8 @@ class NetworkController(DpcshClient):
                 cmd_args['flow_le_ddr'] = flow_le_ddr
             if flow_state_ddr is not None:
                 cmd_args['flow_state_ddr'] = flow_state_ddr
+            if flow_state_cache is not None:
+                cmd_args['flow_state_cache'] = flow_state_cache
             if sport:
                 cmd_args['sport'] = sport
             if dport:

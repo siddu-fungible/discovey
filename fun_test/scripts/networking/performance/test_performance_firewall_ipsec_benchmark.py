@@ -87,9 +87,9 @@ class ScriptSetup(FunTestScript):
             single_flow_encrypt_IMIX_start_data_mpps = 2.6
             single_flow_encrypt_IMIX_end_data_mpps = 5.6
             single_flow_encrypt_IMIX_step_data_mpps = 0.5
-            multi_flow_decrypt_start_data_mpps = 52
-            multi_flow_decrypt_end_data_mpps = 82
-            multi_flow_decrypt_step_data_mpps = 5
+            multi_flow_decrypt_start_data_mpps = 80
+            multi_flow_decrypt_end_data_mpps = 90
+            multi_flow_decrypt_step_data_mpps = 1
             single_flow_decrypt_start_data_mpps = 2
             single_flow_decrypt_end_data_mpps = 5
             single_flow_decrypt_step_data_mpps = 0.5
@@ -158,8 +158,8 @@ class ScriptSetup(FunTestScript):
         result = network_controller_obj.set_etp(pkt_adj_size=8)
         fun_test.simple_assert(result['status'], "Reset pkt_adj_size to 8")
 
-        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=True,
-                                                             flow_state_ddr=True)
+        output_1 = network_controller_obj.set_nu_benchmark_1(mode=mode, num_flows=num_flows, flow_le_ddr=False,
+                                                             flow_state_ddr=False)
         for fpg in benchmark_ports:
             result = network_controller_obj.set_nu_benchmark_1(mode=mode, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable Firewall benchmark')
