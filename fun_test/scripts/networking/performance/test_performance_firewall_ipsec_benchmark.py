@@ -87,9 +87,9 @@ class ScriptSetup(FunTestScript):
             single_flow_encrypt_IMIX_start_data_mpps = 2.6
             single_flow_encrypt_IMIX_end_data_mpps = 5.6
             single_flow_encrypt_IMIX_step_data_mpps = 0.5
-            multi_flow_decrypt_start_data_mpps = 52
-            multi_flow_decrypt_end_data_mpps = 82
-            multi_flow_decrypt_step_data_mpps = 5
+            multi_flow_decrypt_start_data_mpps = 80
+            multi_flow_decrypt_end_data_mpps = 90
+            multi_flow_decrypt_step_data_mpps = 1
             single_flow_decrypt_start_data_mpps = 2
             single_flow_decrypt_end_data_mpps = 5
             single_flow_decrypt_step_data_mpps = 0.5
