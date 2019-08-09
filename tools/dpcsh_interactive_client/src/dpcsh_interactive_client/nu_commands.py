@@ -3464,12 +3464,10 @@ class DebugCommands(PeekCommands):
                 break
         return result
 
-    def get_vp_util_table_obj(self, result, prev_result=None):
+    def get_vp_util_table_obj(self, result):
         master_table_obj = PrettyTable()
         complete_dict = OrderedDict()
         rows_list = ["Cls/Core", "0", "1", "2", "3"]
-        if prev_result:
-            rows_list = ["Cls/Core", "0", "0:diff", "1", "1:diff", "2", "2:diff", "3", "3:diff"]
         for col_name in rows_list:
             complete_dict[col_name] = []
         for key, val in result.iteritems():
@@ -3484,16 +3482,6 @@ class DebugCommands(PeekCommands):
                         complete_dict[_key].append(val)
                         break
 
-        if prev_result:
-            diff_result = self._get_difference(result=result, prev_result=prev_result)
-            for key in sorted(diff_result):
-                vp_num = key.split(".")[2]
-                for _key in rows_list:
-                    if _key != rows_list[0]:
-                        if _key == vp_num + ":diff":
-                            complete_dict[_key].append(diff_result[key])
-                            break
-
         print_keys = complete_dict.keys()
         print_values = complete_dict.values()
         for col_name, col_values in zip(print_keys, print_values):
@@ -3502,7 +3490,6 @@ class DebugCommands(PeekCommands):
 
     def debug_vp_util_pp(self, cluster_id=None, core_id=None, grep_regex=None):
         try:
-            prev_result = None
             while True:
                 try:
                     cmd = "vp_util"
@@ -3525,9 +3512,7 @@ class DebugCommands(PeekCommands):
                                 output_dict[key] = 'N/A'
                     result = self.get_filtered_dict(output_dict=output_dict, cluster_id=cluster_id, core_id=core_id)
 
-                    master_table_obj = self.get_vp_util_table_obj(result=result, prev_result=prev_result)
-
-                    prev_result = result
+                    master_table_obj = self.get_vp_util_table_obj(result=result)
                     print master_table_obj
                     print "\n########################  %s ########################\n" % \
                           str(self._get_timestamp())
@@ -3541,7 +3526,6 @@ class DebugCommands(PeekCommands):
 
     def debug_vp_util(self, cluster_id=None, core_id=None, grep_regex=None, get_result_only=False):
         try:
-            prev_result = None
             while True:
                 try:
                     cmd = "vp_util"
@@ -3549,30 +3533,17 @@ class DebugCommands(PeekCommands):
                     if output_result:
                         result = self.get_filtered_dict(output_dict=output_result, cluster_id=cluster_id, core_id=core_id)
 
-                        if prev_result:
-                            diff_result = self._get_difference(result=result, prev_result=prev_result)
-                            table_obj = PrettyTable(['Field Name', 'Counters', 'Counter Diff'])
-                            table_obj.align = 'l'
-                            table_obj.sortby = 'Field Name'
-                            for key in sorted(result):
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        table_obj.add_row([key, result[key], diff_result[key]])
-                                else:
-                                    table_obj.add_row([key, result[key], diff_result[key]])
-                        else:
-                            table_obj = PrettyTable(['Field Name', 'Counters'])
-                            table_obj.align = 'l'
-                            table_obj.sortby = 'Field Name'
-                            for key in sorted(result):
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        table_obj.add_row([key, result[key]])
-                                else:
+                        table_obj = PrettyTable(['Field Name', 'Counters'])
+                        table_obj.align = 'l'
+                        table_obj.sortby = 'Field Name'
+                        for key in sorted(result):
+                            if grep_regex:
+                                if re.search(grep_regex, key, re.IGNORECASE):
                                     table_obj.add_row([key, result[key]])
+                            else:
+                                table_obj.add_row([key, result[key]])
                         if get_result_only:
                             return cmd, table_obj
-                        prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
