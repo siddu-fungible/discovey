@@ -34,7 +34,7 @@ class CsiPerfOperation:
 
 
 class CsiPerfTemplate():
-    def __init__(self, perf_collector_host_name, listener_ip, fs, setup_docker=False):
+    def __init__(self, perf_collector_host_name, listener_ip, fs, setup_docker=False, listener_port=None):
         self.perf_collector_host_name = perf_collector_host_name
         self.perf_host = None
         self.perf_listener_process_id = None
@@ -46,6 +46,7 @@ class CsiPerfTemplate():
         self.base_job_directory = TOOLS_DIRECTORY + "/trace_jobs"
         self.setup_docker = setup_docker
         self.prepare_complete = False
+        self.listener_port = listener_port
 
     def ensure_docker_images_exist(self):
         docker_images_output = self.perf_host.sudo_command("docker images")
@@ -126,6 +127,8 @@ class CsiPerfTemplate():
                 self.perf_host.kill_process(signal=9, process_id=process_id, kill_seconds=2)
         self.perf_host.command("mv trace_cluster* /tmp")
         command = "python " + PERF_LISTENER_PATH + " --perf-ip={}".format(self.listener_ip)
+        if self.listener_port:
+            command += " --perf-port={}".format(self.listener_port)
         self.perf_listener_process_id = self.perf_host.start_bg_process(command, output_file="/tmp/perf_listener_f1_{}.log".format(f1_index))
 
         if not dpc_client:
