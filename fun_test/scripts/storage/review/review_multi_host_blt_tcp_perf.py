@@ -367,6 +367,12 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
 
+        if self.csi_perf_enabled:
+            csi_perf_host_instance = csi_perf_host_obj.get_instance()
+            ping_status = csi_perf_host_instance.ping(dst=self.csi_f1_ip)
+            fun_test.test_assert(ping_status, "Host {} is able to ping to F1 IP {}".
+                                 format(csi_host_name, self.csi_f1_ip))
+
         fun_test.shared_variables["testbed_config"] = self.testbed_config
         fun_test.shared_variables["blt"] = {}
         fun_test.shared_variables["blt"]["setup_created"] = False
