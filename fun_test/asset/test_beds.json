@@ -805,6 +805,8 @@
             "0": {
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
+                0,
+                4,
                 8,
                 12
               ],
@@ -854,14 +856,14 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/46"
+                "port": "et-0/0/36"
               }
             },
             "4": {
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/47"
+                "port": "et-0/0/37"
               }
             },
             "8": {
@@ -1359,6 +1361,8 @@
             "0": {
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
+                0,
+                4,
                 8,
                 12
               ],
@@ -1408,14 +1412,14 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx1",
-                "port": "et0/0/46"
+                "port": "et0/0/36"
               }
             },
             "4": {
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx1",
-                "port": "et0/0/47"
+                "port": "et0/0/37"
               }
             },
             "8": {
@@ -1627,7 +1631,8 @@
       "mktg-server-12",
       "mktg-server-13",
       "mktg-server-14"
-    ]
+    ],
+    "perf_listener_host_info": ["mktg-server-14"]
   },
   "fs-66": {
     "dut_info": {
