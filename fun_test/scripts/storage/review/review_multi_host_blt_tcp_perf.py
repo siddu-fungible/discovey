@@ -181,15 +181,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
         # Code to collect csi_perf if it's set
         self.csi_perf_enabled = fun_test.get_job_environment_variable("csi_perf")
-        fun_test.log("csi_perf_enabled value is: {}".format(self.csi_perf_enabled))
+        fun_test.log("csi_perf_enabled is set as: {} for current run".format(self.csi_perf_enabled))
         if self.csi_perf_enabled:
-            fun_test.log("self.testbed_config is: {}".format(self.testbed_config))
+            fun_test.log("testbed_config: {}".format(self.testbed_config))
             #  TODO: Get the correct F1 IP
             self.csi_f1_ip = self.testbed_config["dut_info"]["3"]["bond_interface_info"]["0"]["0"]["ip"].split('/')[0]
             fun_test.log("F1 ip used for csi_perf_test: {}".format(self.csi_f1_ip))
-            self.perf_listener_host_name = self.topology_helper.get_available_perf_listener_hosts()
-            fun_test.log("self.perf_listener_host_name is: {}".format(self.perf_listener_host_name))
-            for csi_host_name, csi_perf_host_obj in self.perf_listener_host_name.iteritems():
+            self.perf_listener_host = self.topology_helper.get_available_perf_listener_hosts()
+            fun_test.log("perf_listener_host used for current test: {}".format(self.perf_listener_host))
+            for self.perf_listener_host_name, csi_perf_host_obj in self.perf_listener_host.iteritems():
                 perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
                 self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
                 fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
@@ -379,7 +379,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                            ssh_password=csi_perf_host_obj.spec["ssh_password"])
             ping_status = csi_perf_host_instance.ping(dst=self.csi_f1_ip)
             fun_test.test_assert(ping_status, "Host {} is able to ping to F1 IP {}".
-                                 format(csi_host_name, self.csi_f1_ip))
+                                 format(self.perf_listener_host_name, self.csi_f1_ip))
 
         fun_test.shared_variables["testbed_config"] = self.testbed_config
         fun_test.shared_variables["blt"] = {}
@@ -794,7 +794,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
         # Starting csi perf stats collection if it's set
         if self.csi_perf_enabled:
-            csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=self.perf_listener_host_name,
+            csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
                                            listener_ip=self.perf_listener_ip, fs=self.fs)
             csi_perf_obj.prepare(f1_index=0)
             csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
