@@ -795,7 +795,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         # Starting csi perf stats collection if it's set
         if self.csi_perf_enabled:
             csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=str(self.perf_listener_host_name),
-                                           listener_ip=self.perf_listener_ip, fs=self.fs)
+                                           listener_ip=self.perf_listener_ip, fs=self.fs[0])
             csi_perf_obj.prepare(f1_index=0)
             csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
             try:
