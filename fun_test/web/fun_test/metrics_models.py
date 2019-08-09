@@ -151,30 +151,6 @@ class Triage3Trial(models.Model):
         return self.__str__()
 
 
-class TrialReRuns(models.Model):
-    triage_id = models.IntegerField()
-    fun_os_sha = models.TextField()
-    trial_set_id = models.IntegerField(default=-1)
-    status = models.IntegerField(default=TriagingStates.UNKNOWN)
-    jenkins_build_number = models.IntegerField(default=-1)
-    lsf_job_id = models.IntegerField(default=-1)
-    tag = models.TextField(default="")
-    regex_match = models.TextField(default="")
-    submission_date_time = models.DateTimeField(default=datetime.now)
-    tags = JSONField(default=[])  # for re-runs
-    result = models.TextField(default=RESULTS["UNKNOWN"])
-
-    def __str__(self):
-        return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
-                                                                             self.tag,
-                                                                             self.fun_os_sha,
-                                                                             self.trial_set_id,
-                                                                             TriageTrialStates().code_to_string(self.status))
-
-    def __repr__(self):
-        return self.__str__()
-
-
 class TimestampField(serializers.Field):
     def to_representation(self, value):
         epoch = get_localized_time(datetime(1970, 1, 1))
