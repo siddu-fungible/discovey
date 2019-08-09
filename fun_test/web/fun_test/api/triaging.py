@@ -1,5 +1,5 @@
 from web.web_global import api_safe_json_response
-from fun_global import get_current_time
+from fun_global import get_current_time, RESULTS
 from django.views.decorators.csrf import csrf_exempt
 from web.fun_test.metrics_models import Triage3, Triage3Trial, LastTriageId
 from web.fun_test.triaging_global import TriageTrialStates, TriagingStates, TriagingTypes
@@ -53,6 +53,7 @@ def trials(request, triage_id, fun_os_sha):
                     triage = Triage3.objects.get(triage_id=triage_id)
                     triage.status = TriagingStates.IN_PROGRESS
                     triage.save()
+                first_trial.result = RESULTS["UNKNOWN"]
                 first_trial.save()
             else:
                 request_json = json.loads(request.body)
