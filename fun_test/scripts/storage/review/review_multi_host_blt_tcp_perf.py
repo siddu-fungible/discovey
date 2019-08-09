@@ -786,10 +786,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             final_fio_output = {}
 
             if self.csi_perf_enabled:
-                p = CsiPerfTemplate(perf_collector_host_name=self.perf_listener_host_name,
+                csi_perf_obj = CsiPerfTemplate(perf_collector_host_name=self.perf_listener_host_name,
                                     listener_ip=self.perf_listener_ip, fs=self.fs)
-                p.prepare(f1_index=0, dpcsh_client=self.storage_controller)
-                p.start(f1_index=0, dpc_client=self.storage_controller)
+                csi_perf_obj.prepare(f1_index=0, dpcsh_client=self.storage_controller)
+                csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
                 try:
                     fun_test.log("csi perf stats collection is started")
                     # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
@@ -906,7 +906,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             final_fio_output[combo][mode] = fio_output[combo][mode][1]
 
             if self.csi_perf_enabled:
-                p.stop(f1_index=0)
+                csi_perf_obj.stop(f1_index=0, dpc_client=self.storage_controller)
                 fun_test.log("csi perf stats collection is done")
 
             # Checking whether the vp_util stats collection thread is still running...If so stopping it...
