@@ -45,8 +45,6 @@ export class Triage2Component implements OnInit {
       'metric_id': [-1],
       'triage_type': [null, Validators.required],
       'regex_match_string': [null],
-      'test_script': [null, Validators.required],
-      'test_script_loop': [null, Validators.required]
     });
     this.submissionForm.get('from_fun_os_sha').valueChanges.subscribe(value => {
       this.gitShasValid = false;
