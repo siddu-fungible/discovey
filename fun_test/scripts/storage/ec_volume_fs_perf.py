@@ -182,13 +182,12 @@ class ECVolumeLevelTestcase(FunTestCase):
         fio_output = {}
 
         table_data_rows = []
-        ec_info = fun_test.shared_variables['ec_info']
-        ec_uuid = ec_info["attach_uuid"][0]
         job_inputs = fun_test.get_job_inputs()
         collect_artifacts = job_inputs[
             "collect_artifacts"] if job_inputs and "collect_artifacts" in job_inputs else True
-        poll_interval = job_inputs["poll_interval"] if job_inputs and "poll_interval" in job_inputs else 20
-        stats_collector = CollectStats(storage_controller)
+        poll_interval = job_inputs["poll_interval"] if job_inputs and "poll_interval" in job_inputs else 30
+        ec_details = get_ec_vol_uuids(ec_info=fun_test.shared_variables['ec_info'])
+
         for combo in self.fio_njobs_iodepth:
             fio_result[combo] = {}
             fio_output[combo] = {}
@@ -208,6 +207,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                  "iodepth": io_depth * num_jobs,
                                  "size": fio_cmd_args["size"],
                                  "fio_job_name": fio_job_name}
+                stats_collector = CollectStats(storage_controller)  # required to poll vol stats
                 # initiate stats collection
                 if collect_artifacts:
                     count = (fio_cmd_args['runtime'] + poll_interval) / poll_interval
@@ -215,39 +215,30 @@ class ECVolumeLevelTestcase(FunTestCase):
                         post_fix_name="{}_vputil_artifact.txt".format(fio_job_name))
                     vol_stats_artifact_file = fun_test.get_test_case_artifact_file_name(
                         post_fix_name="{}_volstats_artifact.txt".format(fio_job_name))
-                    vp_util_thread_id = fun_test.execute_thread_after(time_in_seconds=0.5,
-                                                                      func=stats_collector.collect_vp_utils_stats,
-                                                                      output_file=vp_util_artifact_file,
-                                                                      interval=poll_interval,
-                                                                      count=count,
-                                                                      threaded=True)
-                    vol_stats_thread_id = fun_test.execute_thread_after(time_in_seconds=poll_interval/2,
-                                                                        func=stats_collector.collect_vol_stats,
-                                                                        output_file=vol_stats_artifact_file,
-                                                                        vol_type=ec_info["volume_types"]["lsv"],
-                                                                        vol_uuid=ec_uuid,
-                                                                        interval=poll_interval,
-                                                                        count=count,
-                                                                        threaded=True)
-
+                    thread_info = initiate_stats_collection(storage_controller=storage_controller,
+                                                            interval=poll_interval,
+                                                            count=count,
+                                                            vp_util_artifact_file=vp_util_artifact_file,
+                                                            vol_stats_artifact_file=vol_stats_artifact_file,
+                                                            vol_details=ec_details)
+                    active_threads = [thread_info['vp_util_thread_id'],thread_info['vol_stats_thread_id']]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".format(
                     mode, fio_cmd_args['bs'], io_depth * num_jobs))
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = end_host.pcie_fio(filename=nvme_device, **fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
-                fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
-                                                              "io_depth: {2}, num_jobs: {3}".
-                                     format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
                 if collect_artifacts:
-                    fun_test.join_thread(fun_test_thread_id=vp_util_thread_id, sleep_time=1)
-                    fun_test.join_thread(fun_test_thread_id=vol_stats_thread_id, sleep_time=1)
+                    terminate_stats_collection(stats_ollector_obj=stats_collector, thread_list=active_threads)
                     fun_test.add_auxillary_file(description="F1 VP Utilization - {0} IO depth {1}".format(
                         mode, io_depth * num_jobs),
                         filename=vp_util_artifact_file)
                     fun_test.add_auxillary_file(description="F1 Volume Stats - {0} IO depth {1}".format(
                         mode, io_depth * num_jobs),
                         filename=vol_stats_artifact_file)
+                fun_test.test_assert(fio_output[combo][mode], "Execute fio {0} only test with the block size:{1},"
+                                                              "io_depth: {2}, num_jobs: {3}".
+                                     format(mode, fio_cmd_args['bs'], fio_cmd_args['iodepth'], num_jobs))
                 if mode == 'read' or mode == 'randread':  # default fio output write values to -1 before updating into db
                     for key in fio_output[combo][mode]['write']:
                         fio_output[combo][mode]['write'][key] = -1

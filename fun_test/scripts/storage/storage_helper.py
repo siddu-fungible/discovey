@@ -507,3 +507,62 @@ class CollectStats(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return output
+
+
+def get_ec_vol_uuids(ec_info):
+    ec_details = []
+    for num in range(ec_info["num_volumes"]):
+        vol_group = {ec_info["volume_types"]["ndata"]: ec_info["uuids"][num]["blt"],
+                     ec_info["volume_types"]["ec"]: ec_info["uuids"][num]["ec"],
+                     ec_info["volume_types"]["jvol"]: [ec_info["uuids"][num]["jvol"]],
+                     ec_info["volume_types"]["lsv"]: ec_info["uuids"][num]["lsv"]}
+        ec_details.append(vol_group)
+    return ec_details
+
+
+def initiate_stats_collection(storage_controller, interval, count, vp_util_artifact_file=None,
+                              vol_stats_artifact_file=None, bam_stats_articat_file=None, vol_details=None):
+    stats_collector = CollectStats(storage_controller=storage_controller)
+    result = {'status': False,
+              'vp_util_thread_id': None,
+              'vol_stats_thread_id': None,
+              'bam_stats_thread_id': None}
+    if vp_util_artifact_file:
+        result['vp_util_thread_id'] = fun_test.execute_thread_after(time_in_seconds=0.5,
+                                                                    func=stats_collector.collect_vp_utils_stats,
+                                                                    output_file=vp_util_artifact_file,
+                                                                    interval=interval,
+                                                                    count=count,
+                                                                    threaded=True)
+    if vol_stats_artifact_file:
+        result['vol_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=interval / 3,
+                                                                      func=stats_collector.collect_vol_stats,
+                                                                      output_file=vol_stats_artifact_file,
+                                                                      vol_details=vol_details,
+                                                                      interval=interval,
+                                                                      count=count,
+                                                                      threaded=True)
+    if bam_stats_articat_file:
+        result['bam_stats_thread_id'] = fun_test.execute_thread_after(time_in_seconds=(interval * 2) / 3,
+                                                                      func=stats_collector.collect_resource_bam_stats,
+                                                                      output_file=bam_stats_articat_file,
+                                                                      interval=interval,
+                                                                      count=count,
+                                                                      threaded=True)
+    result['status'] = True
+    return result
+
+
+def terminate_stats_collection(stats_ollector_obj, thread_list):
+    for thread in thread_list:
+        fun_test.join_thread(fun_test_thread_id=thread, sleep_time=1)
+
+    reset_collector = False
+    for thread in thread_list:
+        if fun_test.fun_test_threads[thread]["thread"].is_alive():
+            reset_collector = True
+    if reset_collector:
+        stats_ollector_obj.stop_all = True
+        stats_ollector_obj.stop_vol_stats = True
+        stats_ollector_obj.stop_vp_utils = True
+        stats_ollector_obj.stop_resource_bam = True
