@@ -232,6 +232,12 @@ def build_simple_table(data, column_headers=[]):
     simple_table.header = True
     try:
         for key in sorted(data):
+            row_data = []
+            if type(data[key]) is not list:
+                row_data = [key, data[key]]
+            elif type(data[key]) is list:
+                row_data.append(key)
+                row_data.extend(data[key])
             simple_table.add_row([key, data[key]])
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -418,12 +424,33 @@ class CollectStats(object):
             fun_test.critical(str(ex))
         return output
 
-    def collect_vol_stats(self, output_file, vol_type, vol_uuid, interval=10, count=3, non_zero_stats_only=True,
-                          threaded=False,
-                          command_timeout=DPCSH_COMMAND_TIMEOUT):
-        output = False
-        column_headers = ["Param", "Counter"]
+    def collect_vol_stats(self, output_file, vol_details, interval=10, count=3, non_zero_stats_only=True,
+                          threaded=False, command_timeout=DPCSH_COMMAND_TIMEOUT):
+        """
+        :param output_file: File name in which the volume stats collected at every given interval for given number of
+        counts in the table format
+        :param vol_details: The expected format here is:
+                            vol_details = {"VOLUME_TYPE1": [UUID1, UUID2, ...],
+                                           "VOLUME_TYPE2": [UUID1]}
+                            For Example:
+                            vol_details = {"VOL_TYPE_BLK_THIN_LOCAL": [UUID1, UUID2, ...],
+                                           "VOL_TYPE_BLK_EC": [UUID1]}
 
+        :param interval:
+        :param count:
+        :param non_zero_stats_only:
+        :param threaded:
+        :param command_timeout:
+        :return:
+        """
+        output = False
+        column_headers = ["Stats"]
+        for vol_type, vol_uuids in sorted(vol_details.iteritems()):
+            vol_type = vol_type[9:]
+            for vol_uuid in vol_uuids:
+                column_headers.append(vol_type + "/" + vol_uuid)
+
+        vol_stats = {}
         try:
             with open(output_file, 'a') as f:
                 timer = FunTimer(max_time=interval * count)
@@ -433,24 +460,36 @@ class CollectStats(object):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    dpcsh_result = self.storage_controller.peek(
-                        props_tree="storage/volumes/{0}/{1}/stats".format(vol_type, vol_uuid),
-                        command_duration=command_timeout)
-                    self.socket_lock.release()
+                    for vol_type, vol_uuids in sorted(vol_details.iteritems()):
+                        if vol_type not in vol_stats:
+                            vol_stats[vol_type] = {}
+                        for vol_uuid in vol_uuids:
+                            if vol_uuid not in vol_stats[vol_type]:
+                                vol_stats[vol_type][vol_uuid] = {}
+                            props_tree = "storage/volumes/{0}/{1}/stats".format(vol_type, vol_uuid)
+                            dpcsh_result = self.storage_controller.peek(props_tree=props_tree,
+                                                                        command_duration=command_timeout)
                     # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
                     if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        vol_stats = dpcsh_result["data"]
+                        vol_stats[vol_type][vol_uuid] = dpcsh_result["data"]
                     else:
-                        vol_stats = {}
+                        vol_stats[vol_type][vol_uuid] = {}
+                    self.socket_lock.release()
 
-                    if non_zero_stats_only:
-                        filtered_vol_stats = OrderedDict()
-                        for key, value in sorted(vol_stats.iteritems()):
-                            if value != 0.0 or value != 0:
-                                filtered_vol_stats[key] = value
-                        vol_stats = filtered_vol_stats
+                    all_attributes = set()
+                    for vol_type, vol_uuids in sorted(vol_details.iteritems()):
+                        for vol_uuid in vol_uuids:
+                            all_attributes |= set(sorted(vol_stats[vol_type][vol_uuid]))
 
-                    table_data = build_simple_table(data=vol_stats, column_headers=column_headers)
+                    combined_vol_stats = {}
+                    for attribute in all_attributes:
+                        if attribute not in combined_vol_stats:
+                            combined_vol_stats[attribute] = []
+                        for vol_type, vol_uuids in sorted(vol_details.iteritems()):
+                            for vol_uuid in vol_uuids:
+                                combined_vol_stats[attribute].append(vol_stats[vol_type][vol_uuid].get(attribute, "-"))
+
+                    table_data = build_simple_table(data=combined_vol_stats, column_headers=column_headers)
                     lines.append("\n########################  {} ########################\n".format(time.ctime()))
                     lines.append(table_data.get_string())
                     lines.append("\n\n")
