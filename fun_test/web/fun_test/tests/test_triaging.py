@@ -505,4 +505,4 @@ if __name__ == "__main__":
 
             except Exception as ex:
                 logger.exception(ex)
-        # time.sleep(60)
+        time.sleep(60)
