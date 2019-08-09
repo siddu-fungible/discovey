@@ -96,8 +96,7 @@ def trials(request, triage_id, fun_os_sha):
                           "tag": trial.tag,
                           "regex_match": trial.regex_match,
                           "tags": trial.tags,
-                          "result": trial.result,
-                          "re_runs": trial.re_runs}
+                          "result": trial.result}
             # if trial.re_runs:
             #     one_record["history"] =
             result.append(one_record)

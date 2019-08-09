@@ -119,9 +119,6 @@ class Triage3(models.Model):
     base_tag = models.TextField(default="qa_triage")
     regex_match_string = models.TextField(default="")
 
-    test_script = models.TextField(default="")
-    test_script_loop = models.IntegerField(default=-1)
-
     @staticmethod
     def get_tag(base_tag, other_tag):
         return "{}_{}".format(base_tag, other_tag)
@@ -139,7 +136,7 @@ class Triage3Trial(models.Model):
     submission_date_time = models.DateTimeField(default=datetime.now)
     tags = JSONField(default=[])  # for re-runs
     result = models.TextField(default=RESULTS["UNKNOWN"])
-    re_runs = models.BooleanField(default=False)
+    # re_runs = models.BooleanField(default=False)
 
     def __str__(self):
         return "Trial: Triage: {} Tag: {} Sha: {} Set: {} Status: {}".format(self.triage_id,
