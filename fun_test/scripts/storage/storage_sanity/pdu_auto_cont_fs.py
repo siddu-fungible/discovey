@@ -9,7 +9,7 @@ from lib.host.apc_pdu import ApcPdu
 from time import sleep
 
 '''
-Sanity Script for BLT Volume via PCI
+Power cycle FS multiple times and each time check if basic functions are fine
 '''
 
 
@@ -70,8 +70,9 @@ class BLTVolumeSanityScript(FunTestScript):
 
         print ('host_ip {} username {} password {}'.format(apc_info['host_ip'], apc_info['username'], apc_info['password']))
 
-        for pc_no in range(0, no_of_powercycles):
-            fun_test.log("Iteation no: {} out of {}".format(pc_no + 1, no_of_powercycles))
+        for pc_no in range(0, self.no_of_powercycles):
+
+            fun_test.log("Iteation no: {} out of {}".format(pc_no + 1, self.no_of_powercycles))
             apc_pdu = ApcPdu(host_ip = str(apc_info['host_ip']), username = str(apc_info['username']), password = str(apc_info['password']))
 
             sleep (5)
@@ -90,69 +91,34 @@ class BLTVolumeSanityScript(FunTestScript):
                                     message="Power did not come back after pdu port reboot")
 
             fun_test.log("Check if platform components are up")
-            sleep(120)
+            sleep(180)
             fun_test.log("Check for fpga if it is up")
 
-            fun_test.test_assert(expression=fs.get_fpga().ensure_host_is_up(max_wait_time=120),
+            fun_test.test_assert(expression=fs.get_fpga().ensure_host_is_up(max_wait_time=180),
                              context=fs.context, message="FPGA reachable after APC power-cycle")
             fun_test.log("fpga is up")
             fun_test.log("Check if BMC is up")
-            fun_test.test_assert(expression=fs.get_bmc().ensure_host_is_up(max_wait_time=120),
+            fun_test.test_assert(expression=fs.get_bmc().ensure_host_is_up(max_wait_time=180),
                              context=fs.context, message="BMC reachable after APC power-cycle")
             fun_test.log("BMC is up")
             fun_test.log("Check if COMe is up")
-            fun_test.test_assert(expression=fs.get_come().ensure_host_is_up(max_wait_time=120),
+            fun_test.test_assert(expression=fs.get_come().ensure_host_is_up(max_wait_time=180),
                                                                         message="ComE reachable after APC power-cycle")
             fun_test.log("COMe is up")
+
+            topology_helper.set_dut_parameters(dut_index=0, custom_boot_args=self.bootargs,
+                                           disable_f1_index=self.disable_f1_index)
+            fun_test.shared_variables['topology'] = topology_helper.expanded_topology
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology deployed")
 
             try:
                 apc_pdu.disconnect()
             except:
                 pass
 
-        import pdb
-        pdb.set_trace()
-
-
     def cleanup(self):
         pass
-        try:
-            if fun_test.shared_variables['setup_created']:
-                ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                blt_uuid = fun_test.shared_variables["blt_uuid"]
-                # disconnect device from controller
-                fun_test.test_assert(self.storage_controller.detach_volume_from_controller(
-                    ctrlr_uuid=ctrlr_uuid,
-                    ns_id=self.ns_id,
-                    command_duration=self.command_timeout)['status'],
-                                     message="Detach nsid: {} from controller: {}".format(self.ns_id, ctrlr_uuid))
-
-                # delete controller
-                fun_test.test_assert(self.storage_controller.delete_controller(ctrlr_uuid=ctrlr_uuid,
-                                                                               command_duration=self.command_timeout),
-                                     message="Delete Controller uuid: {}".format(ctrlr_uuid))
-
-                # delete BLT
-                fun_test.test_assert(self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                           block_size=self.blt_details["block_size"],
-                                                                           type=self.blt_details["type"],
-                                                                           name=self.blt_details["name"],
-                                                                           uuid=blt_uuid,
-                                                                           command_duration=self.command_timeout)
-                                     ['status'],
-                                     message="Delete Configured BLT")
-        except Exception as ex:
-            fun_test.critical(ex.message)
-        finally:
-            try:
-                self.storage_controller.disconnect()
-            except:
-                pass
-            try:
-                fun_test.shared_variables["topology"].cleanup()
-            except:
-                pass
-
 
 class BltPciSanityTestcase(FunTestCase):
     def describe(self):
@@ -173,107 +139,24 @@ class BltPciSanityTestcase(FunTestCase):
 
     def run(self):
         pass
-        mode = self.fio_mode
-        end_host = fun_test.shared_variables["end_host"]
-        nvme_block_device = fun_test.shared_variables['nvme_block_device']
-        fio_numjob_iodepths = self.fio_numjobs_iodepth
-        fun_test.simple_assert(nvme_block_device, "nvme block device available for test")
-        for combo in fio_numjob_iodepths:
-            num_jobs, iodepth = eval(combo)
-            fio_job_name = "{}_{}_{}".format(self.fio_job_name, mode, iodepth * num_jobs)
-            fio_output = end_host.pcie_fio(filename=nvme_block_device,
-                                           rw=mode,
-                                           numjobs=num_jobs,
-                                           iodepth=iodepth,
-                                           name=fio_job_name,
-                                           **self.fio_cmd_args)
-        fun_test.log("FIO Command Output:{}".format(fio_output))
-        fun_test.test_assert(fio_output,
-                             "Fio {} test for numjobs {} & iodepth {}".format(mode, num_jobs, iodepth))
 
     def cleanup(self):
         pass
 
 
-class BltPciSeqRead(BltPciSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Test sequential read queries on BLT volume over nvme PCI",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to host connected via the PCI interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Seq Read test(without verify) from the end host.''')
-
-
-class BltPciRandRead(BltPciSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="Test random read queries on BLT volume over nvme PCI",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the host connected via the PCI interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Rand Read test(without verify) from the end host.''')
-
-
-class BltPciSeqRWMix(BltPciSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Test Sequential read-write mix 70:30 ratio queries on BLT volume over PCI",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the host connected via the PCI interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO mix seq read-write 70:30 test(without verify) from the end host.''')
-
-
-class BltPciSeqWRMix(BltPciSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Test Sequential write-read mix 70:30 ratio queries on BLT volume over  PCI",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the host connected via the PCI interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO Seq write-read 70:30 test(without verify) from the end host.''')
-
-
-class BltPciRandRWMix(BltPciSanityTestcase):
+class PduMultiPowerCycle(BltPciSanityTestcase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Test Random read-write mix 70:30 ratio queries on BLT volume over PCI",
+                              summary="Power cycle FS multiple times and each time check if basic functions are fine",
                               steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the host connected via the PCI interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO rand read-write 70:30 test(without verify) from the end host.''')
-
-
-class BltPciRandWRMix(BltPciSanityTestcase):
-
-    def describe(self):
-        self.set_test_details(id=6,
-                              summary="Test Random read-write mix 70:30 ratio queries on BLT volume over PCI",
-                              steps='''
-        1. Create a BLT on FS attached with SSD.
-        2. Export (Attach) this BLT to the external host connected via the PCI interface. 
-        3. Pre-condition the volume with write test using fio.
-        4. Run the FIO random write-read 70:30 test(without verify) from the end host.''')
-
+        1. Configure FS and Power cycle from PDU
+        2. Check if COMe, FPGA and BMC are up
+        3. Update FS to latest FW
+        4. Check if all the PFs are visible from COMe.''')
 
 if __name__ == "__main__":
     bltscript = BLTVolumeSanityScript()
-    # bltscript.add_test_case(BltPciSeqRead())
-    # bltscript.add_test_case(BltPciRandRead())
-    # bltscript.add_test_case(BltPciSeqRWMix())
-    # bltscript.add_test_case(BltPciSeqWRMix())
-    bltscript.add_test_case(BltPciRandRWMix())
-    # bltscript.add_test_case(BltPciRandWRMix())
+    bltscript.add_test_case(PduMultiPowerCycle())
 
     bltscript.run()

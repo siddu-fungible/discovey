@@ -6,133 +6,15 @@
     "syslog_level": 2,
     "command_timeout": 30,
     "reboot_timeout": 300,
-    "no_of_powercycles": 500,
-    "blt_details": {
-      "ns_id": 1,
-      "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 1073741824,
-      "block_size": 4096,
-      "name": "thin-block1"
-    },
+    "no_of_powercycles": 40,
     "huid": 3,
     "ctlid": 2,
     "fnid": 2,
     "iter_interval": 2,
     "ns_id": 1,
-    "transport": "PCI",
-    "warm_up_traffic": true,
-    "warm_up_fio_cmd_args": {
-      "bs": "8k",
-      "iodepth": 1,
-      "size": "100%",
-      "rw": "write",
-      "direct": 1,
-      "prio": 0,
-      "verify": "xxhash",
-      "do_verify": 1,
-      "timeout": 600
-    }
+    "transport": "PCI"
   },
-  "BltPciSeqRead": {
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "runtime": 30,
-      "timeout": 35
-    },
-    "fio_mode": "read",
-    "fio_numjobs_iodepth": [
-      "(8, 8)"
-    ],
+  "PduMultiPowerCycle": {
     "fio_job_name": "blt_tcp_sanity"
-  },
-  "BltPciRandRead": {
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "runtime": 30,
-      "timeout": 35
-    },
-    "fio_mode": "randread",
-    "fio_numjobs_iodepth": [
-      "(8, 8)"
-    ],
-    "fio_job_name": "blt_tcp_sanity"
-  },
-  "BltPciSeqRWMix": {
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "rwmixread": 70,
-      "verify": "xxhash",
-      "do_verify": 1,
-      "runtime": 30,
-      "timeout": 60
-    },
-    "fio_mode": "readwrite",
-    "fio_numjobs_iodepth": [
-      "(8, 8)"
-    ],
-    "fio_job_name": "blt_tcp_sanity"
-  },
-  "BltPciSeqWRMix": {
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "rwmixread": 30,
-      "verify": "xxhash",
-      "do_verify": 1,
-      "runtime": 30,
-      "timeout": 35
-    },
-    "fio_mode": "readwrite",
-    "fio_numjobs_iodepth": [
-      "(8, 8)"
-    ],
-    "fio_job_name": "blt_tcp_sanity"
-  },
-  "BltPciRandRWMix": {
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "rwmixread": 70,
-      "verify": "xxhash",
-      "do_verify": 1,
-      "runtime": 30,
-      "timeout": 60
-    },
-    "fio_mode": "randrw",
-    "fio_numjobs_iodepth": [
-      "(8, 8)"
-    ],
-    "fio_job_name": "blt_tcp_sanity"
-  },
-  "BltPciRandWRMix": {
-    "fio_cmd_args": {
-      "bs": "4k",
-      "size": "100%",
-      "direct": 1,
-      "prio": 0,
-      "rwmixread": 30,
-      "verify": "xxhash",
-      "do_verify": 1,
-      "runtime": 30,
-      "timeout": 35
-    },
-    "fio_mode": "randrw",
-    "fio_numjobs_iodepth": [
-      "(8, 8)"
-    ],
-    "fio_job_name": "blt_pci_sanity"
   }
 }
