@@ -193,16 +193,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
                 self.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
                 fun_test.log("csi perf listener host ip is: {}".format(self.perf_listener_ip))
+            # adding csi perf bootargs if csi_perf is enabled
+            #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
+            self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
+                self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         for i in range(len(self.bootargs)):
             self.bootargs[i] += " --mgmt"
             if self.disable_wu_watchdog:
                 self.bootargs[i] += " --disable-wu-watchdog"
-            # adding csi perf bootargs if csi_perf is enabled
-            if self.csi_perf_enabled:
-                #  TODO: Modifying bootargs only for F1_0 as csi_perf on F1_1 is not yet fully supported
-                self.bootargs[0] += " --perf csi-local-ip={} csi-remote-ip={} pdtrace-hbm-size-kb={}".format(
-                self.csi_f1_ip, self.perf_listener_ip, self.csi_perf_pdtrace_hbm_size_kb)
 
         # Deploying of DUTs
         for dut_index in self.available_dut_indexes:
