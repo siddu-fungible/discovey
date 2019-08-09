@@ -225,7 +225,7 @@ def configure_endhost_interface(end_host, test_network, interface_name, timeout=
                                   message="Adding static ARP to F1 route")
 
 
-def build_simple_table(data, column_headers=[]):
+def build_simple_table(data, column_headers=[], split_values_to_columns=False):
     simple_table = PrettyTable(column_headers)
     simple_table.align = 'l'
     simple_table.border = True
@@ -233,12 +233,12 @@ def build_simple_table(data, column_headers=[]):
     try:
         for key in sorted(data):
             row_data = []
-            if type(data[key]) is not list:
-                row_data = [key, data[key]]
-            elif type(data[key]) is list:
+            if type(data[key]) is list and split_values_to_columns:
                 row_data.append(key)
                 row_data.extend(data[key])
-            simple_table.add_row([key, data[key]])
+            else:
+                row_data = [key, data[key]]
+            simple_table.add_row(row_data)
     except Exception as ex:
         fun_test.critical(str(ex))
     return simple_table
@@ -429,13 +429,15 @@ class CollectStats(object):
         """
         :param output_file: File name in which the volume stats collected at every given interval for given number of
         counts in the table format
-        :param vol_details: The expected format here is:
-                            vol_details = {"VOLUME_TYPE1": [UUID1, UUID2, ...],
-                                           "VOLUME_TYPE2": [UUID1]}
-                            For Example:
-                            vol_details = {"VOL_TYPE_BLK_THIN_LOCAL": [UUID1, UUID2, ...],
-                                           "VOL_TYPE_BLK_EC": [UUID1]}
-
+        :param vol_details: Takes a list of dictionaries as its value. Each element is a dictionary whose attributes
+        will be volumes types and the attribute value the list of volume UUID of that particular volume type.
+        volumes types with the list of volume UUIDS of that vol
+        The expected format here is:
+            vol_details = [{"VOLUME_TYPE1": [UUID1, UUID2, ...], "VOLUME_TYPE2": [UUID1], ...},
+                           {"VOLUME_TYPE1": [UUID1, UUID2, ...], "VOLUME_TYPE2": [UUID1], ...}]
+        For Example:
+            vol_details = [{"VOL_TYPE_BLK_THIN_LOCAL": [UUID1, UUID2, ...], "VOL_TYPE_BLK_EC": [UUID1]},
+                           {"VOL_TYPE_BLK_THIN_LOCAL": [UUID1, UUID2, ...], "VOL_TYPE_BLK_EC": [UUID1]}]
         :param interval:
         :param count:
         :param non_zero_stats_only:
@@ -444,56 +446,62 @@ class CollectStats(object):
         :return:
         """
         output = False
-        column_headers = ["Stats"]
-        for vol_type, vol_uuids in sorted(vol_details.iteritems()):
-            vol_type = vol_type[9:]
-            for vol_uuid in vol_uuids:
-                column_headers.append(vol_type + "/" + vol_uuid)
 
-        vol_stats = {}
         try:
             with open(output_file, 'a') as f:
                 timer = FunTimer(max_time=interval * count)
                 while not timer.is_expired():
-                    lines = []
                     if threaded and (self.stop_vol_stats or self.stop_all):
                         fun_test.log("Stopping VP Utils stats collection thread")
                         break
                     self.socket_lock.acquire()
-                    for vol_type, vol_uuids in sorted(vol_details.iteritems()):
-                        if vol_type not in vol_stats:
-                            vol_stats[vol_type] = {}
-                        for vol_uuid in vol_uuids:
-                            if vol_uuid not in vol_stats[vol_type]:
-                                vol_stats[vol_type][vol_uuid] = {}
-                            props_tree = "storage/volumes/{0}/{1}/stats".format(vol_type, vol_uuid)
-                            dpcsh_result = self.storage_controller.peek(props_tree=props_tree,
-                                                                        command_duration=command_timeout)
-                    # fun_test.simple_assert(dpcsh_result["status"], "Pulling VP Utilization")
-                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
-                        vol_stats[vol_type][vol_uuid] = dpcsh_result["data"]
-                    else:
-                        vol_stats[vol_type][vol_uuid] = {}
+                    dpcsh_result = self.storage_controller.peek(props_tree="storage/volumes",
+                                                                command_duration=command_timeout)
                     self.socket_lock.release()
+                    if dpcsh_result["status"] and dpcsh_result["data"] is not None:
+                        all_vol_stats = dpcsh_result["data"]
+                    else:
+                        all_vol_stats = {}
 
-                    all_attributes = set()
-                    for vol_type, vol_uuids in sorted(vol_details.iteritems()):
-                        for vol_uuid in vol_uuids:
-                            all_attributes |= set(sorted(vol_stats[vol_type][vol_uuid]))
-
-                    combined_vol_stats = {}
-                    for attribute in all_attributes:
-                        if attribute not in combined_vol_stats:
-                            combined_vol_stats[attribute] = []
-                        for vol_type, vol_uuids in sorted(vol_details.iteritems()):
-                            for vol_uuid in vol_uuids:
-                                combined_vol_stats[attribute].append(vol_stats[vol_type][vol_uuid].get(attribute, "-"))
-
-                    table_data = build_simple_table(data=combined_vol_stats, column_headers=column_headers)
-                    lines.append("\n########################  {} ########################\n".format(time.ctime()))
-                    lines.append(table_data.get_string())
-                    lines.append("\n\n")
+                    lines = "\n########################  {} ########################\n".format(time.ctime())
                     f.writelines(lines)
+                    # Extracting the required volume stats from the complete peek storage/volumes output
+                    for vol_group in vol_details:
+                        lines = []
+                        column_headers = ["Stats"]
+                        for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                            vol_type = vol_type[13:]
+                            for vol_uuid in vol_uuids:
+                                column_headers.append(vol_type + "/" + vol_uuid[-8:])
+
+                        vol_stats = {}
+                        for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                            if vol_type not in vol_stats:
+                                vol_stats[vol_type] = {}
+                            for vol_uuid in vol_uuids:
+                                if vol_uuid not in vol_stats[vol_type]:
+                                    vol_stats[vol_type][vol_uuid] = {}
+                                if vol_type in all_vol_stats and vol_uuid in all_vol_stats[vol_type]:
+                                    vol_stats[vol_type][vol_uuid] = all_vol_stats[vol_type][vol_uuid]["stats"]
+
+                        all_attributes = set()
+                        for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                            for vol_uuid in vol_uuids:
+                                all_attributes |= set(sorted(vol_stats[vol_type][vol_uuid]))
+
+                        combined_vol_stats = {}
+                        for attribute in all_attributes:
+                            if attribute not in combined_vol_stats:
+                                combined_vol_stats[attribute] = []
+                            for vol_type, vol_uuids in sorted(vol_group.iteritems()):
+                                for vol_uuid in vol_uuids:
+                                    combined_vol_stats[attribute].append(vol_stats[vol_type][vol_uuid].
+                                                                         get(attribute, "-"))
+                        table_data = build_simple_table(data=combined_vol_stats, column_headers=column_headers,
+                                                        split_values_to_columns=True)
+                        lines.append(table_data.get_string())
+                        lines.append("\n\n")
+                        f.writelines(lines)
                     fun_test.sleep("for the next iteration - Volume stats collection", seconds=interval)
             output = True
         except Exception as ex:
