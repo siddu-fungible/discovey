@@ -1,6 +1,6 @@
 <div class="component">
 
-  <form [formGroup]="submissionForm">
+  <form style="padding-top: 10px;" [formGroup]="submissionForm">
     <div class="form-group">
       <label class="control-label col-sm-2" for="submitter">Submitter: </label>
       <select class="form-control" id="submitter" formControlName="submitter">
@@ -50,7 +50,8 @@
   </form>
 
 
-  <app-jenkins-form (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
+  <app-jenkins-form *ngIf="triageTypes && submissionForm.value" [triagingType]="submissionForm.value.triage_type"
+                    (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
 
 
   <ng-container *ngIf="gitShasValid">
