@@ -11,5 +11,7 @@ def site_configs(request):
         result["version"] = site_config.version
         result["announcement"] = site_config.announcement
         result["announcement_level"] = site_config.announcement_level
+    if request.method == "POST":
+        print(1)
 
     return result
