@@ -1151,6 +1151,10 @@ peek_stats_cdu_parser.add_argument('-grep', help="Grep regex pattern", default=N
 peek_stats_ca_parser = peek_stats_parsers.add_parser('ca', help="Peek ca stats")
 peek_stats_ca_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# Peek stats ddr
+peek_stats_ddr_parser = peek_stats_parsers.add_parser('ddr', help="Peek ddr stats")
+peek_stats_ddr_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
