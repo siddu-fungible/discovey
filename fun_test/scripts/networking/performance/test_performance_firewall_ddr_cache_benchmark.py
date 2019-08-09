@@ -138,7 +138,7 @@ class ScriptSetup(FunTestScript):
             fs.cleanup()
 
 
-class TestL4FirewallPerformanceDDRCache128M(TestL4FirewallPerformance):
+class TestL4FirewallPerformanceDDRCache128M(FunTestCase):
     tc_id = 1
     tcc_file_name = "l4_firewall_128M_flows_throughput.tcc"
     spray = False
@@ -149,10 +149,11 @@ class TestL4FirewallPerformanceDDRCache128M(TestL4FirewallPerformance):
     single_flow = False
     test_frame_sizes = [64.0]
     total_test_time = 20
+    flow_direction = FLOW_TYPE_NU_LE_VP_NU_L4_FW
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="RFC-2544 Flow: %s Frames: %s,"
+                              summary="RFC-2544 Flow: %s DDR Cache"
                                       "To get pps and throughput for 128M flows" % (
                                           self.flow_direction),
                               steps="""
@@ -165,6 +166,21 @@ class TestL4FirewallPerformanceDDRCache128M(TestL4FirewallPerformance):
                               7. Once max number of ports are found wher tx and rx pps and throughput matches;
                                  run traffic for 120 seconds.
                                   """)
+
+    def _get_tcc_config_file_path(self, flow_direction):
+        dir_name = None
+        if flow_direction == FLOW_TYPE_NU_LE_VP_NU_L4_FW:
+            dir_name = "nu_le_vp_nu_firewall"
+
+        config_type = "palladium_configs"
+        dut_type = fun_test.shared_variables['dut_type']
+        if dut_type == NuConfigManager.DUT_TYPE_F1:
+            config_type = "f1_configs"
+
+        tcc_config_path = fun_test.get_helper_dir_path() + '/%s/%s/%s' % (
+            config_type, dir_name, self.tcc_file_name)
+        fun_test.debug("Dir Name: %s" % dir_name)
+        return tcc_config_path
 
     def setup(self):
         dut_type = fun_test.shared_variables['dut_type']
@@ -186,6 +202,9 @@ class TestL4FirewallPerformanceDDRCache128M(TestL4FirewallPerformance):
             checkpoint = "Set compensation mode to REMOVED for each port"
             result = self.template_obj.set_ports_compensation_mode()
             fun_test.test_assert(result, checkpoint)
+
+    def cleanup(self):
+        pass
 
     def run(self):
         # Subscribe to results
