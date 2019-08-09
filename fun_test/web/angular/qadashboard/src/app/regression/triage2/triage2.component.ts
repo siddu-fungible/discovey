@@ -141,10 +141,8 @@ export class Triage2Component implements OnInit {
     payload["submitter_email"] = this.submissionForm.value.submitter;
     payload["triage_type"] = this.submissionForm.value.triage_type;
     payload["regex_match_string"] = this.submissionForm.value.regex_match_string;
-    payload["test_script"] = this.submissionForm.value.test_script;
-    payload["test_script_loop"] = this.submissionForm.value.test_script_loop;
     payload["build_parameters"] = this.jenkinsParameters;
-    if (!this.jenkinsParameters && this.submissionForm.value.triage_type !== '5') {
+    if (!this.jenkinsParameters) {
       return this.loggerService.error("Jenkins parameters are invalid");
     }
     let url = "/api/v1/triages";

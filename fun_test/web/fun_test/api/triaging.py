@@ -38,6 +38,17 @@ def trials(request, triage_id, fun_os_sha):
             trials = Triage3Trial.objects.filter(q).order_by('submission_date_time')
             if trials.count():
                 first_trial = trials[0]
+                # TrialReRuns(fun_os_sha=first_trial.fun_os_sha,
+                #                      triage_id=first_trial.triage_id,
+                #                      trial_set_id=first_trial.trial_set_id,
+                #                      status=first_trial.status,
+                #                      jenkins_build_number=first_trial.jenkins_build_number,
+                #                      lsf_job_id=first_trial.lsf_job_id,
+                #                      tag=first_trial.tag,
+                #                      regex_match=first_trial.regex_match,
+                #                      submission_date_time=first_trial.submission_date_time,
+                #                      tags=first_trial.tags,
+                #                      result=first_trial.result).save()
                 request_json = json.loads(request.body)
                 status = request_json.get("status", None)
                 if status is not None:
@@ -54,6 +65,7 @@ def trials(request, triage_id, fun_os_sha):
                     triage.status = TriagingStates.IN_PROGRESS
                     triage.save()
                 first_trial.result = RESULTS["UNKNOWN"]
+                # first_trial.re_runs = True
                 first_trial.save()
             else:
                 request_json = json.loads(request.body)
@@ -84,7 +96,10 @@ def trials(request, triage_id, fun_os_sha):
                           "tag": trial.tag,
                           "regex_match": trial.regex_match,
                           "tags": trial.tags,
-                          "result": trial.result}
+                          "result": trial.result,
+                          "re_runs": trial.re_runs}
+            # if trial.re_runs:
+            #     one_record["history"] =
             result.append(one_record)
     return result
 
@@ -108,8 +123,6 @@ def triagings(request, triage_id):
             triage_id = LastTriageId.get_next_id()
 
             regex_match_string = request_json.get("regex_match_string", None)
-            if not build_parameters:
-                build_parameters = {}
 
             t = Triage3(triage_id=triage_id, metric_id=metric_id,
                         triage_type=triage_type,
@@ -119,11 +132,6 @@ def triagings(request, triage_id):
                         build_parameters=build_parameters)
             if regex_match_string is not None:
                 t.regex_match_string = regex_match_string
-            if triage_type == TriagingTypes.JENKINS_FUN_OS_ON_DEMAND:
-                test_script = request_json["test_script"]
-                test_script_loop = request_json["test_script_loop"]
-                t.test_script = test_script
-                t.test_script_loop = test_script_loop
             t.save()
             result = t.triage_id
         else:

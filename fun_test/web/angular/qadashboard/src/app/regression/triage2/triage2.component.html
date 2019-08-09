@@ -47,19 +47,10 @@
         <span *ngIf="gitShasValid"><i class="fa fa-check fa-fw tick-color"></i>Git commits are valid</span>
       </div>
     </div>
-
-    <div class="form-group" *ngIf="triageTypes && submissionForm.value.triage_type == triageTypes.JENKINS_FUN_OS_ON_DEMAND">
-      <label class="control-label col-sm-2" for="test_script">Test Script: </label>
-      <input style="width: 400px" formControlName="test_script" id="test_script">
-    </div>
-    <div class="form-group" *ngIf="triageTypes && submissionForm.value.triage_type == triageTypes.JENKINS_FUN_OS_ON_DEMAND">
-      <label class="control-label col-sm-2" for="test_script_loop">Test Script Loop: </label>
-      <input style="width: 400px" formControlName="test_script_loop" id="test_script_loop">
-    </div>
   </form>
 
 
-  <app-jenkins-form *ngIf="triageTypes && submissionForm.value.triage_type != triageTypes.JENKINS_FUN_OS_ON_DEMAND"
+  <app-jenkins-form *ngIf="triageTypes && submissionForm.value" [triagingType]="submissionForm.value.triage_type"
                     (data)="jenkinsParametersChanged($event)"></app-jenkins-form>
 
 

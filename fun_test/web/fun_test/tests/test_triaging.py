@@ -316,10 +316,9 @@ class TrialStateMachine:
                 # params["PCI_MODE"] = "root_complex"
             else:
                 jm = JenkinsManager(job_name="funos/funos_on_demand")
-                params = {}
+                params = triage.build_parameters
                 params["BRANCH_FunOS"] = self.fun_os_sha
-                params["TEST_SCRIPT"] = triage.test_script
-                params["TEST_SCRIPT_LOOP"] = triage.test_script_loop
+
             try:
                 queue_item = jm.build(params=params)
                 build_number = jm.get_build_number(queue_item=queue_item)
